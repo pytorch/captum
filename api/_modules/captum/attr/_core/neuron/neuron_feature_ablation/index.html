@@ -36,7 +36,6 @@
 <span class="kn">from</span> <span class="nn">captum._utils.typing</span> <span class="kn">import</span> <span class="n">BaselineType</span><span class="p">,</span> <span class="n">TensorOrTupleOfTensorsGeneric</span>
 <span class="kn">from</span> <span class="nn">captum.attr._core.feature_ablation</span> <span class="kn">import</span> <span class="n">FeatureAblation</span>
 <span class="kn">from</span> <span class="nn">captum.attr._utils.attribution</span> <span class="kn">import</span> <span class="n">NeuronAttribution</span><span class="p">,</span> <span class="n">PerturbationAttribution</span>
-<span class="kn">from</span> <span class="nn">captum.attr._utils.common</span> <span class="kn">import</span> <span class="n">neuron_index_deprecation_decorator</span>
 <span class="kn">from</span> <span class="nn">captum.log</span> <span class="kn">import</span> <span class="n">log_usage</span>
 
 
@@ -83,7 +82,6 @@
         <span class="n">PerturbationAttribution</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">forward_func</span><span class="p">)</span>
 
 <div class="viewcode-block" id="NeuronFeatureAblation.attribute"><a class="viewcode-back" href="../../../../../neuron.html#captum.attr.NeuronFeatureAblation.attribute">[docs]</a>    <span class="nd">@log_usage</span><span class="p">()</span>
-    <span class="nd">@neuron_index_deprecation_decorator</span>
     <span class="k">def</span> <span class="nf">attribute</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">inputs</span><span class="p">:</span> <span class="n">TensorOrTupleOfTensorsGeneric</span><span class="p">,</span>
@@ -310,6 +308,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../../../layer.html">Layer Attribution</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../../neuron.html">Neuron Attribution</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../../metrics.html">Metrics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../robust.html">Robustness</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../../utilities.html">Utilities</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../../base_classes.html">Base Classes</a></li>
 </ul>

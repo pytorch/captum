@@ -26,9 +26,7 @@
 <div class="body" role="main">
 <h1>Source code for captum.attr._utils.common</h1><div class="highlight"><pre>
 <span></span><span class="ch">#!/usr/bin/env python3</span>
-<span class="kn">import</span> <span class="nn">functools</span>
 <span class="kn">import</span> <span class="nn">typing</span>
-<span class="kn">import</span> <span class="nn">warnings</span>
 <span class="kn">from</span> <span class="nn">inspect</span> <span class="kn">import</span> <span class="n">signature</span>
 <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">TYPE_CHECKING</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Union</span>
 
@@ -47,6 +45,10 @@
 
 <span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>
     <span class="kn">from</span> <span class="nn">captum.attr._utils.attribution</span> <span class="kn">import</span> <span class="n">GradientAttribution</span>
+
+
+<span class="k">def</span> <span class="nf">_sum_rows</span><span class="p">(</span><span class="nb">input</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tensor</span><span class="p">:</span>
+    <span class="k">return</span> <span class="nb">input</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="nb">input</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
 
 
 <span class="k">def</span> <span class="nf">_validate_target</span><span class="p">(</span><span class="n">num_samples</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">target</span><span class="p">:</span> <span class="n">TargetType</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
@@ -392,73 +394,6 @@
     <span class="n">total_features</span> <span class="o">=</span> <span class="n">current_num_features</span>
     <span class="n">feature_mask</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">feature_mask</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">feature_mask</span><span class="p">,</span> <span class="n">total_features</span>
-
-
-<span class="k">def</span> <span class="nf">neuron_index_deprecation_decorator</span><span class="p">(</span><span class="n">func</span><span class="p">:</span> <span class="n">Callable</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">:</span>
-    <span class="sa">r</span><span class="sd">"""</span>
-<span class="sd">    Decorator to deprecate neuron_index parameter for Neuron Attribution methods.</span>
-<span class="sd">    """</span>
-
-    <span class="nd">@functools</span><span class="o">.</span><span class="n">wraps</span><span class="p">(</span><span class="n">func</span><span class="p">)</span>
-    <span class="k">def</span> <span class="nf">wrapper</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">):</span>
-        <span class="k">if</span> <span class="s2">"neuron_index"</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
-            <span class="n">kwargs</span><span class="p">[</span><span class="s2">"neuron_selector"</span><span class="p">]</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s2">"neuron_index"</span><span class="p">]</span>
-            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
-                <span class="s2">"neuron_index is being deprecated and replaced with neuron_selector "</span>
-                <span class="s2">"to support more general functionality. Please, update the parameter "</span>
-                <span class="s2">"name to neuron_selector. Support for neuron_index will be removed "</span>
-                <span class="s2">"in Captum 0.4.0."</span><span class="p">,</span>
-                <span class="ne">DeprecationWarning</span><span class="p">,</span>
-            <span class="p">)</span>
-            <span class="k">del</span> <span class="n">kwargs</span><span class="p">[</span><span class="s2">"neuron_index"</span><span class="p">]</span>
-        <span class="k">return</span> <span class="n">func</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-
-    <span class="k">return</span> <span class="n">wrapper</span>
-
-
-<span class="k">def</span> <span class="nf">noise_tunnel_n_samples_deprecation_decorator</span><span class="p">(</span><span class="n">func</span><span class="p">:</span> <span class="n">Callable</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">:</span>
-    <span class="sa">r</span><span class="sd">"""</span>
-<span class="sd">    Decorator to depricate n_samples parameter for NoiseTunnel's `attribute` method.</span>
-<span class="sd">    """</span>
-
-    <span class="nd">@functools</span><span class="o">.</span><span class="n">wraps</span><span class="p">(</span><span class="n">func</span><span class="p">)</span>
-    <span class="k">def</span> <span class="nf">wrapper</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">):</span>
-        <span class="k">if</span> <span class="s2">"nt_samples"</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">kwargs</span> <span class="ow">and</span> <span class="s2">"n_samples"</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
-            <span class="n">kwargs</span><span class="p">[</span><span class="s2">"nt_samples"</span><span class="p">]</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s2">"n_samples"</span><span class="p">]</span>
-            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
-                <span class="s2">"n_samples is being deprecated and replaced with nt_samples "</span>
-                <span class="s2">"to avoid argument naming conflicts in the attribute method. "</span>
-                <span class="s2">"Please, update the parameter name to nt_samples. Support for "</span>
-                <span class="s2">"n_samples will be removed in Captum 0.4.0."</span><span class="p">,</span>
-                <span class="ne">DeprecationWarning</span><span class="p">,</span>
-            <span class="p">)</span>
-            <span class="k">del</span> <span class="n">kwargs</span><span class="p">[</span><span class="s2">"n_samples"</span><span class="p">]</span>
-        <span class="k">return</span> <span class="n">func</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-
-    <span class="k">return</span> <span class="n">wrapper</span>
-
-
-<span class="k">def</span> <span class="nf">lime_n_perturb_samples_deprecation_decorator</span><span class="p">(</span><span class="n">func</span><span class="p">:</span> <span class="n">Callable</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">:</span>
-    <span class="sa">r</span><span class="sd">"""</span>
-<span class="sd">    Decorator to depricate n_perturb_samples parameter for Lime's and KernelSHAP's</span>
-<span class="sd">    attribute method.</span>
-<span class="sd">    """</span>
-
-    <span class="nd">@functools</span><span class="o">.</span><span class="n">wraps</span><span class="p">(</span><span class="n">func</span><span class="p">)</span>
-    <span class="k">def</span> <span class="nf">wrapper</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">):</span>
-        <span class="k">if</span> <span class="s2">"n_perturb_samples"</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
-            <span class="n">kwargs</span><span class="p">[</span><span class="s2">"n_samples"</span><span class="p">]</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s2">"n_perturb_samples"</span><span class="p">]</span>
-            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
-                <span class="s2">"n_perturb_samples is being deprecated and replaced with n_samples "</span>
-                <span class="s2">"to avoid argument naming conflics in the attribute method. "</span>
-                <span class="s2">"Please, update the parameter name to n_samples. Support for "</span>
-                <span class="s2">"n_perturb_samples will be removed in Captum 0.4.0."</span><span class="p">,</span>
-                <span class="ne">DeprecationWarning</span><span class="p">,</span>
-            <span class="p">)</span>
-            <span class="k">del</span> <span class="n">kwargs</span><span class="p">[</span><span class="s2">"n_perturb_samples"</span><span class="p">]</span>
-        <span class="k">return</span> <span class="n">func</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-
-    <span class="k">return</span> <span class="n">wrapper</span>
 </pre></div>
 </div>
 </div>
@@ -474,6 +409,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../../layer.html">Layer Attribution</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../neuron.html">Neuron Attribution</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../metrics.html">Metrics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../robust.html">Robustness</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../utilities.html">Utilities</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../base_classes.html">Base Classes</a></li>
 </ul>

@@ -1,0 +1,296 @@
+<!DOCTYPE html><html lang="en"><head><meta charSet="utf-8"/><meta http-equiv="X-UA-Compatible" content="IE=edge"/><title>Captum · Model Interpretability for PyTorch</title><meta name="viewport" content="width=device-width"/><meta name="generator" content="Docusaurus"/><meta name="description" content="Model Interpretability for PyTorch"/><meta name="docsearch:language" content="en"/><meta property="og:title" content="Captum · Model Interpretability for PyTorch"/><meta property="og:type" content="website"/><meta property="og:url" content="https://captum.ai/"/><meta property="og:description" content="Model Interpretability for PyTorch"/><meta property="og:image" content="https://captum.ai/img/captum-icon.png"/><meta name="twitter:card" content="summary"/><meta name="twitter:image" content="https://captum.ai/img/captum.png"/><link rel="shortcut icon" href="/img/captum.ico"/><link rel="stylesheet" href="https://cdn.jsdelivr.net/docsearch.js/1/docsearch.min.css"/><link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/default.min.css"/><script>
+              (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+              (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+              m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+              })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+              ga('create', 'UA-44373548-48', 'auto');
+              ga('send', 'pageview');
+            </script><link rel="stylesheet" href="/css/code_block_buttons.css"/><script type="text/javascript" src="https://buttons.github.io/buttons.js"></script><script type="text/javascript" src="/js/code_block_buttons.js"></script><script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.0/clipboard.min.js"></script><script type="text/javascript" src="/js/mathjax.js"></script><script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS_HTML"></script><script src="https://unpkg.com/vanilla-back-to-top@7.1.14/dist/vanilla-back-to-top.min.js"></script><script>
+        document.addEventListener('DOMContentLoaded', function() {
+          addBackToTop(
+            {"zIndex":100}
+          )
+        });
+        </script><script src="/js/scrollSpy.js"></script><link rel="stylesheet" href="/css/main.css"/><script src="/js/codetabs.js"></script></head><body><div class="fixedHeaderContainer"><div class="headerWrapper wrapper"><header><a href="/"><img class="logo" src="/img/captum_logo.svg" alt="Captum"/></a><div class="navigationWrapper navigationSlider"><nav class="slidingNav"><ul class="nav-site nav-site-internal"><li class=""><a href="/docs/introduction" target="_self">Docs</a></li><li class=""><a href="/tutorials/" target="_self">Tutorials</a></li><li class=""><a href="/api/" target="_self">API Reference</a></li><li class=""><a href="https://github.com/pytorch/captum" target="_self">GitHub</a></li><li class="navSearchWrapper reactNavSearchWrapper"><input type="text" id="search_input_react" placeholder="Search" title="Search"/></li></ul></nav></div></header></div></div><div class="navPusher"><div>
+<script type="text/javascript" id="documentation_options" data-url_root="./"
+  src="/js/documentation_options.js"></script>
+<script type="text/javascript" src="/js/jquery.js"></script>
+<script type="text/javascript" src="/js/underscore.js"></script>
+<script type="text/javascript" src="/js/doctools.js"></script>
+<script type="text/javascript" src="/js/language_data.js"></script>
+<script type="text/javascript" src="/js/searchtools.js"></script>
+<div class="sphinx"><div class="document">
+<div class="documentwrapper">
+<div class="bodywrapper">
+<div class="body" role="main">
+<h1>Source code for captum.robust._core.pgd</h1><div class="highlight"><pre>
+<span></span><span class="ch">#!/usr/bin/env python3</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Callable</span>
+
+<span class="kn">import</span> <span class="nn">torch</span>
+<span class="kn">import</span> <span class="nn">torch.nn.functional</span> <span class="k">as</span> <span class="nn">F</span>
+<span class="kn">from</span> <span class="nn">torch</span> <span class="kn">import</span> <span class="n">Tensor</span>
+
+<span class="kn">from</span> <span class="nn">captum._utils.common</span> <span class="kn">import</span> <span class="n">_format_input</span><span class="p">,</span> <span class="n">_format_output</span><span class="p">,</span> <span class="n">_is_tuple</span>
+<span class="kn">from</span> <span class="nn">captum._utils.typing</span> <span class="kn">import</span> <span class="n">TensorOrTupleOfTensorsGeneric</span>
+<span class="kn">from</span> <span class="nn">captum.robust._core.fgsm</span> <span class="kn">import</span> <span class="n">FGSM</span>
+<span class="kn">from</span> <span class="nn">captum.robust._core.perturbation</span> <span class="kn">import</span> <span class="n">Perturbation</span>
+
+
+<div class="viewcode-block" id="PGD"><a class="viewcode-back" href="../../../../robust.html#captum.robust.PGD">[docs]</a><span class="k">class</span> <span class="nc">PGD</span><span class="p">(</span><span class="n">Perturbation</span><span class="p">):</span>
+    <span class="sa">r</span><span class="sd">"""</span>
+<span class="sd">    Projected Gradient Descent is an iterative version of the one-step attack</span>
+<span class="sd">    FGSM that can generate adversarial examples. It takes multiple gradient</span>
+<span class="sd">    steps to search for an adversarial perturbation within the desired</span>
+<span class="sd">    neighbor ball around the original inputs. In a non-targeted attack, the</span>
+<span class="sd">    formulation is:</span>
+<span class="sd">        x_0 = x</span>
+<span class="sd">        x_(t+1) = Clip_r(x_t + alpha * sign(gradient of L(theta, x, t)))</span>
+<span class="sd">    where Clip denotes the function that projects its argument to the r-neighbor</span>
+<span class="sd">    ball around x so that the perturbation will be bounded. Alpha is the step</span>
+<span class="sd">    size. L(theta, x, y) is the model's loss function with respect to model</span>
+<span class="sd">    parameters, inputs and targets.</span>
+<span class="sd">    In a targeted attack, the formulation is similar:</span>
+<span class="sd">        x_0 = x</span>
+<span class="sd">        x_(t+1) = Clip_r(x_t - alpha * sign(gradient of L(theta, x, t)))</span>
+
+<span class="sd">    More details on Projected Gradient Descent can be found in the original</span>
+<span class="sd">    paper:</span>
+<span class="sd">    https://arxiv.org/pdf/1706.06083.pdf</span>
+<span class="sd">    """</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">forward_func</span><span class="p">:</span> <span class="n">Callable</span><span class="p">,</span>
+        <span class="n">loss_func</span><span class="p">:</span> <span class="n">Callable</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">lower_bound</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="s2">"-inf"</span><span class="p">),</span>
+        <span class="n">upper_bound</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="s2">"inf"</span><span class="p">),</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="sa">r</span><span class="sd">"""</span>
+<span class="sd">        Args:</span>
+<span class="sd">            forward_func (callable): The pytorch model for which the attack is</span>
+<span class="sd">                        computed.</span>
+<span class="sd">            loss_func (callable, optional): Loss function of which the gradient</span>
+<span class="sd">                        computed. The loss function should take in outputs of the</span>
+<span class="sd">                        model and labels, and return the loss for each input tensor.</span>
+<span class="sd">                        The default loss function is negative log.</span>
+<span class="sd">            lower_bound (float, optional): Lower bound of input values.</span>
+<span class="sd">            upper_bound (float, optional): Upper bound of input values.</span>
+<span class="sd">                        e.g. image pixels must be in the range 0-255</span>
+
+<span class="sd">        Attributes:</span>
+<span class="sd">            bound (Callable): A function that bounds the input values based on</span>
+<span class="sd">                        given lower_bound and upper_bound. Can be overwritten for</span>
+<span class="sd">                        custom use cases if necessary.</span>
+<span class="sd">        """</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">forward_func</span> <span class="o">=</span> <span class="n">forward_func</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fgsm</span> <span class="o">=</span> <span class="n">FGSM</span><span class="p">(</span><span class="n">forward_func</span><span class="p">,</span> <span class="n">loss_func</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bound</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">clamp</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="nb">min</span><span class="o">=</span><span class="n">lower_bound</span><span class="p">,</span> <span class="nb">max</span><span class="o">=</span><span class="n">upper_bound</span><span class="p">)</span>
+
+<div class="viewcode-block" id="PGD.perturb"><a class="viewcode-back" href="../../../../robust.html#captum.robust.PGD.perturb">[docs]</a>    <span class="k">def</span> <span class="nf">perturb</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">inputs</span><span class="p">:</span> <span class="n">TensorOrTupleOfTensorsGeneric</span><span class="p">,</span>
+        <span class="n">radius</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+        <span class="n">step_size</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+        <span class="n">step_num</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">target</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+        <span class="n">additional_forward_args</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">targeted</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="n">random_start</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="n">norm</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"Linf"</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TensorOrTupleOfTensorsGeneric</span><span class="p">:</span>
+        <span class="sa">r</span><span class="sd">"""</span>
+<span class="sd">        This method computes and returns the perturbed input for each input tensor.</span>
+<span class="sd">        It supports both targeted and non-targeted attacks.</span>
+
+<span class="sd">        Args:</span>
+
+<span class="sd">            inputs (tensor or tuple of tensors): Input for which adversarial</span>
+<span class="sd">                        attack is computed. It can be provided as a single</span>
+<span class="sd">                        tensor or a tuple of multiple tensors. If multiple</span>
+<span class="sd">                        input tensors are provided, the batch sizes must be</span>
+<span class="sd">                        aligned accross all tensors.</span>
+<span class="sd">            radius (float): Radius of the neighbor ball centered around inputs.</span>
+<span class="sd">                        The perturbation should be within this range.</span>
+<span class="sd">            step_size (float): Step size of each gradient step.</span>
+<span class="sd">            step_num (int): Step numbers. It usually guarantees that the perturbation</span>
+<span class="sd">                        can reach the border.</span>
+<span class="sd">            target (any): True labels of inputs if non-targeted attack is</span>
+<span class="sd">                        desired. Target class of inputs if targeted attack</span>
+<span class="sd">                        is desired. Target will be passed to the loss function</span>
+<span class="sd">                        to compute loss, so the type needs to match the</span>
+<span class="sd">                        argument type of the loss function.</span>
+
+<span class="sd">                        If using the default negative log as loss function,</span>
+<span class="sd">                        labels should be of type int, tuple, tensor or list.</span>
+<span class="sd">                        For general 2D outputs, labels can be either:</span>
+
+<span class="sd">                        - a single integer or a tensor containing a single</span>
+<span class="sd">                          integer, which is applied to all input examples</span>
+
+<span class="sd">                        - a list of integers or a 1D tensor, with length matching</span>
+<span class="sd">                          the number of examples in inputs (dim 0). Each integer</span>
+<span class="sd">                          is applied as the label for the corresponding example.</span>
+
+<span class="sd">                        For outputs with &gt; 2 dimensions, labels can be either:</span>
+
+<span class="sd">                        - A single tuple, which contains #output_dims - 1</span>
+<span class="sd">                          elements. This label index is applied to all examples.</span>
+
+<span class="sd">                        - A list of tuples with length equal to the number of</span>
+<span class="sd">                          examples in inputs (dim 0), and each tuple containing</span>
+<span class="sd">                          #output_dims - 1 elements. Each tuple is applied as the</span>
+<span class="sd">                          label for the corresponding example.</span>
+<span class="sd">            additional_forward_args (any, optional): If the forward function</span>
+<span class="sd">                        requires additional arguments other than the inputs for</span>
+<span class="sd">                        which attributions should not be computed, this argument</span>
+<span class="sd">                        can be provided. These arguments are provided to</span>
+<span class="sd">                        forward_func in order following the arguments in inputs.</span>
+<span class="sd">                        Default: None.</span>
+<span class="sd">            targeted (bool, optional): If attack should be targeted.</span>
+<span class="sd">                        Default: False.</span>
+<span class="sd">            random_start (bool, optional): If a random initialization is added to</span>
+<span class="sd">                        inputs. Default: False.</span>
+<span class="sd">            norm (str, optional): Specifies the norm to calculate distance from</span>
+<span class="sd">                        original inputs: 'Linf'|'L2'.</span>
+<span class="sd">                        Default: 'Linf'.</span>
+
+<span class="sd">        Returns:</span>
+
+<span class="sd">            - **perturbed inputs** (*tensor* or tuple of *tensors*):</span>
+<span class="sd">                        Perturbed input for each</span>
+<span class="sd">                        input tensor. The perturbed inputs have the same shape and</span>
+<span class="sd">                        dimensionality as the inputs.</span>
+<span class="sd">                        If a single tensor is provided as inputs, a single tensor</span>
+<span class="sd">                        is returned. If a tuple is provided for inputs, a tuple of</span>
+<span class="sd">                        corresponding sized tensors is returned.</span>
+<span class="sd">        """</span>
+
+        <span class="k">def</span> <span class="nf">_clip</span><span class="p">(</span><span class="n">inputs</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">,</span> <span class="n">outputs</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tensor</span><span class="p">:</span>
+            <span class="n">diff</span> <span class="o">=</span> <span class="n">outputs</span> <span class="o">-</span> <span class="n">inputs</span>
+            <span class="k">if</span> <span class="n">norm</span> <span class="o">==</span> <span class="s2">"Linf"</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">inputs</span> <span class="o">+</span> <span class="n">torch</span><span class="o">.</span><span class="n">clamp</span><span class="p">(</span><span class="n">diff</span><span class="p">,</span> <span class="o">-</span><span class="n">radius</span><span class="p">,</span> <span class="n">radius</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">norm</span> <span class="o">==</span> <span class="s2">"L2"</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">inputs</span> <span class="o">+</span> <span class="n">torch</span><span class="o">.</span><span class="n">renorm</span><span class="p">(</span><span class="n">diff</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">radius</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">AssertionError</span><span class="p">(</span><span class="s2">"Norm constraint must be L2 or Linf."</span><span class="p">)</span>
+
+        <span class="n">is_inputs_tuple</span> <span class="o">=</span> <span class="n">_is_tuple</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span>
+        <span class="n">formatted_inputs</span> <span class="o">=</span> <span class="n">_format_input</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span>
+        <span class="n">perturbed_inputs</span> <span class="o">=</span> <span class="n">formatted_inputs</span>
+        <span class="k">if</span> <span class="n">random_start</span><span class="p">:</span>
+            <span class="n">perturbed_inputs</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">bound</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_random_point</span><span class="p">(</span><span class="n">formatted_inputs</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">radius</span><span class="p">,</span> <span class="n">norm</span><span class="p">))</span>
+                <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">formatted_inputs</span><span class="p">))</span>
+            <span class="p">)</span>
+        <span class="k">for</span> <span class="n">_i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">step_num</span><span class="p">):</span>
+            <span class="n">perturbed_inputs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fgsm</span><span class="o">.</span><span class="n">perturb</span><span class="p">(</span>
+                <span class="n">perturbed_inputs</span><span class="p">,</span> <span class="n">step_size</span><span class="p">,</span> <span class="n">target</span><span class="p">,</span> <span class="n">additional_forward_args</span><span class="p">,</span> <span class="n">targeted</span>
+            <span class="p">)</span>
+            <span class="n">perturbed_inputs</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span>
+                <span class="n">_clip</span><span class="p">(</span><span class="n">formatted_inputs</span><span class="p">[</span><span class="n">j</span><span class="p">],</span> <span class="n">perturbed_inputs</span><span class="p">[</span><span class="n">j</span><span class="p">])</span>
+                <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">perturbed_inputs</span><span class="p">))</span>
+            <span class="p">)</span>
+            <span class="c1"># Detaching inputs to avoid dependency of gradient between steps</span>
+            <span class="n">perturbed_inputs</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">bound</span><span class="p">(</span><span class="n">perturbed_inputs</span><span class="p">[</span><span class="n">j</span><span class="p">])</span><span class="o">.</span><span class="n">detach</span><span class="p">()</span>
+                <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">perturbed_inputs</span><span class="p">))</span>
+            <span class="p">)</span>
+        <span class="k">return</span> <span class="n">_format_output</span><span class="p">(</span><span class="n">is_inputs_tuple</span><span class="p">,</span> <span class="n">perturbed_inputs</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="nf">_random_point</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">center</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">,</span> <span class="n">radius</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">norm</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tensor</span><span class="p">:</span>
+        <span class="sa">r</span><span class="sd">"""</span>
+<span class="sd">        A helper function that returns a uniform random point within the ball</span>
+<span class="sd">        with the given center and radius. Norm should be either L2 or Linf.</span>
+<span class="sd">        """</span>
+        <span class="k">if</span> <span class="n">norm</span> <span class="o">==</span> <span class="s2">"L2"</span><span class="p">:</span>
+            <span class="n">u</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">randn_like</span><span class="p">(</span><span class="n">center</span><span class="p">)</span>
+            <span class="n">unit_u</span> <span class="o">=</span> <span class="n">F</span><span class="o">.</span><span class="n">normalize</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="mi">0</span><span class="p">),</span> <span class="o">-</span><span class="mi">1</span><span class="p">))</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">size</span><span class="p">())</span>
+            <span class="n">d</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">numel</span><span class="p">(</span><span class="n">center</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+            <span class="n">r</span> <span class="o">=</span> <span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="mi">0</span><span class="p">))</span> <span class="o">**</span> <span class="p">(</span><span class="mf">1.0</span> <span class="o">/</span> <span class="n">d</span><span class="p">))</span> <span class="o">*</span> <span class="n">radius</span>
+            <span class="n">r</span> <span class="o">=</span> <span class="n">r</span><span class="p">[(</span><span class="o">...</span><span class="p">,)</span> <span class="o">+</span> <span class="p">(</span><span class="kc">None</span><span class="p">,)</span> <span class="o">*</span> <span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">dim</span><span class="p">()</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)]</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="n">r</span> <span class="o">*</span> <span class="n">unit_u</span>
+            <span class="k">return</span> <span class="n">center</span> <span class="o">+</span> <span class="n">x</span>
+        <span class="k">elif</span> <span class="n">norm</span> <span class="o">==</span> <span class="s2">"Linf"</span><span class="p">:</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">rand_like</span><span class="p">(</span><span class="n">center</span><span class="p">)</span> <span class="o">*</span> <span class="n">radius</span> <span class="o">*</span> <span class="mi">2</span> <span class="o">-</span> <span class="n">radius</span>
+            <span class="k">return</span> <span class="n">center</span> <span class="o">+</span> <span class="n">x</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">AssertionError</span><span class="p">(</span><span class="s2">"Norm constraint must be L2 or Linf."</span><span class="p">)</span></div>
+</pre></div>
+</div>
+</div>
+</div>
+<div aria-label="main navigation" class="sphinxsidebar" role="navigation">
+<div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../../index.html">Captum</a></h1>
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../attribution.html">Attribution</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../noise_tunnel.html">NoiseTunnel</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../layer.html">Layer Attribution</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../neuron.html">Neuron Attribution</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../metrics.html">Metrics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../robust.html">Robustness</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../utilities.html">Utilities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../base_classes.html">Base Classes</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Insights API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../insights.html">Insights</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../insights.html#features">Features</a></li>
+</ul>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+<li><a href="../../../../index.html">Documentation overview</a><ul>
+<li><a href="../../../index.html">Module code</a><ul>
+</ul></li>
+</ul></li>
+</ul>
+</div>
+<div id="searchbox" role="search" style="display: none">
+<h3 id="searchlabel">Quick search</h3>
+<div class="searchformwrapper">
+<form action="../../../../search.html" class="search" method="get">
+<input aria-labelledby="searchlabel" name="q" type="text"/>
+<input type="submit" value="Go"/>
+</form>
+</div>
+</div>
+<script>$('#searchbox').show(0);</script>
+</div>
+</div>
+<div class="clearer"></div>
+</div></div></div><footer class="nav-footer" id="footer"><section class="sitemap"><div class="footerSection"><h5>Docs</h5><a href="/docs/introduction">Introduction</a><a href="/docs/getting_started">Getting Started</a><a href="/tutorials/">Tutorials</a><a href="/api/">API Reference</a></div><div class="footerSection"><h5>Social</h5><div class="social"><a class="github-button" href="https://github.com/pytorch/captum" data-count-href="https://github.com/pytorch/captum/stargazers" data-show-count="true" data-count-aria-label="# stargazers on GitHub" aria-label="Star Captum on GitHub">captum</a></div></div></section><a href="https://opensource.facebook.com/" target="_blank" rel="noreferrer noopener" class="fbOpenSource"><img src="/img/oss_logo.png" alt="Facebook Open Source" width="170" height="45"/></a><section class="copyright"> Copyright © 2021 Facebook Inc.</section><script>
+            (function() {
+              var BAD_BASE = '/captum/';
+              if (window.location.origin !== 'https://captum.ai') {
+                var pathname = window.location.pathname;
+                var newPathname = pathname.slice(pathname.indexOf(BAD_BASE) === 0 ? BAD_BASE.length : 1);
+                var newLocation = 'https://captum.ai/' + newPathname;
+                console.log('redirecting to ' + newLocation);
+                window.location.href = newLocation;
+              }
+            })();
+          </script></footer></div><script type="text/javascript" src="https://cdn.jsdelivr.net/docsearch.js/1/docsearch.min.js"></script><script>
+                document.addEventListener('keyup', function(e) {
+                  if (e.target !== document.body) {
+                    return;
+                  }
+                  // keyCode for '/' (slash)
+                  if (e.keyCode === 191) {
+                    const search = document.getElementById('search_input_react');
+                    search && search.focus();
+                  }
+                });
+              </script><script>
+              var search = docsearch({
+                
+                apiKey: '207c27d819f967749142d8611de7cb19',
+                indexName: 'captum',
+                inputSelector: '#search_input_react'
+              });
+            </script></body></html>

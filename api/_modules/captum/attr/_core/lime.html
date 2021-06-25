@@ -61,7 +61,6 @@
 <span class="kn">from</span> <span class="nn">captum.attr._utils.common</span> <span class="kn">import</span> <span class="p">(</span>
     <span class="n">_construct_default_feature_mask</span><span class="p">,</span>
     <span class="n">_format_input_baseline</span><span class="p">,</span>
-    <span class="n">lime_n_perturb_samples_deprecation_decorator</span><span class="p">,</span>
 <span class="p">)</span>
 <span class="kn">from</span> <span class="nn">captum.log</span> <span class="kn">import</span> <span class="n">log_usage</span>
 
@@ -264,7 +263,6 @@
             <span class="p">),</span> <span class="s2">"Must provide transform from original input space to interpretable space"</span>
 
 <div class="viewcode-block" id="LimeBase.attribute"><a class="viewcode-back" href="../../../../lime.html#captum.attr.LimeBase.attribute">[docs]</a>    <span class="nd">@log_usage</span><span class="p">()</span>
-    <span class="nd">@lime_n_perturb_samples_deprecation_decorator</span>
     <span class="k">def</span> <span class="nf">attribute</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">inputs</span><span class="p">:</span> <span class="n">TensorOrTupleOfTensorsGeneric</span><span class="p">,</span>
@@ -754,7 +752,7 @@
 <span class="sd">            interpretable_model (optional, Model): Model object to train</span>
 <span class="sd">                    interpretable model.</span>
 
-<span class="sd">                    This argument is optional and defaults to SkLearnLasso(alpha=1.0),</span>
+<span class="sd">                    This argument is optional and defaults to SkLearnLasso(alpha=0.01),</span>
 <span class="sd">                    which is a wrapper around the Lasso linear model in SkLearn.</span>
 <span class="sd">                    This requires having sklearn version &gt;= 0.23 available.</span>
 
@@ -832,7 +830,7 @@
 
 <span class="sd">        """</span>
         <span class="k">if</span> <span class="n">interpretable_model</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">interpretable_model</span> <span class="o">=</span> <span class="n">SkLearnLasso</span><span class="p">(</span><span class="n">alpha</span><span class="o">=</span><span class="mf">1.0</span><span class="p">)</span>
+            <span class="n">interpretable_model</span> <span class="o">=</span> <span class="n">SkLearnLasso</span><span class="p">(</span><span class="n">alpha</span><span class="o">=</span><span class="mf">0.01</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="n">similarity_func</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">similarity_func</span> <span class="o">=</span> <span class="n">get_exp_kernel_similarity_function</span><span class="p">()</span>
@@ -852,7 +850,6 @@
         <span class="p">)</span>
 
 <div class="viewcode-block" id="Lime.attribute"><a class="viewcode-back" href="../../../../lime.html#captum.attr.Lime.attribute">[docs]</a>    <span class="nd">@log_usage</span><span class="p">()</span>
-    <span class="nd">@lime_n_perturb_samples_deprecation_decorator</span>
     <span class="k">def</span> <span class="nf">attribute</span><span class="p">(</span>  <span class="c1"># type: ignore</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">inputs</span><span class="p">:</span> <span class="n">TensorOrTupleOfTensorsGeneric</span><span class="p">,</span>
@@ -1273,6 +1270,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../../layer.html">Layer Attribution</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../neuron.html">Neuron Attribution</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../metrics.html">Metrics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../robust.html">Robustness</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../utilities.html">Utilities</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../base_classes.html">Base Classes</a></li>
 </ul>
