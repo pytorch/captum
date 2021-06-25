@@ -7,5 +7,6 @@ set -e
 mypy -p captum.attr --ignore-missing-imports --allow-redefinition
 mypy -p captum.insights --ignore-missing-imports --allow-redefinition
 mypy -p captum.metrics --ignore-missing-imports --allow-redefinition
+mypy -p captum.robust --ignore-missing-imports --allow-redefinition
 mypy -p tests --ignore-missing-imports --allow-redefinition
 mypy -p captum._utils --ignore-missing-imports --allow-redefinition
