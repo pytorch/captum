@@ -17,3 +17,4 @@ Attribution
     shapley_value_sampling
     lime
     kernel_shap
+    lrp
