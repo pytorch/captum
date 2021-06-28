@@ -1,0 +1,515 @@
+<!DOCTYPE html><html lang="en"><head><meta charSet="utf-8"/><meta http-equiv="X-UA-Compatible" content="IE=edge"/><title>Captum · Model Interpretability for PyTorch</title><meta name="viewport" content="width=device-width"/><meta name="generator" content="Docusaurus"/><meta name="description" content="Model Interpretability for PyTorch"/><meta name="docsearch:language" content="en"/><meta property="og:title" content="Captum · Model Interpretability for PyTorch"/><meta property="og:type" content="website"/><meta property="og:url" content="https://captum.ai/"/><meta property="og:description" content="Model Interpretability for PyTorch"/><meta property="og:image" content="https://captum.ai/img/captum-icon.png"/><meta name="twitter:card" content="summary"/><meta name="twitter:image" content="https://captum.ai/img/captum.png"/><link rel="shortcut icon" href="/img/captum.ico"/><link rel="stylesheet" href="https://cdn.jsdelivr.net/docsearch.js/1/docsearch.min.css"/><link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/default.min.css"/><script>
+              (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+              (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+              m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+              })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+              ga('create', 'UA-44373548-48', 'auto');
+              ga('send', 'pageview');
+            </script><link rel="stylesheet" href="/css/code_block_buttons.css"/><script type="text/javascript" src="https://buttons.github.io/buttons.js"></script><script type="text/javascript" src="/js/code_block_buttons.js"></script><script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.0/clipboard.min.js"></script><script type="text/javascript" src="/js/mathjax.js"></script><script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS_HTML"></script><script src="https://unpkg.com/vanilla-back-to-top@7.1.14/dist/vanilla-back-to-top.min.js"></script><script>
+        document.addEventListener('DOMContentLoaded', function() {
+          addBackToTop(
+            {"zIndex":100}
+          )
+        });
+        </script><script src="/js/scrollSpy.js"></script><link rel="stylesheet" href="/css/main.css"/><script src="/js/codetabs.js"></script></head><body><div class="fixedHeaderContainer"><div class="headerWrapper wrapper"><header><a href="/"><img class="logo" src="/img/captum_logo.svg" alt="Captum"/></a><div class="navigationWrapper navigationSlider"><nav class="slidingNav"><ul class="nav-site nav-site-internal"><li class=""><a href="/docs/introduction" target="_self">Docs</a></li><li class=""><a href="/tutorials/" target="_self">Tutorials</a></li><li class=""><a href="/api/" target="_self">API Reference</a></li><li class=""><a href="https://github.com/pytorch/captum" target="_self">GitHub</a></li><li class="navSearchWrapper reactNavSearchWrapper"><input type="text" id="search_input_react" placeholder="Search" title="Search"/></li></ul></nav></div></header></div></div><div class="navPusher"><div>
+<script type="text/javascript" id="documentation_options" data-url_root="./"
+  src="/js/documentation_options.js"></script>
+<script type="text/javascript" src="/js/jquery.js"></script>
+<script type="text/javascript" src="/js/underscore.js"></script>
+<script type="text/javascript" src="/js/doctools.js"></script>
+<script type="text/javascript" src="/js/language_data.js"></script>
+<script type="text/javascript" src="/js/searchtools.js"></script>
+<div class="sphinx"><div class="document">
+<div class="documentwrapper">
+<div class="bodywrapper">
+<div class="body" role="main">
+<h1>Source code for captum.attr._core.lrp</h1><div class="highlight"><pre>
+<span></span><span class="ch">#!/usr/bin/env python3</span>
+
+<span class="kn">import</span> <span class="nn">typing</span>
+<span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">defaultdict</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Union</span><span class="p">,</span> <span class="n">cast</span>
+
+<span class="kn">import</span> <span class="nn">torch.nn</span> <span class="k">as</span> <span class="nn">nn</span>
+<span class="kn">from</span> <span class="nn">torch</span> <span class="kn">import</span> <span class="n">Tensor</span>
+<span class="kn">from</span> <span class="nn">torch.nn</span> <span class="kn">import</span> <span class="n">Module</span>
+<span class="kn">from</span> <span class="nn">torch.utils.hooks</span> <span class="kn">import</span> <span class="n">RemovableHandle</span>
+
+<span class="kn">from</span> <span class="nn">captum._utils.common</span> <span class="kn">import</span> <span class="n">_format_input</span><span class="p">,</span> <span class="n">_format_output</span><span class="p">,</span> <span class="n">_is_tuple</span><span class="p">,</span> <span class="n">_run_forward</span>
+<span class="kn">from</span> <span class="nn">captum._utils.gradient</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">apply_gradient_requirements</span><span class="p">,</span>
+    <span class="n">undo_gradient_requirements</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span> <span class="nn">captum._utils.typing</span> <span class="kn">import</span> <span class="n">Literal</span><span class="p">,</span> <span class="n">TargetType</span><span class="p">,</span> <span class="n">TensorOrTupleOfTensorsGeneric</span>
+<span class="kn">from</span> <span class="nn">captum.attr._utils.attribution</span> <span class="kn">import</span> <span class="n">GradientAttribution</span>
+<span class="kn">from</span> <span class="nn">captum.attr._utils.common</span> <span class="kn">import</span> <span class="n">_sum_rows</span>
+<span class="kn">from</span> <span class="nn">captum.attr._utils.custom_modules</span> <span class="kn">import</span> <span class="n">Addition_Module</span>
+<span class="kn">from</span> <span class="nn">captum.attr._utils.lrp_rules</span> <span class="kn">import</span> <span class="n">EpsilonRule</span><span class="p">,</span> <span class="n">PropagationRule</span>
+<span class="kn">from</span> <span class="nn">captum.log</span> <span class="kn">import</span> <span class="n">log_usage</span>
+
+
+<div class="viewcode-block" id="LRP"><a class="viewcode-back" href="../../../../lrp.html#captum.attr.LRP">[docs]</a><span class="k">class</span> <span class="nc">LRP</span><span class="p">(</span><span class="n">GradientAttribution</span><span class="p">):</span>
+    <span class="sa">r</span><span class="sd">"""</span>
+<span class="sd">    Layer-wise relevance propagation is based on a backward propagation</span>
+<span class="sd">    mechanism applied sequentially to all layers of the model. Here, the</span>
+<span class="sd">    model output score represents the initial relevance which is decomposed</span>
+<span class="sd">    into values for each neuron of the underlying layers. The decomposition</span>
+<span class="sd">    is defined by rules that are chosen for each layer, involving its weights</span>
+<span class="sd">    and activations. Details on the model can be found in the original paper</span>
+<span class="sd">    [https://doi.org/10.1371/journal.pone.0130140]. The implementation is</span>
+<span class="sd">    inspired by the tutorial of the same group</span>
+<span class="sd">    [https://doi.org/10.1016/j.dsp.2017.10.011] and the publication by</span>
+<span class="sd">    Ancona et al. [https://openreview.net/forum?id=Sy21R9JAW].</span>
+<span class="sd">    """</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model</span><span class="p">:</span> <span class="n">Module</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="sa">r</span><span class="sd">"""</span>
+<span class="sd">        Args:</span>
+
+<span class="sd">            model (module): The forward function of the model or any modification of</span>
+<span class="sd">                it. Custom rules for a given layer need to be defined as attribute</span>
+<span class="sd">                `module.rule` and need to be of type PropagationRule. If no rule is</span>
+<span class="sd">                specified for a layer, a pre-defined default rule for the module type</span>
+<span class="sd">                is used.</span>
+<span class="sd">        """</span>
+        <span class="n">GradientAttribution</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">model</span> <span class="o">=</span> <span class="n">model</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_check_rules</span><span class="p">()</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">multiplies_by_inputs</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">True</span>
+
+    <span class="nd">@typing</span><span class="o">.</span><span class="n">overload</span>
+    <span class="k">def</span> <span class="nf">attribute</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">inputs</span><span class="p">:</span> <span class="n">TensorOrTupleOfTensorsGeneric</span><span class="p">,</span>
+        <span class="n">target</span><span class="p">:</span> <span class="n">TargetType</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">additional_forward_args</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">return_convergence_delta</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="kc">False</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="n">verbose</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TensorOrTupleOfTensorsGeneric</span><span class="p">:</span>
+        <span class="o">...</span>
+
+    <span class="nd">@typing</span><span class="o">.</span><span class="n">overload</span>
+    <span class="k">def</span> <span class="nf">attribute</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">inputs</span><span class="p">:</span> <span class="n">TensorOrTupleOfTensorsGeneric</span><span class="p">,</span>
+        <span class="n">target</span><span class="p">:</span> <span class="n">TargetType</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">additional_forward_args</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">return_convergence_delta</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="kc">True</span><span class="p">],</span>
+        <span class="n">verbose</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">TensorOrTupleOfTensorsGeneric</span><span class="p">,</span> <span class="n">Tensor</span><span class="p">]:</span>
+        <span class="o">...</span>
+
+<div class="viewcode-block" id="LRP.attribute"><a class="viewcode-back" href="../../../../lrp.html#captum.attr.LRP.attribute">[docs]</a>    <span class="nd">@log_usage</span><span class="p">()</span>
+    <span class="k">def</span> <span class="nf">attribute</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">inputs</span><span class="p">:</span> <span class="n">TensorOrTupleOfTensorsGeneric</span><span class="p">,</span>
+        <span class="n">target</span><span class="p">:</span> <span class="n">TargetType</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">additional_forward_args</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">return_convergence_delta</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="n">verbose</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span>
+        <span class="n">TensorOrTupleOfTensorsGeneric</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">TensorOrTupleOfTensorsGeneric</span><span class="p">,</span> <span class="n">Tensor</span><span class="p">]</span>
+    <span class="p">]:</span>
+        <span class="sa">r</span><span class="sd">"""</span>
+<span class="sd">        Args:</span>
+<span class="sd">            inputs (tensor or tuple of tensors):  Input for which relevance is</span>
+<span class="sd">                        propagated. If forward_func takes a single</span>
+<span class="sd">                        tensor as input, a single input tensor should be provided.</span>
+<span class="sd">                        If forward_func takes multiple tensors as input, a tuple</span>
+<span class="sd">                        of the input tensors should be provided. It is assumed</span>
+<span class="sd">                        that for all given input tensors, dimension 0 corresponds</span>
+<span class="sd">                        to the number of examples, and if multiple input tensors</span>
+<span class="sd">                        are provided, the examples must be aligned appropriately.</span>
+<span class="sd">            target (int, tuple, tensor or list, optional):  Output indices for</span>
+<span class="sd">                        which gradients are computed (for classification cases,</span>
+<span class="sd">                        this is usually the target class).</span>
+<span class="sd">                        If the network returns a scalar value per example,</span>
+<span class="sd">                        no target index is necessary.</span>
+<span class="sd">                        For general 2D outputs, targets can be either:</span>
+
+<span class="sd">                    - a single integer or a tensor containing a single</span>
+<span class="sd">                        integer, which is applied to all input examples</span>
+
+<span class="sd">                    - a list of integers or a 1D tensor, with length matching</span>
+<span class="sd">                        the number of examples in inputs (dim 0). Each integer</span>
+<span class="sd">                        is applied as the target for the corresponding example.</span>
+
+<span class="sd">                    For outputs with &gt; 2 dimensions, targets can be either:</span>
+
+<span class="sd">                    - A single tuple, which contains #output_dims - 1</span>
+<span class="sd">                        elements. This target index is applied to all examples.</span>
+
+<span class="sd">                    - A list of tuples with length equal to the number of</span>
+<span class="sd">                        examples in inputs (dim 0), and each tuple containing</span>
+<span class="sd">                        #output_dims - 1 elements. Each tuple is applied as the</span>
+<span class="sd">                        target for the corresponding example.</span>
+
+<span class="sd">                    Default: None</span>
+<span class="sd">            additional_forward_args (tuple, optional): If the forward function</span>
+<span class="sd">                    requires additional arguments other than the inputs for</span>
+<span class="sd">                    which attributions should not be computed, this argument</span>
+<span class="sd">                    can be provided. It must be either a single additional</span>
+<span class="sd">                    argument of a Tensor or arbitrary (non-tuple) type or a tuple</span>
+<span class="sd">                    containing multiple additional arguments including tensors</span>
+<span class="sd">                    or any arbitrary python types. These arguments are provided to</span>
+<span class="sd">                    forward_func in order, following the arguments in inputs.</span>
+<span class="sd">                    Note that attributions are not computed with respect</span>
+<span class="sd">                    to these arguments.</span>
+<span class="sd">                    Default: None</span>
+
+<span class="sd">            return_convergence_delta (bool, optional): Indicates whether to return</span>
+<span class="sd">                    convergence delta or not. If `return_convergence_delta`</span>
+<span class="sd">                    is set to True convergence delta will be returned in</span>
+<span class="sd">                    a tuple following attributions.</span>
+<span class="sd">                    Default: False</span>
+
+<span class="sd">            verbose (bool, optional): Indicates whether information on application</span>
+<span class="sd">                    of rules is printed during propagation.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            *tensor* or tuple of *tensors* of **attributions**</span>
+<span class="sd">            or 2-element tuple of **attributions**, **delta**::</span>
+<span class="sd">            - **attributions** (*tensor* or tuple of *tensors*):</span>
+<span class="sd">                        The propagated relevance values with respect to each</span>
+<span class="sd">                        input feature. The values are normalized by the output score</span>
+<span class="sd">                        value (sum(relevance)=1). To obtain values comparable to other</span>
+<span class="sd">                        methods or implementations these values need to be multiplied</span>
+<span class="sd">                        by the output score. Attributions will always</span>
+<span class="sd">                        be the same size as the provided inputs, with each value</span>
+<span class="sd">                        providing the attribution of the corresponding input index.</span>
+<span class="sd">                        If a single tensor is provided as inputs, a single tensor is</span>
+<span class="sd">                        returned. If a tuple is provided for inputs, a tuple of</span>
+<span class="sd">                        corresponding sized tensors is returned. The sum of attributions</span>
+<span class="sd">                        is one and not corresponding to the prediction score as in other</span>
+<span class="sd">                        implementations.</span>
+<span class="sd">            - **delta** (*tensor*, returned if return_convergence_delta=True):</span>
+<span class="sd">                        Delta is calculated per example, meaning that the number of</span>
+<span class="sd">                        elements in returned delta tensor is equal to the number of</span>
+<span class="sd">                        of examples in the inputs.</span>
+<span class="sd">        Examples::</span>
+
+<span class="sd">                &gt;&gt;&gt; # ImageClassifier takes a single input tensor of images Nx3x32x32,</span>
+<span class="sd">                &gt;&gt;&gt; # and returns an Nx10 tensor of class probabilities. It has one</span>
+<span class="sd">                &gt;&gt;&gt; # Conv2D and a ReLU layer.</span>
+<span class="sd">                &gt;&gt;&gt; net = ImageClassifier()</span>
+<span class="sd">                &gt;&gt;&gt; lrp = LRP(net)</span>
+<span class="sd">                &gt;&gt;&gt; input = torch.randn(3, 3, 32, 32)</span>
+<span class="sd">                &gt;&gt;&gt; # Attribution size matches input size: 3x3x32x32</span>
+<span class="sd">                &gt;&gt;&gt; attribution = lrp.attribute(input, target=5)</span>
+
+<span class="sd">        """</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span> <span class="o">=</span> <span class="n">verbose</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_original_state_dict</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">state_dict</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">layers</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Module</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_get_layers</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_check_and_attach_rules</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">backward_handles</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">RemovableHandle</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">forward_handles</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">RemovableHandle</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="n">is_inputs_tuple</span> <span class="o">=</span> <span class="n">_is_tuple</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span>
+        <span class="n">inputs</span> <span class="o">=</span> <span class="n">_format_input</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span>
+        <span class="n">gradient_mask</span> <span class="o">=</span> <span class="n">apply_gradient_requirements</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="c1"># 1. Forward pass: Change weights of layers according to selected rules.</span>
+            <span class="n">output</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_compute_output_and_change_weights</span><span class="p">(</span>
+                <span class="n">inputs</span><span class="p">,</span> <span class="n">target</span><span class="p">,</span> <span class="n">additional_forward_args</span>
+            <span class="p">)</span>
+            <span class="c1"># 2. Forward pass + backward pass: Register hooks to configure relevance</span>
+            <span class="c1"># propagation and execute back-propagation.</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_register_forward_hooks</span><span class="p">()</span>
+            <span class="n">normalized_relevances</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">gradient_func</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_forward_fn_wrapper</span><span class="p">,</span> <span class="n">inputs</span><span class="p">,</span> <span class="n">target</span><span class="p">,</span> <span class="n">additional_forward_args</span>
+            <span class="p">)</span>
+            <span class="n">relevances</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span>
+                <span class="n">normalized_relevance</span>
+                <span class="o">*</span> <span class="n">output</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="o">-</span><span class="mi">1</span><span class="p">,)</span> <span class="o">+</span> <span class="p">(</span><span class="mi">1</span><span class="p">,)</span> <span class="o">*</span> <span class="p">(</span><span class="n">normalized_relevance</span><span class="o">.</span><span class="n">dim</span><span class="p">()</span> <span class="o">-</span> <span class="mi">1</span><span class="p">))</span>
+                <span class="k">for</span> <span class="n">normalized_relevance</span> <span class="ow">in</span> <span class="n">normalized_relevances</span>
+            <span class="p">)</span>
+        <span class="k">finally</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_restore_model</span><span class="p">()</span>
+
+        <span class="n">undo_gradient_requirements</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">gradient_mask</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">return_convergence_delta</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">(</span>
+                <span class="n">_format_output</span><span class="p">(</span><span class="n">is_inputs_tuple</span><span class="p">,</span> <span class="n">relevances</span><span class="p">),</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">compute_convergence_delta</span><span class="p">(</span><span class="n">relevances</span><span class="p">,</span> <span class="n">output</span><span class="p">),</span>
+            <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">_format_output</span><span class="p">(</span><span class="n">is_inputs_tuple</span><span class="p">,</span> <span class="n">relevances</span><span class="p">)</span>  <span class="c1"># type: ignore</span></div>
+
+<div class="viewcode-block" id="LRP.has_convergence_delta"><a class="viewcode-back" href="../../../../lrp.html#captum.attr.LRP.has_convergence_delta">[docs]</a>    <span class="k">def</span> <span class="nf">has_convergence_delta</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">True</span></div>
+
+<div class="viewcode-block" id="LRP.compute_convergence_delta"><a class="viewcode-back" href="../../../../lrp.html#captum.attr.LRP.compute_convergence_delta">[docs]</a>    <span class="k">def</span> <span class="nf">compute_convergence_delta</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">attributions</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">]],</span> <span class="n">output</span><span class="p">:</span> <span class="n">Tensor</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tensor</span><span class="p">:</span>
+        <span class="sd">"""</span>
+<span class="sd">        Here, we use the completeness property of LRP: The relevance is conserved</span>
+<span class="sd">        during the propagation through the models' layers. Therefore, the difference</span>
+<span class="sd">        between the sum of attribution (relevance) values and model output is taken as</span>
+<span class="sd">        the convergence delta. It should be zero for functional attribution. However,</span>
+<span class="sd">        when rules with an epsilon value are used for stability reasons, relevance is</span>
+<span class="sd">        absorbed during propagation and the convergence delta is non-zero.</span>
+
+<span class="sd">        Args:</span>
+
+<span class="sd">            attributions (tensor or tuple of tensors): Attribution scores that</span>
+<span class="sd">                        are precomputed by an attribution algorithm.</span>
+<span class="sd">                        Attributions can be provided in form of a single tensor</span>
+<span class="sd">                        or a tuple of those. It is assumed that attribution</span>
+<span class="sd">                        tensor's dimension 0 corresponds to the number of</span>
+<span class="sd">                        examples, and if multiple input tensors are provided,</span>
+<span class="sd">                        the examples must be aligned appropriately.</span>
+
+<span class="sd">            output (tensor with single element): The output value with respect to which</span>
+<span class="sd">                        the attribution values are computed. This value corresponds to</span>
+<span class="sd">                        the target score of a classification model.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            *tensor*:</span>
+<span class="sd">            - **delta** Difference of relevance in output layer and input layer.</span>
+<span class="sd">        """</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">attributions</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">attr</span> <span class="ow">in</span> <span class="n">attributions</span><span class="p">:</span>
+                <span class="n">summed_attr</span> <span class="o">=</span> <span class="n">cast</span><span class="p">(</span>
+                    <span class="n">Tensor</span><span class="p">,</span> <span class="nb">sum</span><span class="p">(</span><span class="n">_sum_rows</span><span class="p">(</span><span class="n">attr</span><span class="p">)</span> <span class="k">for</span> <span class="n">attr</span> <span class="ow">in</span> <span class="n">attributions</span><span class="p">)</span>
+                <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">summed_attr</span> <span class="o">=</span> <span class="n">_sum_rows</span><span class="p">(</span><span class="n">attributions</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">output</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span> <span class="o">-</span> <span class="n">summed_attr</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span></div>
+
+    <span class="k">def</span> <span class="nf">_get_layers</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model</span><span class="p">:</span> <span class="n">Module</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">layer</span> <span class="ow">in</span> <span class="n">model</span><span class="o">.</span><span class="n">children</span><span class="p">():</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">layer</span><span class="o">.</span><span class="n">children</span><span class="p">()))</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">layer</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_get_layers</span><span class="p">(</span><span class="n">layer</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_check_and_attach_rules</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">layer</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">layers</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">layer</span><span class="p">,</span> <span class="s2">"rule"</span><span class="p">):</span>
+                <span class="n">layer</span><span class="o">.</span><span class="n">activations</span> <span class="o">=</span> <span class="p">{}</span>  <span class="c1"># type: ignore</span>
+                <span class="n">layer</span><span class="o">.</span><span class="n">rule</span><span class="o">.</span><span class="n">relevance_input</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="nb">list</span><span class="p">)</span>  <span class="c1"># type: ignore</span>
+                <span class="n">layer</span><span class="o">.</span><span class="n">rule</span><span class="o">.</span><span class="n">relevance_output</span> <span class="o">=</span> <span class="p">{}</span>  <span class="c1"># type: ignore</span>
+                <span class="k">pass</span>
+            <span class="k">elif</span> <span class="nb">type</span><span class="p">(</span><span class="n">layer</span><span class="p">)</span> <span class="ow">in</span> <span class="n">SUPPORTED_LAYERS_WITH_RULES</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                <span class="n">layer</span><span class="o">.</span><span class="n">activations</span> <span class="o">=</span> <span class="p">{}</span>  <span class="c1"># type: ignore</span>
+                <span class="n">layer</span><span class="o">.</span><span class="n">rule</span> <span class="o">=</span> <span class="n">SUPPORTED_LAYERS_WITH_RULES</span><span class="p">[</span><span class="nb">type</span><span class="p">(</span><span class="n">layer</span><span class="p">)]()</span>  <span class="c1"># type: ignore</span>
+                <span class="n">layer</span><span class="o">.</span><span class="n">rule</span><span class="o">.</span><span class="n">relevance_input</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="nb">list</span><span class="p">)</span>  <span class="c1"># type: ignore</span>
+                <span class="n">layer</span><span class="o">.</span><span class="n">rule</span><span class="o">.</span><span class="n">relevance_output</span> <span class="o">=</span> <span class="p">{}</span>  <span class="c1"># type: ignore</span>
+            <span class="k">elif</span> <span class="nb">type</span><span class="p">(</span><span class="n">layer</span><span class="p">)</span> <span class="ow">in</span> <span class="n">SUPPORTED_NON_LINEAR_LAYERS</span><span class="p">:</span>
+                <span class="n">layer</span><span class="o">.</span><span class="n">rule</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1"># type: ignore</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+                    <span class="p">(</span>
+                        <span class="sa">f</span><span class="s2">"Module type </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">layer</span><span class="p">)</span><span class="si">}</span><span class="s2"> is not supported."</span>
+                        <span class="s2">"No default rule defined."</span>
+                    <span class="p">)</span>
+                <span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_check_rules</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">module</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">modules</span><span class="p">():</span>
+            <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="s2">"rule"</span><span class="p">):</span>
+                <span class="k">if</span> <span class="p">(</span>
+                    <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">module</span><span class="o">.</span><span class="n">rule</span><span class="p">,</span> <span class="n">PropagationRule</span><span class="p">)</span>
+                    <span class="ow">and</span> <span class="n">module</span><span class="o">.</span><span class="n">rule</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+                <span class="p">):</span>
+                    <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+                        <span class="p">(</span>
+                            <span class="sa">f</span><span class="s2">"Please select propagation rules inherited from class "</span>
+                            <span class="sa">f</span><span class="s2">"PropagationRule for module: </span><span class="si">{</span><span class="n">module</span><span class="si">}</span><span class="s2">"</span>
+                        <span class="p">)</span>
+                    <span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_register_forward_hooks</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">layer</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">layers</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">layer</span><span class="p">)</span> <span class="ow">in</span> <span class="n">SUPPORTED_NON_LINEAR_LAYERS</span><span class="p">:</span>
+                <span class="n">backward_handle</span> <span class="o">=</span> <span class="n">layer</span><span class="o">.</span><span class="n">register_backward_hook</span><span class="p">(</span>
+                    <span class="n">PropagationRule</span><span class="o">.</span><span class="n">backward_hook_activation</span>
+                <span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">backward_handles</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">backward_handle</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">forward_handle</span> <span class="o">=</span> <span class="n">layer</span><span class="o">.</span><span class="n">register_forward_hook</span><span class="p">(</span>
+                    <span class="n">layer</span><span class="o">.</span><span class="n">rule</span><span class="o">.</span><span class="n">forward_hook</span>  <span class="c1"># type: ignore</span>
+                <span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">forward_handles</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">forward_handle</span><span class="p">)</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span><span class="p">:</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Applied </span><span class="si">{</span><span class="n">layer</span><span class="o">.</span><span class="n">rule</span><span class="si">}</span><span class="s2"> on layer </span><span class="si">{</span><span class="n">layer</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_register_weight_hooks</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">layer</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">layers</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">layer</span><span class="o">.</span><span class="n">rule</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">forward_handle</span> <span class="o">=</span> <span class="n">layer</span><span class="o">.</span><span class="n">register_forward_hook</span><span class="p">(</span>
+                    <span class="n">layer</span><span class="o">.</span><span class="n">rule</span><span class="o">.</span><span class="n">forward_hook_weights</span>  <span class="c1"># type: ignore</span>
+                <span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">forward_handles</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">forward_handle</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_register_pre_hooks</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">layer</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">layers</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">layer</span><span class="o">.</span><span class="n">rule</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">forward_handle</span> <span class="o">=</span> <span class="n">layer</span><span class="o">.</span><span class="n">register_forward_pre_hook</span><span class="p">(</span>
+                    <span class="n">layer</span><span class="o">.</span><span class="n">rule</span><span class="o">.</span><span class="n">forward_pre_hook_activations</span>  <span class="c1"># type: ignore</span>
+                <span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">forward_handles</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">forward_handle</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_compute_output_and_change_weights</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">inputs</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span>
+        <span class="n">target</span><span class="p">:</span> <span class="n">TargetType</span><span class="p">,</span>
+        <span class="n">additional_forward_args</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tensor</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_register_weight_hooks</span><span class="p">()</span>
+            <span class="n">output</span> <span class="o">=</span> <span class="n">_run_forward</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">,</span> <span class="n">inputs</span><span class="p">,</span> <span class="n">target</span><span class="p">,</span> <span class="n">additional_forward_args</span><span class="p">)</span>
+        <span class="k">finally</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_remove_forward_hooks</span><span class="p">()</span>
+        <span class="c1"># Register pre_hooks that pass the initial activations from before weight</span>
+        <span class="c1"># adjustments as inputs to the layers with adjusted weights. This procedure</span>
+        <span class="c1"># is important for graph generation in the 2nd forward pass.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_register_pre_hooks</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">output</span>
+
+    <span class="k">def</span> <span class="nf">_remove_forward_hooks</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">forward_handle</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">forward_handles</span><span class="p">:</span>
+            <span class="n">forward_handle</span><span class="o">.</span><span class="n">remove</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">_remove_backward_hooks</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">backward_handle</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">backward_handles</span><span class="p">:</span>
+            <span class="n">backward_handle</span><span class="o">.</span><span class="n">remove</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">layer</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">layers</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">layer</span><span class="o">.</span><span class="n">rule</span><span class="p">,</span> <span class="s2">"_handle_input_hooks"</span><span class="p">):</span>
+                <span class="k">for</span> <span class="n">handle</span> <span class="ow">in</span> <span class="n">layer</span><span class="o">.</span><span class="n">rule</span><span class="o">.</span><span class="n">_handle_input_hooks</span><span class="p">:</span>  <span class="c1"># type: ignore</span>
+                    <span class="n">handle</span><span class="o">.</span><span class="n">remove</span><span class="p">()</span>
+            <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">layer</span><span class="o">.</span><span class="n">rule</span><span class="p">,</span> <span class="s2">"_handle_output_hook"</span><span class="p">):</span>
+                <span class="n">layer</span><span class="o">.</span><span class="n">rule</span><span class="o">.</span><span class="n">_handle_output_hook</span><span class="o">.</span><span class="n">remove</span><span class="p">()</span>  <span class="c1"># type: ignore</span>
+
+    <span class="k">def</span> <span class="nf">_remove_rules</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">layer</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">layers</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">layer</span><span class="p">,</span> <span class="s2">"rule"</span><span class="p">):</span>
+                <span class="k">del</span> <span class="n">layer</span><span class="o">.</span><span class="n">rule</span>
+
+    <span class="k">def</span> <span class="nf">_clear_properties</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">layer</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">layers</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">layer</span><span class="p">,</span> <span class="s2">"activation"</span><span class="p">):</span>
+                <span class="k">del</span> <span class="n">layer</span><span class="o">.</span><span class="n">activation</span>
+
+    <span class="k">def</span> <span class="nf">_restore_state</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">load_state_dict</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_original_state_dict</span><span class="p">)</span>  <span class="c1"># type: ignore</span>
+
+    <span class="k">def</span> <span class="nf">_restore_model</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_restore_state</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_remove_backward_hooks</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_remove_forward_hooks</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_remove_rules</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_clear_properties</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">_forward_fn_wrapper</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">inputs</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tensor</span><span class="p">:</span>
+        <span class="sd">"""</span>
+<span class="sd">        Wraps a forward function with addition of zero as a workaround to</span>
+<span class="sd">        https://github.com/pytorch/pytorch/issues/35802 discussed in</span>
+<span class="sd">        https://github.com/pytorch/captum/issues/143#issuecomment-611750044</span>
+
+<span class="sd">        #TODO: Remove when bugs are fixed</span>
+<span class="sd">        """</span>
+        <span class="n">adjusted_inputs</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span>
+            <span class="nb">input</span> <span class="o">+</span> <span class="mi">0</span> <span class="k">if</span> <span class="nb">input</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="nb">input</span> <span class="k">for</span> <span class="nb">input</span> <span class="ow">in</span> <span class="n">inputs</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">(</span><span class="o">*</span><span class="n">adjusted_inputs</span><span class="p">)</span></div>
+
+
+<span class="n">SUPPORTED_LAYERS_WITH_RULES</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="n">nn</span><span class="o">.</span><span class="n">MaxPool1d</span><span class="p">:</span> <span class="n">EpsilonRule</span><span class="p">,</span>
+    <span class="n">nn</span><span class="o">.</span><span class="n">MaxPool2d</span><span class="p">:</span> <span class="n">EpsilonRule</span><span class="p">,</span>
+    <span class="n">nn</span><span class="o">.</span><span class="n">MaxPool3d</span><span class="p">:</span> <span class="n">EpsilonRule</span><span class="p">,</span>
+    <span class="n">nn</span><span class="o">.</span><span class="n">Conv2d</span><span class="p">:</span> <span class="n">EpsilonRule</span><span class="p">,</span>
+    <span class="n">nn</span><span class="o">.</span><span class="n">AvgPool2d</span><span class="p">:</span> <span class="n">EpsilonRule</span><span class="p">,</span>
+    <span class="n">nn</span><span class="o">.</span><span class="n">AdaptiveAvgPool2d</span><span class="p">:</span> <span class="n">EpsilonRule</span><span class="p">,</span>
+    <span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">:</span> <span class="n">EpsilonRule</span><span class="p">,</span>
+    <span class="n">nn</span><span class="o">.</span><span class="n">BatchNorm2d</span><span class="p">:</span> <span class="n">EpsilonRule</span><span class="p">,</span>
+    <span class="n">Addition_Module</span><span class="p">:</span> <span class="n">EpsilonRule</span><span class="p">,</span>
+<span class="p">}</span>
+
+<span class="n">SUPPORTED_NON_LINEAR_LAYERS</span> <span class="o">=</span> <span class="p">[</span><span class="n">nn</span><span class="o">.</span><span class="n">ReLU</span><span class="p">,</span> <span class="n">nn</span><span class="o">.</span><span class="n">Dropout</span><span class="p">,</span> <span class="n">nn</span><span class="o">.</span><span class="n">Tanh</span><span class="p">]</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div aria-label="main navigation" class="sphinxsidebar" role="navigation">
+<div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../../index.html">Captum</a></h1>
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../attribution.html">Attribution</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../noise_tunnel.html">NoiseTunnel</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../layer.html">Layer Attribution</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../neuron.html">Neuron Attribution</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../metrics.html">Metrics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../robust.html">Robustness</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../utilities.html">Utilities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../base_classes.html">Base Classes</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Insights API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../insights.html">Insights</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../insights.html#features">Features</a></li>
+</ul>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+<li><a href="../../../../index.html">Documentation overview</a><ul>
+<li><a href="../../../index.html">Module code</a><ul>
+</ul></li>
+</ul></li>
+</ul>
+</div>
+<div id="searchbox" role="search" style="display: none">
+<h3 id="searchlabel">Quick search</h3>
+<div class="searchformwrapper">
+<form action="../../../../search.html" class="search" method="get">
+<input aria-labelledby="searchlabel" name="q" type="text"/>
+<input type="submit" value="Go"/>
+</form>
+</div>
+</div>
+<script>$('#searchbox').show(0);</script>
+</div>
+</div>
+<div class="clearer"></div>
+</div></div></div><footer class="nav-footer" id="footer"><section class="sitemap"><div class="footerSection"><h5>Docs</h5><a href="/docs/introduction">Introduction</a><a href="/docs/getting_started">Getting Started</a><a href="/tutorials/">Tutorials</a><a href="/api/">API Reference</a></div><div class="footerSection"><h5>Social</h5><div class="social"><a class="github-button" href="https://github.com/pytorch/captum" data-count-href="https://github.com/pytorch/captum/stargazers" data-show-count="true" data-count-aria-label="# stargazers on GitHub" aria-label="Star Captum on GitHub">captum</a></div></div></section><a href="https://opensource.facebook.com/" target="_blank" rel="noreferrer noopener" class="fbOpenSource"><img src="/img/oss_logo.png" alt="Facebook Open Source" width="170" height="45"/></a><section class="copyright"> Copyright © 2021 Facebook Inc.</section><script>
+            (function() {
+              var BAD_BASE = '/captum/';
+              if (window.location.origin !== 'https://captum.ai') {
+                var pathname = window.location.pathname;
+                var newPathname = pathname.slice(pathname.indexOf(BAD_BASE) === 0 ? BAD_BASE.length : 1);
+                var newLocation = 'https://captum.ai/' + newPathname;
+                console.log('redirecting to ' + newLocation);
+                window.location.href = newLocation;
+              }
+            })();
+          </script></footer></div><script type="text/javascript" src="https://cdn.jsdelivr.net/docsearch.js/1/docsearch.min.js"></script><script>
+                document.addEventListener('keyup', function(e) {
+                  if (e.target !== document.body) {
+                    return;
+                  }
+                  // keyCode for '/' (slash)
+                  if (e.keyCode === 191) {
+                    const search = document.getElementById('search_input_react');
+                    search && search.focus();
+                  }
+                });
+              </script><script>
+              var search = docsearch({
+                
+                apiKey: '207c27d819f967749142d8611de7cb19',
+                indexName: 'captum',
+                inputSelector: '#search_input_react'
+              });
+            </script></body></html>
