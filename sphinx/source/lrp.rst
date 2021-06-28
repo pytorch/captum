@@ -1,5 +1,5 @@
 LRP
 ====================
 
-.. autoclass:: captum.attr.lrp
+.. autoclass:: captum.attr.LRP
     :members:

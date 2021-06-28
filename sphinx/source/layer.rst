@@ -66,5 +66,5 @@ Layer Feature Ablation
 Layer LRP
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. autoclass:: captum.attr.layer_lrp
+.. autoclass:: captum.attr.LayerLRP
     :members:
