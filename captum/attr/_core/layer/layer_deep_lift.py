@@ -13,11 +13,7 @@ from captum._utils.common import (
     _format_baseline,
     _format_input,
 )
-from captum._utils.gradient import (
-    apply_gradient_requirements,
-    compute_layer_gradients_and_eval,
-    undo_gradient_requirements,
-)
+from captum._utils.gradient import compute_layer_gradients_and_eval
 from captum._utils.typing import (
     BaselineType,
     Literal,
@@ -70,7 +66,7 @@ class LayerDeepLift(LayerAttribution, DeepLift):
         model: Module,
         layer: Module,
         multiply_by_inputs: bool = True,
-    ):
+    ) -> None:
         r"""
         Args:
 
@@ -294,7 +290,6 @@ class LayerDeepLift(LayerAttribution, DeepLift):
         """
         inputs = _format_input(inputs)
         baselines = _format_baseline(baselines, inputs)
-        gradient_mask = apply_gradient_requirements(inputs)
         _validate_input(inputs, baselines)
 
         baselines = _tensorize_baseline(inputs, baselines)
@@ -357,7 +352,6 @@ class LayerDeepLift(LayerAttribution, DeepLift):
             # remove hooks from all activations
             self._remove_hooks(main_model_hooks)
 
-        undo_gradient_requirements(inputs, gradient_mask)
         return _compute_conv_delta_and_format_attrs(
             self,
             return_convergence_delta,

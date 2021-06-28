@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import itertools
+import math
 import warnings
 from typing import Any, Callable, Iterable, Sequence, Tuple, Union
 
@@ -16,6 +17,7 @@ from captum._utils.common import (
     _is_tuple,
     _run_forward,
 )
+from captum._utils.progress import progress
 from captum._utils.typing import BaselineType, TargetType, TensorOrTupleOfTensorsGeneric
 from captum.attr._utils.attribution import PerturbationAttribution
 from captum.attr._utils.common import (
@@ -86,6 +88,7 @@ class ShapleyValueSampling(PerturbationAttribution):
         feature_mask: Union[None, TensorOrTupleOfTensorsGeneric] = None,
         n_samples: int = 25,
         perturbations_per_eval: int = 1,
+        show_progress: bool = False,
     ) -> TensorOrTupleOfTensorsGeneric:
         r"""
         NOTE: The feature_mask argument differs from other perturbation based
@@ -209,6 +212,11 @@ class ShapleyValueSampling(PerturbationAttribution):
                             If the forward function returns a single scalar per batch,
                             perturbations_per_eval must be set to 1.
                             Default: 1
+                show_progress (bool, optional): Displays the progress of computation.
+                            It will try to use tqdm if available for advanced features
+                            (e.g. time estimation). Otherwise, it will fallback to
+                            a simple output of progress.
+                            Default: False
 
         Returns:
                 *tensor* or tuple of *tensors* of **attributions**:
@@ -285,9 +293,24 @@ class ShapleyValueSampling(PerturbationAttribution):
                     max(torch.max(single_mask).item() for single_mask in feature_mask)
                     + 1
                 )
+
+            if show_progress:
+                attr_progress = progress(
+                    desc=f"{self.get_name()} attribution",
+                    total=self._get_n_evaluations(
+                        total_features, n_samples, perturbations_per_eval
+                    )
+                    + 1,  # add 1 for the initial eval
+                )
+                attr_progress.update(0)
+
             initial_eval = _run_forward(
                 self.forward_func, baselines, target, additional_forward_args
             )
+
+            if show_progress:
+                attr_progress.update()
+
             agg_output_mode = _find_output_mode_and_verify(
                 initial_eval, num_examples, perturbations_per_eval, feature_mask
             )
@@ -336,6 +359,9 @@ class ShapleyValueSampling(PerturbationAttribution):
                         current_target,
                         current_add_args,
                     )
+                    if show_progress:
+                        attr_progress.update()
+
                     if agg_output_mode:
                         eval_diff = modified_eval - prev_results
                         prev_results = modified_eval
@@ -357,6 +383,9 @@ class ShapleyValueSampling(PerturbationAttribution):
                         total_attrib[j] += (
                             current_eval_diff * current_masks[j].float()
                         ).sum(dim=0)
+
+            if show_progress:
+                attr_progress.close()
 
             # Divide total attributions by number of random permutations and return
             # formatted attributions.
@@ -395,8 +424,7 @@ class ShapleyValueSampling(PerturbationAttribution):
         target_repeated = _expand_target(target, perturbations_per_eval)
         for i in range(len(feature_permutation)):
             current_tensors = tuple(
-                current
-                * (torch.tensor(1) - (mask == feature_permutation[i]).to(current.dtype))
+                current * (~(mask == feature_permutation[i])).to(current.dtype)
                 + input * (mask == feature_permutation[i]).to(input.dtype)
                 for input, current, mask in zip(inputs, current_tensors, input_masks)
             )
@@ -448,8 +476,12 @@ class ShapleyValueSampling(PerturbationAttribution):
                 combined_masks,
             )
 
+    def _get_n_evaluations(self, total_features, n_samples, perturbations_per_eval):
+        """return the total number of forward evaluations needed"""
+        return math.ceil(total_features / perturbations_per_eval) * n_samples
 
-class ShapleyValues(PerturbationAttribution):
+
+class ShapleyValues(ShapleyValueSampling):
     """
     A perturbation based approach to compute attribution, based on the concept
     of Shapley Values from cooperative game theory. This method involves taking
@@ -492,9 +524,8 @@ class ShapleyValues(PerturbationAttribution):
                         attributions will have first dimension 1, corresponding to
                         feature importance across all examples in the batch.
         """
-        PerturbationAttribution.__init__(self, forward_func)
-        self.shapley_sampling = ShapleyValueSampling(forward_func)
-        self.shapley_sampling.permutation_generator = _all_perm_generator
+        ShapleyValueSampling.__init__(self, forward_func)
+        self.permutation_generator = _all_perm_generator
 
     @log_usage()
     def attribute(
@@ -505,6 +536,7 @@ class ShapleyValues(PerturbationAttribution):
         additional_forward_args: Any = None,
         feature_mask: Union[None, TensorOrTupleOfTensorsGeneric] = None,
         perturbations_per_eval: int = 1,
+        show_progress: bool = False,
     ) -> TensorOrTupleOfTensorsGeneric:
         r"""
         NOTE: The feature_mask argument differs from other perturbation based
@@ -625,7 +657,11 @@ class ShapleyValues(PerturbationAttribution):
                             If the forward function returns a single scalar per batch,
                             perturbations_per_eval must be set to 1.
                             Default: 1
-
+                show_progress (bool, optional): Displays the progress of computation.
+                            It will try to use tqdm if available for advanced features
+                            (e.g. time estimation). Otherwise, it will fallback to
+                            a simple output of progress.
+                            Default: False
         Returns:
                 *tensor* or tuple of *tensors* of **attributions**:
                 - **attributions** (*tensor* or tuple of *tensors*):
@@ -691,12 +727,19 @@ class ShapleyValues(PerturbationAttribution):
                 "Consider using Shapley Value Sampling instead."
             )
 
-        return self.shapley_sampling.attribute.__wrapped__(
-            self.shapley_sampling,  # self
+        return super().attribute.__wrapped__(
+            self,
             inputs=inputs,
             baselines=baselines,
             target=target,
             additional_forward_args=additional_forward_args,
             feature_mask=feature_mask,
             perturbations_per_eval=perturbations_per_eval,
+            show_progress=show_progress,
+        )
+
+    def _get_n_evaluations(self, total_features, n_samples, perturbations_per_eval):
+        """return the total number of forward evaluations needed"""
+        return math.ceil(total_features / perturbations_per_eval) * math.factorial(
+            total_features
         )

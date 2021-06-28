@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
 
+import io
 import unittest
-from typing import Any, Callable, Tuple, Union
+import unittest.mock
+from typing import Any, Callable, Generator, Tuple, Union
 
 import torch
 from torch import Tensor
@@ -23,6 +25,7 @@ from tests.helpers.basic import (
 from tests.helpers.basic_models import (
     BasicModel_MultiLayer,
     BasicModel_MultiLayer_MultiInput,
+    BasicModelBoolInput,
 )
 
 
@@ -54,10 +57,17 @@ def alt_perturb_func(
         )
 
 
+def alt_perturb_generator(
+    original_inp: TensorOrTupleOfTensorsGeneric, **kwargs
+) -> Generator[TensorOrTupleOfTensorsGeneric, None, None]:
+    while True:
+        yield alt_perturb_func(original_inp, **kwargs)
+
+
 def alt_to_interp_rep(
     curr_sample: TensorOrTupleOfTensorsGeneric,
     original_input: TensorOrTupleOfTensorsGeneric,
-    **kwargs: Any
+    **kwargs: Any,
 ) -> Tensor:
     binary_vector = torch.zeros(1, kwargs["num_interp_features"])
     feature_mask = kwargs["feature_mask"]
@@ -105,8 +115,9 @@ class Test(BaseTest):
             inp,
             [73.3716, 193.3349, 113.3349],
             perturbations_per_eval=(1, 2, 3),
-            n_perturb_samples=500,
+            n_samples=500,
             expected_coefs_only=[73.3716, 193.3349, 113.3349],
+            test_generator=True,
         )
 
     def test_simple_lime_with_mask(self) -> None:
@@ -118,7 +129,7 @@ class Test(BaseTest):
             [271.0, 271.0, 111.0],
             feature_mask=torch.tensor([[0, 0, 1]]),
             perturbations_per_eval=(1, 2, 3),
-            n_perturb_samples=500,
+            n_samples=500,
             expected_coefs_only=[271.0, 111.0],
         )
 
@@ -133,7 +144,60 @@ class Test(BaseTest):
             baselines=4,
             perturbations_per_eval=(1, 2, 3),
             expected_coefs_only=[244.0, 100.0],
+            test_generator=True,
         )
+
+    def test_simple_lime_boolean(self) -> None:
+        net = BasicModelBoolInput()
+        inp = torch.tensor([[True, False, True]])
+        self._lime_test_assert(
+            net,
+            inp,
+            [31.42, 31.42, 30.90],
+            feature_mask=torch.tensor([[0, 0, 1]]),
+            perturbations_per_eval=(1, 2, 3),
+            test_generator=True,
+        )
+
+    def test_simple_lime_boolean_with_baselines(self) -> None:
+        net = BasicModelBoolInput()
+        inp = torch.tensor([[True, False, True]])
+        self._lime_test_assert(
+            net,
+            inp,
+            [-36.0, -36.0, 0.0],
+            feature_mask=torch.tensor([[0, 0, 1]]),
+            baselines=True,
+            perturbations_per_eval=(1, 2, 3),
+            test_generator=True,
+        )
+
+    @unittest.mock.patch("sys.stderr", new_callable=io.StringIO)
+    def test_simple_lime_with_show_progress(self, mock_stderr) -> None:
+        net = BasicModel_MultiLayer()
+        inp = torch.tensor([[20.0, 50.0, 30.0]], requires_grad=True)
+
+        # test progress output for each batch size
+        for bsz in (1, 2, 3):
+            self._lime_test_assert(
+                net,
+                inp,
+                [73.3716, 193.3349, 113.3349],
+                perturbations_per_eval=(bsz,),
+                n_samples=500,
+                test_generator=True,
+                show_progress=True,
+            )
+            output = mock_stderr.getvalue()
+
+            # to test if progress calculation aligns with the actual iteration
+            # all perturbations_per_eval should reach progress of 100%
+            assert (
+                "Lime attribution: 100%" in output
+            ), f"Error progress output: {repr(output)}"
+
+            mock_stderr.seek(0)
+            mock_stderr.truncate(0)
 
     def test_simple_batch_lime(self) -> None:
         net = BasicModel_MultiLayer()
@@ -143,7 +207,7 @@ class Test(BaseTest):
             inp,
             [[73.4450, 193.5979, 113.4363], [32.11, 48.00, 11.00]],
             perturbations_per_eval=(1, 2, 3),
-            n_perturb_samples=800,
+            n_samples=800,
             expected_coefs_only=[[73.4450, 193.5979, 113.4363], [32.11, 48.00, 11.00]],
         )
 
@@ -156,8 +220,9 @@ class Test(BaseTest):
             [[271.0, 271.0, 111.0], [32.11, 48.00, 11.00]],
             feature_mask=torch.tensor([[0, 0, 1], [0, 1, 2]]),
             perturbations_per_eval=(1, 2, 3),
-            n_perturb_samples=600,
+            n_samples=600,
             expected_coefs_only=[[271.0, 111.0, 0.0], [32.11, 48.00, 11.00]],
+            test_generator=True,
         )
 
     def test_multi_input_lime_without_mask(self) -> None:
@@ -175,7 +240,7 @@ class Test(BaseTest):
             (inp1, inp2, inp3),
             expected,
             additional_input=(1,),
-            n_perturb_samples=2000,
+            n_samples=2000,
             expected_coefs_only=[87, 0, 0, 75, 0, 195, 0, 395, 35],
         )
 
@@ -198,7 +263,7 @@ class Test(BaseTest):
             expected,
             additional_input=(1,),
             feature_mask=(mask1, mask2, mask3),
-            n_perturb_samples=500,
+            n_samples=500,
             expected_coefs_only=[251.0, 591.0, 0.0],
         )
         expected_with_baseline = (
@@ -214,8 +279,9 @@ class Test(BaseTest):
             feature_mask=(mask1, mask2, mask3),
             baselines=(2, 3.0, 4),
             perturbations_per_eval=(1, 2, 3),
-            n_perturb_samples=500,
+            n_samples=500,
             expected_coefs_only=[180, 576.0, -8.0],
+            test_generator=True,
         )
 
     def test_multi_input_batch_lime_without_mask(self) -> None:
@@ -233,7 +299,7 @@ class Test(BaseTest):
             (inp1, inp2, inp3),
             expected,
             additional_input=(1,),
-            n_perturb_samples=1000,
+            n_samples=1000,
             expected_coefs_only=[
                 [87.8777, 0.0, 0.0, 74.7283, 0.0, 195.1708, 0.0, 395.5216, 35.5530],
                 [
@@ -288,7 +354,8 @@ class Test(BaseTest):
                 [48.2441, 1036.4233, 128.3161],
                 [180.3035, 575.8969, -8.3229],
             ],
-            n_perturb_samples=500,
+            n_samples=500,
+            test_generator=True,
         )
 
     # Remaining tests are for cases where forward function returns a scalar
@@ -325,7 +392,7 @@ class Test(BaseTest):
             perturbations_per_eval=(1,),
             target=None,
             expected_coefs_only=[75.0, 17.0],
-            n_perturb_samples=700,
+            n_samples=700,
         )
 
     def test_multi_inp_lime_scalar_tensor_0d(self) -> None:
@@ -369,10 +436,11 @@ class Test(BaseTest):
             feature_mask=(mask1, mask2, mask3),
             perturbations_per_eval=(1,),
             target=None,
-            n_perturb_samples=1500,
+            n_samples=1500,
             expected_coefs_only=[305.5, 3850.6666, 410.1],
             delta=1.5,
             batch_attr=True,
+            test_generator=True,
         )
 
     def _lime_test_assert(
@@ -386,14 +454,17 @@ class Test(BaseTest):
         perturbations_per_eval: Tuple[int, ...] = (1,),
         baselines: BaselineType = None,
         target: Union[None, int] = 0,
-        n_perturb_samples: int = 100,
+        n_samples: int = 100,
         delta: float = 1.0,
         batch_attr: bool = False,
+        test_generator: bool = False,
+        show_progress: bool = False,
     ) -> None:
         for batch_size in perturbations_per_eval:
             lime = Lime(
                 model,
                 similarity_func=get_exp_kernel_similarity_function("cosine", 10.0),
+                interpretable_model=SkLearnLasso(alpha=1.0),
             )
             attributions = lime.attribute(
                 test_input,
@@ -402,7 +473,8 @@ class Test(BaseTest):
                 additional_forward_args=additional_input,
                 baselines=baselines,
                 perturbations_per_eval=batch_size,
-                n_perturb_samples=n_perturb_samples,
+                n_samples=n_samples,
+                show_progress=show_progress,
             )
             assertTensorTuplesAlmostEqual(
                 self, attributions, expected_attr, delta=delta, mode="max"
@@ -416,8 +488,9 @@ class Test(BaseTest):
                     additional_forward_args=additional_input,
                     baselines=baselines,
                     perturbations_per_eval=batch_size,
-                    n_perturb_samples=n_perturb_samples,
+                    n_samples=n_samples,
                     return_input_shape=False,
+                    show_progress=show_progress,
                 )
                 assertTensorAlmostEqual(
                     self, attributions, expected_coefs_only, delta=delta, mode="max"
@@ -427,7 +500,7 @@ class Test(BaseTest):
                     model,
                     SkLearnLasso(alpha=1.0),
                     get_exp_kernel_similarity_function("euclidean", 1000.0),
-                    alt_perturb_func,
+                    alt_perturb_generator if test_generator else alt_perturb_func,
                     False,
                     None,
                     alt_to_interp_rep,
@@ -458,8 +531,9 @@ class Test(BaseTest):
                         additional_forward_args=additional_input,
                         baselines=baselines,
                         perturbations_per_eval=batch_size,
-                        n_perturb_samples=n_perturb_samples,
+                        n_samples=n_samples,
                         num_interp_features=num_interp_features,
+                        show_progress=show_progress,
                     )
                     assertTensorAlmostEqual(
                         self, attributions, expected_coefs_only, delta=delta, mode="max"
@@ -492,8 +566,9 @@ class Test(BaseTest):
                         additional_forward_args=curr_additional_args,
                         baselines=curr_baselines,
                         perturbations_per_eval=batch_size,
-                        n_perturb_samples=n_perturb_samples,
+                        n_samples=n_samples,
                         num_interp_features=num_interp_features,
+                        show_progress=show_progress,
                     )
                     assertTensorAlmostEqual(
                         self,

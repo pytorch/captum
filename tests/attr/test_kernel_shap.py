@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 
+import io
 import unittest
+import unittest.mock
 from typing import Any, Callable, List, Tuple, Union
 
 import torch
@@ -39,7 +41,7 @@ class Test(BaseTest):
             net,
             inp,
             [40.0, 120.0, 80.0],
-            n_perturb_samples=500,
+            n_samples=500,
             baselines=baseline,
             expected_coefs=[40.0, 120.0, 80.0],
         )
@@ -52,7 +54,7 @@ class Test(BaseTest):
             inp,
             [76.66666, 196.66666, 116.66666],
             perturbations_per_eval=(1, 2, 3),
-            n_perturb_samples=500,
+            n_samples=500,
         )
 
     def test_simple_kernel_shap_with_mask(self) -> None:
@@ -66,6 +68,32 @@ class Test(BaseTest):
             perturbations_per_eval=(1, 2, 3),
             expected_coefs=[275.0, 115.0],
         )
+
+    @unittest.mock.patch("sys.stderr", new_callable=io.StringIO)
+    def test_simple_kernel_shap_with_show_progress(self, mock_stderr) -> None:
+        net = BasicModel_MultiLayer()
+        inp = torch.tensor([[20.0, 50.0, 30.0]], requires_grad=True)
+
+        # test progress output for each batch size
+        for bsz in (1, 2, 3):
+            self._kernel_shap_test_assert(
+                net,
+                inp,
+                [76.66666, 196.66666, 116.66666],
+                perturbations_per_eval=(bsz,),
+                n_samples=500,
+                show_progress=True,
+            )
+            output = mock_stderr.getvalue()
+
+            # to test if progress calculation aligns with the actual iteration
+            # all perturbations_per_eval should reach progress of 100%
+            assert (
+                "Kernel Shap attribution: 100%" in output
+            ), f"Error progress output: {repr(output)}"
+
+            mock_stderr.seek(0)
+            mock_stderr.truncate(0)
 
     def test_simple_kernel_shap_with_baselines(self) -> None:
         net = BasicModel_MultiLayer()
@@ -87,7 +115,7 @@ class Test(BaseTest):
             inp,
             [[7.0, 32.5, 10.5], [76.66666, 196.66666, 116.66666]],
             perturbations_per_eval=(1, 2, 3),
-            n_perturb_samples=20000,
+            n_samples=20000,
         )
 
     def test_simple_batch_kernel_shap_with_mask(self) -> None:
@@ -99,7 +127,7 @@ class Test(BaseTest):
             [[39.5, 39.5, 10.5], [275.0, 275.0, 115.0]],
             feature_mask=torch.tensor([[0, 0, 1], [1, 1, 0]]),
             perturbations_per_eval=(1, 2, 3),
-            n_perturb_samples=100,
+            n_samples=100,
             expected_coefs=[[39.5, 10.5], [115.0, 275.0]],
         )
 
@@ -118,7 +146,7 @@ class Test(BaseTest):
             (inp1, inp2, inp3),
             expected,
             additional_input=(1,),
-            n_perturb_samples=2000,
+            n_samples=2000,
         )
 
     def test_multi_input_kernel_shap_with_mask(self) -> None:
@@ -171,7 +199,7 @@ class Test(BaseTest):
             (inp1, inp2, inp3),
             expected,
             additional_input=(1,),
-            n_perturb_samples=2500,
+            n_samples=2500,
             expected_coefs=[
                 [90.0, 0, 0, 78, 0, 198, 0, 398, 38],
                 [78.0, 198.0, 118.0, 0.0, 398.0, 0.0, 0.0, 38.0, 0.0],
@@ -197,6 +225,7 @@ class Test(BaseTest):
             expected,
             additional_input=(1,),
             feature_mask=(mask1, mask2, mask3),
+            n_samples=300,
         )
         expected_with_baseline = (
             [[1040, 1040, 1040], [184, 580.0, 184]],
@@ -293,7 +322,7 @@ class Test(BaseTest):
             feature_mask=(mask1, mask2, mask3),
             perturbations_per_eval=(1,),
             target=None,
-            n_perturb_samples=1500,
+            n_samples=1500,
         )
 
     def _kernel_shap_test_assert(
@@ -306,9 +335,10 @@ class Test(BaseTest):
         perturbations_per_eval: Tuple[int, ...] = (1,),
         baselines: BaselineType = None,
         target: Union[None, int] = 0,
-        n_perturb_samples: int = 100,
+        n_samples: int = 100,
         delta: float = 1.0,
         expected_coefs: Union[None, List[float], List[List[float]]] = None,
+        show_progress: bool = False,
     ) -> None:
         for batch_size in perturbations_per_eval:
             kernel_shap = KernelShap(model)
@@ -319,7 +349,8 @@ class Test(BaseTest):
                 additional_forward_args=additional_input,
                 baselines=baselines,
                 perturbations_per_eval=batch_size,
-                n_perturb_samples=n_perturb_samples,
+                n_samples=n_samples,
+                show_progress=show_progress,
             )
             assertTensorTuplesAlmostEqual(
                 self, attributions, expected_attr, delta=delta, mode="max"
@@ -334,8 +365,9 @@ class Test(BaseTest):
                     additional_forward_args=additional_input,
                     baselines=baselines,
                     perturbations_per_eval=batch_size,
-                    n_perturb_samples=n_perturb_samples,
+                    n_samples=n_samples,
                     return_input_shape=False,
+                    show_progress=show_progress,
                 )
                 assertTensorAlmostEqual(
                     self, attributions, expected_coefs, delta=delta, mode="max"

@@ -16,6 +16,7 @@ from captum._utils.common import (
     _format_tensor_into_tuples,
 )
 from captum._utils.typing import TensorOrTupleOfTensorsGeneric
+from captum.log import log_usage
 from captum.metrics._utils.batching import _divide_and_aggregate_metrics
 
 
@@ -57,6 +58,7 @@ def default_perturb_func(
     return perturbed_input
 
 
+@log_usage()
 def sensitivity_max(
     explanation_func: Callable,
     inputs: TensorOrTupleOfTensorsGeneric,
@@ -188,8 +190,8 @@ def sensitivity_max(
         >>> net = ImageClassifier()
         >>> saliency = Saliency(net)
         >>> input = torch.randn(2, 3, 32, 32, requires_grad=True)
-        >>> # Computes sensitivity score for saliency maps
-        >>> sens = sensitivity_max(saliency.attribute, input)
+        >>> # Computes sensitivity score for saliency maps of class 3
+        >>> sens = sensitivity_max(saliency.attribute, input, target = 3)
 
     """
 

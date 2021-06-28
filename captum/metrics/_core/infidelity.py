@@ -17,6 +17,7 @@ from captum._utils.common import (
     safe_div,
 )
 from captum._utils.typing import BaselineType, TargetType, TensorOrTupleOfTensorsGeneric
+from captum.log import log_usage
 from captum.metrics._utils.batching import _divide_and_aggregate_metrics
 
 
@@ -68,7 +69,7 @@ def infidelity_perturb_func_decorator(multipy_by_inputs: bool = True) -> Callabl
         def default_perturb_func(
             inputs: TensorOrTupleOfTensorsGeneric, baselines: BaselineType = None
         ):
-            r""""""
+            r""" """
             inputs_perturbed = (
                 pertub_func(inputs, baselines)
                 if baselines is not None
@@ -108,6 +109,7 @@ def infidelity_perturb_func_decorator(multipy_by_inputs: bool = True) -> Callabl
     return sub_infidelity_perturb_func_decorator
 
 
+@log_usage()
 def infidelity(
     forward_func: Callable,
     perturb_func: Callable,
@@ -118,6 +120,7 @@ def infidelity(
     target: TargetType = None,
     n_perturb_samples: int = 10,
     max_examples_per_batch: int = None,
+    normalize: bool = False,
 ) -> Tensor:
     r"""
     Explanation infidelity represents the expected mean-squared error
@@ -345,6 +348,20 @@ def infidelity(
                 `input batch size * n_perturb_samples`.
 
                 Default: None
+        normalize (bool, optional): Normalize the dot product of the input
+                perturbation and the attribution so the infidelity value is invariant
+                to constant scaling of the attribution values. The normalization factor
+                beta is defined as the ratio of two mean values:
+                $$ \beta = \frac{
+                    \mathbb{E}_{I \sim \mu_I} [ I^T \Phi(f, x) (f(x) - f(x - I)) ]
+                }{
+                    \mathbb{E}_{I \sim \mu_I} [ (I^T \Phi(f, x))^2 ]
+                } $$.
+                Please refer the original paper for the meaning of the symbols. Same
+                normalization can be found in the paper's official implementation
+                https://github.com/chihkuanyeh/saliency_evaluation
+
+                Default: False
     Returns:
 
         infidelities (tensor): A tensor of scalar infidelity scores per
@@ -381,7 +398,7 @@ def infidelity(
         """
 
         def call_perturb_func():
-            r""""""
+            r""" """
             baselines_pert = None
             inputs_pert: Union[Tensor, Tuple[Tensor, ...]]
             if len(inputs_expanded) == 1:
@@ -437,7 +454,9 @@ def infidelity(
                 is: {}"""
             ).format(perturb[0].shape, input_perturbed[0].shape)
 
-    def _next_infidelity(current_n_perturb_samples: int) -> Tensor:
+    def _next_infidelity_tensors(
+        current_n_perturb_samples: int,
+    ) -> Union[Tuple[Tensor], Tuple[Tensor, Tensor, Tensor]]:
         perturbations, inputs_perturbed = _generate_perturbations(
             current_n_perturb_samples
         )
@@ -472,11 +491,12 @@ def infidelity(
         inputs_fwd = torch.repeat_interleave(
             inputs_fwd, current_n_perturb_samples, dim=0
         )
-        inputs_minus_perturb = inputs_fwd - inputs_perturbed_fwd
+        perturbed_fwd_diffs = inputs_fwd - inputs_perturbed_fwd
         attributions_expanded = tuple(
             torch.repeat_interleave(attribution, current_n_perturb_samples, dim=0)
             for attribution in attributions
         )
+
         attributions_times_perturb = tuple(
             (attribution_expanded * perturbation).view(attribution_expanded.size(0), -1)
             for attribution_expanded, perturbation in zip(
@@ -484,19 +504,31 @@ def infidelity(
             )
         )
 
-        attribution_times_perturb_sums = sum(
-            [
-                torch.sum(attribution_times_perturb, dim=1)
-                for attribution_times_perturb in attributions_times_perturb
-            ]
+        attr_times_perturb_sums = sum(
+            torch.sum(attribution_times_perturb, dim=1)
+            for attribution_times_perturb in attributions_times_perturb
         )
+        attr_times_perturb_sums = cast(Tensor, attr_times_perturb_sums)
 
-        return torch.sum(
-            torch.pow(
-                attribution_times_perturb_sums - inputs_minus_perturb.view(-1), 2
-            ).view(bsz, -1),
-            dim=1,
-        )
+        # reshape as Tensor(bsz, current_n_perturb_samples)
+        attr_times_perturb_sums = attr_times_perturb_sums.view(bsz, -1)
+        perturbed_fwd_diffs = perturbed_fwd_diffs.view(bsz, -1)
+
+        if normalize:
+            # in order to normalize, we have to aggregate the following tensors
+            # to calculate MSE in its polynomial expansion:
+            # (a-b)^2 = a^2 - 2ab + b^2
+            return (
+                attr_times_perturb_sums.pow(2).sum(-1),
+                (attr_times_perturb_sums * perturbed_fwd_diffs).sum(-1),
+                perturbed_fwd_diffs.pow(2).sum(-1),
+            )
+        else:
+            # returns (a-b)^2 if no need to normalize
+            return ((attr_times_perturb_sums - perturbed_fwd_diffs).pow(2).sum(-1),)
+
+    def _sum_infidelity_tensors(agg_tensors, tensors):
+        return tuple(agg_t + t for agg_t, t in zip(agg_tensors, tensors))
 
     # perform argument formattings
     inputs = _format_input(inputs)  # type: ignore
@@ -520,10 +552,32 @@ def infidelity(
 
     bsz = inputs[0].size(0)
     with torch.no_grad():
-        metrics_sum = _divide_and_aggregate_metrics(
+        # if not normalize, directly return aggrgated MSE ((a-b)^2,)
+        # else return aggregated MSE's polynomial expansion tensors (a^2, ab, b^2)
+        agg_tensors = _divide_and_aggregate_metrics(
             cast(Tuple[Tensor, ...], inputs),
             n_perturb_samples,
-            _next_infidelity,
+            _next_infidelity_tensors,
+            agg_func=_sum_infidelity_tensors,
             max_examples_per_batch=max_examples_per_batch,
         )
-    return metrics_sum * 1 / n_perturb_samples
+
+    if normalize:
+        beta_num = agg_tensors[1]
+        beta_denorm = agg_tensors[0]
+
+        beta = safe_div(
+            beta_num,
+            beta_denorm,
+            torch.tensor(1.0, dtype=beta_denorm.dtype, device=beta_denorm.device),
+        )
+
+        infidelity_values = (
+            beta ** 2 * agg_tensors[0] - 2 * beta * agg_tensors[1] + agg_tensors[2]
+        )
+    else:
+        infidelity_values = agg_tensors[0]
+
+    infidelity_values /= n_perturb_samples
+
+    return infidelity_values

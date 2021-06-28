@@ -26,7 +26,6 @@ class PropagationRule(ABC):
         inputs = _format_tensor_into_tuples(inputs)
         self._has_single_input = len(inputs) == 1
         self._handle_input_hooks = []
-        self.relevance_input = []
         for input in inputs:
             if not hasattr(input, "hook_registered"):
                 input_hook = self._create_backward_hook_input(input.data)
@@ -41,6 +40,16 @@ class PropagationRule(ABC):
         module: Module, grad_input: Tensor, grad_output: Tensor
     ) -> Tensor:
         """Backward hook to propagate relevance over non-linear activations."""
+        if (
+            isinstance(grad_input, tuple)
+            and isinstance(grad_output, tuple)
+            and len(grad_input) > len(grad_output)
+        ):
+            # Adds any additional elements of grad_input if applicable
+            # This occurs when registering a backward hook on nn.Dropout
+            # modules, which has an additional element of None in
+            # grad_input
+            return grad_output + grad_input[len(grad_output) :]
         return grad_output
 
     def _create_backward_hook_input(
@@ -48,10 +57,11 @@ class PropagationRule(ABC):
     ) -> Callable[[Tensor], Optional[Tensor]]:
         def _backward_hook_input(grad: Tensor) -> Tensor:
             relevance = grad * inputs
+            device = grad.device
             if self._has_single_input:
-                self.relevance_input = relevance.data
+                self.relevance_input[device] = relevance.data
             else:
-                self.relevance_input.append(relevance.data)
+                self.relevance_input[device].append(relevance.data)
             return relevance
 
         return _backward_hook_input
@@ -63,7 +73,7 @@ class PropagationRule(ABC):
             sign = torch.sign(outputs)
             sign[sign == 0] = 1
             relevance = grad / (outputs + sign * self.STABILITY_FACTOR)
-            self.relevance_output = grad.data
+            self.relevance_output[grad.device] = grad.data
             return relevance
 
         return _backward_hook_output
@@ -75,7 +85,8 @@ class PropagationRule(ABC):
         outputs: Tensor,
     ) -> None:
         """Save initial activations a_j before modules are changed"""
-        module.activations = tuple(input.data for input in inputs)
+        device = inputs[0].device if isinstance(inputs, tuple) else inputs.device
+        module.activations[device] = tuple(input.data for input in inputs)
         self._manipulate_weights(module, inputs, outputs)
 
     @abstractmethod
@@ -89,7 +100,8 @@ class PropagationRule(ABC):
 
     def forward_pre_hook_activations(self, module: Module, inputs: Tuple[Tensor, ...]):
         """Pass initial activations to graph generation pass"""
-        for input, activation in zip(inputs, module.activations):
+        device = inputs[0].device if isinstance(inputs, tuple) else inputs.device
+        for input, activation in zip(inputs, module.activations[device]):
             input.data = activation
         return inputs
 
@@ -199,7 +211,7 @@ class IdentityRule(EpsilonRule):
         self, inputs: Tensor
     ) -> Callable[[Tensor], Optional[Tensor]]:
         def _backward_hook_input(grad: Tensor) -> Tensor:
-            return self.relevance_output
+            return self.relevance_output[grad.device]
 
         return _backward_hook_input
 
@@ -733,11 +745,13 @@ class ZBoundRule(PropagationRule):
         if hasattr(module, "weight"):
             if self._module_neg is None:
                 self._module_neg = copy.deepcopy(module)
-                self._module_neg.weight.data = torch.clamp(self._module_neg.weight.data, 
-                    max=0.0
+                self._module_neg.weight.data = torch.clamp(
+                    self._module_neg.weight.data, max=0.0
                 )
             self._module_pos = module
-            self._module_pos.weight.data = torch.clamp(self._module_pos.weight.data, min=0.0)
+            self._module_pos.weight.data = torch.clamp(
+                self._module_pos.weight.data, min=0.0
+            )
 
     def _manipulate_weights(
         self,

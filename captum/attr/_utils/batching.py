@@ -84,10 +84,10 @@ def _batch_attribution(
             total_attr = current_attr
         else:
             if isinstance(total_attr, Tensor):
-                total_attr = total_attr + current_attr
+                total_attr = total_attr + current_attr.detach()
             else:
                 total_attr = tuple(
-                    current + prev_total
+                    current.detach() + prev_total
                     for current, prev_total in zip(current_attr, total_attr)
                 )
         if include_endpoint and end_step < n_steps:

@@ -305,7 +305,7 @@ class LayerGradientShap(LayerAttribution, GradientAttribution):
             nt,  # self
             inputs,
             nt_type="smoothgrad",
-            n_samples=n_samples,
+            nt_samples=n_samples,
             stdevs=stdevs,
             draw_baseline_from_distrib=True,
             baselines=baselines,
@@ -332,7 +332,7 @@ class LayerInputBaselineXGradient(LayerAttribution, GradientAttribution):
         layer: Module,
         device_ids: Union[None, List[int]] = None,
         multiply_by_inputs: bool = True,
-    ):
+    ) -> None:
         r"""
         Args:
 

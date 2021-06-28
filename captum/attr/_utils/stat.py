@@ -20,7 +20,7 @@ class Stat:
     3. The name of the statistic that is used for the user to refer to
     """
 
-    def __init__(self, name: Optional[str] = None, **kwargs: Any):
+    def __init__(self, name: Optional[str] = None, **kwargs: Any) -> None:
         """
         Args:
             name (str, optional):
@@ -83,7 +83,7 @@ class Count(Stat):
     number of `update`'s called
     """
 
-    def __init__(self, name: Optional[str] = None):
+    def __init__(self, name: Optional[str] = None) -> None:
         super().__init__(name=name)
         self.n = None
 
@@ -101,7 +101,7 @@ class Mean(Stat):
     Calculates the average of a tensor
     """
 
-    def __init__(self, name: Optional[str] = None):
+    def __init__(self, name: Optional[str] = None) -> None:
         super().__init__(name=name)
         self.rolling_mean: Optional[Tensor] = None
         self.n: Optional[Count] = None
@@ -131,7 +131,7 @@ class MSE(Stat):
     Calculates the mean squared error of a tensor
     """
 
-    def __init__(self, name: Optional[str] = None):
+    def __init__(self, name: Optional[str] = None) -> None:
         super().__init__(name=name)
         self.prev_mean = None
         self.mse = None
@@ -166,7 +166,7 @@ class Var(Stat):
     This is equal to mse / (n - order)
     """
 
-    def __init__(self, name: Optional[str] = None, order: int = 0):
+    def __init__(self, name: Optional[str] = None, order: int = 0) -> None:
         if name is None:
             if order == 0:
                 name = "variance"
@@ -206,7 +206,7 @@ class StdDev(Stat):
     The standard deviation, with an associated order.
     """
 
-    def __init__(self, name: Optional[str] = None, order: int = 0):
+    def __init__(self, name: Optional[str] = None, order: int = 0) -> None:
         if name is None:
             if order == 0:
                 name = "std_dev"
@@ -235,7 +235,7 @@ class GeneralAccumFn(Stat):
     where fn is a custom function
     """
 
-    def __init__(self, fn: Callable, name: Optional[str] = None):
+    def __init__(self, fn: Callable, name: Optional[str] = None) -> None:
         super().__init__(name=name)
         self.result = None
         self.fn = fn
@@ -251,17 +251,23 @@ class GeneralAccumFn(Stat):
 
 
 class Min(GeneralAccumFn):
-    def __init__(self, name: Optional[str] = None, min_fn: Callable = torch.min):
+    def __init__(
+        self, name: Optional[str] = None, min_fn: Callable = torch.min
+    ) -> None:
         super().__init__(name=name, fn=min_fn)
 
 
 class Max(GeneralAccumFn):
-    def __init__(self, name: Optional[str] = None, max_fn: Callable = torch.max):
+    def __init__(
+        self, name: Optional[str] = None, max_fn: Callable = torch.max
+    ) -> None:
         super().__init__(name=name, fn=max_fn)
 
 
 class Sum(GeneralAccumFn):
-    def __init__(self, name: Optional[str] = None, add_fn: Callable = torch.add):
+    def __init__(
+        self, name: Optional[str] = None, add_fn: Callable = torch.add
+    ) -> None:
         super().__init__(name=name, fn=add_fn)
 
 

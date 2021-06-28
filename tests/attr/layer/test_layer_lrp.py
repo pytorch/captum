@@ -24,7 +24,7 @@ def _get_simple_model(inplace=False):
 
 def _get_simple_model2(inplace=False):
     class MyModel(nn.Module):
-        def __init__(self, inplace):
+        def __init__(self, inplace) -> None:
             super().__init__()
             self.lin = nn.Linear(2, 2)
             self.lin.weight = nn.Parameter(torch.ones(2, 2))
@@ -62,9 +62,7 @@ class Test(BaseTest):
         assertTensorAlmostEqual(
             self, relevance[0], torch.Tensor([[[0, 4], [31, 40]], [[0, 0], [-6, -15]]])
         )
-        assertTensorAlmostEqual(
-            self, delta, torch.Tensor([-21, 75])
-        )  # Due to bias in conv1 layer
+        assertTensorAlmostEqual(self, delta, torch.Tensor([0]))
 
     def test_lrp_simple_attributions(self):
         model, inputs = _get_simple_model(inplace=False)
@@ -106,7 +104,7 @@ class Test(BaseTest):
 
     def test_lrp_simple_tanh(self):
         class Model(nn.Module):
-            def __init__(self):
+            def __init__(self) -> None:
                 super(Model, self).__init__()
                 self.linear = nn.Linear(3, 3, bias=False)
                 self.linear.weight.data.fill_(0.1)
@@ -174,6 +172,6 @@ class Test(BaseTest):
         self.assertEqual(len(relevance), len(delta))
         assertTensorAlmostEqual(
             self,
-            relevance[0][0],
-            torch.tensor([[[18.0, 36.0, 54.0]], [[36.0, 72.0, 108.0]]]),
+            relevance[0],
+            torch.tensor([[18.0, 36.0, 54.0], [36.0, 72.0, 108.0]]),
         )

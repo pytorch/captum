@@ -122,7 +122,7 @@ class Test(BaseTest):
                 input,
                 baselines=baseline,
                 nt_type=type,
-                n_samples=n_samples,
+                nt_samples=n_samples,
                 stdevs=0.0002,
                 n_steps=100,
                 target=target,

@@ -24,7 +24,7 @@ that of the main implementation.
 
 
 class ConductanceReference(LayerAttribution):
-    def __init__(self, forward_func, layer):
+    def __init__(self, forward_func, layer) -> None:
         r"""
         Args
 

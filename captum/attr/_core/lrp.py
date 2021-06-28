@@ -1,17 +1,25 @@
 #!/usr/bin/env python3
 
-import warnings
-from typing import Any
+import typing
+from collections import defaultdict
+from typing import Any, List, Tuple, Union, cast
 
-import torch
 import torch.nn as nn
+from torch import Tensor
+from torch.nn import Module
+from torch.utils.hooks import RemovableHandle
 
-from ..._utils.common import _format_input, _format_output, _run_forward
-from ..._utils.gradient import apply_gradient_requirements, undo_gradient_requirements
-from ..._utils.typing import Module, TargetType, Tensor, TensorOrTupleOfTensorsGeneric
-from .._utils.attribution import GradientAttribution
-from .._utils.custom_modules import Addition_Module
-from .._utils.lrp_rules import EpsilonRule, PropagationRule
+from captum._utils.common import _format_input, _format_output, _is_tuple, _run_forward
+from captum._utils.gradient import (
+    apply_gradient_requirements,
+    undo_gradient_requirements,
+)
+from captum._utils.typing import Literal, TargetType, TensorOrTupleOfTensorsGeneric
+from captum.attr._utils.attribution import GradientAttribution
+from captum.attr._utils.common import _sum_rows
+from captum.attr._utils.custom_modules import Addition_Module
+from captum.attr._utils.lrp_rules import EpsilonRule, PropagationRule
+from captum.log import log_usage
 
 
 class LRP(GradientAttribution):
@@ -29,34 +37,47 @@ class LRP(GradientAttribution):
     """
 
     def __init__(self, model: Module) -> None:
-        """
+        r"""
         Args:
 
-            model (callable): The forward function of the model or any modification of
+            model (module): The forward function of the model or any modification of
                 it. Custom rules for a given layer need to be defined as attribute
                 `module.rule` and need to be of type PropagationRule. If no rule is
                 specified for a layer, a pre-defined default rule for the module type
                 is used.
         """
         GradientAttribution.__init__(self, model)
-
-        if isinstance(model, nn.DataParallel):
-            warnings.warn(
-                """Although input model is of type `nn.DataParallel` it will run
-                only on one device. Support for multiple devices will be added soon."""
-            )
-            self.model = model.module
-        else:
-            self.model = model
-
-        self.layers = []
-        self._get_layers(self.model)
+        self.model = model
         self._check_rules()
 
     @property
     def multiplies_by_inputs(self) -> bool:
         return True
 
+    @typing.overload
+    def attribute(
+        self,
+        inputs: TensorOrTupleOfTensorsGeneric,
+        target: TargetType = None,
+        additional_forward_args: Any = None,
+        return_convergence_delta: Literal[False] = False,
+        verbose: bool = False,
+    ) -> TensorOrTupleOfTensorsGeneric:
+        ...
+
+    @typing.overload
+    def attribute(
+        self,
+        inputs: TensorOrTupleOfTensorsGeneric,
+        target: TargetType = None,
+        additional_forward_args: Any = None,
+        *,
+        return_convergence_delta: Literal[True],
+        verbose: bool = False,
+    ) -> Tuple[TensorOrTupleOfTensorsGeneric, Tensor]:
+        ...
+
+    @log_usage()
     def attribute(
         self,
         inputs: TensorOrTupleOfTensorsGeneric,
@@ -64,7 +85,9 @@ class LRP(GradientAttribution):
         additional_forward_args: Any = None,
         return_convergence_delta: bool = False,
         verbose: bool = False,
-    ) -> TensorOrTupleOfTensorsGeneric:
+    ) -> Union[
+        TensorOrTupleOfTensorsGeneric, Tuple[TensorOrTupleOfTensorsGeneric, Tensor]
+    ]:
         r"""
         Args:
             inputs (tensor or tuple of tensors):  Input for which relevance is
@@ -155,11 +178,13 @@ class LRP(GradientAttribution):
         """
         self.verbose = verbose
         self._original_state_dict = self.model.state_dict()
+        self.layers: List[Module] = []
+        self._get_layers(self.model)
         self._check_and_attach_rules()
-        self.backward_handles = []
-        self.forward_handles = []
+        self.backward_handles: List[RemovableHandle] = []
+        self.forward_handles: List[RemovableHandle] = []
 
-        is_inputs_tuple = isinstance(inputs, tuple)
+        is_inputs_tuple = _is_tuple(inputs)
         inputs = _format_input(inputs)
         gradient_mask = apply_gradient_requirements(inputs)
 
@@ -175,7 +200,8 @@ class LRP(GradientAttribution):
                 self._forward_fn_wrapper, inputs, target, additional_forward_args
             )
             relevances = tuple(
-                normalized_relevance * output.unsqueeze(dim=1)
+                normalized_relevance
+                * output.reshape((-1,) + (1,) * (normalized_relevance.dim() - 1))
                 for normalized_relevance in normalized_relevances
             )
         finally:
@@ -184,21 +210,18 @@ class LRP(GradientAttribution):
         undo_gradient_requirements(inputs, gradient_mask)
 
         if return_convergence_delta:
-            delta = []
-            for relevance in relevances:
-                delta.append(self.compute_convergence_delta(relevance, output))
             return (
                 _format_output(is_inputs_tuple, relevances),
-                _format_output(is_inputs_tuple, tuple(delta)),
+                self.compute_convergence_delta(relevances, output),
             )
         else:
-            return _format_output(is_inputs_tuple, relevances)
+            return _format_output(is_inputs_tuple, relevances)  # type: ignore
 
     def has_convergence_delta(self) -> bool:
         return True
 
     def compute_convergence_delta(
-        self, attributions: TensorOrTupleOfTensorsGeneric, output: Tensor
+        self, attributions: Union[Tensor, Tuple[Tensor, ...]], output: Tensor
     ) -> Tensor:
         """
         Here, we use the completeness property of LRP: The relevance is conserved
@@ -226,19 +249,14 @@ class LRP(GradientAttribution):
             *tensor*:
             - **delta** Difference of relevance in output layer and input layer.
         """
-
-        def _attribution_delta(attributions: Tensor, output: Tensor) -> Tensor:
-            remaining_dims = tuple(range(1, len(attributions.shape)))
-            sum_attributions = torch.sum(attributions, dim=remaining_dims)
-            delta = output - sum_attributions
-            return delta
-
         if isinstance(attributions, tuple):
-            stacked_attributions = torch.stack(attributions, dim=1)
-            delta = _attribution_delta(stacked_attributions, output)
+            for attr in attributions:
+                summed_attr = cast(
+                    Tensor, sum(_sum_rows(attr) for attr in attributions)
+                )
         else:
-            delta = _attribution_delta(attributions, output)
-        return delta
+            summed_attr = _sum_rows(attributions)
+        return output.flatten() - summed_attr.flatten()
 
     def _get_layers(self, model: Module) -> None:
         for layer in model.children():
@@ -250,11 +268,17 @@ class LRP(GradientAttribution):
     def _check_and_attach_rules(self) -> None:
         for layer in self.layers:
             if hasattr(layer, "rule"):
+                layer.activations = {}  # type: ignore
+                layer.rule.relevance_input = defaultdict(list)  # type: ignore
+                layer.rule.relevance_output = {}  # type: ignore
                 pass
             elif type(layer) in SUPPORTED_LAYERS_WITH_RULES.keys():
-                layer.rule = SUPPORTED_LAYERS_WITH_RULES[type(layer)]()
+                layer.activations = {}  # type: ignore
+                layer.rule = SUPPORTED_LAYERS_WITH_RULES[type(layer)]()  # type: ignore
+                layer.rule.relevance_input = defaultdict(list)  # type: ignore
+                layer.rule.relevance_output = {}  # type: ignore
             elif type(layer) in SUPPORTED_NON_LINEAR_LAYERS:
-                layer.rule = None
+                layer.rule = None  # type: ignore
             else:
                 raise TypeError(
                     (
@@ -277,20 +301,6 @@ class LRP(GradientAttribution):
                         )
                     )
 
-    @staticmethod
-    def _no_op_pre_hook(
-        module: Module, inputs: TensorOrTupleOfTensorsGeneric
-    ) -> TensorOrTupleOfTensorsGeneric:
-        """Pre hook for inserting nop node in between modules, used for fixing the hook
-        ordering ambiguity issues.
-        """
-        if isinstance(inputs, tuple):
-            out = tuple(input_ + 0.0 for input_ in inputs)
-        elif isinstance(inputs, Tensor):
-            out = inputs + 0.0
-
-        return out
-
     def _register_forward_hooks(self) -> None:
         for layer in self.layers:
             if type(layer) in SUPPORTED_NON_LINEAR_LAYERS:
@@ -299,11 +309,9 @@ class LRP(GradientAttribution):
                 )
                 self.backward_handles.append(backward_handle)
             else:
-                # adding no op node as workaround for hook ordering issues
-                no_op_handle = layer.register_forward_pre_hook(self._no_op_pre_hook)
-                self.forward_handles.append(no_op_handle)
-
-                forward_handle = layer.register_forward_hook(layer.rule.forward_hook)
+                forward_handle = layer.register_forward_hook(
+                    layer.rule.forward_hook  # type: ignore
+                )
                 self.forward_handles.append(forward_handle)
                 if self.verbose:
                     print(f"Applied {layer.rule} on layer {layer}")
@@ -312,7 +320,7 @@ class LRP(GradientAttribution):
         for layer in self.layers:
             if layer.rule is not None:
                 forward_handle = layer.register_forward_hook(
-                    layer.rule.forward_hook_weights
+                    layer.rule.forward_hook_weights  # type: ignore
                 )
                 self.forward_handles.append(forward_handle)
 
@@ -320,13 +328,13 @@ class LRP(GradientAttribution):
         for layer in self.layers:
             if layer.rule is not None:
                 forward_handle = layer.register_forward_pre_hook(
-                    layer.rule.forward_pre_hook_activations
+                    layer.rule.forward_pre_hook_activations  # type: ignore
                 )
                 self.forward_handles.append(forward_handle)
 
     def _compute_output_and_change_weights(
         self,
-        inputs: TensorOrTupleOfTensorsGeneric,
+        inputs: Tuple[Tensor, ...],
         target: TargetType,
         additional_forward_args: Any,
     ) -> Tensor:
@@ -350,10 +358,10 @@ class LRP(GradientAttribution):
             backward_handle.remove()
         for layer in self.layers:
             if hasattr(layer.rule, "_handle_input_hooks"):
-                for handle in layer.rule._handle_input_hooks:
+                for handle in layer.rule._handle_input_hooks:  # type: ignore
                     handle.remove()
             if hasattr(layer.rule, "_handle_output_hook"):
-                layer.rule._handle_output_hook.remove()
+                layer.rule._handle_output_hook.remove()  # type: ignore
 
     def _remove_rules(self) -> None:
         for layer in self.layers:
@@ -366,7 +374,7 @@ class LRP(GradientAttribution):
                 del layer.activation
 
     def _restore_state(self) -> None:
-        self.model.load_state_dict(self._original_state_dict)
+        self.model.load_state_dict(self._original_state_dict)  # type: ignore
 
     def _restore_model(self) -> None:
         self._restore_state()
@@ -383,7 +391,9 @@ class LRP(GradientAttribution):
 
         #TODO: Remove when bugs are fixed
         """
-        adjusted_inputs = tuple(input + 0 for input in inputs)
+        adjusted_inputs = tuple(
+            input + 0 if input is not None else input for input in inputs
+        )
         return self.model(*adjusted_inputs)
 
 

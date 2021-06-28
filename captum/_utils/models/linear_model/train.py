@@ -1,4 +1,5 @@
 import time
+import warnings
 from typing import Any, Callable, Dict, List, Optional
 
 import torch
@@ -227,7 +228,7 @@ def sgd_train_linear_model(
 
 
 class NormLayer(nn.Module):
-    def __init__(self, mean, std, n=None, eps=1e-8):
+    def __init__(self, mean, std, n=None, eps=1e-8) -> None:
         super().__init__()
         self.mean = mean
         self.std = std
@@ -286,10 +287,11 @@ def sklearn_train_linear_model(
     except ImportError:
         raise ValueError("sklearn is not available. Please install sklearn >= 0.23")
 
-    assert (
-        sklearn.__version__ >= "0.23.0"
-    ), "Must have sklearn version 0.23.0 or higher to use "
-    "sample_weight in Lasso regression."
+    if not sklearn.__version__ >= "0.23.0":
+        warnings.warn(
+            "Must have sklearn version 0.23.0 or higher to use "
+            "sample_weight in Lasso regression."
+        )
 
     num_batches = 0
     xs, ys, ws = [], [], []
@@ -323,17 +325,32 @@ def sklearn_train_linear_model(
     sklearn_model = reduce(
         lambda val, el: getattr(val, el), [sklearn] + sklearn_trainer.split(".")
     )(**construct_kwargs)
-    sklearn_model.fit(x, y, sample_weight=w, **fit_kwargs)
+    try:
+        sklearn_model.fit(x, y, sample_weight=w, **fit_kwargs)
+    except TypeError:
+        sklearn_model.fit(x, y, **fit_kwargs)
+        warnings.warn(
+            "Sample weight is not supported for the provided linear model!"
+            " Trained model without weighting inputs. For Lasso, please"
+            " upgrade sklearn to a version >= 0.23.0."
+        )
+
     t2 = time.time()
 
     # Convert weights to pytorch
-    num_outputs = 1 if len(y.shape) == 1 else y.shape[1]
+    classes = (
+        torch.IntTensor(sklearn_model.classes_)
+        if hasattr(sklearn_model, "classes_")
+        else None
+    )
+    num_outputs = sklearn_model.coef_.shape[0] if sklearn_model.coef_.ndim > 1 else 1
     weight_values = torch.FloatTensor(sklearn_model.coef_)  # type: ignore
     bias_values = torch.FloatTensor([sklearn_model.intercept_])  # type: ignore
     model._construct_model_params(
         norm_type=None,
         weight_values=weight_values.view(num_outputs, -1),
         bias_value=bias_values.squeeze().unsqueeze(0),
+        classes=classes,
     )
 
     if norm_input:

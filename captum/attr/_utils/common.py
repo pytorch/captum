@@ -1,7 +1,5 @@
 #!/usr/bin/env python3
-import functools
 import typing
-import warnings
 from inspect import signature
 from typing import TYPE_CHECKING, Any, Callable, List, Tuple, Union
 
@@ -20,6 +18,10 @@ from captum.attr._utils.approximation_methods import SUPPORTED_METHODS
 
 if TYPE_CHECKING:
     from captum.attr._utils.attribution import GradientAttribution
+
+
+def _sum_rows(input: Tensor) -> Tensor:
+    return input.reshape(input.shape[0], -1).sum(1)
 
 
 def _validate_target(num_samples: int, target: TargetType) -> None:
@@ -365,25 +367,3 @@ def _construct_default_feature_mask(
     total_features = current_num_features
     feature_mask = tuple(feature_mask)
     return feature_mask, total_features
-
-
-def neuron_index_deprecation_decorator(func):
-    r"""
-    Decorator to deprecate neuron_index parameter for Neuron Attribution methods.
-    """
-
-    @functools.wraps(func)
-    def wrapper(*args, **kwargs):
-        if "neuron_index" in kwargs:
-            kwargs["neuron_selector"] = kwargs["neuron_index"]
-            warnings.warn(
-                "neuron_index is being deprecated and replaced with neuron_selector "
-                "to support more general functionality. Please update the parameter "
-                "name to neuron_selector. Support for neuron_index will be removed "
-                "in Captum 0.4.0",
-                DeprecationWarning,
-            )
-            del kwargs["neuron_index"]
-        return func(*args, **kwargs)
-
-    return wrapper

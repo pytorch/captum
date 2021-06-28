@@ -9,7 +9,6 @@ from captum._utils.gradient import _forward_layer_eval
 from captum._utils.typing import BaselineType, TensorOrTupleOfTensorsGeneric
 from captum.attr._core.feature_ablation import FeatureAblation
 from captum.attr._utils.attribution import NeuronAttribution, PerturbationAttribution
-from captum.attr._utils.common import neuron_index_deprecation_decorator
 from captum.log import log_usage
 
 
@@ -56,7 +55,6 @@ class NeuronFeatureAblation(NeuronAttribution, PerturbationAttribution):
         PerturbationAttribution.__init__(self, forward_func)
 
     @log_usage()
-    @neuron_index_deprecation_decorator
     def attribute(
         self,
         inputs: TensorOrTupleOfTensorsGeneric,

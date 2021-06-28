@@ -155,8 +155,8 @@ def visualize_image_attr(
         outlier_perc (float or int, optional): Top attribution values which
                     correspond to a total of outlier_perc percentage of the
                     total attribution are set to 1 and scaling is performed
-                    using the minimum of these values. For sign=`all`, outliers a
-                    nd scale value are computed using absolute value of
+                    using the minimum of these values. For sign=`all`, outliers
+                    and scale value are computed using absolute value of
                     attributions.
                     Default: 2
         cmap (string, optional): String corresponding to desired colormap for
@@ -451,7 +451,7 @@ class VisualizationDataRecord:
         attr_score,
         raw_input,
         convergence_score,
-    ):
+    ) -> None:
         self.word_attributions = word_attributions
         self.pred_prob = pred_prob
         self.pred_class = pred_class
@@ -514,7 +514,7 @@ def format_word_importances(words, importances):
 
 def visualize_text(
     datarecords: Iterable[VisualizationDataRecord], legend: bool = True
-) -> None:
+) -> "HTML":  # In quotes because this type doesn't exist in standalone mode
     assert HAS_IPYTHON, (
         "IPython must be available to visualize text. "
         "Please run 'pip install ipython'."
@@ -567,4 +567,7 @@ def visualize_text(
 
     dom.append("".join(rows))
     dom.append("</table>")
-    display(HTML("".join(dom)))
+    html = HTML("".join(dom))
+    display(html)
+
+    return html

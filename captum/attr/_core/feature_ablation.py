@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import math
 from typing import Any, Callable, Tuple, Union, cast
 
 import torch
@@ -14,6 +15,7 @@ from captum._utils.common import (
     _is_tuple,
     _run_forward,
 )
+from captum._utils.progress import progress
 from captum._utils.typing import BaselineType, TargetType, TensorOrTupleOfTensorsGeneric
 from captum.attr._utils.attribution import PerturbationAttribution
 from captum.attr._utils.common import _format_input_baseline
@@ -61,7 +63,8 @@ class FeatureAblation(PerturbationAttribution):
         additional_forward_args: Any = None,
         feature_mask: Union[None, Tensor, Tuple[Tensor, ...]] = None,
         perturbations_per_eval: int = 1,
-        **kwargs: Any
+        show_progress: bool = False,
+        **kwargs: Any,
     ) -> TensorOrTupleOfTensorsGeneric:
         r"""
         Args:
@@ -179,6 +182,11 @@ class FeatureAblation(PerturbationAttribution):
                         and use a single feature mask to describe the features
                         for all examples in the batch.
                         Default: 1
+            show_progress (bool, optional): Displays the progress of computation.
+                        It will try to use tqdm if available for advanced features
+                        (e.g. time estimation). Otherwise, it will fallback to
+                        a simple output of progress.
+                        Default: False
             **kwargs (Any, optional): Any additional arguments used by child
                         classes of FeatureAblation (such as Occlusion) to construct
                         ablations. These arguments are ignored when using
@@ -249,11 +257,30 @@ class FeatureAblation(PerturbationAttribution):
             isinstance(perturbations_per_eval, int) and perturbations_per_eval >= 1
         ), "Perturbations per evaluation must be an integer and at least 1."
         with torch.no_grad():
+            if show_progress:
+                feature_counts = self._get_feature_counts(
+                    inputs, feature_mask, **kwargs
+                )
+                total_forwards = (
+                    sum(
+                        math.ceil(count / perturbations_per_eval)
+                        for count in feature_counts
+                    )
+                    + 1
+                )  # add 1 for the initial eval
+                attr_progress = progress(
+                    desc=f"{self.get_name()} attribution", total=total_forwards
+                )
+                attr_progress.update(0)
+
             # Computes initial evaluation with all features, which is compared
             # to each ablated result.
             initial_eval = _run_forward(
                 self.forward_func, inputs, target, additional_forward_args
             )
+
+            if show_progress:
+                attr_progress.update()
 
             agg_output_mode = FeatureAblation._find_output_mode(
                 perturbations_per_eval, feature_mask
@@ -307,12 +334,13 @@ class FeatureAblation(PerturbationAttribution):
                 # Skip any empty input tensors
                 if torch.numel(inputs[i]) == 0:
                     continue
+
                 for (
                     current_inputs,
                     current_add_args,
                     current_target,
                     current_mask,
-                ) in self._ablation_generator(
+                ) in self._ith_input_ablation_generator(
                     i,
                     inputs,
                     additional_forward_args,
@@ -320,7 +348,7 @@ class FeatureAblation(PerturbationAttribution):
                     baselines,
                     feature_mask,
                     perturbations_per_eval,
-                    **kwargs
+                    **kwargs,
                 ):
                     # modified_eval dimensions: 1D tensor with length
                     # equal to #num_examples * #features in batch
@@ -330,6 +358,10 @@ class FeatureAblation(PerturbationAttribution):
                         current_target,
                         current_add_args,
                     )
+
+                    if show_progress:
+                        attr_progress.update()
+
                     # (contains 1 more dimension than inputs). This adds extra
                     # dimensions of 1 to make the tensor broadcastable with the inputs
                     # tensor.
@@ -346,11 +378,15 @@ class FeatureAblation(PerturbationAttribution):
                         eval_diff = (
                             initial_eval - modified_eval.reshape((-1, num_outputs))
                         ).reshape((-1, num_outputs) + (len(inputs[i].shape) - 1) * (1,))
+                        eval_diff = eval_diff.to(total_attrib[i].device)
                     if self.use_weights:
                         weights[i] += current_mask.float().sum(dim=0)
                     total_attrib[i] += (eval_diff * current_mask.to(attrib_type)).sum(
                         dim=0
                     )
+
+            if show_progress:
+                attr_progress.close()
 
             # Divide total attributions by counts and return formatted attributions
             if self.use_weights:
@@ -363,7 +399,7 @@ class FeatureAblation(PerturbationAttribution):
             _result = _format_output(is_inputs_tuple, attrib)
         return _result
 
-    def _ablation_generator(
+    def _ith_input_ablation_generator(
         self,
         i,
         inputs,
@@ -372,11 +408,14 @@ class FeatureAblation(PerturbationAttribution):
         baselines,
         input_mask,
         perturbations_per_eval,
-        **kwargs
+        **kwargs,
     ):
         """
-        This method is a generator which yields each perturbation to be evaluated
-        including inputs, additional_forward_args, targets, and mask.
+        This method return an generator of ablation perturbations of the i-th input
+
+        Returns:
+            ablation_iter (generator): yields each perturbation to be evaluated
+                        as a tuple (inputs, additional_forward_args, targets, mask).
         """
         extra_args = {}
         for key, value in kwargs.items():
@@ -457,7 +496,7 @@ class FeatureAblation(PerturbationAttribution):
                 baseline,
                 num_features_processed,
                 num_features_processed + current_num_ablated_features,
-                **extra_args
+                **extra_args,
             )
 
             # current_features[i] has dimension
@@ -512,6 +551,18 @@ class FeatureAblation(PerturbationAttribution):
             torch.min(input_mask).item(),
             torch.max(input_mask).item() + 1,
             input_mask,
+        )
+
+    def _get_feature_counts(self, inputs, feature_mask, **kwargs):
+        """return the numbers of input features"""
+        if not feature_mask:
+            return tuple(inp[0].numel() if inp.numel() else 0 for inp in inputs)
+
+        return tuple(
+            (mask.max() - mask.min()).item() + 1
+            if mask is not None
+            else (inp[0].numel() if inp.numel() else 0)
+            for inp, mask in zip(inputs, feature_mask)
         )
 
     @staticmethod

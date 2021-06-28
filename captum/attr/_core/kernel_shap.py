@@ -1,47 +1,16 @@
 #!/usr/bin/env python3
 
-import math
-from typing import Any, Callable, Tuple, Union
+from typing import Any, Callable, Generator, Tuple, Union
 
 import torch
 from torch import Tensor
+from torch.distributions.categorical import Categorical
 
 from captum._utils.models.linear_model import SkLearnLinearRegression
 from captum._utils.typing import BaselineType, TargetType, TensorOrTupleOfTensorsGeneric
-from captum.attr._core.lime import Lime
+from captum.attr._core.lime import Lime, construct_feature_mask
+from captum.attr._utils.common import _format_input_baseline
 from captum.log import log_usage
-
-
-def combination(n: int, k: int) -> int:
-    try:
-        # Combination only available in Python 3.8
-        return math.comb(n, k)  # type: ignore
-    except AttributeError:
-        return math.factorial(n) // math.factorial(k) // math.factorial(n - k)
-
-
-def kernel_shap_similarity_kernel(
-    _, __, interpretable_sample: Tensor, **kwargs
-) -> Tensor:
-    assert (
-        "num_interp_features" in kwargs
-    ), "Must provide num_interp_features to use default similarity kernel"
-    num_selected_features = int(interpretable_sample.sum(dim=1).item())
-    num_features = kwargs["num_interp_features"]
-    combinations = combination(num_features, num_selected_features)
-    denom = (
-        combinations * num_selected_features * (num_features - num_selected_features)
-    )
-    if denom != 0:
-        similarities = (num_features - 1) / denom
-    else:
-        # weight should be theoretically infinite when denom = 0
-        # enforcing that trained linear model must satisfy
-        # end-point criteria. In practice, it is sufficient to
-        # make this weight substantially larger so setting this
-        # weight to 100 (all other weights are < 1).
-        similarities = 100.0
-    return torch.tensor([similarities])
 
 
 class KernelShap(Lime):
@@ -67,9 +36,11 @@ class KernelShap(Lime):
         Lime.__init__(
             self,
             forward_func,
-            SkLearnLinearRegression(),
-            kernel_shap_similarity_kernel,
+            interpretable_model=SkLearnLinearRegression(),
+            similarity_func=self.kernel_shap_similarity_kernel,
+            perturb_func=self.kernel_shap_perturb_generator,
         )
+        self.inf_weight = 1000000.0
 
     @log_usage()
     def attribute(  # type: ignore
@@ -79,9 +50,10 @@ class KernelShap(Lime):
         target: TargetType = None,
         additional_forward_args: Any = None,
         feature_mask: Union[None, Tensor, Tuple[Tensor, ...]] = None,
-        n_perturb_samples: int = 25,
+        n_samples: int = 25,
         perturbations_per_eval: int = 1,
         return_input_shape: bool = True,
+        show_progress: bool = False,
     ) -> TensorOrTupleOfTensorsGeneric:
         r"""
         This method attributes the output of the model with given target index
@@ -213,9 +185,9 @@ class KernelShap(Lime):
                         If None, then a feature mask is constructed which assigns
                         each scalar within a tensor as a separate feature.
                         Default: None
-            n_perturb_samples (int, optional):  The number of samples of the original
+            n_samples (int, optional):  The number of samples of the original
                         model used to train the surrogate interpretable model.
-                        Default: `50` if `n_perturb_samples` is not provided.
+                        Default: `50` if `n_samples` is not provided.
             perturbations_per_eval (int, optional): Allows multiple samples
                         to be processed simultaneously in one call to forward_fn.
                         Each forward pass will contain a maximum of
@@ -241,6 +213,11 @@ class KernelShap(Lime):
                         tensor is returned, containing only the coefficients
                         of the trained interpretable model, with length
                         num_interp_features.
+            show_progress (bool, optional): Displays the progress of computation.
+                        It will try to use tqdm if available for advanced features
+                        (e.g. time estimation). Otherwise, it will fallback to
+                        a simple output of progress.
+                        Default: False
 
         Returns:
             *tensor* or tuple of *tensors* of **attributions**:
@@ -266,7 +243,7 @@ class KernelShap(Lime):
             >>> ks = KernelShap(net)
             >>> # Computes attribution, with each of the 4 x 4 = 16
             >>> # features as a separate interpretable feature
-            >>> attr = ks.attribute(input, target=1, n_perturb_samples=200)
+            >>> attr = ks.attribute(input, target=1, n_samples=200)
 
             >>> # Alternatively, we can group each 2x2 square of the inputs
             >>> # as one 'interpretable' feature and perturb them together.
@@ -292,14 +269,81 @@ class KernelShap(Lime):
             >>> # Computes KernelSHAP attributions with feature mask.
             >>> attr = ks.attribute(input, target=1, feature_mask=feature_mask)
         """
-        return Lime.attribute.__wrapped__(
-            self,
+        formatted_inputs, baselines = _format_input_baseline(inputs, baselines)
+        feature_mask, num_interp_features = construct_feature_mask(
+            feature_mask, formatted_inputs
+        )
+        num_features_list = torch.arange(num_interp_features, dtype=torch.float)
+        denom = num_features_list * (num_interp_features - num_features_list)
+        probs = (num_interp_features - 1) / denom
+        probs[0] = 0.0
+        return self._attribute_kwargs(
             inputs=inputs,
             baselines=baselines,
             target=target,
             additional_forward_args=additional_forward_args,
             feature_mask=feature_mask,
-            n_perturb_samples=n_perturb_samples,
+            n_samples=n_samples,
             perturbations_per_eval=perturbations_per_eval,
             return_input_shape=return_input_shape,
+            num_select_distribution=Categorical(probs),
+            show_progress=show_progress,
         )
+
+    def kernel_shap_similarity_kernel(
+        self, _, __, interpretable_sample: Tensor, **kwargs
+    ) -> Tensor:
+        assert (
+            "num_interp_features" in kwargs
+        ), "Must provide num_interp_features to use default similarity kernel"
+        num_selected_features = int(interpretable_sample.sum(dim=1).item())
+        num_features = kwargs["num_interp_features"]
+        if num_selected_features == 0 or num_selected_features == num_features:
+            # weight should be theoretically infinite when
+            # num_selected_features = 0 or num_features
+            # enforcing that trained linear model must satisfy
+            # end-point criteria. In practice, it is sufficient to
+            # make this weight substantially larger so setting this
+            # weight to 1000000 (all other weights are 1).
+            similarities = self.inf_weight
+        else:
+            similarities = 1.0
+        return torch.tensor([similarities])
+
+    def kernel_shap_perturb_generator(
+        self, original_inp: Union[Tensor, Tuple[Tensor, ...]], **kwargs
+    ) -> Generator[Tensor, None, None]:
+        r"""
+        Perturbations are sampled by the following process:
+         - Choose k (number of selected features), based on the distribution
+                p(k) = (M - 1) / (k * (M - k))
+            where M is the total number of features in the interpretable space
+         - Randomly select a binary vector with k ones, each sample is equally
+            likely. This is done by generating a random vector of normal
+            values and thresholding based on the top k elements.
+
+         Since there are M choose k vectors with k ones, this weighted sampling
+         is equivalent to applying the Shapley kernel for the sample weight,
+         defined as:
+         k(M, k) = (M - 1) / (k * (M - k) * (M choose k))
+        """
+        assert (
+            "num_select_distribution" in kwargs and "num_interp_features" in kwargs
+        ), (
+            "num_select_distribution and num_interp_features are necessary"
+            " to use kernel_shap_perturb_func"
+        )
+        if isinstance(original_inp, Tensor):
+            device = original_inp.device
+        else:
+            device = original_inp[0].device
+        num_features = kwargs["num_interp_features"]
+        yield torch.ones(1, num_features, device=device, dtype=torch.long)
+        yield torch.zeros(1, num_features, device=device, dtype=torch.long)
+        while True:
+            num_selected_features = kwargs["num_select_distribution"].sample()
+            rand_vals = torch.randn(1, num_features)
+            threshold = torch.kthvalue(
+                rand_vals, num_features - num_selected_features
+            ).values.item()
+            yield (rand_vals > threshold).to(device=device).long()

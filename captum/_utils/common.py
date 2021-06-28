@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import typing
 from enum import Enum
+from functools import reduce
 from inspect import signature
 from typing import Any, Callable, Dict, List, Tuple, Union, cast, overload
 
@@ -106,7 +107,7 @@ def _zeros(inputs: Tuple[Tensor, ...]) -> Tuple[int, ...]:
     Takes a tuple of tensors as input and returns a tuple that has the same
     length as `inputs` with each element as the integer 0.
     """
-    return tuple(0 for input in inputs)
+    return tuple(0 if input.dtype is not torch.bool else False for input in inputs)
 
 
 def _format_baseline(
@@ -249,6 +250,20 @@ def _expand_target(
     return target
 
 
+def _expand_feature_mask(
+    feature_mask: Union[Tensor, Tuple[Tensor, ...]], n_samples: int
+):
+    is_feature_mask_tuple = _is_tuple(feature_mask)
+    feature_mask = _format_tensor_into_tuples(feature_mask)
+    feature_mask_new = tuple(
+        feature_mask_elem.repeat_interleave(n_samples, dim=0)
+        if feature_mask_elem.size(0) > 1
+        else feature_mask_elem
+        for feature_mask_elem in feature_mask
+    )
+    return _format_output(is_feature_mask_tuple, feature_mask_new)
+
+
 def _expand_and_update_baselines(
     inputs: Tuple[Tensor, ...],
     n_samples: int,
@@ -317,6 +332,18 @@ def _expand_and_update_target(n_samples: int, kwargs: dict):
     kwargs["target"] = target
 
 
+def _expand_and_update_feature_mask(n_samples: int, kwargs: dict):
+    if "feature_mask" not in kwargs:
+        return
+
+    feature_mask = kwargs["feature_mask"]
+    if feature_mask is None:
+        return
+
+    feature_mask = _expand_feature_mask(feature_mask, n_samples)
+    kwargs["feature_mask"] = feature_mask
+
+
 @typing.overload
 def _format_output(
     is_inputs_tuple: Literal[True], output: Tuple[Tensor, ...]
@@ -352,6 +379,43 @@ def _format_output(
         "The number of output tensors is: {}".format(len(output))
     )
     return output if is_inputs_tuple else output[0]
+
+
+@typing.overload
+def _format_outputs(
+    is_multiple_inputs: Literal[False], outputs: List[Tuple[Tensor, ...]]
+) -> Union[Tensor, Tuple[Tensor, ...]]:
+    ...
+
+
+@typing.overload
+def _format_outputs(
+    is_multiple_inputs: Literal[True], outputs: List[Tuple[Tensor, ...]]
+) -> List[Union[Tensor, Tuple[Tensor, ...]]]:
+    ...
+
+
+@typing.overload
+def _format_outputs(
+    is_multiple_inputs: bool, outputs: List[Tuple[Tensor, ...]]
+) -> Union[Tensor, Tuple[Tensor, ...], List[Union[Tensor, Tuple[Tensor, ...]]]]:
+    ...
+
+
+def _format_outputs(
+    is_multiple_inputs: bool, outputs: List[Tuple[Tensor, ...]]
+) -> Union[Tensor, Tuple[Tensor, ...], List[Union[Tensor, Tuple[Tensor, ...]]]]:
+    assert isinstance(outputs, list), "Outputs must be a list"
+    assert is_multiple_inputs or len(outputs) == 1, (
+        "outputs should contain multiple inputs or have a single output"
+        f"however the number of outputs is: {len(outputs)}"
+    )
+
+    return (
+        [_format_output(len(output) > 1, output) for output in outputs]
+        if is_multiple_inputs
+        else _format_output(len(outputs[0]) > 1, outputs[0])
+    )
 
 
 def _run_forward(
@@ -554,3 +618,18 @@ def _flatten_tensor_or_tuple(inp: TensorOrTupleOfTensorsGeneric) -> Tensor:
     if isinstance(inp, Tensor):
         return inp.flatten()
     return torch.cat([single_inp.flatten() for single_inp in inp])
+
+
+def _get_module_from_name(model: Module, layer_name: str) -> Any:
+    r"""
+    Returns the module (layer) object, given its (string) name
+    in the model.
+
+    Args:
+            name (str): Module or nested modules name string in self.model
+
+    Returns:
+            The module (layer) in self.model.
+    """
+
+    return reduce(getattr, layer_name.split("."), model)

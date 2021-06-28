@@ -11,6 +11,7 @@ from torch.nn import Module
 
 from captum.attr._core.guided_grad_cam import GuidedGradCam
 from captum.attr._core.layer.layer_deep_lift import LayerDeepLift, LayerDeepLiftShap
+from captum.attr._core.layer.layer_lrp import LayerLRP
 from captum.attr._core.neuron.neuron_deep_lift import NeuronDeepLift, NeuronDeepLiftShap
 from captum.attr._core.neuron.neuron_guided_backprop_deconvnet import (
     NeuronDeconvolution,
@@ -162,7 +163,9 @@ class DataParallelMeta(type):
 
                 model_1, model_2 = (
                     cuda_model,
-                    torch.nn.parallel.DistributedDataParallel(cuda_model),
+                    torch.nn.parallel.DistributedDataParallel(
+                        cuda_model, device_ids=[0], output_device=0
+                    ),
                 )
                 args_1, args_2 = cuda_args, cuda_args
             else:
@@ -193,6 +196,7 @@ class DataParallelMeta(type):
                         (
                             LayerDeepLift,
                             LayerDeepLiftShap,
+                            LayerLRP,
                             NeuronDeepLift,
                             NeuronDeepLiftShap,
                             NeuronDeconvolution,
@@ -201,7 +205,8 @@ class DataParallelMeta(type):
                         ),
                     ):
                         attr_method_2 = internal_algorithm(
-                            model_2, get_target_layer(cuda_model, target_layer)
+                            model_2,
+                            get_target_layer(cuda_model, target_layer),  # type: ignore
                         )
                     else:
                         attr_method_2 = internal_algorithm(

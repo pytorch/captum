@@ -39,7 +39,7 @@ class BaseFeature:
         baseline_transforms: Optional[Union[Callable, List[Callable]]],
         input_transforms: Optional[Union[Callable, List[Callable]]],
         visualization_transform: Optional[Callable],
-    ):
+    ) -> None:
         r"""
         Args:
 
@@ -86,7 +86,7 @@ class ImageFeature(BaseFeature):
         baseline_transforms: Union[Callable, List[Callable]],
         input_transforms: Union[Callable, List[Callable]],
         visualization_transform: Optional[Callable] = None,
-    ):
+    ) -> None:
         r"""
         Args:
             name (str): The label of the specific feature. For example, an
@@ -160,7 +160,7 @@ class TextFeature(BaseFeature):
         baseline_transforms: Union[Callable, List[Callable]],
         input_transforms: Union[Callable, List[Callable]],
         visualization_transform: Callable,
-    ):
+    ) -> None:
         r"""
         Args:
             name (str): The label of the specific feature. For example, an
@@ -237,7 +237,7 @@ class GeneralFeature(BaseFeature):
     where N is the number of samples and C is the number of categories.
     """
 
-    def __init__(self, name: str, categories: List[str]):
+    def __init__(self, name: str, categories: List[str]) -> None:
         r"""
         Args:
             name (str): The label of the specific feature. For example, an
@@ -287,7 +287,7 @@ class EmptyFeature(BaseFeature):
         baseline_transforms: Optional[Union[Callable, List[Callable]]] = None,
         input_transforms: Optional[Union[Callable, List[Callable]]] = None,
         visualization_transform: Optional[Callable] = None,
-    ):
+    ) -> None:
         super().__init__(
             name,
             baseline_transforms=baseline_transforms,

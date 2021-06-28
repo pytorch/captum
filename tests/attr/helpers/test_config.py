@@ -20,7 +20,9 @@ from captum.attr._core.layer.layer_feature_ablation import LayerFeatureAblation
 from captum.attr._core.layer.layer_gradient_shap import LayerGradientShap
 from captum.attr._core.layer.layer_gradient_x_activation import LayerGradientXActivation
 from captum.attr._core.layer.layer_integrated_gradients import LayerIntegratedGradients
+from captum.attr._core.layer.layer_lrp import LayerLRP
 from captum.attr._core.lime import Lime
+from captum.attr._core.lrp import LRP
 from captum.attr._core.neuron.neuron_conductance import NeuronConductance
 from captum.attr._core.neuron.neuron_deep_lift import NeuronDeepLift, NeuronDeepLiftShap
 from captum.attr._core.neuron.neuron_feature_ablation import NeuronFeatureAblation
@@ -36,11 +38,13 @@ from captum.attr._core.neuron.neuron_integrated_gradients import (
 from captum.attr._core.occlusion import Occlusion
 from captum.attr._core.saliency import Saliency
 from captum.attr._core.shapley_value import ShapleyValueSampling
+from captum.attr._utils.input_layer_wrapper import ModelInputWrapper
 from tests.helpers.basic import set_all_random_seeds
 from tests.helpers.basic_models import (
     BasicModel_ConvNet,
     BasicModel_MultiLayer,
     BasicModel_MultiLayer_MultiInput,
+    BasicModel_MultiLayer_TrueMultiInput,
     ReLULinearModel,
 )
 
@@ -101,6 +105,7 @@ config = [
             FeaturePermutation,
             Lime,
             KernelShap,
+            LRP,
         ],
         "model": BasicModel_MultiLayer(),
         "attribute_args": {"inputs": torch.randn(4, 3), "target": 1},
@@ -119,6 +124,7 @@ config = [
             FeaturePermutation,
             Lime,
             KernelShap,
+            LRP,
         ],
         "model": BasicModel_MultiLayer_MultiInput(),
         "attribute_args": {
@@ -126,7 +132,7 @@ config = [
             "additional_forward_args": (2 * torch.randn(12, 3), 5),
             "target": 0,
         },
-        "dp_delta": 0.0003,
+        "dp_delta": 0.001,
     },
     {
         "name": "basic_multi_target",
@@ -142,6 +148,7 @@ config = [
             FeaturePermutation,
             Lime,
             KernelShap,
+            LRP,
         ],
         "model": BasicModel_MultiLayer(),
         "attribute_args": {"inputs": torch.randn(4, 3), "target": [0, 1, 1, 0]},
@@ -160,6 +167,7 @@ config = [
             FeaturePermutation,
             Lime,
             KernelShap,
+            LRP,
         ],
         "model": BasicModel_MultiLayer_MultiInput(),
         "attribute_args": {
@@ -167,6 +175,7 @@ config = [
             "additional_forward_args": (2 * torch.randn(6, 3), 5),
             "target": [0, 1, 1, 0, 0, 1],
         },
+        "dp_delta": 0.0005,
     },
     {
         "name": "basic_multiple_tuple_target",
@@ -182,6 +191,7 @@ config = [
             FeaturePermutation,
             Lime,
             KernelShap,
+            LRP,
         ],
         "model": BasicModel_MultiLayer(),
         "attribute_args": {
@@ -204,6 +214,7 @@ config = [
             FeaturePermutation,
             Lime,
             KernelShap,
+            LRP,
         ],
         "model": BasicModel_MultiLayer(),
         "attribute_args": {"inputs": torch.randn(4, 3), "target": torch.tensor([0])},
@@ -222,6 +233,7 @@ config = [
             FeaturePermutation,
             Lime,
             KernelShap,
+            LRP,
         ],
         "model": BasicModel_MultiLayer(),
         "attribute_args": {
@@ -288,16 +300,18 @@ config = [
             Saliency,
             GuidedBackprop,
             Deconvolution,
+            LRP,
         ],
         "model": BasicModel_MultiLayer_MultiInput(),
         "attribute_args": {
             "inputs": (10 * torch.randn(6, 3), 5 * torch.randn(6, 3)),
             "additional_forward_args": (2 * torch.randn(6, 3), 5),
             "target": [0, 1, 1, 0, 0, 1],
-            "n_samples": 20,
+            "nt_samples": 20,
             "stdevs": 0.0,
         },
         "noise_tunnel": True,
+        "dp_delta": 0.01,
     },
     {
         "name": "basic_multiple_target_with_baseline_nt",
@@ -309,12 +323,13 @@ config = [
             DeepLift,
             GuidedBackprop,
             Deconvolution,
+            LRP,
         ],
         "model": BasicModel_MultiLayer(),
         "attribute_args": {
             "inputs": torch.randn(4, 3),
             "target": [0, 1, 1, 0],
-            "n_samples": 20,
+            "nt_samples": 20,
             "stdevs": 0.0,
         },
         "noise_tunnel": True,
@@ -329,13 +344,14 @@ config = [
             DeepLift,
             GuidedBackprop,
             Deconvolution,
+            LRP,
         ],
         "model": BasicModel_MultiLayer(),
         "attribute_args": {
             "inputs": torch.randn(4, 3),
             "target": [(1, 0, 0), (0, 1, 1), (1, 1, 1), (0, 0, 0)],
             "additional_forward_args": (None, True),
-            "n_samples": 20,
+            "nt_samples": 20,
             "stdevs": 0.0,
         },
         "noise_tunnel": True,
@@ -350,12 +366,13 @@ config = [
             DeepLift,
             GuidedBackprop,
             Deconvolution,
+            LRP,
         ],
         "model": BasicModel_MultiLayer(),
         "attribute_args": {
             "inputs": torch.randn(4, 3),
             "target": torch.tensor([0]),
-            "n_samples": 20,
+            "nt_samples": 20,
             "stdevs": 0.0,
         },
         "noise_tunnel": True,
@@ -370,12 +387,35 @@ config = [
             DeepLift,
             GuidedBackprop,
             Deconvolution,
+            LRP,
         ],
         "model": BasicModel_MultiLayer(),
         "attribute_args": {
             "inputs": torch.randn(4, 3),
             "target": torch.tensor([0, 1, 1, 0]),
-            "n_samples": 20,
+            "nt_samples": 20,
+            "stdevs": 0.0,
+        },
+        "noise_tunnel": True,
+    },
+    {
+        "name": "basic_multi_tensor_target_batched_nt",
+        "algorithms": [
+            IntegratedGradients,
+            Saliency,
+            InputXGradient,
+            FeatureAblation,
+            DeepLift,
+            GuidedBackprop,
+            Deconvolution,
+            LRP,
+        ],
+        "model": BasicModel_MultiLayer(),
+        "attribute_args": {
+            "inputs": torch.randn(4, 3),
+            "target": torch.tensor([0, 1, 1, 0]),
+            "nt_samples": 20,
+            "nt_samples_batch_size": 2,
             "stdevs": 0.0,
         },
         "noise_tunnel": True,
@@ -1143,5 +1183,59 @@ config = [
         "model": BasicModel_MultiLayer(multi_input_module=True),
         "layer": ["multi_relu", "linear1", "linear0"],
         "attribute_args": {"inputs": torch.randn(4, 3), "target": 0},
+    },
+    {
+        "name": "basic_layer_ig_multi_layer_multi_output",
+        "algorithms": [LayerIntegratedGradients],
+        "model": BasicModel_MultiLayer_TrueMultiInput(),
+        "layer": ["m1", "m234"],
+        "attribute_args": {
+            "inputs": (
+                torch.randn(5, 3),
+                torch.randn(5, 3),
+                torch.randn(5, 3),
+                torch.randn(5, 3),
+            ),
+            "target": 0,
+        },
+    },
+    {
+        "name": "basic_layer_ig_multi_layer_multi_output_with_input_wrapper",
+        "algorithms": [LayerIntegratedGradients],
+        "model": ModelInputWrapper(BasicModel_MultiLayer_TrueMultiInput()),
+        "layer": ["module.m1", "module.m234"],
+        "attribute_args": {
+            "inputs": (
+                torch.randn(5, 3),
+                torch.randn(5, 3),
+                torch.randn(5, 3),
+                torch.randn(5, 3),
+            ),
+            "target": 0,
+        },
+    },
+    # Layer LRP
+    {
+        "name": "basic_layer_lrp",
+        "algorithms": [
+            LayerLRP,
+        ],
+        "model": BasicModel_MultiLayer(),
+        "layer": "linear2",
+        "attribute_args": {"inputs": torch.randn(4, 3), "target": 0},
+    },
+    {
+        "name": "basic_layer_lrp_multi_input",
+        "algorithms": [
+            LayerLRP,
+        ],
+        "model": BasicModel_MultiLayer_MultiInput(),
+        "layer": "model.linear1",
+        "attribute_args": {
+            "inputs": (10 * torch.randn(12, 3), 5 * torch.randn(12, 3)),
+            "additional_forward_args": (2 * torch.randn(12, 3), 5),
+            "target": 0,
+        },
+        "dp_delta": 0.0002,
     },
 ]

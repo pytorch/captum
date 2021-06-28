@@ -58,6 +58,7 @@ class Occlusion(FeatureAblation):
         target: TargetType = None,
         additional_forward_args: Any = None,
         perturbations_per_eval: int = 1,
+        show_progress: bool = False,
     ) -> TensorOrTupleOfTensorsGeneric:
         r"""
         Args:
@@ -179,6 +180,11 @@ class Occlusion(FeatureAblation):
                             (perturbations_per_eval * #examples) / num_devices
                             samples.
                             Default: 1
+                show_progress (bool, optional): Displays the progress of computation.
+                            It will try to use tqdm if available for advanced features
+                            (e.g. time estimation). Otherwise, it will fallback to
+                            a simple output of progress.
+                            Default: False
 
         Returns:
                 *tensor* or tuple of *tensors* of **attributions**:
@@ -258,6 +264,7 @@ class Occlusion(FeatureAblation):
             sliding_window_tensors=sliding_window_tensors,
             shift_counts=tuple(shift_counts),
             strides=strides,
+            show_progress=show_progress,
         )
 
     def _construct_ablated_input(
@@ -366,3 +373,7 @@ class Occlusion(FeatureAblation):
     ) -> Tuple[int, int, None]:
         feature_max = np.prod(kwargs["shift_counts"])
         return 0, feature_max, None
+
+    def _get_feature_counts(self, inputs, feature_mask, **kwargs):
+        """return the numbers of possible input features"""
+        return tuple(np.prod(counts).astype(int) for counts in kwargs["shift_counts"])

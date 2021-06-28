@@ -51,7 +51,7 @@ def report(*args):
         pass
 
 
-INSIGHTS_REQUIRES = ["flask", "ipython", "ipywidgets", "jupyter"]
+INSIGHTS_REQUIRES = ["flask", "ipython", "ipywidgets", "jupyter", "flask-compress"]
 
 INSIGHTS_FILE_SUBDIRS = [
     "insights/attr_vis/frontend/build",
@@ -145,7 +145,7 @@ if __name__ == "__main__":
         long_description_content_type="text/markdown",
         python_requires=">=3.6",
         install_requires=["matplotlib", "numpy", "torch>=1.2"],
-        packages=find_packages(),
+        packages=find_packages(exclude=("tests", "tests.*")),
         extras_require={
             "dev": DEV_REQUIRES,
             "insights": INSIGHTS_REQUIRES,
@@ -159,7 +159,6 @@ if __name__ == "__main__":
                 [
                     "captum/insights/attr_vis/widget/static/extension.js",
                     "captum/insights/attr_vis/widget/static/index.js",
-                    "captum/insights/attr_vis/widget/static/index.js.map",
                 ],
             ),
             (

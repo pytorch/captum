@@ -23,6 +23,12 @@ class Test(BaseTest):
         inp = torch.tensor([[0.0, 100.0, 0.0]], requires_grad=True)
         self._layer_activation_test_assert(net, net.linear0, inp, [0.0, 400.0, 0.0])
 
+    def test_simple_input_gradient_activation_no_grad(self) -> None:
+        net = BasicModel_MultiLayer()
+        inp = torch.tensor([[0.0, 100.0, 0.0]], requires_grad=True)
+        with torch.no_grad():
+            self._layer_activation_test_assert(net, net.linear0, inp, [0.0, 400.0, 0.0])
+
     def test_simple_linear_gradient_activation(self) -> None:
         net = BasicModel_MultiLayer()
         inp = torch.tensor([[0.0, 100.0, 0.0]])
@@ -33,9 +39,10 @@ class Test(BaseTest):
     def test_multi_layer_linear_gradient_activation(self) -> None:
         net = BasicModel_MultiLayer()
         inp = torch.tensor([[0.0, 100.0, 0.0]])
+        module_list: List[Module] = [net.linear0, net.linear1]
         self._layer_activation_test_assert(
             net,
-            [net.linear0, net.linear1],
+            module_list,
             inp,
             ([0.0, 400.0, 0.0], [90.0, 101.0, 101.0, 101.0]),
         )
@@ -68,9 +75,10 @@ class Test(BaseTest):
     def test_multi_layer_multi_gradient_activation(self) -> None:
         net = BasicModel_MultiLayer(multi_input_module=True)
         inp = torch.tensor([[3.0, 4.0, 0.0]])
+        module_list: List[Module] = [net.multi_relu, net.linear0]
         self._layer_activation_test_assert(
             net,
-            [net.multi_relu, net.linear0],
+            module_list,
             inp,
             [([0.0, 8.0, 8.0, 8.0], [0.0, 8.0, 8.0, 8.0]), [9.0, 12.0, 0.0]],
         )
@@ -106,6 +114,19 @@ class Test(BaseTest):
         self.assertEqual(
             list(layer_act.attribute(inputs=(input1, input2)).shape), [4, 100]
         )
+
+    def test_gradient_activation_embedding_no_grad(self) -> None:
+        input1 = torch.tensor([2, 5, 0, 1])
+        input2 = torch.tensor([3, 0, 0, 2])
+        model = BasicEmbeddingModel()
+        for param in model.parameters():
+            param.requires_grad = False
+
+        with torch.no_grad():
+            layer_act = LayerGradientXActivation(model, model.embedding1)
+            self.assertEqual(
+                list(layer_act.attribute(inputs=(input1, input2)).shape), [4, 100]
+            )
 
     def _layer_activation_test_assert(
         self,

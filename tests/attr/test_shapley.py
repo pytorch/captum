@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 
+import io
 import unittest
+import unittest.mock
 from typing import Any, Callable, Tuple, Union
 
 import torch
@@ -11,6 +13,7 @@ from tests.helpers.basic import BaseTest, assertTensorTuplesAlmostEqual
 from tests.helpers.basic_models import (
     BasicModel_MultiLayer,
     BasicModel_MultiLayer_MultiInput,
+    BasicModelBoolInput,
 )
 
 
@@ -34,6 +37,29 @@ class Test(BaseTest):
             inp,
             [275.0, 275.0, 115.0],
             feature_mask=torch.tensor([[0, 0, 1]]),
+            perturbations_per_eval=(1, 2, 3),
+        )
+
+    def test_simple_shapley_sampling_boolean(self) -> None:
+        net = BasicModelBoolInput()
+        inp = torch.tensor([[True, False, True]])
+        self._shapley_test_assert(
+            net,
+            inp,
+            [35.0, 35.0, 35.0],
+            feature_mask=torch.tensor([[0, 0, 1]]),
+            perturbations_per_eval=(1, 2, 3),
+        )
+
+    def test_simple_shapley_sampling_boolean_with_baseline(self) -> None:
+        net = BasicModelBoolInput()
+        inp = torch.tensor([[True, False, True]])
+        self._shapley_test_assert(
+            net,
+            inp,
+            [-40.0, -40.0, 0.0],
+            feature_mask=torch.tensor([[0, 0, 1]]),
+            baselines=True,
             perturbations_per_eval=(1, 2, 3),
         )
 
@@ -222,6 +248,64 @@ class Test(BaseTest):
             lambda *inp: int(torch.sum(net(*inp)).item())
         )
 
+    @unittest.mock.patch("sys.stderr", new_callable=io.StringIO)
+    def test_shapley_sampling_with_show_progress(self, mock_stderr) -> None:
+        net = BasicModel_MultiLayer()
+        inp = torch.tensor([[20.0, 50.0, 30.0]], requires_grad=True)
+
+        # test progress output for each batch size
+        for bsz in (1, 2, 3):
+            self._shapley_test_assert(
+                net,
+                inp,
+                [76.66666, 196.66666, 116.66666],
+                perturbations_per_eval=(bsz,),
+                n_samples=250,
+                show_progress=True,
+            )
+            output = mock_stderr.getvalue()
+
+            # to test if progress calculation aligns with the actual iteration
+            # all perturbations_per_eval should reach progress of 100%
+            assert (
+                "Shapley Value Sampling attribution: 100%" in output
+            ), f"Error progress output: {repr(output)}"
+            assert (
+                "Shapley Values attribution: 100%" in output
+            ), f"Error progress output: {repr(output)}"
+
+            mock_stderr.seek(0)
+            mock_stderr.truncate(0)
+
+    @unittest.mock.patch("sys.stderr", new_callable=io.StringIO)
+    def test_shapley_sampling_with_mask_and_show_progress(self, mock_stderr) -> None:
+        net = BasicModel_MultiLayer()
+        inp = torch.tensor([[20.0, 50.0, 30.0]], requires_grad=True)
+
+        # test progress output for each batch size
+        for bsz in (1, 2, 3):
+            self._shapley_test_assert(
+                net,
+                inp,
+                [275.0, 275.0, 115.0],
+                feature_mask=torch.tensor([[0, 0, 1]]),
+                perturbations_per_eval=(bsz,),
+                show_progress=True,
+            )
+            output = mock_stderr.getvalue()
+
+            # to test if progress calculation aligns with the actual iteration
+            # all perturbations_per_eval should reach progress of 100%
+            assert (
+                "Shapley Value Sampling attribution: 100%" in output
+            ), f"Error progress output: {repr(output)}"
+            assert (
+                "Shapley Values attribution: 100%" in output
+            ), f"Error progress output: {repr(output)}"
+
+            mock_stderr.seek(0)
+            mock_stderr.truncate(0)
+
     def _single_input_one_sample_batch_scalar_shapley_assert(
         self, func: Callable
     ) -> None:
@@ -304,6 +388,7 @@ class Test(BaseTest):
         n_samples: int = 100,
         delta: float = 1.0,
         test_true_shapley: bool = True,
+        show_progress: bool = False,
     ) -> None:
         for batch_size in perturbations_per_eval:
             shapley_samp = ShapleyValueSampling(model)
@@ -315,6 +400,7 @@ class Test(BaseTest):
                 baselines=baselines,
                 perturbations_per_eval=batch_size,
                 n_samples=n_samples,
+                show_progress=show_progress,
             )
             assertTensorTuplesAlmostEqual(
                 self, attributions, expected_attr, delta=delta, mode="max"
@@ -328,6 +414,7 @@ class Test(BaseTest):
                     additional_forward_args=additional_input,
                     baselines=baselines,
                     perturbations_per_eval=batch_size,
+                    show_progress=show_progress,
                 )
                 assertTensorTuplesAlmostEqual(
                     self, attributions, expected_attr, mode="max", delta=0.001

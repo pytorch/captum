@@ -7,7 +7,7 @@ class Addition_Module(nn.Module):
     propagation. Any addition in a forward function needs to be replaced with the
     module before using LRP."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
 
     def forward(self, x1, x2):
