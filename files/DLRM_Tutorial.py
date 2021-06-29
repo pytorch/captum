@@ -46,9 +46,15 @@ from captum.attr import IntegratedGradients, LayerConductance, NeuronConductance
 import matplotlib.pyplot as plt
 
 
+# In[3]:
+
+
+torch.__version__
+
+
 # Defining the device used to store the model and the tensors.
 
-# In[3]:
+# In[4]:
 
 
 device = torch.device("cuda:1" if torch.cuda.is_available() else "cpu")
@@ -56,7 +62,7 @@ device = torch.device("cuda:1" if torch.cuda.is_available() else "cpu")
 
 # Initializing an instance of `DLRM_Net` model and defining parameters necessary to load pretrained DLRM model.
 
-# In[4]:
+# In[5]:
 
 
 m_spa=16
@@ -87,7 +93,7 @@ dlrm = DLRM_Net(
 
 # Let's download pre-trained dlrm model from AWS S3 bucket.
 
-# In[ ]:
+# In[6]:
 
 
 get_ipython().system('wget https://pytorch-tutorial-assets.s3.amazonaws.com/kg.pt -O models/kg.pt')
@@ -95,7 +101,7 @@ get_ipython().system('wget https://pytorch-tutorial-assets.s3.amazonaws.com/kg.p
 
 # Loading pre-trained DLRM model and moving it to predefined device.
 
-# In[5]:
+# In[7]:
 
 
 model_path = 'models/kg.pt'
@@ -113,7 +119,7 @@ dlrm = dlrm.to(device)
 # 
 # 
 
-# In[6]:
+# In[8]:
 
 
 S_T_Z_test_above_0999 = torch.load('data/dlrm/X_S_T_test_above_0999')
@@ -122,7 +128,7 @@ S_T_Z_test = torch.load('data/dlrm/X_S_T_test')
 
 # Re-defining forwad pass for the DLRM model so that it accepts sparse embeddings instead of feature indices and offsets. This is done this way because `apply_emb` cannot be easily replaced by model hooks. https://github.com/facebookresearch/dlrm/blob/52b77f80a24303294a02c86b574529cdc420aac5/dlrm_s_pytorch.py#L276 
 
-# In[7]:
+# In[9]:
 
 
 def sequential_forward(dense_x, *sparse_y):
@@ -148,7 +154,7 @@ def sequential_forward(dense_x, *sparse_y):
 # Let's extract individual features for each sample from both batches of data. Each sample is represented through dense and sparse features. In this example `X_test` represents dense features. `lS_o_test` and `lS_i_test` represent sparse features. `lS_o_test` represents the offset of each sparse feature group and `lS_i_test` the index. More details about it can be found here: https://github.com/facebookresearch/dlrm/blob/52b77f80a24303294a02c86b574529cdc420aac5/dlrm_s_pytorch.py#L276
 # 
 
-# In[8]:
+# In[10]:
 
 
 X_test_above_0999 = S_T_Z_test_above_0999['X_test'].to(device)
@@ -157,7 +163,7 @@ lS_i_test_above_0999 = S_T_Z_test_above_0999['lS_i_test'].to(device)
 probs_above_0999 = S_T_Z_test_above_0999['probs'].to(device)
 
 
-# In[9]:
+# In[11]:
 
 
 X_test = S_T_Z_test['X_test'].to(device)
@@ -166,17 +172,11 @@ lS_i_test = S_T_Z_test['lS_i_test'].to(device)
 probs = S_T_Z_test['probs'].to(device)
 
 
-# In[10]:
-
-
-embeddings = dlrm.apply_emb(lS_o_test, lS_i_test, dlrm.emb_l)
-
-
 # # Feature Importance
 
 # We used one of the sample-based feature importance algorithms, namely Integrated Gradients, in order to understand which features are important in predicting Ads as `Clicked` with high prediction scores. 
 
-# In[11]:
+# In[12]:
 
 
 ig = IntegratedGradients(sequential_forward)
@@ -184,17 +184,17 @@ ig = IntegratedGradients(sequential_forward)
 
 # Below we compute feature importances both for dense and sparse features. We performed the computations both for the batch that contains Ads that are predicted as `Clicked` with high prediction score and the batch that doesn't set any conditions on the prediction score.
 
-# In[12]:
+# In[13]:
 
 
-embeddings = dlrm.apply_emb(lS_o_test, lS_i_test, dlrm.emb_l)
+embeddings = dlrm.apply_emb(lS_o_test, lS_i_test, dlrm.emb_l, dlrm.v_W_l)
 
 attributions, delta = ig.attribute((X_test, *embeddings), n_steps=10, return_convergence_delta=True)
 attr_dense = attributions[0]
 attr_sparse = torch.stack(attributions[1:], dim=1)
 
 # ...... the batch that contains Ads that are predicted as Clicked with high prediction score ......
-embeddings_above_0999 = dlrm.apply_emb(lS_o_test_above_0999, lS_i_test_above_0999, dlrm.emb_l)
+embeddings_above_0999 = dlrm.apply_emb(lS_o_test_above_0999, lS_i_test_above_0999, dlrm.emb_l, dlrm.v_W_l)
 
 attributions_above_0999, delta_above_0999 = ig.attribute((X_test_above_0999, *embeddings_above_0999),                                                           n_steps=10, return_convergence_delta=True)
 attr_dense_above_0999 = attributions_above_0999[0]
@@ -203,7 +203,7 @@ attr_sparse_above_0999 = torch.stack(attributions_above_0999[1:], dim=1)
 
 # Defining labels / names for dense and sparse features.
 
-# In[13]:
+# In[14]:
 
 
 dense_names = ['d{}'.format(i) for i in range(attr_dense.shape[1])]
@@ -212,9 +212,9 @@ sparse_names = ['s{}'.format(i) for i in range(attr_sparse.shape[1])]
 names = dense_names + sparse_names
 
 
-# Below we visualize feature importance scores for 5 different Ads, color-coded in 5 different colors that were predicted as `Clicked` with 0.999 prediction score. X-axis corresponds to the input features and y to the attribution scores. The first 13 features correspond to dense and the last 26 to sparse features. As we can see, the sparse features primarily contribute to `Clicked` predictions whereas dense, contribute to both `Clicked` and `Non-Clicked`.
+# Below we visualize feature importance scores for 5 different Ads, color-coded in 5 different colors that were predicted as `Clicked` with 0.999 prediction score. X-axis corresponds to the input features and y-axis to the attribution scores. The first 13 features correspond to dense and the last 26 to sparse features. As we can see, the sparse features primarily contribute to `Clicked` predictions whereas dense, contribute to both `Clicked` and `Non-Clicked` predictions.
 
-# In[14]:
+# In[15]:
 
 
 import matplotlib.pyplot as plt
@@ -256,7 +256,7 @@ plt.show()
 
 # A helper function to plot aggregated feature importance.
 
-# In[15]:
+# In[16]:
 
 
 def plot_fi(fi_scores, title, x_axis='Input Features',             x_axis_labels=dense_names + sparse_names, y_axis='Attribution'):
@@ -274,21 +274,21 @@ def plot_fi(fi_scores, title, x_axis='Input Features',             x_axis_labels
 # Below we plot aggregated feature importance scores across all 497 samples that have a prediction score close to 1.0.
 # We can see that the primary and consistent high predictive signal is coming from the sparse features. Dense features contribute to both `Clicked` and `Non-Clicked` predictions.
 
-# In[16]:
+# In[17]:
 
 
 all_features_above_0999 = torch.cat([attr_dense_above_0999.sum(dim=0), attr_sparse_above_0999.sum(dim=(0,2))])
 plot_fi(all_features_above_0999, 'Feature Importances cross {} Examples that were predicted as Ads with a '         'prediction score > 0.999'.format(len(probs_above_0999)))
 
 
-# In this example, instead of taking samples with the high prediction score let's consider all samples in `S_T_Z_test` batch. We can clearly see that the relative contribution score for the sparse features reduces and the dense features became significantly prominent which speaks to the fact that the primary signal for `Non-Clicked` is coming from the dense features. This observation is however made by using all-zero baseline for the Integrated Gradients algorithm.
+# In the next example, instead of taking samples with the high prediction score let's consider all samples in `S_T_Z_test` batch. We can clearly see that the relative contribution score for the sparse features reduces and the dense features became significantly prominent which speaks to the fact that the primary signal for `Non-Clicked` is coming from the dense features. This observation, however, is made by using all-zero baseline for the Integrated Gradients algorithm.
 # When we compute prediction score for all-zero input tensor we observe that the prediction score is 0.2, `Non-Clicked`. Ideally we would like the prediction score for baseline to be more neutral, somewhere close to 0.
 # 
 # To dig deeper into whether sparse or dense features are more important for `Clicked` and `Non-Clicked` predictions we set those features to 0, one at a time and observe prediction score changes.
 
 # If we zero out all sparse features we notice that all samples get classified as `Non-Clicked`.
 
-# In[17]:
+# In[18]:
 
 
 embeddings_above_0999_zeros = [torch.zeros_like(embedding) for embedding in embeddings_above_0999]
@@ -299,9 +299,9 @@ print("The percentage of samples that are classified as `Clicked` after "
       "zeroing out sparse features: {}%".format(zero_emb_perc))
 
 
-# If we zero out dense features we notice that about the half of the Ads are still classified and `Clicked`. If we look closer into the scores we will noticed that for some samples that scores have even increased.
+# If we zero out dense features, we notice that almost all Ads still classified as `Clicked`. If we look closer into the scores we will noticed that for some samples the scores have even increased.
 
-# In[18]:
+# In[19]:
 
 
 zero_dense_perc = 100 * sum(sequential_forward(torch.zeros_like(X_test_above_0999),                                                *embeddings_above_0999) > 0.5).item() / X_test_above_0999.size(0)
@@ -309,7 +309,7 @@ print("The percentage of samples that are classified as `Clicked` "
       "after zero-ing out dense features: {}%".format(int(zero_dense_perc)))
 
 
-# In[19]:
+# In[20]:
 
 
 all_features = torch.cat([attr_dense.sum(dim=0), attr_sparse.sum(dim=(0,2))])
@@ -322,13 +322,13 @@ plot_fi(all_features, 'Feature Importances cross {} Examples that were predicted
 # 
 # We use Layer Conductance algorithm to estimate the importance of all 367 neurons. 
 
-# In[20]:
+# In[21]:
 
 
 lc = LayerConductance(sequential_forward, dlrm.top_l)
 
 
-# In[21]:
+# In[22]:
 
 
 layer_attribution = lc.attribute(inputs=(X_test_above_0999, *embeddings_above_0999),
@@ -336,10 +336,10 @@ layer_attribution = lc.attribute(inputs=(X_test_above_0999, *embeddings_above_09
                                               attribute_to_layer_input=True)
 
 
-# The figure below demonstrates the importance scores of each neuron in the output of interaction layer. First 16 neurons have mixed contributions both to `Clicked` and `Non-Clicked` predictions. The following 351 interaction neurons either primarily contribute to `Clicked` or have no effect on the prediction. In fact we can see that many of those interactions have no effect on the prediction. This observations, however, are supported by 497 samples that are predicted as `Clicked` with a prediction score larger than 0.999. One might think that the samples might not be representative enough, however, even if we increase the sample size we still observe similar patterns. As an extension of this work one might think of performing statistical significance testing for random subsamples that are predicted as `Clicked` with high prediction score to make more convincing statements.
+# The figure below demonstrates the importance scores of each neuron in the output of interaction layer. First 16 neurons have mixed contributions both to `Clicked` and `Non-Clicked` predictions. The following 351 interaction neurons either primarily contribute to `Clicked` or have no effect on the prediction. In fact we can see that many of those interactions have no effect on the prediction. This observations, however, are supported by 497 samples that are predicted as `Clicked` with a prediction score larger than 0.999. One might think that the samples might not be representative enough, however, even if we increase the sample size we still observe similar patterns. As an extension of this work one might think of performing statistical significance testing for random subsamples that are predicted as `Clicked` with high prediction score to make more convincing arguments.
 # 
 
-# In[22]:
+# In[23]:
 
 
 layer_attrs_all_sum = layer_attribution.sum(axis=0)
@@ -350,9 +350,9 @@ plot_fi(layer_attrs_all_sum,         title='Feature Interaction Importances for 
        )
 
 
-# Please note that in the example above we sum the attributions across all examples for each neuron. This means that if the attributions are positive and negative they can cancel out each other. For deeper analysis we also recommend to look into attribution scores assigned by each example for a given neuron. For the neurons indexed with 5 and 6 we observe zero score is assigned consistently across all samples.
+# Please note that in the example above we sum the attributions across all examples for each neuron. This means that if the attributions are positive and negative they can cancel out each other. For deeper analysis we also recommend to look into attribution scores assigned by each example for a given neuron. For the neurons indexed with 5 and 6 we observe that zero score is assigned consistently across all samples.
 
-# In[23]:
+# In[24]:
 
 
 print("The percentage of samples that have zero attribution for neuron "
@@ -365,19 +365,19 @@ print("The percentage of samples that have zero attribution for neuron "
 
 # # Neuron Importance
 
-# In the last experiment we look into the aggregated attribution scores stacked for 82 Ads that were predicted as `Clicked` with prediction score > 0.6 for all 256 neurons in the last fully connected layer.
+# In this last section we look into the aggregated attribution scores stacked for 82 Ads that were predicted as `Clicked` with prediction score > 0.6 for all 256 neurons in the last fully connected layer.
 # 
 # For our experiments we used LayerConductance algorithm for `top_l` layer.
 
-# In[24]:
+# In[25]:
 
 
 ncl = LayerConductance(sequential_forward, dlrm.top_l[3])
 
 
-# On figure below we visualize stacked attribution score per neuron, considering that the attribution scores can be both positive and negative. When we analyze resulting neuron importances, we conclude that 42 out of 256 neurons always assigned a negative and another 13 always assigned zero attribution scores according to all 82 Ads samples with prediction score > 0.6. The remaining neurons are assigned either positive or mixed (positive, zero or negative) attribution scores.
+# On figure below we visualize stacked attribution scores per neuron, considering that the attribution scores can be both positive and negative. When we analyze resulting neuron importances, we conclude that 45 out of 256 neurons always assigned a negative and another 24 always assigned zero attribution scores according to all 82 Ads samples with prediction score > 0.6. The remaining neurons are assigned either positive or mixed (positive, zero or negative) attribution scores.
 
-# In[25]:
+# In[ ]:
 
 
 indices = (probs.squeeze() > 0.6).nonzero().view(-1)
@@ -390,7 +390,7 @@ neuron_attributions_select = neuron_attributions_select.cpu().detach().numpy()
 
 # Below we can see the attributions for 10 samples stacked on each other for all 256 neurons in the last fully connected layer. We chose 10 samples only because it is visually easier to perceive.
 
-# In[29]:
+# In[30]:
 
 
 all_neurons = pd.DataFrame(neuron_attributions_select[:, :10])
@@ -402,7 +402,7 @@ plt.ylabel('Neuron Indices', fontsize=40)
 
 # The number of neurons that have zero contribution in predicting that an Ad is `Clicked` out of all 82 samples.
 
-# In[27]:
+# In[28]:
 
 
 zero_contributions = sum((neuron_attributions_select != 0.0).sum(axis=1) == 0.0)
@@ -411,7 +411,7 @@ zero_contributions
 
 # The number of neurons that have negative contributions in predicting that an Ad is Clicked out of all 82 samples.
 
-# In[28]:
+# In[29]:
 
 
 negative_contributions = sum((neuron_attributions_select > 0.0).sum(axis=1) == 0.0) - zero_contributions
@@ -420,6 +420,6 @@ negative_contributions
 
 # # Model pruning based on neuron importance
 
-# We can extend our analysis further and ablate the neurons that have zero contribution to the prediction or are negatively correlated with the ads prediction across all samples. According to the specific examples demonstrated above we can see that based on our sample size of 82(prediction score > 0.6), 13 neurons out of all 256 always demonstrate zero contribution to the prediction. If we ablate this neurons we can see that the False Negatives are reducing and overall Recall and F1 score of the model are increasing. Since this is a tutorial and measuring the accuracy and F1 scores on test data can be time consuming we do not demonstrate it here but the users are welcome to ablate those neurons based on the neuron importance scores and examine the difference in the Accurancy and F1 scores.
+# We can extend our analysis further and ablate the neurons that have zero contribution to the prediction or are negatively correlated with the ads prediction across all samples. According to the specific examples demonstrated above we can see that based on our sample size of 82(prediction score > 0.6), 24 neurons out of all 256 always demonstrate zero contribution to the prediction. If we ablate this neurons we can see that the False Negatives are reducing and overall Recall and F1 score of the model are increasing. Since this is a tutorial and measuring the accuracy and F1 scores on test data can be time consuming we do not demonstrate it here but the users are welcome to ablate those neurons based on the neuron importance scores and examine the difference in the Accurancy and F1 scores.
 # 
 # Similar thinking can also be applied to the neurons that are always negatively correlated with the `Clicked` prediction.
