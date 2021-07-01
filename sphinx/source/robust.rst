@@ -13,3 +13,17 @@ PGD
 
 .. autoclass:: captum.robust.PGD
     :members:
+
+
+Attack Comparator
+^^^^^^^^^^^^^^^^^
+
+.. autoclass:: captum.robust.AttackComparator
+    :members:
+
+
+Min Param Perturbation
+^^^^^^^^^^^^^^^^
+
+.. autoclass:: captum.robust.MinParamPerturbation
+    :members:
