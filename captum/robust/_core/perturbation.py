@@ -34,3 +34,6 @@ class Perturbation:
                     is returned. If a tuple is provided for inputs, a tuple of
                     corresponding sized tensors is returned.
     """
+
+    def __call__(self, *args, **kwargs):
+        return self.perturb(*args, **kwargs)
