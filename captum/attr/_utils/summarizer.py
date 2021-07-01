@@ -2,6 +2,7 @@
 
 from typing import Dict, List, Optional, Tuple, Type, Union
 
+import torch
 from torch import Tensor
 
 from captum.attr._utils.stat import MSE, Count, Max, Mean, Min, Stat, StdDev, Sum, Var
@@ -76,6 +77,8 @@ class Summarizer:
                         stats=stats, summary_stats_indices=self._summary_stats_indicies
                     )
                 )
+            if not isinstance(inp, torch.Tensor):
+                inp = torch.tensor(inp, dtype=torch.float)
             self._summarizers[i].update(inp)
 
     @property
