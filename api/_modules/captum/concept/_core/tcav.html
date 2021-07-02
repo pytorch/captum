@@ -1,0 +1,757 @@
+<!DOCTYPE html><html lang="en"><head><meta charSet="utf-8"/><meta http-equiv="X-UA-Compatible" content="IE=edge"/><title>Captum · Model Interpretability for PyTorch</title><meta name="viewport" content="width=device-width"/><meta name="generator" content="Docusaurus"/><meta name="description" content="Model Interpretability for PyTorch"/><meta name="docsearch:language" content="en"/><meta property="og:title" content="Captum · Model Interpretability for PyTorch"/><meta property="og:type" content="website"/><meta property="og:url" content="https://captum.ai/"/><meta property="og:description" content="Model Interpretability for PyTorch"/><meta property="og:image" content="https://captum.ai/img/captum-icon.png"/><meta name="twitter:card" content="summary"/><meta name="twitter:image" content="https://captum.ai/img/captum.png"/><link rel="shortcut icon" href="/img/captum.ico"/><link rel="stylesheet" href="https://cdn.jsdelivr.net/docsearch.js/1/docsearch.min.css"/><link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/default.min.css"/><script>
+              (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+              (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+              m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+              })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+              ga('create', 'UA-44373548-48', 'auto');
+              ga('send', 'pageview');
+            </script><link rel="stylesheet" href="/css/code_block_buttons.css"/><script type="text/javascript" src="https://buttons.github.io/buttons.js"></script><script type="text/javascript" src="/js/code_block_buttons.js"></script><script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.0/clipboard.min.js"></script><script type="text/javascript" src="/js/mathjax.js"></script><script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS_HTML"></script><script src="https://unpkg.com/vanilla-back-to-top@7.1.14/dist/vanilla-back-to-top.min.js"></script><script>
+        document.addEventListener('DOMContentLoaded', function() {
+          addBackToTop(
+            {"zIndex":100}
+          )
+        });
+        </script><script src="/js/scrollSpy.js"></script><link rel="stylesheet" href="/css/main.css"/><script src="/js/codetabs.js"></script></head><body><div class="fixedHeaderContainer"><div class="headerWrapper wrapper"><header><a href="/"><img class="logo" src="/img/captum_logo.svg" alt="Captum"/></a><div class="navigationWrapper navigationSlider"><nav class="slidingNav"><ul class="nav-site nav-site-internal"><li class=""><a href="/docs/introduction" target="_self">Docs</a></li><li class=""><a href="/tutorials/" target="_self">Tutorials</a></li><li class=""><a href="/api/" target="_self">API Reference</a></li><li class=""><a href="https://github.com/pytorch/captum" target="_self">GitHub</a></li><li class="navSearchWrapper reactNavSearchWrapper"><input type="text" id="search_input_react" placeholder="Search" title="Search"/></li></ul></nav></div></header></div></div><div class="navPusher"><div>
+<script type="text/javascript" id="documentation_options" data-url_root="./"
+  src="/js/documentation_options.js"></script>
+<script type="text/javascript" src="/js/jquery.js"></script>
+<script type="text/javascript" src="/js/underscore.js"></script>
+<script type="text/javascript" src="/js/doctools.js"></script>
+<script type="text/javascript" src="/js/language_data.js"></script>
+<script type="text/javascript" src="/js/searchtools.js"></script>
+<div class="sphinx"><div class="document">
+<div class="documentwrapper">
+<div class="bodywrapper">
+<div class="body" role="main">
+<h1>Source code for captum.concept._core.tcav</h1><div class="highlight"><pre>
+<span></span><span class="ch">#!/usr/bin/env python3</span>
+
+<span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">defaultdict</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Set</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Union</span><span class="p">,</span> <span class="n">cast</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">torch</span>
+<span class="kn">import</span> <span class="nn">torch.multiprocessing</span> <span class="k">as</span> <span class="nn">multiprocessing</span>
+<span class="kn">from</span> <span class="nn">torch</span> <span class="kn">import</span> <span class="n">Tensor</span>
+<span class="kn">from</span> <span class="nn">torch.nn</span> <span class="kn">import</span> <span class="n">Module</span>
+
+<span class="kn">from</span> <span class="nn">captum._utils.common</span> <span class="kn">import</span> <span class="n">_format_tensor_into_tuples</span><span class="p">,</span> <span class="n">_get_module_from_name</span>
+<span class="kn">from</span> <span class="nn">captum._utils.typing</span> <span class="kn">import</span> <span class="n">TargetType</span><span class="p">,</span> <span class="n">TensorOrTupleOfTensorsGeneric</span>
+<span class="kn">from</span> <span class="nn">captum.attr</span> <span class="kn">import</span> <span class="n">LayerActivation</span><span class="p">,</span> <span class="n">LayerAttribution</span><span class="p">,</span> <span class="n">LayerGradientXActivation</span>
+<span class="kn">from</span> <span class="nn">captum.concept._core.av</span> <span class="kn">import</span> <span class="n">AV</span>
+<span class="kn">from</span> <span class="nn">captum.concept._core.cav</span> <span class="kn">import</span> <span class="n">CAV</span>
+<span class="kn">from</span> <span class="nn">captum.concept._core.concept</span> <span class="kn">import</span> <span class="n">Concept</span><span class="p">,</span> <span class="n">ConceptInterpreter</span>
+<span class="kn">from</span> <span class="nn">captum.concept._utils.classifier</span> <span class="kn">import</span> <span class="n">Classifier</span><span class="p">,</span> <span class="n">DefaultClassifier</span>
+<span class="kn">from</span> <span class="nn">captum.concept._utils.common</span> <span class="kn">import</span> <span class="n">concepts_to_str</span>
+
+
+<span class="k">def</span> <span class="nf">train_cav</span><span class="p">(</span>
+    <span class="n">concepts</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Concept</span><span class="p">],</span>
+    <span class="n">layers</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]],</span>
+    <span class="n">classifier</span><span class="p">:</span> <span class="n">Classifier</span><span class="p">,</span>
+    <span class="n">save_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">classifier_kwargs</span><span class="p">:</span> <span class="n">Dict</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">CAV</span><span class="p">]]:</span>
+    <span class="sa">r</span><span class="sd">"""</span>
+<span class="sd">    A helper function for parallel CAV computations that can be called</span>
+<span class="sd">    from a python process.</span>
+
+<span class="sd">    Please see the TCAV class documentation for further information.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        concepts (list[Concept]): A list of Concept objects that are used</span>
+<span class="sd">                to train a classifier and learn decision boundaries between</span>
+<span class="sd">                those concepts for each layer defined in the `layers`</span>
+<span class="sd">                argument.</span>
+<span class="sd">        layers (str, list[str]): A list of layer names or a single layer</span>
+<span class="sd">                name that is used to compute the activations of all concept</span>
+<span class="sd">                examples per concept and train a classifier using those</span>
+<span class="sd">                activations.</span>
+<span class="sd">        classifier (Classifier): A custom classifier class, such as the</span>
+<span class="sd">                Sklearn "linear_model" that allows us to train a model</span>
+<span class="sd">                using the activation vectors extracted for a layer per concept.</span>
+<span class="sd">                It also allows us to access trained weights of the classifier</span>
+<span class="sd">                and the list of prediction classes.</span>
+<span class="sd">        save_path (str): The path for storing Concept Activation</span>
+<span class="sd">                Vectors (CAVs) and Activation Vectors (AVs).</span>
+<span class="sd">        classifier_kwargs (dict): Additional named arguments that are passed to</span>
+<span class="sd">                concept classifier's `train_and_eval` method.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        cavs (dict): A dictionary of CAV objects indexed by concept ids and</span>
+<span class="sd">                layer names. It gives access to the weights of each concept</span>
+<span class="sd">                in a given layer and model statistics such as accuracies</span>
+<span class="sd">                that resulted in trained concept weights.</span>
+<span class="sd">    """</span>
+
+    <span class="n">concepts_key</span> <span class="o">=</span> <span class="n">concepts_to_str</span><span class="p">(</span><span class="n">concepts</span><span class="p">)</span>
+    <span class="n">cavs</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">CAV</span><span class="p">]]</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">()</span>
+    <span class="n">cavs</span><span class="p">[</span><span class="n">concepts_key</span><span class="p">]</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">()</span>
+    <span class="n">layers</span> <span class="o">=</span> <span class="p">[</span><span class="n">layers</span><span class="p">]</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">layers</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="k">else</span> <span class="n">layers</span>
+    <span class="k">for</span> <span class="n">layer</span> <span class="ow">in</span> <span class="n">layers</span><span class="p">:</span>
+        <span class="c1"># Create data loader to initialize the trainer.</span>
+        <span class="n">dataloader</span> <span class="o">=</span> <span class="n">AV</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">save_path</span><span class="p">,</span> <span class="n">layer</span><span class="p">,</span> <span class="n">concepts</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="p">(</span>
+            <span class="n">dataloader</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+        <span class="p">),</span> <span class="s2">"Cannot load concepts for given layer: </span><span class="si">{}</span><span class="s2">"</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">layer</span><span class="p">)</span>
+
+        <span class="c1"># Train and evaluate the model provided in the classifier</span>
+        <span class="n">classifier_stats_dict</span> <span class="o">=</span> <span class="n">classifier</span><span class="o">.</span><span class="n">train_and_eval</span><span class="p">(</span>
+            <span class="n">dataloader</span><span class="p">,</span> <span class="o">**</span><span class="n">classifier_kwargs</span>
+        <span class="p">)</span>
+        <span class="n">classifier_stats_dict</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="p">{}</span> <span class="k">if</span> <span class="n">classifier_stats_dict</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">classifier_stats_dict</span>
+        <span class="p">)</span>
+
+        <span class="n">weights</span> <span class="o">=</span> <span class="n">classifier</span><span class="o">.</span><span class="n">weights</span><span class="p">()</span>
+        <span class="k">assert</span> <span class="p">(</span>
+            <span class="n">weights</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">weights</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span>
+        <span class="p">),</span> <span class="s2">"Model weights connot be None or empty"</span>
+
+        <span class="n">classes</span> <span class="o">=</span> <span class="n">classifier</span><span class="o">.</span><span class="n">classes</span><span class="p">()</span>
+        <span class="k">assert</span> <span class="p">(</span>
+            <span class="n">classes</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">classes</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span>
+        <span class="p">),</span> <span class="s2">"Classes cannot be None or empty"</span>
+
+        <span class="n">classes</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">cast</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">classes</span><span class="p">)</span><span class="o">.</span><span class="n">detach</span><span class="p">()</span><span class="o">.</span><span class="n">numpy</span><span class="p">()</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">classes</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">)</span>
+            <span class="k">else</span> <span class="n">classes</span>
+        <span class="p">)</span>
+        <span class="n">cavs</span><span class="p">[</span><span class="n">concepts_key</span><span class="p">][</span><span class="n">layer</span><span class="p">]</span> <span class="o">=</span> <span class="n">CAV</span><span class="p">(</span>
+            <span class="n">concepts</span><span class="p">,</span>
+            <span class="n">layer</span><span class="p">,</span>
+            <span class="p">{</span><span class="s2">"weights"</span><span class="p">:</span> <span class="n">weights</span><span class="p">,</span> <span class="s2">"classes"</span><span class="p">:</span> <span class="n">classes</span><span class="p">,</span> <span class="o">**</span><span class="n">classifier_stats_dict</span><span class="p">},</span>
+            <span class="n">save_path</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="c1"># Saving cavs on the disk</span>
+        <span class="n">cavs</span><span class="p">[</span><span class="n">concepts_key</span><span class="p">][</span><span class="n">layer</span><span class="p">]</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
+
+    <span class="k">return</span> <span class="n">cavs</span>
+
+
+<div class="viewcode-block" id="TCAV"><a class="viewcode-back" href="../../../../concept.html#captum.concept.TCAV">[docs]</a><span class="k">class</span> <span class="nc">TCAV</span><span class="p">(</span><span class="n">ConceptInterpreter</span><span class="p">):</span>
+    <span class="sa">r</span><span class="sd">"""</span>
+<span class="sd">    This class implements ConceptInterpreter abstract class using an</span>
+<span class="sd">    approach called Testing with Concept Activation Vectors (TCAVs),</span>
+<span class="sd">    as described in the paper:</span>
+<span class="sd">        https://arxiv.org/pdf/1711.11279.pdf</span>
+
+<span class="sd">    TCAV scores for a given layer, a list of concepts and input example</span>
+<span class="sd">    are computed using the dot product between prediction's layer</span>
+<span class="sd">    sensitivities for given input examples and Concept Activation Vectors</span>
+<span class="sd">    (CAVs) in that same layer.</span>
+
+<span class="sd">    CAVs are defined as vectors that are orthogonal to the classification boundary</span>
+<span class="sd">    hyperplane that separate given concepts in a given layer from each other.</span>
+<span class="sd">    For a given layer, CAVs are computed by training a classifier that uses the</span>
+<span class="sd">    layer activation vectors for a set of concept examples as input examples and</span>
+<span class="sd">    concept ids as corresponding input labels. Trained weights of</span>
+<span class="sd">    that classifier represent CAVs.</span>
+
+<span class="sd">    CAVs are represented as a learned weight matrix with the dimensionality</span>
+<span class="sd">    C X F, where:</span>
+<span class="sd">        F represents the number of input features in the classifier.</span>
+<span class="sd">        C is the number of concepts used for the classification. Concept</span>
+<span class="sd">        ids are used as labels for concept examples during the training.</span>
+
+<span class="sd">    We can use any layer attribution algorithm to compute layer sensitivities</span>
+<span class="sd">    of a model prediction.</span>
+<span class="sd">    For example, the gradients of an output prediction w.r.t. the outputs of</span>
+<span class="sd">    the layer.</span>
+<span class="sd">    The CAVs and the Sensitivities (SENS) are used to compute the TCAV score:</span>
+
+<span class="sd">        0. TCAV = CAV • SENS, a dot product between those two vectors</span>
+
+<span class="sd">    The final TCAV score can be computed by aggregating the TCAV scores</span>
+<span class="sd">    for each input concept based on the sign or magnitude of the tcav scores.</span>
+
+<span class="sd">        1. sign_count_score = | TCAV &gt; 0 | / | TCAV |</span>
+<span class="sd">        2. magnitude_score = SUM(ABS(TCAV * (TCAV &gt; 0))) / SUM(ABS(TCAV))</span>
+<span class="sd">    """</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">model</span><span class="p">:</span> <span class="n">Module</span><span class="p">,</span>
+        <span class="n">layers</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]],</span>
+        <span class="n">classifier</span><span class="p">:</span> <span class="n">Classifier</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">layer_attr_method</span><span class="p">:</span> <span class="n">LayerAttribution</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">save_path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"./cav/"</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">classifier_kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="sa">r</span><span class="sd">"""</span>
+<span class="sd">        Args:</span>
+<span class="sd">            model (Module): An instance of pytorch model that is used to compute</span>
+<span class="sd">                    layer activations and attributions.</span>
+<span class="sd">            layers (str, list[str]): A list of layer name(s) that are</span>
+<span class="sd">                    used for computing concept activations (cavs) and layer</span>
+<span class="sd">                    attributions.</span>
+<span class="sd">            classifier (Classifier): A custom classifier class, such as the</span>
+<span class="sd">                    Sklearn "linear_model" that allows us to train a model</span>
+<span class="sd">                    using the activation vectors extracted for a layer per concept.</span>
+<span class="sd">                    It also allows us to access trained weights of the model</span>
+<span class="sd">                    and the list of prediction classes.</span>
+<span class="sd">            layer_attr_method (LayerAttribution, optional): An instance of a layer</span>
+<span class="sd">                    attribution algorithm that helps us to compute model prediction</span>
+<span class="sd">                    sensitivity scores.</span>
+
+<span class="sd">                    Default: None</span>
+<span class="sd">                    If `layer_attr_method` is None, we default it to gradients</span>
+<span class="sd">                    for the layers using `LayerGradientXActivation` layer</span>
+<span class="sd">                    attribution algorithm.</span>
+<span class="sd">            save_path (str, optional): The path for storing CAVs and</span>
+<span class="sd">                    Activation Vectors (AVs).</span>
+<span class="sd">            classifier_kwargs (any, optional): Additional arguments such as</span>
+<span class="sd">                    `test_split_ratio` that are passed to concept `classifier`.</span>
+
+<span class="sd">        Examples::</span>
+<span class="sd">            &gt;&gt;&gt;</span>
+<span class="sd">            &gt;&gt;&gt; # TCAV use example:</span>
+<span class="sd">            &gt;&gt;&gt;</span>
+<span class="sd">            &gt;&gt;&gt; # Define the concepts</span>
+<span class="sd">            &gt;&gt;&gt; stripes = Concept(0, "stripes", striped_data_iter)</span>
+<span class="sd">            &gt;&gt;&gt; random = Concept(1, "random", random_data_iter)</span>
+<span class="sd">            &gt;&gt;&gt;</span>
+<span class="sd">            &gt;&gt;&gt;</span>
+<span class="sd">            &gt;&gt;&gt; mytcav = TCAV(model=imagenet,</span>
+<span class="sd">            &gt;&gt;&gt;     layers=['inception4c', 'inception4d'])</span>
+<span class="sd">            &gt;&gt;&gt;</span>
+<span class="sd">            &gt;&gt;&gt; scores = mytcav.interpret(inputs, [[stripes, random]], target = 0)</span>
+<span class="sd">            &gt;&gt;&gt;</span>
+<span class="sd">            For more thorough examples, please check out TCAV tutorial and test cases.</span>
+<span class="sd">        """</span>
+        <span class="n">ConceptInterpreter</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">layers</span> <span class="o">=</span> <span class="p">[</span><span class="n">layers</span><span class="p">]</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">layers</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="k">else</span> <span class="n">layers</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">concepts</span><span class="p">:</span> <span class="n">Set</span><span class="p">[</span><span class="n">Concept</span><span class="p">]</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">classifier</span> <span class="o">=</span> <span class="n">classifier</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">classifier_kwargs</span> <span class="o">=</span> <span class="n">classifier_kwargs</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cavs</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">CAV</span><span class="p">]]</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="k">lambda</span><span class="p">:</span> <span class="n">defaultdict</span><span class="p">())</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">classifier</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">classifier</span> <span class="o">=</span> <span class="n">DefaultClassifier</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">layer_attr_method</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">layer_attr_method</span> <span class="o">=</span> <span class="n">cast</span><span class="p">(</span>
+                <span class="n">LayerAttribution</span><span class="p">,</span>
+                <span class="n">LayerGradientXActivation</span><span class="p">(</span>  <span class="c1"># type: ignore</span>
+                    <span class="n">model</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="n">multiply_by_inputs</span><span class="o">=</span><span class="kc">False</span>
+                <span class="p">),</span>
+            <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">layer_attr_method</span> <span class="o">=</span> <span class="n">layer_attr_method</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">save_path</span> <span class="o">=</span> <span class="n">save_path</span>
+
+<div class="viewcode-block" id="TCAV.generate_all_activations"><a class="viewcode-back" href="../../../../concept.html#captum.concept.TCAV.generate_all_activations">[docs]</a>    <span class="k">def</span> <span class="nf">generate_all_activations</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="sa">r</span><span class="sd">"""</span>
+<span class="sd">        Computes layer activations for all concepts and layers that are</span>
+<span class="sd">        defined in `self.layers` and `self.concepts` instance variables.</span>
+<span class="sd">        """</span>
+        <span class="k">for</span> <span class="n">concept</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">concepts</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">generate_activation</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">layers</span><span class="p">,</span> <span class="n">concept</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TCAV.generate_activation"><a class="viewcode-back" href="../../../../concept.html#captum.concept.TCAV.generate_activation">[docs]</a>    <span class="k">def</span> <span class="nf">generate_activation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">layers</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">List</span><span class="p">],</span> <span class="n">concept</span><span class="p">:</span> <span class="n">Concept</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="sa">r</span><span class="sd">"""</span>
+<span class="sd">        Computes layer activations for the specified `concept` and</span>
+<span class="sd">        the list of layer(s) `layers`.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            layers (str, list[str]): A list of layer names or a layer name</span>
+<span class="sd">                    that is used to compute layer activations for the</span>
+<span class="sd">                    specific `concept`.</span>
+<span class="sd">            concept (Concept): A single Concept object that provides access</span>
+<span class="sd">                    to concept examples using a data iterator.</span>
+<span class="sd">        """</span>
+        <span class="n">layers</span> <span class="o">=</span> <span class="p">[</span><span class="n">layers</span><span class="p">]</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">layers</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="k">else</span> <span class="n">layers</span>
+        <span class="n">layer_modules</span> <span class="o">=</span> <span class="p">[</span><span class="n">_get_module_from_name</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">,</span> <span class="n">layer</span><span class="p">)</span> <span class="k">for</span> <span class="n">layer</span> <span class="ow">in</span> <span class="n">layers</span><span class="p">]</span>
+
+        <span class="n">layer_act</span> <span class="o">=</span> <span class="n">LayerActivation</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">,</span> <span class="n">layer_modules</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">concept</span><span class="o">.</span><span class="n">data_iter</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">,</span> <span class="p">(</span>
+            <span class="s2">"Data iterator for concept id:"</span><span class="p">,</span>
+            <span class="s2">"</span><span class="si">{}</span><span class="s2"> must be specified"</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">concept</span><span class="o">.</span><span class="n">id</span><span class="p">),</span>
+        <span class="p">)</span>
+        <span class="k">for</span> <span class="n">examples</span> <span class="ow">in</span> <span class="n">concept</span><span class="o">.</span><span class="n">data_iter</span><span class="p">:</span>
+            <span class="n">activations</span> <span class="o">=</span> <span class="n">layer_act</span><span class="o">.</span><span class="n">attribute</span><span class="p">(</span><span class="n">examples</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">activation</span><span class="p">,</span> <span class="n">layer_name</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">activations</span><span class="p">,</span> <span class="n">layers</span><span class="p">):</span>
+                <span class="n">activation</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">activation</span><span class="p">,</span> <span class="p">(</span><span class="n">activation</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="o">-</span><span class="mi">1</span><span class="p">))</span>
+                <span class="n">AV</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">save_path</span><span class="p">,</span> <span class="n">concept</span><span class="p">,</span> <span class="n">layer_name</span><span class="p">,</span> <span class="n">activation</span><span class="o">.</span><span class="n">detach</span><span class="p">())</span></div>
+
+<div class="viewcode-block" id="TCAV.generate_activations"><a class="viewcode-back" href="../../../../concept.html#captum.concept.TCAV.generate_activations">[docs]</a>    <span class="k">def</span> <span class="nf">generate_activations</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">concept_layers</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="n">Concept</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="sa">r</span><span class="sd">"""</span>
+<span class="sd">        Computes layer activations for the concepts and layers specified in</span>
+<span class="sd">        `concept_layers` dictionary.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            concept_layers (dict[Concept, list[str]]): Dictionay that maps</span>
+<span class="sd">                    Concept objects to a list of layer names to generate</span>
+<span class="sd">                    the activations. Ex.: concept_layers =</span>
+<span class="sd">                    {"striped": ['inception4c', 'inception4d']}</span>
+<span class="sd">        """</span>
+        <span class="k">for</span> <span class="n">concept</span> <span class="ow">in</span> <span class="n">concept_layers</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">generate_activation</span><span class="p">(</span><span class="n">concept_layers</span><span class="p">[</span><span class="n">concept</span><span class="p">],</span> <span class="n">concept</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TCAV.load_cavs"><a class="viewcode-back" href="../../../../concept.html#captum.concept.TCAV.load_cavs">[docs]</a>    <span class="k">def</span> <span class="nf">load_cavs</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">concepts</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Concept</span><span class="p">]</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">Dict</span><span class="p">[</span><span class="n">Concept</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]]]:</span>
+        <span class="sa">r</span><span class="sd">"""</span>
+<span class="sd">        This function load CAVs as a dictionary of concept ids and</span>
+<span class="sd">        layers. CAVs are stored in a directory located under</span>
+<span class="sd">        `self.save_path` path, in .pkl files with the format:</span>
+<span class="sd">        &lt;self.save_path&gt;/&lt;concept_ids&gt;-&lt;layer_name&gt;.pkl. Ex.:</span>
+<span class="sd">        "/cavs/0-1-2-inception4c.pkl", where 0, 1 and 2 are concept ids.</span>
+
+<span class="sd">        It returns a list of layers and a dictionary of concept-layers mapping</span>
+<span class="sd">        for the concepts and layer that require CAV computation through training.</span>
+<span class="sd">        This can happen if the CAVs aren't already pre-computed for a given list</span>
+<span class="sd">        of concepts and layer.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            concepts (list[Concept]): A list of Concept objects for which we want</span>
+<span class="sd">                    to load the CAV.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            layers (list[layer]): A list of layers for which some CAVs still need</span>
+<span class="sd">                    to be computed.</span>
+<span class="sd">            concept_layers (dict[concept, layer]): A dictionay of concept-layers</span>
+<span class="sd">                    mapping for which we need to perform CAV computation through</span>
+<span class="sd">                    training.</span>
+<span class="sd">        """</span>
+
+        <span class="n">concepts_key</span> <span class="o">=</span> <span class="n">concepts_to_str</span><span class="p">(</span><span class="n">concepts</span><span class="p">)</span>
+
+        <span class="n">layers</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">concept_layers</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="nb">list</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">layer</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">layers</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">cavs</span><span class="p">[</span><span class="n">concepts_key</span><span class="p">][</span><span class="n">layer</span><span class="p">]</span> <span class="o">=</span> <span class="n">CAV</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">save_path</span><span class="p">,</span> <span class="n">concepts</span><span class="p">,</span> <span class="n">layer</span><span class="p">)</span>
+
+            <span class="c1"># If CAV aren't loaded</span>
+            <span class="k">if</span> <span class="p">(</span>
+                <span class="n">concepts_key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">cavs</span>
+                <span class="ow">or</span> <span class="n">layer</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">cavs</span><span class="p">[</span><span class="n">concepts_key</span><span class="p">]</span>
+                <span class="ow">or</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">cavs</span><span class="p">[</span><span class="n">concepts_key</span><span class="p">][</span><span class="n">layer</span><span class="p">]</span>
+            <span class="p">):</span>
+
+                <span class="n">layers</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">layer</span><span class="p">)</span>
+                <span class="c1"># For all concepts in this experimental_set</span>
+                <span class="k">for</span> <span class="n">concept</span> <span class="ow">in</span> <span class="n">concepts</span><span class="p">:</span>
+                    <span class="c1"># Collect not activated layers for this concept</span>
+                    <span class="k">if</span> <span class="ow">not</span> <span class="n">AV</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">save_path</span><span class="p">,</span> <span class="n">concept</span><span class="p">,</span> <span class="n">layer</span><span class="p">):</span>
+                        <span class="n">concept_layers</span><span class="p">[</span><span class="n">concept</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">layer</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">layers</span><span class="p">,</span> <span class="n">concept_layers</span></div>
+
+<div class="viewcode-block" id="TCAV.compute_cavs"><a class="viewcode-back" href="../../../../concept.html#captum.concept.TCAV.compute_cavs">[docs]</a>    <span class="k">def</span> <span class="nf">compute_cavs</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">experimental_sets</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">Concept</span><span class="p">]],</span>
+        <span class="n">force_train</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="n">processes</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="sa">r</span><span class="sd">"""</span>
+<span class="sd">        This method computes CAVs for given `experiments_sets` and layers</span>
+<span class="sd">        specified in `self.layers` instance variable. Internally, it</span>
+<span class="sd">        trains a classifier and creates an instance of CAV class using the</span>
+<span class="sd">        weights of the trained classifier for each experimental set.</span>
+
+<span class="sd">        It also allows to compute the CAVs in parallel using python's</span>
+<span class="sd">        multiprocessing API and the number of processes specified in</span>
+<span class="sd">        the argument.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            experimental_sets (list[list[Concept]]): A list of lists of concept</span>
+<span class="sd">                    instances for which the cavs will be computed.</span>
+<span class="sd">            force_train (bool, optional): A flag that indicates whether to</span>
+<span class="sd">                    train the CAVs regardless of whether they are saved or not.</span>
+<span class="sd">                    Default: False</span>
+<span class="sd">            processes (int, optional): The number of processes to be created</span>
+<span class="sd">                    when running in multi-processing mode. If processes &gt; 0 then</span>
+<span class="sd">                    CAV computation will be performed in parallel using</span>
+<span class="sd">                    multi-processing, otherwise it will be performed sequentially</span>
+<span class="sd">                    in a single process.</span>
+<span class="sd">                    Default: None</span>
+<span class="sd">        Returns:</span>
+<span class="sd">            cavs (dict) : A mapping of concept ids and layers to CAV objects.</span>
+<span class="sd">                    If CAVs for the concept_ids-layer pairs are present in the</span>
+<span class="sd">                    data storage they will be loaded into the memory, otherwise</span>
+<span class="sd">                    they will be computed using a training process and stored</span>
+<span class="sd">                    in the data storage that can be configured using `save_path`</span>
+<span class="sd">                    input argument.</span>
+<span class="sd">        """</span>
+
+        <span class="c1"># Update self.concepts with concepts</span>
+        <span class="k">for</span> <span class="n">concepts</span> <span class="ow">in</span> <span class="n">experimental_sets</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">concepts</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">concepts</span><span class="p">)</span>
+
+        <span class="n">concept_ids</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">concept</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">concepts</span><span class="p">:</span>
+            <span class="k">assert</span> <span class="n">concept</span><span class="o">.</span><span class="n">id</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">concept_ids</span><span class="p">,</span> <span class="p">(</span>
+                <span class="s2">"There is more than one instance "</span>
+                <span class="s2">"of a concept with id </span><span class="si">{}</span><span class="s2"> defined in experimental sets. Please, "</span>
+                <span class="s2">"make sure to reuse the same instance of concept"</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                    <span class="nb">str</span><span class="p">(</span><span class="n">concept</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+            <span class="n">concept_ids</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">concept</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">force_train</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">generate_all_activations</span><span class="p">()</span>
+
+        <span class="c1"># List of layers per concept key (experimental_set item) to be trained</span>
+        <span class="n">concept_key_to_layers</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="nb">list</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">concepts</span> <span class="ow">in</span> <span class="n">experimental_sets</span><span class="p">:</span>
+
+            <span class="n">concepts_key</span> <span class="o">=</span> <span class="n">concepts_to_str</span><span class="p">(</span><span class="n">concepts</span><span class="p">)</span>
+
+            <span class="c1"># If not 'force_train', try to load a saved CAV</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">force_train</span><span class="p">:</span>
+                <span class="n">layers</span><span class="p">,</span> <span class="n">concept_layers</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">load_cavs</span><span class="p">(</span><span class="n">concepts</span><span class="p">)</span>
+                <span class="n">concept_key_to_layers</span><span class="p">[</span><span class="n">concepts_key</span><span class="p">]</span> <span class="o">=</span> <span class="n">layers</span>
+                <span class="c1"># Generate activations for missing (concept, layers)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">generate_activations</span><span class="p">(</span><span class="n">concept_layers</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">concept_key_to_layers</span><span class="p">[</span><span class="n">concepts_key</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">layers</span>
+        <span class="k">if</span> <span class="n">processes</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">processes</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">pool</span> <span class="o">=</span> <span class="n">multiprocessing</span><span class="o">.</span><span class="n">Pool</span><span class="p">(</span><span class="n">processes</span><span class="p">)</span>
+            <span class="n">cavs_list</span> <span class="o">=</span> <span class="n">pool</span><span class="o">.</span><span class="n">starmap</span><span class="p">(</span>
+                <span class="n">train_cav</span><span class="p">,</span>
+                <span class="p">[</span>
+                    <span class="p">(</span>
+                        <span class="n">concepts</span><span class="p">,</span>
+                        <span class="n">concept_key_to_layers</span><span class="p">[</span><span class="n">concepts_to_str</span><span class="p">(</span><span class="n">concepts</span><span class="p">)],</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">classifier</span><span class="p">,</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">save_path</span><span class="p">,</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">classifier_kwargs</span><span class="p">,</span>
+                    <span class="p">)</span>
+                    <span class="k">for</span> <span class="n">concepts</span> <span class="ow">in</span> <span class="n">experimental_sets</span>
+                <span class="p">],</span>
+            <span class="p">)</span>
+            <span class="n">pool</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+            <span class="n">pool</span><span class="o">.</span><span class="n">join</span><span class="p">()</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">cavs_list</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">concepts</span> <span class="ow">in</span> <span class="n">experimental_sets</span><span class="p">:</span>
+                <span class="n">cavs_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                    <span class="n">train_cav</span><span class="p">(</span>
+                        <span class="n">concepts</span><span class="p">,</span>
+                        <span class="n">concept_key_to_layers</span><span class="p">[</span><span class="n">concepts_to_str</span><span class="p">(</span><span class="n">concepts</span><span class="p">)],</span>
+                        <span class="n">cast</span><span class="p">(</span><span class="n">Classifier</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">classifier</span><span class="p">),</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">save_path</span><span class="p">,</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">classifier_kwargs</span><span class="p">,</span>
+                    <span class="p">)</span>
+                <span class="p">)</span>
+
+        <span class="c1"># list[Dict[concept, Dict[layer, list]]] =&gt; Dict[concept, Dict[layer, list]]</span>
+        <span class="k">for</span> <span class="n">cavs</span> <span class="ow">in</span> <span class="n">cavs_list</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">c_key</span> <span class="ow">in</span> <span class="n">cavs</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">cavs</span><span class="p">[</span><span class="n">c_key</span><span class="p">]</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">cavs</span><span class="p">[</span><span class="n">c_key</span><span class="p">])</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">cavs</span></div>
+
+<div class="viewcode-block" id="TCAV.interpret"><a class="viewcode-back" href="../../../../concept.html#captum.concept.TCAV.interpret">[docs]</a>    <span class="k">def</span> <span class="nf">interpret</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">inputs</span><span class="p">:</span> <span class="n">TensorOrTupleOfTensorsGeneric</span><span class="p">,</span>
+        <span class="n">experimental_sets</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">Concept</span><span class="p">]],</span>
+        <span class="n">target</span><span class="p">:</span> <span class="n">TargetType</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">additional_forward_args</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">processes</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Tensor</span><span class="p">]]]:</span>
+        <span class="sa">r</span><span class="sd">"""</span>
+<span class="sd">        This method computes magnitude and sign-based TCAV scores for each</span>
+<span class="sd">        experimental sets in `experimental_sets` list.</span>
+<span class="sd">        TCAV scores are computed using a dot product between layer attribution</span>
+<span class="sd">        scores for specific predictions and CAV vectors.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            inputs (tensor or tuple of tensors): Inputs for which predictions</span>
+<span class="sd">                    are performed and attributions are computed.</span>
+<span class="sd">                    If model takes a single tensor as</span>
+<span class="sd">                    input, a single input tensor should be provided.</span>
+<span class="sd">                    If model takes multiple tensors as</span>
+<span class="sd">                    input, a tuple of the input tensors should be provided.</span>
+<span class="sd">                    It is assumed that for all given input tensors,</span>
+<span class="sd">                    dimension 0 corresponds to the number of examples</span>
+<span class="sd">                    (aka batch size), and if multiple input tensors are</span>
+<span class="sd">                    provided, the examples must be aligned appropriately.</span>
+<span class="sd">            experimental_sets (list[list[Concept]]): A list of list of Concept</span>
+<span class="sd">                    instances.</span>
+<span class="sd">            target (int, tuple, tensor or list, optional):  Output indices for</span>
+<span class="sd">                    which attributions are computed (for classification cases,</span>
+<span class="sd">                    this is usually the target class).</span>
+<span class="sd">                    If the network returns a scalar value per example,</span>
+<span class="sd">                    no target index is necessary.</span>
+<span class="sd">                    For general 2D outputs, targets can be either:</span>
+<span class="sd">                        - a single integer or a tensor containing a single</span>
+<span class="sd">                          integer, which is applied to all input examples</span>
+<span class="sd">                        - a list of integers or a 1D tensor, with length matching</span>
+<span class="sd">                          the number of examples in inputs (dim 0). Each integer</span>
+<span class="sd">                          is applied as the target for the corresponding example.</span>
+<span class="sd">                        For outputs with &gt; 2 dimensions, targets can be either:</span>
+<span class="sd">                        - A single tuple, which contains #output_dims - 1</span>
+<span class="sd">                          elements. This target index is applied to all examples.</span>
+<span class="sd">                        - A list of tuples with length equal to the number of</span>
+<span class="sd">                          examples in inputs (dim 0), and each tuple containing</span>
+<span class="sd">                          #output_dims - 1 elements. Each tuple is applied as the</span>
+<span class="sd">                          target for the corresponding example.</span>
+<span class="sd">            additional_forward_args (Any, optional): Extra arguments that are passed to</span>
+<span class="sd">                     model when computing the attributions for `inputs`</span>
+<span class="sd">                     w.r.t. layer output.</span>
+<span class="sd">                     Default: None</span>
+<span class="sd">            processes (int, optional): The number of processes to be created. if</span>
+<span class="sd">                    processes is larger than one then CAV computations will be</span>
+<span class="sd">                    performed in parallel using the number of processes equal to</span>
+<span class="sd">                    `processes`. Otherwise, CAV computations will be performed</span>
+<span class="sd">                    sequential.</span>
+<span class="sd">                    Default:None</span>
+<span class="sd">            **kwargs (Any, optional): A list of arguments that are passed to layer</span>
+<span class="sd">                    attribution algorithm's attribute method. This could be for</span>
+<span class="sd">                    example `n_steps` in case of integrated gradients.</span>
+<span class="sd">                    Default: None</span>
+<span class="sd">        Returns:</span>
+<span class="sd">            results (dict): A dictionary of sign and magnitude -based tcav scores</span>
+<span class="sd">                    for each concept set per layer.</span>
+<span class="sd">                    The order of TCAV scores in the resulting tensor for each</span>
+<span class="sd">                    experimental set follows the order in which concepts</span>
+<span class="sd">                    are passed in `experimental_sets` input argument.</span>
+
+<span class="sd">        results example::</span>
+<span class="sd">            &gt;&gt;&gt; #</span>
+<span class="sd">            &gt;&gt;&gt; # scores =</span>
+<span class="sd">            &gt;&gt;&gt; # {'0-1':</span>
+<span class="sd">            &gt;&gt;&gt; #     {'inception4c':</span>
+<span class="sd">            &gt;&gt;&gt; #         {'sign_count': tensor([0.5800, 0.4200]),</span>
+<span class="sd">            &gt;&gt;&gt; #          'magnitude': tensor([0.6613, 0.3387])},</span>
+<span class="sd">            &gt;&gt;&gt; #      'inception4d':</span>
+<span class="sd">            &gt;&gt;&gt; #         {'sign_count': tensor([0.6200, 0.3800]),</span>
+<span class="sd">            &gt;&gt;&gt; #           'magnitude': tensor([0.7707, 0.2293])}}),</span>
+<span class="sd">            &gt;&gt;&gt; #  '0-2':</span>
+<span class="sd">            &gt;&gt;&gt; #     {'inception4c':</span>
+<span class="sd">            &gt;&gt;&gt; #         {'sign_count': tensor([0.6200, 0.3800]),</span>
+<span class="sd">            &gt;&gt;&gt; #          'magnitude': tensor([0.6806, 0.3194])},</span>
+<span class="sd">            &gt;&gt;&gt; #      'inception4d':</span>
+<span class="sd">            &gt;&gt;&gt; #         {'sign_count': tensor([0.6400, 0.3600]),</span>
+<span class="sd">            &gt;&gt;&gt; #          'magnitude': tensor([0.6563, 0.3437])}})})</span>
+<span class="sd">            &gt;&gt;&gt; #</span>
+
+<span class="sd">        """</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">compute_cavs</span><span class="p">(</span><span class="n">experimental_sets</span><span class="p">,</span> <span class="n">processes</span><span class="o">=</span><span class="n">processes</span><span class="p">)</span>
+
+        <span class="n">scores</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Tensor</span><span class="p">]]]</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span>
+            <span class="k">lambda</span><span class="p">:</span> <span class="n">defaultdict</span><span class="p">()</span>
+        <span class="p">)</span>
+
+        <span class="c1"># Retrieves the lengths of the experimental sets so that we can sort</span>
+        <span class="c1"># them by the length and compute TCAV scores in batches.</span>
+        <span class="n">exp_set_lens</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span>
+            <span class="nb">list</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="k">lambda</span> <span class="n">exp_set</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">exp_set</span><span class="p">),</span> <span class="n">experimental_sets</span><span class="p">)),</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">object</span>
+        <span class="p">)</span>
+        <span class="n">exp_set_lens_arg_sort</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argsort</span><span class="p">(</span><span class="n">exp_set_lens</span><span class="p">)</span>
+
+        <span class="c1"># compute offsets using sorted lengths using their indices</span>
+        <span class="n">exp_set_lens_sort</span> <span class="o">=</span> <span class="n">exp_set_lens</span><span class="p">[</span><span class="n">exp_set_lens_arg_sort</span><span class="p">]</span>
+        <span class="n">exp_set_offsets_bool</span> <span class="o">=</span> <span class="p">[</span><span class="kc">False</span><span class="p">]</span> <span class="o">+</span> <span class="nb">list</span><span class="p">(</span>
+            <span class="n">exp_set_lens_sort</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="n">exp_set_lens_sort</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>
+        <span class="p">)</span>
+        <span class="n">exp_set_offsets</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">offset</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">exp_set_offsets_bool</span><span class="p">):</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">offset</span><span class="p">:</span>
+                <span class="n">exp_set_offsets</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+
+        <span class="n">exp_set_offsets</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">exp_set_lens</span><span class="p">))</span>
+
+        <span class="c1"># sort experimental sets using the length of the concepts in each set</span>
+        <span class="n">experimental_sets_sorted</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">experimental_sets</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">object</span><span class="p">)[</span>
+            <span class="n">exp_set_lens_arg_sort</span>
+        <span class="p">]</span>
+
+        <span class="k">for</span> <span class="n">layer</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">layers</span><span class="p">:</span>
+            <span class="n">layer_module</span> <span class="o">=</span> <span class="n">_get_module_from_name</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">,</span> <span class="n">layer</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">layer_attr_method</span><span class="o">.</span><span class="n">layer</span> <span class="o">=</span> <span class="n">layer_module</span>
+
+            <span class="n">attribs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">layer_attr_method</span><span class="o">.</span><span class="n">attribute</span><span class="p">(</span>
+                <span class="n">inputs</span><span class="p">,</span>
+                <span class="n">target</span><span class="o">=</span><span class="n">target</span><span class="p">,</span>
+                <span class="n">additional_forward_args</span><span class="o">=</span><span class="n">additional_forward_args</span><span class="p">,</span>
+                <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+            <span class="p">)</span>
+
+            <span class="n">attribs</span> <span class="o">=</span> <span class="n">_format_tensor_into_tuples</span><span class="p">(</span><span class="n">attribs</span><span class="p">)</span>
+            <span class="c1"># n_inputs x n_features (2 dimensions)</span>
+            <span class="n">attribs</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">(</span>
+                <span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">attrib</span><span class="p">,</span> <span class="p">(</span><span class="n">attrib</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="o">-</span><span class="mi">1</span><span class="p">))</span> <span class="k">for</span> <span class="n">attrib</span> <span class="ow">in</span> <span class="n">attribs</span><span class="p">],</span>
+                <span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+            <span class="p">)</span>
+
+            <span class="c1"># n_experiments x n_concepts x n_features (3 dimensions)</span>
+            <span class="n">cavs</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="n">classes</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">concepts</span> <span class="ow">in</span> <span class="n">experimental_sets</span><span class="p">:</span>
+                <span class="n">concepts_key</span> <span class="o">=</span> <span class="n">concepts_to_str</span><span class="p">(</span><span class="n">concepts</span><span class="p">)</span>
+                <span class="n">cavs_stats</span> <span class="o">=</span> <span class="n">cast</span><span class="p">(</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">cavs</span><span class="p">[</span><span class="n">concepts_key</span><span class="p">][</span><span class="n">layer</span><span class="p">]</span><span class="o">.</span><span class="n">stats</span><span class="p">)</span>
+                <span class="n">cavs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">cavs_stats</span><span class="p">[</span><span class="s2">"weights"</span><span class="p">]</span><span class="o">.</span><span class="n">float</span><span class="p">()</span><span class="o">.</span><span class="n">detach</span><span class="p">()</span><span class="o">.</span><span class="n">tolist</span><span class="p">())</span>
+                <span class="n">classes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">cavs_stats</span><span class="p">[</span><span class="s2">"classes"</span><span class="p">])</span>
+
+            <span class="c1"># sort cavs and classes using the length of the concepts in each set</span>
+            <span class="n">cavs_sorted</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">cavs</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">object</span><span class="p">)[</span><span class="n">exp_set_lens_arg_sort</span><span class="p">]</span>
+            <span class="n">classes_sorted</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">classes</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">object</span><span class="p">)[</span><span class="n">exp_set_lens_arg_sort</span><span class="p">]</span>
+
+            <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="k">while</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">exp_set_offsets</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="n">cav_subset</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span>
+                    <span class="n">cavs_sorted</span><span class="p">[</span><span class="n">exp_set_offsets</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="p">:</span> <span class="n">exp_set_offsets</span><span class="p">[</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]],</span>
+                    <span class="n">dtype</span><span class="o">=</span><span class="nb">object</span><span class="p">,</span>
+                <span class="p">)</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
+                <span class="n">classes_subset</span> <span class="o">=</span> <span class="n">classes_sorted</span><span class="p">[</span>
+                    <span class="n">exp_set_offsets</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="p">:</span> <span class="n">exp_set_offsets</span><span class="p">[</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span>
+                <span class="p">]</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
+
+                <span class="c1"># n_experiments x n_concepts x n_features (3 dimensions)</span>
+                <span class="n">cav_subset</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="n">cav_subset</span><span class="p">)</span>
+                <span class="n">cav_subset</span> <span class="o">=</span> <span class="n">cav_subset</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">attribs</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
+                <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">cav_subset</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">==</span> <span class="mi">3</span><span class="p">,</span> <span class="p">(</span>
+                    <span class="s2">"cav should have 3 dimensions: n_experiments x "</span>
+                    <span class="s2">"n_concepts x n_features."</span>
+                <span class="p">)</span>
+
+                <span class="n">experimental_subset_sorted</span> <span class="o">=</span> <span class="n">experimental_sets_sorted</span><span class="p">[</span>
+                    <span class="n">exp_set_offsets</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="p">:</span> <span class="n">exp_set_offsets</span><span class="p">[</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span>
+                <span class="p">]</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_tcav_sub_computation</span><span class="p">(</span>
+                    <span class="n">scores</span><span class="p">,</span>
+                    <span class="n">layer</span><span class="p">,</span>
+                    <span class="n">attribs</span><span class="p">,</span>
+                    <span class="n">cav_subset</span><span class="p">,</span>
+                    <span class="n">classes_subset</span><span class="p">,</span>
+                    <span class="n">experimental_subset_sorted</span><span class="p">,</span>
+                <span class="p">)</span>
+                <span class="n">i</span> <span class="o">+=</span> <span class="mi">1</span>
+
+        <span class="k">return</span> <span class="n">scores</span></div>
+
+    <span class="k">def</span> <span class="nf">_tcav_sub_computation</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">scores</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Tensor</span><span class="p">]]],</span>
+        <span class="n">layer</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">attribs</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">,</span>
+        <span class="n">cavs</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">,</span>
+        <span class="n">classes</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]],</span>
+        <span class="n">experimental_sets</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">Concept</span><span class="p">]],</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="c1"># n_inputs x n_concepts (2 dimensions)</span>
+        <span class="n">tcav_score</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">matmul</span><span class="p">(</span><span class="n">attribs</span><span class="o">.</span><span class="n">float</span><span class="p">(),</span> <span class="n">torch</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="n">cavs</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span>
+        <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">tcav_score</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">==</span> <span class="mi">3</span><span class="p">,</span> <span class="p">(</span>
+            <span class="s2">"tcav_score should have 3 dimensions: n_experiments x "</span>
+            <span class="s2">"n_inputs x n_concepts."</span>
+        <span class="p">)</span>
+
+        <span class="k">assert</span> <span class="n">attribs</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="n">tcav_score</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="p">(</span>
+            <span class="s2">"attrib and tcav_score should have the same 1st and "</span>
+            <span class="s2">"2nd dimensions respectively (n_inputs)."</span>
+        <span class="p">)</span>
+        <span class="c1"># n_experiments x n_concepts</span>
+        <span class="n">sign_count_score</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">torch</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">tcav_score</span> <span class="o">&gt;</span> <span class="mf">0.0</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">float</span><span class="p">()</span> <span class="o">/</span> <span class="n">tcav_score</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="p">)</span>
+        <span class="c1"># n_experiments x n_concepts</span>
+        <span class="n">sign_count_score</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">torch</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">tcav_score</span> <span class="o">&gt;</span> <span class="mf">0.0</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">float</span><span class="p">()</span> <span class="o">/</span> <span class="n">tcav_score</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="p">)</span>
+
+        <span class="n">magnitude_score</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span>
+            <span class="n">torch</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">tcav_score</span> <span class="o">*</span> <span class="p">(</span><span class="n">tcav_score</span> <span class="o">&gt;</span> <span class="mf">0.0</span><span class="p">)</span><span class="o">.</span><span class="n">float</span><span class="p">()),</span> <span class="n">dim</span><span class="o">=</span><span class="mi">1</span>
+        <span class="p">)</span> <span class="o">/</span> <span class="n">torch</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">tcav_score</span><span class="p">),</span> <span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="p">(</span><span class="n">cls_set</span><span class="p">,</span> <span class="n">concepts</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">classes</span><span class="p">,</span> <span class="n">experimental_sets</span><span class="p">)):</span>
+            <span class="n">concepts_key</span> <span class="o">=</span> <span class="n">concepts_to_str</span><span class="p">(</span><span class="n">concepts</span><span class="p">)</span>
+
+            <span class="c1"># sort classes / concepts in the order specified in concept_keys</span>
+            <span class="n">concept_ord</span> <span class="o">=</span> <span class="p">{</span><span class="n">concept</span><span class="o">.</span><span class="n">id</span><span class="p">:</span> <span class="n">ci</span> <span class="k">for</span> <span class="n">ci</span><span class="p">,</span> <span class="n">concept</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">concepts</span><span class="p">)}</span>
+            <span class="n">new_ord</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">([</span><span class="n">concept_ord</span><span class="p">[</span><span class="bp">cls</span><span class="p">]</span> <span class="k">for</span> <span class="bp">cls</span> <span class="ow">in</span> <span class="n">cls_set</span><span class="p">])</span>
+
+            <span class="c1"># sort based on classes</span>
+            <span class="n">scores</span><span class="p">[</span><span class="n">concepts_key</span><span class="p">][</span><span class="n">layer</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="s2">"sign_count"</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">index_select</span><span class="p">(</span>
+                    <span class="n">sign_count_score</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="p">:],</span> <span class="n">dim</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="n">new_ord</span>
+                <span class="p">),</span>
+                <span class="s2">"magnitude"</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">index_select</span><span class="p">(</span>
+                    <span class="n">magnitude_score</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="p">:],</span> <span class="n">dim</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="n">new_ord</span>
+                <span class="p">),</span>
+            <span class="p">}</span></div>
+</pre></div>
+</div>
+</div>
+</div>
+<div aria-label="main navigation" class="sphinxsidebar" role="navigation">
+<div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../../index.html">Captum</a></h1>
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../attribution.html">Attribution</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../noise_tunnel.html">NoiseTunnel</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../layer.html">Layer Attribution</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../neuron.html">Neuron Attribution</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../metrics.html">Metrics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../robust.html">Robustness</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../concept.html">Concept-based Interpretability</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../utilities.html">Utilities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../base_classes.html">Base Classes</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Insights API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../insights.html">Insights</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../insights.html#features">Features</a></li>
+</ul>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+<li><a href="../../../../index.html">Documentation overview</a><ul>
+<li><a href="../../../index.html">Module code</a><ul>
+</ul></li>
+</ul></li>
+</ul>
+</div>
+<div id="searchbox" role="search" style="display: none">
+<h3 id="searchlabel">Quick search</h3>
+<div class="searchformwrapper">
+<form action="../../../../search.html" class="search" method="get">
+<input aria-labelledby="searchlabel" name="q" type="text"/>
+<input type="submit" value="Go"/>
+</form>
+</div>
+</div>
+<script>$('#searchbox').show(0);</script>
+</div>
+</div>
+<div class="clearer"></div>
+</div></div></div><footer class="nav-footer" id="footer"><section class="sitemap"><div class="footerSection"><h5>Docs</h5><a href="/docs/introduction">Introduction</a><a href="/docs/getting_started">Getting Started</a><a href="/tutorials/">Tutorials</a><a href="/api/">API Reference</a></div><div class="footerSection"><h5>Social</h5><div class="social"><a class="github-button" href="https://github.com/pytorch/captum" data-count-href="https://github.com/pytorch/captum/stargazers" data-show-count="true" data-count-aria-label="# stargazers on GitHub" aria-label="Star Captum on GitHub">captum</a></div></div></section><a href="https://opensource.facebook.com/" target="_blank" rel="noreferrer noopener" class="fbOpenSource"><img src="/img/oss_logo.png" alt="Facebook Open Source" width="170" height="45"/></a><section class="copyright"> Copyright © 2021 Facebook Inc.</section><script>
+            (function() {
+              var BAD_BASE = '/captum/';
+              if (window.location.origin !== 'https://captum.ai') {
+                var pathname = window.location.pathname;
+                var newPathname = pathname.slice(pathname.indexOf(BAD_BASE) === 0 ? BAD_BASE.length : 1);
+                var newLocation = 'https://captum.ai/' + newPathname;
+                console.log('redirecting to ' + newLocation);
+                window.location.href = newLocation;
+              }
+            })();
+          </script></footer></div><script type="text/javascript" src="https://cdn.jsdelivr.net/docsearch.js/1/docsearch.min.js"></script><script>
+                document.addEventListener('keyup', function(e) {
+                  if (e.target !== document.body) {
+                    return;
+                  }
+                  // keyCode for '/' (slash)
+                  if (e.keyCode === 191) {
+                    const search = document.getElementById('search_input_react');
+                    search && search.focus();
+                  }
+                });
+              </script><script>
+              var search = docsearch({
+                
+                apiKey: '207c27d819f967749142d8611de7cb19',
+                indexName: 'captum',
+                inputSelector: '#search_input_react'
+              });
+            </script></body></html>

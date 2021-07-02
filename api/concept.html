@@ -1,0 +1,617 @@
+<!DOCTYPE html><html lang="en"><head><meta charSet="utf-8"/><meta http-equiv="X-UA-Compatible" content="IE=edge"/><title>Captum · Model Interpretability for PyTorch</title><meta name="viewport" content="width=device-width"/><meta name="generator" content="Docusaurus"/><meta name="description" content="Model Interpretability for PyTorch"/><meta name="docsearch:language" content="en"/><meta property="og:title" content="Captum · Model Interpretability for PyTorch"/><meta property="og:type" content="website"/><meta property="og:url" content="https://captum.ai/"/><meta property="og:description" content="Model Interpretability for PyTorch"/><meta property="og:image" content="https://captum.ai/img/captum-icon.png"/><meta name="twitter:card" content="summary"/><meta name="twitter:image" content="https://captum.ai/img/captum.png"/><link rel="shortcut icon" href="/img/captum.ico"/><link rel="stylesheet" href="https://cdn.jsdelivr.net/docsearch.js/1/docsearch.min.css"/><link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/default.min.css"/><script>
+              (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+              (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+              m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+              })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+              ga('create', 'UA-44373548-48', 'auto');
+              ga('send', 'pageview');
+            </script><link rel="stylesheet" href="/css/code_block_buttons.css"/><script type="text/javascript" src="https://buttons.github.io/buttons.js"></script><script type="text/javascript" src="/js/code_block_buttons.js"></script><script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.0/clipboard.min.js"></script><script type="text/javascript" src="/js/mathjax.js"></script><script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS_HTML"></script><script src="https://unpkg.com/vanilla-back-to-top@7.1.14/dist/vanilla-back-to-top.min.js"></script><script>
+        document.addEventListener('DOMContentLoaded', function() {
+          addBackToTop(
+            {"zIndex":100}
+          )
+        });
+        </script><script src="/js/scrollSpy.js"></script><link rel="stylesheet" href="/css/main.css"/><script src="/js/codetabs.js"></script></head><body><div class="fixedHeaderContainer"><div class="headerWrapper wrapper"><header><a href="/"><img class="logo" src="/img/captum_logo.svg" alt="Captum"/></a><div class="navigationWrapper navigationSlider"><nav class="slidingNav"><ul class="nav-site nav-site-internal"><li class=""><a href="/docs/introduction" target="_self">Docs</a></li><li class=""><a href="/tutorials/" target="_self">Tutorials</a></li><li class=""><a href="/api/" target="_self">API Reference</a></li><li class=""><a href="https://github.com/pytorch/captum" target="_self">GitHub</a></li><li class="navSearchWrapper reactNavSearchWrapper"><input type="text" id="search_input_react" placeholder="Search" title="Search"/></li></ul></nav></div></header></div></div><div class="navPusher"><div>
+<script type="text/javascript" id="documentation_options" data-url_root="./"
+  src="/js/documentation_options.js"></script>
+<script type="text/javascript" src="/js/jquery.js"></script>
+<script type="text/javascript" src="/js/underscore.js"></script>
+<script type="text/javascript" src="/js/doctools.js"></script>
+<script type="text/javascript" src="/js/language_data.js"></script>
+<script type="text/javascript" src="/js/searchtools.js"></script>
+<div class="sphinx"><div class="document">
+<div class="documentwrapper">
+<div class="bodywrapper">
+<div class="body" role="main">
+<section id="concept-based-interpretability">
+<h1>Concept-based Interpretability<a class="headerlink" href="#concept-based-interpretability" title="Permalink to this headline">¶</a></h1>
+<section id="tcav">
+<h2>TCAV<a class="headerlink" href="#tcav" title="Permalink to this headline">¶</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="captum.concept.TCAV">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">captum.concept.</span></span><span class="sig-name descname"><span class="pre">TCAV</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">layers</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">classifier</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">layer_attr_method</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'./cav/'</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">classifier_kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/concept/_core/tcav.html#TCAV"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum.concept.TCAV" title="Permalink to this definition">¶</a></dt>
+<dd><p>This class implements ConceptInterpreter abstract class using an
+approach called Testing with Concept Activation Vectors (TCAVs),
+as described in the paper:</p>
+<blockquote>
+<div><p><a class="reference external" href="https://arxiv.org/pdf/1711.11279.pdf">https://arxiv.org/pdf/1711.11279.pdf</a></p>
+</div></blockquote>
+<p>TCAV scores for a given layer, a list of concepts and input example
+are computed using the dot product between prediction’s layer
+sensitivities for given input examples and Concept Activation Vectors
+(CAVs) in that same layer.</p>
+<p>CAVs are defined as vectors that are orthogonal to the classification boundary
+hyperplane that separate given concepts in a given layer from each other.
+For a given layer, CAVs are computed by training a classifier that uses the
+layer activation vectors for a set of concept examples as input examples and
+concept ids as corresponding input labels. Trained weights of
+that classifier represent CAVs.</p>
+<p>CAVs are represented as a learned weight matrix with the dimensionality
+C X F, where:</p>
+<blockquote>
+<div><p>F represents the number of input features in the classifier.
+C is the number of concepts used for the classification. Concept
+ids are used as labels for concept examples during the training.</p>
+</div></blockquote>
+<p>We can use any layer attribution algorithm to compute layer sensitivities
+of a model prediction.
+For example, the gradients of an output prediction w.r.t. the outputs of
+the layer.
+The CAVs and the Sensitivities (SENS) are used to compute the TCAV score:</p>
+<blockquote>
+<div><ol class="arabic simple" start="0">
+<li><p>TCAV = CAV • SENS, a dot product between those two vectors</p></li>
+</ol>
+</div></blockquote>
+<p>The final TCAV score can be computed by aggregating the TCAV scores
+for each input concept based on the sign or magnitude of the tcav scores.</p>
+<blockquote>
+<div><ol class="arabic simple">
+<li><p>sign_count_score = | TCAV &gt; 0 | / | TCAV |</p></li>
+<li><p>magnitude_score = SUM(ABS(TCAV * (TCAV &gt; 0))) / SUM(ABS(TCAV))</p></li>
+</ol>
+</div></blockquote>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>model</strong> (<em>Module</em>) – An instance of pytorch model that is used to compute
+layer activations and attributions.</p></li>
+<li><p><strong>layers</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.9)"><em>list</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a><em>]</em>) – A list of layer name(s) that are
+used for computing concept activations (cavs) and layer
+attributions.</p></li>
+<li><p><strong>classifier</strong> (<a class="reference internal" href="#captum.concept.Classifier" title="captum.concept.Classifier"><em>Classifier</em></a>) – A custom classifier class, such as the
+Sklearn “linear_model” that allows us to train a model
+using the activation vectors extracted for a layer per concept.
+It also allows us to access trained weights of the model
+and the list of prediction classes.</p></li>
+<li><p><strong>layer_attr_method</strong> (<a class="reference internal" href="base_classes.html#captum.attr.LayerAttribution" title="captum.attr.LayerAttribution"><em>LayerAttribution</em></a><em>, </em><em>optional</em>) – <p>An instance of a layer
+attribution algorithm that helps us to compute model prediction
+sensitivity scores.</p>
+<p>Default: None
+If <cite>layer_attr_method</cite> is None, we default it to gradients
+for the layers using <cite>LayerGradientXActivation</cite> layer
+attribution algorithm.</p>
+</p></li>
+<li><p><strong>save_path</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a><em>, </em><em>optional</em>) – The path for storing CAVs and
+Activation Vectors (AVs).</p></li>
+<li><p><strong>classifier_kwargs</strong> (<em>any</em><em>, </em><em>optional</em>) – Additional arguments such as
+<cite>test_split_ratio</cite> that are passed to concept <cite>classifier</cite>.</p></li>
+</ul>
+</dd>
+</dl>
+<dl>
+<dt>Examples::</dt><dd><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="go">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># TCAV use example:</span>
+<span class="go">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># Define the concepts</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">stripes</span> <span class="o">=</span> <span class="n">Concept</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="s2">"stripes"</span><span class="p">,</span> <span class="n">striped_data_iter</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">random</span> <span class="o">=</span> <span class="n">Concept</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="s2">"random"</span><span class="p">,</span> <span class="n">random_data_iter</span><span class="p">)</span>
+<span class="go">&gt;&gt;&gt;</span>
+<span class="go">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mytcav</span> <span class="o">=</span> <span class="n">TCAV</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="n">imagenet</span><span class="p">,</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="n">layers</span><span class="o">=</span><span class="p">[</span><span class="s1">'inception4c'</span><span class="p">,</span> <span class="s1">'inception4d'</span><span class="p">])</span>
+<span class="go">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">scores</span> <span class="o">=</span> <span class="n">mytcav</span><span class="o">.</span><span class="n">interpret</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="p">[[</span><span class="n">stripes</span><span class="p">,</span> <span class="n">random</span><span class="p">]],</span> <span class="n">target</span> <span class="o">=</span> <span class="mi">0</span><span class="p">)</span>
+<span class="go">&gt;&gt;&gt;</span>
+<span class="go">For more thorough examples, please check out TCAV tutorial and test cases.</span>
+</pre></div>
+</div>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="captum.concept.TCAV.compute_cavs">
+<span class="sig-name descname"><span class="pre">compute_cavs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">experimental_sets</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">force_train</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">processes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/concept/_core/tcav.html#TCAV.compute_cavs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum.concept.TCAV.compute_cavs" title="Permalink to this definition">¶</a></dt>
+<dd><p>This method computes CAVs for given <cite>experiments_sets</cite> and layers
+specified in <cite>self.layers</cite> instance variable. Internally, it
+trains a classifier and creates an instance of CAV class using the
+weights of the trained classifier for each experimental set.</p>
+<p>It also allows to compute the CAVs in parallel using python’s
+multiprocessing API and the number of processes specified in
+the argument.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>experimental_sets</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.9)"><em>list</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.9)"><em>list</em></a><em>[</em><a class="reference internal" href="#captum.concept.Concept" title="captum.concept.Concept"><em>Concept</em></a><em>]</em><em>]</em>) – A list of lists of concept
+instances for which the cavs will be computed.</p></li>
+<li><p><strong>force_train</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.9)"><em>bool</em></a><em>, </em><em>optional</em>) – A flag that indicates whether to
+train the CAVs regardless of whether they are saved or not.
+Default: False</p></li>
+<li><p><strong>processes</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a><em>, </em><em>optional</em>) – The number of processes to be created
+when running in multi-processing mode. If processes &gt; 0 then
+CAV computation will be performed in parallel using
+multi-processing, otherwise it will be performed sequentially
+in a single process.
+Default: None</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><dl class="simple">
+<dt>A mapping of concept ids and layers to CAV objects.</dt><dd><p>If CAVs for the concept_ids-layer pairs are present in the
+data storage they will be loaded into the memory, otherwise
+they will be computed using a training process and stored
+in the data storage that can be configured using <cite>save_path</cite>
+input argument.</p>
+</dd>
+</dl>
+</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>cavs (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.9)">dict</a>)</p>
+</dd>
+</dl>
+</dd></dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="captum.concept.TCAV.generate_activation">
+<span class="sig-name descname"><span class="pre">generate_activation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layers</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">concept</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/concept/_core/tcav.html#TCAV.generate_activation"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum.concept.TCAV.generate_activation" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes layer activations for the specified <cite>concept</cite> and
+the list of layer(s) <cite>layers</cite>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>layers</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.9)"><em>list</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a><em>]</em>) – A list of layer names or a layer name
+that is used to compute layer activations for the
+specific <cite>concept</cite>.</p></li>
+<li><p><strong>concept</strong> (<a class="reference internal" href="#captum.concept.Concept" title="captum.concept.Concept"><em>Concept</em></a>) – A single Concept object that provides access
+to concept examples using a data iterator.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.9)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="captum.concept.TCAV.generate_activations">
+<span class="sig-name descname"><span class="pre">generate_activations</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">concept_layers</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/concept/_core/tcav.html#TCAV.generate_activations"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum.concept.TCAV.generate_activations" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes layer activations for the concepts and layers specified in
+<cite>concept_layers</cite> dictionary.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>concept_layers</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.9)"><em>dict</em></a><em>[</em><a class="reference internal" href="#captum.concept.Concept" title="captum.concept.Concept"><em>Concept</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.9)"><em>list</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a><em>]</em><em>]</em>) – Dictionay that maps
+Concept objects to a list of layer names to generate
+the activations. Ex.: concept_layers =
+{“striped”: [‘inception4c’, ‘inception4d’]}</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.9)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="captum.concept.TCAV.generate_all_activations">
+<span class="sig-name descname"><span class="pre">generate_all_activations</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/concept/_core/tcav.html#TCAV.generate_all_activations"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum.concept.TCAV.generate_all_activations" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes layer activations for all concepts and layers that are
+defined in <cite>self.layers</cite> and <cite>self.concepts</cite> instance variables.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.9)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="captum.concept.TCAV.interpret">
+<span class="sig-name descname"><span class="pre">interpret</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inputs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">experimental_sets</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">additional_forward_args</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">processes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/concept/_core/tcav.html#TCAV.interpret"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum.concept.TCAV.interpret" title="Permalink to this definition">¶</a></dt>
+<dd><p>This method computes magnitude and sign-based TCAV scores for each
+experimental sets in <cite>experimental_sets</cite> list.
+TCAV scores are computed using a dot product between layer attribution
+scores for specific predictions and CAV vectors.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>inputs</strong> (<em>tensor</em><em> or </em><em>tuple of tensors</em>) – Inputs for which predictions
+are performed and attributions are computed.
+If model takes a single tensor as
+input, a single input tensor should be provided.
+If model takes multiple tensors as
+input, a tuple of the input tensors should be provided.
+It is assumed that for all given input tensors,
+dimension 0 corresponds to the number of examples
+(aka batch size), and if multiple input tensors are
+provided, the examples must be aligned appropriately.</p></li>
+<li><p><strong>experimental_sets</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.9)"><em>list</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.9)"><em>list</em></a><em>[</em><a class="reference internal" href="#captum.concept.Concept" title="captum.concept.Concept"><em>Concept</em></a><em>]</em><em>]</em>) – A list of list of Concept
+instances.</p></li>
+<li><p><strong>target</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.9)"><em>tuple</em></a><em>, </em><em>tensor</em><em> or </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.9)"><em>list</em></a><em>, </em><em>optional</em>) – <p>Output indices for
+which attributions are computed (for classification cases,
+this is usually the target class).
+If the network returns a scalar value per example,
+no target index is necessary.
+For general 2D outputs, targets can be either:</p>
+<blockquote>
+<div><ul>
+<li><p>a single integer or a tensor containing a single
+integer, which is applied to all input examples</p></li>
+<li><p>a list of integers or a 1D tensor, with length matching
+the number of examples in inputs (dim 0). Each integer
+is applied as the target for the corresponding example.</p></li>
+</ul>
+<p>For outputs with &gt; 2 dimensions, targets can be either:
+- A single tuple, which contains #output_dims - 1</p>
+<blockquote>
+<div><p>elements. This target index is applied to all examples.</p>
+</div></blockquote>
+<ul>
+<li><p>A list of tuples with length equal to the number of
+examples in inputs (dim 0), and each tuple containing
+#output_dims - 1 elements. Each tuple is applied as the
+target for the corresponding example.</p></li>
+</ul>
+</div></blockquote>
+</p></li>
+<li><p><strong>additional_forward_args</strong> (<em>Any</em><em>, </em><em>optional</em>) – Extra arguments that are passed to
+model when computing the attributions for <cite>inputs</cite>
+w.r.t. layer output.
+Default: None</p></li>
+<li><p><strong>processes</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a><em>, </em><em>optional</em>) – The number of processes to be created. if
+processes is larger than one then CAV computations will be
+performed in parallel using the number of processes equal to
+<cite>processes</cite>. Otherwise, CAV computations will be performed
+sequential.
+Default:None</p></li>
+<li><p><strong>**kwargs</strong> (<em>Any</em><em>, </em><em>optional</em>) – A list of arguments that are passed to layer
+attribution algorithm’s attribute method. This could be for
+example <cite>n_steps</cite> in case of integrated gradients.
+Default: None</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><dl class="simple">
+<dt>A dictionary of sign and magnitude -based tcav scores</dt><dd><p>for each concept set per layer.
+The order of TCAV scores in the resulting tensor for each
+experimental set follows the order in which concepts
+are passed in <cite>experimental_sets</cite> input argument.</p>
+</dd>
+</dl>
+</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>results (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.9)">dict</a>)</p>
+</dd>
+</dl>
+<dl>
+<dt>results example::</dt><dd><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1">#</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># scores =</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># {'0-1':</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1">#     {'inception4c':</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1">#         {'sign_count': tensor([0.5800, 0.4200]),</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1">#          'magnitude': tensor([0.6613, 0.3387])},</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1">#      'inception4d':</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1">#         {'sign_count': tensor([0.6200, 0.3800]),</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1">#           'magnitude': tensor([0.7707, 0.2293])}}),</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1">#  '0-2':</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1">#     {'inception4c':</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1">#         {'sign_count': tensor([0.6200, 0.3800]),</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1">#          'magnitude': tensor([0.6806, 0.3194])},</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1">#      'inception4d':</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1">#         {'sign_count': tensor([0.6400, 0.3600]),</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1">#          'magnitude': tensor([0.6563, 0.3437])}})})</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1">#</span>
+</pre></div>
+</div>
+</dd>
+</dl>
+</dd></dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="captum.concept.TCAV.load_cavs">
+<span class="sig-name descname"><span class="pre">load_cavs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">concepts</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/concept/_core/tcav.html#TCAV.load_cavs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum.concept.TCAV.load_cavs" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function load CAVs as a dictionary of concept ids and
+layers. CAVs are stored in a directory located under
+<cite>self.save_path</cite> path, in .pkl files with the format:
+&lt;self.save_path&gt;/&lt;concept_ids&gt;-&lt;layer_name&gt;.pkl. Ex.:
+“/cavs/0-1-2-inception4c.pkl”, where 0, 1 and 2 are concept ids.</p>
+<p>It returns a list of layers and a dictionary of concept-layers mapping
+for the concepts and layer that require CAV computation through training.
+This can happen if the CAVs aren’t already pre-computed for a given list
+of concepts and layer.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>concepts</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.9)"><em>list</em></a><em>[</em><a class="reference internal" href="#captum.concept.Concept" title="captum.concept.Concept"><em>Concept</em></a><em>]</em>) – A list of Concept objects for which we want
+to load the CAV.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><dl class="simple">
+<dt>A list of layers for which some CAVs still need</dt><dd><p>to be computed.</p>
+</dd>
+<dt>concept_layers (dict[concept, layer]): A dictionay of concept-layers</dt><dd><p>mapping for which we need to perform CAV computation through
+training.</p>
+</dd>
+</dl>
+</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>layers (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.9)">list</a>[layer])</p>
+</dd>
+</dl>
+</dd></dl>
+</dd></dl>
+</section>
+<section id="conceptinterpreter">
+<h2>ConceptInterpreter<a class="headerlink" href="#conceptinterpreter" title="Permalink to this headline">¶</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="captum.concept.ConceptInterpreter">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">captum.concept.</span></span><span class="sig-name descname"><span class="pre">ConceptInterpreter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/concept/_core/concept.html#ConceptInterpreter"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum.concept.ConceptInterpreter" title="Permalink to this definition">¶</a></dt>
+<dd><p>An abstract class that exposes an abstract interpret method
+that has to be implemented by a specific algorithm for
+concept-based model interpretability.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>model</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/generated/torch.nn.Module.html#torch.nn.Module" title="(in PyTorch v1.9.0a0+gitd69c22d)"><em>torch.nn.Module</em></a>) – An instance of pytorch model.</p>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="captum.concept.ConceptInterpreter.interpret">
+<span class="sig-name descname"><span class="pre">interpret</span></span><em class="property"><span class="pre">:</span> <span class="pre">Callable</span></em><a class="headerlink" href="#captum.concept.ConceptInterpreter.interpret" title="Permalink to this definition">¶</a></dt>
+<dd><p>An abstract interpret method that performs concept-based model interpretability
+and returns the interpretation results in form of tensors, dictionaries or other
+data structures.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>inputs</strong> (<em>tensor</em><em> or </em><em>tuple of tensors</em>) – Inputs for which concept-based
+interpretation scores are computed. It can be provided as
+a single tensor or a tuple of multiple tensors. If multiple
+input tensors are provided, the batch size (the first
+dimension of the tensors) must be aligned across all tensors.</p>
+</dd>
+</dl>
+</dd></dl>
+</dd></dl>
+</section>
+<section id="concept">
+<h2>Concept<a class="headerlink" href="#concept" title="Permalink to this headline">¶</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="captum.concept.Concept">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">captum.concept.</span></span><span class="sig-name descname"><span class="pre">Concept</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_iter</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/concept/_core/concept.html#Concept"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum.concept.Concept" title="Permalink to this definition">¶</a></dt>
+<dd><p>Concepts are human-friendly abstract representations that can be
+numerically encoded into torch tensors. They can be illustrated as
+images, text or any other form of representation. In case of images,
+for example, “stripes” concept can be represented through a number
+of example images resembling “stripes” in various different
+contexts. In case of Natural Language Processing, the concept of
+“happy”, for instance, can be illustrated through a number of
+adjectives and words that convey happiness.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>id</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a>) – The unique identifier of the concept.</p></li>
+<li><p><strong>name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – A unique name of the concept.</p></li>
+<li><p><strong>data_iter</strong> (<em>iter</em>) – A pytorch Dataloader object. Combines a dataset
+and a sampler, and provides an iterable over a given
+dataset. For more information, please check:
+<a class="reference external" href="https://pytorch.org/docs/stable/data.html">https://pytorch.org/docs/stable/data.html</a></p></li>
+</ul>
+</dd>
+</dl>
+<dl>
+<dt>Example::</dt><dd><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># Creates a Concept object named "striped", with a data_iter</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># object to iterate over all files in "./concepts/striped"</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">concept_name</span> <span class="o">=</span> <span class="s2">"striped"</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">concept_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s2">"./concepts"</span><span class="p">,</span> <span class="n">concept_name</span><span class="p">)</span> <span class="o">+</span> <span class="s2">"/"</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">concept_iter</span> <span class="o">=</span> <span class="n">dataset_to_dataloader</span><span class="p">(</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">get_tensor_from_filename</span><span class="p">,</span> <span class="n">concepts_path</span><span class="o">=</span><span class="n">concept_path</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">concept_object</span> <span class="o">=</span> <span class="n">Concept</span><span class="p">(</span>
+<span class="go">        id=0, name=concept_name, data_iter=concept_iter)</span>
+</pre></div>
+</div>
+</dd>
+</dl>
+</dd></dl>
+</section>
+<section id="classifier">
+<h2>Classifier<a class="headerlink" href="#classifier" title="Permalink to this headline">¶</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="captum.concept.Classifier">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">captum.concept.</span></span><span class="sig-name descname"><span class="pre">Classifier</span></span><a class="reference internal" href="_modules/captum/concept/_utils/classifier.html#Classifier"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum.concept.Classifier" title="Permalink to this definition">¶</a></dt>
+<dd><p>An abstract class definition of any classifier that allows to train a model
+and access trained weights of that model.</p>
+<p>More specifically the classifier can, for instance, be trained on the
+activations of a particular layer. Below we can see an example a sklearn
+linear classifier wrapped by the <cite>CustomClassifier</cite> which extends <cite>Classifier</cite>
+abstract class.</p>
+<p>Example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sklearn</span> <span class="kn">import</span> <span class="n">linear_model</span>
+<span class="go">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">CustomClassifier</span><span class="p">(</span><span class="n">Classifier</span><span class="p">):</span>
+<span class="go">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="go">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="bp">self</span><span class="o">.</span><span class="n">lm</span> <span class="o">=</span> <span class="n">linear_model</span><span class="o">.</span><span class="n">SGDClassifier</span><span class="p">(</span><span class="n">alpha</span><span class="o">=</span><span class="mf">0.01</span><span class="p">,</span> <span class="n">max_iter</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span>
+<span class="gp">&gt;&gt;&gt; </span>                                         <span class="n">tol</span><span class="o">=</span><span class="mf">1e-3</span><span class="p">)</span>
+<span class="go">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">def</span> <span class="nf">train_and_eval</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dataloader</span><span class="p">):</span>
+<span class="go">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="n">x_train</span><span class="p">,</span> <span class="n">x_test</span><span class="p">,</span> <span class="n">y_train</span><span class="p">,</span> <span class="n">y_test</span> <span class="o">=</span> <span class="n">train_test_split</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">labels</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="bp">self</span><span class="o">.</span><span class="n">lm</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">x_train</span><span class="o">.</span><span class="n">detach</span><span class="p">()</span><span class="o">.</span><span class="n">numpy</span><span class="p">(),</span> <span class="n">y_train</span><span class="o">.</span><span class="n">detach</span><span class="p">()</span><span class="o">.</span><span class="n">numpy</span><span class="p">())</span>
+<span class="go">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="n">preds</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lm</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">x_test</span><span class="o">.</span><span class="n">detach</span><span class="p">()</span><span class="o">.</span><span class="n">numpy</span><span class="p">()))</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="k">return</span> <span class="p">{</span><span class="s1">'accs'</span><span class="p">:</span> <span class="p">(</span><span class="n">preds</span> <span class="o">==</span> <span class="n">y_test</span><span class="p">)</span><span class="o">.</span><span class="n">float</span><span class="p">()</span><span class="o">.</span><span class="n">mean</span><span class="p">()}</span>
+<span class="go">&gt;&gt;&gt;</span>
+<span class="go">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">def</span> <span class="nf">weights</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="go">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lm</span><span class="o">.</span><span class="n">coef_</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+<span class="gp">&gt;&gt;&gt; </span>        <span class="c1"># if there are two concepts, there is only one label.</span>
+<span class="gp">&gt;&gt;&gt; </span>        <span class="c1"># We split it in two.</span>
+<span class="gp">&gt;&gt;&gt; </span>        <span class="k">return</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">([</span><span class="o">-</span><span class="mi">1</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">lm</span><span class="o">.</span><span class="n">coef_</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">lm</span><span class="o">.</span><span class="n">coef_</span><span class="p">[</span><span class="mi">0</span><span class="p">]])</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="k">else</span><span class="p">:</span>
+<span class="gp">&gt;&gt;&gt; </span>        <span class="k">return</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lm</span><span class="o">.</span><span class="n">coef_</span><span class="p">)</span>
+<span class="go">&gt;&gt;&gt;</span>
+<span class="go">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">def</span> <span class="nf">classes</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">lm</span><span class="o">.</span><span class="n">classes_</span>
+<span class="go">&gt;&gt;&gt;</span>
+<span class="go">&gt;&gt;&gt;</span>
+</pre></div>
+</div>
+<dl class="py method">
+<dt class="sig sig-object py" id="captum.concept.Classifier.classes">
+<em class="property"><span class="pre">abstract</span> </em><span class="sig-name descname"><span class="pre">classes</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/concept/_utils/classifier.html#Classifier.classes"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum.concept.Classifier.classes" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function returns the list of all classes that are used by the
+classifier to train the model in the <cite>train_and_eval</cite> method.
+The order of returned classes has to match the same order used in
+the weights matrix returned by the <cite>weights</cite> method.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>The list of classes used by the classifier to train
+the model in the <cite>train_and_eval</cite> method.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>classes (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.9)">list</a>)</p>
+</dd>
+</dl>
+</dd></dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="captum.concept.Classifier.train_and_eval">
+<em class="property"><span class="pre">abstract</span> </em><span class="sig-name descname"><span class="pre">train_and_eval</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dataloader</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/concept/_utils/classifier.html#Classifier.train_and_eval"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum.concept.Classifier.train_and_eval" title="Permalink to this definition">¶</a></dt>
+<dd><p>This method is responsible for training a classifier using the data
+provided through <cite>dataloader</cite> input arguments. Based on the specific
+implementation, it may or may not return a statistics about model
+training and evaluation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>dataloader</strong> (<em>dataloader</em>) – A dataloader that enables batch-wise access to
+the inputs and corresponding labels. Dataloader allows us to
+iterate over the dataset by loading the batches in lazy manner.</p></li>
+<li><p><strong>kwargs</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.9)"><em>dict</em></a>) – Named arguments that are used for training and evaluating
+concept classifier.
+Default: None</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><dl class="simple">
+<dt>a dictionary of statistics about the performance of the model.</dt><dd><p>For example the accuracy of the model on the test and/or
+train dataset(s). The user may decide to return None or an
+empty dictionary if she/he decides to not return any performance
+statistics.</p>
+</dd>
+</dl>
+</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>stats (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.9)">dict</a>)</p>
+</dd>
+</dl>
+</dd></dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="captum.concept.Classifier.weights">
+<em class="property"><span class="pre">abstract</span> </em><span class="sig-name descname"><span class="pre">weights</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/concept/_utils/classifier.html#Classifier.weights"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum.concept.Classifier.weights" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function returns a C x F tensor weights, where
+C is the number of classes and F is the number of features.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><dl class="simple">
+<dt>A torch Tensor with the weights resulting from</dt><dd><p>the model training.</p>
+</dd>
+</dl>
+</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>weights (tensor)</p>
+</dd>
+</dl>
+</dd></dl>
+</dd></dl>
+</section>
+</section>
+</div>
+</div>
+</div>
+<div aria-label="main navigation" class="sphinxsidebar" role="navigation">
+<div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">Captum</a></h1>
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">API Reference</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="attribution.html">Attribution</a></li>
+<li class="toctree-l1"><a class="reference internal" href="noise_tunnel.html">NoiseTunnel</a></li>
+<li class="toctree-l1"><a class="reference internal" href="layer.html">Layer Attribution</a></li>
+<li class="toctree-l1"><a class="reference internal" href="neuron.html">Neuron Attribution</a></li>
+<li class="toctree-l1"><a class="reference internal" href="metrics.html">Metrics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="robust.html">Robustness</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Concept-based Interpretability</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#tcav">TCAV</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#conceptinterpreter">ConceptInterpreter</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#concept">Concept</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#classifier">Classifier</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="utilities.html">Utilities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="base_classes.html">Base Classes</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Insights API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="insights.html">Insights</a></li>
+<li class="toctree-l1"><a class="reference internal" href="insights.html#features">Features</a></li>
+</ul>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+<li><a href="index.html">Documentation overview</a><ul>
+<li>Previous: <a href="robust.html" title="previous chapter">Robustness</a></li>
+<li>Next: <a href="utilities.html" title="next chapter">Utilities</a></li>
+</ul></li>
+</ul>
+</div>
+<div id="searchbox" role="search" style="display: none">
+<h3 id="searchlabel">Quick search</h3>
+<div class="searchformwrapper">
+<form action="search.html" class="search" method="get">
+<input aria-labelledby="searchlabel" name="q" type="text"/>
+<input type="submit" value="Go"/>
+</form>
+</div>
+</div>
+<script>$('#searchbox').show(0);</script>
+</div>
+</div>
+<div class="clearer"></div>
+</div></div></div><footer class="nav-footer" id="footer"><section class="sitemap"><div class="footerSection"><h5>Docs</h5><a href="/docs/introduction">Introduction</a><a href="/docs/getting_started">Getting Started</a><a href="/tutorials/">Tutorials</a><a href="/api/">API Reference</a></div><div class="footerSection"><h5>Social</h5><div class="social"><a class="github-button" href="https://github.com/pytorch/captum" data-count-href="https://github.com/pytorch/captum/stargazers" data-show-count="true" data-count-aria-label="# stargazers on GitHub" aria-label="Star Captum on GitHub">captum</a></div></div></section><a href="https://opensource.facebook.com/" target="_blank" rel="noreferrer noopener" class="fbOpenSource"><img src="/img/oss_logo.png" alt="Facebook Open Source" width="170" height="45"/></a><section class="copyright"> Copyright © 2021 Facebook Inc.</section><script>
+            (function() {
+              var BAD_BASE = '/captum/';
+              if (window.location.origin !== 'https://captum.ai') {
+                var pathname = window.location.pathname;
+                var newPathname = pathname.slice(pathname.indexOf(BAD_BASE) === 0 ? BAD_BASE.length : 1);
+                var newLocation = 'https://captum.ai/' + newPathname;
+                console.log('redirecting to ' + newLocation);
+                window.location.href = newLocation;
+              }
+            })();
+          </script></footer></div><script type="text/javascript" src="https://cdn.jsdelivr.net/docsearch.js/1/docsearch.min.js"></script><script>
+                document.addEventListener('keyup', function(e) {
+                  if (e.target !== document.body) {
+                    return;
+                  }
+                  // keyCode for '/' (slash)
+                  if (e.keyCode === 191) {
+                    const search = document.getElementById('search_input_react');
+                    search && search.focus();
+                  }
+                });
+              </script><script>
+              var search = docsearch({
+                
+                apiKey: '207c27d819f967749142d8611de7cb19',
+                indexName: 'captum',
+                inputSelector: '#search_input_react'
+              });
+            </script></body></html>
