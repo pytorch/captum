@@ -110,7 +110,7 @@ class TCAV(ConceptInterpreter):
     This class implements ConceptInterpreter abstract class using an
     approach called Testing with Concept Activation Vectors (TCAVs),
     as described in the paper:
-        https://arxiv.org/pdf/1711.11279.pdf
+    https://arxiv.org/pdf/1711.11279.pdf
 
     TCAV scores for a given layer, a list of concepts and input example
     are computed using the dot product between prediction's layer
@@ -126,9 +126,9 @@ class TCAV(ConceptInterpreter):
 
     CAVs are represented as a learned weight matrix with the dimensionality
     C X F, where:
-        F represents the number of input features in the classifier.
-        C is the number of concepts used for the classification. Concept
-        ids are used as labels for concept examples during the training.
+    F represents the number of input features in the classifier.
+    C is the number of concepts used for the classification. Concept
+    ids are used as labels for concept examples during the training.
 
     We can use any layer attribution algorithm to compute layer sensitivities
     of a model prediction.
@@ -136,13 +136,13 @@ class TCAV(ConceptInterpreter):
     the layer.
     The CAVs and the Sensitivities (SENS) are used to compute the TCAV score:
 
-        0. TCAV = CAV • SENS, a dot product between those two vectors
+    0. TCAV = CAV • SENS, a dot product between those two vectors
 
     The final TCAV score can be computed by aggregating the TCAV scores
     for each input concept based on the sign or magnitude of the tcav scores.
 
-        1. sign_count_score = | TCAV > 0 | / | TCAV |
-        2. magnitude_score = SUM(ABS(TCAV * (TCAV > 0))) / SUM(ABS(TCAV))
+    1. sign_count_score = | TCAV > 0 | / | TCAV |
+    2. magnitude_score = SUM(ABS(TCAV * (TCAV > 0))) / SUM(ABS(TCAV))
     """
 
     def __init__(
