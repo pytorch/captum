@@ -17,6 +17,7 @@ Captum API Reference
    neuron
    metrics
    robust
+   concept
    utilities
    base_classes
 
