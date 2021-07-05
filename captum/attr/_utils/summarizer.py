@@ -43,7 +43,7 @@ class Summarizer:
 
         return copy.deepcopy(self._stats)
 
-    def update(self, x: Union[Tensor, Tuple[Tensor, ...]]):
+    def update(self, x: Union[float, Tensor, Tuple[Union[float, Tensor], ...]]):
         r"""
         Calls `update` on each `Stat` object within the summarizer
 
@@ -59,7 +59,7 @@ class Summarizer:
 
         from captum._utils.common import _format_tensor_into_tuples
 
-        x = _format_tensor_into_tuples(x)
+        x = _format_tensor_into_tuples(x)  # type: ignore
 
         for i, inp in enumerate(x):
             if i >= len(self._summarizers):

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 import math
 from enum import Enum
-from typing import Any, Callable, Dict, Generator, List, Optional, Tuple, Union
+from typing import Any, Callable, Dict, Generator, List, Optional, Tuple, Union, cast
 
 import torch
 from torch import Tensor
@@ -136,7 +136,9 @@ class MinParamPerturbation:
         self.num_attempts = num_attempts
         self.preproc_fn = preproc_fn
         self.apply_before_preproc = apply_before_preproc
-        self.correct_fn = correct_fn if correct_fn is not None else default_correct_fn
+        self.correct_fn = cast(
+            Callable, correct_fn if correct_fn is not None else default_correct_fn
+        )
 
         assert (
             mode.upper() in MinParamPerturbationMode.__members__
@@ -147,9 +149,9 @@ class MinParamPerturbation:
         self,
         input_list: List,
         additional_forward_args: Any,
-        correct_fn_kwargs: Dict[str, Any],
+        correct_fn_kwargs: Optional[Dict[str, Any]],
         target: TargetType,
-    ) -> None:
+    ) -> Optional[int]:
         if additional_forward_args is None:
             additional_forward_args = ()
 
