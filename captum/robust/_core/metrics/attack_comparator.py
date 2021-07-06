@@ -1,7 +1,19 @@
 #!/usr/bin/env python3
 import warnings
 from collections import namedtuple
-from typing import Any, Callable, Dict, List, NamedTuple, Optional, Tuple, Union
+from typing import (
+    Any,
+    Callable,
+    Dict,
+    Generic,
+    List,
+    NamedTuple,
+    Optional,
+    Tuple,
+    TypeVar,
+    Union,
+    cast,
+)
 
 from torch import Tensor
 
@@ -14,6 +26,10 @@ from captum.attr import Max, Mean, Min, Summarizer
 from captum.robust._core.perturbation import Perturbation
 
 ORIGINAL_KEY = "Original"
+
+MetricResultType = TypeVar(
+    "MetricResultType", float, Tensor, Tuple[Union[float, Tensor], ...]
+)
 
 
 class AttackInfo(NamedTuple):
@@ -33,7 +49,7 @@ def agg_metric(inp):
     return inp
 
 
-class AttackComparator:
+class AttackComparator(Generic[MetricResultType]):
     r"""
     Allows measuring model robustness for a given attack or set of attacks. This class
     can be used with any metric(s) as well as any set of attacks, either based on
@@ -44,7 +60,7 @@ class AttackComparator:
     def __init__(
         self,
         forward_func: Callable,
-        metric: Callable[..., Union[float, Tensor, Tuple[Union[float, Tensor], ...]]],
+        metric: Callable[..., MetricResultType],
         preproc_fn: Callable = None,
     ) -> None:
         r"""
@@ -74,10 +90,10 @@ class AttackComparator:
                 additional_forward_args provided to evaluate.
         """
         self.forward_func = forward_func
-        self.metric = metric
+        self.metric: Callable = metric
         self.preproc_fn = preproc_fn
-        self.attacks = {}
-        self.summary_results = {}
+        self.attacks: Dict[str, AttackInfo] = {}
+        self.summary_results: Dict[str, Summarizer] = {}
         self.metric_aggregator = agg_metric
         self.batch_stats = [Mean, Min, Max]
         self.aggregate_stats = [Mean]
@@ -148,7 +164,7 @@ class AttackComparator:
 
     def _format_summary(
         self, summary: Union[Dict, List[Dict]]
-    ) -> Dict[str, Union[float, Tuple[float, ...]]]:
+    ) -> Dict[str, MetricResultType]:
         r"""
         This method reformats a given summary; particularly for tuples,
         the Summarizer's summary format is a list of dictionaries,
@@ -159,12 +175,12 @@ class AttackComparator:
         if isinstance(summary, dict):
             return summary
         else:
-            summary_dict = {}
+            summary_dict: Dict[str, Tuple] = {}
             for key in summary[0]:
                 summary_dict[key] = tuple(s[key] for s in summary)
                 if self.out_format:
                     summary_dict[key] = self.out_format(*summary_dict[key])
-            return summary_dict
+            return summary_dict  # type: ignore
 
     def _update_out_format(
         self, out_metric: Union[float, Tensor, Tuple[Union[float, Tensor], ...]]
@@ -174,7 +190,9 @@ class AttackComparator:
             and isinstance(out_metric, tuple)
             and hasattr(out_metric, "_fields")
         ):
-            self.out_format = namedtuple(type(out_metric).__name__, out_metric._fields)
+            self.out_format = namedtuple(  # type: ignore
+                type(out_metric).__name__, cast(NamedTuple, out_metric)._fields
+            )
 
     def _evaluate_batch(
         self,
@@ -212,13 +230,10 @@ class AttackComparator:
     def evaluate(
         self,
         inputs: Any,
-        additional_forward_args: Optional[Tuple] = None,
+        additional_forward_args: Any = None,
         perturbations_per_eval: int = 1,
         **kwargs,
-    ) -> Dict[
-        str,
-        Union[Tensor, Tuple[Tensor, ...], Dict[str, Union[Tensor, Tuple[Tensor, ...]]]],
-    ]:
+    ) -> Dict[str, Union[MetricResultType, Dict[str, MetricResultType]]]:
         r"""
         Evaluate model and attack performance on provided inputs
 
@@ -385,45 +400,44 @@ class AttackComparator:
 
     def _parse_and_update_results(
         self, batch_summarizers: Dict[str, Summarizer]
-    ) -> Dict[
-        str, Union[float, Tuple[float, ...], Dict[str, Union[float, Tuple[float, ...]]]]
-    ]:
-        results = {
-            ORIGINAL_KEY: self._format_summary(batch_summarizers[ORIGINAL_KEY].summary)[
-                "mean"
-            ]
+    ) -> Dict[str, Union[MetricResultType, Dict[str, MetricResultType]]]:
+        results: Dict[str, Union[MetricResultType, Dict[str, MetricResultType]]] = {
+            ORIGINAL_KEY: self._format_summary(
+                cast(Union[Dict, List], batch_summarizers[ORIGINAL_KEY].summary)
+            )["mean"]
         }
         self.summary_results[ORIGINAL_KEY].update(
             self.metric_aggregator(results[ORIGINAL_KEY])
         )
         for attack_key in self.attacks:
             attack = self.attacks[attack_key]
-            results[attack.name] = self._format_summary(
-                batch_summarizers[attack.name].summary
+            attack_results = self._format_summary(
+                cast(Union[Dict, List], batch_summarizers[attack.name].summary)
             )
+            results[attack.name] = attack_results
 
-            if len(results[attack.name]) == 1:
-                key = next(iter(results[attack.name]))
+            if len(attack_results) == 1:
+                key = next(iter(attack_results))
                 if attack.name not in self.summary_results:
                     self.summary_results[attack.name] = Summarizer(
                         [stat() for stat in self.aggregate_stats]
                     )
                 self.summary_results[attack.name].update(
-                    self.metric_aggregator(results[attack.name][key])
+                    self.metric_aggregator(attack_results[key])
                 )
             else:
-                for key in results[attack.name]:
+                for key in attack_results:
                     summary_key = f"{attack.name} {key.title()} Attempt"
                     if summary_key not in self.summary_results:
                         self.summary_results[summary_key] = Summarizer(
                             [stat() for stat in self.aggregate_stats]
                         )
                     self.summary_results[summary_key].update(
-                        self.metric_aggregator(results[attack.name][key])
+                        self.metric_aggregator(attack_results[key])
                     )
         return results
 
-    def summary(self) -> Dict[str, Dict[str, Union[Tensor, Tuple[Tensor, ...]]]]:
+    def summary(self) -> Dict[str, Dict[str, MetricResultType]]:
         r"""
         Returns average results over all previous batches evaluated.
 
@@ -440,7 +454,9 @@ class AttackComparator:
                 per batch.
         """
         return {
-            key: self._format_summary(self.summary_results[key].summary)
+            key: self._format_summary(
+                cast(Union[Dict, List], self.summary_results[key].summary)
+            )
             for key in self.summary_results
         }
 

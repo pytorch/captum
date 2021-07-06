@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-from typing import List
+from typing import List, cast
 
 import torch
 from torch import Tensor
@@ -55,7 +55,7 @@ class Test(BaseTest):
         target_inp, pert = minimal_pert.evaluate(
             inp, target=0, attack_kwargs={"ind": 0}
         )
-        self.assertAlmostEqual(pert, 2.0)
+        self.assertAlmostEqual(cast(float, pert), 2.0)
         assertTensorAlmostEqual(
             self, target_inp, torch.tensor([[0.0, -9.0, 9.0, 1.0, -3.0]])
         )
@@ -79,7 +79,7 @@ class Test(BaseTest):
             attack_kwargs={"ind": 0},
             perturbations_per_eval=10,
         )
-        self.assertAlmostEqual(pert, 2.0)
+        self.assertAlmostEqual(cast(float, pert), 2.0)
         assertTensorAlmostEqual(
             self, target_inp, torch.tensor([[0.0, -9.0, 9.0, 1.0, -3.0]])
         )
