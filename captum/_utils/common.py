@@ -159,6 +159,19 @@ def _format_input(inputs: Union[Tensor, Tuple[Tensor, ...]]) -> Tuple[Tensor, ..
     return _format_tensor_into_tuples(inputs)
 
 
+def _format_float_or_tensor_into_tuples(
+    inputs: Union[float, Tensor, Tuple[Union[float, Tensor], ...]]
+) -> Tuple[Union[float, Tensor], ...]:
+    if not isinstance(inputs, tuple):
+        assert isinstance(
+            inputs, (torch.Tensor, float)
+        ), "`inputs` must have type float or torch.Tensor but {} found: ".format(
+            type(inputs)
+        )
+        inputs = (inputs,)
+    return inputs
+
+
 @overload
 def _format_additional_forward_args(additional_forward_args: None) -> None:
     ...
