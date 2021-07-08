@@ -37,7 +37,9 @@ class PropagationRule(ABC):
 
     @staticmethod
     def backward_hook_activation(
-        module: Module, grad_input: Union[Tensor, Tuple[Tensor, ...]], grad_output: Union[Tensor, Tuple[Tensor, ...]]
+        module: Module,
+        grad_input: Union[Tensor, Tuple[Tensor, ...]],
+        grad_output: Union[Tensor, Tuple[Tensor, ...]],
     ) -> Union[Tensor, Tuple[Tensor, ...]]:
         """Backward hook to propagate relevance over non-linear activations."""
         if (
@@ -349,7 +351,7 @@ class ZBoundRule(PropagationRule):
         """
         if not hasattr(module, "weight"):
             raise RuntimeError(
-                f"{self.__class__.__name__} assigned to module without weights:" 
+                f"{self.__class__.__name__} assigned to module without weights:"
                 + "{module}. This rule only supports modules with weight."
             )
         inputs = _format_tensor_into_tuples(inputs)
