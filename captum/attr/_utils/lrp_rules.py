@@ -37,8 +37,8 @@ class PropagationRule(ABC):
 
     @staticmethod
     def backward_hook_activation(
-        module: Module, grad_input: Tensor, grad_output: Tensor
-    ) -> Tensor:
+        module: Module, grad_input: Union[Tensor, Tuple[Tensor, ...]], grad_output: Union[Tensor, Tuple[Tensor, ...]]
+    ) -> Union[Tensor, Tuple[Tensor, ...]]:
         """Backward hook to propagate relevance over non-linear activations."""
         if (
             isinstance(grad_input, tuple)
@@ -303,7 +303,183 @@ class FlatRule(WSquaredRule):
             module.weight.data = torch.ones_like(module.weight.data)
 
 
-class AlphaBetaRule(PropagationRule):
+class ZBoundRule(PropagationRule):
+    r"""
+    Z found rule for relevance backpropagation with bounded input values.
+
+    Use for input layer for images.
+    """
+
+    def __init__(
+        self,
+        lower_bound: Union[int, float] = -1.0,
+        upper_bound: Union[int, float] = 1.0,
+        set_bias_to_zero: bool = True,
+    ) -> None:
+        """
+        Args:
+            lower_bound (Union[int, float], optional): Lower bound value for input
+            features. Defaults to -1.0.
+            upper_bound (Union[int, float], optional): Upper bound for input features.
+            Defaults to 1.0.
+            set_bias_to_zero (bool, optional): Parameter for setting bias to
+            zero in relevance computations.
+            Defaults to False.
+        """
+        self.upper_bound = upper_bound
+        self.lower_bound = lower_bound
+        self.set_bias_to_zero = set_bias_to_zero
+
+        self._lower_bound_tensor = torch.Tensor()
+        self._upper_bound_tensor = torch.Tensor()
+
+        self._module_pos: Module = None
+        self._module_neg: Module = None
+        self._bias_contrib: Tensor = None
+
+        self._denominator_bound_contribution = torch.Tensor()
+        self._input_shapes: Tuple[torch.Size, ...] = tuple()
+
+    def forward_hook(
+        self, module: Module, inputs: Tuple[Tensor, ...], outputs: Tensor
+    ) -> Tensor:
+        r"""
+        Register backward hooks on input and output
+        tensors of linear layers in the model.
+        """
+        if not hasattr(module, "weight"):
+            raise RuntimeError(
+                f"{self.__class__.__name__} assigned to module without weights:" 
+                + "{module}. This rule only supports modules with weight."
+            )
+        inputs = _format_tensor_into_tuples(inputs)
+        self._handle_input_hooks = list()
+        for input_index, input_ in enumerate(inputs):
+            if not hasattr(input_, "hook_registered"):
+                input_hook = self._create_backward_hook_input(input_.data, input_index)
+                handle = input_.register_hook(input_hook)
+                self._handle_input_hooks.append(handle)
+                input_.hook_registered = True
+        output_hook = self._create_backward_hook_output(outputs.data)
+        self._handle_output_hook = outputs.register_hook(output_hook)
+
+        self._create_auxiliary_quantities(inputs)
+
+        return outputs.clone()
+
+    def _create_backward_hook_input(
+        self, input_: Tensor, input_index: int
+    ) -> Callable[[Tensor], Optional[Tensor]]:
+        def _backward_hook_input(grad: Tensor) -> Tensor:
+            relevance = (input_ - self._lower_bound_tensor[input_index]) * grad
+            relevance += (
+                input_ - self._upper_bound_tensor[input_index]
+            ) * self.negative_weight_contraction[input_index]
+
+            return relevance
+
+        return _backward_hook_input
+
+    def _create_backward_hook_output(
+        self, output: Tensor
+    ) -> Callable[[Tensor], Optional[Tensor]]:
+        def _backward_hook_output(grad: Tensor) -> Tensor:
+
+            denominator = self.og_outputs[0] - self._denominator_bound_contribution
+            if self.set_bias_to_zero and self._bias_contrib is not None:
+                denominator -= torch.cat(
+                    tuple(self._bias_contrib for _ in range(output.shape[0]))
+                )
+            denominator += self.STABILITY_FACTOR
+
+            rescaled_relevance = grad / denominator
+            self.negative_weight_contraction = torch.autograd.grad(
+                outputs=self.upper_bound_contrib,
+                inputs=self._upper_bound_tensor,
+                grad_outputs=rescaled_relevance,
+                retain_graph=True,
+            )
+
+            return rescaled_relevance
+
+        return _backward_hook_output
+
+    def _create_auxiliary_quantities(self, inputs: Tuple[Tensor, ...]) -> None:
+        r"""
+        Computes the l w^+ + h w^- term for the denominator.
+        """
+        input_shapes = tuple(x.shape for x in inputs)
+
+        if input_shapes != self._input_shapes:
+            self._input_shapes = input_shapes
+
+            with torch.autograd.set_grad_enabled(True):
+                self._upper_bound_tensor = tuple(
+                    torch.full(
+                        input_shape,
+                        self.upper_bound,
+                        dtype=torch.float,
+                        requires_grad=True,
+                    )
+                    for input_shape in self._input_shapes
+                )
+                self.upper_bound_contrib = self._module_neg.forward(
+                    *self._upper_bound_tensor
+                )
+
+            with torch.no_grad():
+                self._lower_bound_tensor = tuple(
+                    torch.full(input_shape, self.lower_bound, dtype=torch.float)
+                    for input_shape in self._input_shapes
+                )
+                self._denominator_bound_contribution = (
+                    self._module_pos.forward(*self._lower_bound_tensor)
+                    + self.upper_bound_contrib
+                )
+
+    def forward_hook_weights(
+        self,
+        module: Module,
+        inputs: Tuple[Tensor, ...],
+        outputs: Tensor,
+    ) -> None:
+        self.og_outputs = outputs.detach()
+        super().forward_hook_weights(module, inputs, outputs)
+
+    def _separate_weights_by_sign(self, module: Module) -> None:
+        if hasattr(module, "weight"):
+            if self._module_neg is None:
+                self._module_neg = copy.deepcopy(module)
+                self._module_neg.weight.data = torch.clamp(
+                    self._module_neg.weight.data, max=0.0
+                )
+            self._module_pos = module
+            self._module_pos.weight.data = torch.clamp(
+                self._module_pos.weight.data, min=0.0
+            )
+
+    def _manipulate_weights(
+        self,
+        module: Module,
+        inputs: Tuple[Tensor, ...],
+        outputs: Tensor,
+    ) -> None:
+        if hasattr(module, "bias"):
+            if module.bias is not None:
+                if self.set_bias_to_zero and self._bias_contrib is None:
+                    with torch.no_grad():
+                        self._bias_contrib = module.forward(
+                            *(
+                                torch.zeros(input_.shape[1:]).unsqueeze(dim=0)
+                                for input_ in inputs
+                            )
+                        )
+                module.bias.data = torch.zeros_like(module.bias.data)
+
+        self._separate_weights_by_sign(module)
+
+
+class AlphaBetaRule(ZBoundRule):
     r"""
     Alpha Beta rule for relevance backpropagation. This rule weights
     the positive and negative addends contributing to some pre-activation
@@ -326,42 +502,15 @@ class AlphaBetaRule(PropagationRule):
         self.beta = 1.0 - self.alpha
         self.set_bias_to_zero = set_bias_to_zero
 
-        self._module_pos = None
-        self._module_neg = None
-        self._bias_contrib = None
-
-    def forward_hook(
-        self, module: Module, inputs: Tuple[Tensor, ...], outputs: Tensor
-    ) -> Tensor:
-        r"""Register backward hooks on input and output tensors of linear layers in the
-        model."""
-        if not hasattr(module, "weight"):
-            raise RuntimeError(
-                f"AlphaBetaRule assigned to module without weights: {module}. "
-                + "This rule only supports modules with weight."
-            )
-        inputs = _format_tensor_into_tuples(inputs)
-        self._has_single_input = len(inputs) == 1
-        self._handle_input_hooks = list()
-        for input_index, input_ in enumerate(inputs):
-            if not hasattr(input_, "hook_registered"):
-                input_hook = self._create_backward_hook_input(input_.data, input_index)
-                handle = input_.register_hook(input_hook)
-                self._handle_input_hooks.append(handle)
-                input_.hook_registered = True
-        output_hook = self._create_backward_hook_output(outputs.data)
-        self._handle_output_hook = outputs.register_hook(output_hook)
-
-        self._create_signed_inputs(inputs)
-
-        return outputs.clone()
+        self._module_pos: Optional[Module] = None
+        self._module_neg: Optional[Module] = None
+        self._bias_contrib: Tensor = None
 
     def _create_backward_hook_input(
         self, input_: Tensor, input_index: int
     ) -> Callable[[Tensor], Optional[Tensor]]:
         def _backward_hook_input(grad: Tensor) -> Tensor:
-            out = self.out[input_index]
-            return out
+            return self.out[input_index]
 
         return _backward_hook_input
 
@@ -439,20 +588,13 @@ class AlphaBetaRule(PropagationRule):
 
         return out
 
-    def _create_signed_inputs(self, inputs: Tuple[Tensor, ...]) -> None:
+    def _create_auxiliary_quantities(self, inputs: Tuple[Tensor, ...]) -> None:
         self.inputs_pos = tuple(input_.data.clamp(min=0) for input_ in inputs)
         self.inputs_neg = tuple(input_.data.clamp(max=0) for input_ in inputs)
 
         for input_pos, input_neg in zip(self.inputs_pos, self.inputs_neg):
             input_pos.requires_grad_(True)
             input_neg.requires_grad_(True)
-
-    def _separate_weights_by_sign(self, module: Module) -> None:
-        if self._module_neg is None:
-            self._module_neg = copy.deepcopy(module)
-            self._module_neg.weight.data = self._module_neg.weight.data.clamp(max=0.0)
-        self._module_pos = module
-        self._module_pos.weight.data = self._module_pos.weight.data.clamp(min=0.0)
 
     def _manipulate_weights(
         self,
@@ -463,173 +605,6 @@ class AlphaBetaRule(PropagationRule):
         if hasattr(module, "bias"):
             if module.bias is not None:
                 if not self.set_bias_to_zero and self._bias_contrib is None:
-                    with torch.no_grad():
-                        self._bias_contrib = module.forward(
-                            *(
-                                torch.zeros(input_.shape[1:]).unsqueeze(dim=0)
-                                for input_ in inputs
-                            )
-                        )
-                module.bias.data = torch.zeros_like(module.bias.data)
-
-        self._separate_weights_by_sign(module)
-
-
-class ZBoundRule(PropagationRule):
-    def __init__(
-        self,
-        lower_bound: Union[int, float] = -1.0,
-        upper_bound: Union[int, float] = 1.0,
-        set_bias_to_zero: bool = True,
-    ) -> None:
-        r"""
-        If lower_bound is a float, this will be used for every input feature.
-        If lower bound is a tuple, each entry will be used for all features of
-        the corresponding input.
-        """
-        self.upper_bound = upper_bound
-        self.lower_bound = lower_bound
-        self.set_bias_to_zero = set_bias_to_zero
-
-        self._lower_bound_tensor = torch.Tensor()
-        self._upper_bound_tensor = torch.Tensor()
-
-        self._module_pos = None
-        self._module_neg = None
-        self._bias_contrib = None
-
-        self._denominator_bound_contribution = torch.Tensor()
-        self._input_shapes: Tuple[torch.Size, ...] = tuple()
-
-    def forward_hook(
-        self, module: Module, inputs: Tuple[Tensor, ...], outputs: Tensor
-    ) -> Tensor:
-        r"""
-        Register backward hooks on input and output
-        tensors of linear layers in the model.
-        """
-        if not hasattr(module, "weight"):
-            raise RuntimeError(
-                f"ZBoundRule assigned to module without weights: {module}. "
-                + "This rule only supports modules with weight."
-            )
-        inputs = _format_tensor_into_tuples(inputs)
-        self._has_single_input = len(inputs) == 1
-        self._handle_input_hooks = list()
-        self.relevance_input = list()
-        for input_index, input_ in enumerate(inputs):
-            if not hasattr(input_, "hook_registered"):
-                input_hook = self._create_backward_hook_input(input_.data, input_index)
-                handle = input_.register_hook(input_hook)
-                self._handle_input_hooks.append(handle)
-                input_.hook_registered = True
-        output_hook = self._create_backward_hook_output(outputs.data)
-        self._handle_output_hook = outputs.register_hook(output_hook)
-
-        self._weight_contraction_with_bounds(inputs)
-
-        return outputs.clone()
-
-    def _create_backward_hook_input(
-        self, input_: Tensor, input_index: int
-    ) -> Callable[[Tensor], Optional[Tensor]]:
-        def _backward_hook_input(grad: Tensor) -> Tensor:
-            relevance = (input_ - self._lower_bound_tensor[input_index]) * grad
-            relevance += (input_ - self._upper_bound_tensor[input_index]) * self.res_wm[
-                input_index
-            ]
-
-            return relevance
-
-        return _backward_hook_input
-
-    def _create_backward_hook_output(
-        self, output: Tensor
-    ) -> Callable[[Tensor], Optional[Tensor]]:
-        def _backward_hook_output(grad: Tensor) -> Tensor:
-
-            denominator = self.og_outputs[0] - self._denominator_bound_contribution
-            if self.set_bias_to_zero and self._bias_contrib is not None:
-                denominator -= torch.cat(
-                    tuple(self._bias_contrib for _ in range(output.shape[0]))
-                )
-            denominator += self.STABILITY_FACTOR
-
-            rescaled_relevance = grad / denominator
-            self.res_wm = torch.autograd.grad(
-                outputs=self.upper_bound_contrib,
-                inputs=self._upper_bound_tensor,
-                grad_outputs=rescaled_relevance,
-                retain_graph=True,
-            )
-
-            return rescaled_relevance
-
-        return _backward_hook_output
-
-    def _weight_contraction_with_bounds(self, inputs: Tuple[Tensor, ...]) -> None:
-        r"""
-        Computes the l w^+ + h w^- term for the denominator.
-        """
-        input_shapes = tuple(x.shape for x in inputs)
-
-        if input_shapes != self._input_shapes:
-            self._input_shapes = input_shapes
-
-            with torch.autograd.set_grad_enabled(True):
-                self._upper_bound_tensor = tuple(
-                    torch.full(
-                        input_shape,
-                        self.upper_bound,
-                        dtype=torch.float,
-                        requires_grad=True,
-                    )
-                    for input_shape in self._input_shapes
-                )
-                self.upper_bound_contrib = self._module_neg.forward(
-                    *self._upper_bound_tensor
-                )
-
-            with torch.no_grad():
-                self._lower_bound_tensor = tuple(
-                    torch.full(input_shape, self.lower_bound, dtype=torch.float)
-                    for input_shape in self._input_shapes
-                )
-                self._denominator_bound_contribution = (
-                    self._module_pos.forward(*self._lower_bound_tensor)
-                    + self.upper_bound_contrib
-                )
-
-    def forward_hook_weights(
-        self,
-        module: Module,
-        inputs: Tuple[Tensor, ...],
-        outputs: Tensor,
-    ) -> None:
-        super().forward_hook_weights(module, inputs, outputs)
-        self.og_outputs = outputs.detach()
-
-    def _separate_weights_by_sign(self, module: Module) -> None:
-        if hasattr(module, "weight"):
-            if self._module_neg is None:
-                self._module_neg = copy.deepcopy(module)
-                self._module_neg.weight.data = torch.clamp(
-                    self._module_neg.weight.data, max=0.0
-                )
-            self._module_pos = module
-            self._module_pos.weight.data = torch.clamp(
-                self._module_pos.weight.data, min=0.0
-            )
-
-    def _manipulate_weights(
-        self,
-        module: Module,
-        inputs: Tuple[Tensor, ...],
-        outputs: Tensor,
-    ) -> None:
-        if hasattr(module, "bias"):
-            if module.bias is not None:
-                if self.set_bias_to_zero and self._bias_contrib is None:
                     with torch.no_grad():
                         self._bias_contrib = module.forward(
                             *(

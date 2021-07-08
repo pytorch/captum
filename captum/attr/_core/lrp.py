@@ -337,10 +337,10 @@ class LRP(GradientAttribution):
         Returns:
             TensorOrTupleOfTensorsGeneric: cloned inputs
         """
-        if isinstance(inputs, tuple):
-            return tuple(x.clone() for x in inputs)
-        else:
+        if isinstance(inputs, Tensor):
             return inputs.clone()
+        else:
+            return tuple(x.clone() for x in inputs)
 
     def _register_weight_hooks(self) -> None:
         for layer in self.layers:
