@@ -2,7 +2,12 @@
 from enum import Enum
 from typing import Callable, List, Tuple
 
-import numpy as np
+import torch
+
+try:
+    import numpy as np
+except ImportError:
+    np = None
 
 
 class Riemann(Enum):
@@ -34,6 +39,11 @@ def approximation_parameters(
     if method in SUPPORTED_RIEMANN_METHODS:
         return riemann_builders(method=Riemann[method.split("_")[-1]])
     if method == "gausslegendre":
+        if not np:
+            raise ValueError(
+                f"Method '{method}' is invalid because NumPy is not available."
+                "Consider using 'riemann' instead"
+            )
         return gauss_legendre_builders()
     raise ValueError("Invalid integral approximation method name: {}".format(method))
 
@@ -73,13 +83,13 @@ def riemann_builders(
     def alphas(n: int) -> List[float]:
         assert n > 1, "The number of steps has to be larger than one"
         if method == Riemann.trapezoid:
-            return list(np.linspace(0, 1, n))
+            return torch.linspace(0, 1, n).tolist()
         elif method == Riemann.left:
-            return list(np.linspace(0, 1 - 1 / n, n))
+            return torch.linspace(0, 1 - 1 / n, n).tolist()
         elif method == Riemann.middle:
-            return list(np.linspace(1 / (2 * n), 1 - 1 / (2 * n), n))
+            return torch.linspace(1 / (2 * n), 1 - 1 / (2 * n), n).tolist()
         elif method == Riemann.right:
-            return list(np.linspace(1 / n, 1, n))
+            return torch.linspace(1 / n, 1, n).tolist()
         else:
             raise AssertionError("Provided Reimann approximation method is not valid.")
         # This is not a standard riemann method but in many cases it
