@@ -4,11 +4,6 @@ from typing import Callable, List, Tuple
 
 import torch
 
-try:
-    import numpy as np
-except ImportError:
-    np = None
-
 
 class Riemann(Enum):
     left = 1
@@ -39,11 +34,6 @@ def approximation_parameters(
     if method in SUPPORTED_RIEMANN_METHODS:
         return riemann_builders(method=Riemann[method.split("_")[-1]])
     if method == "gausslegendre":
-        if not np:
-            raise ValueError(
-                f"Method '{method}' is invalid because NumPy is not available."
-                "Consider using 'riemann' instead"
-            )
         return gauss_legendre_builders()
     raise ValueError("Invalid integral approximation method name: {}".format(method))
 
@@ -131,6 +121,9 @@ def gauss_legendre_builders() -> Tuple[
                     of integrand in the range of [0, 1]
 
     """
+
+    # allow using riemann even without np
+    import numpy as np
 
     def step_sizes(n: int) -> List[float]:
         assert n > 0, "The number of steps has to be larger than zero"
