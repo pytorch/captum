@@ -83,11 +83,18 @@ class TutorialHome extends React.Component {
                 Using Captum and Integrated Gradients we interpret the output of several test questions and analyze the attribution scores
                 of the text and visual parts of the model. Find the tutorial <a href="Multimodal_VQA_Interpret">here</a>.
 
-                <h4>Interpreting question answering with BERT:</h4>
+                <h4>Interpreting question answering with BERT Part 1:</h4>
                 This tutorial demonstrates how to use Captum to interpret a BERT model for question answering.
                 We use a pre-trained model from Hugging Face fine-tuned on the SQUAD dataset and show how to use hooks to
                 examine and better understand embeddings, sub-embeddings, BERT, and attention layers.
                 Find the tutorial <a href="Bert_SQUAD_Interpret">here</a>.
+
+                <h4>Interpreting question answering with BERT Part 2:</h4>
+                In the second part of Bert tutorial we analyze attention matrices using attribution algorithms s.a. Integrated Gradients.
+                This analysis helps us to identify strong interaction pairs between different tokens for a specific model prediction.
+                We compare our findings with the <a href="https://arxiv.org/pdf/2004.10102.pdf">vector norms<a> and show that attribution scores
+                more meaningful compared to the vector norms.
+                <a href="Bert_SQUAD_Interpret2"><here/a>.
 
                 <h4>Interpreting a regression model of Boston house prices:</h4>
                 To demonstrate interpreting regression models we have chosen to look at the Boston house prices dataset.
@@ -115,6 +122,19 @@ class TutorialHome extends React.Component {
                 source Visual Question Answer (VQA) model.
                 Find the tutorial <a href="Multimodal_VQA_Captum_Insights">here</a>.
 
+                <h4>Intepreting DLRM model with Captum:</h4>
+                This tutorial demonstrates how we use Captum for Deep Learning Recommender Models using
+                <a href="https://github.com/facebookresearch/dlrm">dlrm</a> model published from facebook research and integrated gradients algorithm.
+                It showcases feature importance differences for sparse and dense features in predicting clicked and non-clicked Ads. It also analysis
+                the importance of interaction layer and neuron importances in the final fully connected layer when predicting clicked Ads.
+                Find the tutorial <a href="DLRM_Tutorial">here</a>.
+
+                <h4>Interpreting vision and text models with LIME:</h4>
+                This tutorial demonstrates how to interpret computer vision and text classification models using Local Interpretable Model-agnostic
+                Explanations (LIME) algorithm. For vision it uses resnet18 model to explain image classification based on super-pixels extracted by
+                a segmentation mask. For text it uses a classification model trained on `AG_NEWS` dataset and explains model predictions based
+                on the word tokens in the input text.
+                Find the tutorial <a href="Image_and_Text_Classification_LIME">here</a>.
               </p>
             </body>
           </div>
