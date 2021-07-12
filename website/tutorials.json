@@ -55,6 +55,10 @@
     {
       "id": "DLRM_Tutorial",
       "title": "Interpreting Deep Learning Recommender Models"
+    },
+    {
+      "id": "Image_and_Text_Classification_LIME",
+      "title": "Interpreting vision and text models with LIME"
     }
   ]
 }
