@@ -37,7 +37,7 @@ class Stat:
     def init(self):
         pass
 
-    def _get_stat(self, stat: "Stat") -> Optional["Stat"]:
+    def _get_stat(self, stat: Stat) -> Optional[Stat]:
         assert self._other_stats is not None
         return self._other_stats.get(stat)
 
