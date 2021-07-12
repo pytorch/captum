@@ -93,7 +93,7 @@ class TutorialHome extends React.Component {
                 In the second part of Bert tutorial we analyze attention matrices using attribution algorithms s.a. Integrated Gradients.
                 This analysis helps us to identify strong interaction pairs between different tokens for a specific model prediction.
                 We compare our findings with the <a href="https://arxiv.org/pdf/2004.10102.pdf">vector norms<a> and show that attribution scores
-                more meaningful compared to the vector norms.
+                are more meaningful compared to the vector norms.
                 <a href="Bert_SQUAD_Interpret2"><here/a>.
 
                 <h4>Interpreting a regression model of Boston house prices:</h4>
@@ -122,11 +122,11 @@ class TutorialHome extends React.Component {
                 source Visual Question Answer (VQA) model.
                 Find the tutorial <a href="Multimodal_VQA_Captum_Insights">here</a>.
 
-                <h4>Intepreting DLRM model with Captum:</h4>
+                <h4>Intepreting DLRM models with Captum:</h4>
                 This tutorial demonstrates how we use Captum for Deep Learning Recommender Models using
                 <a href="https://github.com/facebookresearch/dlrm">dlrm</a> model published from facebook research and integrated gradients algorithm.
-                It showcases feature importance differences for sparse and dense features in predicting clicked and non-clicked Ads. It also analysis
-                the importance of interaction layer and neuron importances in the final fully connected layer when predicting clicked Ads.
+                It showcases feature importance differences for sparse and dense features in predicting clicked and non-clicked Ads. It also analyzes
+                the importance of feature interaction layer and neuron importances in the final fully connected layer when predicting clicked Ads.
                 Find the tutorial <a href="DLRM_Tutorial">here</a>.
 
                 <h4>Interpreting vision and text models with LIME:</h4>
