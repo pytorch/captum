@@ -33,10 +33,8 @@
 <em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">captum.concept.</span></span><span class="sig-name descname"><span class="pre">TCAV</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">layers</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">classifier</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">layer_attr_method</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'./cav/'</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">classifier_kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/concept/_core/tcav.html#TCAV"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum.concept.TCAV" title="Permalink to this definition">¶</a></dt>
 <dd><p>This class implements ConceptInterpreter abstract class using an
 approach called Testing with Concept Activation Vectors (TCAVs),
-as described in the paper:</p>
-<blockquote>
-<div><p><a class="reference external" href="https://arxiv.org/pdf/1711.11279.pdf">https://arxiv.org/pdf/1711.11279.pdf</a></p>
-</div></blockquote>
+as described in the paper:
+<a class="reference external" href="https://arxiv.org/pdf/1711.11279.pdf">https://arxiv.org/pdf/1711.11279.pdf</a></p>
 <p>TCAV scores for a given layer, a list of concepts and input example
 are computed using the dot product between prediction’s layer
 sensitivities for given input examples and Concept Activation Vectors
@@ -48,30 +46,24 @@ layer activation vectors for a set of concept examples as input examples and
 concept ids as corresponding input labels. Trained weights of
 that classifier represent CAVs.</p>
 <p>CAVs are represented as a learned weight matrix with the dimensionality
-C X F, where:</p>
-<blockquote>
-<div><p>F represents the number of input features in the classifier.
+C X F, where:
+F represents the number of input features in the classifier.
 C is the number of concepts used for the classification. Concept
 ids are used as labels for concept examples during the training.</p>
-</div></blockquote>
 <p>We can use any layer attribution algorithm to compute layer sensitivities
 of a model prediction.
 For example, the gradients of an output prediction w.r.t. the outputs of
 the layer.
 The CAVs and the Sensitivities (SENS) are used to compute the TCAV score:</p>
-<blockquote>
-<div><ol class="arabic simple" start="0">
+<ol class="arabic simple" start="0">
 <li><p>TCAV = CAV • SENS, a dot product between those two vectors</p></li>
 </ol>
-</div></blockquote>
 <p>The final TCAV score can be computed by aggregating the TCAV scores
 for each input concept based on the sign or magnitude of the tcav scores.</p>
-<blockquote>
-<div><ol class="arabic simple">
+<ol class="arabic simple">
 <li><p>sign_count_score = | TCAV &gt; 0 | / | TCAV |</p></li>
 <li><p>magnitude_score = SUM(ABS(TCAV * (TCAV &gt; 0))) / SUM(ABS(TCAV))</p></li>
 </ol>
-</div></blockquote>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -540,7 +532,7 @@ C is the number of classes and F is the number of features.</p>
 <div class="sphinxsidebarwrapper">
 <h1 class="logo"><a href="index.html">Captum</a></h1>
 <h3>Navigation</h3>
-<p class="caption"><span class="caption-text">API Reference</span></p>
+<p class="caption" role="heading"><span class="caption-text">API Reference</span></p>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="attribution.html">Attribution</a></li>
 <li class="toctree-l1"><a class="reference internal" href="noise_tunnel.html">NoiseTunnel</a></li>
@@ -558,7 +550,7 @@ C is the number of classes and F is the number of features.</p>
 <li class="toctree-l1"><a class="reference internal" href="utilities.html">Utilities</a></li>
 <li class="toctree-l1"><a class="reference internal" href="base_classes.html">Base Classes</a></li>
 </ul>
-<p class="caption"><span class="caption-text">Insights API Reference</span></p>
+<p class="caption" role="heading"><span class="caption-text">Insights API Reference</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="insights.html">Insights</a></li>
 <li class="toctree-l1"><a class="reference internal" href="insights.html#features">Features</a></li>
@@ -576,7 +568,7 @@ C is the number of classes and F is the number of features.</p>
 <h3 id="searchlabel">Quick search</h3>
 <div class="searchformwrapper">
 <form action="search.html" class="search" method="get">
-<input aria-labelledby="searchlabel" name="q" type="text"/>
+<input aria-labelledby="searchlabel" autocapitalize="off" autocomplete="off" autocorrect="off" name="q" spellcheck="false" type="text"/>
 <input type="submit" value="Go"/>
 </form>
 </div>

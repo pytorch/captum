@@ -28,7 +28,19 @@
 <span></span><span class="ch">#!/usr/bin/env python3</span>
 <span class="kn">import</span> <span class="nn">warnings</span>
 <span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">namedtuple</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">NamedTuple</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Union</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">Any</span><span class="p">,</span>
+    <span class="n">Callable</span><span class="p">,</span>
+    <span class="n">Dict</span><span class="p">,</span>
+    <span class="n">Generic</span><span class="p">,</span>
+    <span class="n">List</span><span class="p">,</span>
+    <span class="n">NamedTuple</span><span class="p">,</span>
+    <span class="n">Optional</span><span class="p">,</span>
+    <span class="n">Tuple</span><span class="p">,</span>
+    <span class="n">TypeVar</span><span class="p">,</span>
+    <span class="n">Union</span><span class="p">,</span>
+    <span class="n">cast</span><span class="p">,</span>
+<span class="p">)</span>
 
 <span class="kn">from</span> <span class="nn">torch</span> <span class="kn">import</span> <span class="n">Tensor</span>
 
@@ -41,6 +53,10 @@
 <span class="kn">from</span> <span class="nn">captum.robust._core.perturbation</span> <span class="kn">import</span> <span class="n">Perturbation</span>
 
 <span class="n">ORIGINAL_KEY</span> <span class="o">=</span> <span class="s2">"Original"</span>
+
+<span class="n">MetricResultType</span> <span class="o">=</span> <span class="n">TypeVar</span><span class="p">(</span>
+    <span class="s2">"MetricResultType"</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="n">Tensor</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="n">Tensor</span><span class="p">],</span> <span class="o">...</span><span class="p">]</span>
+<span class="p">)</span>
 
 
 <span class="k">class</span> <span class="nc">AttackInfo</span><span class="p">(</span><span class="n">NamedTuple</span><span class="p">):</span>
@@ -60,7 +76,7 @@
     <span class="k">return</span> <span class="n">inp</span>
 
 
-<div class="viewcode-block" id="AttackComparator"><a class="viewcode-back" href="../../../../../robust.html#captum.robust.AttackComparator">[docs]</a><span class="k">class</span> <span class="nc">AttackComparator</span><span class="p">:</span>
+<div class="viewcode-block" id="AttackComparator"><a class="viewcode-back" href="../../../../../robust.html#captum.robust.AttackComparator">[docs]</a><span class="k">class</span> <span class="nc">AttackComparator</span><span class="p">(</span><span class="n">Generic</span><span class="p">[</span><span class="n">MetricResultType</span><span class="p">]):</span>
     <span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">    Allows measuring model robustness for a given attack or set of attacks. This class</span>
 <span class="sd">    can be used with any metric(s) as well as any set of attacks, either based on</span>
@@ -71,7 +87,7 @@
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">forward_func</span><span class="p">:</span> <span class="n">Callable</span><span class="p">,</span>
-        <span class="n">metric</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">Union</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="n">Tensor</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="n">Tensor</span><span class="p">],</span> <span class="o">...</span><span class="p">]]],</span>
+        <span class="n">metric</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">MetricResultType</span><span class="p">],</span>
         <span class="n">preproc_fn</span><span class="p">:</span> <span class="n">Callable</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="sa">r</span><span class="sd">"""</span>
@@ -101,10 +117,10 @@
 <span class="sd">                additional_forward_args provided to evaluate.</span>
 <span class="sd">        """</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">forward_func</span> <span class="o">=</span> <span class="n">forward_func</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">metric</span> <span class="o">=</span> <span class="n">metric</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">metric</span><span class="p">:</span> <span class="n">Callable</span> <span class="o">=</span> <span class="n">metric</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">preproc_fn</span> <span class="o">=</span> <span class="n">preproc_fn</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">attacks</span> <span class="o">=</span> <span class="p">{}</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">summary_results</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">attacks</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">AttackInfo</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">summary_results</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Summarizer</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">metric_aggregator</span> <span class="o">=</span> <span class="n">agg_metric</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">batch_stats</span> <span class="o">=</span> <span class="p">[</span><span class="n">Mean</span><span class="p">,</span> <span class="n">Min</span><span class="p">,</span> <span class="n">Max</span><span class="p">]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">aggregate_stats</span> <span class="o">=</span> <span class="p">[</span><span class="n">Mean</span><span class="p">]</span>
@@ -175,7 +191,7 @@
 
     <span class="k">def</span> <span class="nf">_format_summary</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">summary</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">]]</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Union</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="o">...</span><span class="p">]]]:</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">MetricResultType</span><span class="p">]:</span>
         <span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        This method reformats a given summary; particularly for tuples,</span>
 <span class="sd">        the Summarizer's summary format is a list of dictionaries,</span>
@@ -186,12 +202,12 @@
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">summary</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
             <span class="k">return</span> <span class="n">summary</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="n">summary_dict</span> <span class="o">=</span> <span class="p">{}</span>
+            <span class="n">summary_dict</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
             <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">summary</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
                 <span class="n">summary_dict</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">s</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">summary</span><span class="p">)</span>
                 <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">out_format</span><span class="p">:</span>
                     <span class="n">summary_dict</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">out_format</span><span class="p">(</span><span class="o">*</span><span class="n">summary_dict</span><span class="p">[</span><span class="n">key</span><span class="p">])</span>
-            <span class="k">return</span> <span class="n">summary_dict</span>
+            <span class="k">return</span> <span class="n">summary_dict</span>  <span class="c1"># type: ignore</span>
 
     <span class="k">def</span> <span class="nf">_update_out_format</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">out_metric</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="n">Tensor</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="n">Tensor</span><span class="p">],</span> <span class="o">...</span><span class="p">]]</span>
@@ -201,7 +217,9 @@
             <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">out_metric</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)</span>
             <span class="ow">and</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">out_metric</span><span class="p">,</span> <span class="s2">"_fields"</span><span class="p">)</span>
         <span class="p">):</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">out_format</span> <span class="o">=</span> <span class="n">namedtuple</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">out_metric</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span> <span class="n">out_metric</span><span class="o">.</span><span class="n">_fields</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">out_format</span> <span class="o">=</span> <span class="n">namedtuple</span><span class="p">(</span>  <span class="c1"># type: ignore</span>
+                <span class="nb">type</span><span class="p">(</span><span class="n">out_metric</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span> <span class="n">cast</span><span class="p">(</span><span class="n">NamedTuple</span><span class="p">,</span> <span class="n">out_metric</span><span class="p">)</span><span class="o">.</span><span class="n">_fields</span>
+            <span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_evaluate_batch</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
@@ -239,13 +257,10 @@
 <div class="viewcode-block" id="AttackComparator.evaluate"><a class="viewcode-back" href="../../../../../robust.html#captum.robust.AttackComparator.evaluate">[docs]</a>    <span class="k">def</span> <span class="nf">evaluate</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">inputs</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
-        <span class="n">additional_forward_args</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Tuple</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">additional_forward_args</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">perturbations_per_eval</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
         <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span>
-        <span class="nb">str</span><span class="p">,</span>
-        <span class="n">Union</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Union</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">]]]],</span>
-    <span class="p">]:</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Union</span><span class="p">[</span><span class="n">MetricResultType</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">MetricResultType</span><span class="p">]]]:</span>
         <span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        Evaluate model and attack performance on provided inputs</span>
 
@@ -412,45 +427,44 @@
 
     <span class="k">def</span> <span class="nf">_parse_and_update_results</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">batch_summarizers</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Summarizer</span><span class="p">]</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span>
-        <span class="nb">str</span><span class="p">,</span> <span class="n">Union</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Union</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="o">...</span><span class="p">]]]]</span>
-    <span class="p">]:</span>
-        <span class="n">results</span> <span class="o">=</span> <span class="p">{</span>
-            <span class="n">ORIGINAL_KEY</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_format_summary</span><span class="p">(</span><span class="n">batch_summarizers</span><span class="p">[</span><span class="n">ORIGINAL_KEY</span><span class="p">]</span><span class="o">.</span><span class="n">summary</span><span class="p">)[</span>
-                <span class="s2">"mean"</span>
-            <span class="p">]</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Union</span><span class="p">[</span><span class="n">MetricResultType</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">MetricResultType</span><span class="p">]]]:</span>
+        <span class="n">results</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Union</span><span class="p">[</span><span class="n">MetricResultType</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">MetricResultType</span><span class="p">]]]</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="n">ORIGINAL_KEY</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_format_summary</span><span class="p">(</span>
+                <span class="n">cast</span><span class="p">(</span><span class="n">Union</span><span class="p">[</span><span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">],</span> <span class="n">batch_summarizers</span><span class="p">[</span><span class="n">ORIGINAL_KEY</span><span class="p">]</span><span class="o">.</span><span class="n">summary</span><span class="p">)</span>
+            <span class="p">)[</span><span class="s2">"mean"</span><span class="p">]</span>
         <span class="p">}</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">summary_results</span><span class="p">[</span><span class="n">ORIGINAL_KEY</span><span class="p">]</span><span class="o">.</span><span class="n">update</span><span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">metric_aggregator</span><span class="p">(</span><span class="n">results</span><span class="p">[</span><span class="n">ORIGINAL_KEY</span><span class="p">])</span>
         <span class="p">)</span>
         <span class="k">for</span> <span class="n">attack_key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">attacks</span><span class="p">:</span>
             <span class="n">attack</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">attacks</span><span class="p">[</span><span class="n">attack_key</span><span class="p">]</span>
-            <span class="n">results</span><span class="p">[</span><span class="n">attack</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_format_summary</span><span class="p">(</span>
-                <span class="n">batch_summarizers</span><span class="p">[</span><span class="n">attack</span><span class="o">.</span><span class="n">name</span><span class="p">]</span><span class="o">.</span><span class="n">summary</span>
+            <span class="n">attack_results</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_format_summary</span><span class="p">(</span>
+                <span class="n">cast</span><span class="p">(</span><span class="n">Union</span><span class="p">[</span><span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">],</span> <span class="n">batch_summarizers</span><span class="p">[</span><span class="n">attack</span><span class="o">.</span><span class="n">name</span><span class="p">]</span><span class="o">.</span><span class="n">summary</span><span class="p">)</span>
             <span class="p">)</span>
+            <span class="n">results</span><span class="p">[</span><span class="n">attack</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">attack_results</span>
 
-            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">results</span><span class="p">[</span><span class="n">attack</span><span class="o">.</span><span class="n">name</span><span class="p">])</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
-                <span class="n">key</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="nb">iter</span><span class="p">(</span><span class="n">results</span><span class="p">[</span><span class="n">attack</span><span class="o">.</span><span class="n">name</span><span class="p">]))</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">attack_results</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="n">key</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="nb">iter</span><span class="p">(</span><span class="n">attack_results</span><span class="p">))</span>
                 <span class="k">if</span> <span class="n">attack</span><span class="o">.</span><span class="n">name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">summary_results</span><span class="p">:</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">summary_results</span><span class="p">[</span><span class="n">attack</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">Summarizer</span><span class="p">(</span>
                         <span class="p">[</span><span class="n">stat</span><span class="p">()</span> <span class="k">for</span> <span class="n">stat</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">aggregate_stats</span><span class="p">]</span>
                     <span class="p">)</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">summary_results</span><span class="p">[</span><span class="n">attack</span><span class="o">.</span><span class="n">name</span><span class="p">]</span><span class="o">.</span><span class="n">update</span><span class="p">(</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">metric_aggregator</span><span class="p">(</span><span class="n">results</span><span class="p">[</span><span class="n">attack</span><span class="o">.</span><span class="n">name</span><span class="p">][</span><span class="n">key</span><span class="p">])</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">metric_aggregator</span><span class="p">(</span><span class="n">attack_results</span><span class="p">[</span><span class="n">key</span><span class="p">])</span>
                 <span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
-                <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">results</span><span class="p">[</span><span class="n">attack</span><span class="o">.</span><span class="n">name</span><span class="p">]:</span>
+                <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">attack_results</span><span class="p">:</span>
                     <span class="n">summary_key</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">attack</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">key</span><span class="o">.</span><span class="n">title</span><span class="p">()</span><span class="si">}</span><span class="s2"> Attempt"</span>
                     <span class="k">if</span> <span class="n">summary_key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">summary_results</span><span class="p">:</span>
                         <span class="bp">self</span><span class="o">.</span><span class="n">summary_results</span><span class="p">[</span><span class="n">summary_key</span><span class="p">]</span> <span class="o">=</span> <span class="n">Summarizer</span><span class="p">(</span>
                             <span class="p">[</span><span class="n">stat</span><span class="p">()</span> <span class="k">for</span> <span class="n">stat</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">aggregate_stats</span><span class="p">]</span>
                         <span class="p">)</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">summary_results</span><span class="p">[</span><span class="n">summary_key</span><span class="p">]</span><span class="o">.</span><span class="n">update</span><span class="p">(</span>
-                        <span class="bp">self</span><span class="o">.</span><span class="n">metric_aggregator</span><span class="p">(</span><span class="n">results</span><span class="p">[</span><span class="n">attack</span><span class="o">.</span><span class="n">name</span><span class="p">][</span><span class="n">key</span><span class="p">])</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">metric_aggregator</span><span class="p">(</span><span class="n">attack_results</span><span class="p">[</span><span class="n">key</span><span class="p">])</span>
                     <span class="p">)</span>
         <span class="k">return</span> <span class="n">results</span>
 
-<div class="viewcode-block" id="AttackComparator.summary"><a class="viewcode-back" href="../../../../../robust.html#captum.robust.AttackComparator.summary">[docs]</a>    <span class="k">def</span> <span class="nf">summary</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Union</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">]]]]:</span>
+<div class="viewcode-block" id="AttackComparator.summary"><a class="viewcode-back" href="../../../../../robust.html#captum.robust.AttackComparator.summary">[docs]</a>    <span class="k">def</span> <span class="nf">summary</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">MetricResultType</span><span class="p">]]:</span>
         <span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        Returns average results over all previous batches evaluated.</span>
 
@@ -467,7 +481,9 @@
 <span class="sd">                per batch.</span>
 <span class="sd">        """</span>
         <span class="k">return</span> <span class="p">{</span>
-            <span class="n">key</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_format_summary</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">summary_results</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="o">.</span><span class="n">summary</span><span class="p">)</span>
+            <span class="n">key</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_format_summary</span><span class="p">(</span>
+                <span class="n">cast</span><span class="p">(</span><span class="n">Union</span><span class="p">[</span><span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">summary_results</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="o">.</span><span class="n">summary</span><span class="p">)</span>
+            <span class="p">)</span>
             <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">summary_results</span>
         <span class="p">}</span></div>
 
@@ -484,7 +500,7 @@
 <div class="sphinxsidebarwrapper">
 <h1 class="logo"><a href="../../../../../index.html">Captum</a></h1>
 <h3>Navigation</h3>
-<p class="caption"><span class="caption-text">API Reference</span></p>
+<p class="caption" role="heading"><span class="caption-text">API Reference</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../../../../attribution.html">Attribution</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../../noise_tunnel.html">NoiseTunnel</a></li>
@@ -496,7 +512,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../../../utilities.html">Utilities</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../../base_classes.html">Base Classes</a></li>
 </ul>
-<p class="caption"><span class="caption-text">Insights API Reference</span></p>
+<p class="caption" role="heading"><span class="caption-text">Insights API Reference</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../../../../insights.html">Insights</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../../insights.html#features">Features</a></li>
@@ -514,7 +530,7 @@
 <h3 id="searchlabel">Quick search</h3>
 <div class="searchformwrapper">
 <form action="../../../../../search.html" class="search" method="get">
-<input aria-labelledby="searchlabel" name="q" type="text"/>
+<input aria-labelledby="searchlabel" autocapitalize="off" autocomplete="off" autocorrect="off" name="q" spellcheck="false" type="text"/>
 <input type="submit" value="Go"/>
 </form>
 </div>

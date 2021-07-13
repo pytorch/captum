@@ -28,7 +28,7 @@
 <span></span><span class="ch">#!/usr/bin/env python3</span>
 <span class="kn">import</span> <span class="nn">math</span>
 <span class="kn">from</span> <span class="nn">enum</span> <span class="kn">import</span> <span class="n">Enum</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Generator</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Union</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Generator</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Union</span><span class="p">,</span> <span class="n">cast</span>
 
 <span class="kn">import</span> <span class="nn">torch</span>
 <span class="kn">from</span> <span class="nn">torch</span> <span class="kn">import</span> <span class="n">Tensor</span>
@@ -163,7 +163,9 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">num_attempts</span> <span class="o">=</span> <span class="n">num_attempts</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">preproc_fn</span> <span class="o">=</span> <span class="n">preproc_fn</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">apply_before_preproc</span> <span class="o">=</span> <span class="n">apply_before_preproc</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">correct_fn</span> <span class="o">=</span> <span class="n">correct_fn</span> <span class="k">if</span> <span class="n">correct_fn</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">default_correct_fn</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">correct_fn</span> <span class="o">=</span> <span class="n">cast</span><span class="p">(</span>
+            <span class="n">Callable</span><span class="p">,</span> <span class="n">correct_fn</span> <span class="k">if</span> <span class="n">correct_fn</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">default_correct_fn</span>
+        <span class="p">)</span>
 
         <span class="k">assert</span> <span class="p">(</span>
             <span class="n">mode</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span> <span class="ow">in</span> <span class="n">MinParamPerturbationMode</span><span class="o">.</span><span class="n">__members__</span>
@@ -174,9 +176,9 @@
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">input_list</span><span class="p">:</span> <span class="n">List</span><span class="p">,</span>
         <span class="n">additional_forward_args</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
-        <span class="n">correct_fn_kwargs</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span>
+        <span class="n">correct_fn_kwargs</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]],</span>
         <span class="n">target</span><span class="p">:</span> <span class="n">TargetType</span><span class="p">,</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]:</span>
         <span class="k">if</span> <span class="n">additional_forward_args</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">additional_forward_args</span> <span class="o">=</span> <span class="p">()</span>
 
@@ -489,7 +491,7 @@
 <div class="sphinxsidebarwrapper">
 <h1 class="logo"><a href="../../../../../index.html">Captum</a></h1>
 <h3>Navigation</h3>
-<p class="caption"><span class="caption-text">API Reference</span></p>
+<p class="caption" role="heading"><span class="caption-text">API Reference</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../../../../attribution.html">Attribution</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../../noise_tunnel.html">NoiseTunnel</a></li>
@@ -501,7 +503,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../../../utilities.html">Utilities</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../../base_classes.html">Base Classes</a></li>
 </ul>
-<p class="caption"><span class="caption-text">Insights API Reference</span></p>
+<p class="caption" role="heading"><span class="caption-text">Insights API Reference</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../../../../insights.html">Insights</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../../insights.html#features">Features</a></li>
@@ -519,7 +521,7 @@
 <h3 id="searchlabel">Quick search</h3>
 <div class="searchformwrapper">
 <form action="../../../../../search.html" class="search" method="get">
-<input aria-labelledby="searchlabel" name="q" type="text"/>
+<input aria-labelledby="searchlabel" autocapitalize="off" autocomplete="off" autocorrect="off" name="q" spellcheck="false" type="text"/>
 <input type="submit" value="Go"/>
 </form>
 </div>
