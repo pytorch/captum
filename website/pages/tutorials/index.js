@@ -92,9 +92,9 @@ class TutorialHome extends React.Component {
                 <h4>Interpreting question answering with BERT Part 2:</h4>
                 In the second part of Bert tutorial we analyze attention matrices using attribution algorithms s.a. Integrated Gradients.
                 This analysis helps us to identify strong interaction pairs between different tokens for a specific model prediction.
-                We compare our findings with the <a href="https://arxiv.org/pdf/2004.10102.pdf">vector norms<a> and show that attribution scores
+                We compare our findings with the <a href="https://arxiv.org/pdf/2004.10102.pdf">vector norms</a> and show that attribution scores
                 are more meaningful compared to the vector norms.
-                <a href="Bert_SQUAD_Interpret2"><here</a>.
+                <a href="Bert_SQUAD_Interpret2">here</a>.
 
                 <h4>Interpreting a regression model of Boston house prices:</h4>
                 To demonstrate interpreting regression models we have chosen to look at the Boston house prices dataset.
