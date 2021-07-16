@@ -120,6 +120,26 @@ class BasicLinearModel(nn.Module):
         return self.linear(torch.cat((x1, x2), dim=-1))
 
 
+class BasicLinearModel2(nn.Module):
+    def __init__(self, in_features, out_features):
+        super().__init__()
+        self.linear = nn.Linear(in_features, out_features, bias=False)
+
+    def forward(self, input):
+        return self.linear(input)
+
+
+class BasicLinearModel_Multilayer(nn.Module):
+    def __init__(self, in_features, hidden_nodes, out_features):
+        super().__init__()
+        self.linear1 = nn.Linear(in_features, hidden_nodes, bias=False)
+        self.linear2 = nn.Linear(hidden_nodes, out_features, bias=False)
+
+    def forward(self, input):
+        x = self.linear1(input)
+        return self.linear2(x)
+
+
 class ReLUDeepLiftModel(nn.Module):
     r"""
     https://www.youtube.com/watch?v=f_iAM0NPwnM
