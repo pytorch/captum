@@ -349,9 +349,9 @@ def sklearn_train_linear_model(
 
     num_outputs = sklearn_model.coef_.shape[0] if sklearn_model.coef_.ndim > 1 else 1
     weight_values = torch.FloatTensor(sklearn_model.coef_).to(device)  # type: ignore
-    bias_values = torch.FloatTensor([sklearn_model.intercept_]).to(
+    bias_values = torch.FloatTensor([sklearn_model.intercept_]).to( # type: ignore
         device
-    )  # type: ignore
+    )
     model._construct_model_params(
         norm_type=None,
         weight_values=weight_values.view(num_outputs, -1),
