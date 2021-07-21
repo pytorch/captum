@@ -712,7 +712,7 @@ def _compute_jacobian_wrt_params(
     inputs: Union[Tuple[Tensor], Tensor],
     labels: Optional[Tensor] = None,
     loss_fn: Optional[Union[Module, Callable]] = None,
-) -> List[Tuple[Tensor]]:
+) -> Tuple[Tensor, ...]:
     r"""
     Computes the Jacobian of a batch of test examples given a model, and optional
     loss function and target labels. This method is equivalent to calculating the
@@ -746,7 +746,7 @@ def _compute_jacobian_wrt_params(
             loss = loss_fn(out, labels)
             if hasattr(loss_fn, "reduction"):
                 msg0 = "Please ensure loss_fn.reduction is set to `none`"
-                assert loss_fn.reduction == "none", msg0
+                assert loss_fn.reduction == "none", msg0  # type: ignore
             else:
                 msg1 = (
                     "Loss function is applying a reduction. Please ensure "
@@ -757,22 +757,17 @@ def _compute_jacobian_wrt_params(
                 assert out.shape[0] == loss.shape[0], msg1
             out = loss
 
-        init = True
-        grads = []
-        for i in range(out.shape[0]):
-            grad = torch.autograd.grad(
+        grads_list = [
+            torch.autograd.grad(
                 outputs=out[i],
-                inputs=model.parameters(),
+                inputs=model.parameters(),  # type: ignore
                 grad_outputs=torch.ones_like(out[i]),
                 retain_graph=True,
             )
+            for i in range(out.shape[0])
+        ]
 
-            for i, layer in enumerate(grad):
-                if init:
-                    grads.append(layer.unsqueeze(0))
-                else:
-                    grads[i] = torch.cat((grads[i], layer.unsqueeze(0)))
-            init = False
+        grads = tuple([torch.stack(x) for x in zip(*grads_list)])
 
         return tuple(grads)
 
@@ -783,7 +778,7 @@ def _compute_jacobian_wrt_params_autograd_hacks(
     labels: Optional[Tensor] = None,
     loss_fn: Optional[Module] = None,
     reduction_type: Optional[str] = "sum",
-) -> List[Tuple[Tensor]]:
+) -> Tuple[Any, ...]:
     r"""
     NOT SUPPORTED FOR OPEN SOURCE. This method uses an internal 'hack` and is currently
     not supported.
@@ -854,7 +849,11 @@ def _compute_jacobian_wrt_params_autograd_hacks(
         out.backward(gradient=torch.ones_like(out))
         autograd_hacks.compute_grad1(model, loss_type=reduction_type)
 
-        grads = tuple(param.grad1 for param in model.parameters())
+        grads = tuple(
+            param.grad1  # type: ignore
+            for param in model.parameters()
+            if hasattr(param, "grad1")
+        )
 
         autograd_hacks.clear_backprops(model)
         autograd_hacks.remove_hooks(model)
