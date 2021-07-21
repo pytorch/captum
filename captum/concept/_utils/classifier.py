@@ -170,16 +170,17 @@ class DefaultClassifier(Classifier):
             inputs.append(input)
             labels.append(label)
 
+        device = "cpu" if input is None else input.device
         x_train, x_test, y_train, y_test = _train_test_split(
             torch.cat(inputs), torch.cat(labels), test_split=test_split_ratio
         )
-
+        self.lm.device = device
         self.lm.fit(DataLoader(TensorDataset(x_train, y_train)))
 
         predict = self.lm(x_test)
 
         predict = self.lm.classes()[torch.argmax(predict, dim=1)]
-        score = predict.long() == y_test.long()
+        score = predict.long() == y_test.long().cpu()
 
         accs = score.float().mean()
 
