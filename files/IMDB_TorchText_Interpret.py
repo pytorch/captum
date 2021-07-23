@@ -22,6 +22,7 @@ import spacy
 import torch
 import torchtext
 import torchtext.data
+
 import torch.nn as nn
 import torch.nn.functional as F
 
@@ -39,10 +40,10 @@ for package in (captum, spacy, torch, torchtext):
     print(package.__name__, package.__version__)
 
 
-# In[3]:
+# In[ ]:
 
 
-device = torch.device("cuda:5" if torch.cuda.is_available() else "cpu")
+device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 
 # The dataset used for training this model can be found in: https://ai.stanford.edu/~amaas/data/sentiment/
@@ -107,10 +108,10 @@ class CNN(nn.Module):
 # 
 # The model can be downloaded here: https://github.com/pytorch/captum/blob/master/tutorials/models/imdb-model-cnn.pt
 
-# In[5]:
+# In[ ]:
 
 
-model = torch.load('models/imdb-model-cnn.pt')
+model = torch.load('models/imdb-model-cnn-large.pt')
 model.eval()
 model = model.to(device)
 
@@ -126,21 +127,25 @@ def forward_with_sigmoid(input):
 
 # Load a small subset of test data using torchtext from IMDB dataset.
 
-# In[7]:
+# In[ ]:
 
 
 TEXT = torchtext.data.Field(lower=True, tokenize='spacy')
 Label = torchtext.data.LabelField(dtype = torch.float)
 
 
-# In[8]:
+# In[ ]:
 
 
+# If you use torchtext version >= 0.9, make sure to access train and test splits with:
+# train, test = IMDB(tokenizer=get_tokenizer("spacy"))
 train, test = torchtext.datasets.IMDB.splits(text_field=TEXT,
                                       label_field=Label,
                                       train='train',
                                       test='test',
                                       path='data/aclImdb')
+
+
 test, _ = test.split(split_ratio = 0.04)
 
 
@@ -176,7 +181,7 @@ print('Vocabulary Size: ', len(TEXT.vocab))
 # In[11]:
 
 
-PAD_IND = TEXT.vocab.stoi['pad']
+PAD_IND = TEXT.vocab.stoi[TEXT.pad_token]
 
 
 # In[12]:
@@ -209,7 +214,7 @@ vis_data_records_ig = []
 def interpret_sentence(model, sentence, min_len = 7, label = 0):
     text = [tok.text for tok in nlp.tokenizer(sentence.lower())]
     if len(text) < min_len:
-        text += ['pad'] * (min_len - len(text))
+        text += [TEXT.pad_token] * (min_len - len(text))
     indexed = [TEXT.vocab.stoi[t] for t in text]
 
     model.zero_grad()
@@ -261,7 +266,7 @@ interpret_sentence(model, 'Best film ever', label=1)
 interpret_sentence(model, 'Such a great show!', label=1)
 interpret_sentence(model, 'It was a horrible movie', label=0)
 interpret_sentence(model, 'I\'ve never watched something as bad', label=0)
-interpret_sentence(model, 'It is a disgusting movie!', label=0)
+interpret_sentence(model, 'That is a terrible movie.', label=0)
 
 
 # Below is an example of how we can visualize attributions for the text tokens. Feel free to visualize it differently if you choose to have a different visualization method.
