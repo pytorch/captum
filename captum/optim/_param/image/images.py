@@ -152,7 +152,8 @@ class FFTImage(ImageParameterization):
                 parameterized output image tensor.
             channels (int, optional): The number of channels to use for each image.
                 Default: 3
-            batch (int, optional): The number of images to stack along the batch dimension.
+            batch (int, optional): The number of images to stack along the batch
+                dimension.
                 Default: 1
             init (torch.tensor, optional): Optionally specify a tensor to
                 use instead of creating one.
@@ -289,7 +290,8 @@ class PixelImage(ImageParameterization):
                 parameterized output image tensor.
             channels (int, optional): The number of channels to use for each image.
                 Default: 3
-            batch (int, optional): The number of images to stack along the batch dimension.
+            batch (int, optional): The number of images to stack along the batch
+                dimension.
                 Default: 1
             init (torch.tensor, optional): Optionally specify a tensor to
                 use instead of creating one.
@@ -331,7 +333,8 @@ class LaplacianImage(ImageParameterization):
                 parameterized output image tensor.
             channels (int, optional): The number of channels to use for each image.
                 Default: 3
-            batch (int, optional): The number of images to stack along the batch dimension.
+            batch (int, optional): The number of images to stack along the batch
+                dimension.
                 Default: 1
             init (torch.tensor, optional): Optionally specify a tensor to
                 use instead of creating one.
@@ -596,16 +599,16 @@ class NaturalImage(ImageParameterization):
             batch (int, optional): The number of channels to use when creating the
                 nn.Parameter tensor, or stacking init images.
                 Default: 1
-            parameterization (ImageParameterization, optional): An image parameterization
-                class.
+            parameterization (ImageParameterization, optional): An image
+                parameterization class.
                 Default: FFTImage
             squash_func (Callable[[torch.Tensor], torch.Tensor]], optional): The squash
                 function to use after color recorrelation. A funtion or lambda function.
                 Default: None
             decorrelation_module (nn.Module, optional): A ToRGB instance.
                 Default: ToRGB
-            decorrelate_init (bool, optional): Whether or not to apply color decorrelation
-                to the init tensor input.
+            decorrelate_init (bool, optional): Whether or not to apply color
+                decorrelation to the init tensor input.
                 Default: True
         """
         super().__init__()
