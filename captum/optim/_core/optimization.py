@@ -46,6 +46,7 @@ class InputOptimization(Objective, Parameterized):
     ) -> None:
         r"""
         Args:
+
             model (nn.Module):  The reference to PyTorch model instance.
             input_param (nn.Module, optional):  A module that generates an input,
                         consumed by the model.
@@ -71,6 +72,7 @@ class InputOptimization(Objective, Parameterized):
 
     def loss(self) -> torch.Tensor:
         r"""Compute loss value for current iteration.
+
         Returns:
             *tensor* representing **loss**:
             - **loss** (*tensor*):
@@ -115,13 +117,22 @@ class InputOptimization(Objective, Parameterized):
         lr: float = 0.025,
     ) -> torch.Tensor:
         r"""Optimize input based on loss function and objectives.
+
         Args:
+
             stop_criteria (StopCriteria, optional):  A function that is called
                         every iteration and returns a bool that determines whether
                         to stop the optimization.
                         See captum.optim.typing.StopCriteria for details.
             optimizer (Optimizer, optional):  An torch.optim.Optimizer used to
                         optimize the input based on the loss function.
+            loss_summarize_fn (Callable, optional): The function to use for summarizing
+                tensor outputs from loss functions.
+                Default: default_loss_summarize
+            lr: (float): If no optimizer is given, then lr is used as the learning rate
+                for the Adam optimizer.
+                Default: 0.025
+
         Returns:
             history (torch.Tensor): A stack of loss values per iteration. The size
                 of the dimension on which loss values are stacked corresponds to
@@ -149,10 +160,12 @@ class InputOptimization(Objective, Parameterized):
 
 def n_steps(n: int, show_progress: bool = True) -> StopCriteria:
     """StopCriteria generator that uses number of steps as a stop criteria.
+
     Args:
         n (int):  Number of steps to run optimization.
         show_progress (bool, optional):  Whether or not to show progress bar.
             Default: True
+
     Returns:
         *StopCriteria* callable
     """
