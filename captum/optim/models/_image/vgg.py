@@ -30,25 +30,34 @@ def vgg16(
     https://arxiv.org/abs/1409.1556
     http://www.robots.ox.ac.uk/~vgg/research/very_deep/
     https://gist.github.com/ksimonyan/3785162f95cd2d5fee77#file-readme-md
+
     Args:
+
         pretrained (bool, optional): If True, returns a model pre-trained on ImageNet.
+            Default: False
         progress (bool, optional): If True, displays a progress bar of the download to
             stderr
+            Default: True
         model_path (str, optional): Optional path for VGG model file.
+            Default: None
         replace_relus_with_redirectedrelu (bool, optional): If True, return pretrained
             model with Redirected ReLU in place of ReLU layers.
+            Default: *True* when pretrained is True otherwise *False*
         use_linear_modules_only (bool, optional): If True, return pretrained
             model with all nonlinear layers replaced with linear equivalents.
+            Default: False
         out_features (int, optional): Number of output features in the model used for
-            training. Default: 1000 when pretrained is True.
+            training.
+            Default: 1000
         transform_input (bool, optional): If True, preprocesses the input according to
-            the method with which it was trained on ImageNet. Default: *True*
+            the method with which it was trained on ImageNet.
+            Default: True
         scale_input (bool, optional): If True and transform_input is True, scale the
             input range from [0, 1] to [0, 255] in the internal preprocessing.
-            Default: *True*
+            Default: True
         classifier_logits (bool, optional): If True, adds the classifier component of
-            the model. Default: *False* when pretrained is True otherwise set to
-            *True*.
+            the model.
+            Default: *False* when pretrained is True otherwise set to *True*.
     """
 
     if "layers" not in kwargs:
@@ -95,6 +104,31 @@ class VGG(nn.Module):
         replace_relus_with_redirectedrelu: bool = False,
         use_linear_modules_only: bool = False,
     ) -> None:
+        """
+        Args:
+
+            layers (list of int and str): A list of numbers corresponding to layer
+                channel sizes, along with the letter 'P' to denote pooling layers.
+                Default: VGG16_LAYERS
+            out_features (int, optional): Number of output features in the model used
+                for training.
+                Default: 1000
+            transform_input (bool, optional): If True, preprocesses the input according
+                to the method with which it was trained on ImageNet.
+                Default: True
+            scale_input (bool, optional): If True and transform_input is True, scale
+                the input range from [0, 1] to [0, 255] in the internal preprocessing.
+                Default: True
+            replace_relus_with_redirectedrelu (bool, optional): If True, return
+                pretrained model with Redirected ReLU in place of ReLU layers.
+                Default: False
+            use_linear_modules_only (bool, optional): If True, return pretrained model
+                with all nonlinear layers replaced with linear equivalents.
+                Default: False
+            classifier_logits (bool, optional): If True, adds the classifier component
+                of the model.
+                Default: False
+        """
         super().__init__()
         self.classifier_logits = classifier_logits
         self.transform_input = transform_input
@@ -124,6 +158,14 @@ class VGG(nn.Module):
             )
 
     def _transform_input(self, x: torch.Tensor) -> torch.Tensor:
+        """
+        Args:
+
+            x (torch.Tensor): An input tensor to normalize and scale the values of.
+
+        Returns:
+            x (torch.Tensor): A transformed tensor.
+        """
         if self.transform_input:
             assert x.dim() == 3 or x.dim() == 4
             if x.min() < 0.0 or x.max() > 1.0 and self.scale_input:
@@ -137,6 +179,14 @@ class VGG(nn.Module):
         return x
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
+        """
+        Args:
+
+            x (torch.Tensor): An input tensor for the model.
+
+        Returns:
+            x (torch.Tensor): The model output tensor.
+        """
         x = self._transform_input(x)
         x = self.features(x)
         x = self.avgpool(x)
@@ -154,20 +204,25 @@ def _buildSequential(
     """
     Build the feature component of VGG models, based on the make_layers helper function
     from: https://github.com/pytorch/vision/blob/master/torchvision/models/vgg.py
+
     Args:
+
         channel_list (list of int and str): The list of layer channels and pool layer
             locations to use for creating the feature model.
         activ (Type[nn.Module]): The type of activation layer to use for the feature
             model.
+            Default: nn.ReLU
         p_layer (Type[nn.Module]): The type of pooling layer to use for the feature
             model.
+            Default: nn.MaxPool2d
+
     Returns:
         features (nn.Sequential): The full feature model for a VGG model.
     """
     layers: List[nn.Module] = []
     in_channels: int = 3
     for c in channel_list:
-        if c == "P":
+        if c == "P" or c == "p":
             layers += [p_layer(kernel_size=2, stride=2)]
         else:
             c = cast(int, c)
