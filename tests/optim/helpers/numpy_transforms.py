@@ -8,7 +8,11 @@ from captum.optim._utils.typing import IntSeqOrIntType
 
 class BlendAlpha:
     """
-    NumPy version of the BlendAlpha transform
+    NumPy version of the BlendAlpha transform.
+
+    Args:
+        background (array, optional):  An NCHW image array to be used as the
+            Alpha channel's background.
     """
 
     def __init__(self, background: Optional[np.ndarray] = None) -> None:
@@ -16,6 +20,14 @@ class BlendAlpha:
         self.background = background
 
     def blend_alpha(self, x: np.ndarray) -> np.ndarray:
+        """
+        Blend the Alpha channel into the RGB channels.
+
+        Args:
+            x (array): RGBA image array to blend into an RGB image array.
+        Returns:
+            blended (array): RGB image array.
+        """
         assert x.shape[1] == 4
         assert x.ndim == 4
         rgb, alpha = x[:, :3, ...], x[:, 3:4, ...]
@@ -30,7 +42,11 @@ class BlendAlpha:
 
 class RandomSpatialJitter:
     """
-    NumPy version of the RandomSpatialJitter transform
+    NumPy version of the RandomSpatialJitter transform.
+
+    Args:
+        translate (int):  The amount to translate the H and W dimensions
+            of an CHW or NCHW array.
     """
 
     def __init__(self, translate: int) -> None:
@@ -59,6 +75,7 @@ class RandomSpatialJitter:
 class CenterCrop:
     """
     Center crop a specified amount from a tensor.
+
     Arguments:
         size (int or sequence of int): Number of pixels to center crop away.
         pixels_from_edges (bool, optional): Whether to treat crop size values
@@ -181,6 +198,15 @@ class ToRGB:
             )
 
     def to_rgb(self, x: np.ndarray, inverse: bool = False) -> np.ndarray:
+        """
+        Args:
+            x (array):  A CHW or NCHW RGB or RGBA image array.
+            inverse (bool, optional):  Whether to recorrelate or decorrelate colors.
+                Default is set to False.
+        Returns:
+            *array*:  An array with it's colors recorrelated or decorrelated.
+        """
+
         assert x.ndim == 3 or x.ndim == 4
 
         # alpha channel is taken off...
