@@ -129,8 +129,8 @@ class InputOptimization(Objective, Parameterized):
             loss_summarize_fn (Callable, optional): The function to use for summarizing
                 tensor outputs from loss functions.
                 Default: default_loss_summarize
-            lr: (float): If no optimizer is given, then lr is used as the learning rate
-                for the Adam optimizer.
+            lr: (float, optional): If no optimizer is given, then lr is used as the
+                learning rate for the Adam optimizer.
                 Default: 0.025
 
         Returns:

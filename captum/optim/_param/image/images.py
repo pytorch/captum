@@ -51,9 +51,9 @@ class ImageTensor(torch.Tensor):
         Args:
 
             path (str): A URL or filepath to an image.
-            scale (float): The image scale to use.
+            scale (float, optional): The image scale to use.
                 Default: 255.0
-            mode (str:) The image loading mode to use.
+            mode (str, optional): The image loading mode to use.
                 Default: "RGB"
 
         Returns:
@@ -103,7 +103,7 @@ class ImageTensor(torch.Tensor):
 
             figsize (Tuple[int, int], optional): height & width to use
                 for displaying the `ImageTensor` figure.
-            scale (float): Value to multiply the `ImageTensor` by so that
+            scale (float, optional): Value to multiply the `ImageTensor` by so that
                 it's value range is [0-255] for display.
                 Default: 255.0
         """
@@ -117,7 +117,7 @@ class ImageTensor(torch.Tensor):
 
             filename (str): The filename to use when saving the `ImageTensor` as an
                 image file.
-            scale (float): Value to multiply the `ImageTensor` by so that
+            scale (float, optional): Value to multiply the `ImageTensor` by so that
                 it's value range is [0-255] for saving.
                 Default: 255.0
         """

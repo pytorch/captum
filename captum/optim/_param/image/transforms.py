@@ -394,7 +394,7 @@ class ScaleInputRange(nn.Module):
         """
         Args:
 
-            multiplier (float):  A float value used to scale the input.
+            multiplier (float, optional):  A float value used to scale the input.
         """
         super().__init__()
         self.multiplier = multiplier
