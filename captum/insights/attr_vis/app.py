@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 from collections import namedtuple
+from itertools import cycle
 from typing import (
     Any,
     Callable,
@@ -199,6 +200,7 @@ class AttributionVisualizer:
         self._outputs: List[VisualizationOutput] = []
         self._config = FilterConfig(prediction="all", classes=[], num_examples=4)
         self._dataset_iter = iter(dataset)
+        self._dataset_cache: List[Batch] = []
 
     def _calculate_attribution_from_cache(
         self, input_index: int, model_index: int, target: Optional[Tensor]
@@ -439,7 +441,22 @@ class AttributionVisualizer:
         return results if results else None
 
     def _get_outputs(self) -> List[Tuple[List[VisualizationOutput], SampleCache]]:
-        batch_data = next(self._dataset_iter)
+        # If we run out of new betches, then we need to
+        # display data which was already shown before.
+        # However, since the dataset given to us is a generator,
+        # we can't reset it to return to the beginning.
+        # Because of this, we store a small cache of stale
+        # data, and iterate on it after the main generator
+        # stops returning new batches.
+        try:
+            batch_data = next(self._dataset_iter)
+            self._dataset_cache.append(batch_data)
+            if len(self._dataset_cache) > self._config.num_examples:
+                self._dataset_cache.pop(0)
+        except StopIteration:
+            self._dataset_iter = cycle(self._dataset_cache)
+            batch_data = next(self._dataset_iter)
+
         vis_outputs = []
 
         # Type ignore for issue with passing union to function taking generic
@@ -465,10 +482,7 @@ class AttributionVisualizer:
     def visualize(self):
         self._outputs = []
         while len(self._outputs) < self._config.num_examples:
-            try:
-                self._outputs.extend(self._get_outputs())
-            except StopIteration:
-                break
+            self._outputs.extend(self._get_outputs())
         return [o[0] for o in self._outputs]
 
     def get_insights_config(self):
