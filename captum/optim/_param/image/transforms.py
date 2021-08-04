@@ -13,15 +13,31 @@ from captum.optim._utils.typing import IntSeqOrIntType, NumSeqOrTensorType
 
 class BlendAlpha(nn.Module):
     r"""Blends a 4 channel input parameterization into an RGB image.
-
     You can specify a fixed background, or a random one will be used by default.
     """
 
     def __init__(self, background: Optional[torch.Tensor] = None) -> None:
+        """
+        Args:
+
+            background (tensor, optional):  An NCHW image tensor to be used as the
+                Alpha channel's background.
+                Default: None
+        """
         super().__init__()
         self.background = background
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
+        """
+        Blend the Alpha channel into the RGB channels.
+
+        Args:
+
+            x (torch.Tensor): RGBA image tensor to blend into an RGB image tensor.
+
+        Returns:
+            **blended** (torch.Tensor): RGB image tensor.
+        """
         assert x.dim() == 4
         assert x.size(1) == 4
         rgb, alpha = x[:, :3, ...], x[:, 3:4, ...]
@@ -36,6 +52,16 @@ class IgnoreAlpha(nn.Module):
     r"""Ignores a 4th channel"""
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
+        """
+        Ignore the alpha channel.
+
+        Args:
+
+            x (torch.Tensor): RGBA image tensor.
+
+        Returns:
+            **rgb** (torch.Tensor): RGB image tensor without the alpha channel.
+        """
         assert x.dim() == 4
         assert x.size(1) == 4
         rgb = x[:, :3, ...]
@@ -52,16 +78,17 @@ class ToRGB(nn.Module):
     [0] Y. Ohta, T. Kanade, and T. Sakai, "Color information for region segmentation,"
     Computer Graphics and Image Processing, vol. 13, no. 3, pp. 222–241, 1980
     https://www.sciencedirect.com/science/article/pii/0146664X80900477
-
-    Arguments:
-        transform (str or tensor):  Either a string for one of the precalculated
-            transform matrices, or a 3x3 matrix for the 3 RGB channels of input
-            tensors.
     """
 
     @staticmethod
     def klt_transform() -> torch.Tensor:
-        """Karhunen-Loève transform (KLT) measured on ImageNet"""
+        """
+        Karhunen-Loève transform (KLT) measured on ImageNet
+
+        Returns:
+            **transform** (torch.Tensor): A Karhunen-Loève transform (KLT) measured on
+                the ImageNet dataset.
+        """
         KLT = [[0.26, 0.09, 0.02], [0.27, 0.00, -0.05], [0.27, -0.09, 0.03]]
         transform = torch.Tensor(KLT).float()
         transform = transform / torch.max(torch.norm(transform, dim=0))
@@ -69,6 +96,11 @@ class ToRGB(nn.Module):
 
     @staticmethod
     def i1i2i3_transform() -> torch.Tensor:
+        """
+        Returns:
+            **transform** (torch.Tensor): An approximation of natural colors transform
+                (i1i2i3).
+        """
         i1i2i3_matrix = [
             [1 / 3, 1 / 3, 1 / 3],
             [1 / 2, 0, -1 / 2],
@@ -77,6 +109,13 @@ class ToRGB(nn.Module):
         return torch.Tensor(i1i2i3_matrix)
 
     def __init__(self, transform: Union[str, torch.Tensor] = "klt") -> None:
+        """
+        Args:
+
+            transform (str or tensor):  Either a string for one of the precalculated
+                transform matrices, or a 3x3 matrix for the 3 RGB channels of input
+                tensors.
+        """
         super().__init__()
         assert isinstance(transform, str) or torch.is_tensor(transform)
         if torch.is_tensor(transform):
@@ -93,6 +132,18 @@ class ToRGB(nn.Module):
             )
 
     def forward(self, x: torch.Tensor, inverse: bool = False) -> torch.Tensor:
+        """
+        Args:
+
+            x (torch.tensor):  A CHW or NCHW RGB or RGBA image tensor.
+            inverse (bool, optional):  Whether to recorrelate or decorrelate colors.
+                Default: False.
+
+        Returns:
+            chw (torch.tensor):  A tensor with it's colors recorrelated or
+                decorrelated.
+        """
+
         assert x.dim() == 3 or x.dim() == 4
 
         # alpha channel is taken off...
@@ -128,15 +179,6 @@ class ToRGB(nn.Module):
 class CenterCrop(torch.nn.Module):
     """
     Center crop a specified amount from a tensor.
-    Arguments:
-        size (int, sequence, int): Number of pixels to center crop away.
-        pixels_from_edges (bool, optional): Whether to treat crop size
-            values as the number of pixels from the tensor's edge, or an
-            exact shape in the center.
-        offset_left (bool, optional): If the cropped away sides are not
-            equal in size, offset center by +1 to the left and/or top.
-            Default is set to False. This parameter is only valid when
-            pixels_from_edges is False.
     """
 
     def __init__(
@@ -145,6 +187,18 @@ class CenterCrop(torch.nn.Module):
         pixels_from_edges: bool = False,
         offset_left: bool = False,
     ) -> None:
+        """
+        Args:
+
+            size (int, sequence, int): Number of pixels to center crop away.
+                pixels_from_edges (bool, optional): Whether to treat crop size
+                values as the number of pixels from the tensor's edge, or an
+                exact shape in the center.
+            offset_left (bool, optional): If the cropped away sides are not
+                equal in size, offset center by +1 to the left and/or top.
+                This parameter is only valid when `pixels_from_edges` is False.
+                Default: False
+        """
         super().__init__()
         self.crop_vals = size
         self.pixels_from_edges = pixels_from_edges
@@ -153,10 +207,12 @@ class CenterCrop(torch.nn.Module):
     def forward(self, input: torch.Tensor) -> torch.Tensor:
         """
         Center crop an input.
-        Arguments:
+
+        Args:
             input (torch.Tensor): Input to center crop.
+
         Returns:
-            tensor (torch.Tensor): A center cropped tensor.
+            **tensor** (torch.Tensor): A center cropped *tensor*.
         """
 
         return center_crop(
@@ -172,18 +228,22 @@ def center_crop(
 ) -> torch.Tensor:
     """
     Center crop a specified amount from a tensor.
-    Arguments:
+
+    Args:
+
         input (tensor):  A CHW or NCHW image tensor to center crop.
         size (int, sequence, int): Number of pixels to center crop away.
         pixels_from_edges (bool, optional): Whether to treat crop size
             values as the number of pixels from the tensor's edge, or an
             exact shape in the center.
+            Default: False
         offset_left (bool, optional): If the cropped away sides are not
             equal in size, offset center by +1 to the left and/or top.
-            Default is set to False. This parameter is only valid when
-            pixels_from_edges is False.
+            This parameter is only valid when `pixels_from_edges` is False.
+            Default: False
+
     Returns:
-        *tensor*:  A center cropped tensor.
+        **tensor**:  A center cropped *tensor*.
     """
 
     assert input.dim() == 3 or input.dim() == 4
@@ -218,6 +278,13 @@ def _rand_select(
 ) -> Union[int, float, torch.Tensor]:
     """
     Randomly return a single value from the provided tuple, list, or tensor.
+
+    Args:
+
+        transform_values (sequence):  A sequence of values to randomly select from.
+
+    Returns:
+        **value**:  A single value from the specified sequence.
     """
     n = torch.randint(low=0, high=len(transform_values), size=[1]).item()
     return transform_values[n]
@@ -226,11 +293,14 @@ def _rand_select(
 class RandomScale(nn.Module):
     """
     Apply random rescaling on a NCHW tensor.
-    Arguments:
-        scale (float, sequence): Tuple of rescaling values to randomly select from.
     """
 
     def __init__(self, scale: NumSeqOrTensorType) -> None:
+        """
+        Args:
+
+            scale (float, sequence): Tuple of rescaling values to randomly select from.
+        """
         super().__init__()
         assert hasattr(scale, "__iter__")
         if torch.is_tensor(scale):
@@ -262,6 +332,16 @@ class RandomScale(nn.Module):
         return x
 
     def forward(self, input: torch.Tensor) -> torch.Tensor:
+        """
+        Randomly scale / zoom in or out of a tensor.
+
+        Args:
+
+            input (torch.Tensor): Input to randomly scale.
+
+        Returns:
+            **tensor** (torch.Tensor): Scaled *tensor*.
+        """
         scale = _rand_select(self.scale)
         return self.scale_tensor(input, scale=scale)
 
@@ -269,11 +349,14 @@ class RandomScale(nn.Module):
 class RandomSpatialJitter(torch.nn.Module):
     """
     Apply random spatial translations on a NCHW tensor.
-    Arguments:
-        translate (int):
     """
 
     def __init__(self, translate: int) -> None:
+        """
+        Args:
+
+            translate (int): The max horizontal and vertical translation to use.
+        """
         super().__init__()
         self.pad_range = 2 * translate
         self.pad = nn.ReflectionPad2d(translate)
@@ -291,6 +374,16 @@ class RandomSpatialJitter(torch.nn.Module):
         return cropped
 
     def forward(self, input: torch.Tensor) -> torch.Tensor:
+        """
+        Randomly translate an input tensor's height and width dimensions.
+
+        Args:
+
+            input (torch.Tensor): Input to randomly translate.
+
+        Returns:
+            **tensor** (torch.Tensor): A randomly translated *tensor*.
+        """
         insets = torch.randint(high=self.pad_range, size=(2,))
         return self.translate_tensor(input, insets)
 
@@ -359,10 +452,25 @@ class ScaleInputRange(nn.Module):
     """
 
     def __init__(self, multiplier: float = 1.0) -> None:
+        """
+        Args:
+
+            multiplier (float, optional):  A float value used to scale the input.
+        """
         super().__init__()
         self.multiplier = multiplier
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
+        """
+        Scale an input tensor's values.
+
+        Args:
+
+            x (torch.Tensor): Input to scale values of.
+
+        Returns:
+            **tensor** (torch.Tensor): tensor with it's values scaled.
+        """
         return x * self.multiplier
 
 
@@ -372,6 +480,16 @@ class RGBToBGR(nn.Module):
     """
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
+        """
+        Perform RGB to BGR conversion on an input
+
+        Args:
+
+            x (torch.Tensor): RGB image tensor to convert to BGR.
+
+        Returns:
+            **BGR tensor** (torch.Tensor): A BGR tensor.
+        """
         assert x.dim() == 4
         assert x.size(1) == 3
         return x[:, [2, 1, 0]]
@@ -415,13 +533,6 @@ class GaussianSmoothing(nn.Module):
     Apply gaussian smoothing on a
     1d, 2d or 3d tensor. Filtering is performed seperately for each channel
     in the input using a depthwise convolution.
-    Arguments:
-        channels (int, sequence): Number of channels of the input tensors. Output will
-            have this number of channels as well.
-        kernel_size (int, sequence): Size of the gaussian kernel.
-        sigma (float, sequence): Standard deviation of the gaussian kernel.
-        dim (int, optional): The number of dimensions of the data.
-            Default value is 2 (spatial).
     """
 
     def __init__(
@@ -431,6 +542,16 @@ class GaussianSmoothing(nn.Module):
         sigma: Union[float, Sequence[float]],
         dim: int = 2,
     ) -> None:
+        """
+        Args:
+
+            channels (int, sequence): Number of channels of the input tensors. Output
+                will have this number of channels as well.
+            kernel_size (int, sequence): Size of the gaussian kernel.
+            sigma (float, sequence): Standard deviation of the gaussian kernel.
+            dim (int, optional): The number of dimensions of the data.
+                Default value is 2 (spatial).
+        """
         super().__init__()
         if isinstance(kernel_size, numbers.Number):
             kernel_size = [kernel_size] * dim
@@ -475,10 +596,13 @@ class GaussianSmoothing(nn.Module):
     def forward(self, input: torch.Tensor) -> torch.Tensor:
         """
         Apply gaussian filter to input.
-        Arguments:
+
+        Args:
+
             input (torch.Tensor): Input to apply gaussian filter on.
+
         Returns:
-            filtered (torch.Tensor): Filtered output.
+            **filtered** (torch.Tensor): Filtered output.
         """
         return self.conv(input, weight=self.weight, groups=self.groups)
 
@@ -492,6 +616,16 @@ class SymmetricPadding(torch.autograd.Function):
     def forward(
         ctx: torch.autograd.Function, x: torch.Tensor, padding: List[List[int]]
     ) -> torch.Tensor:
+        """
+        Apply NumPy symmetric padding to an input tensor while preserving the gradient.
+
+        Args:
+
+            x (torch.Tensor): Input to apply symmetric padding on.
+
+        Returns:
+            **tensor** (torch.Tensor): Padded tensor.
+        """
         ctx.padding = padding
         x_device = x.device
         x = x.cpu()
@@ -505,6 +639,16 @@ class SymmetricPadding(torch.autograd.Function):
     def backward(
         ctx: torch.autograd.Function, grad_output: torch.Tensor
     ) -> Tuple[torch.Tensor, None]:
+        """
+        Crop away symmetric padding.
+
+        Args:
+
+            grad_output (torch.Tensor): Input to remove symmetric padding from.
+
+        Returns:
+            **grad_input** (torch.Tensor): Unpadded tensor.
+        """
         grad_input = grad_output.clone()
         B, C, H, W = grad_input.size()
         b1, b2 = ctx.padding[0]
@@ -521,26 +665,44 @@ class NChannelsToRGB(nn.Module):
     """
 
     def __init__(self, warp: bool = False) -> None:
+        """
+        Args:
+
+            warp (bool, optional): Whether or not to make the resulting RGB colors more
+                distict from each other. Default is set to False.
+        """
         super().__init__()
         self.warp = warp
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
+        """
+        Reduce any number of channels down to 3.
+
+        Args:
+
+            x (torch.Tensor): Input to reduce channel dimensions on.
+
+        Returns:
+            **3 channel RGB tensor** (torch.Tensor): RGB image tensor.
+        """
         assert x.dim() == 4
         return nchannels_to_rgb(x, self.warp)
 
 
 class RandomCrop(nn.Module):
     """
-        Randomly crop out a specific size from an NCHW image tensor.
-    ​
-        Args:
-            crop_size (int, sequence, int): The desired cropped output size.
+    Randomly crop out a specific size from an NCHW image tensor.
     """
 
     def __init__(
         self,
         crop_size: IntSeqOrIntType,
     ) -> None:
+        """
+        Args:
+
+            crop_size (int, sequence, int): The desired cropped output size.
+        """
         super().__init__()
         crop_size = [crop_size] * 2 if not hasattr(crop_size, "__iter__") else crop_size
         crop_size = list(crop_size) * 2 if len(crop_size) == 1 else crop_size
