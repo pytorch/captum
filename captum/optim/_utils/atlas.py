@@ -13,6 +13,7 @@ def normalize_grid(
     Remove outliers from an xy coordinate grid tensor, and rescale it to [0, 1].
 
     Args:
+
         xy_grid (torch.tensor): The xy coordinate grid tensor to normalize,
             with a shape of: [n_points, n_axes].
         min_percentile (float, optional): The minimum percentile to use when
@@ -21,6 +22,7 @@ def normalize_grid(
             normalizing the tensor. Value must be in the range [0, 1].
         relative_margin (float, optional): The relative margin to use when
             normalizing the tensor.
+
     Returns:
         normalized_grid (torch.tensor): A normalized xy coordinate grid tensor.
     """
@@ -50,12 +52,14 @@ def calc_grid_indices(
     Create sets of grid cell indices of a specified size for an irregular grid.
 
     Args:
+
         xy_grid (torch.tensor): The xy coordinate grid activation samples, with a shape
             of: [n_points, 2].
         grid_size (Tuple[int, int]): The grid_size of grid cells to use. The grid_size
             variable should be in the format of: [width, height].
         x_extent (Tuple[float, float], optional): The x axis range to use.
         y_extent (Tuple[float, float], optional): The y axis range to use.
+
     Returns:
         indices (list of list of tensor): Grid cell indices for the irregular grid.
     """
@@ -95,6 +99,7 @@ def extract_grid_vectors(
     https://distill.pub/2019/activation-atlas/
 
     Args:
+
         grid_indices (list of list of torch.tensor): List of lists of grid indices to
             use.
         raw_activations (torch.tensor): Raw unmodified activation samples, with a shape
@@ -103,6 +108,7 @@ def extract_grid_vectors(
             variable should be in the format of: [width, height].
         min_density (int, optional): The minimum number of points for a cell to be
             counted.
+
     Returns:
         cells (torch.tensor): A tensor containing all the direction vector that were
             created.
@@ -144,6 +150,7 @@ def create_atlas_vectors(
     https://distill.pub/2019/activation-atlas/
 
     Args:
+
         xy_grid (torch.tensor): The xy coordinate grid activation samples, with a shape
             of: [n_points, 2].
         raw_activations (torch.tensor): Raw unmodified activation samples, with a shape
@@ -191,6 +198,7 @@ def create_atlas(
     corresponding grid coordinates.
 
     Args:
+
         cells (list of tensor or tensor): A list or stack of image tensors made with
             atlas direction vectors.
         coords (list of Tuple[int, int] or list of Tuple[int, int, int]): A list of
@@ -200,6 +208,7 @@ def create_atlas(
             variable should be in the format of: [width, height].
         base_tensor (Callable, optional): What to use for the atlas base tensor. Basic
             choices are: torch.ones or torch.zeros.
+
     Returns:
         atlas_canvas (torch.tensor): The full activation atlas visualization.
     """
