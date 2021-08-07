@@ -58,6 +58,9 @@ def vgg16(
         classifier_logits (bool, optional): If True, adds the classifier component of
             the model.
             Default: *False* when pretrained is True otherwise set to *True*.
+
+        Returns:
+            model (nn.Module): A VGG-16 model instance.
     """
 
     if "layers" not in kwargs:
