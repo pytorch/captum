@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 
-from typing import Callable, Iterable, Union
+from typing import Callable, Union
 
+import torch
 from torch.nn import Module
 
 
@@ -18,15 +19,19 @@ class Concept:
     adjectives and words that convey happiness.
     """
 
-    def __init__(self, id: int, name: str, data_iter: Union[None, Iterable]) -> None:
+    def __init__(
+        self, id: int, name: str, data_iter: Union[None, torch.utils.data.DataLoader]
+    ) -> None:
 
         r"""
         Args:
             id (int):   The unique identifier of the concept.
             name (str): A unique name of the concept.
-            data_iter (iter): A pytorch Dataloader object. Combines a dataset
+            data_iter (DataLoader): A pytorch DataLoader object that combines a dataset
                         and a sampler, and provides an iterable over a given
-                        dataset. For more information, please check:
+                        dataset. Only the input batches are provided by `data_iter`.
+                        Concept ids can be used as labels if necessary.
+                        For more information, please check:
                         https://pytorch.org/docs/stable/data.html
 
         Example::
