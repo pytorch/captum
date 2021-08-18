@@ -2,15 +2,14 @@
 from typing import Any
 
 import torch
-from torch import Tensor
-from torch.nn import Module
-
 from captum._utils.typing import TensorOrTupleOfTensorsGeneric
 from captum.attr._core.input_x_gradient import InputXGradient
 from captum.attr._core.noise_tunnel import NoiseTunnel
 from tests.attr.test_saliency import _get_basic_config, _get_multiargs_basic_config
 from tests.helpers.basic import BaseTest, assertArraysAlmostEqual
 from tests.helpers.classification_models import SoftmaxModel
+from torch import Tensor
+from torch.nn import Module
 
 
 class Test(BaseTest):

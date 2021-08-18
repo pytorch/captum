@@ -6,7 +6,6 @@ from typing import Callable
 
 import numpy as np
 import torch
-
 from captum.log import patch_methods
 
 

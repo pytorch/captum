@@ -3,11 +3,10 @@
 from typing import Iterable, cast
 
 import torch
-from torch.utils.data import IterableDataset
-
 from captum.concept._core.concept import Concept
 from captum.concept._utils.data_iterator import dataset_to_dataloader
 from tests.helpers.basic import BaseTest
+from torch.utils.data import IterableDataset
 
 
 class CustomIterableDataset(IterableDataset):

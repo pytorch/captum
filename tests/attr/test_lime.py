@@ -6,8 +6,6 @@ import unittest.mock
 from typing import Any, Callable, Generator, Tuple, Union
 
 import torch
-from torch import Tensor
-
 from captum._utils.models.linear_model import SkLearnLasso
 from captum._utils.typing import BaselineType, TensorOrTupleOfTensorsGeneric
 from captum.attr._core.lime import Lime, LimeBase, get_exp_kernel_similarity_function
@@ -27,6 +25,7 @@ from tests.helpers.basic_models import (
     BasicModel_MultiLayer_MultiInput,
     BasicModelBoolInput,
 )
+from torch import Tensor
 
 
 def alt_perturb_func(

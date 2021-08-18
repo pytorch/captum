@@ -7,10 +7,9 @@ from datetime import datetime
 from typing import List, Tuple, Union
 
 import torch
+from captum.concept._core.concept import Concept
 from torch import Tensor
 from torch.utils.data import DataLoader, Dataset
-
-from captum.concept._core.concept import Concept
 
 
 class AV:

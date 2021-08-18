@@ -6,8 +6,6 @@ import unittest
 from typing import Any, List, Tuple, Union
 
 import torch
-from torch.nn import Module
-
 from captum._utils.typing import TensorOrTupleOfTensorsGeneric
 from captum.attr._core.guided_backprop_deconvnet import Deconvolution
 from captum.attr._core.neuron.neuron_guided_backprop_deconvnet import (
@@ -15,6 +13,7 @@ from captum.attr._core.neuron.neuron_guided_backprop_deconvnet import (
 )
 from tests.helpers.basic import BaseTest, assertTensorAlmostEqual
 from tests.helpers.basic_models import BasicModel_ConvNet_One_Conv
+from torch.nn import Module
 
 
 class Test(BaseTest):

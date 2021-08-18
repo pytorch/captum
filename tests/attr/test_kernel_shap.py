@@ -6,7 +6,6 @@ import unittest.mock
 from typing import Any, Callable, List, Tuple, Union
 
 import torch
-
 from captum._utils.typing import BaselineType, TensorOrTupleOfTensorsGeneric
 from captum.attr._core.kernel_shap import KernelShap
 from tests.helpers.basic import (

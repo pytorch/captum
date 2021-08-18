@@ -3,9 +3,6 @@ from typing import Tuple, cast
 
 import torch
 import torch.nn as nn
-from torch import Tensor
-from torch.nn import Module
-
 from captum.attr import LRP, InputXGradient
 from captum.attr._utils.lrp_rules import (
     Alpha1_Beta0_Rule,
@@ -19,6 +16,8 @@ from tests.helpers.basic_models import (
     BasicModel_MultiLayer,
     SimpleLRPModel,
 )
+from torch import Tensor
+from torch.nn import Module
 
 
 def _get_basic_config() -> Tuple[Module, Tensor]:

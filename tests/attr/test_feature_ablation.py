@@ -6,8 +6,6 @@ import unittest.mock
 from typing import Any, List, Tuple, Union, cast
 
 import torch
-from torch import Tensor
-
 from captum._utils.typing import BaselineType, TargetType, TensorOrTupleOfTensorsGeneric
 from captum.attr._core.feature_ablation import FeatureAblation
 from captum.attr._core.noise_tunnel import NoiseTunnel
@@ -21,6 +19,7 @@ from tests.helpers.basic_models import (
     BasicModelBoolInput,
     BasicModelWithSparseInputs,
 )
+from torch import Tensor
 
 
 class Test(BaseTest):

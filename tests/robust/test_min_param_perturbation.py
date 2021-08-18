@@ -2,11 +2,10 @@
 from typing import List, cast
 
 import torch
-from torch import Tensor
-
 from captum.robust import MinParamPerturbation
 from tests.helpers.basic import BaseTest, assertTensorAlmostEqual
 from tests.helpers.basic_models import BasicModel, BasicModel_MultiLayer
+from torch import Tensor
 
 
 def inp_subtract(inp: Tensor, ind: int = 0, add_arg: int = 0) -> Tensor:

@@ -13,9 +13,6 @@ from typing import (
 )
 
 import torch
-from torch import Tensor
-from torch.nn import Module
-
 from captum.attr import IntegratedGradients
 from captum.attr._utils.batching import _batched_generator
 from captum.insights.attr_vis.attribution_calculation import (
@@ -29,6 +26,8 @@ from captum.insights.attr_vis.config import (
 from captum.insights.attr_vis.features import BaseFeature
 from captum.insights.attr_vis.server import namedtuple_to_dict
 from captum.log import log_usage
+from torch import Tensor
+from torch.nn import Module
 
 _CONTEXT_COLAB = "_CONTEXT_COLAB"
 _CONTEXT_IPYTHON = "_CONTEXT_IPYTHON"
@@ -227,9 +226,8 @@ class AttributionVisualizer:
 
     @log_usage()
     def render(self, debug=True):
-        from IPython.display import display
-
         from captum.insights.attr_vis.widget import CaptumInsights
+        from IPython.display import display
 
         widget = CaptumInsights(visualizer=self)
         display(widget)
@@ -255,9 +253,8 @@ class AttributionVisualizer:
 
     def _serve_colab(self, blocking=False, debug=False, port=None):
         import ipywidgets as widgets
-        from IPython.display import HTML, display
-
         from captum.insights.attr_vis.server import start_server
+        from IPython.display import HTML, display
 
         # TODO: Output widget only captures beginning of server logs. It seems
         # the context manager isn't respected when the web server is run on a

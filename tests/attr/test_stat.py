@@ -3,7 +3,6 @@ import random
 
 import numpy as np
 import torch
-
 from captum.attr import MSE, Max, Mean, Min, StdDev, Sum, Summarizer, Var
 from tests.helpers.basic import (
     BaseTest,

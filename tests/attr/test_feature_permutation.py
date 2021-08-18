@@ -2,8 +2,6 @@
 from typing import List, Tuple
 
 import torch
-from torch import Tensor
-
 from captum.attr._core.feature_permutation import FeaturePermutation, _permute_feature
 from tests.helpers.basic import (
     BaseTest,
@@ -11,6 +9,7 @@ from tests.helpers.basic import (
     assertTensorAlmostEqual,
 )
 from tests.helpers.basic_models import BasicModelWithSparseInputs
+from torch import Tensor
 
 
 class Test(BaseTest):

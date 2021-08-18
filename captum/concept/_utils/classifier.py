@@ -6,10 +6,9 @@ from abc import ABC, abstractmethod
 from typing import Any, Dict, List, Tuple, Union
 
 import torch
+from captum._utils.models.linear_model import model
 from torch import Tensor
 from torch.utils.data import DataLoader, TensorDataset
-
-from captum._utils.models.linear_model import model
 
 
 class Classifier(ABC):

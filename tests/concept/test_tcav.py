@@ -18,9 +18,6 @@ from typing import (
 )
 
 import torch
-from torch import Tensor
-from torch.utils.data import DataLoader, IterableDataset
-
 from captum._utils.common import _get_module_from_name
 from captum.concept._core.av import AV
 from captum.concept._core.concept import Concept
@@ -30,6 +27,8 @@ from captum.concept._utils.common import concepts_to_str
 from captum.concept._utils.data_iterator import dataset_to_dataloader
 from tests.helpers.basic import BaseTest, assertTensorAlmostEqual
 from tests.helpers.basic_models import BasicModel_ConvNet
+from torch import Tensor
+from torch.utils.data import DataLoader, IterableDataset
 
 
 class CustomClassifier(Classifier):

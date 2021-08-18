@@ -4,8 +4,6 @@ from enum import Enum
 from typing import Any, Callable, Dict, Optional, Tuple, Type, cast
 
 import torch
-from torch.nn import Module
-
 from captum.attr._core.noise_tunnel import NoiseTunnel
 from captum.attr._models.base import _set_deep_layer_value
 from captum.attr._utils.attribution import Attribution, InternalAttribution
@@ -17,6 +15,7 @@ from tests.attr.helpers.gen_test_utils import (
 )
 from tests.attr.helpers.test_config import config
 from tests.helpers.basic import BaseTest, deep_copy_args
+from torch.nn import Module
 
 """
 Tests in this file are dynamically generated based on the config

@@ -4,9 +4,6 @@ from inspect import signature
 from typing import Callable, List, Tuple, Union
 
 import torch
-from torch import Tensor
-from torch.nn import Module
-
 from captum.attr._core.deep_lift import DeepLift, DeepLiftShap
 from captum.attr._core.integrated_gradients import IntegratedGradients
 from tests.helpers.basic import (
@@ -23,6 +20,8 @@ from tests.helpers.basic_models import (
     ReLULinearModel,
     TanhDeepLiftModel,
 )
+from torch import Tensor
+from torch.nn import Module
 
 
 class Test(BaseTest):

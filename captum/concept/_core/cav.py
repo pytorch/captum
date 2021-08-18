@@ -4,7 +4,6 @@ import os
 from typing import Any, Dict, List
 
 import torch
-
 from captum.concept._core.concept import Concept
 from captum.concept._utils.common import concepts_to_str
 

@@ -3,11 +3,10 @@ import tempfile
 from typing import cast
 
 import torch
-from torch.utils.data import DataLoader
-
 from captum.concept._core.av import AV
 from captum.concept._core.concept import Concept
 from tests.helpers.basic import BaseTest, assertTensorAlmostEqual
+from torch.utils.data import DataLoader
 
 
 class Test(BaseTest):

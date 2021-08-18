@@ -4,8 +4,6 @@ import unittest
 from typing import Any, Tuple, Union, cast
 
 import torch
-from torch.nn import Module
-
 from captum._utils.common import _zeros
 from captum._utils.typing import BaselineType, Tensor, TensorOrTupleOfTensorsGeneric
 from captum.attr._core.integrated_gradients import IntegratedGradients
@@ -25,6 +23,7 @@ from tests.helpers.basic_models import (
     BasicModel6_MultiTensor,
     BasicModel_MultiLayer,
 )
+from torch.nn import Module
 
 
 class Test(BaseTest):

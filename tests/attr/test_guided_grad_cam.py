@@ -4,12 +4,11 @@ import unittest
 from typing import Any
 
 import torch
-from torch.nn import Module
-
 from captum._utils.typing import TensorOrTupleOfTensorsGeneric
 from captum.attr._core.guided_grad_cam import GuidedGradCam
 from tests.helpers.basic import BaseTest, assertTensorAlmostEqual
 from tests.helpers.basic_models import BasicModel_ConvNet_One_Conv
+from torch.nn import Module
 
 
 class Test(BaseTest):

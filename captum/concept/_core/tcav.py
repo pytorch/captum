@@ -6,9 +6,6 @@ from typing import Any, Dict, List, Set, Tuple, Union, cast
 import numpy as np
 import torch
 import torch.multiprocessing as multiprocessing
-from torch import Tensor
-from torch.nn import Module
-
 from captum._utils.common import _format_tensor_into_tuples, _get_module_from_name
 from captum._utils.typing import TargetType, TensorOrTupleOfTensorsGeneric
 from captum.attr import LayerActivation, LayerAttribution, LayerGradientXActivation
@@ -17,6 +14,8 @@ from captum.concept._core.cav import CAV
 from captum.concept._core.concept import Concept, ConceptInterpreter
 from captum.concept._utils.classifier import Classifier, DefaultClassifier
 from captum.concept._utils.common import concepts_to_str
+from torch import Tensor
+from torch.nn import Module
 
 
 def train_cav(

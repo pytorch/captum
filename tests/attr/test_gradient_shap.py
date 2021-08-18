@@ -4,11 +4,10 @@ from typing import Tuple, Union, cast
 
 import numpy as np
 import torch
-from numpy import ndarray
-
 from captum._utils.typing import Tensor
 from captum.attr._core.gradient_shap import GradientShap
 from captum.attr._core.integrated_gradients import IntegratedGradients
+from numpy import ndarray
 from tests.helpers.basic import (
     BaseTest,
     assertArraysAlmostEqual,

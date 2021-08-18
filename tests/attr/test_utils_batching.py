@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
 import torch
-
 from captum.attr._utils.batching import (
     _batched_generator,
     _batched_operator,

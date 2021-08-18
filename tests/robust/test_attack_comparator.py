@@ -3,11 +3,10 @@ import collections
 from typing import List
 
 import torch
-from torch import Tensor
-
 from captum.robust import FGSM, AttackComparator
 from tests.helpers.basic import BaseTest, assertTensorAlmostEqual
 from tests.helpers.basic_models import BasicModel, BasicModel_MultiLayer
+from torch import Tensor
 
 
 def float_metric(model_out: Tensor, target: int):

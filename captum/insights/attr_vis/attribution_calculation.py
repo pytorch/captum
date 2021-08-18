@@ -14,15 +14,14 @@ from typing import (
 )
 
 import torch
-from torch import Tensor
-from torch.nn import Module
-
 from captum._utils.common import _run_forward, safe_div
 from captum.insights.attr_vis.config import (
     ATTRIBUTION_METHOD_CONFIG,
     ATTRIBUTION_NAMES_TO_METHODS,
 )
 from captum.insights.attr_vis.features import BaseFeature
+from torch import Tensor
+from torch.nn import Module
 
 OutputScore = namedtuple("OutputScore", "score index label")
 

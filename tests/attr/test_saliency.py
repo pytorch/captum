@@ -2,9 +2,6 @@
 from typing import Any, Tuple, Union, cast
 
 import torch
-from torch import Tensor
-from torch.nn import Module
-
 from captum._utils.gradient import compute_gradients
 from captum._utils.typing import TensorOrTupleOfTensorsGeneric
 from captum.attr._core.noise_tunnel import NoiseTunnel
@@ -16,6 +13,8 @@ from tests.helpers.basic import (
 )
 from tests.helpers.basic_models import BasicModel, BasicModel5_MultiArgs
 from tests.helpers.classification_models import SoftmaxModel
+from torch import Tensor
+from torch.nn import Module
 
 
 def _get_basic_config() -> Tuple[Module, Tensor, Tensor, Any]:

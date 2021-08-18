@@ -6,11 +6,10 @@ import threading
 from time import sleep
 from typing import Optional
 
+from captum.log import log_usage
 from flask import Flask, jsonify, render_template, request
 from flask_compress import Compress
 from torch import Tensor
-
-from captum.log import log_usage
 
 app = Flask(
     __name__, static_folder="frontend/build/static", template_folder="frontend/build"

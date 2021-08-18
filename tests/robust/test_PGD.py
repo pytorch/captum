@@ -1,10 +1,9 @@
 #!/usr/bin/env python3
 import torch
-from torch.nn import CrossEntropyLoss
-
 from captum.robust import PGD
 from tests.helpers.basic import BaseTest, assertArraysAlmostEqual
 from tests.helpers.basic_models import BasicModel, BasicModel2, BasicModel_MultiLayer
+from torch.nn import CrossEntropyLoss
 
 
 class Test(BaseTest):
