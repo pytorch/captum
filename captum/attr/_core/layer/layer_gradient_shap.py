@@ -5,9 +5,6 @@ from typing import Any, Callable, List, Tuple, Union, cast
 
 import numpy as np
 import torch
-from torch import Tensor
-from torch.nn import Module
-
 from captum._utils.gradient import _forward_layer_eval, compute_layer_gradients_and_eval
 from captum._utils.typing import Literal, TargetType, TensorOrTupleOfTensorsGeneric
 from captum.attr._core.gradient_shap import _scale_input
@@ -19,6 +16,8 @@ from captum.attr._utils.common import (
     _format_input_baseline,
 )
 from captum.log import log_usage
+from torch import Tensor
+from torch.nn import Module
 
 
 class LayerGradientShap(LayerAttribution, GradientAttribution):

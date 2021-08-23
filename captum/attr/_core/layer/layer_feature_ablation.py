@@ -2,10 +2,6 @@
 from typing import Any, Callable, List, Tuple, Union
 
 import torch
-from torch import Tensor
-from torch.nn import Module
-from torch.nn.parallel.scatter_gather import scatter
-
 from captum._utils.common import (
     _extract_device,
     _format_additional_forward_args,
@@ -18,6 +14,9 @@ from captum._utils.typing import BaselineType, TargetType
 from captum.attr._core.feature_ablation import FeatureAblation
 from captum.attr._utils.attribution import LayerAttribution, PerturbationAttribution
 from captum.log import log_usage
+from torch import Tensor
+from torch.nn import Module
+from torch.nn.parallel.scatter_gather import scatter
 
 
 class LayerFeatureAblation(LayerAttribution, PerturbationAttribution):

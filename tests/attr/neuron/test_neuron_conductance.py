@@ -4,9 +4,6 @@ import unittest
 from typing import Any, Callable, List, Tuple, Union, cast
 
 import torch
-from torch import Tensor
-from torch.nn import Module
-
 from captum._utils.typing import BaselineType, TensorOrTupleOfTensorsGeneric
 from captum.attr._core.layer.layer_conductance import LayerConductance
 from captum.attr._core.neuron.neuron_conductance import NeuronConductance
@@ -16,6 +13,8 @@ from tests.helpers.basic_models import (
     BasicModel_MultiLayer,
     BasicModel_MultiLayer_MultiInput,
 )
+from torch import Tensor
+from torch.nn import Module
 
 
 class Test(BaseTest):

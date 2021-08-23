@@ -3,12 +3,11 @@ from typing import Any, Callable
 
 import torch
 import torch.nn.functional as F
-from torch import Tensor
-
 from captum._utils.common import _format_input, _format_output, _is_tuple
 from captum._utils.typing import TensorOrTupleOfTensorsGeneric
 from captum.robust._core.fgsm import FGSM
 from captum.robust._core.perturbation import Perturbation
+from torch import Tensor
 
 
 class PGD(Perturbation):

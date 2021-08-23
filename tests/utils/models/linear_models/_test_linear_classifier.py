@@ -2,13 +2,12 @@ import argparse
 import random
 from typing import Optional
 
+import captum._utils.models.linear_model.model as pytorch_model_module
 import numpy as np
 import sklearn.datasets as datasets
 import torch
-from torch.utils.data import DataLoader, TensorDataset
-
-import captum._utils.models.linear_model.model as pytorch_model_module
 from tests.utils.test_linear_model import _evaluate
+from torch.utils.data import DataLoader, TensorDataset
 
 
 def sklearn_dataset_to_loaders(

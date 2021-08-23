@@ -1,8 +1,6 @@
 #!/usr/bin/env python3
 from typing import Any, Callable, List, Tuple, Union
 
-from torch.nn import Module
-
 from captum._utils.common import (
     _format_additional_forward_args,
     _format_input,
@@ -17,6 +15,7 @@ from captum._utils.gradient import (
 from captum._utils.typing import TensorOrTupleOfTensorsGeneric
 from captum.attr._utils.attribution import GradientAttribution, NeuronAttribution
 from captum.log import log_usage
+from torch.nn import Module
 
 
 class NeuronGradient(NeuronAttribution, GradientAttribution):

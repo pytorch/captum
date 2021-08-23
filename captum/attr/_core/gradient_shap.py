@@ -4,7 +4,6 @@ from typing import Any, Callable, Tuple, Union
 
 import numpy as np
 import torch
-
 from captum._utils.common import _is_tuple
 from captum._utils.typing import (
     BaselineType,

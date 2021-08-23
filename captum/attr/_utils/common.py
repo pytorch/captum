@@ -4,8 +4,6 @@ from inspect import signature
 from typing import TYPE_CHECKING, Any, Callable, List, Tuple, Union
 
 import torch
-from torch import Tensor
-
 from captum._utils.common import _format_baseline, _format_input, _format_output
 from captum._utils.common import _validate_input as _validate_input_basic
 from captum._utils.typing import (
@@ -15,6 +13,7 @@ from captum._utils.typing import (
     TensorOrTupleOfTensorsGeneric,
 )
 from captum.attr._utils.approximation_methods import SUPPORTED_METHODS
+from torch import Tensor
 
 if TYPE_CHECKING:
     from captum.attr._utils.attribution import GradientAttribution

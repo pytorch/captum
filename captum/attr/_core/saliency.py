@@ -3,7 +3,6 @@
 from typing import Any, Callable
 
 import torch
-
 from captum._utils.common import _format_input, _format_output, _is_tuple
 from captum._utils.gradient import (
     apply_gradient_requirements,

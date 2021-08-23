@@ -5,8 +5,6 @@ from inspect import signature
 from typing import Any, Callable, Tuple, Union, cast
 
 import torch
-from torch import Tensor
-
 from captum._utils.common import (
     _expand_and_update_additional_forward_args,
     _expand_and_update_baselines,
@@ -18,6 +16,7 @@ from captum._utils.common import (
 from captum._utils.typing import TensorOrTupleOfTensorsGeneric
 from captum.log import log_usage
 from captum.metrics._utils.batching import _divide_and_aggregate_metrics
+from torch import Tensor
 
 
 def default_perturb_func(

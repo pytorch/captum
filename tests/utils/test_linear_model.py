@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
 import torch
-
 from captum._utils.models.linear_model.model import (
     SGDLasso,
     SGDLinearRegression,

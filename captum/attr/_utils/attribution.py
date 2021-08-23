@@ -3,9 +3,6 @@ from typing import Any, Callable, Generic, List, Tuple, Type, Union, cast
 
 import torch
 import torch.nn.functional as F
-from torch import Tensor
-from torch.nn import Module
-
 from captum._utils.common import (
     _format_additional_forward_args,
     _format_tensor_into_tuples,
@@ -21,6 +18,8 @@ from captum.attr._utils.common import (
     _validate_input,
 )
 from captum.log import log_usage
+from torch import Tensor
+from torch.nn import Module
 
 
 class Attribution:

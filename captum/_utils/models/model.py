@@ -3,10 +3,9 @@
 from abc import ABC, abstractmethod
 from typing import Dict, Optional, Union
 
+from captum._utils.typing import TensorOrTupleOfTensorsGeneric
 from torch import Tensor
 from torch.utils.data import DataLoader
-
-from captum._utils.typing import TensorOrTupleOfTensorsGeneric
 
 
 class Model(ABC):

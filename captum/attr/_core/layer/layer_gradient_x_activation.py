@@ -1,9 +1,6 @@
 #!/usr/bin/env python3
 from typing import Any, Callable, List, Tuple, Union
 
-from torch import Tensor
-from torch.nn import Module
-
 from captum._utils.common import (
     _format_additional_forward_args,
     _format_input,
@@ -13,6 +10,8 @@ from captum._utils.gradient import compute_layer_gradients_and_eval
 from captum._utils.typing import ModuleOrModuleList, TargetType
 from captum.attr._utils.attribution import GradientAttribution, LayerAttribution
 from captum.log import log_usage
+from torch import Tensor
+from torch.nn import Module
 
 
 class LayerGradientXActivation(LayerAttribution, GradientAttribution):

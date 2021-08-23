@@ -4,10 +4,6 @@ from typing import Any, List, Tuple, Union
 
 import torch
 import torch.nn.functional as F
-from torch import Tensor
-from torch.nn import Module
-from torch.utils.hooks import RemovableHandle
-
 from captum._utils.common import _format_input, _format_output, _is_tuple
 from captum._utils.gradient import (
     apply_gradient_requirements,
@@ -16,6 +12,9 @@ from captum._utils.gradient import (
 from captum._utils.typing import TargetType, TensorOrTupleOfTensorsGeneric
 from captum.attr._utils.attribution import GradientAttribution
 from captum.log import log_usage
+from torch import Tensor
+from torch.nn import Module
+from torch.utils.hooks import RemovableHandle
 
 
 class ModifiedReluGradientAttribution(GradientAttribution):

@@ -2,8 +2,6 @@
 from typing import Any, Callable, Tuple
 
 import torch
-from torch import Tensor
-
 from captum._utils.common import (
     _format_additional_forward_args,
     _format_input,
@@ -18,6 +16,7 @@ from captum._utils.gradient import (
 )
 from captum._utils.typing import TensorOrTupleOfTensorsGeneric
 from captum.robust._core.perturbation import Perturbation
+from torch import Tensor
 
 
 class FGSM(Perturbation):

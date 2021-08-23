@@ -4,8 +4,6 @@ import warnings
 from typing import Any, Callable, Iterator, Tuple, Union
 
 import torch
-from torch import Tensor
-
 from captum._utils.common import (
     _format_additional_forward_args,
     _format_input,
@@ -18,6 +16,7 @@ from captum._utils.typing import (
     TupleOrTensorOrBoolGeneric,
 )
 from captum.attr._utils.approximation_methods import approximation_parameters
+from torch import Tensor
 
 
 def _batch_attribution(
