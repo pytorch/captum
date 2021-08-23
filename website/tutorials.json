@@ -59,6 +59,18 @@
     {
       "id": "Image_and_Text_Classification_LIME",
       "title": "Interpreting vision and text models with LIME"
+    },
+    {
+      "id": "CIFAR_Captum_Robustness",
+      "title": "Applying robustness attacks and metrics to CIFAR model and dataset"
+    },
+    {
+      "id": "TCAV_Image",
+      "title": "TCAV for image classification for googlenet model"
+    },
+    {
+      "id": "TCAV_NLP",
+      "title": "TCAV for NLP sentiment analysis model"
     }
   ]
 }
