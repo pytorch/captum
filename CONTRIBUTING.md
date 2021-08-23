@@ -35,27 +35,17 @@ pip install -e .[dev]
 
 #### Code Style
 
-Captum uses [black](https://github.com/ambv/black) and  [flake8](https://github.com/PyCQA/flake8) to
-enforce a common code style across the code base. black and flake8 are installed easily via
-pip using `pip install black flake8`, and run locally by calling
+Captum uses [ufmt](https://pypi.org/project/ufmt/) and  [flake8](https://github.com/PyCQA/flake8) to
+enforce a common code style across the code base. ufmt and flake8 are installed easily via
+pip using `pip install ufmt flake8`, and run locally by calling
 ```bash
-black .
+ufmt format .
 flake8 .
 ```
-from the repository root. No additional configuration should be needed (see the
-[black documentation](https://black.readthedocs.io/en/stable/installation_and_usage.html#usage)
-for advanced usage).
-
-Captum also uses [isort](https://github.com/timothycrosley/isort) to sort imports
-alphabetically and separate into sections. isort is installed easily via
-pip using `pip install isort`, and run locally by calling
-```bash
-isort
-```
-from the repository root. Configuration for isort is located in .isort.cfg.
+from the repository root.
 
 We feel strongly that having a consistent code style is extremely important, so
-CircleCI will fail on your PR if it does not adhere to the black or flake8 formatting style or isort import ordering.
+CircleCI will fail on your PR if it does not adhere to the ufmt or flake8 formatting style.
 
 
 #### Type Hints
