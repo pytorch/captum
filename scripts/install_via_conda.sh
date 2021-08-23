@@ -43,7 +43,7 @@ conda install -y -c conda-forge yarn
 conda install -y --no-channel-priority -c conda-forge nodejs=14
 
 # install lint deps
-pip install black==21.4b2 usort==0.6.3 ufmt
+pip install black==21.4b2 usort==0.6.4 ufmt
 
 # build insights and install captum
 BUILD_INSIGHTS=1 python setup.py develop

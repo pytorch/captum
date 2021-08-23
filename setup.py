@@ -72,7 +72,7 @@ DEV_REQUIRES = (
         "sphinx",
         "sphinx-autodoc-typehints",
         "mypy>=0.760",
-        "usort==0.6.3",
+        "usort==0.6.4",
         "ufmt",
         "scikit-learn",
     ]
