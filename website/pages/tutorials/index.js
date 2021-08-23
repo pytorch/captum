@@ -94,7 +94,7 @@ class TutorialHome extends React.Component {
                 This analysis helps us to identify strong interaction pairs between different tokens for a specific model prediction.
                 We compare our findings with the <a href="https://arxiv.org/pdf/2004.10102.pdf">vector norms</a> and show that attribution scores
                 are more meaningful compared to the vector norms.
-                <a href="Bert_SQUAD_Interpret2">here</a>.
+                Find the tutorial <a href="Bert_SQUAD_Interpret2">here</a>.
 
                 <h4>Interpreting a regression model of Boston house prices:</h4>
                 To demonstrate interpreting regression models we have chosen to look at the Boston house prices dataset.
@@ -124,7 +124,7 @@ class TutorialHome extends React.Component {
 
                 <h4>Intepreting DLRM models with Captum:</h4>
                 This tutorial demonstrates how we use Captum for Deep Learning Recommender Models using
-                <a href="https://github.com/facebookresearch/dlrm">dlrm</a> model published from facebook research and integrated gradients algorithm.
+                 <a href="https://github.com/facebookresearch/dlrm">dlrm</a> model published from facebook research and integrated gradients algorithm.
                 It showcases feature importance differences for sparse and dense features in predicting clicked and non-clicked Ads. It also analyzes
                 the importance of feature interaction layer and neuron importances in the final fully connected layer when predicting clicked Ads.
                 Find the tutorial <a href="DLRM_Tutorial">here</a>.
@@ -135,6 +135,24 @@ class TutorialHome extends React.Component {
                 a segmentation mask. For text it uses a classification model trained on `AG_NEWS` dataset and explains model predictions based
                 on the word tokens in the input text.
                 Find the tutorial <a href="Image_and_Text_Classification_LIME">here</a>.
+
+                <h4>Applying robustness attacks and metrics to CIFAR model and dataset:</h4>
+                This tutorial demonstrates how to apply robustness attacks such as FGSM and PGD as well as robustness metrics such as
+                MinParamPerturbation and AttackComparator to a model trained on CIFAR dataset. Apart from that it also demonstrates how
+                robustness techniques can be used in conjunction with attribution algorithms.
+                Find the tutorial <a href="CIFAR_Captum_Robustness">here</a>.
+
+                <h4>TCAV for image classification for googlenet model:</h4>
+                This tutorial demonstrates how to apply Testing with Concept Activation Vectors (TCAV) algorithm on image classification problem.
+                It uses googlenet model and imagenet images to showcase the effectiveness of TCAV algorithm on interpreting zebra predictions through
+                stripes concepts.
+                Find the tutorial <a href="TCAV_Image">here</a>.
+
+                <h4>TCAV for NLP sentiment analysis model:</h4>
+                This tutorial demonstrates how to apply TCAV algorithm for a NLP task using movie rating dataset and a CNN-based binary
+                sentiment classification model. It showcases that `positive adjectives` concept plays a significant role in predicting
+                positive sentiment.
+                Find the tutorial <a href="TCAV_NLP">here</a>.
               </p>
             </body>
           </div>
