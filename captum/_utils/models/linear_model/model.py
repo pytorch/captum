@@ -1,10 +1,9 @@
 from typing import Callable, List, Optional, cast
 
 import torch.nn as nn
+from captum._utils.models.model import Model
 from torch import Tensor
 from torch.utils.data import DataLoader
-
-from captum._utils.models.model import Model
 
 
 class LinearModel(nn.Module, Model):

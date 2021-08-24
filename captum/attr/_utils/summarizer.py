@@ -3,10 +3,9 @@
 from typing import Dict, List, Optional, Tuple, Type, Union
 
 import torch
-from torch import Tensor
-
 from captum.attr._utils.stat import MSE, Count, Max, Mean, Min, Stat, StdDev, Sum, Var
 from captum.log import log_usage
+from torch import Tensor
 
 
 class Summarizer:

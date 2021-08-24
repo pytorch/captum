@@ -15,8 +15,6 @@ from typing import (
     cast,
 )
 
-from torch import Tensor
-
 from captum._utils.common import (
     _expand_additional_forward_args,
     _format_additional_forward_args,
@@ -24,6 +22,7 @@ from captum._utils.common import (
 )
 from captum.attr import Max, Mean, Min, Summarizer
 from captum.robust._core.perturbation import Perturbation
+from torch import Tensor
 
 ORIGINAL_KEY = "Original"
 

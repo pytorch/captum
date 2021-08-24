@@ -6,9 +6,6 @@ from collections import defaultdict
 from typing import Any, Callable, Dict, List, Optional, Tuple, Union, cast
 
 import torch
-from torch import Tensor, device
-from torch.nn import Module
-
 from captum._utils.common import (
     _reduce_list,
     _run_forward,
@@ -21,6 +18,8 @@ from captum._utils.typing import (
     TargetType,
     TensorOrTupleOfTensorsGeneric,
 )
+from torch import Tensor, device
+from torch.nn import Module
 
 
 def apply_gradient_requirements(

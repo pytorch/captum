@@ -5,10 +5,6 @@ from collections import defaultdict
 from typing import Any, List, Tuple, Union, cast
 
 import torch.nn as nn
-from torch import Tensor
-from torch.nn import Module
-from torch.utils.hooks import RemovableHandle
-
 from captum._utils.common import _format_input, _format_output, _is_tuple, _run_forward
 from captum._utils.gradient import (
     apply_gradient_requirements,
@@ -20,6 +16,9 @@ from captum.attr._utils.common import _sum_rows
 from captum.attr._utils.custom_modules import Addition_Module
 from captum.attr._utils.lrp_rules import EpsilonRule, PropagationRule
 from captum.log import log_usage
+from torch import Tensor
+from torch.nn import Module
+from torch.utils.hooks import RemovableHandle
 
 
 class LRP(GradientAttribution):

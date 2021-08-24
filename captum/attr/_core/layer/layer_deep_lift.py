@@ -3,9 +3,6 @@ import typing
 from typing import Any, Callable, Sequence, Tuple, Union, cast
 
 import torch
-from torch import Tensor
-from torch.nn import Module
-
 from captum._utils.common import (
     ExpansionTypes,
     _expand_target,
@@ -30,6 +27,8 @@ from captum.attr._utils.common import (
     _validate_input,
 )
 from captum.log import log_usage
+from torch import Tensor
+from torch.nn import Module
 
 
 class LayerDeepLift(LayerAttribution, DeepLift):

@@ -1,14 +1,13 @@
 #!/usr/bin/env python3
 from typing import Any, Callable, Tuple, Union, cast
 
-from torch import Tensor
-from torch.nn import Module
-
 from captum._utils.gradient import construct_neuron_grad_fn
 from captum._utils.typing import BaselineType, TensorOrTupleOfTensorsGeneric
 from captum.attr._core.deep_lift import DeepLift, DeepLiftShap
 from captum.attr._utils.attribution import GradientAttribution, NeuronAttribution
 from captum.log import log_usage
+from torch import Tensor
+from torch.nn import Module
 
 
 class NeuronDeepLift(NeuronAttribution, GradientAttribution):

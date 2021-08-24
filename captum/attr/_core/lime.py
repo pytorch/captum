@@ -6,10 +6,6 @@ import warnings
 from typing import Any, Callable, List, Optional, Tuple, Union, cast
 
 import torch
-from torch import Tensor
-from torch.nn import CosineSimilarity
-from torch.utils.data import DataLoader, TensorDataset
-
 from captum._utils.common import (
     _expand_additional_forward_args,
     _expand_target,
@@ -36,6 +32,9 @@ from captum.attr._utils.common import (
     _format_input_baseline,
 )
 from captum.log import log_usage
+from torch import Tensor
+from torch.nn import CosineSimilarity
+from torch.utils.data import DataLoader, TensorDataset
 
 
 class LimeBase(PerturbationAttribution):

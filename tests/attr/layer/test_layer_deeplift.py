@@ -5,8 +5,6 @@ from __future__ import print_function
 from typing import List, Tuple, Union, cast
 
 import torch
-from torch import Tensor
-
 from captum.attr._core.layer.layer_deep_lift import LayerDeepLift, LayerDeepLiftShap
 from tests.helpers.basic import (
     BaseTest,
@@ -23,6 +21,7 @@ from tests.helpers.basic_models import (
     LinearMaxPoolLinearModel,
     ReLULinearModel,
 )
+from torch import Tensor
 
 
 class TestDeepLift(BaseTest):

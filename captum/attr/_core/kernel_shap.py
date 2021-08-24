@@ -3,14 +3,13 @@
 from typing import Any, Callable, Generator, Tuple, Union
 
 import torch
-from torch import Tensor
-from torch.distributions.categorical import Categorical
-
 from captum._utils.models.linear_model import SkLearnLinearRegression
 from captum._utils.typing import BaselineType, TargetType, TensorOrTupleOfTensorsGeneric
 from captum.attr._core.lime import Lime, construct_feature_mask
 from captum.attr._utils.common import _format_input_baseline
 from captum.log import log_usage
+from torch import Tensor
+from torch.distributions.categorical import Categorical
 
 
 class KernelShap(Lime):

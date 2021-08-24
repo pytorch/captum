@@ -3,9 +3,6 @@ import warnings
 from typing import Any, Callable, List, Tuple, Union
 
 import torch
-from torch import Tensor
-from torch.nn import Module
-
 from captum._utils.common import (
     _expand_additional_forward_args,
     _expand_target,
@@ -25,6 +22,8 @@ from captum.attr._utils.common import (
     _validate_input,
 )
 from captum.log import log_usage
+from torch import Tensor
+from torch.nn import Module
 
 
 class NeuronConductance(NeuronAttribution, GradientAttribution):

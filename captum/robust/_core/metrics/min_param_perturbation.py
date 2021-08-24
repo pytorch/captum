@@ -4,8 +4,6 @@ from enum import Enum
 from typing import Any, Callable, Dict, Generator, List, Optional, Tuple, Union, cast
 
 import torch
-from torch import Tensor
-
 from captum._utils.common import (
     _expand_additional_forward_args,
     _format_additional_forward_args,
@@ -13,6 +11,7 @@ from captum._utils.common import (
 )
 from captum._utils.typing import TargetType
 from captum.robust._core.perturbation import Perturbation
+from torch import Tensor
 
 
 def drange(

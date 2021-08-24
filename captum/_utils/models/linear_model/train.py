@@ -4,9 +4,8 @@ from typing import Any, Callable, Dict, List, Optional
 
 import torch
 import torch.nn as nn
-from torch.utils.data import DataLoader
-
 from captum._utils.models.linear_model.model import LinearModel
+from torch.utils.data import DataLoader
 
 
 def l2_loss(x1, x2, weights=None):

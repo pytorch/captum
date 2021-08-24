@@ -3,9 +3,6 @@ import unittest
 from typing import Any, List, Tuple, Union
 
 import torch
-from torch import Tensor
-from torch.nn import Module
-
 from captum._utils.typing import ModuleOrModuleList
 from captum.attr._core.layer.layer_activation import LayerActivation
 from captum.attr._core.layer.layer_gradient_x_activation import LayerGradientXActivation
@@ -15,6 +12,8 @@ from tests.helpers.basic_models import (
     BasicModel_MultiLayer,
     BasicModel_MultiLayer_MultiInput,
 )
+from torch import Tensor
+from torch.nn import Module
 
 
 class Test(BaseTest):

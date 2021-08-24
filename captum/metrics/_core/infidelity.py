@@ -3,8 +3,6 @@
 from typing import Any, Callable, Tuple, Union, cast
 
 import torch
-from torch import Tensor
-
 from captum._utils.common import (
     ExpansionTypes,
     _expand_additional_forward_args,
@@ -19,6 +17,7 @@ from captum._utils.common import (
 from captum._utils.typing import BaselineType, TargetType, TensorOrTupleOfTensorsGeneric
 from captum.log import log_usage
 from captum.metrics._utils.batching import _divide_and_aggregate_metrics
+from torch import Tensor
 
 
 def infidelity_perturb_func_decorator(multipy_by_inputs: bool = True) -> Callable:

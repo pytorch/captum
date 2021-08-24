@@ -2,9 +2,6 @@
 import typing
 from typing import Any, List, Tuple, Union, cast
 
-from torch import Tensor
-from torch.nn import Module
-
 from captum._utils.common import _format_input, _reduce_list, _sort_key_list
 from captum._utils.gradient import (
     apply_gradient_requirements,
@@ -19,6 +16,8 @@ from captum._utils.typing import (
 )
 from captum.attr._core.lrp import LRP
 from captum.attr._utils.attribution import LayerAttribution
+from torch import Tensor
+from torch.nn import Module
 
 
 class LayerLRP(LRP, LayerAttribution):

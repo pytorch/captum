@@ -7,9 +7,6 @@ from typing import Any, Callable, Dict, List, Tuple, Union, cast, overload
 
 import numpy as np
 import torch
-from torch import Tensor, device
-from torch.nn import Module
-
 from captum._utils.typing import (
     BaselineType,
     Literal,
@@ -17,6 +14,8 @@ from captum._utils.typing import (
     TensorOrTupleOfTensorsGeneric,
     TupleOrTensorOrBoolGeneric,
 )
+from torch import Tensor, device
+from torch.nn import Module
 
 
 class ExpansionTypes(Enum):

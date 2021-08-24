@@ -6,8 +6,6 @@ import warnings
 from typing import Any, Callable, Iterable, Sequence, Tuple, Union
 
 import torch
-from torch import Tensor
-
 from captum._utils.common import (
     _expand_additional_forward_args,
     _expand_target,
@@ -27,6 +25,7 @@ from captum.attr._utils.common import (
     _tensorize_baseline,
 )
 from captum.log import log_usage
+from torch import Tensor
 
 
 def _all_perm_generator(num_features: int, num_samples: int) -> Iterable[Sequence[int]]:
