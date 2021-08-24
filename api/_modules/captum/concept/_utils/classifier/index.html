@@ -33,10 +33,9 @@
 <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Union</span>
 
 <span class="kn">import</span> <span class="nn">torch</span>
+<span class="kn">from</span> <span class="nn">captum._utils.models.linear_model</span> <span class="kn">import</span> <span class="n">model</span>
 <span class="kn">from</span> <span class="nn">torch</span> <span class="kn">import</span> <span class="n">Tensor</span>
 <span class="kn">from</span> <span class="nn">torch.utils.data</span> <span class="kn">import</span> <span class="n">DataLoader</span><span class="p">,</span> <span class="n">TensorDataset</span>
-
-<span class="kn">from</span> <span class="nn">captum._utils.models.linear_model</span> <span class="kn">import</span> <span class="n">model</span>
 
 
 <div class="viewcode-block" id="Classifier"><a class="viewcode-back" href="../../../../concept.html#captum.concept.Classifier">[docs]</a><span class="k">class</span> <span class="nc">Classifier</span><span class="p">(</span><span class="n">ABC</span><span class="p">):</span>
@@ -197,16 +196,17 @@
             <span class="n">inputs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">input</span><span class="p">)</span>
             <span class="n">labels</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">label</span><span class="p">)</span>
 
+        <span class="n">device</span> <span class="o">=</span> <span class="s2">"cpu"</span> <span class="k">if</span> <span class="nb">input</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="nb">input</span><span class="o">.</span><span class="n">device</span>
         <span class="n">x_train</span><span class="p">,</span> <span class="n">x_test</span><span class="p">,</span> <span class="n">y_train</span><span class="p">,</span> <span class="n">y_test</span> <span class="o">=</span> <span class="n">_train_test_split</span><span class="p">(</span>
             <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">(</span><span class="n">inputs</span><span class="p">),</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">(</span><span class="n">labels</span><span class="p">),</span> <span class="n">test_split</span><span class="o">=</span><span class="n">test_split_ratio</span>
         <span class="p">)</span>
-
+        <span class="bp">self</span><span class="o">.</span><span class="n">lm</span><span class="o">.</span><span class="n">device</span> <span class="o">=</span> <span class="n">device</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">lm</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">DataLoader</span><span class="p">(</span><span class="n">TensorDataset</span><span class="p">(</span><span class="n">x_train</span><span class="p">,</span> <span class="n">y_train</span><span class="p">)))</span>
 
         <span class="n">predict</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">lm</span><span class="p">(</span><span class="n">x_test</span><span class="p">)</span>
 
         <span class="n">predict</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">lm</span><span class="o">.</span><span class="n">classes</span><span class="p">()[</span><span class="n">torch</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">predict</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)]</span>
-        <span class="n">score</span> <span class="o">=</span> <span class="n">predict</span><span class="o">.</span><span class="n">long</span><span class="p">()</span> <span class="o">==</span> <span class="n">y_test</span><span class="o">.</span><span class="n">long</span><span class="p">()</span>
+        <span class="n">score</span> <span class="o">=</span> <span class="n">predict</span><span class="o">.</span><span class="n">long</span><span class="p">()</span> <span class="o">==</span> <span class="n">y_test</span><span class="o">.</span><span class="n">long</span><span class="p">()</span><span class="o">.</span><span class="n">cpu</span><span class="p">()</span>
 
         <span class="n">accs</span> <span class="o">=</span> <span class="n">score</span><span class="o">.</span><span class="n">float</span><span class="p">()</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
 

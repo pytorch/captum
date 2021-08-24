@@ -33,9 +33,6 @@
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">torch</span>
 <span class="kn">import</span> <span class="nn">torch.multiprocessing</span> <span class="k">as</span> <span class="nn">multiprocessing</span>
-<span class="kn">from</span> <span class="nn">torch</span> <span class="kn">import</span> <span class="n">Tensor</span>
-<span class="kn">from</span> <span class="nn">torch.nn</span> <span class="kn">import</span> <span class="n">Module</span>
-
 <span class="kn">from</span> <span class="nn">captum._utils.common</span> <span class="kn">import</span> <span class="n">_format_tensor_into_tuples</span><span class="p">,</span> <span class="n">_get_module_from_name</span>
 <span class="kn">from</span> <span class="nn">captum._utils.typing</span> <span class="kn">import</span> <span class="n">TargetType</span><span class="p">,</span> <span class="n">TensorOrTupleOfTensorsGeneric</span>
 <span class="kn">from</span> <span class="nn">captum.attr</span> <span class="kn">import</span> <span class="n">LayerActivation</span><span class="p">,</span> <span class="n">LayerAttribution</span><span class="p">,</span> <span class="n">LayerGradientXActivation</span>
@@ -44,6 +41,8 @@
 <span class="kn">from</span> <span class="nn">captum.concept._core.concept</span> <span class="kn">import</span> <span class="n">Concept</span><span class="p">,</span> <span class="n">ConceptInterpreter</span>
 <span class="kn">from</span> <span class="nn">captum.concept._utils.classifier</span> <span class="kn">import</span> <span class="n">Classifier</span><span class="p">,</span> <span class="n">DefaultClassifier</span>
 <span class="kn">from</span> <span class="nn">captum.concept._utils.common</span> <span class="kn">import</span> <span class="n">concepts_to_str</span>
+<span class="kn">from</span> <span class="nn">torch</span> <span class="kn">import</span> <span class="n">Tensor</span>
+<span class="kn">from</span> <span class="nn">torch.nn</span> <span class="kn">import</span> <span class="n">Module</span>
 
 
 <span class="k">def</span> <span class="nf">train_cav</span><span class="p">(</span>
@@ -667,7 +666,9 @@
 
             <span class="c1"># sort classes / concepts in the order specified in concept_keys</span>
             <span class="n">concept_ord</span> <span class="o">=</span> <span class="p">{</span><span class="n">concept</span><span class="o">.</span><span class="n">id</span><span class="p">:</span> <span class="n">ci</span> <span class="k">for</span> <span class="n">ci</span><span class="p">,</span> <span class="n">concept</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">concepts</span><span class="p">)}</span>
-            <span class="n">new_ord</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">([</span><span class="n">concept_ord</span><span class="p">[</span><span class="bp">cls</span><span class="p">]</span> <span class="k">for</span> <span class="bp">cls</span> <span class="ow">in</span> <span class="n">cls_set</span><span class="p">])</span>
+            <span class="n">new_ord</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span>
+                <span class="p">[</span><span class="n">concept_ord</span><span class="p">[</span><span class="bp">cls</span><span class="p">]</span> <span class="k">for</span> <span class="bp">cls</span> <span class="ow">in</span> <span class="n">cls_set</span><span class="p">],</span> <span class="n">device</span><span class="o">=</span><span class="n">tcav_score</span><span class="o">.</span><span class="n">device</span>
+            <span class="p">)</span>
 
             <span class="c1"># sort based on classes</span>
             <span class="n">scores</span><span class="p">[</span><span class="n">concepts_key</span><span class="p">][</span><span class="n">layer</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>

@@ -30,12 +30,11 @@
 
 <span class="kn">import</span> <span class="nn">torch</span>
 <span class="kn">import</span> <span class="nn">torch.nn.functional</span> <span class="k">as</span> <span class="nn">F</span>
-<span class="kn">from</span> <span class="nn">torch</span> <span class="kn">import</span> <span class="n">Tensor</span>
-
 <span class="kn">from</span> <span class="nn">captum._utils.common</span> <span class="kn">import</span> <span class="n">_format_input</span><span class="p">,</span> <span class="n">_format_output</span><span class="p">,</span> <span class="n">_is_tuple</span>
 <span class="kn">from</span> <span class="nn">captum._utils.typing</span> <span class="kn">import</span> <span class="n">TensorOrTupleOfTensorsGeneric</span>
 <span class="kn">from</span> <span class="nn">captum.robust._core.fgsm</span> <span class="kn">import</span> <span class="n">FGSM</span>
 <span class="kn">from</span> <span class="nn">captum.robust._core.perturbation</span> <span class="kn">import</span> <span class="n">Perturbation</span>
+<span class="kn">from</span> <span class="nn">torch</span> <span class="kn">import</span> <span class="n">Tensor</span>
 
 
 <div class="viewcode-block" id="PGD"><a class="viewcode-back" href="../../../../robust.html#captum.robust.PGD">[docs]</a><span class="k">class</span> <span class="nc">PGD</span><span class="p">(</span><span class="n">Perturbation</span><span class="p">):</span>

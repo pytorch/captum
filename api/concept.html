@@ -386,9 +386,11 @@ adjectives and words that convey happiness.</p>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>id</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a>) – The unique identifier of the concept.</p></li>
 <li><p><strong>name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – A unique name of the concept.</p></li>
-<li><p><strong>data_iter</strong> (<em>iter</em>) – A pytorch Dataloader object. Combines a dataset
+<li><p><strong>data_iter</strong> (<em>DataLoader</em>) – A pytorch DataLoader object that combines a dataset
 and a sampler, and provides an iterable over a given
-dataset. For more information, please check:
+dataset. Only the input batches are provided by <cite>data_iter</cite>.
+Concept ids can be used as labels if necessary.
+For more information, please check:
 <a class="reference external" href="https://pytorch.org/docs/stable/data.html">https://pytorch.org/docs/stable/data.html</a></p></li>
 </ul>
 </dd>

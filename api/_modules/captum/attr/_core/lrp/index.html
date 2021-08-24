@@ -32,10 +32,6 @@
 <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Union</span><span class="p">,</span> <span class="n">cast</span>
 
 <span class="kn">import</span> <span class="nn">torch.nn</span> <span class="k">as</span> <span class="nn">nn</span>
-<span class="kn">from</span> <span class="nn">torch</span> <span class="kn">import</span> <span class="n">Tensor</span>
-<span class="kn">from</span> <span class="nn">torch.nn</span> <span class="kn">import</span> <span class="n">Module</span>
-<span class="kn">from</span> <span class="nn">torch.utils.hooks</span> <span class="kn">import</span> <span class="n">RemovableHandle</span>
-
 <span class="kn">from</span> <span class="nn">captum._utils.common</span> <span class="kn">import</span> <span class="n">_format_input</span><span class="p">,</span> <span class="n">_format_output</span><span class="p">,</span> <span class="n">_is_tuple</span><span class="p">,</span> <span class="n">_run_forward</span>
 <span class="kn">from</span> <span class="nn">captum._utils.gradient</span> <span class="kn">import</span> <span class="p">(</span>
     <span class="n">apply_gradient_requirements</span><span class="p">,</span>
@@ -47,6 +43,9 @@
 <span class="kn">from</span> <span class="nn">captum.attr._utils.custom_modules</span> <span class="kn">import</span> <span class="n">Addition_Module</span>
 <span class="kn">from</span> <span class="nn">captum.attr._utils.lrp_rules</span> <span class="kn">import</span> <span class="n">EpsilonRule</span><span class="p">,</span> <span class="n">PropagationRule</span>
 <span class="kn">from</span> <span class="nn">captum.log</span> <span class="kn">import</span> <span class="n">log_usage</span>
+<span class="kn">from</span> <span class="nn">torch</span> <span class="kn">import</span> <span class="n">Tensor</span>
+<span class="kn">from</span> <span class="nn">torch.nn</span> <span class="kn">import</span> <span class="n">Module</span>
+<span class="kn">from</span> <span class="nn">torch.utils.hooks</span> <span class="kn">import</span> <span class="n">RemovableHandle</span>
 
 
 <div class="viewcode-block" id="LRP"><a class="viewcode-back" href="../../../../lrp.html#captum.attr.LRP">[docs]</a><span class="k">class</span> <span class="nc">LRP</span><span class="p">(</span><span class="n">GradientAttribution</span><span class="p">):</span>
@@ -309,8 +308,10 @@
             <span class="k">else</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
                     <span class="p">(</span>
-                        <span class="sa">f</span><span class="s2">"Module type </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">layer</span><span class="p">)</span><span class="si">}</span><span class="s2"> is not supported."</span>
-                        <span class="s2">"No default rule defined."</span>
+                        <span class="sa">f</span><span class="s2">"Module of type </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">layer</span><span class="p">)</span><span class="si">}</span><span class="s2"> has no rule defined and no"</span>
+                        <span class="s2">"default rule exists for this module type. Please, set a rule"</span>
+                        <span class="s2">"explicitly for this module and assure that it is appropriate"</span>
+                        <span class="s2">"for this type of layer."</span>
                     <span class="p">)</span>
                 <span class="p">)</span>
 

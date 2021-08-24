@@ -27,8 +27,9 @@
 <h1>Source code for captum.concept._core.concept</h1><div class="highlight"><pre>
 <span></span><span class="ch">#!/usr/bin/env python3</span>
 
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">Union</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Union</span>
 
+<span class="kn">import</span> <span class="nn">torch</span>
 <span class="kn">from</span> <span class="nn">torch.nn</span> <span class="kn">import</span> <span class="n">Module</span>
 
 
@@ -45,15 +46,19 @@
 <span class="sd">    adjectives and words that convey happiness.</span>
 <span class="sd">    """</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">id</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">data_iter</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="nb">id</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">data_iter</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">DataLoader</span><span class="p">]</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 
         <span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        Args:</span>
 <span class="sd">            id (int):   The unique identifier of the concept.</span>
 <span class="sd">            name (str): A unique name of the concept.</span>
-<span class="sd">            data_iter (iter): A pytorch Dataloader object. Combines a dataset</span>
+<span class="sd">            data_iter (DataLoader): A pytorch DataLoader object that combines a dataset</span>
 <span class="sd">                        and a sampler, and provides an iterable over a given</span>
-<span class="sd">                        dataset. For more information, please check:</span>
+<span class="sd">                        dataset. Only the input batches are provided by `data_iter`.</span>
+<span class="sd">                        Concept ids can be used as labels if necessary.</span>
+<span class="sd">                        For more information, please check:</span>
 <span class="sd">                        https://pytorch.org/docs/stable/data.html</span>
 
 <span class="sd">        Example::</span>

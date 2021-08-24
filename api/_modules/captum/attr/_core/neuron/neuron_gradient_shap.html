@@ -28,13 +28,12 @@
 <span></span><span class="ch">#!/usr/bin/env python3</span>
 <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Union</span>
 
-<span class="kn">from</span> <span class="nn">torch.nn</span> <span class="kn">import</span> <span class="n">Module</span>
-
 <span class="kn">from</span> <span class="nn">captum._utils.gradient</span> <span class="kn">import</span> <span class="n">construct_neuron_grad_fn</span>
 <span class="kn">from</span> <span class="nn">captum._utils.typing</span> <span class="kn">import</span> <span class="n">TensorOrTupleOfTensorsGeneric</span>
 <span class="kn">from</span> <span class="nn">captum.attr._core.gradient_shap</span> <span class="kn">import</span> <span class="n">GradientShap</span>
 <span class="kn">from</span> <span class="nn">captum.attr._utils.attribution</span> <span class="kn">import</span> <span class="n">GradientAttribution</span><span class="p">,</span> <span class="n">NeuronAttribution</span>
 <span class="kn">from</span> <span class="nn">captum.log</span> <span class="kn">import</span> <span class="n">log_usage</span>
+<span class="kn">from</span> <span class="nn">torch.nn</span> <span class="kn">import</span> <span class="n">Module</span>
 
 
 <div class="viewcode-block" id="NeuronGradientShap"><a class="viewcode-back" href="../../../../../neuron.html#captum.attr.NeuronGradientShap">[docs]</a><span class="k">class</span> <span class="nc">NeuronGradientShap</span><span class="p">(</span><span class="n">NeuronAttribution</span><span class="p">,</span> <span class="n">GradientAttribution</span><span class="p">):</span>

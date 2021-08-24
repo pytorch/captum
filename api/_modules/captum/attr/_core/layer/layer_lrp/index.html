@@ -29,9 +29,6 @@
 <span class="kn">import</span> <span class="nn">typing</span>
 <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Union</span><span class="p">,</span> <span class="n">cast</span>
 
-<span class="kn">from</span> <span class="nn">torch</span> <span class="kn">import</span> <span class="n">Tensor</span>
-<span class="kn">from</span> <span class="nn">torch.nn</span> <span class="kn">import</span> <span class="n">Module</span>
-
 <span class="kn">from</span> <span class="nn">captum._utils.common</span> <span class="kn">import</span> <span class="n">_format_input</span><span class="p">,</span> <span class="n">_reduce_list</span><span class="p">,</span> <span class="n">_sort_key_list</span>
 <span class="kn">from</span> <span class="nn">captum._utils.gradient</span> <span class="kn">import</span> <span class="p">(</span>
     <span class="n">apply_gradient_requirements</span><span class="p">,</span>
@@ -46,6 +43,8 @@
 <span class="p">)</span>
 <span class="kn">from</span> <span class="nn">captum.attr._core.lrp</span> <span class="kn">import</span> <span class="n">LRP</span>
 <span class="kn">from</span> <span class="nn">captum.attr._utils.attribution</span> <span class="kn">import</span> <span class="n">LayerAttribution</span>
+<span class="kn">from</span> <span class="nn">torch</span> <span class="kn">import</span> <span class="n">Tensor</span>
+<span class="kn">from</span> <span class="nn">torch.nn</span> <span class="kn">import</span> <span class="n">Module</span>
 
 
 <div class="viewcode-block" id="LayerLRP"><a class="viewcode-back" href="../../../../../layer.html#captum.attr.LayerLRP">[docs]</a><span class="k">class</span> <span class="nc">LayerLRP</span><span class="p">(</span><span class="n">LRP</span><span class="p">,</span> <span class="n">LayerAttribution</span><span class="p">):</span>

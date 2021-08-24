@@ -30,14 +30,13 @@
 <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Generator</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Union</span>
 
 <span class="kn">import</span> <span class="nn">torch</span>
-<span class="kn">from</span> <span class="nn">torch</span> <span class="kn">import</span> <span class="n">Tensor</span>
-<span class="kn">from</span> <span class="nn">torch.distributions.categorical</span> <span class="kn">import</span> <span class="n">Categorical</span>
-
 <span class="kn">from</span> <span class="nn">captum._utils.models.linear_model</span> <span class="kn">import</span> <span class="n">SkLearnLinearRegression</span>
 <span class="kn">from</span> <span class="nn">captum._utils.typing</span> <span class="kn">import</span> <span class="n">BaselineType</span><span class="p">,</span> <span class="n">TargetType</span><span class="p">,</span> <span class="n">TensorOrTupleOfTensorsGeneric</span>
 <span class="kn">from</span> <span class="nn">captum.attr._core.lime</span> <span class="kn">import</span> <span class="n">Lime</span><span class="p">,</span> <span class="n">construct_feature_mask</span>
 <span class="kn">from</span> <span class="nn">captum.attr._utils.common</span> <span class="kn">import</span> <span class="n">_format_input_baseline</span>
 <span class="kn">from</span> <span class="nn">captum.log</span> <span class="kn">import</span> <span class="n">log_usage</span>
+<span class="kn">from</span> <span class="nn">torch</span> <span class="kn">import</span> <span class="n">Tensor</span>
+<span class="kn">from</span> <span class="nn">torch.distributions.categorical</span> <span class="kn">import</span> <span class="n">Categorical</span>
 
 
 <div class="viewcode-block" id="KernelShap"><a class="viewcode-back" href="../../../../kernel_shap.html#captum.attr.KernelShap">[docs]</a><span class="k">class</span> <span class="nc">KernelShap</span><span class="p">(</span><span class="n">Lime</span><span class="p">):</span>
