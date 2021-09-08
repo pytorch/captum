@@ -32,7 +32,7 @@ def safe_div(
     A simple utility function to perform `numerator / denom`
     if the statement is undefined => result will be `numerator / default_denorm`
     """
-    if not torch.is_tensor(denom):
+    if isinstance(denom, (int, float)):
         return numerator / (denom if denom != 0 else default_denom)
 
     # convert default_denom to tensor if it is float
