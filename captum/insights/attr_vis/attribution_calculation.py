@@ -151,7 +151,8 @@ class AttributionCalculation:
 
         # normalise the contribution, s.t. sum(abs(x_i)) = 1
         norm = torch.norm(net_contrib, p=1)
-        net_contrib = safe_div(net_contrib, norm, default_value=net_contrib)
+        # if norm is 0, all net_contrib elements are 0
+        net_contrib = safe_div(net_contrib, norm)
 
         return net_contrib.tolist()
 
