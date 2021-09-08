@@ -13,7 +13,7 @@ class Test(BaseTest):
         assert safe_div(num, 2) == 2.0
         assert safe_div(num, 0, 2) == 2.0
         assert safe_div(num, 2.0) == 2.0
-        assert safe_div(num, 0., 2.0) == 2.0
+        assert safe_div(num, 0.0, 2.0) == 2.0
 
     def test_safe_div_tensor_denom(self):
         num = torch.tensor([4.0, 6.0])
