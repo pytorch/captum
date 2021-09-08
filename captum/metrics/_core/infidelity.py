@@ -350,12 +350,14 @@ def infidelity(
         normalize (bool, optional): Normalize the dot product of the input
                 perturbation and the attribution so the infidelity value is invariant
                 to constant scaling of the attribution values. The normalization factor
-                beta is defined as the ratio of two mean values:
-                $$ \beta = \frac{
-                    \mathbb{E}_{I \sim \mu_I} [ I^T \Phi(f, x) (f(x) - f(x - I)) ]
-                }{
-                    \mathbb{E}_{I \sim \mu_I} [ (I^T \Phi(f, x))^2 ]
-                } $$.
+                beta is defined as the ratio of two mean values::
+
+                    \beta = \frac{
+                        \mathbb{E}_{I \sim \mu_I} [ I^T \Phi(f, x) (f(x) - f(x - I)) ]
+                    }{
+                        \mathbb{E}_{I \sim \mu_I} [ (I^T \Phi(f, x))^2 ]
+                    }
+
                 Please refer the original paper for the meaning of the symbols. Same
                 normalization can be found in the paper's official implementation
                 https://github.com/chihkuanyeh/saliency_evaluation

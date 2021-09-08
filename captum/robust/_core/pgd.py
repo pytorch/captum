@@ -16,14 +16,17 @@ class PGD(Perturbation):
     FGSM that can generate adversarial examples. It takes multiple gradient
     steps to search for an adversarial perturbation within the desired
     neighbor ball around the original inputs. In a non-targeted attack, the
-    formulation is:
+    formulation is::
+
         x_0 = x
         x_(t+1) = Clip_r(x_t + alpha * sign(gradient of L(theta, x, t)))
+
     where Clip denotes the function that projects its argument to the r-neighbor
     ball around x so that the perturbation will be bounded. Alpha is the step
     size. L(theta, x, y) is the model's loss function with respect to model
     parameters, inputs and targets.
-    In a targeted attack, the formulation is similar:
+    In a targeted attack, the formulation is similar::
+
         x_0 = x
         x_(t+1) = Clip_r(x_t - alpha * sign(gradient of L(theta, x, t)))
 

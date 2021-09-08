@@ -454,18 +454,22 @@ class TCAV(ConceptInterpreter):
                     If the network returns a scalar value per example,
                     no target index is necessary.
                     For general 2D outputs, targets can be either:
-                        - a single integer or a tensor containing a single
-                          integer, which is applied to all input examples
-                        - a list of integers or a 1D tensor, with length matching
-                          the number of examples in inputs (dim 0). Each integer
-                          is applied as the target for the corresponding example.
-                        For outputs with > 2 dimensions, targets can be either:
-                        - A single tuple, which contains #output_dims - 1
-                          elements. This target index is applied to all examples.
-                        - A list of tuples with length equal to the number of
-                          examples in inputs (dim 0), and each tuple containing
-                          #output_dims - 1 elements. Each tuple is applied as the
-                          target for the corresponding example.
+
+                    - a single integer or a tensor containing a single
+                        integer, which is applied to all input examples
+                    - a list of integers or a 1D tensor, with length matching
+                        the number of examples in inputs (dim 0). Each integer
+                        is applied as the target for the corresponding example.
+
+                    For outputs with > 2 dimensions, targets can be either:
+
+                    - A single tuple, which contains #output_dims - 1
+                        elements. This target index is applied to all examples.
+                    - A list of tuples with length equal to the number of
+                        examples in inputs (dim 0), and each tuple containing
+                        #output_dims - 1 elements. Each tuple is applied as the
+                        target for the corresponding example.
+
             additional_forward_args (Any, optional): Extra arguments that are passed to
                      model when computing the attributions for `inputs`
                      w.r.t. layer output.

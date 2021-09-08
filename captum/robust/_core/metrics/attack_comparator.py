@@ -70,9 +70,10 @@ class AttackComparator(Generic[MetricResultType]):
 
             metric (callable): This function is applied to the model output in
                 order to compute the desired performance metric or metrics.
-                This function should have the following signature:
-                    def model_metric(model_out: Tensor, **kwargs: Any)
-                            -> Union[float, Tensor, Tuple[Union[float, Tensor], ...]
+                This function should have the following signature::
+
+                    >>> def model_metric(model_out: Tensor, **kwargs: Any)
+                    >>>     -> Union[float, Tensor, Tuple[Union[float, Tensor], ...]:
 
                 All kwargs provided to evaluate are provided to the metric function,
                 following the model output. A single metric can be returned as
