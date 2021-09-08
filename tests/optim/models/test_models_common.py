@@ -290,3 +290,48 @@ class TestSkipLayersFunction(BaseTest):
         model_utils.skip_layers(model, torch.nn.ReLU)
         output_tensor = model(x)
         assertTensorAlmostEqual(self, x, output_tensor, 0)
+
+
+class TestMaxPool2dRelaxed(BaseTest):
+    def test_maxpool2d_relaxed_forward_data(self) -> None:
+        maxpool_relaxed = model_utils.MaxPool2dRelaxed(
+            kernel_size=3, stride=2, padding=0, ceil_mode=True
+        )
+        maxpool = torch.nn.MaxPool2d(kernel_size=3, stride=2, padding=0, ceil_mode=True)
+
+        test_input = torch.arange(0, 1 * 3 * 8 * 8).view(1, 3, 8, 8).float()
+
+        test_output_relaxed = maxpool_relaxed(test_input.clone())
+        test_output_max = maxpool(test_input.clone())
+
+        assertTensorAlmostEqual(self, test_output_relaxed, test_output_max)
+
+    def test_maxpool2d_relaxed_gradient(self) -> None:
+        maxpool_relaxed = model_utils.MaxPool2dRelaxed(
+            kernel_size=3, stride=2, padding=0, ceil_mode=True
+        )
+        test_input = torch.nn.Parameter(
+            torch.arange(0, 1 * 1 * 4 * 4).view(1, 1, 4, 4).float()
+        )
+
+        test_output = maxpool_relaxed(test_input)
+
+        output_grad = torch.autograd.grad(
+            outputs=[test_output],
+            inputs=[test_input],
+            grad_outputs=[test_output],
+        )[0]
+
+        expected_output = torch.tensor(
+            [
+                [
+                    [
+                        [1.1111, 1.1111, 2.9444, 1.8333],
+                        [1.1111, 1.1111, 2.9444, 1.8333],
+                        [3.4444, 3.4444, 9.0278, 5.5833],
+                        [2.3333, 2.3333, 6.0833, 3.7500],
+                    ]
+                ]
+            ],
+        )
+        assertTensorAlmostEqual(self, output_grad, expected_output, 0.0005)
