@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 import random
 
-import numpy as np
 import torch
 from captum.attr import MSE, Max, Mean, Min, StdDev, Sum, Summarizer, Var
 from tests.helpers.basic import (
@@ -61,9 +60,7 @@ class Test(BaseTest):
                 values.append(BIG_VAL)
                 summ.update(torch.tensor(BIG_VAL, dtype=torch.float64))
 
-            actual_var = torch.var(
-                torch.tensor(values).type(torch.double), unbiased=False
-            )
+            actual_var = torch.var(torch.tensor(values).double(), unbiased=False)
 
             var = summ.summary["variance"]
 
