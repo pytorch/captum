@@ -55,6 +55,8 @@ class TutorialHome extends React.Component {
                 using conductance.  Finally, we analyze a specific
                 neuron to understand feature importance for that specific neuron.  Find the tutorial <a href="Titanic_Basic_Interpret">here</a>.
 
+                <h3>Attribution</h3>
+
                 <h4>Interpreting text models:</h4>
                 In this tutorial we use a pre-trained CNN model for sentiment analysis on an IMDB dataset.
                 We use Captum and Integrated Gradients to interpret model predictions by show which specific
@@ -111,17 +113,6 @@ class TutorialHome extends React.Component {
                 allowing attributions to be computed in a distributed manner across processors, machines or GPUs.
                 Find the tutorial <a href="Distributed_Attribution">here</a>.
 
-
-                <h4>Getting Started with Captum Insights:</h4>
-                This tutorial demonstrates how to use Captum Insights for a vision model in a notebook setting.  A simple pretrained torchvision
-                CNN model is loaded and then used on the CIFAR dataset.  Captum Insights is then loaded to visualize the interpretation of specific examples.
-                Find the tutorial <a href="CIFAR_TorchVision_Captum_Insights">here</a>.
-
-                <h4>Using Captum Insights with multimodal models (VQA):</h4>
-                This tutorial demonstrates how to use Captum Insights for visualizing attributions of a multimodal model, particularly an open
-                source Visual Question Answer (VQA) model.
-                Find the tutorial <a href="Multimodal_VQA_Captum_Insights">here</a>.
-
                 <h4>Intepreting DLRM models with Captum:</h4>
                 This tutorial demonstrates how we use Captum for Deep Learning Recommender Models using
                  <a href="https://github.com/facebookresearch/dlrm">dlrm</a> model published from facebook research and integrated gradients algorithm.
@@ -136,11 +127,15 @@ class TutorialHome extends React.Component {
                 on the word tokens in the input text.
                 Find the tutorial <a href="Image_and_Text_Classification_LIME">here</a>.
 
+                <h3>Robustness</h3>
+
                 <h4>Applying robustness attacks and metrics to CIFAR model and dataset:</h4>
                 This tutorial demonstrates how to apply robustness attacks such as FGSM and PGD as well as robustness metrics such as
                 MinParamPerturbation and AttackComparator to a model trained on CIFAR dataset. Apart from that it also demonstrates how
                 robustness techniques can be used in conjunction with attribution algorithms.
                 Find the tutorial <a href="CIFAR_Captum_Robustness">here</a>.
+
+                <h3>Concept</h3>
 
                 <h4>TCAV for image classification for googlenet model:</h4>
                 This tutorial demonstrates how to apply Testing with Concept Activation Vectors (TCAV) algorithm on image classification problem.
@@ -153,6 +148,18 @@ class TutorialHome extends React.Component {
                 sentiment classification model. It showcases that `positive adjectives` concept plays a significant role in predicting
                 positive sentiment.
                 Find the tutorial <a href="TCAV_NLP">here</a>.
+
+                <h3>Captum Insight</h3>
+
+                <h4>Getting Started with Captum Insights:</h4>
+                This tutorial demonstrates how to use Captum Insights for a vision model in a notebook setting.  A simple pretrained torchvision
+                CNN model is loaded and then used on the CIFAR dataset.  Captum Insights is then loaded to visualize the interpretation of specific examples.
+                Find the tutorial <a href="CIFAR_TorchVision_Captum_Insights">here</a>.
+
+                <h4>Using Captum Insights with multimodal models (VQA):</h4>
+                This tutorial demonstrates how to use Captum Insights for visualizing attributions of a multimodal model, particularly an open
+                source Visual Question Answer (VQA) model.
+                Find the tutorial <a href="Multimodal_VQA_Captum_Insights">here</a>.
               </p>
             </body>
           </div>
