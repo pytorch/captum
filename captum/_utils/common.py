@@ -24,17 +24,24 @@ class ExpansionTypes(Enum):
 
 
 def safe_div(
-    numerator: Tensor, denom: Union[Tensor, float], default_value: Tensor
+    numerator: Tensor,
+    denom: Union[Tensor, int, float],
+    default_denom: Union[Tensor, int, float] = 1.0,
 ) -> Tensor:
     r"""
     A simple utility function to perform `numerator / denom`
-    if the statement is undefined => result will be `default_value`
+    if the statement is undefined => result will be `numerator / default_denorm`
     """
-    if isinstance(denom, float):
-        return numerator / denom if denom != 0.0 else default_value
+    if isinstance(denom, (int, float)):
+        return numerator / (denom if denom != 0 else default_denom)
 
-    # if denominator is a tensor
-    return numerator / torch.where(denom != 0.0, denom, default_value)
+    # convert default_denom to tensor if it is float
+    if not torch.is_tensor(default_denom):
+        default_denom = torch.tensor(
+            default_denom, dtype=denom.dtype, device=denom.device
+        )
+
+    return numerator / torch.where(denom != 0, denom, default_denom)
 
 
 @typing.overload

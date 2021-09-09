@@ -3,11 +3,38 @@
 from typing import List, Tuple, cast
 
 import torch
-from captum._utils.common import _reduce_list, _select_targets, _sort_key_list
+from captum._utils.common import safe_div, _reduce_list, _select_targets, _sort_key_list
 from tests.helpers.basic import BaseTest, assertTensorAlmostEqual
 
 
 class Test(BaseTest):
+    def test_safe_div_number_denom(self):
+        num = torch.tensor(4.0)
+        assert safe_div(num, 2) == 2.0
+        assert safe_div(num, 0, 2) == 2.0
+        assert safe_div(num, 2.0) == 2.0
+        assert safe_div(num, 0.0, 2.0) == 2.0
+
+    def test_safe_div_tensor_denom(self):
+        num = torch.tensor([4.0, 6.0])
+
+        exp = torch.tensor([2.0, 3.0])
+        assert (safe_div(num, torch.tensor([2.0, 2.0])) == exp).all()
+
+        # tensor default denom
+        assert (safe_div(num, torch.tensor([0.0, 0.0]), torch.tensor(2.0)) == exp).all()
+        assert (
+            safe_div(
+                num,
+                torch.tensor([0.0, 0.0]),
+                torch.tensor([2.0, 2.0]),
+            )
+            == exp
+        ).all()
+
+        # float default denom
+        assert (safe_div(num, torch.tensor([0.0, 0.0]), 2.0) == exp).all()
+
     def test_reduce_list_tensors(self):
         tensors = [torch.tensor([[3, 4, 5]]), torch.tensor([[0, 1, 2]])]
         reduced = _reduce_list(tensors)

@@ -82,7 +82,7 @@ def infidelity_perturb_func_decorator(multipy_by_inputs: bool = True) -> Callabl
                     safe_div(
                         input - input_perturbed,
                         input,
-                        torch.tensor(1.0, device=input.device),
+                        default_denom=1.0,
                     )
                     if multipy_by_inputs
                     else input - input_perturbed
@@ -93,7 +93,7 @@ def infidelity_perturb_func_decorator(multipy_by_inputs: bool = True) -> Callabl
                     safe_div(
                         input - input_perturbed,
                         input - baseline,
-                        torch.tensor(1.0, device=input.device),
+                        default_denom=1.0,
                     )
                     if multipy_by_inputs
                     else input - input_perturbed
@@ -567,11 +567,7 @@ def infidelity(
         beta_num = agg_tensors[1]
         beta_denorm = agg_tensors[0]
 
-        beta = safe_div(
-            beta_num,
-            beta_denorm,
-            torch.tensor(1.0, dtype=beta_denorm.dtype, device=beta_denorm.device),
-        )
+        beta = safe_div(beta_num, beta_denorm)
 
         infidelity_values = (
             beta ** 2 * agg_tensors[0] - 2 * beta * agg_tensors[1] + agg_tensors[2]
