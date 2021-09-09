@@ -61,8 +61,9 @@ class Test(BaseTest):
                 values.append(BIG_VAL)
                 summ.update(torch.tensor(BIG_VAL, dtype=torch.float64))
 
-            actual_var = np.var(values)
-            actual_var = torch.from_numpy(np.array(actual_var))
+            actual_var = torch.var(
+                torch.tensor(values).type(torch.double), unbiased=False
+            )
 
             var = summ.summary["variance"]
 
@@ -97,7 +98,8 @@ class Test(BaseTest):
     def test_stats_random_data(self):
         N = 1000
         BIG_VAL = 100000
-        values = list(get_values(lo=-BIG_VAL, hi=BIG_VAL, n=N))
+        _values = list(get_values(lo=-BIG_VAL, hi=BIG_VAL, n=N))
+        values = torch.tensor(_values, dtype=torch.float64)
         stats_to_test = [
             Mean(),
             Var(),
@@ -121,24 +123,22 @@ class Test(BaseTest):
             "mse",
         ]
         gt_fns = [
-            np.mean,
-            np.var,
-            lambda x: np.var(x, ddof=1),
-            np.std,
-            lambda x: np.std(x, ddof=1),
-            np.min,
-            np.max,
-            np.sum,
-            lambda x: np.sum((x - np.mean(x)) ** 2),
+            torch.mean,
+            lambda x: torch.var(x, unbiased=False),
+            lambda x: torch.var(x, unbiased=True),
+            lambda x: torch.std(x, unbiased=False),
+            lambda x: torch.std(x, unbiased=True),
+            torch.min,
+            torch.max,
+            torch.sum,
+            lambda x: torch.sum((x - torch.mean(x)) ** 2),
         ]
 
         for stat, name, gt in zip(stats_to_test, stat_names, gt_fns):
             summ = Summarizer([stat])
+            actual = gt(values)
             for x in values:
-                summ.update(torch.tensor(x, dtype=torch.float64))
-
-            actual = torch.from_numpy(np.array(gt(values)))
+                summ.update(x)
             stat_val = summ.summary[name]
-
             # rounding errors is a serious issue (moreso for MSE)
             assertTensorAlmostEqual(self, stat_val, actual, delta=0.005)
