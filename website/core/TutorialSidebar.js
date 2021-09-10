@@ -57,8 +57,6 @@ class TutorialSidebar extends React.Component {
     Object.keys(json).forEach(category => {
       const categoryItems = json[category];
       const items = categoryItems.map(item => {
-        console.log('$$$')
-        console.log(item.id)
         if (item.id !== undefined) {
           return {
             type: 'LINK',
