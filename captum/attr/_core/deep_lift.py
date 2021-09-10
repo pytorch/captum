@@ -3,7 +3,6 @@ import typing
 import warnings
 from typing import Any, Callable, List, Tuple, Union, cast
 
-import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -958,7 +957,7 @@ def softmax(
         abs(delta_in) < eps, new_grad_inp[0], grad_output[0] * delta_out / delta_in
     )
     # normalizing
-    n = np.prod(grad_input[0].shape)
+    n = grad_input[0].numel()
 
     # updating only the first half
     new_grad_inp[0] = grad_input_unnorm - grad_input_unnorm.sum() * 1 / n
