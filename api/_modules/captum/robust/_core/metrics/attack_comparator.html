@@ -97,9 +97,10 @@
 
 <span class="sd">            metric (callable): This function is applied to the model output in</span>
 <span class="sd">                order to compute the desired performance metric or metrics.</span>
-<span class="sd">                This function should have the following signature:</span>
-<span class="sd">                    def model_metric(model_out: Tensor, **kwargs: Any)</span>
-<span class="sd">                            -&gt; Union[float, Tensor, Tuple[Union[float, Tensor], ...]</span>
+<span class="sd">                This function should have the following signature::</span>
+
+<span class="sd">                    &gt;&gt;&gt; def model_metric(model_out: Tensor, **kwargs: Any)</span>
+<span class="sd">                    &gt;&gt;&gt;     -&gt; Union[float, Tensor, Tuple[Union[float, Tensor], ...]:</span>
 
 <span class="sd">                All kwargs provided to evaluate are provided to the metric function,</span>
 <span class="sd">                following the model output. A single metric can be returned as</span>

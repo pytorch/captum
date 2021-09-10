@@ -43,14 +43,17 @@
 <span class="sd">    FGSM that can generate adversarial examples. It takes multiple gradient</span>
 <span class="sd">    steps to search for an adversarial perturbation within the desired</span>
 <span class="sd">    neighbor ball around the original inputs. In a non-targeted attack, the</span>
-<span class="sd">    formulation is:</span>
+<span class="sd">    formulation is::</span>
+
 <span class="sd">        x_0 = x</span>
 <span class="sd">        x_(t+1) = Clip_r(x_t + alpha * sign(gradient of L(theta, x, t)))</span>
+
 <span class="sd">    where Clip denotes the function that projects its argument to the r-neighbor</span>
 <span class="sd">    ball around x so that the perturbation will be bounded. Alpha is the step</span>
 <span class="sd">    size. L(theta, x, y) is the model's loss function with respect to model</span>
 <span class="sd">    parameters, inputs and targets.</span>
-<span class="sd">    In a targeted attack, the formulation is similar:</span>
+<span class="sd">    In a targeted attack, the formulation is similar::</span>
+
 <span class="sd">        x_0 = x</span>
 <span class="sd">        x_(t+1) = Clip_r(x_t - alpha * sign(gradient of L(theta, x, t)))</span>
 

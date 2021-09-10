@@ -109,7 +109,7 @@
                     <span class="n">safe_div</span><span class="p">(</span>
                         <span class="nb">input</span> <span class="o">-</span> <span class="n">input_perturbed</span><span class="p">,</span>
                         <span class="nb">input</span><span class="p">,</span>
-                        <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="nb">input</span><span class="o">.</span><span class="n">device</span><span class="p">),</span>
+                        <span class="n">default_denom</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
                     <span class="p">)</span>
                     <span class="k">if</span> <span class="n">multipy_by_inputs</span>
                     <span class="k">else</span> <span class="nb">input</span> <span class="o">-</span> <span class="n">input_perturbed</span>
@@ -120,7 +120,7 @@
                     <span class="n">safe_div</span><span class="p">(</span>
                         <span class="nb">input</span> <span class="o">-</span> <span class="n">input_perturbed</span><span class="p">,</span>
                         <span class="nb">input</span> <span class="o">-</span> <span class="n">baseline</span><span class="p">,</span>
-                        <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="nb">input</span><span class="o">.</span><span class="n">device</span><span class="p">),</span>
+                        <span class="n">default_denom</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
                     <span class="p">)</span>
                     <span class="k">if</span> <span class="n">multipy_by_inputs</span>
                     <span class="k">else</span> <span class="nb">input</span> <span class="o">-</span> <span class="n">input_perturbed</span>
@@ -377,12 +377,14 @@
 <span class="sd">        normalize (bool, optional): Normalize the dot product of the input</span>
 <span class="sd">                perturbation and the attribution so the infidelity value is invariant</span>
 <span class="sd">                to constant scaling of the attribution values. The normalization factor</span>
-<span class="sd">                beta is defined as the ratio of two mean values:</span>
-<span class="sd">                $$ \beta = \frac{</span>
-<span class="sd">                    \mathbb{E}_{I \sim \mu_I} [ I^T \Phi(f, x) (f(x) - f(x - I)) ]</span>
-<span class="sd">                }{</span>
-<span class="sd">                    \mathbb{E}_{I \sim \mu_I} [ (I^T \Phi(f, x))^2 ]</span>
-<span class="sd">                } $$.</span>
+<span class="sd">                beta is defined as the ratio of two mean values::</span>
+
+<span class="sd">                    \beta = \frac{</span>
+<span class="sd">                        \mathbb{E}_{I \sim \mu_I} [ I^T \Phi(f, x) (f(x) - f(x - I)) ]</span>
+<span class="sd">                    }{</span>
+<span class="sd">                        \mathbb{E}_{I \sim \mu_I} [ (I^T \Phi(f, x))^2 ]</span>
+<span class="sd">                    }</span>
+
 <span class="sd">                Please refer the original paper for the meaning of the symbols. Same</span>
 <span class="sd">                normalization can be found in the paper's official implementation</span>
 <span class="sd">                https://github.com/chihkuanyeh/saliency_evaluation</span>
@@ -592,11 +594,7 @@
         <span class="n">beta_num</span> <span class="o">=</span> <span class="n">agg_tensors</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
         <span class="n">beta_denorm</span> <span class="o">=</span> <span class="n">agg_tensors</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
 
-        <span class="n">beta</span> <span class="o">=</span> <span class="n">safe_div</span><span class="p">(</span>
-            <span class="n">beta_num</span><span class="p">,</span>
-            <span class="n">beta_denorm</span><span class="p">,</span>
-            <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">beta_denorm</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">beta_denorm</span><span class="o">.</span><span class="n">device</span><span class="p">),</span>
-        <span class="p">)</span>
+        <span class="n">beta</span> <span class="o">=</span> <span class="n">safe_div</span><span class="p">(</span><span class="n">beta_num</span><span class="p">,</span> <span class="n">beta_denorm</span><span class="p">)</span>
 
         <span class="n">infidelity_values</span> <span class="o">=</span> <span class="p">(</span>
             <span class="n">beta</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">agg_tensors</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">beta</span> <span class="o">*</span> <span class="n">agg_tensors</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">agg_tensors</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>

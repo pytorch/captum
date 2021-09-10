@@ -239,17 +239,15 @@ at least be equal <cite>input batch size</cite> and at most
 <li><p><strong>normalize</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.9)"><em>bool</em></a><em>, </em><em>optional</em>) – <p>Normalize the dot product of the input
 perturbation and the attribution so the infidelity value is invariant
 to constant scaling of the attribution values. The normalization factor
-beta is defined as the ratio of two mean values:
-$$ beta = frac{</p>
-<blockquote>
-<div><p>mathbb{E}_{I sim mu_I} [ I^T Phi(f, x) (f(x) - f(x - I)) ]</p>
-</div></blockquote>
-<dl class="simple">
-<dt>}{</dt><dd><p>mathbb{E}_{I sim mu_I} [ (I^T Phi(f, x))^2 ]</p>
-</dd>
-</dl>
-<p>} $$.
-Please refer the original paper for the meaning of the symbols. Same
+beta is defined as the ratio of two mean values:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>\<span class="n">beta</span> <span class="o">=</span> \<span class="n">frac</span><span class="p">{</span>
+    \<span class="n">mathbb</span><span class="p">{</span><span class="n">E</span><span class="p">}</span><span class="n">_</span><span class="p">{</span><span class="n">I</span> \<span class="n">sim</span> \<span class="n">mu_I</span><span class="p">}</span> <span class="p">[</span> <span class="n">I</span><span class="o">^</span><span class="n">T</span> \<span class="n">Phi</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span> <span class="p">(</span><span class="n">f</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">-</span> <span class="n">f</span><span class="p">(</span><span class="n">x</span> <span class="o">-</span> <span class="n">I</span><span class="p">))</span> <span class="p">]</span>
+<span class="p">}{</span>
+    \<span class="n">mathbb</span><span class="p">{</span><span class="n">E</span><span class="p">}</span><span class="n">_</span><span class="p">{</span><span class="n">I</span> \<span class="n">sim</span> \<span class="n">mu_I</span><span class="p">}</span> <span class="p">[</span> <span class="p">(</span><span class="n">I</span><span class="o">^</span><span class="n">T</span> \<span class="n">Phi</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">x</span><span class="p">))</span><span class="o">^</span><span class="mi">2</span> <span class="p">]</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Please refer the original paper for the meaning of the symbols. Same
 normalization can be found in the paper’s official implementation
 <a class="reference external" href="https://github.com/chihkuanyeh/saliency_evaluation">https://github.com/chihkuanyeh/saliency_evaluation</a></p>
 <p>Default: False</p>

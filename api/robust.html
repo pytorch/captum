@@ -156,19 +156,19 @@ FGSM that can generate adversarial examples. It takes multiple gradient
 steps to search for an adversarial perturbation within the desired
 neighbor ball around the original inputs. In a non-targeted attack, the
 formulation is:</p>
-<blockquote>
-<div><p>x_0 = x
-x_(t+1) = Clip_r(x_t + alpha * sign(gradient of L(theta, x, t)))</p>
-</div></blockquote>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">x_0</span> <span class="o">=</span> <span class="n">x</span>
+<span class="n">x_</span><span class="p">(</span><span class="n">t</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span> <span class="o">=</span> <span class="n">Clip_r</span><span class="p">(</span><span class="n">x_t</span> <span class="o">+</span> <span class="n">alpha</span> <span class="o">*</span> <span class="n">sign</span><span class="p">(</span><span class="n">gradient</span> <span class="n">of</span> <span class="n">L</span><span class="p">(</span><span class="n">theta</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">t</span><span class="p">)))</span>
+</pre></div>
+</div>
 <p>where Clip denotes the function that projects its argument to the r-neighbor
 ball around x so that the perturbation will be bounded. Alpha is the step
 size. L(theta, x, y) is the model’s loss function with respect to model
 parameters, inputs and targets.
 In a targeted attack, the formulation is similar:</p>
-<blockquote>
-<div><p>x_0 = x
-x_(t+1) = Clip_r(x_t - alpha * sign(gradient of L(theta, x, t)))</p>
-</div></blockquote>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">x_0</span> <span class="o">=</span> <span class="n">x</span>
+<span class="n">x_</span><span class="p">(</span><span class="n">t</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span> <span class="o">=</span> <span class="n">Clip_r</span><span class="p">(</span><span class="n">x_t</span> <span class="o">-</span> <span class="n">alpha</span> <span class="o">*</span> <span class="n">sign</span><span class="p">(</span><span class="n">gradient</span> <span class="n">of</span> <span class="n">L</span><span class="p">(</span><span class="n">theta</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">t</span><span class="p">)))</span>
+</pre></div>
+</div>
 <p>More details on Projected Gradient Descent can be found in the original
 paper:
 <a class="reference external" href="https://arxiv.org/pdf/1706.06083.pdf">https://arxiv.org/pdf/1706.06083.pdf</a></p>
@@ -293,12 +293,10 @@ function.</p></li>
 <li><p><strong>metric</strong> (<em>callable</em>) – <p>This function is applied to the model output in
 order to compute the desired performance metric or metrics.
 This function should have the following signature:</p>
-<blockquote>
-<div><dl class="simple">
-<dt>def model_metric(model_out: Tensor, <a href="#id1"><span class="problematic" id="id2">**</span></a>kwargs: Any)</dt><dd><p>-&gt; Union[float, Tensor, Tuple[Union[float, Tensor], …]</p>
-</dd>
-</dl>
-</div></blockquote>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">def</span> <span class="nf">model_metric</span><span class="p">(</span><span class="n">model_out</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="n">Tensor</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="n">Tensor</span><span class="p">],</span> <span class="o">...</span><span class="p">]:</span>
+</pre></div>
+</div>
 <p>All kwargs provided to evaluate are provided to the metric function,
 following the model output. A single metric can be returned as
 a float or tensor, and multiple metrics should be returned as either
@@ -535,7 +533,7 @@ function must be provided which determines correctness.</p>
 <p>The first argument to this function must be the model out;
 any additional arguments should be provided through correct_fn_kwargs.</p>
 <dl class="simple">
-<dt>This function should have the following signature:</dt><dd><p>def correct_fn(model_out: Tensor, <a href="#id3"><span class="problematic" id="id4">**</span></a>kwargs: Any) -&gt; bool</p>
+<dt>This function should have the following signature:</dt><dd><p>def correct_fn(model_out: Tensor, <a href="#id1"><span class="problematic" id="id2">**</span></a>kwargs: Any) -&gt; bool</p>
 </dd>
 </dl>
 <p>Method should return a boolean if correct (True) and incorrect (False).
