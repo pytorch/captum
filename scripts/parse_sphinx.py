@@ -31,7 +31,7 @@ def parse_sphinx(input_dir, output_dir):
                 with open(os.path.join(cur, fname), "r") as f:
                     soup = BeautifulSoup(f.read(), "html.parser")
                     doc = soup.find("div", {"class": "document"})
-                    wrapped_doc = doc.wrap(soup.new_tag("div", **{"class": "sphinx"}))
+                    wrapped_doc = doc.wrap(soup.new_tag("div", **{"class": "sphinx wrapper"}))
                 # add js
                 if fname == "search.html":
                     out = js_scripts + search_js_scripts + str(wrapped_doc)

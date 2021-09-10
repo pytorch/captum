@@ -287,6 +287,13 @@ a.docs-prev:hover {
   background-color: inherit;
 }
 
+/* Style api refs */
+div.sphinx div.document {
+  margin: 0 0;
+  padding: 40px 0;
+  width: auto;
+}
+
 .wrapper {
   max-width: 1400px;
 }
