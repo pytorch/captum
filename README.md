@@ -80,10 +80,6 @@ exploring features that contribute to a prediction the model makes.
 It also helps understand which neurons and layers are important for
 model predictions.
 
-Currently, the library uses gradient-based interpretability algorithms
-and attributes contributions to each input of the model with respect to
-different neurons and layers, both intermediate and final.
-
 Let's apply some of those algorithms to a toy model we have created for
 demonstration purposes.
 For simplicity, we will use the following architecture, but users are welcome
