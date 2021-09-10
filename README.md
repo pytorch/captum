@@ -410,9 +410,33 @@ If you have questions about using Captum methods, please check this [FAQ](docs/f
 See the [CONTRIBUTING](CONTRIBUTING.md) file for how to help out.
 
 ## Talks and Papers
-The slides of our presentation from NeurIPS 2019 can be found [here](docs/presentations/Captum_NeurIPS_2019_final.key)
+**NeurIPS 2019:**
+The slides of our presentation  can be found [here](docs/presentations/Captum_NeurIPS_2019_final.key)
 
-The slides of our presentation from KDD 2020 tutorial can be found [here](https://pytorch-tutorial-assets.s3.amazonaws.com/Captum_KDD_2020.pdf)
+**KDD 2020:**
+The slides of our presentation from KDD 2020 tutorial can be found [here](https://pytorch-tutorial-assets.s3.amazonaws.com/Captum_KDD_2020.pdf).
+You can watch the recorded talk [here](https://www.youtube.com/watch?v=hY_XzglTkak)
+
+**GTC 2020:**
+Opening Up the Black Box: Model Understanding with Captum and PyTorch.
+You can watch the recorded talk [here](https://www.youtube.com/watch?v=0QLrRyLndFI)
+
+**XAI Summit 2020:**
+Using Captum and Fiddler to Improve Model Understanding with Explainable AI.
+You can watch the recorded talk [here](https://www.youtube.com/watch?v=dvuVld5Hyc8)
+
+**PyTorch Developer Day 2020**
+Model Interpretability.
+You can watch the recorded talk [here](https://www.youtube.com/watch?v=Lj5hHBGue58)
+
+**NAACL 2021**
+Tutorial on Fine-grained Interpretation and Causation Analysis in Deep NLP Models.
+You can watch the recorded talk [here](https://www.youtube.com/watch?v=ayhBHZYjeqs
+)
+
+**ICLR 2021 workshop on Responsible AI**:
+- [Paper](https://arxiv.org/abs/2009.07896) on the Captum Library
+- [Paper](https://arxiv.org/abs/2106.07475) on Invesitgating Sanity Checks for Saliency Maps
 
 ## References of Algorithms
 
