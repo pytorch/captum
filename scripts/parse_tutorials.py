@@ -44,7 +44,14 @@ def gen_tutorials(repo_dir: str) -> None:
     with open(os.path.join(repo_dir, "website", "tutorials.json"), "r") as infile:
         tutorial_config = json.loads(infile.read())
 
-    tutorial_ids = {x["id"] for v in tutorial_config.values() for x in v}
+    tutorial_ids = []
+    for category_items in tutorial_config.values():
+        for item in category_items:
+            if "id" in item:
+                tutorial_ids.append(item["id"])
+            else:
+                for sub_item in item["children"]:
+                    tutorial_ids.append(sub_item["id"])
 
     for tid in tutorial_ids:
         print("Generating {} tutorial".format(tid))
