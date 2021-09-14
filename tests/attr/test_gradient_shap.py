@@ -10,7 +10,6 @@ from captum.attr._core.integrated_gradients import IntegratedGradients
 from numpy import ndarray
 from tests.helpers.basic import (
     BaseTest,
-    assertArraysAlmostEqual,
     assertTensorAlmostEqual,
 )
 from tests.helpers.basic_models import BasicLinearModel, BasicModel2
@@ -244,10 +243,8 @@ class Test(BaseTest):
         self, attributions1: Tuple[Tensor, ...], attributions2: Tuple[Tensor, ...]
     ) -> None:
         for attribution1, attribution2 in zip(attributions1, attributions2):
-            for attr_row1, attr_row2 in zip(
-                attribution1.detach().numpy(), attribution2.detach().numpy()
-            ):
-                assertArraysAlmostEqual(attr_row1, attr_row2, delta=0.005)
+            for attr_row1, attr_row2 in zip(attribution1, attribution2):
+                assertTensorAlmostEqual(self, attr_row1, attr_row2, 0.005, "max")
 
 
 def _assert_attribution_delta(
@@ -272,7 +269,7 @@ def _assert_attribution_delta(
 
 
 def _assert_delta(test: BaseTest, delta: Tensor) -> None:
-    delta_condition = all(abs(delta.numpy().flatten()) < 0.0006)
+    delta_condition = (delta.abs() < 0.0006).all()
     test.assertTrue(
         delta_condition,
         "Sum of SHAP values {} does"

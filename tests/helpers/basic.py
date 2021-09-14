@@ -62,17 +62,12 @@ def assertTensorTuplesAlmostEqual(test, actual, expected, delta=0.0001, mode="su
 
 def assertAttributionComparision(test, attributions1, attributions2):
     for attribution1, attribution2 in zip(attributions1, attributions2):
-        for attr_row1, attr_row2 in zip(
-            attribution1.detach().numpy(), attribution2.detach().numpy()
-        ):
-            if isinstance(attr_row1, np.ndarray):
-                assertArraysAlmostEqual(attr_row1, attr_row2, delta=0.05)
-            else:
-                test.assertAlmostEqual(attr_row1, attr_row2, delta=0.05)
+        for attr_row1, attr_row2 in zip(attribution1, attribution2):
+            assertTensorAlmostEqual(test, attr_row1, attr_row2, 0.05, "max")
 
 
 def assert_delta(test, delta):
-    delta_condition = all(abs(delta.numpy().flatten()) < 0.00001)
+    delta_condition = (delta.abs() < 0.00001).all()
     test.assertTrue(
         delta_condition,
         "The sum of attribution values {} for relu layer is not "
