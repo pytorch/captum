@@ -106,7 +106,7 @@ class CNN(nn.Module):
 
 # Loads pretrained model and sets the model to eval mode.
 # 
-# The model can be downloaded here: https://github.com/pytorch/captum/blob/master/tutorials/models/imdb-model-cnn.pt
+# The model can be downloaded here: https://github.com/pytorch/captum/blob/master/tutorials/models/imdb-model-cnn-large.pt
 
 # In[ ]:
 
@@ -251,7 +251,7 @@ def add_attributions_to_visualizer(attributions, text, pred, pred_ind, label, de
                             Label.vocab.itos[pred_ind],
                             Label.vocab.itos[label],
                             Label.vocab.itos[1],
-                            attributions.sum(),       
+                            attributions.sum(),
                             text,
                             delta))
 
