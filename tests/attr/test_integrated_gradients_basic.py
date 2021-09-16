@@ -464,7 +464,7 @@ class Test(BaseTest):
         for input, attribution in zip(inputs, attributions):
             self.assertEqual(attribution.shape, input.shape)
         if multiply_by_inputs:
-            self.assertTrue(all(abs(delta.numpy().flatten()) < 0.07))
+            assertTensorAlmostEqual(self, delta, torch.zeros(delta.shape), 0.07, "max")
 
         # compare attributions retrieved with and without
         # `return_convergence_delta` flag

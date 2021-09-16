@@ -457,7 +457,7 @@ class Test(BaseTest):
             target=None,
             feature_mask=mask,
             perturbations_per_eval=(1,),
-            expected_ablation=torch.zeros((5 * 3 * 2,) + inp[0].shape).numpy().tolist(),
+            expected_ablation=torch.zeros((5 * 3 * 2,) + inp[0].shape),
         )
 
     def test_single_inp_ablation_multi_output_aggr(self) -> None:

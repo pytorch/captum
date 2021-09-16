@@ -10,6 +10,7 @@ from tests.helpers.basic import (
     BaseTest,
     assertArraysAlmostEqual,
     assertTensorTuplesAlmostEqual,
+    assertTensorAlmostEqual,
 )
 from tests.helpers.basic_models import BasicModel, BasicModel5_MultiArgs
 from tests.helpers.classification_models import SoftmaxModel
@@ -18,7 +19,7 @@ from torch.nn import Module
 
 
 def _get_basic_config() -> Tuple[Module, Tensor, Tensor, Any]:
-    input = torch.tensor([1.0, 2.0, 3.0, 0.0, -1.0, 7.0], requires_grad=True)
+    input = torch.tensor([1.0, 2.0, 3.0, 0.0, -1.0, 7.0], requires_grad=True).T
     # manually percomputed gradients
     grads = torch.tensor([-0.0, -0.0, -0.0, 1.0, 1.0, -0.0])
     return BasicModel(), input, grads, None
@@ -179,11 +180,14 @@ class Test(BaseTest):
 
     def _assert_attribution(self, attribution: Tensor, expected: Tensor) -> None:
         expected = torch.abs(expected)
-        assertArraysAlmostEqual(
-            expected.detach().numpy().flatten().tolist(),
-            attribution.detach().numpy().flatten().tolist(),
-            delta=0.5,
-        )
+        if len(attribution.shape) == 0:
+            assert (attribution - expected).abs() < 0.001
+        else:
+            assertArraysAlmostEqual(
+                expected.flatten(),
+                attribution.flatten(),
+                delta=0.5,
+            )
 
     def _saliency_classification_assert(self, nt_type: str = "vanilla") -> None:
         num_in = 5
@@ -199,10 +203,7 @@ class Test(BaseTest):
             output = model(input)[:, target]
             output.backward()
             expected = torch.abs(cast(Tensor, input.grad))
-            self.assertEqual(
-                expected.detach().numpy().tolist(),
-                attributions.detach().numpy().tolist(),
-            )
+            assertTensorAlmostEqual(self, attributions, expected)
         else:
             nt = NoiseTunnel(saliency)
             attributions = nt.attribute(

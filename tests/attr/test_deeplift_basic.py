@@ -291,10 +291,10 @@ class Test(BaseTest):
         attrs, delta = dl.attribute(
             inputs, baselines, target=0, return_convergence_delta=True
         )
-        expected = [[0.0, 0.0, 0.0, -8.0], [0.0, -7.0, 0.0, 0.0]]
-        expected_delta = [0.0, 0.0]
-        assertArraysAlmostEqual(attrs.detach().numpy(), expected)
-        assertArraysAlmostEqual(delta.detach().numpy(), expected_delta)
+        expected = torch.Tensor([[0.0, 0.0, 0.0, -8.0], [0.0, -7.0, 0.0, 0.0]])
+        expected_delta = torch.Tensor([0.0, 0.0])
+        assertTensorAlmostEqual(self, attrs, expected, 0.0001)
+        assertTensorAlmostEqual(self, delta, expected_delta, 0.0001)
 
     def _deeplift_assert(
         self,
@@ -345,7 +345,7 @@ class Test(BaseTest):
                 )
                 assertArraysAlmostEqual(delta, delta_external, 0.0)
 
-            delta_condition = all(abs(delta.numpy().flatten()) < 0.00001)
+            delta_condition = (delta.abs() < 0.00001).all()
             self.assertTrue(
                 delta_condition,
                 "The sum of attribution values {} is not "

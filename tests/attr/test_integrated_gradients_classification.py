@@ -106,7 +106,7 @@ class Test(BaseTest):
             )
             assertTensorAlmostEqual(self, delta_expected, delta)
 
-            delta_condition = all(abs(delta.numpy().flatten()) < 0.005)
+            delta_condition = (delta.abs() < 0.005).all()
             self.assertTrue(
                 delta_condition,
                 "The sum of attribution values {} is not "
@@ -130,7 +130,7 @@ class Test(BaseTest):
             )
             self.assertEqual([input.shape[0] * n_samples], list(delta.shape))
 
-        self.assertTrue(all(abs(delta.numpy().flatten()) < 0.05))
+        self.assertTrue((delta.abs() < 0.05).all())
         self.assertEqual(attributions.shape, input.shape)
 
 

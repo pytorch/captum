@@ -179,7 +179,7 @@ class Test(BaseTest):
     ) -> None:
         self.assertEqual(inputs.shape, attributions.shape)
 
-        delta_condition = all(abs(delta.numpy().flatten()) < 0.003)
+        delta_condition = (delta.abs() < 0.003).all()
         self.assertTrue(
             delta_condition,
             "The sum of attribution values {} is not "

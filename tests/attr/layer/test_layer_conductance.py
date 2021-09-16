@@ -153,7 +153,7 @@ class Test(BaseTest):
                 internal_batch_size=internal_batch_size,
                 return_convergence_delta=True,
             )
-            delta_condition = all(abs(delta.numpy().flatten()) < 0.01)
+            delta_condition = (delta.abs() < 0.01).all()
             self.assertTrue(
                 delta_condition,
                 "Sum of attributions does {}"
@@ -195,7 +195,7 @@ class Test(BaseTest):
                 return_convergence_delta=True,
             ),
         )
-        delta_condition = all(abs(delta.numpy().flatten()) < 0.005)
+        delta_condition = (delta.abs() < 0.005).all()
         self.assertTrue(
             delta_condition,
             "Sum of attribution values does {} "
