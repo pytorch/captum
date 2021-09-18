@@ -259,11 +259,22 @@ def skip_layers(
 class MaxPool2dRelaxed(torch.nn.Module):
     """
     A relaxed pooling layer, that's useful for calculating attributions of spatial
-    positions. This layer reduces Noise in the gradient through the use of a
-    continuous relaxation of the gradient.
+    positions. Noise in the gradient is reduced by the continuous relaxation of the
+    gradient of models using this layer.
+
+    This layer is meant to be combined with forward-mode AD, so that the class
+    attributions of spatial posititions can be estimated using the rate at which
+    increasing the neuron affects the output classes
 
     This layer peforms a MaxPool2d operation on the input, while using an equivalent
     AvgPool2d layer to compute the gradient.
+
+    Carter, et al., "Activation Atlas", Distill, 2019.
+    https://distill.pub/2019/activation-atlas/
+
+    The Lucid equivalent of this class can be found here:
+    https://github.com/
+    tensorflow/lucid/blob/master/lucid/optvis/overrides/smoothed_maxpool_grad.py
     """
 
     def __init__(
