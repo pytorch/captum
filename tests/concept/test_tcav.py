@@ -18,8 +18,8 @@ from typing import (
 )
 
 import torch
+from captum._utils.av import AV
 from captum._utils.common import _get_module_from_name
-from captum.concept._core.av import AV
 from captum.concept._core.concept import Concept
 from captum.concept._core.tcav import TCAV
 from captum.concept._utils.classifier import Classifier
@@ -882,31 +882,39 @@ class Test(BaseTest):
             # verify that all activations exist and have correct shapes
             for layer in layers:
                 for _, concept in concept_dict.items():
-                    self.assertTrue(AV.exists(tmpdirname, concept, layer))
-
-                activations = AV.load(tmpdirname, layer, list(concept_dict.values()))
-                self.assertTrue(activations is not None)
+                    self.assertTrue(
+                        AV.exists(
+                            tmpdirname, "default_model_id", layer, concept.identifier
+                        )
+                    )
 
                 concept_meta: Dict[int, int] = defaultdict(int)
-                for activation in cast(Iterable, activations):
-                    features, labels = activation
-                    concept_meta[labels[0].item()] += features.shape[0]
-
-                    layer_module = _get_module_from_name(tcav.model, layer)
-
-                    # find the concept with id
-                    concept = cast(
-                        Concept, find_concept_by_id(tcav.concepts, labels[0].item())
+                for _, concept in concept_dict.items():
+                    activations = AV.load(
+                        tmpdirname, "default_model_id", layer, concept.identifier
                     )
-                    self.assertTrue(concept.data_iter is not None)
-                    for data in cast(Iterable, concept.data_iter):
-                        hook = layer_module.register_forward_hook(
-                            forward_hook_wrapper(features)
-                        )
-                        tcav.model(data)
-                        hook.remove()
 
-                # asserting the lenght of entire dataset for eeach concept
+                    def batch_collate(batch):
+                        return torch.cat(batch)
+
+                    self.assertTrue(concept.data_iter is not None)
+                    assert not (activations is None)
+                    for activation in cast(
+                        Iterable, DataLoader(activations, collate_fn=batch_collate)
+                    ):
+
+                        concept_meta[concept.id] += activation.shape[0]
+
+                        layer_module = _get_module_from_name(tcav.model, layer)
+
+                        for data in cast(Iterable, concept.data_iter):
+                            hook = layer_module.register_forward_hook(
+                                forward_hook_wrapper(activation)
+                            )
+                            tcav.model(data)
+                            hook.remove()
+
+                # asserting the length of entire dataset for each concept
                 for concept_meta_i in concept_meta.values():
                     self.assertEqual(concept_meta_i, 100)
 

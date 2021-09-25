@@ -6,16 +6,97 @@ from typing import Any, Dict, List, Set, Tuple, Union, cast
 import numpy as np
 import torch
 import torch.multiprocessing as multiprocessing
+from captum._utils.av import AV
 from captum._utils.common import _format_tensor_into_tuples, _get_module_from_name
 from captum._utils.typing import TargetType, TensorOrTupleOfTensorsGeneric
 from captum.attr import LayerActivation, LayerAttribution, LayerGradientXActivation
-from captum.concept._core.av import AV
 from captum.concept._core.cav import CAV
 from captum.concept._core.concept import Concept, ConceptInterpreter
 from captum.concept._utils.classifier import Classifier, DefaultClassifier
 from captum.concept._utils.common import concepts_to_str
 from torch import Tensor
 from torch.nn import Module
+from torch.utils.data import DataLoader, Dataset
+
+DEFAULT_MODEL_ID = "default_model_id"
+
+
+class LabelledDataset(Dataset):
+    """
+    A torch Dataset whose __getitem__ returns both a batch of activation vectors,
+    as well as a batch of labels associated with those activation vectors.
+    It is used to train a classifier in train_tcav
+    """
+
+    def __init__(self, datasets: List[AV.AVDataset], labels: List[int]):
+        """
+        Creates the LabelledDataset given a list of K Datasets, and a length K
+        list of integer labels representing K different concepts.
+        The assumption is that the k-th Dataset of datasets is associated with
+        the k-th element of labels.
+        The LabelledDataset is the concatenation of the K Datasets in datasets.
+        However, __get_item__ not only returns a batch of activation vectors,
+        but also a batch of labels indicating which concept that batch of
+        activation vectors is associated with.
+        Args:
+            datasets (list[Dataset]): The k-th element of datasets is a Dataset
+                    representing activation vectors associated with the k-th
+                    concept
+            labels (list[Int]): The k-th element of labels is the integer label
+                    associated with the k-th concept
+        """
+        assert len(datasets) == len(
+            labels
+        ), "number of datasets does not match the number of concepts"
+
+        from itertools import accumulate
+
+        offsets = [0] + list(accumulate(map(len, datasets), (lambda x, y: x + y)))
+        self.length = offsets[-1]
+        self.datasets = datasets
+        self.labels = labels
+        self.lowers = offsets[:-1]
+        self.uppers = offsets[1:]
+
+    def _i_to_k(self, i):
+
+        left, right = 0, len(self.uppers)
+        while left < right:
+            mid = (left + right) // 2
+            if self.lowers[mid] <= i and i < self.uppers[mid]:
+                return mid
+            if i >= self.uppers[mid]:
+                left = mid
+            else:
+                right = mid
+
+    def __getitem__(self, i):
+        """
+        Returns a batch of activation vectors, as well as a batch of labels
+        indicating which concept the batch of activation vectors is associated
+        with.
+
+        args:
+            i (int): which (activation vector, label) batch in the dataset to
+                    return
+        returns:
+            inputs (Tensor): i-th batch in Dataset (representing activation
+                    vectors)
+            labels (Tensor): labels of i-th batch in Dataset
+        """
+        assert i < self.length
+        k = self._i_to_k(i)
+        inputs = self.datasets[k][i - self.lowers[k]]
+        assert len(inputs.shape) == 2
+
+        labels = torch.tensor([self.labels[k]] * inputs.size(0), device=inputs.device)
+        return inputs, labels
+
+    def __len__(self):
+        """
+        returns the total number of batches in the labelled_dataset
+        """
+        return self.length
 
 
 def train_cav(
@@ -62,13 +143,26 @@ def train_cav(
     cavs[concepts_key] = defaultdict()
     layers = [layers] if isinstance(layers, str) else layers
     for layer in layers:
-        # Create data loader to initialize the trainer.
-        dataloader = AV.load(save_path, layer, concepts)
-        assert (
-            dataloader is not None
-        ), "Cannot load concepts for given layer: {}".format(layer)
 
-        # Train and evaluate the model provided in the classifier
+        # Create data loader to initialize the trainer.
+        datasets = list(
+            AV.load(save_path, DEFAULT_MODEL_ID, layer, concept.identifier)
+            for concept in concepts
+        )
+
+        labels = [concept.id for concept in concepts]
+        assert None not in datasets, "Cannot load concepts for given layer: {}".format(
+            layer
+        )
+
+        labelled_dataset = LabelledDataset(cast(List[AV.AVDataset], datasets), labels)
+
+        def batch_collate(batch):
+            inputs, labels = zip(*batch)
+            return torch.cat(inputs), torch.cat(labels)
+
+        dataloader = DataLoader(labelled_dataset, collate_fn=batch_collate)
+
         classifier_stats_dict = classifier.train_and_eval(
             dataloader, **classifier_kwargs
         )
@@ -242,11 +336,18 @@ class TCAV(ConceptInterpreter):
             "Data iterator for concept id:",
             "{} must be specified".format(concept.id),
         )
-        for examples in concept.data_iter:
+        for i, examples in enumerate(concept.data_iter):
             activations = layer_act.attribute(examples)
             for activation, layer_name in zip(activations, layers):
                 activation = torch.reshape(activation, (activation.shape[0], -1))
-                AV.save(self.save_path, concept, layer_name, activation.detach())
+                AV.save(
+                    self.save_path,
+                    DEFAULT_MODEL_ID,
+                    concept.identifier,
+                    layer_name,
+                    activation.detach(),
+                    str(i),
+                )
 
     def generate_activations(self, concept_layers: Dict[Concept, List[str]]) -> None:
         r"""
@@ -308,7 +409,9 @@ class TCAV(ConceptInterpreter):
                 # For all concepts in this experimental_set
                 for concept in concepts:
                     # Collect not activated layers for this concept
-                    if not AV.exists(self.save_path, concept, layer):
+                    if not AV.exists(
+                        self.save_path, DEFAULT_MODEL_ID, layer, concept.identifier
+                    ):
                         concept_layers[concept].append(layer)
         return layers, concept_layers
 
@@ -397,6 +500,7 @@ class TCAV(ConceptInterpreter):
                     for concepts in experimental_sets
                 ],
             )
+
             pool.close()
             pool.join()
 
