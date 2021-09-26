@@ -264,10 +264,11 @@ class MaxPool2dRelaxed(torch.nn.Module):
 
     This layer is meant to be combined with forward-mode AD, so that the class
     attributions of spatial posititions can be estimated using the rate at which
-    increasing the neuron affects the output classes
+    increasing the neuron affects the output classes.
 
     This layer peforms a MaxPool2d operation on the input, while using an equivalent
-    AvgPool2d layer to compute the gradient.
+    AvgPool2d layer to compute the gradient. This means that the forward pass returns
+    nn.MaxPool2d(input) while the backward pass uses nn.AvgPool2d(input).
 
     Carter, et al., "Activation Atlas", Distill, 2019.
     https://distill.pub/2019/activation-atlas/
@@ -275,6 +276,10 @@ class MaxPool2dRelaxed(torch.nn.Module):
     The Lucid equivalent of this class can be found here:
     https://github.com/
     tensorflow/lucid/blob/master/lucid/optvis/overrides/smoothed_maxpool_grad.py
+
+    An additional Lucid reference implementation can be found here:
+    https://colab.research.google.com/github/tensorflow/
+    lucid/blob/master/notebooks/building-blocks/AttrSpatial.ipynb
     """
 
     def __init__(
