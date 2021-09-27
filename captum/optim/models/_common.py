@@ -1,6 +1,6 @@
 import math
 from inspect import signature
-from typing import Dict, List, Tuple, Type, Union, cast
+from typing import Dict, List, Optional, Tuple, Type, Union, cast
 
 import torch
 import torch.nn as nn
@@ -254,3 +254,71 @@ def skip_layers(
         layers = cast(List[Type[nn.Module]], layers)
         for target_layer in layers:
             replace_layers(model, target_layer, SkipLayer)
+
+
+class MaxPool2dRelaxed(torch.nn.Module):
+    """
+    A relaxed pooling layer, that's useful for calculating attributions of spatial
+    positions. Noise in the gradient is reduced by the continuous relaxation of the
+    gradient of models using this layer.
+
+    This layer is meant to be combined with forward-mode AD, so that the class
+    attributions of spatial posititions can be estimated using the rate at which
+    increasing the neuron affects the output classes.
+
+    This layer peforms a MaxPool2d operation on the input, while using an equivalent
+    AvgPool2d layer to compute the gradient. This means that the forward pass returns
+    nn.MaxPool2d(input) while the backward pass uses nn.AvgPool2d(input).
+
+    Carter, et al., "Activation Atlas", Distill, 2019.
+    https://distill.pub/2019/activation-atlas/
+
+    The Lucid equivalent of this class can be found here:
+    https://github.com/
+    tensorflow/lucid/blob/master/lucid/optvis/overrides/smoothed_maxpool_grad.py
+
+    An additional Lucid reference implementation can be found here:
+    https://colab.research.google.com/github/tensorflow/
+    lucid/blob/master/notebooks/building-blocks/AttrSpatial.ipynb
+    """
+
+    def __init__(
+        self,
+        kernel_size: Union[int, Tuple[int, ...]],
+        stride: Optional[Union[int, Tuple[int, ...]]] = None,
+        padding: Union[int, Tuple[int, ...]] = 0,
+        ceil_mode: bool = False,
+    ) -> None:
+        """
+        Args:
+
+            kernel_size (int or tuple of int): The size of the window to perform max &
+            average pooling with.
+            stride (int or tuple of int, optional): The stride window size to use.
+                Default: None
+            padding (int or tuple of int): The amount of zero padding to add to both
+                sides in the nn.MaxPool2d & nn.AvgPool2d modules.
+                Default: 0
+            ceil_mode (bool, optional): Whether to use ceil or floor for creating the
+                output shape.
+                Default: False
+        """
+        super().__init__()
+        self.maxpool = torch.nn.MaxPool2d(
+            kernel_size=kernel_size, stride=stride, padding=padding, ceil_mode=ceil_mode
+        )
+        self.avgpool = torch.nn.AvgPool2d(
+            kernel_size=kernel_size, stride=stride, padding=padding, ceil_mode=ceil_mode
+        )
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        """
+        Args:
+
+            x (torch.Tensor): An input tensor to run the pooling operations on.
+
+        Returns:
+            x (torch.Tensor): A max pooled x tensor with gradient of an equivalent avg
+                pooled tensor.
+        """
+        return self.maxpool(x.detach()) + self.avgpool(x) - self.avgpool(x.detach())
