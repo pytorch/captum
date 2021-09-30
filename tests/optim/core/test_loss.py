@@ -133,6 +133,31 @@ class TestNeuronDirection(BaseTest):
         self.assertAlmostEqual(get_loss_value(model, loss), dot, places=6)
 
 
+class TestAngledNeuronDirection(BaseTest):
+    def test_angled_neuron_direction(self) -> None:
+        model = BasicModel_ConvNet_Optim()
+        loss = opt_loss.AngledNeuronDirection(
+            model.layer, vec=torch.ones(1, 2), cossim_pow=0
+        )
+        a = 1
+        b = [CHANNEL_ACTIVATION_0_LOSS, CHANNEL_ACTIVATION_1_LOSS]
+        dot = np.sum(np.inner(a, b))
+        self.assertAlmostEqual(np.sum(get_loss_value(model, loss)), dot, places=6)
+
+    def test_angled_neuron_direction_whitened(self) -> None:
+        model = BasicModel_ConvNet_Optim()
+        loss = opt_loss.AngledNeuronDirection(
+            model.layer,
+            vec=torch.ones(1, 2),
+            vec_whitened=torch.ones(2, 2),
+            cossim_pow=0,
+        )
+        a = 1
+        b = [CHANNEL_ACTIVATION_0_LOSS, CHANNEL_ACTIVATION_1_LOSS]
+        dot = np.sum(np.inner(a, b)) * 2
+        self.assertAlmostEqual(np.sum(get_loss_value(model, loss)), dot, places=6)
+
+
 class TestTensorDirection(BaseTest):
     def test_tensor_direction(self) -> None:
         model = BasicModel_ConvNet_Optim()

@@ -60,13 +60,38 @@ class TestWeightsToHeatmap2D(BaseTest):
         x[4:5, 0:4] = x[4:5, 0:4] * -0.8
 
         x_out = common.weights_to_heatmap_2d(x)
-        x_out_np = numpy_common.weights_to_heatmap_2d(x.numpy())
-        assertTensorAlmostEqual(self, x_out, torch.as_tensor(x_out_np).float())
+
+        x_out_expected = torch.tensor(
+            [
+                [
+                    [0.9639, 0.9639, 0.9639, 0.9639],
+                    [0.8580, 0.8580, 0.8580, 0.8580],
+                    [0.9686, 0.9686, 0.9686, 0.9686],
+                    [0.8102, 0.8102, 0.8102, 0.8102],
+                    [0.2408, 0.2408, 0.2408, 0.2408],
+                ],
+                [
+                    [0.8400, 0.8400, 0.8400, 0.8400],
+                    [0.2588, 0.2588, 0.2588, 0.2588],
+                    [0.9686, 0.9686, 0.9686, 0.9686],
+                    [0.8902, 0.8902, 0.8902, 0.8902],
+                    [0.5749, 0.5749, 0.5749, 0.5749],
+                ],
+                [
+                    [0.7851, 0.7851, 0.7851, 0.7851],
+                    [0.2792, 0.2792, 0.2792, 0.2792],
+                    [0.9686, 0.9686, 0.9686, 0.9686],
+                    [0.9294, 0.9294, 0.9294, 0.9294],
+                    [0.7624, 0.7624, 0.7624, 0.7624],
+                ],
+            ]
+        )
+        assertTensorAlmostEqual(self, x_out, x_out_expected, delta=0.01)
 
     def test_weights_to_heatmap_2d_cuda(self) -> None:
         if not torch.cuda.is_available():
             raise unittest.SkipTest(
-                "Skipping ImageTensor CUDA test due to not supporting CUDA."
+                "Skipping weights_to_heatmap_2d CUDA test due to not supporting CUDA."
             )
         x = torch.ones(5, 4)
         x[0:1, 0:4] = x[0:1, 0:4] * 0.2
@@ -76,6 +101,31 @@ class TestWeightsToHeatmap2D(BaseTest):
         x[4:5, 0:4] = x[4:5, 0:4] * -0.8
 
         x_out = common.weights_to_heatmap_2d(x.cuda())
-        x_out_np = numpy_common.weights_to_heatmap_2d(x.numpy())
-        assertTensorAlmostEqual(self, x_out, torch.as_tensor(x_out_np).float())
+
+        x_out_expected = torch.tensor(
+            [
+                [
+                    [0.9639, 0.9639, 0.9639, 0.9639],
+                    [0.8580, 0.8580, 0.8580, 0.8580],
+                    [0.9686, 0.9686, 0.9686, 0.9686],
+                    [0.8102, 0.8102, 0.8102, 0.8102],
+                    [0.2408, 0.2408, 0.2408, 0.2408],
+                ],
+                [
+                    [0.8400, 0.8400, 0.8400, 0.8400],
+                    [0.2588, 0.2588, 0.2588, 0.2588],
+                    [0.9686, 0.9686, 0.9686, 0.9686],
+                    [0.8902, 0.8902, 0.8902, 0.8902],
+                    [0.5749, 0.5749, 0.5749, 0.5749],
+                ],
+                [
+                    [0.7851, 0.7851, 0.7851, 0.7851],
+                    [0.2792, 0.2792, 0.2792, 0.2792],
+                    [0.9686, 0.9686, 0.9686, 0.9686],
+                    [0.9294, 0.9294, 0.9294, 0.9294],
+                    [0.7624, 0.7624, 0.7624, 0.7624],
+                ],
+            ]
+        )
+        assertTensorAlmostEqual(self, x_out, x_out_expected, delta=0.01)
         self.assertTrue(x_out.is_cuda)
