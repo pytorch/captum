@@ -348,6 +348,7 @@ class Test(BaseTest):
             feature_mask=mask,
             perturbations_per_eval=(1,),
             target=None,
+            n_samples=2500
         )
 
     def _multi_input_batch_scalar_shapley_assert(self, func: Callable) -> None:
