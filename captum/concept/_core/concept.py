@@ -49,6 +49,10 @@ class Concept:
         self.name = name
         self.data_iter = data_iter
 
+    @property
+    def identifier(self):
+        return "%s-%s" % (self.name, self.id)
+
     def __repr__(self):
         return "Concept(%r, %r)" % (self.id, self.name)
 
