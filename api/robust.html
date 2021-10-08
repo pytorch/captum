@@ -50,8 +50,8 @@ computed.</p></li>
 computed. The loss function should take in outputs of the
 model and labels, and return a loss tensor.
 The default loss function is negative log.</p></li>
-<li><p><strong>lower_bound</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.9)"><em>float</em></a><em>, </em><em>optional</em>) – Lower bound of input values.</p></li>
-<li><p><strong>upper_bound</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.9)"><em>float</em></a><em>, </em><em>optional</em>) – Upper bound of input values.
+<li><p><strong>lower_bound</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.10)"><em>float</em></a><em>, </em><em>optional</em>) – Lower bound of input values.</p></li>
+<li><p><strong>upper_bound</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.10)"><em>float</em></a><em>, </em><em>optional</em>) – Upper bound of input values.
 e.g. image pixels must be in the range 0-255</p></li>
 </ul>
 </dd>
@@ -75,7 +75,7 @@ custom use cases if necessary.</p>
 as zero. Can be modified for custom use cases if necessary.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
-<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.9)">float</a></p>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.10)">float</a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -92,7 +92,7 @@ attack is computed. It can be provided as a single
 tensor or a tuple of multiple tensors. If multiple
 input tensors are provided, the batch sizes must be
 aligned accross all tensors.</p></li>
-<li><p><strong>epsilon</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.9)"><em>float</em></a>) – Step size of perturbation.</p></li>
+<li><p><strong>epsilon</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.10)"><em>float</em></a>) – Step size of perturbation.</p></li>
 <li><p><strong>target</strong> (<em>any</em>) – <p>True labels of inputs if non-targeted attack is
 desired. Target class of inputs if targeted attack
 is desired. Target will be passed to the loss function
@@ -124,7 +124,7 @@ which attributions should not be computed, this argument
 can be provided. These arguments are provided to
 forward_func in order following the arguments in inputs.
 Default: None.</p></li>
-<li><p><strong>targeted</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.9)"><em>bool</em></a><em>, </em><em>optional</em>) – If attack should be targeted.
+<li><p><strong>targeted</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.10)"><em>bool</em></a><em>, </em><em>optional</em>) – If attack should be targeted.
 Default: False.</p></li>
 </ul>
 </dd>
@@ -181,8 +181,8 @@ computed.</p></li>
 computed. The loss function should take in outputs of the
 model and labels, and return the loss for each input tensor.
 The default loss function is negative log.</p></li>
-<li><p><strong>lower_bound</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.9)"><em>float</em></a><em>, </em><em>optional</em>) – Lower bound of input values.</p></li>
-<li><p><strong>upper_bound</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.9)"><em>float</em></a><em>, </em><em>optional</em>) – Upper bound of input values.
+<li><p><strong>lower_bound</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.10)"><em>float</em></a><em>, </em><em>optional</em>) – Lower bound of input values.</p></li>
+<li><p><strong>upper_bound</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.10)"><em>float</em></a><em>, </em><em>optional</em>) – Upper bound of input values.
 e.g. image pixels must be in the range 0-255</p></li>
 </ul>
 </dd>
@@ -212,10 +212,10 @@ attack is computed. It can be provided as a single
 tensor or a tuple of multiple tensors. If multiple
 input tensors are provided, the batch sizes must be
 aligned accross all tensors.</p></li>
-<li><p><strong>radius</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.9)"><em>float</em></a>) – Radius of the neighbor ball centered around inputs.
+<li><p><strong>radius</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.10)"><em>float</em></a>) – Radius of the neighbor ball centered around inputs.
 The perturbation should be within this range.</p></li>
-<li><p><strong>step_size</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.9)"><em>float</em></a>) – Step size of each gradient step.</p></li>
-<li><p><strong>step_num</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a>) – Step numbers. It usually guarantees that the perturbation
+<li><p><strong>step_size</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.10)"><em>float</em></a>) – Step size of each gradient step.</p></li>
+<li><p><strong>step_num</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><em>int</em></a>) – Step numbers. It usually guarantees that the perturbation
 can reach the border.</p></li>
 <li><p><strong>target</strong> (<em>any</em>) – <p>True labels of inputs if non-targeted attack is
 desired. Target class of inputs if targeted attack
@@ -248,11 +248,11 @@ which attributions should not be computed, this argument
 can be provided. These arguments are provided to
 forward_func in order following the arguments in inputs.
 Default: None.</p></li>
-<li><p><strong>targeted</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.9)"><em>bool</em></a><em>, </em><em>optional</em>) – If attack should be targeted.
+<li><p><strong>targeted</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.10)"><em>bool</em></a><em>, </em><em>optional</em>) – If attack should be targeted.
 Default: False.</p></li>
-<li><p><strong>random_start</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.9)"><em>bool</em></a><em>, </em><em>optional</em>) – If a random initialization is added to
+<li><p><strong>random_start</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.10)"><em>bool</em></a><em>, </em><em>optional</em>) – If a random initialization is added to
 inputs. Default: False.</p></li>
-<li><p><strong>norm</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a><em>, </em><em>optional</em>) – Specifies the norm to calculate distance from
+<li><p><strong>norm</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><em>str</em></a><em>, </em><em>optional</em>) – Specifies the norm to calculate distance from
 original inputs: ‘Linf’|’L2’.
 Default: ‘Linf’.</p></li>
 </ul>
@@ -324,18 +324,18 @@ additional_forward_args provided to evaluate.</p></li>
 of a Captum Perturbation / Attack
 or any other perturbation or attack function such
 as a torchvision transform.</p></li>
-<li><p><strong>name</strong> (<em>optional</em><em>, </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – Name or identifier for attack, used as key for
+<li><p><strong>name</strong> (<em>optional</em><em>, </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><em>str</em></a>) – Name or identifier for attack, used as key for
 attack results. This defaults to attack.__class__.__name__
 if not provided and must be unique for all added attacks.</p></li>
-<li><p><strong>num_attempts</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a>) – Number of attempts that attack should be
+<li><p><strong>num_attempts</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><em>int</em></a>) – Number of attempts that attack should be
 repeated. This should only be set to &gt; 1 for non-deterministic
 attacks. The minimum, maximum, and average (best, worst, and
 average case) are tracked for attack attempts.</p></li>
-<li><p><strong>apply_before_preproc</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.9)"><em>bool</em></a>) – Defines whether attack should be applied
+<li><p><strong>apply_before_preproc</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.10)"><em>bool</em></a>) – Defines whether attack should be applied
 before or after preproc function.</p></li>
-<li><p><strong>attack_kwargs</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.9)"><em>dict</em></a>) – Additional arguments to be provided to given attack.
+<li><p><strong>attack_kwargs</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.10)"><em>dict</em></a>) – Additional arguments to be provided to given attack.
 This should be provided as a dictionary of keyword arguments.</p></li>
-<li><p><strong>additional_attack_arg_names</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.9)"><em>list</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a><em>]</em>) – Any additional arguments for the
+<li><p><strong>additional_attack_arg_names</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.10)"><em>list</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><em>str</em></a><em>]</em>) – Any additional arguments for the
 attack which are specific to the particular input example or batch.
 An example of this is target, which is necessary for some attacks such
 as FGSM or PGD. These arguments are included if provided as a kwarg
@@ -343,7 +343,7 @@ to evaluate.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Return type</dt>
-<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.9)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a></p>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.10)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -433,7 +433,7 @@ without any perturbations.</p>
 </div>
 <dl class="field-list simple">
 <dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Dict" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Dict</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Union" title="(in Python v3.9)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code></a>[~MetricResultType, <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Dict" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Dict</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, ~MetricResultType]]]</p>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Dict" title="(in Python v3.10)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Dict</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Union" title="(in Python v3.10)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code></a>[~MetricResultType, <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Dict" title="(in Python v3.10)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Dict</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, ~MetricResultType]]]</p>
 </dd>
 </dl>
 </dd></dl>
@@ -443,7 +443,7 @@ without any perturbations.</p>
 <dd><p>Reset stored average summary results for previous batches</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.9)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a></p>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.10)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -500,17 +500,17 @@ or any other perturbation or attack function such
 as a torchvision transform.
 Perturb function must take additional argument (var_name) used for
 minimal perturbation search.</p></li>
-<li><p><strong>arg_name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – Name of argument / variable paramterizing attack, must be
+<li><p><strong>arg_name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><em>str</em></a>) – Name of argument / variable paramterizing attack, must be
 kwarg of attack. Examples are num_dropout or stdevs</p></li>
-<li><p><strong>arg_min</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.9)"><em>float</em></a>) – Minimum value of target variable</p></li>
-<li><p><strong>arg_max</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.9)"><em>float</em></a>) – Maximum value of target variable
+<li><p><strong>arg_min</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><em>int</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.10)"><em>float</em></a>) – Minimum value of target variable</p></li>
+<li><p><strong>arg_max</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><em>int</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.10)"><em>float</em></a>) – Maximum value of target variable
 (not included in range)</p></li>
-<li><p><strong>arg_step</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.9)"><em>float</em></a>) – Minimum interval for increase of target variable.</p></li>
-<li><p><strong>mode</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a><em>, </em><em>optional</em>) – Mode for search of minimum attack value;
+<li><p><strong>arg_step</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><em>int</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.10)"><em>float</em></a>) – Minimum interval for increase of target variable.</p></li>
+<li><p><strong>mode</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><em>str</em></a><em>, </em><em>optional</em>) – Mode for search of minimum attack value;
 either ‘linear’ for linear search on variable, or ‘binary’ for
 binary search of variable
 Default: ‘linear’</p></li>
-<li><p><strong>num_attempts</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a><em>, </em><em>optional</em>) – Number of attempts or trials with
+<li><p><strong>num_attempts</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><em>int</em></a><em>, </em><em>optional</em>) – Number of attempts or trials with
 given variable. This should only be set to &gt; 1 for non-deterministic
 perturbation / attack functions
 Default: 1</p></li>
@@ -518,7 +518,7 @@ Default: 1</p></li>
 of preproc_fn is then provided as input to model, in addition to
 additional_forward_args provided to evaluate.
 Default: None</p></li>
-<li><p><strong>apply_before_preproc</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.9)"><em>bool</em></a><em>, </em><em>optional</em>) – Defines whether attack should be
+<li><p><strong>apply_before_preproc</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.10)"><em>bool</em></a><em>, </em><em>optional</em>) – Defines whether attack should be
 applied before or after preproc function.
 Default: False</p></li>
 <li><p><strong>correct_fn</strong> (<em>Callable</em><em>, </em><em>optional</em>) – <p>This determines whether the perturbed input
@@ -578,7 +578,7 @@ the given argument is used for all forward evaluations.
 Default: None</p></li>
 <li><p><strong>target</strong> (<em>TargetType</em>) – Target class for classification. This is required if
 using the default correct_fn</p></li>
-<li><p><strong>perturbations_per_eval</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a><em>, </em><em>optional</em>) – Allows perturbations of multiple
+<li><p><strong>perturbations_per_eval</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><em>int</em></a><em>, </em><em>optional</em>) – Allows perturbations of multiple
 attacks to be grouped and evaluated in one call of forward_fn
 Each forward pass will contain a maximum of
 perturbations_per_eval * #examples samples.
@@ -598,7 +598,7 @@ arguments provided to correct function</p></li>
 </ul>
 </dd>
 <dt class="field-even">Return type</dt>
-<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Tuple" title="(in Python v3.9)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Tuple</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.9)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Union" title="(in Python v3.9)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.9)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a>]]</p>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Tuple" title="(in Python v3.10)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Tuple</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.10)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Union" title="(in Python v3.10)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.10)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.10)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a>]]</p>
 </dd>
 <dt class="field-odd">Returns</dt>
 <dd class="field-odd"><p><p>Tuple of (perturbed_inputs, param_val) if successful

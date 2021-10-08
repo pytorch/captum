@@ -196,7 +196,7 @@ to these arguments. This means that these arguments aren’t
 being passed to <cite>perturb_func</cite> as an input argument.</p>
 <p>Default: None</p>
 </p></li>
-<li><p><strong>target</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.9)"><em>tuple</em></a><em>, </em><em>tensor</em><em> or </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.9)"><em>list</em></a><em>, </em><em>optional</em>) – <p>Indices for selecting
+<li><p><strong>target</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><em>int</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.10)"><em>tuple</em></a><em>, </em><em>tensor</em><em> or </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.10)"><em>list</em></a><em>, </em><em>optional</em>) – <p>Indices for selecting
 predictions from output(for classification cases,
 this is usually the target class).
 If the network returns a scalar value per example, no target
@@ -219,13 +219,13 @@ target for the corresponding example.</p></li>
 </ul>
 <p>Default: None</p>
 </p></li>
-<li><p><strong>n_perturb_samples</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a><em>, </em><em>optional</em>) – <p>The number of times input tensors
+<li><p><strong>n_perturb_samples</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><em>int</em></a><em>, </em><em>optional</em>) – <p>The number of times input tensors
 are perturbed. Each input example in the inputs tensor is expanded
 <cite>n_perturb_samples</cite>
 times before calling <cite>perturb_func</cite> function.</p>
 <p>Default: 10</p>
 </p></li>
-<li><p><strong>max_examples_per_batch</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a><em>, </em><em>optional</em>) – <p>The number of maximum input
+<li><p><strong>max_examples_per_batch</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><em>int</em></a><em>, </em><em>optional</em>) – <p>The number of maximum input
 examples that are processed together. In case the number of
 examples (<cite>input batch size * n_perturb_samples</cite>) exceeds
 <cite>max_examples_per_batch</cite>, they will be sliced
@@ -236,7 +236,7 @@ at least be equal <cite>input batch size</cite> and at most
 <cite>input batch size * n_perturb_samples</cite>.</p>
 <p>Default: None</p>
 </p></li>
-<li><p><strong>normalize</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.9)"><em>bool</em></a><em>, </em><em>optional</em>) – <p>Normalize the dot product of the input
+<li><p><strong>normalize</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.10)"><em>bool</em></a><em>, </em><em>optional</em>) – <p>Normalize the dot product of the input
 perturbation and the attribution so the infidelity value is invariant
 to constant scaling of the attribution values. The normalization factor
 beta is defined as the ratio of two mean values:</p>
@@ -350,7 +350,7 @@ times within the batch.</p>
 </dl>
 <p>Default: default_perturb_func</p>
 </p></li>
-<li><p><strong>perturb_radius</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.9)"><em>float</em></a><em>, </em><em>optional</em>) – <p>The epsilon radius used for sampling.
+<li><p><strong>perturb_radius</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.10)"><em>float</em></a><em>, </em><em>optional</em>) – <p>The epsilon radius used for sampling.
 In the <cite>default_perturb_func</cite> it is used as the radius of
 the L-Infinity ball. In a general case it can serve as a radius of
 any L_p nom.
@@ -358,19 +358,19 @@ This argument is passed to <cite>perturb_func</cite> if it takes more than
 one argument.</p>
 <p>Default: 0.02</p>
 </p></li>
-<li><p><strong>n_perturb_samples</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a><em>, </em><em>optional</em>) – <p>The number of times input tensors
+<li><p><strong>n_perturb_samples</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><em>int</em></a><em>, </em><em>optional</em>) – <p>The number of times input tensors
 are perturbed. Each input example in the inputs tensor is
 expanded <cite>n_perturb_samples</cite> times before calling
 <cite>perturb_func</cite> function.</p>
 <p>Default: 10</p>
 </p></li>
-<li><p><strong>norm_ord</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.9)"><em>float</em></a><em>, </em><em>inf</em><em>, </em><em>-inf</em><em>, </em><em>'fro'</em><em>, </em><em>'nuc'</em><em>, </em><em>optional</em>) – <p>The type of norm
+<li><p><strong>norm_ord</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><em>int</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.10)"><em>float</em></a><em>, </em><em>inf</em><em>, </em><em>-inf</em><em>, </em><em>'fro'</em><em>, </em><em>'nuc'</em><em>, </em><em>optional</em>) – <p>The type of norm
 that is used to compute the
 norm of the sensitivity matrix which is defined as the difference
 between the explanation function at its input and perturbed input.</p>
 <p>Default: ‘fro’</p>
 </p></li>
-<li><p><strong>max_examples_per_batch</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a><em>, </em><em>optional</em>) – <dl>
+<li><p><strong>max_examples_per_batch</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><em>int</em></a><em>, </em><em>optional</em>) – <dl>
 <dt>The number of maximum input</dt><dd><p>examples that are processed together. In case the number of
 examples (<cite>input batch size * n_perturb_samples</cite>) exceeds
 <cite>max_examples_per_batch</cite>, they will be sliced

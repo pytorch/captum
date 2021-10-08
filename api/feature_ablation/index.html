@@ -94,7 +94,7 @@ for corresponding input tensor.</p></li>
 use zero scalar corresponding to each input tensor.
 Default: None</p>
 </p></li>
-<li><p><strong>target</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.9)"><em>tuple</em></a><em>, </em><em>tensor</em><em> or </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.9)"><em>list</em></a><em>, </em><em>optional</em>) – <p>Output indices for
+<li><p><strong>target</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><em>int</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.10)"><em>tuple</em></a><em>, </em><em>tensor</em><em> or </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.10)"><em>list</em></a><em>, </em><em>optional</em>) – <p>Output indices for
 which gradients are computed (for classification cases,
 this is usually the target class).
 If the network returns a scalar value per example,
@@ -153,7 +153,7 @@ If None, then a feature mask is constructed which assigns
 each scalar within a tensor as a separate feature, which
 is ablated independently.
 Default: None</p></li>
-<li><p><strong>perturbations_per_eval</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a><em>, </em><em>optional</em>) – Allows ablation of multiple
+<li><p><strong>perturbations_per_eval</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><em>int</em></a><em>, </em><em>optional</em>) – Allows ablation of multiple
 features to be processed simultaneously in one call to
 forward_fn.
 Each forward pass will contain a maximum of
@@ -169,7 +169,7 @@ scalar value), you must set perturbations_per_eval to 1
 and use a single feature mask to describe the features
 for all examples in the batch.
 Default: 1</p></li>
-<li><p><strong>show_progress</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.9)"><em>bool</em></a><em>, </em><em>optional</em>) – Displays the progress of computation.
+<li><p><strong>show_progress</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.10)"><em>bool</em></a><em>, </em><em>optional</em>) – Displays the progress of computation.
 It will try to use tqdm if available for advanced features
 (e.g. time estimation). Otherwise, it will fallback to
 a simple output of progress.

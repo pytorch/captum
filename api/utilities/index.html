@@ -77,11 +77,11 @@ be represented in these modes.</p></li>
 </ol>
 <p>Default: <cite>absolute_value</cite></p>
 </p></li>
-<li><p><strong>plt_fig_axis</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.9)"><em>tuple</em></a><em>, </em><em>optional</em>) – Tuple of matplotlib.pyplot.figure and axis
+<li><p><strong>plt_fig_axis</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.10)"><em>tuple</em></a><em>, </em><em>optional</em>) – Tuple of matplotlib.pyplot.figure and axis
 on which to visualize. If None is provided, then a new figure
 and axis are created.
 Default: None</p></li>
-<li><p><strong>outlier_perc</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.9)"><em>float</em></a><em> or </em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a><em>, </em><em>optional</em>) – Top attribution values which
+<li><p><strong>outlier_perc</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.10)"><em>float</em></a><em> or </em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><em>int</em></a><em>, </em><em>optional</em>) – Top attribution values which
 correspond to a total of outlier_perc percentage of the
 total attribution are set to 1 and scaling is performed
 using the minimum of these values. For sign=`all`, outliers
@@ -94,7 +94,7 @@ sign, “Blues” for absolute value, “Greens” for positive sign,
 and a spectrum from red to green for all. Note that this
 argument is only used for visualizations displaying heatmaps.
 Default: None</p></li>
-<li><p><strong>alpha_overlay</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.9)"><em>float</em></a><em>, </em><em>optional</em>) – Alpha to set for heatmap when using
+<li><p><strong>alpha_overlay</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.10)"><em>float</em></a><em>, </em><em>optional</em>) – Alpha to set for heatmap when using
 <cite>blended_heat_map</cite> visualization mode, which overlays the
 heat map over the greyscaled original image.
 Default: 0.5</p></li>
@@ -107,7 +107,7 @@ Default: False</p></li>
 <li><p><strong>title</strong> (<em>string</em><em>, </em><em>optional</em>) – Title string for plot. If None, no title is
 set.
 Default: None</p></li>
-<li><p><strong>fig_size</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.9)"><em>tuple</em></a><em>, </em><em>optional</em>) – Size of figure created.
+<li><p><strong>fig_size</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.10)"><em>tuple</em></a><em>, </em><em>optional</em>) – Size of figure created.
 Default: (6,6)</p></li>
 <li><p><strong>use_pyplot</strong> (<em>boolean</em><em>, </em><em>optional</em>) – If true, uses pyplot to create and show
 figure and displays the figure after creating. If False,
@@ -179,7 +179,7 @@ string argument for sign to visualize_image_attr.</p></li>
 a title string for each plot. If None is provided, no titles
 are added to subplots.
 Default: None</p></li>
-<li><p><strong>fig_size</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.9)"><em>tuple</em></a><em>, </em><em>optional</em>) – Size of figure created.
+<li><p><strong>fig_size</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.10)"><em>tuple</em></a><em>, </em><em>optional</em>) – Size of figure created.
 Default: (8, 6)</p></li>
 <li><p><strong>use_pyplot</strong> (<em>boolean</em><em>, </em><em>optional</em>) – If true, uses pyplot to create and show
 figure and displays the figure after creating. If False,
@@ -318,7 +318,7 @@ layer that allows us to access the embeddings through their indices.</p>
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>model</strong> (<em>torch.nn.Model</em>) – An instance of PyTorch model that contains embeddings.</p></li>
-<li><p><strong>embedding_layer_name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a><em>, </em><em>optional</em>) – The name of the embedding layer
+<li><p><strong>embedding_layer_name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><em>str</em></a><em>, </em><em>optional</em>) – The name of the embedding layer
 in the <cite>model</cite> that we would like to make interpretable.</p></li>
 </ul>
 </dd>
@@ -418,7 +418,7 @@ index of the reference token in the vocabulary as an argument to
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>sequence_length</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a>) – The length of the reference sequence</p></li>
+<li><p><strong>sequence_length</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><em>int</em></a>) – The length of the reference sequence</p></li>
 <li><p><strong>device</strong> (<em>torch.device</em>) – The device on which the reference tensor will
 be created.</p></li>
 </ul>
@@ -457,7 +457,7 @@ task, thus you should expect batched (x, y) pairs or (x, y, w) triples.</p>
 <dd class="field-odd"><p><strong>train_data</strong> (<em>DataLoader</em>) – The data to train on</p>
 </dd>
 <dt class="field-even">Return type</dt>
-<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Optional" title="(in Python v3.9)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Dict" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Dict</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Union" title="(in Python v3.9)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a>, <a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.9.1)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tensor</span></code></a>]]]</p>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Optional" title="(in Python v3.10)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Dict" title="(in Python v3.10)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Dict</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Union" title="(in Python v3.10)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.10)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a>, <a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.9.1)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tensor</span></code></a>]]]</p>
 </dd>
 <dt class="field-odd">Returns</dt>
 <dd class="field-odd"><p>Optional statistics about training, e.g.  iterations it took to
@@ -497,7 +497,7 @@ tensors to numpy and then convert the resulting trained model to a
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>sklearn_module</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>) – <p>The module under sklearn to construct and use for training, e.g.
+<li><p><strong>sklearn_module</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>) – <p>The module under sklearn to construct and use for training, e.g.
 use “svm.LinearSVC” for an SVM or “linear_model.Lasso” for Lasso.</p>
 <p>There are factory classes defined for you for common use cases,
 such as <cite>SkLearnLasso</cite>.</p>

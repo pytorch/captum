@@ -33,16 +33,97 @@
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">torch</span>
 <span class="kn">import</span> <span class="nn">torch.multiprocessing</span> <span class="k">as</span> <span class="nn">multiprocessing</span>
+<span class="kn">from</span> <span class="nn">captum._utils.av</span> <span class="kn">import</span> <span class="n">AV</span>
 <span class="kn">from</span> <span class="nn">captum._utils.common</span> <span class="kn">import</span> <span class="n">_format_tensor_into_tuples</span><span class="p">,</span> <span class="n">_get_module_from_name</span>
 <span class="kn">from</span> <span class="nn">captum._utils.typing</span> <span class="kn">import</span> <span class="n">TargetType</span><span class="p">,</span> <span class="n">TensorOrTupleOfTensorsGeneric</span>
 <span class="kn">from</span> <span class="nn">captum.attr</span> <span class="kn">import</span> <span class="n">LayerActivation</span><span class="p">,</span> <span class="n">LayerAttribution</span><span class="p">,</span> <span class="n">LayerGradientXActivation</span>
-<span class="kn">from</span> <span class="nn">captum.concept._core.av</span> <span class="kn">import</span> <span class="n">AV</span>
 <span class="kn">from</span> <span class="nn">captum.concept._core.cav</span> <span class="kn">import</span> <span class="n">CAV</span>
 <span class="kn">from</span> <span class="nn">captum.concept._core.concept</span> <span class="kn">import</span> <span class="n">Concept</span><span class="p">,</span> <span class="n">ConceptInterpreter</span>
 <span class="kn">from</span> <span class="nn">captum.concept._utils.classifier</span> <span class="kn">import</span> <span class="n">Classifier</span><span class="p">,</span> <span class="n">DefaultClassifier</span>
 <span class="kn">from</span> <span class="nn">captum.concept._utils.common</span> <span class="kn">import</span> <span class="n">concepts_to_str</span>
 <span class="kn">from</span> <span class="nn">torch</span> <span class="kn">import</span> <span class="n">Tensor</span>
 <span class="kn">from</span> <span class="nn">torch.nn</span> <span class="kn">import</span> <span class="n">Module</span>
+<span class="kn">from</span> <span class="nn">torch.utils.data</span> <span class="kn">import</span> <span class="n">DataLoader</span><span class="p">,</span> <span class="n">Dataset</span>
+
+<span class="n">DEFAULT_MODEL_ID</span> <span class="o">=</span> <span class="s2">"default_model_id"</span>
+
+
+<span class="k">class</span> <span class="nc">LabelledDataset</span><span class="p">(</span><span class="n">Dataset</span><span class="p">):</span>
+    <span class="sd">"""</span>
+<span class="sd">    A torch Dataset whose __getitem__ returns both a batch of activation vectors,</span>
+<span class="sd">    as well as a batch of labels associated with those activation vectors.</span>
+<span class="sd">    It is used to train a classifier in train_tcav</span>
+<span class="sd">    """</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">datasets</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">AV</span><span class="o">.</span><span class="n">AVDataset</span><span class="p">],</span> <span class="n">labels</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]):</span>
+        <span class="sd">"""</span>
+<span class="sd">        Creates the LabelledDataset given a list of K Datasets, and a length K</span>
+<span class="sd">        list of integer labels representing K different concepts.</span>
+<span class="sd">        The assumption is that the k-th Dataset of datasets is associated with</span>
+<span class="sd">        the k-th element of labels.</span>
+<span class="sd">        The LabelledDataset is the concatenation of the K Datasets in datasets.</span>
+<span class="sd">        However, __get_item__ not only returns a batch of activation vectors,</span>
+<span class="sd">        but also a batch of labels indicating which concept that batch of</span>
+<span class="sd">        activation vectors is associated with.</span>
+<span class="sd">        Args:</span>
+<span class="sd">            datasets (list[Dataset]): The k-th element of datasets is a Dataset</span>
+<span class="sd">                    representing activation vectors associated with the k-th</span>
+<span class="sd">                    concept</span>
+<span class="sd">            labels (list[Int]): The k-th element of labels is the integer label</span>
+<span class="sd">                    associated with the k-th concept</span>
+<span class="sd">        """</span>
+        <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">datasets</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span>
+            <span class="n">labels</span>
+        <span class="p">),</span> <span class="s2">"number of datasets does not match the number of concepts"</span>
+
+        <span class="kn">from</span> <span class="nn">itertools</span> <span class="kn">import</span> <span class="n">accumulate</span>
+
+        <span class="n">offsets</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="nb">list</span><span class="p">(</span><span class="n">accumulate</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">len</span><span class="p">,</span> <span class="n">datasets</span><span class="p">),</span> <span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">:</span> <span class="n">x</span> <span class="o">+</span> <span class="n">y</span><span class="p">)))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">length</span> <span class="o">=</span> <span class="n">offsets</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">datasets</span> <span class="o">=</span> <span class="n">datasets</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">labels</span> <span class="o">=</span> <span class="n">labels</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lowers</span> <span class="o">=</span> <span class="n">offsets</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">uppers</span> <span class="o">=</span> <span class="n">offsets</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>
+
+    <span class="k">def</span> <span class="nf">_i_to_k</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">i</span><span class="p">):</span>
+
+        <span class="n">left</span><span class="p">,</span> <span class="n">right</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">uppers</span><span class="p">)</span>
+        <span class="k">while</span> <span class="n">left</span> <span class="o">&lt;</span> <span class="n">right</span><span class="p">:</span>
+            <span class="n">mid</span> <span class="o">=</span> <span class="p">(</span><span class="n">left</span> <span class="o">+</span> <span class="n">right</span><span class="p">)</span> <span class="o">//</span> <span class="mi">2</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">lowers</span><span class="p">[</span><span class="n">mid</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="n">i</span> <span class="ow">and</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">uppers</span><span class="p">[</span><span class="n">mid</span><span class="p">]:</span>
+                <span class="k">return</span> <span class="n">mid</span>
+            <span class="k">if</span> <span class="n">i</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">uppers</span><span class="p">[</span><span class="n">mid</span><span class="p">]:</span>
+                <span class="n">left</span> <span class="o">=</span> <span class="n">mid</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">right</span> <span class="o">=</span> <span class="n">mid</span>
+
+    <span class="k">def</span> <span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">i</span><span class="p">):</span>
+        <span class="sd">"""</span>
+<span class="sd">        Returns a batch of activation vectors, as well as a batch of labels</span>
+<span class="sd">        indicating which concept the batch of activation vectors is associated</span>
+<span class="sd">        with.</span>
+
+<span class="sd">        args:</span>
+<span class="sd">            i (int): which (activation vector, label) batch in the dataset to</span>
+<span class="sd">                    return</span>
+<span class="sd">        returns:</span>
+<span class="sd">            inputs (Tensor): i-th batch in Dataset (representing activation</span>
+<span class="sd">                    vectors)</span>
+<span class="sd">            labels (Tensor): labels of i-th batch in Dataset</span>
+<span class="sd">        """</span>
+        <span class="k">assert</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">length</span>
+        <span class="n">k</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_i_to_k</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+        <span class="n">inputs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">datasets</span><span class="p">[</span><span class="n">k</span><span class="p">][</span><span class="n">i</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">lowers</span><span class="p">[</span><span class="n">k</span><span class="p">]]</span>
+        <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">inputs</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span>
+
+        <span class="n">labels</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">labels</span><span class="p">[</span><span class="n">k</span><span class="p">]]</span> <span class="o">*</span> <span class="n">inputs</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="mi">0</span><span class="p">),</span> <span class="n">device</span><span class="o">=</span><span class="n">inputs</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">inputs</span><span class="p">,</span> <span class="n">labels</span>
+
+    <span class="k">def</span> <span class="fm">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">"""</span>
+<span class="sd">        returns the total number of batches in the labelled_dataset</span>
+<span class="sd">        """</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">length</span>
 
 
 <span class="k">def</span> <span class="nf">train_cav</span><span class="p">(</span>
@@ -89,13 +170,26 @@
     <span class="n">cavs</span><span class="p">[</span><span class="n">concepts_key</span><span class="p">]</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">()</span>
     <span class="n">layers</span> <span class="o">=</span> <span class="p">[</span><span class="n">layers</span><span class="p">]</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">layers</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="k">else</span> <span class="n">layers</span>
     <span class="k">for</span> <span class="n">layer</span> <span class="ow">in</span> <span class="n">layers</span><span class="p">:</span>
-        <span class="c1"># Create data loader to initialize the trainer.</span>
-        <span class="n">dataloader</span> <span class="o">=</span> <span class="n">AV</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">save_path</span><span class="p">,</span> <span class="n">layer</span><span class="p">,</span> <span class="n">concepts</span><span class="p">)</span>
-        <span class="k">assert</span> <span class="p">(</span>
-            <span class="n">dataloader</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
-        <span class="p">),</span> <span class="s2">"Cannot load concepts for given layer: </span><span class="si">{}</span><span class="s2">"</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">layer</span><span class="p">)</span>
 
-        <span class="c1"># Train and evaluate the model provided in the classifier</span>
+        <span class="c1"># Create data loader to initialize the trainer.</span>
+        <span class="n">datasets</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span>
+            <span class="n">AV</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">save_path</span><span class="p">,</span> <span class="n">DEFAULT_MODEL_ID</span><span class="p">,</span> <span class="n">layer</span><span class="p">,</span> <span class="n">concept</span><span class="o">.</span><span class="n">identifier</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">concept</span> <span class="ow">in</span> <span class="n">concepts</span>
+        <span class="p">)</span>
+
+        <span class="n">labels</span> <span class="o">=</span> <span class="p">[</span><span class="n">concept</span><span class="o">.</span><span class="n">id</span> <span class="k">for</span> <span class="n">concept</span> <span class="ow">in</span> <span class="n">concepts</span><span class="p">]</span>
+        <span class="k">assert</span> <span class="kc">None</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">datasets</span><span class="p">,</span> <span class="s2">"Cannot load concepts for given layer: </span><span class="si">{}</span><span class="s2">"</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+            <span class="n">layer</span>
+        <span class="p">)</span>
+
+        <span class="n">labelled_dataset</span> <span class="o">=</span> <span class="n">LabelledDataset</span><span class="p">(</span><span class="n">cast</span><span class="p">(</span><span class="n">List</span><span class="p">[</span><span class="n">AV</span><span class="o">.</span><span class="n">AVDataset</span><span class="p">],</span> <span class="n">datasets</span><span class="p">),</span> <span class="n">labels</span><span class="p">)</span>
+
+        <span class="k">def</span> <span class="nf">batch_collate</span><span class="p">(</span><span class="n">batch</span><span class="p">):</span>
+            <span class="n">inputs</span><span class="p">,</span> <span class="n">labels</span> <span class="o">=</span> <span class="nb">zip</span><span class="p">(</span><span class="o">*</span><span class="n">batch</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">(</span><span class="n">inputs</span><span class="p">),</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">(</span><span class="n">labels</span><span class="p">)</span>
+
+        <span class="n">dataloader</span> <span class="o">=</span> <span class="n">DataLoader</span><span class="p">(</span><span class="n">labelled_dataset</span><span class="p">,</span> <span class="n">collate_fn</span><span class="o">=</span><span class="n">batch_collate</span><span class="p">)</span>
+
         <span class="n">classifier_stats_dict</span> <span class="o">=</span> <span class="n">classifier</span><span class="o">.</span><span class="n">train_and_eval</span><span class="p">(</span>
             <span class="n">dataloader</span><span class="p">,</span> <span class="o">**</span><span class="n">classifier_kwargs</span>
         <span class="p">)</span>
@@ -269,11 +363,18 @@
             <span class="s2">"Data iterator for concept id:"</span><span class="p">,</span>
             <span class="s2">"</span><span class="si">{}</span><span class="s2"> must be specified"</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">concept</span><span class="o">.</span><span class="n">id</span><span class="p">),</span>
         <span class="p">)</span>
-        <span class="k">for</span> <span class="n">examples</span> <span class="ow">in</span> <span class="n">concept</span><span class="o">.</span><span class="n">data_iter</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">examples</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">concept</span><span class="o">.</span><span class="n">data_iter</span><span class="p">):</span>
             <span class="n">activations</span> <span class="o">=</span> <span class="n">layer_act</span><span class="o">.</span><span class="n">attribute</span><span class="p">(</span><span class="n">examples</span><span class="p">)</span>
             <span class="k">for</span> <span class="n">activation</span><span class="p">,</span> <span class="n">layer_name</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">activations</span><span class="p">,</span> <span class="n">layers</span><span class="p">):</span>
                 <span class="n">activation</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">activation</span><span class="p">,</span> <span class="p">(</span><span class="n">activation</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="o">-</span><span class="mi">1</span><span class="p">))</span>
-                <span class="n">AV</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">save_path</span><span class="p">,</span> <span class="n">concept</span><span class="p">,</span> <span class="n">layer_name</span><span class="p">,</span> <span class="n">activation</span><span class="o">.</span><span class="n">detach</span><span class="p">())</span></div>
+                <span class="n">AV</span><span class="o">.</span><span class="n">save</span><span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">save_path</span><span class="p">,</span>
+                    <span class="n">DEFAULT_MODEL_ID</span><span class="p">,</span>
+                    <span class="n">concept</span><span class="o">.</span><span class="n">identifier</span><span class="p">,</span>
+                    <span class="n">layer_name</span><span class="p">,</span>
+                    <span class="n">activation</span><span class="o">.</span><span class="n">detach</span><span class="p">(),</span>
+                    <span class="nb">str</span><span class="p">(</span><span class="n">i</span><span class="p">),</span>
+                <span class="p">)</span></div>
 
 <div class="viewcode-block" id="TCAV.generate_activations"><a class="viewcode-back" href="../../../../concept.html#captum.concept.TCAV.generate_activations">[docs]</a>    <span class="k">def</span> <span class="nf">generate_activations</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">concept_layers</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="n">Concept</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="sa">r</span><span class="sd">"""</span>
@@ -335,7 +436,9 @@
                 <span class="c1"># For all concepts in this experimental_set</span>
                 <span class="k">for</span> <span class="n">concept</span> <span class="ow">in</span> <span class="n">concepts</span><span class="p">:</span>
                     <span class="c1"># Collect not activated layers for this concept</span>
-                    <span class="k">if</span> <span class="ow">not</span> <span class="n">AV</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">save_path</span><span class="p">,</span> <span class="n">concept</span><span class="p">,</span> <span class="n">layer</span><span class="p">):</span>
+                    <span class="k">if</span> <span class="ow">not</span> <span class="n">AV</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">save_path</span><span class="p">,</span> <span class="n">DEFAULT_MODEL_ID</span><span class="p">,</span> <span class="n">layer</span><span class="p">,</span> <span class="n">concept</span><span class="o">.</span><span class="n">identifier</span>
+                    <span class="p">):</span>
                         <span class="n">concept_layers</span><span class="p">[</span><span class="n">concept</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">layer</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">layers</span><span class="p">,</span> <span class="n">concept_layers</span></div>
 
@@ -424,6 +527,7 @@
                     <span class="k">for</span> <span class="n">concepts</span> <span class="ow">in</span> <span class="n">experimental_sets</span>
                 <span class="p">],</span>
             <span class="p">)</span>
+
             <span class="n">pool</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
             <span class="n">pool</span><span class="o">.</span><span class="n">join</span><span class="p">()</span>
 
