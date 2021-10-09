@@ -53,7 +53,7 @@ class AV:
             with the input `model_id`.
 
             Args:
-                path (str): The manifold path where the activation vectors
+                path (str): The path where the activation vectors
                         for the `layer` are stored.
                 model_id (str): The name/version of the model for which layer
                         activations are being computed and stored.
@@ -153,10 +153,10 @@ class AV:
     ) -> bool:
         r"""
         Verifies whether the model + layer activations exist
-        under the manifold path.
+        under the path.
 
         Args:
-            path (str): The manifold path where the activation vectors
+            path (str): The path where the activation vectors
                     for the `model_id` are stored.
             model_id (str): The name/version of the model for which layer activations
                     are being computed and stored.
@@ -197,7 +197,7 @@ class AV:
         `layer` under the manifold `path`.
 
         Args:
-            path (str): The manifold path where the activation vectors
+            path (str): The path where the activation vectors
                     for the `layer` are stored.
             model_id (str): The name/version of the model for which layer activations
                     are being computed and stored.
@@ -292,7 +292,7 @@ class AV:
         Returns unsaved layers, and deletes saved layers if load_from_disk is False.
 
         Args:
-            path (str): The manifold path where the activation vectors
+            path (str): The path where the activation vectors
                     for the `layer` are stored.
             model_id (str): The name/version of the model for which layer activations
                     are being computed and stored.
@@ -348,7 +348,7 @@ class AV:
         Computes layer activations for the given inputs and specified `layers`
 
         Args:
-            path (str): The manifold path where the activation vectors
+            path (str): The path where the activation vectors
                     for the `layer` are stored.
             module (torch.nn.Module): An instance of pytorch model. This model should
                     define all of its layers as attributes of the model.
@@ -444,7 +444,7 @@ class AV:
         (see AV._unpack_data).
 
         Args:
-            path (str): The manifold path where the activation vectors
+            path (str): The path where the activation vectors
                     for the `layer` are stored.
             module (torch.nn.Module): An instance of pytorch model. This model should
                     define all of its layers as attributes of the model.
