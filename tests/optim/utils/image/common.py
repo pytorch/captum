@@ -5,7 +5,6 @@ import torch
 
 import captum.optim._utils.image.common as common
 from tests.helpers.basic import BaseTest, assertTensorAlmostEqual
-from tests.optim.helpers import numpy_common
 
 
 class TestGetNeuronPos(unittest.TestCase):
