@@ -172,7 +172,7 @@ def nchannels_to_rgb(x: torch.Tensor, warp: bool = True) -> torch.Tensor:
 
 
 def weights_to_heatmap_2d(
-    tensor: torch.Tensor,
+    weight: torch.Tensor,
     colors: List[str] = ["0571b0", "92c5de", "f7f7f7", "f4a582", "ca0020"],
 ) -> torch.Tensor:
     """
@@ -190,7 +190,7 @@ def weights_to_heatmap_2d(
         color_tensor (torch.Tensor):  A weight heatmap.
     """
 
-    assert tensor.dim() == 2
+    assert weight.dim() == 2
     assert len(colors) == 5
     assert all([len(c) == 6 for c in colors])
 
@@ -202,8 +202,8 @@ def weights_to_heatmap_2d(
             [hex2base10(x[0:2]), hex2base10(x[2:4]), hex2base10(x[4:6])], device=device
         )
 
-    color_list = [get_color(c, tensor.device) for c in colors]
-    x = tensor.expand((3, tensor.shape[0], tensor.shape[1])).permute(1, 2, 0)
+    color_list = [get_color(c, weight.device) for c in colors]
+    x = weight.expand((3, weight.shape[0], weight.shape[1])).permute(1, 2, 0)
 
     color_tensor = (
         (x >= 0) * (x < 0.5) * ((1 - x * 2) * color_list[2] + x * 2 * color_list[3])

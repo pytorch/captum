@@ -84,7 +84,7 @@ class TestRandomRotation(BaseTest):
         theta = 25.1
         theta = theta * 3.141592653589793 / 180
         rot_mod = transforms.RandomRotation([25.1])
-        rot_matrix = rot_mod.get_rot_mat(
+        rot_matrix = rot_mod._get_rot_mat(
             theta, device=torch.device("cpu"), dtype=torch.float32
         )
         expected_matrix = torch.tensor(
@@ -97,7 +97,7 @@ class TestRandomRotation(BaseTest):
         rot_mod = transforms.RandomRotation([25.0])
 
         test_input = torch.eye(4, 4).repeat(3, 1, 1).unsqueeze(0)
-        test_output = rot_mod.rotate_tensor(test_input, 25.0)
+        test_output = rot_mod._rotate_tensor(test_input, 25.0)
 
         expected_output = (
             torch.tensor(

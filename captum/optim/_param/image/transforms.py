@@ -6,7 +6,6 @@ import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-
 from captum.optim._utils.image.common import nchannels_to_rgb
 from captum.optim._utils.typing import IntSeqOrIntType, NumSeqOrTensorType
 
@@ -405,13 +404,16 @@ class RandomRotation(nn.Module):
         assert len(degrees) > 0
         self.degrees = degrees
 
-    def get_rot_mat(
+    def _get_rot_mat(
         self,
         theta: Union[int, float, torch.Tensor],
         device: torch.device,
         dtype: torch.dtype,
     ) -> torch.Tensor:
-        theta = torch.tensor(theta, device=device, dtype=dtype)
+        if torch.is_tensor(theta):
+            theta = theta.float().to(device)
+        else:
+            theta = torch.tensor(theta, device=device, dtype=dtype)
         rot_mat = torch.tensor(
             [
                 [torch.cos(theta), -torch.sin(theta), 0],
@@ -422,11 +424,11 @@ class RandomRotation(nn.Module):
         )
         return rot_mat
 
-    def rotate_tensor(
+    def _rotate_tensor(
         self, x: torch.Tensor, theta: Union[int, float, torch.Tensor]
     ) -> torch.Tensor:
         theta = theta * math.pi / 180
-        rot_matrix = self.get_rot_mat(theta, x.device, x.dtype)[None, ...].repeat(
+        rot_matrix = self._get_rot_mat(theta, x.device, x.dtype)[None, ...].repeat(
             x.shape[0], 1, 1
         )
         if torch.__version__ >= "1.3.0":
@@ -450,7 +452,7 @@ class RandomRotation(nn.Module):
             **tensor** (torch.Tensor): A randomly rotated *tensor*.
         """
         rotate_angle = _rand_select(self.degrees)
-        return self.rotate_tensor(x, rotate_angle)
+        return self._rotate_tensor(x, rotate_angle)
 
 
 class ScaleInputRange(nn.Module):
