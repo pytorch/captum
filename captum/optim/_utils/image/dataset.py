@@ -3,7 +3,12 @@ import torch
 
 def image_cov(tensor: torch.Tensor) -> torch.Tensor:
     """
-    Calculate a tensor's RGB covariance matrix
+    Calculate a tensor's RGB covariance matrix.
+
+    Args:
+        tensor (tensor):  An NCHW image tensor.
+    Returns:
+        *tensor*:  An RGB covariance matrix for the specified tensor.
     """
 
     tensor = tensor.reshape(-1, 3)
@@ -14,6 +19,12 @@ def image_cov(tensor: torch.Tensor) -> torch.Tensor:
 def dataset_cov_matrix(loader: torch.utils.data.DataLoader) -> torch.Tensor:
     """
     Calculate the covariance matrix for an image dataset.
+
+    Args:
+        loader (torch.utils.data.DataLoader):  The reference to a PyTorch
+            dataloader instance.
+    Returns:
+        *tensor*:  A covariance matrix for the specified dataset.
     """
 
     cov_mtx = torch.zeros(3, 3)
@@ -30,6 +41,13 @@ def cov_matrix_to_klt(
 ) -> torch.Tensor:
     """
     Convert a cov matrix to a klt matrix.
+
+    Args:
+        cov_mtx (tensor):  A 3 by 3 covariance matrix generated from a dataset.
+        normalize (bool):  Whether or not to normalize the resulting KLT matrix.
+        epsilon (float):
+    Returns:
+        *tensor*:  A KLT matrix for the specified covariance matrix.
     """
 
     U, S, V = torch.svd(cov_mtx)
@@ -47,6 +65,13 @@ def dataset_klt_matrix(
     a Karhunen-Loève transform (KLT) matrix, for a dataset.
     The color correlation matrix can then used in color decorrelation
     transforms for models trained on the dataset.
+
+    Args:
+        loader (torch.utils.data.DataLoader):  The reference to a PyTorch
+            dataloader instance.
+        normalize (bool):  Whether or not to normalize the resulting KLT matrix.
+    Returns:
+        *tensor*:  A KLT matrix for the specified dataset.
     """
 
     cov_mtx = dataset_cov_matrix(loader)

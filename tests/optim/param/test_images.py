@@ -337,7 +337,7 @@ class TestSharedImage(BaseTest):
             shapes=shared_shapes, parameterization=test_param
         )
 
-        offset = image_param.get_offset(4, 3)
+        offset = image_param._get_offset(4, 3)
 
         self.assertEqual(len(offset), 3)
         self.assertEqual(offset, [[4, 4, 4, 4]] * 3)
@@ -354,7 +354,7 @@ class TestSharedImage(BaseTest):
         )
 
         offset_vals = ((1, 2, 3, 4), (4, 3, 2, 1), (1, 2, 3, 4))
-        offset = image_param.get_offset(offset_vals, 3)
+        offset = image_param._get_offset(offset_vals, 3)
 
         self.assertEqual(len(offset), 3)
         self.assertEqual(offset, [[int(o) for o in v] for v in offset_vals])
@@ -371,7 +371,7 @@ class TestSharedImage(BaseTest):
         )
 
         offset_vals = (1, 2, 3, 4)
-        offset = image_param.get_offset(offset_vals, 3)
+        offset = image_param._get_offset(offset_vals, 3)
 
         self.assertEqual(len(offset), 3)
         self.assertEqual(offset, [list(offset_vals)] * 3)
@@ -388,7 +388,7 @@ class TestSharedImage(BaseTest):
         )
 
         offset_vals = (2, 3, 4)
-        offset = image_param.get_offset(offset_vals, 3)
+        offset = image_param._get_offset(offset_vals, 3)
 
         self.assertEqual(len(offset), 3)
         self.assertEqual(offset, [[0] + list(offset_vals)] * 3)
@@ -405,7 +405,7 @@ class TestSharedImage(BaseTest):
         )
 
         offset_vals = (3, 4)
-        offset = image_param.get_offset(offset_vals, 3)
+        offset = image_param._get_offset(offset_vals, 3)
 
         self.assertEqual(len(offset), 3)
         self.assertEqual(offset, [[0, 0] + list(offset_vals)] * 3)
@@ -448,7 +448,7 @@ class TestSharedImage(BaseTest):
         )
 
         test_x_list = [torch.ones(*size) for x in range(size[0])]
-        output_A = image_param.apply_offset(test_x_list)
+        output_A = image_param._apply_offset(test_x_list)
 
         x_list = [torch.ones(*size) for x in range(size[0])]
         self.assertEqual(image_param.offset, [list(offset_vals)])
@@ -475,7 +475,7 @@ class TestSharedImage(BaseTest):
         batch = 1
 
         test_tensor = torch.ones(6, 4, 128, 128)
-        output_tensor = image_param.interpolate_tensor(
+        output_tensor = image_param._interpolate_tensor(
             test_tensor, batch, channels, size[0], size[1]
         )
 

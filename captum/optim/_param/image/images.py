@@ -27,6 +27,15 @@ class ImageTensor(torch.Tensor):
         *args,
         **kwargs,
     ) -> torch.Tensor:
+        """
+        Args:
+
+            x (list or np.ndarray or torch.Tensor): A list, NumPy array, or PyTorch
+                tensor to create an `ImageTensor` from.
+
+        Returns:
+           x (ImageTensor): An `ImageTensor` instance.
+        """
         if isinstance(x, torch.Tensor) and x.is_cuda:
             x.show = MethodType(cls.show, x)
             x.export = MethodType(cls.export, x)
@@ -36,6 +45,20 @@ class ImageTensor(torch.Tensor):
 
     @classmethod
     def open(cls, path: str, scale: float = 255.0, mode: str = "RGB") -> "ImageTensor":
+        """
+        Load an image file from a URL or local filepath directly into an `ImageTensor`.
+
+        Args:
+
+            path (str): A URL or filepath to an image.
+            scale (float, optional): The image scale to use.
+                Default: 255.0
+            mode (str, optional): The image loading mode to use.
+                Default: "RGB"
+
+        Returns:
+           x (ImageTensor): An `ImageTensor` instance.
+        """
         if path.startswith("https://") or path.startswith("http://"):
             response = requests.get(path, stream=True)
             img = Image.open(response.raw)
@@ -73,9 +96,31 @@ class ImageTensor(torch.Tensor):
     def show(
         self, figsize: Optional[Tuple[int, int]] = None, scale: float = 255.0
     ) -> None:
+        """
+        Display an `ImageTensor`.
+
+        Args:
+
+            figsize (Tuple[int, int], optional): height & width to use
+                for displaying the `ImageTensor` figure.
+            scale (float, optional): Value to multiply the `ImageTensor` by so that
+                it's value range is [0-255] for display.
+                Default: 255.0
+        """
         show(self, figsize=figsize, scale=scale)
 
     def export(self, filename: str, scale: float = 255.0) -> None:
+        """
+        Save an `ImageTensor` as an image file.
+
+        Args:
+
+            filename (str): The filename to use when saving the `ImageTensor` as an
+                image file.
+            scale (float, optional): Value to multiply the `ImageTensor` by so that
+                it's value range is [0-255] for saving.
+                Default: 255.0
+        """
         save_tensor_as_image(self, filename=filename, scale=scale)
 
 
@@ -89,7 +134,9 @@ class ImageParameterization(InputParameterization):
 
 
 class FFTImage(ImageParameterization):
-    """Parameterize an image using inverse real 2D FFT"""
+    """
+    Parameterize an image using inverse real 2D FFT
+    """
 
     def __init__(
         self,
@@ -98,6 +145,20 @@ class FFTImage(ImageParameterization):
         batch: int = 1,
         init: Optional[torch.Tensor] = None,
     ) -> None:
+        """
+        Args:
+
+            size (Tuple[int, int]): The height & width dimensions to use for the
+                parameterized output image tensor.
+            channels (int, optional): The number of channels to use for each image.
+                Default: 3
+            batch (int, optional): The number of images to stack along the batch
+                dimension.
+                Default: 1
+            init (torch.tensor, optional): Optionally specify a tensor to
+                use instead of creating one.
+                Default: None
+        """
         super().__init__()
         if init is None:
             assert len(size) == 2
@@ -137,13 +198,33 @@ class FFTImage(ImageParameterization):
         self.fourier_coeffs = nn.Parameter(fourier_coeffs)
 
     def rfft2d_freqs(self, height: int, width: int) -> torch.Tensor:
-        """Computes 2D spectrum frequencies."""
+        """
+        Computes 2D spectrum frequencies.
+
+        Args:
+
+            height (int): The h dimension of the 2d frequency scale.
+            width (int): The w dimension of the 2d frequency scale.
+
+        Returns:
+            **tensor** (tensor): A 2d frequency scale tensor.
+        """
+
         fy = self.torch_fftfreq(height)[:, None]
         fx = self.torch_fftfreq(width)[: width // 2 + 1]
         return torch.sqrt((fx * fx) + (fy * fy))
 
     def get_fft_funcs(self) -> Tuple[Callable, Callable, Callable]:
-        """Support older versions of PyTorch"""
+        """
+        Support older versions of PyTorch. This function ensures that the same FFT
+        operations are carried regardless of whether your PyTorch version has the
+        torch.fft update.
+
+        Returns:
+            fft functions (tuple of Callable): A list of FFT functions
+                to use for irfft, rfft, and fftfreq operations.
+        """
+
         if TORCH_VERSION >= "1.7.0":
             import torch.fft
 
@@ -180,12 +261,21 @@ class FFTImage(ImageParameterization):
         return torch_rfft, torch_irfft, torch_fftfreq
 
     def forward(self) -> torch.Tensor:
+        """
+        Returns:
+            **output** (torch.tensor): A spatially recorrelated tensor.
+        """
+
         scaled_spectrum = self.fourier_coeffs * self.spectrum_scale
         output = self.torch_irfft(scaled_spectrum)
         return output.refine_names("B", "C", "H", "W")
 
 
 class PixelImage(ImageParameterization):
+    """
+    Parameterize a simple pixel image tensor that requires no additional transforms.
+    """
+
     def __init__(
         self,
         size: Tuple[int, int] = None,
@@ -193,6 +283,20 @@ class PixelImage(ImageParameterization):
         batch: int = 1,
         init: Optional[torch.Tensor] = None,
     ) -> None:
+        """
+        Args:
+
+            size (Tuple[int, int]): The height & width dimensions to use for the
+                parameterized output image tensor.
+            channels (int, optional): The number of channels to use for each image.
+                Default: 3
+            batch (int, optional): The number of images to stack along the batch
+                dimension.
+                Default: 1
+            init (torch.tensor, optional): Optionally specify a tensor to
+                use instead of creating one.
+                Default: None
+        """
         super().__init__()
         if init is None:
             assert size is not None and channels is not None and batch is not None
@@ -212,6 +316,7 @@ class PixelImage(ImageParameterization):
 class LaplacianImage(ImageParameterization):
     """
     TODO: Fix divison by 6 in setup_input when init is not None.
+    Parameterize an image tensor with a laplacian pyramid.
     """
 
     def __init__(
@@ -221,11 +326,25 @@ class LaplacianImage(ImageParameterization):
         batch: int = 1,
         init: Optional[torch.Tensor] = None,
     ) -> None:
+        """
+        Args:
+
+            size (Tuple[int, int]): The height & width dimensions to use for the
+                parameterized output image tensor.
+            channels (int, optional): The number of channels to use for each image.
+                Default: 3
+            batch (int, optional): The number of images to stack along the batch
+                dimension.
+                Default: 1
+            init (torch.tensor, optional): Optionally specify a tensor to
+                use instead of creating one.
+                Default: None
+        """
         super().__init__()
         power = 0.1
 
         if init is None:
-            tensor_params, self.scaler = self.setup_input(size, channels, power, init)
+            tensor_params, self.scaler = self._setup_input(size, channels, power, init)
 
             self.tensor_params = torch.nn.ModuleList(
                 [deepcopy(tensor_params) for b in range(batch)]
@@ -234,13 +353,13 @@ class LaplacianImage(ImageParameterization):
             init = init.unsqueeze(0) if init.dim() == 3 else init
             P = []
             for b in range(init.size(0)):
-                tensor_params, self.scaler = self.setup_input(
+                tensor_params, self.scaler = self._setup_input(
                     size, channels, power, init[b].unsqueeze(0)
                 )
                 P.append(tensor_params)
             self.tensor_params = torch.nn.ModuleList(P)
 
-    def setup_input(
+    def _setup_input(
         self,
         size: Tuple[int, int],
         channels: int,
@@ -264,16 +383,26 @@ class LaplacianImage(ImageParameterization):
         tensor_params = torch.nn.ParameterList(tensor_params)
         return tensor_params, scaler
 
-    def create_tensor(self, params_list: torch.nn.ParameterList) -> torch.Tensor:
-        A = []
+    def _create_tensor(self, params_list: torch.nn.ParameterList) -> torch.Tensor:
+        """
+        Resize tensor parameters to the target size.
+
+        Args:
+
+            params_list (torch.nn.ParameterList): List of tensors to resize.
+
+        Returns:
+            **tensor** (torch.Tensor): The sum of all tensor parameters.
+        """
+        A: List[torch.Tensor] = []
         for xi, upsamplei in zip(params_list, self.scaler):
             A.append(upsamplei(xi))
         return torch.sum(torch.cat(A), 0) + 0.5
 
     def forward(self) -> torch.Tensor:
-        A = []
+        A: List[torch.Tensor] = []
         for params_list in self.tensor_params:
-            tensor = self.create_tensor(params_list)
+            tensor = self._create_tensor(params_list)
             A.append(tensor)
         return torch.stack(A).refine_names("B", "C", "H", "W")
 
@@ -297,6 +426,17 @@ class SharedImage(ImageParameterization):
         parameterization: ImageParameterization = None,
         offset: Union[int, Tuple[int], Tuple[Tuple[int]], None] = None,
     ) -> None:
+        """
+        Args:
+
+            shapes (list of int or list of list of ints): The shapes of the shared
+                tensors to use for creating the nn.Parameter tensors.
+            parameterization (ImageParameterization): An image parameterization
+                instance.
+            offset (int or list of int or list of list of ints , optional): The offsets
+                to use for the shared tensors.
+                Default: None
+        """
         super().__init__()
         assert shapes is not None
         A = []
@@ -308,9 +448,21 @@ class SharedImage(ImageParameterization):
             A.append(torch.nn.Parameter(torch.randn([batch, channels, height, width])))
         self.shared_init = torch.nn.ParameterList(A)
         self.parameterization = parameterization
-        self.offset = self.get_offset(offset, len(A)) if offset is not None else None
+        self.offset = self._get_offset(offset, len(A)) if offset is not None else None
 
-    def get_offset(self, offset: Union[int, Tuple[int]], n: int) -> List[List[int]]:
+    def _get_offset(self, offset: Union[int, Tuple[int]], n: int) -> List[List[int]]:
+        """
+        Given offset values, return a list of offsets for _apply_offset to use.
+
+        Args:
+
+            offset (int or list of int or list of list of ints , optional): The offsets
+                to use for the shared tensors.
+            n (int): The number of tensors needing offset values.
+
+        Returns:
+            **offset** (list of list of int): A list of offset values.
+        """
         if type(offset) is tuple or type(offset) is list:
             if type(offset[0]) is tuple or type(offset[0]) is list:
                 assert len(offset) == n and all(len(t) == 4 for t in offset)
@@ -323,8 +475,19 @@ class SharedImage(ImageParameterization):
         assert all([all([type(o) is int for o in v]) for v in offset])
         return offset
 
-    def apply_offset(self, x_list: List[torch.Tensor]) -> List[torch.Tensor]:
-        A = []
+    def _apply_offset(self, x_list: List[torch.Tensor]) -> List[torch.Tensor]:
+        """
+        Apply list of offsets to list of tensors.
+
+        Args:
+
+            x_list (list of torch.Tensor): list of tensors to offset.
+
+        Returns:
+            **A** (list of torch.Tensor): list of offset tensors.
+        """
+
+        A: List[torch.Tensor] = []
         for x, offset in zip(x_list, self.offset):
             assert x.dim() == 4
             size = list(x.size())
@@ -345,13 +508,23 @@ class SharedImage(ImageParameterization):
             A.append(x)
         return A
 
-    def interpolate_tensor(
+    def _interpolate_tensor(
         self, x: torch.Tensor, batch: int, channels: int, height: int, width: int
     ) -> torch.Tensor:
         """
-        Linear interpolation for 4D, 5D, and 6D tensors.
-        If the batch dimension needs to be resized,
-        we move it's location temporarily for F.interpolate.
+        Linear interpolation for 4D, 5D, and 6D tensors. If the batch dimension needs
+        to be resized, we move it's location temporarily for F.interpolate.
+
+        Args:
+
+            x (torch.Tensor): The tensor to resize.
+            batch (int): The batch size to resize the tensor to.
+            channels (int): The channel size to resize the tensor to.
+            height (int): The height to resize the tensor to.
+            width (int): The width to resize the tensor to.
+
+        Returns:
+            **tensor** (torch.Tensor): A resized tensor.
         """
 
         if x.size(1) == channels:
@@ -376,7 +549,7 @@ class SharedImage(ImageParameterization):
     def forward(self) -> torch.Tensor:
         image = self.parameterization()
         x = [
-            self.interpolate_tensor(
+            self._interpolate_tensor(
                 shared_tensor,
                 image.size(0),
                 image.size(1),
@@ -386,7 +559,7 @@ class SharedImage(ImageParameterization):
             for shared_tensor in self.shared_init
         ]
         if self.offset is not None:
-            x = self.apply_offset(x)
+            x = self._apply_offset(x)
         return (image + sum(x)).refine_names("B", "C", "H", "W")
 
 
@@ -401,21 +574,6 @@ class NaturalImage(ImageParameterization):
     If a model requires a normalization step, such as normalizing imagenet RGB values,
     or rescaling to [0,255], it can perform those steps with the provided transforms or
     inside its computation.
-
-    Arguments:
-        size (Tuple[int, int]): The height and width to use for the nn.Parameter image
-            tensor.
-        channels (int): The number of channels to use when creating the
-            nn.Parameter tensor.
-        batch (int): The number of channels to use when creating the
-            nn.Parameter tensor, or stacking init images.
-        parameterization (ImageParameterization, optional): An image parameterization
-            class.
-        squash_func (Callable[[torch.Tensor], torch.Tensor]], optional): The squash
-            function to use after color recorrelation. A funtion or lambda function.
-        decorrelation_module (nn.Module, optional): A ToRGB instance.
-        decorrelate_init (bool, optional): Whether or not to apply color decorrelation
-            to the init tensor input.
     """
 
     def __init__(
@@ -429,6 +587,30 @@ class NaturalImage(ImageParameterization):
         decorrelation_module: Optional[nn.Module] = ToRGB(transform="klt"),
         decorrelate_init: bool = True,
     ) -> None:
+        """
+        Args:
+
+            size (Tuple[int, int], optional): The height and width to use for the
+                nn.Parameter image tensor.
+                Default: (224, 224)
+            channels (int, optional): The number of channels to use when creating the
+                nn.Parameter tensor.
+                Default: 3
+            batch (int, optional): The number of channels to use when creating the
+                nn.Parameter tensor, or stacking init images.
+                Default: 1
+            parameterization (ImageParameterization, optional): An image
+                parameterization class.
+                Default: FFTImage
+            squash_func (Callable[[torch.Tensor], torch.Tensor]], optional): The squash
+                function to use after color recorrelation. A funtion or lambda function.
+                Default: None
+            decorrelation_module (nn.Module, optional): A ToRGB instance.
+                Default: ToRGB
+            decorrelate_init (bool, optional): Whether or not to apply color
+                decorrelation to the init tensor input.
+                Default: True
+        """
         super().__init__()
         self.decorrelate = decorrelation_module
         if init is not None:

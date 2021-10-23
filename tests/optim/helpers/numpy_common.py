@@ -12,6 +12,13 @@ def weights_to_heatmap_2d(
     By default red represents excitatory values,
     blue represents inhibitory values, and white represents
     no excitation or inhibition.
+
+    Args:
+        weight (array):  A 2d array to create the heatmap from.
+        colors (List of strings):  A list of strings containing color
+        hex values to use for coloring the heatmap.
+    Returns:
+        *array*:  A weight heatmap.
     """
 
     assert array.ndim == 2
