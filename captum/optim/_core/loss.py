@@ -506,10 +506,21 @@ class AngledNeuronDirection(BaseLoss):
     unstretch the activation space. Compared to the traditional Direction objectives,
     this objective places more emphasis on angle by optionally multiplying the dot
     product by the cosine similarity.
+
     When cossim_pow is equal to 0, this objective works as a euclidean
     neuron objective. When cossim_pow is greater than 0, this objective works as a
     cosine similarity objective. An additional whitened neuron direction vector
     can optionally be supplied to improve visualization quality for some models.
+
+    This Lucid equivalents of this loss function can be found here:
+    https://github.com/tensorflow/lucid/blob/master/notebooks/
+    activation-atlas/activation-atlas-simple.ipynb
+    https://github.com/tensorflow/lucid/blob/master/notebooks/
+    activation-atlas/class-activation-atlas.ipynb
+
+    Like the Lucid equivalents, our implementation differs slightly from the
+    associated research paper.
+
     Carter, et al., "Activation Atlas", Distill, 2019.
     https://distill.pub/2019/activation-atlas/
     """

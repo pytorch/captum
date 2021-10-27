@@ -67,8 +67,9 @@ def calc_grid_indices(
             Default: (0.0, 1.0)
 
     Returns:
-        indices (list of list of torch.Tensors): Grid cell indices for the irregular
-            grid.
+        indices (list of list of torch.Tensors): List of lists of grid indices
+            stored inside tensors to use. Each 1D tensor of indices has a size of:
+            0 to n_points.
     """
 
     assert xy_grid.dim() == 2 and xy_grid.size(1) == 2
@@ -107,8 +108,9 @@ def extract_grid_vectors(
 
     Args:
 
-        grid_indices (list of list of torch.tensor): List of lists of grid indices to
-            use.
+        grid_indices (list of list of torch.tensor): List of lists of grid indices
+            stored inside tensors to use. Each 1D tensor of indices has a size of:
+            0 to n_points.
         raw_activations (torch.tensor): Raw unmodified activation samples, with a shape
             of: [n_samples, n_channels].
         grid_size (Tuple[int, int]): The grid_size of grid cells to use. The grid_size
@@ -118,8 +120,9 @@ def extract_grid_vectors(
             Default: 8
 
     Returns:
-        cells (torch.tensor): A tensor containing all the direction vectors that were
-            created.
+        cell_vecs (torch.tensor): A tensor containing all the direction vectors that
+            were created, stacked along the batch dimension with a shape of:
+            [n_vecs, vecs].
         cell_coords (list of Tuple[int, int, int]): List of coordinates for grid
             spatial positions of each direction vector, and the number of samples used
             for the cell. The list for each cell is in the format of:
@@ -178,7 +181,8 @@ def create_atlas_vectors(
 
     Returns:
         grid_vecs (torch.tensor): A tensor containing all the direction vectors that
-            were created, stacked along the batch dimension.
+            were created, stacked along the batch dimension, with a shape of:
+            [n_vecs, vecs].
         cell_coords (list of Tuple[int, int, int]): List of coordinates for grid
             spatial positions of each direction vector, and the number of samples used
             for the cell. The list for each cell is in the format of:
