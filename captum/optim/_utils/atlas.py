@@ -69,7 +69,7 @@ def calc_grid_indices(
     Returns:
         indices (list of list of torch.Tensors): List of lists of grid indices
             stored inside tensors to use. Each 1D tensor of indices has a size of:
-            0 to n_points.
+            0 to n_indices.
     """
 
     assert xy_grid.dim() == 2 and xy_grid.size(1) == 2
@@ -110,7 +110,7 @@ def extract_grid_vectors(
 
         grid_indices (list of list of torch.tensor): List of lists of grid indices
             stored inside tensors to use. Each 1D tensor of indices has a size of:
-            0 to n_points.
+            0 to n_indices.
         raw_activations (torch.tensor): Raw unmodified activation samples, with a shape
             of: [n_samples, n_channels].
         grid_size (Tuple[int, int]): The grid_size of grid cells to use. The grid_size
@@ -122,7 +122,7 @@ def extract_grid_vectors(
     Returns:
         cell_vecs (torch.tensor): A tensor containing all the direction vectors that
             were created, stacked along the batch dimension with a shape of:
-            [n_vecs, vecs].
+            [n_vecs, n_channels].
         cell_coords (list of Tuple[int, int, int]): List of coordinates for grid
             spatial positions of each direction vector, and the number of samples used
             for the cell. The list for each cell is in the format of:
@@ -182,7 +182,7 @@ def create_atlas_vectors(
     Returns:
         grid_vecs (torch.tensor): A tensor containing all the direction vectors that
             were created, stacked along the batch dimension, with a shape of:
-            [n_vecs, vecs].
+            [n_vecs, n_channels].
         cell_coords (list of Tuple[int, int, int]): List of coordinates for grid
             spatial positions of each direction vector, and the number of samples used
             for the cell. The list for each cell is in the format of:
@@ -240,6 +240,8 @@ def create_atlas(
     assert all([c.device == cells[0].device for c in cells])
     assert cells[0].dim() == 4
 
+    #  The cells variable is a list of equal sized NCHW image tensors, where the length
+    #  of list is equal to the number of coordinates in the coords variable
     cell_b, cell_c, cell_h, cell_w = cells[0].shape
     atlas_canvas = base_tensor(
         cell_b,
