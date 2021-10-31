@@ -3,7 +3,7 @@ import unittest
 
 import torch
 
-import captum.optim._utils.atlas as atlas
+import captum.optim._utils.image.atlas as atlas
 from tests.helpers.basic import BaseTest, assertTensorAlmostEqual
 
 

@@ -53,10 +53,24 @@ def calc_grid_indices(
     y_extent: Tuple[float, float] = (0.0, 1.0),
 ) -> List[List[torch.Tensor]]:
     """
-    Create sets of grid cell indices of a specified size for an irregular grid.
+    This function draws a 2D grid across the irregular grid of points, and then groups
+    point indices based on the grid cell they fall within. The grid cells are then
+    filled with 1D tensors that have anywhere from 0 to n_indices values in them. The
+    sets of grid indices can then be used with the extract_grid_vectors function to
+    create atlas grid cell direction vectors.
+
+    Indices are stored for grid cells in an xy matrix, where the outer lists represent
+    x positions and the inner lists represent y positions. Each grid cell is filled
+    with 1D tensors that have anywhere from 0 to n_indices index values inside them.
+
+    Below is an example of the index list format for a grid_size of (3, 3):
+    indices = [x1[y1, y2, y3], x2[y1, y2, y3], x3[y1, y2, y3]]
+
+    Grid cells would then be ordered like this, where each cell contains a list of
+    indices for that particular cell:
+    indices = [[0, 1, 2], [3, 4, 5], [6, 7, 8]]
 
     Args:
-
         xy_grid (torch.tensor): The xy coordinate grid activation samples, with a shape
             of: [n_points, 2].
         grid_size (Tuple[int, int]): The grid_size of grid cells to use. The grid_size
@@ -65,7 +79,6 @@ def calc_grid_indices(
             Default: (0.0, 1.0)
         y_extent (Tuple[float, float], optional): The y axis range to use.
             Default: (0.0, 1.0)
-
     Returns:
         indices (list of list of torch.Tensors): List of lists of grid indices
             stored inside tensors to use. Each 1D tensor of indices has a size of:
@@ -101,7 +114,8 @@ def extract_grid_vectors(
     """
     Create direction vectors for activation samples and grid indices. Grid cells
     without the minimum number of points as specified by min_density will be
-    ignored.
+    ignored. The calc_grid_indices function can be used to produce the values required
+    for the grid_indices variable.
 
     Carter, et al., "Activation Atlas", Distill, 2019.
     https://distill.pub/2019/activation-atlas/
@@ -240,8 +254,10 @@ def create_atlas(
     assert all([c.device == cells[0].device for c in cells])
     assert cells[0].dim() == 4
 
-    #  The cells variable is a list of equal sized NCHW image tensors, where the length
-    #  of list is equal to the number of coordinates in the coords variable
+    #  cell_b -> number of images
+    #  cell_c -> image channel
+    #  cell_h ->  image hight
+    #  cell_w -> image width
     cell_b, cell_c, cell_h, cell_w = cells[0].shape
     atlas_canvas = base_tensor(
         cell_b,
