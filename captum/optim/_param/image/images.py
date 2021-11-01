@@ -37,7 +37,8 @@ class ImageTensor(torch.Tensor):
     @classmethod
     def open(cls, path: str, scale: float = 255.0, mode: str = "RGB") -> "ImageTensor":
         if path.startswith("https://") or path.startswith("http://"):
-            response = requests.get(path, stream=True)
+            headers = {"User-Agent": "Captum"}
+            response = requests.get(path, stream=True, headers=headers)
             img = Image.open(response.raw)
         else:
             img = Image.open(path)
