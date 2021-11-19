@@ -1,7 +1,7 @@
 import functools
 import operator
 from abc import ABC, abstractmethod, abstractproperty
-from typing import Any, Callable, Optional, Tuple, Union
+from typing import Any, Callable, List, Optional, Tuple, Union
 
 import torch
 import torch.nn as nn
@@ -27,7 +27,7 @@ class Loss(ABC):
         super(Loss, self).__init__()
 
     @abstractproperty
-    def target(self) -> nn.Module:
+    def target(self) -> Union[nn.Module, List[nn.Module]]:
         pass
 
     @abstractmethod
@@ -140,7 +140,9 @@ def module_op(
 
 class BaseLoss(Loss):
     def __init__(
-        self, target: nn.Module = [], batch_index: Optional[int] = None
+        self,
+        target: Union[nn.Module, List[nn.Module]] = [],
+        batch_index: Optional[int] = None,
     ) -> None:
         super(BaseLoss, self).__init__()
         self._target = target
@@ -150,7 +152,7 @@ class BaseLoss(Loss):
             self._batch_index = (batch_index, batch_index + 1)
 
     @property
-    def target(self) -> nn.Module:
+    def target(self) -> Union[nn.Module, List[nn.Module]]:
         return self._target
 
     @property
@@ -160,7 +162,10 @@ class BaseLoss(Loss):
 
 class CompositeLoss(BaseLoss):
     def __init__(
-        self, loss_fn: Callable, name: str = "", target: nn.Module = []
+        self,
+        loss_fn: Callable,
+        name: str = "",
+        target: Union[nn.Module, List[nn.Module]] = [],
     ) -> None:
         super(CompositeLoss, self).__init__(target)
         self.__name__ = name
@@ -678,6 +683,47 @@ class ActivationWeights(BaseLoss):
         return activations
 
 
+def sum_loss_list(
+    loss_list: List,
+    to_scalar_fn: Callable[[torch.Tensor], torch.Tensor] = torch.mean,
+) -> CompositeLoss:
+    """
+    Summarize a large number of losses without recursion errors. By default using 300+
+    loss functions for a single optimization task will result in exceeding Python's
+    default maximum recursion depth limit. This function can be used to avoid the
+    recursion depth limit for tasks such as summarizing a large list of loss functions
+    with the built-in sum() function.
+
+    This function works similar to Lucid's optvis.objectives.Objective.sum() function.
+
+    Args:
+
+        loss_list (list): A list of loss function objectives.
+        to_scalar_fn (Callable): A function for converting loss function outputs to
+            scalar values, in order to prevent size mismatches.
+            Default: torch.mean
+
+    Returns:
+        loss_fn (CompositeLoss): A composite loss function containing all the loss
+            functions from `loss_list`.
+    """
+
+    def loss_fn(module: ModuleOutputMapping) -> torch.Tensor:
+        return sum([to_scalar_fn(loss(module)) for loss in loss_list])
+
+    name = "Sum(" + ", ".join([loss.__name__ for loss in loss_list]) + ")"
+    # Collect targets from losses
+    target = [
+        target
+        for targets in [
+            [loss.target] if not hasattr(loss.target, "__iter__") else loss.target
+            for loss in loss_list
+        ]
+        for target in targets
+    ]
+    return CompositeLoss(loss_fn, name=name, target=target)
+
+
 def default_loss_summarize(loss_value: torch.Tensor) -> torch.Tensor:
     """
     Helper function to summarize tensor outputs from loss functions.
@@ -708,5 +754,6 @@ __all__ = [
     "AngledNeuronDirection",
     "TensorDirection",
     "ActivationWeights",
+    "sum_loss_list",
     "default_loss_summarize",
 ]
