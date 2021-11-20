@@ -146,7 +146,7 @@ def train_cav(
 
         # Create data loader to initialize the trainer.
         datasets = list(
-            AV.load(save_path, DEFAULT_MODEL_ID, layer, concept.identifier)
+            AV.load(save_path, DEFAULT_MODEL_ID, concept.identifier, layer)
             for concept in concepts
         )
 

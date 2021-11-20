@@ -884,14 +884,14 @@ class Test(BaseTest):
                 for _, concept in concept_dict.items():
                     self.assertTrue(
                         AV.exists(
-                            tmpdirname, "default_model_id", layer, concept.identifier
+                            tmpdirname, "default_model_id", concept.identifier, layer
                         )
                     )
 
                 concept_meta: Dict[int, int] = defaultdict(int)
                 for _, concept in concept_dict.items():
                     activations = AV.load(
-                        tmpdirname, "default_model_id", layer, concept.identifier
+                        tmpdirname, "default_model_id", concept.identifier, layer
                     )
 
                     def batch_collate(batch):
