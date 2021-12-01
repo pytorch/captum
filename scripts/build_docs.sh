@@ -51,18 +51,21 @@ mkdir -p "website/pages/api/"
 cwd=$(pwd)
 python scripts/parse_sphinx.py -i "${cwd}/sphinx/build/html/" -o "${cwd}/website/pages/api/"
 
-SPHINX_JS_DIR='sphinx/build/html/_static/'
+SPHINX_STATIC_DIR='sphinx/build/html/_static/'
 DOCUSAURUS_JS_DIR='website/static/js/'
+DOCUSAURUS_CSS_DIR='website/static/css/'
 
 mkdir -p $DOCUSAURUS_JS_DIR
 
-# move JS files from /sphinx/build/html/_static/*:
-cp "${SPHINX_JS_DIR}documentation_options.js" "${DOCUSAURUS_JS_DIR}documentation_options.js"
-cp "${SPHINX_JS_DIR}jquery.js" "${DOCUSAURUS_JS_DIR}jquery.js"
-cp "${SPHINX_JS_DIR}underscore.js" "${DOCUSAURUS_JS_DIR}underscore.js"
-cp "${SPHINX_JS_DIR}doctools.js" "${DOCUSAURUS_JS_DIR}doctools.js"
-cp "${SPHINX_JS_DIR}language_data.js" "${DOCUSAURUS_JS_DIR}language_data.js"
-cp "${SPHINX_JS_DIR}searchtools.js" "${DOCUSAURUS_JS_DIR}searchtools.js"
+# move static files from /sphinx/build/html/_static/*:
+cp "${SPHINX_STATIC_DIR}documentation_options.js" "${DOCUSAURUS_JS_DIR}documentation_options.js"
+cp "${SPHINX_STATIC_DIR}jquery.js" "${DOCUSAURUS_JS_DIR}jquery.js"
+cp "${SPHINX_STATIC_DIR}underscore.js" "${DOCUSAURUS_JS_DIR}underscore.js"
+cp "${SPHINX_STATIC_DIR}doctools.js" "${DOCUSAURUS_JS_DIR}doctools.js"
+cp "${SPHINX_STATIC_DIR}language_data.js" "${DOCUSAURUS_JS_DIR}language_data.js"
+cp "${SPHINX_STATIC_DIR}searchtools.js" "${DOCUSAURUS_JS_DIR}searchtools.js"
+cp "${SPHINX_STATIC_DIR}katex_autorenderer.js" "${DOCUSAURUS_JS_DIR}katex_autorenderer.js"
+cp "${SPHINX_STATIC_DIR}katex-math.css" "${DOCUSAURUS_CSS_DIR}katex-math.css"
 
 # searchindex.js is not static util
 cp "sphinx/build/html/searchindex.js" "${DOCUSAURUS_JS_DIR}searchindex.js"
