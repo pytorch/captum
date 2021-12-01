@@ -151,9 +151,6 @@ def train_cav(
         )
 
         labels = [concept.id for concept in concepts]
-        assert None not in datasets, "Cannot load concepts for given layer: {}".format(
-            layer
-        )
 
         labelled_dataset = LabelledDataset(cast(List[AV.AVDataset], datasets), labels)
 

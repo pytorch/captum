@@ -245,7 +245,7 @@ class AV:
         identifier: Optional[str] = None,
         layer: Optional[str] = None,
         num_id: Optional[str] = None,
-    ) -> Union[None, AVDataset]:
+    ) -> AVDataset:
         r"""
         Loads lazily the activation vectors for given `model_id` and
         `layer` saved under the `path`.
@@ -275,8 +275,10 @@ class AV:
         if os.path.exists(av_save_dir):
             avdataset = AV.AVDataset(path, model_id, identifier, layer, num_id)
             return avdataset
-
-        return None
+        else:
+            raise RuntimeError(
+                f"Activation vectors for model {model_id} was not found at path {path}"
+            )
 
     @staticmethod
     def _manage_loading_layers(
@@ -401,7 +403,6 @@ class AV:
                 raise RuntimeError(f"Layer {layer} was not found in manifold")
             else:
                 act_dataset = AV.load(path, model_id, identifier, layer, num_id)
-                assert not (act_dataset is None)
                 _layer_act = [act.squeeze(0) for act in DataLoader(act_dataset)]
                 __layer_act = torch.cat(_layer_act)
                 activations.append(__layer_act)
