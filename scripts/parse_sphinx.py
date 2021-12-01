@@ -6,30 +6,31 @@ import os
 from bs4 import BeautifulSoup
 
 base_scripts = """
-    <script type="text/javascript" id="documentation_options" data-url_root="./"
-    src="/js/documentation_options.js"></script>
-    <script type="text/javascript" src="/js/jquery.js"></script>
-    <script type="text/javascript" src="/js/underscore.js"></script>
-    <script type="text/javascript" src="/js/doctools.js"></script>
-    <script type="text/javascript" src="/js/language_data.js"></script>
-    <script type="text/javascript" src="/js/searchtools.js"></script>
+<script type="text/javascript" id="documentation_options" data-url_root="./"
+src="/js/documentation_options.js"></script>
+<script type="text/javascript" src="/js/jquery.js"></script>
+<script type="text/javascript" src="/js/underscore.js"></script>
+<script type="text/javascript" src="/js/doctools.js"></script>
+<script type="text/javascript" src="/js/language_data.js"></script>
+<script type="text/javascript" src="/js/searchtools.js"></script>
 """  # noqa: E501
 
 search_js_scripts = """
-    <script type="text/javascript">
-        jQuery(function() { Search.loadIndex("/js/searchindex.js"); });
-    </script>
+<script type="text/javascript">
+    jQuery(function() { Search.loadIndex("/js/searchindex.js"); });
+</script>
 
-    <script type="text/javascript" id="searchindexloader"></script>
+<script type="text/javascript" id="searchindexloader"></script>
 """
 
 katex_scripts = """
-    <script src="https://cdn.jsdelivr.net/npm/katex@0.13.11/dist/katex.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/katex@0.13.11/dist/contrib/auto-render.min.js"></script>
-    <script src="/js/katex_autorenderer.js"></script>
-    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/katex@0.13.11/dist/katex.min.css" />
-    <link rel="stylesheet" type="text/css" href="/css/katex-math.css" />
-"""
+<script src="https://cdn.jsdelivr.net/npm/katex@0.13.11/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.13.11/dist/contrib/auto-render.min.js"></script>
+<script src="/js/katex_autorenderer.js"></script>
+<link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/katex@0.13.11/dist/katex.min.css" />
+<link rel="stylesheet" type="text/css" href="/css/katex-math.css" />
+"""  # noqa: E501
+
 
 def parse_sphinx(input_dir, output_dir):
     for cur, _, files in os.walk(input_dir):
@@ -43,7 +44,12 @@ def parse_sphinx(input_dir, output_dir):
                     )
                 # add scripts that sphinx pages need
                 if fname == "search.html":
-                    out = base_scripts + search_js_scripts + katex_scripts + str(wrapped_doc)
+                    out = (
+                        base_scripts
+                        + search_js_scripts
+                        + katex_scripts
+                        + str(wrapped_doc)
+                    )
                 else:
                     out = base_scripts + katex_scripts + str(wrapped_doc)
                 output_path = os.path.join(output_dir, os.path.relpath(cur, input_dir))
