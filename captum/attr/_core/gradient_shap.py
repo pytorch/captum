@@ -25,14 +25,11 @@ from captum.log import log_usage
 class GradientShap(GradientAttribution):
     r"""
     Implements gradient SHAP based on the implementation from SHAP's primary
-    author. For reference, please, view:
-
-    https://github.com/slundberg/shap\
-    #deep-learning-example-with-gradientexplainer-tensorflowkeraspytorch-models
-
-    A Unified Approach to Interpreting Model Predictions
-    http://papers.nips.cc/paper\
-    7062-a-unified-approach-to-interpreting-model-predictions
+    author. For reference, please view the original
+    `implementation
+    <https://github.com/slundberg/shap#deep-learning-example-with-gradientexplainer-tensorflowkeraspytorch-models>`_
+    and the paper: `A Unified Approach to Interpreting Model Predictions
+    <https://arxiv.org/abs/1705.07874>`_
 
     GradientShap approximates SHAP values by computing the expectations of
     gradients by randomly sampling from the distribution of baselines/references.
