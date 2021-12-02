@@ -350,8 +350,9 @@ def infidelity(
         normalize (bool, optional): Normalize the dot product of the input
                 perturbation and the attribution so the infidelity value is invariant
                 to constant scaling of the attribution values. The normalization factor
-                beta is defined as the ratio of two mean values::
+                beta is defined as the ratio of two mean values:
 
+                .. math::
                     \beta = \frac{
                         \mathbb{E}_{I \sim \mu_I} [ I^T \Phi(f, x) (f(x) - f(x - I)) ]
                     }{

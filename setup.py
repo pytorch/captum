@@ -71,6 +71,7 @@ DEV_REQUIRES = (
         "flake8",
         "sphinx",
         "sphinx-autodoc-typehints",
+        "sphinxcontrib-katex",
         "mypy>=0.760",
         "usort==0.6.4",
         "ufmt",
