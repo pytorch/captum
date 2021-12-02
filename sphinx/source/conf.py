@@ -28,6 +28,7 @@ author = "The PyTorch Team"
 # but the version is no longer used
 # since version is trimmed in sphinx pages to embed into docusaurus
 import captum  # noqa: E402
+
 version = captum.__version__
 
 
