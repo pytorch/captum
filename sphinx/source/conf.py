@@ -10,7 +10,6 @@
 # -- Path setup --------------------------------------------------------------
 
 import os
-import re
 import sys
 
 base_path = os.path.abspath(os.path.join(__file__, "..", "..", ".."))
@@ -25,8 +24,10 @@ project = "Captum"
 copyright = "2019, Facebook, Inc."
 author = "The PyTorch Team"
 
-# import captum from base_path
-import captum
+# import captum from base_path to get the version
+# but the version is no longer used
+# since version is trimmed in sphinx pages to embed into docusaurus
+import captum  # noqa: E402
 version = captum.__version__
 
 
