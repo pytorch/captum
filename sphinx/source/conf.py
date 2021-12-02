@@ -13,14 +13,11 @@ import os
 import re
 import sys
 
-# base_path = os.path.abspath("../captum"))
-base_path = os.path.abspath(os.path.join(__file__, "..", "..", "..", "captum"))
+base_path = os.path.abspath(os.path.join(__file__, "..", "..", ".."))
+# read module from src instead of installation
+sys.path.insert(0, base_path)
 
-sys.path.append(base_path)
-
-sys.path.insert(0, os.path.abspath("../..captum/attr"))
-
-print(base_path)
+print("base path for Captum module:", base_path)
 
 # -- Project information -----------------------------------------------------
 
@@ -28,16 +25,9 @@ project = "Captum"
 copyright = "2019, Facebook, Inc."
 author = "The PyTorch Team"
 
-
-# get version string from setup.py
-with open(os.path.join(base_path, "__init__.py"), "r") as f:
-    match = re.search(r"__version__ = ['\"]([^'\"]*)['\"]", f.read(), re.M)
-
-# The full version (of the form X.Y.ZaW or X.Y.Z.pW)
-release = match.group(1)
-# The short X.Y.Z version
-splits = release.split(".")
-version = ".".join(splits[:2] + [splits[2][:1]])  # TODO: be smarter here
+# import captum from base_path
+import captum
+version = captum.__version__
 
 
 # -- General configuration ---------------------------------------------------
