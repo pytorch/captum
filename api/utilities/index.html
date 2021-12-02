@@ -6,7 +6,7 @@
 
               ga('create', 'UA-44373548-48', 'auto');
               ga('send', 'pageview');
-            </script><link rel="stylesheet" href="/css/code_block_buttons.css"/><script type="text/javascript" src="https://buttons.github.io/buttons.js"></script><script type="text/javascript" src="/js/code_block_buttons.js"></script><script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.0/clipboard.min.js"></script><script type="text/javascript" src="/js/mathjax.js"></script><script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS_HTML"></script><script src="https://unpkg.com/vanilla-back-to-top@7.1.14/dist/vanilla-back-to-top.min.js"></script><script>
+            </script><link rel="stylesheet" href="/css/code_block_buttons.css"/><script type="text/javascript" src="https://buttons.github.io/buttons.js"></script><script type="text/javascript" src="/js/code_block_buttons.js"></script><script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.0/clipboard.min.js"></script><script src="https://unpkg.com/vanilla-back-to-top@7.1.14/dist/vanilla-back-to-top.min.js"></script><script>
         document.addEventListener('DOMContentLoaded', function() {
           addBackToTop(
             {"zIndex":100}
@@ -14,12 +14,18 @@
         });
         </script><script src="/js/scrollSpy.js"></script><link rel="stylesheet" href="/css/main.css"/><script src="/js/codetabs.js"></script></head><body><div class="fixedHeaderContainer"><div class="headerWrapper wrapper"><header><a href="/"><img class="logo" src="/img/captum_logo.svg" alt="Captum"/></a><div class="navigationWrapper navigationSlider"><nav class="slidingNav"><ul class="nav-site nav-site-internal"><li class=""><a href="/docs/introduction" target="_self">Docs</a></li><li class=""><a href="/tutorials/" target="_self">Tutorials</a></li><li class=""><a href="/api/" target="_self">API Reference</a></li><li class=""><a href="https://github.com/pytorch/captum" target="_self">GitHub</a></li><li class="navSearchWrapper reactNavSearchWrapper"><input type="text" id="search_input_react" placeholder="Search" title="Search"/></li></ul></nav></div></header></div></div><div class="navPusher"><div>
 <script type="text/javascript" id="documentation_options" data-url_root="./"
-  src="/js/documentation_options.js"></script>
+src="/js/documentation_options.js"></script>
 <script type="text/javascript" src="/js/jquery.js"></script>
 <script type="text/javascript" src="/js/underscore.js"></script>
 <script type="text/javascript" src="/js/doctools.js"></script>
 <script type="text/javascript" src="/js/language_data.js"></script>
 <script type="text/javascript" src="/js/searchtools.js"></script>
+
+<script src="https://cdn.jsdelivr.net/npm/katex@0.13.11/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.13.11/dist/contrib/auto-render.min.js"></script>
+<script src="/js/katex_autorenderer.js"></script>
+<link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/katex@0.13.11/dist/katex.min.css" />
+<link rel="stylesheet" type="text/css" href="/css/katex-math.css" />
 <div class="sphinx wrapper"><div class="document">
 <div class="documentwrapper">
 <div class="bodywrapper">
@@ -233,7 +239,7 @@ same axis provided.</p>
 <h2>Interpretable Embeddings<a class="headerlink" href="#interpretable-embeddings" title="Permalink to this headline">¶</a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="captum.attr.InterpretableEmbeddingBase">
-<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">captum.attr.</span></span><span class="sig-name descname"><span class="pre">InterpretableEmbeddingBase</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">embedding</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">full_name</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_models/base.html#InterpretableEmbeddingBase"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum.attr.InterpretableEmbeddingBase" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">captum.attr.</span></span><span class="sig-name descname"><span class="pre">InterpretableEmbeddingBase</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">embedding</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">full_name</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_models/base.html#InterpretableEmbeddingBase"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum.attr.InterpretableEmbeddingBase" title="Permalink to this definition">¶</a></dt>
 <dd><p>Since some embedding vectors, e.g. word are created and assigned in
 the embedding layers of Pytorch models we need a way to access
 those layers, generate the embeddings and subtract the baseline.
@@ -367,7 +373,7 @@ embedding layer in the model.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>model</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/generated/torch.nn.Module.html#torch.nn.Module" title="(in PyTorch v1.9.1)"><em>torch.nn.Module</em></a>) – An instance of PyTorch model that contains embeddings</p></li>
+<li><p><strong>model</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/generated/torch.nn.Module.html#torch.nn.Module" title="(in PyTorch v1.10.0)"><em>torch.nn.Module</em></a>) – An instance of PyTorch model that contains embeddings</p></li>
 <li><p><strong>interpretable_emb</strong> (<em>tensor</em>) – An instance of <cite>InterpretableEmbeddingBase</cite>
 that was originally created in
 <cite>configure_interpretable_embedding_layer</cite> function and has
@@ -405,7 +411,7 @@ to be removed after interpretation is finished.</p></li>
 <h2>Token Reference Base<a class="headerlink" href="#token-reference-base" title="Permalink to this headline">¶</a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="captum.attr.TokenReferenceBase">
-<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">captum.attr.</span></span><span class="sig-name descname"><span class="pre">TokenReferenceBase</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">reference_token_idx</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_models/base.html#TokenReferenceBase"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum.attr.TokenReferenceBase" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">captum.attr.</span></span><span class="sig-name descname"><span class="pre">TokenReferenceBase</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">reference_token_idx</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_models/base.html#TokenReferenceBase"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum.attr.TokenReferenceBase" title="Permalink to this definition">¶</a></dt>
 <dd><p>A base class for creating reference (aka baseline) tensor for a sequence of
 tokens. A typical example of such token is <cite>PAD</cite>. Users need to provide the
 index of the reference token in the vocabulary as an argument to
@@ -441,13 +447,13 @@ be created.</p></li>
 <h2>Linear Models<a class="headerlink" href="#linear-models" title="Permalink to this headline">¶</a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="captum._utils.models.model.Model">
-<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">captum._utils.models.model.</span></span><span class="sig-name descname"><span class="pre">Model</span></span><a class="reference internal" href="_modules/captum/_utils/models/model.html#Model"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum._utils.models.model.Model" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">captum._utils.models.model.</span></span><span class="sig-name descname"><span class="pre">Model</span></span><a class="reference internal" href="_modules/captum/_utils/models/model.html#Model"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum._utils.models.model.Model" title="Permalink to this definition">¶</a></dt>
 <dd><p>Abstract Class to describe the interface of a trainable model to be used
 within the algorithms of captum.</p>
 <p>Please note that this is an experimental feature.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="captum._utils.models.model.Model.fit">
-<em class="property"><span class="pre">abstract</span> </em><span class="sig-name descname"><span class="pre">fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">train_data</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/_utils/models/model.html#Model.fit"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum._utils.models.model.Model.fit" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">train_data</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/_utils/models/model.html#Model.fit"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum._utils.models.model.Model.fit" title="Permalink to this definition">¶</a></dt>
 <dd><p>Override this method to actually train your model.</p>
 <p>The specification of the dataloader will be supplied by the algorithm
 you are using within captum. This will likely be a supervised learning
@@ -457,7 +463,7 @@ task, thus you should expect batched (x, y) pairs or (x, y, w) triples.</p>
 <dd class="field-odd"><p><strong>train_data</strong> (<em>DataLoader</em>) – The data to train on</p>
 </dd>
 <dt class="field-even">Return type</dt>
-<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Optional" title="(in Python v3.10)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Dict" title="(in Python v3.10)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Dict</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Union" title="(in Python v3.10)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.10)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a>, <a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.9.1)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tensor</span></code></a>]]]</p>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Optional" title="(in Python v3.10)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Dict" title="(in Python v3.10)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Dict</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Union" title="(in Python v3.10)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.10)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a>, <a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.10.0)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tensor</span></code></a>]]]</p>
 </dd>
 <dt class="field-odd">Returns</dt>
 <dd class="field-odd"><p>Optional statistics about training, e.g.  iterations it took to
@@ -467,14 +473,14 @@ train, training loss, etc.</p>
 </dd></dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="captum._utils.models.model.Model.representation">
-<em class="property"><span class="pre">abstract</span> </em><span class="sig-name descname"><span class="pre">representation</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/_utils/models/model.html#Model.representation"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum._utils.models.model.Model.representation" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">representation</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/_utils/models/model.html#Model.representation"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum._utils.models.model.Model.representation" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns the underlying representation of the interpretable model. For a
 linear model this is simply a tensor (the concatenation of weights
 and bias). For something slightly more complicated, such as a decision
 tree, this could be the nodes of a decision tree.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p><a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.9.1)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tensor</span></code></a></p>
+<dd class="field-odd"><p><a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.10.0)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tensor</span></code></a></p>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p>A Tensor describing the representation of the model.</p>
@@ -484,7 +490,7 @@ tree, this could be the nodes of a decision tree.</p>
 </dd></dl>
 <dl class="py class">
 <dt class="sig sig-object py" id="captum._utils.models.linear_model.SkLearnLinearModel">
-<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">captum._utils.models.linear_model.</span></span><span class="sig-name descname"><span class="pre">SkLearnLinearModel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sklearn_module</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/_utils/models/linear_model/model.html#SkLearnLinearModel"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum._utils.models.linear_model.SkLearnLinearModel" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">captum._utils.models.linear_model.</span></span><span class="sig-name descname"><span class="pre">SkLearnLinearModel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sklearn_module</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/_utils/models/linear_model/model.html#SkLearnLinearModel"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum._utils.models.linear_model.SkLearnLinearModel" title="Permalink to this definition">¶</a></dt>
 <dd><p>Factory class to construct a <cite>LinearModel</cite> with sklearn training method.</p>
 <p>Please note that this assumes:</p>
 <ol class="arabic simple" start="0">
@@ -521,7 +527,7 @@ such as <cite>SkLearnLasso</cite>.</p>
 </dd></dl>
 <dl class="py class">
 <dt class="sig sig-object py" id="captum._utils.models.linear_model.SkLearnLinearRegression">
-<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">captum._utils.models.linear_model.</span></span><span class="sig-name descname"><span class="pre">SkLearnLinearRegression</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/_utils/models/linear_model/model.html#SkLearnLinearRegression"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum._utils.models.linear_model.SkLearnLinearRegression" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">captum._utils.models.linear_model.</span></span><span class="sig-name descname"><span class="pre">SkLearnLinearRegression</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/_utils/models/linear_model/model.html#SkLearnLinearRegression"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum._utils.models.linear_model.SkLearnLinearRegression" title="Permalink to this definition">¶</a></dt>
 <dd><p>Factory class. Trains a model with <cite>sklearn.linear_model.LinearRegression</cite>.</p>
 <p>Any arguments provided to the sklearn constructor can be provided
 as kwargs here.</p>
@@ -540,7 +546,7 @@ as kwargs here.</p>
 </dd></dl>
 <dl class="py class">
 <dt class="sig sig-object py" id="captum._utils.models.linear_model.SkLearnLasso">
-<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">captum._utils.models.linear_model.</span></span><span class="sig-name descname"><span class="pre">SkLearnLasso</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/_utils/models/linear_model/model.html#SkLearnLasso"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum._utils.models.linear_model.SkLearnLasso" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">captum._utils.models.linear_model.</span></span><span class="sig-name descname"><span class="pre">SkLearnLasso</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/_utils/models/linear_model/model.html#SkLearnLasso"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum._utils.models.linear_model.SkLearnLasso" title="Permalink to this definition">¶</a></dt>
 <dd><p>Factory class. Trains a <cite>LinearModel</cite> model with
 <cite>sklearn.linear_model.Lasso</cite>. You will need sklearn version &gt;= 0.23 to
 support sample weights.</p>
@@ -559,7 +565,7 @@ support sample weights.</p>
 </dd></dl>
 <dl class="py class">
 <dt class="sig sig-object py" id="captum._utils.models.linear_model.SkLearnRidge">
-<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">captum._utils.models.linear_model.</span></span><span class="sig-name descname"><span class="pre">SkLearnRidge</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/_utils/models/linear_model/model.html#SkLearnRidge"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum._utils.models.linear_model.SkLearnRidge" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">captum._utils.models.linear_model.</span></span><span class="sig-name descname"><span class="pre">SkLearnRidge</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/_utils/models/linear_model/model.html#SkLearnRidge"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum._utils.models.linear_model.SkLearnRidge" title="Permalink to this definition">¶</a></dt>
 <dd><p>Factory class. Trains a model with <cite>sklearn.linear_model.Ridge</cite>.</p>
 <p>Any arguments provided to the sklearn constructor can be provided
 as kwargs here.</p>
@@ -578,7 +584,7 @@ as kwargs here.</p>
 </dd></dl>
 <dl class="py class">
 <dt class="sig sig-object py" id="captum._utils.models.linear_model.SGDLinearModel">
-<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">captum._utils.models.linear_model.</span></span><span class="sig-name descname"><span class="pre">SGDLinearModel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/_utils/models/linear_model/model.html#SGDLinearModel"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum._utils.models.linear_model.SGDLinearModel" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">captum._utils.models.linear_model.</span></span><span class="sig-name descname"><span class="pre">SGDLinearModel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/_utils/models/linear_model/model.html#SGDLinearModel"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum._utils.models.linear_model.SGDLinearModel" title="Permalink to this definition">¶</a></dt>
 <dd><p>Factory class. Construct a a <cite>LinearModel</cite> with the
 <cite>sgd_train_linear_model</cite> as the train method</p>
 <dl class="field-list simple">
@@ -591,7 +597,7 @@ documentation.</p>
 </dd></dl>
 <dl class="py class">
 <dt class="sig sig-object py" id="captum._utils.models.linear_model.SGDLasso">
-<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">captum._utils.models.linear_model.</span></span><span class="sig-name descname"><span class="pre">SGDLasso</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/_utils/models/linear_model/model.html#SGDLasso"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum._utils.models.linear_model.SGDLasso" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">captum._utils.models.linear_model.</span></span><span class="sig-name descname"><span class="pre">SGDLasso</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/_utils/models/linear_model/model.html#SGDLasso"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum._utils.models.linear_model.SGDLasso" title="Permalink to this definition">¶</a></dt>
 <dd><p>Factory class to train a <cite>LinearModel</cite> with SGD
 (<cite>sgd_train_linear_model</cite>) whilst setting appropriate parameters to
 optimize for ridge regression loss. This optimizes L2 loss + alpha * L1
@@ -606,7 +612,7 @@ converge to 0.</p>
 </dd></dl>
 <dl class="py class">
 <dt class="sig sig-object py" id="captum._utils.models.linear_model.SGDRidge">
-<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">captum._utils.models.linear_model.</span></span><span class="sig-name descname"><span class="pre">SGDRidge</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/_utils/models/linear_model/model.html#SGDRidge"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum._utils.models.linear_model.SGDRidge" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">captum._utils.models.linear_model.</span></span><span class="sig-name descname"><span class="pre">SGDRidge</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/_utils/models/linear_model/model.html#SGDRidge"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum._utils.models.linear_model.SGDRidge" title="Permalink to this definition">¶</a></dt>
 <dd><p>Factory class to train a <cite>LinearModel</cite> with SGD
 (<cite>sgd_train_linear_model</cite>) whilst setting appropriate parameters to
 optimize for ridge regression loss. This optimizes L2 loss + alpha *
@@ -671,7 +677,7 @@ L2 regularization.</p>
 </div>
 </div>
 <div class="clearer"></div>
-</div></div></div><footer class="nav-footer" id="footer"><section class="sitemap"><div class="footerSection"><h5>Docs</h5><a href="/docs/introduction">Introduction</a><a href="/docs/getting_started">Getting Started</a><a href="/tutorials/">Tutorials</a><a href="/api/">API Reference</a></div><div class="footerSection"><h5>Social</h5><div class="social"><a class="github-button" href="https://github.com/pytorch/captum" data-count-href="https://github.com/pytorch/captum/stargazers" data-show-count="true" data-count-aria-label="# stargazers on GitHub" aria-label="Star Captum on GitHub">captum</a></div></div></section><a href="https://opensource.facebook.com/" target="_blank" rel="noreferrer noopener" class="fbOpenSource"><img src="/img/oss_logo.png" alt="Facebook Open Source" width="170" height="45"/></a><section class="copyright"> Copyright © 2021 Facebook Inc.</section><script>
+</div></div></div><footer class="nav-footer" id="footer"><section class="sitemap"><div class="footerSection"><h5>Docs</h5><a href="/docs/introduction">Introduction</a><a href="/docs/getting_started">Getting Started</a><a href="/tutorials/">Tutorials</a><a href="/api/">API Reference</a></div><div class="footerSection"><h5>Legal</h5><a href="https://opensource.facebook.com/legal/privacy/" target="_blank" rel="noreferrer noopener">Privacy</a><a href="https://opensource.facebook.com/legal/terms/" target="_blank" rel="noreferrer noopener">Terms</a></div><div class="footerSection"><h5>Social</h5><div class="social"><a class="github-button" href="https://github.com/pytorch/captum" data-count-href="https://github.com/pytorch/captum/stargazers" data-show-count="true" data-count-aria-label="# stargazers on GitHub" aria-label="Star Captum on GitHub">captum</a></div></div></section><a href="https://opensource.facebook.com/" target="_blank" rel="noreferrer noopener" class="fbOpenSource"><img src="/img/oss_logo.png" alt="Facebook Open Source" width="170" height="45"/></a><section class="copyright"> Copyright © 2021 Facebook Inc.</section><script>
             (function() {
               var BAD_BASE = '/captum/';
               if (window.location.origin !== 'https://captum.ai') {
