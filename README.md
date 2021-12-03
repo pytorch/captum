@@ -23,6 +23,8 @@ For model developers, Captum can be used to improve and troubleshoot models by f
 
 Captum helps ML researchers more easily implement interpretability algorithms that can interact with PyTorch models. Captum also allows researchers to quickly benchmark their work against other existing algorithms available in the library.
 
+![Overview of Attribution Algorithms](./docs/Captum_Attribution_Algos.png)
+
 #### Target Audience
 
 The primary audiences for Captum are model developers who are looking to improve their models and understand which features are important and interpretability researchers focused on identifying algorithms that can better interpret many types of models.
