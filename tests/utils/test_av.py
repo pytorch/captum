@@ -172,7 +172,7 @@ class Test(BaseTest):
             loaded_dataset = AV.load(
                 tmpdir, model_id, DEFAULT_IDENTIFIER, "layer1.0.conv1", n_batch_name
             )
-            self.assertIsNotNone(loaded_dataset)
+
             assertTensorAlmostEqual(self, next(iter(loaded_dataset)), batch, 0.0)
 
             loaded_dataset_for_layer = AV.load(
@@ -206,8 +206,16 @@ class Test(BaseTest):
 
     def test_av_load_non_saved_layer(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
-            dataset = AV.load(tmpdir, "dummy")
-            self.assertIsNone(dataset)
+            model_id = "dummy"
+            with self.assertRaises(RuntimeError) as context:
+                AV.load(tmpdir, model_id)
+            self.assertTrue(
+                (
+                    f"Activation vectors for model {model_id} "
+                    f"was not found at path {tmpdir}"
+                )
+                == str(context.exception)
+            )
 
     def test_av_load_one_batch(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -216,12 +224,20 @@ class Test(BaseTest):
             avs = [av_0, av_1]
 
             # add av_0 to the list of activations
-            dataset = AV.load(tmpdir, "dummy")
-            self.assertIsNone(dataset)
+            model_id = "dummy"
+            with self.assertRaises(RuntimeError) as context:
+                AV.load(tmpdir, model_id)
+            self.assertTrue(
+                (
+                    f"Activation vectors for model {model_id} "
+                    f"was not found at path {tmpdir}"
+                )
+                == str(context.exception)
+            )
 
             AV.save(tmpdir, "dummy", DEFAULT_IDENTIFIER, "layer1.0.conv1", av_0, "0")
             dataset = AV.load(tmpdir, "dummy", identifier=DEFAULT_IDENTIFIER)
-            self.assertIsNotNone(dataset)
+
             for i, av in enumerate(DataLoader(cast(Dataset, dataset))):
                 assertTensorAlmostEqual(self, av, avs[i])
 
@@ -236,7 +252,7 @@ class Test(BaseTest):
 
             AV.save(tmpdir, "dummy", DEFAULT_IDENTIFIER, "layer1.0.conv2", av_1, "0")
             dataset = AV.load(tmpdir, "dummy", identifier=DEFAULT_IDENTIFIER)
-            self.assertIsNotNone(dataset)
+
             dataloader = DataLoader(cast(Dataset, dataset))
             self.assertEqual(len(dataloader), 2)
             for i, av in enumerate(dataloader):
