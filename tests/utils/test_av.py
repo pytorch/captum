@@ -405,10 +405,9 @@ class Test(BaseTest):
             low, high = 0, 16
             mymodel = BasicLinearReLULinear(num_features)
             mydata = RangeDataset(low, high, num_features)
-            layers: List[str] = []
-            for name, _module in mymodel.named_modules():
-                layers.append(name)
-            layers: List[str] = list(filter(None, layers))
+            layers: List[str] = [
+                value[0] for value in mymodel.named_modules() if value[0]
+            ]
 
             # First AV generation on last 2 layers
             inputs = torch.stack((mydata[1], mydata[8], mydata[14]))
@@ -438,10 +437,9 @@ class Test(BaseTest):
             batch_size = high // 2
             mymodel = BasicLinearReLULinear(num_features)
             mydata = RangeDataset(low, high, num_features)
-            layers: List[str] = []
-            for name, _module in mymodel.named_modules():
-                layers.append(name)
-            layers: List[str] = list(filter(None, layers))
+            layers: List[str] = [
+                value[0] for value in mymodel.named_modules() if value[0]
+            ]
 
             # First AV generation on last 2 layers
             AV.generate_dataset_activations(
@@ -482,10 +480,10 @@ class Test(BaseTest):
             low, high = 0, 16
             mymodel = BasicLinearReLULinear(num_features)
             mydata = RangeDataset(low, high, num_features)
-            layers: List[str] = []
-            for name, _module in mymodel.named_modules():
-                layers.append(name)
-            layers: List[str] = list(filter(None, layers))
+            layers: List[str] = [
+                value[0] for value in mymodel.named_modules() if value[0]
+            ]
+
             # First AV generation on last 2 layers
             test_input = mydata[1].unsqueeze(0)
             act = AV.generate_activation(
