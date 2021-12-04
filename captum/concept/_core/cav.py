@@ -23,6 +23,7 @@ class CAV:
         layer: str,
         stats: Dict[str, Any] = None,
         save_path: str = "./cav/",
+        model_id: str = "default_model_id",
     ) -> None:
         r"""
         This class encapsulates the instances of CAVs objects, saves them in
@@ -33,24 +34,28 @@ class CAV:
                         names will be saved and loaded.
             layer (str): The layer where concept activation vectors are
                         computed using a predefined classifier.
-            stats (dict): a dictionary that retains information about the CAV
-                        classifier such as CAV weights and accuracies.
+            stats (dict, optional): a dictionary that retains information about
+                        the CAV classifier such as CAV weights and accuracies.
                         Ex.: stats = {"weights": weights, "classes": classes,
                                       "accs": accs}, where "weights" are learned
                         model parameters, "classes" are a list of classes used
                         by the model to generate the "weights" and "accs"
                         the classifier training or validation accuracy.
-            save_path (str): The path where the CAV objects are stored.
-
+            save_path (str, optional): The path where the CAV objects are stored.
+            model_id (str, optional): A unique model identifier associated with
+                        this CAV instance.
         """
 
         self.concepts = concepts
         self.layer = layer
         self.stats = stats
         self.save_path = save_path
+        self.model_id = model_id
 
     @staticmethod
-    def assemble_save_path(path: str, concepts: List[Concept], layer: str):
+    def assemble_save_path(
+        path: str, model_id: str, concepts: List[Concept], layer: str
+    ) -> str:
         r"""
         A utility method for assembling filename and its path, from
         a concept list and a layer name.
@@ -58,6 +63,8 @@ class CAV:
         Args:
             path (str): A path to be concatenated with the concepts key and
                     layer name.
+            model_id (str): A unique model identifier associated with input
+                    `layer` and `concepts`
             concepts (list(Concept)): A list of concepts that are concatenated
                     together and used as a concept key using their ids. These
                     concept ids are retrieved from TCAV s`Concept` objects.
@@ -73,13 +80,12 @@ class CAV:
                         layer = "inception4c"
                         path = "/cavs",
                     the resulting save path will be:
-                        "/cavs/0-1-2-inception4c.pkl"
+                        "/cavs/default_model_id/0-1-2-inception4c.pkl"
 
         """
 
         file_name = concepts_to_str(concepts) + "-" + layer + ".pkl"
-
-        return os.path.join(path, file_name)
+        return os.path.join(path, model_id, file_name)
 
     def save(self):
         r"""
@@ -106,15 +112,29 @@ class CAV:
             "stats": self.stats,
         }
 
-        if not os.path.exists(self.save_path):
-            os.mkdir(self.save_path)
-
-        cavs_path = CAV.assemble_save_path(self.save_path, self.concepts, self.layer)
-
+        cavs_path = CAV.assemble_save_path(
+            self.save_path, self.model_id, self.concepts, self.layer
+        )
         torch.save(save_dict, cavs_path)
 
     @staticmethod
-    def load(cavs_path: str, concepts: List[Concept], layer: str):
+    def create_cav_dir_if_missing(save_path: str, model_id: str) -> None:
+        r"""
+        A utility function for creating the directories where the CAVs will
+        be stored. CAVs are saved in a folder under named by `model_id`
+        under `save_path`.
+        Args:
+            save_path (str): A root path where the CAVs will be stored
+            model_id (str): A unique model identifier associated with the
+                    CAVs. A folder named `model_id` is created under
+                    `save_path`. The CAVs are later stored there.
+        """
+        cav_model_id_path = os.path.join(save_path, model_id)
+        if not os.path.exists(cav_model_id_path):
+            os.makedirs(cav_model_id_path)
+
+    @staticmethod
+    def load(cavs_path: str, model_id: str, concepts: List[Concept], layer: str):
         r"""
         Loads CAV dictionary from a pickle file for given input
         `layer` and `concepts`.
@@ -123,6 +143,9 @@ class CAV:
             cavs_path (str): The root path where the cavs are stored
                     in the storage (on the disk).
                     Ex.: "/cavs"
+            model_id (str): A unique model identifier associated with the
+                    CAVs. There exist a folder named `model_id` under
+                    `cavs_path` path. The CAVs are loaded from this folder.
             concepts (list[Concept]):  A List of concepts for which
                     we would like to load the cavs.
             layer (str): The layer name. Ex.: "inception4c". In case of nested
@@ -133,10 +156,10 @@ class CAV:
             cav(CAV): An instance of a CAV class, containing the respective CAV
                     score per concept and layer. An example of a path where the
                     cavs are loaded from is:
-                    "/cavs/0-1-2-inception4c.pkl"
+                    "/cavs/default_model_id/0-1-2-inception4c.pkl"
         """
 
-        cavs_path = CAV.assemble_save_path(cavs_path, concepts, layer)
+        cavs_path = CAV.assemble_save_path(cavs_path, model_id, concepts, layer)
 
         if os.path.exists(cavs_path):
             save_dict = torch.load(cavs_path)

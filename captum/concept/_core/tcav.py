@@ -14,11 +14,10 @@ from captum.concept._core.cav import CAV
 from captum.concept._core.concept import Concept, ConceptInterpreter
 from captum.concept._utils.classifier import Classifier, DefaultClassifier
 from captum.concept._utils.common import concepts_to_str
+from captum.log import log_usage
 from torch import Tensor
 from torch.nn import Module
 from torch.utils.data import DataLoader, Dataset
-
-DEFAULT_MODEL_ID = "default_model_id"
 
 
 class LabelledDataset(Dataset):
@@ -100,6 +99,7 @@ class LabelledDataset(Dataset):
 
 
 def train_cav(
+    model_id,
     concepts: List[Concept],
     layers: Union[str, List[str]],
     classifier: Classifier,
@@ -113,6 +113,9 @@ def train_cav(
     Please see the TCAV class documentation for further information.
 
     Args:
+        model_id (str): A unique identifier for the PyTorch model for which
+                we would like to load the layer activations and train a
+                model in order to compute CAVs.
         concepts (list[Concept]): A list of Concept objects that are used
                 to train a classifier and learn decision boundaries between
                 those concepts for each layer defined in the `layers`
@@ -145,10 +148,10 @@ def train_cav(
     for layer in layers:
 
         # Create data loader to initialize the trainer.
-        datasets = list(
-            AV.load(save_path, DEFAULT_MODEL_ID, concept.identifier, layer)
+        datasets = [
+            AV.load(save_path, model_id, concept.identifier, layer)
             for concept in concepts
-        )
+        ]
 
         labels = [concept.id for concept in concepts]
 
@@ -187,8 +190,8 @@ def train_cav(
             layer,
             {"weights": weights, "classes": classes, **classifier_stats_dict},
             save_path,
+            model_id,
         )
-
         # Saving cavs on the disk
         cavs[concepts_key][layer].save()
 
@@ -239,6 +242,7 @@ class TCAV(ConceptInterpreter):
         self,
         model: Module,
         layers: Union[str, List[str]],
+        model_id: str = "default_model_id",
         classifier: Classifier = None,
         layer_attr_method: LayerAttribution = None,
         save_path: str = "./cav/",
@@ -251,7 +255,11 @@ class TCAV(ConceptInterpreter):
             layers (str, list[str]): A list of layer name(s) that are
                     used for computing concept activations (cavs) and layer
                     attributions.
-            classifier (Classifier): A custom classifier class, such as the
+            model_id (str, optional): A unique identifier for the PyTorch `model`
+                    passed as first argument to the constructor of TCAV class. It
+                    is used to store and load activations for given input `model`
+                    and associated `layers`.
+            classifier (Classifier, optional): A custom classifier class, such as the
                     Sklearn "linear_model" that allows us to train a model
                     using the activation vectors extracted for a layer per concept.
                     It also allows us to access trained weights of the model
@@ -287,6 +295,7 @@ class TCAV(ConceptInterpreter):
         """
         ConceptInterpreter.__init__(self, model)
         self.layers = [layers] if isinstance(layers, str) else layers
+        self.model_id = model_id
         self.concepts: Set[Concept] = set()
         self.classifier = classifier
         self.classifier_kwargs = classifier_kwargs
@@ -303,7 +312,17 @@ class TCAV(ConceptInterpreter):
         else:
             self.layer_attr_method = layer_attr_method
 
+        assert model_id, (
+            "`model_id` cannot be None or empty. Consider giving `model_id` "
+            "a meaningful name or leave it unspecified. If model_id is unspecified we "
+            "will use `default_model_id` as its default value."
+        )
+
         self.save_path = save_path
+
+        # Creates CAV save directory if it doesn't exist. It is created once in the
+        # constructor before generating the CAVs.
+        CAV.create_cav_dir_if_missing(self.save_path, model_id)
 
     def generate_all_activations(self) -> None:
         r"""
@@ -334,12 +353,14 @@ class TCAV(ConceptInterpreter):
             "{} must be specified".format(concept.id),
         )
         for i, examples in enumerate(concept.data_iter):
-            activations = layer_act.attribute(examples)
+            activations = layer_act.attribute.__wrapped__(  # type: ignore
+                layer_act, examples
+            )
             for activation, layer_name in zip(activations, layers):
                 activation = torch.reshape(activation, (activation.shape[0], -1))
                 AV.save(
                     self.save_path,
-                    DEFAULT_MODEL_ID,
+                    self.model_id,
                     concept.identifier,
                     layer_name,
                     activation.detach(),
@@ -393,7 +414,9 @@ class TCAV(ConceptInterpreter):
         concept_layers = defaultdict(list)
 
         for layer in self.layers:
-            self.cavs[concepts_key][layer] = CAV.load(self.save_path, concepts, layer)
+            self.cavs[concepts_key][layer] = CAV.load(
+                self.save_path, self.model_id, concepts, layer
+            )
 
             # If CAV aren't loaded
             if (
@@ -407,7 +430,7 @@ class TCAV(ConceptInterpreter):
                 for concept in concepts:
                     # Collect not activated layers for this concept
                     if not AV.exists(
-                        self.save_path, DEFAULT_MODEL_ID, layer, concept.identifier
+                        self.save_path, self.model_id, layer, concept.identifier
                     ):
                         concept_layers[concept].append(layer)
         return layers, concept_layers
@@ -488,6 +511,7 @@ class TCAV(ConceptInterpreter):
                 train_cav,
                 [
                     (
+                        self.model_id,
                         concepts,
                         concept_key_to_layers[concepts_to_str(concepts)],
                         self.classifier,
@@ -506,6 +530,7 @@ class TCAV(ConceptInterpreter):
             for concepts in experimental_sets:
                 cavs_list.append(
                     train_cav(
+                        self.model_id,
                         concepts,
                         concept_key_to_layers[concepts_to_str(concepts)],
                         cast(Classifier, self.classifier),
@@ -521,6 +546,7 @@ class TCAV(ConceptInterpreter):
 
         return self.cavs
 
+    @log_usage()
     def interpret(
         self,
         inputs: TensorOrTupleOfTensorsGeneric,
@@ -646,7 +672,8 @@ class TCAV(ConceptInterpreter):
             layer_module = _get_module_from_name(self.model, layer)
             self.layer_attr_method.layer = layer_module
 
-            attribs = self.layer_attr_method.attribute(
+            attribs = self.layer_attr_method.attribute.__wrapped__(  # type: ignore
+                self.layer_attr_method,
                 inputs,
                 target=target,
                 additional_forward_args=additional_forward_args,
@@ -672,7 +699,6 @@ class TCAV(ConceptInterpreter):
             # sort cavs and classes using the length of the concepts in each set
             cavs_sorted = np.array(cavs, dtype=object)[exp_set_lens_arg_sort]
             classes_sorted = np.array(classes, dtype=object)[exp_set_lens_arg_sort]
-
             i = 0
             while i < len(exp_set_offsets) - 1:
                 cav_subset = np.array(
