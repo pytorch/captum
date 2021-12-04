@@ -184,9 +184,6 @@ src="/js/documentation_options.js"></script>
         <span class="p">)</span>
 
         <span class="n">labels</span> <span class="o">=</span> <span class="p">[</span><span class="n">concept</span><span class="o">.</span><span class="n">id</span> <span class="k">for</span> <span class="n">concept</span> <span class="ow">in</span> <span class="n">concepts</span><span class="p">]</span>
-        <span class="k">assert</span> <span class="kc">None</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">datasets</span><span class="p">,</span> <span class="s2">"Cannot load concepts for given layer: </span><span class="si">{}</span><span class="s2">"</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
-            <span class="n">layer</span>
-        <span class="p">)</span>
 
         <span class="n">labelled_dataset</span> <span class="o">=</span> <span class="n">LabelledDataset</span><span class="p">(</span><span class="n">cast</span><span class="p">(</span><span class="n">List</span><span class="p">[</span><span class="n">AV</span><span class="o">.</span><span class="n">AVDataset</span><span class="p">],</span> <span class="n">datasets</span><span class="p">),</span> <span class="n">labels</span><span class="p">)</span>
 
@@ -761,10 +758,6 @@ src="/js/documentation_options.js"></script>
         <span class="k">assert</span> <span class="n">attribs</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="n">tcav_score</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="p">(</span>
             <span class="s2">"attrib and tcav_score should have the same 1st and "</span>
             <span class="s2">"2nd dimensions respectively (n_inputs)."</span>
-        <span class="p">)</span>
-        <span class="c1"># n_experiments x n_concepts</span>
-        <span class="n">sign_count_score</span> <span class="o">=</span> <span class="p">(</span>
-            <span class="n">torch</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">tcav_score</span> <span class="o">&gt;</span> <span class="mf">0.0</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">float</span><span class="p">()</span> <span class="o">/</span> <span class="n">tcav_score</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
         <span class="p">)</span>
         <span class="c1"># n_experiments x n_concepts</span>
         <span class="n">sign_count_score</span> <span class="o">=</span> <span class="p">(</span>
