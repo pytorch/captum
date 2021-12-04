@@ -294,6 +294,7 @@ class Test(BaseTest):
             [[-4.0, 0, 0, 0, 0, 0, -4.0]],
             [[]],
         )
+        # no mask
         self._lime_test_assert(
             net,
             (inp1, inp2),
@@ -301,6 +302,7 @@ class Test(BaseTest):
             n_samples=2000,
             expected_coefs_only=[-4.0, 0, 0, 0, 0, 0, -4.0],
         )
+        # with mask
         self._lime_test_assert(
             net,
             (inp1, inp2),
