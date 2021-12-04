@@ -730,10 +730,6 @@ class TCAV(ConceptInterpreter):
         sign_count_score = (
             torch.sum(tcav_score > 0.0, dim=1).float() / tcav_score.shape[1]
         )
-        # n_experiments x n_concepts
-        sign_count_score = (
-            torch.sum(tcav_score > 0.0, dim=1).float() / tcav_score.shape[1]
-        )
 
         magnitude_score = torch.sum(
             torch.abs(tcav_score * (tcav_score > 0.0).float()), dim=1
