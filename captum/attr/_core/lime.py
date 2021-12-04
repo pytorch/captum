@@ -654,7 +654,11 @@ def construct_feature_mask(feature_mask, formatted_inputs):
     else:
         feature_mask = _format_input(feature_mask)
         min_interp_features = int(
-            min(torch.min(single_inp).item() for single_inp in feature_mask)
+            min(
+                torch.min(single_mask).item()
+                for single_mask in feature_mask
+                if single_mask.numel()
+            )
         )
         if min_interp_features != 0:
             warnings.warn(
@@ -662,11 +666,16 @@ def construct_feature_mask(feature_mask, formatted_inputs):
                 " start at 0."
             )
             feature_mask = tuple(
-                single_inp - min_interp_features for single_inp in feature_mask
+                single_mask - min_interp_features for single_mask in feature_mask
             )
 
         num_interp_features = int(
-            max(torch.max(single_inp).item() for single_inp in feature_mask) + 1
+            max(
+                torch.max(single_mask).item()
+                for single_mask in feature_mask
+                if single_mask.numel()
+            )
+            + 1
         )
     return feature_mask, num_interp_features
 

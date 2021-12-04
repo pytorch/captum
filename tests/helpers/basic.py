@@ -13,7 +13,7 @@ def deep_copy_args(func: Callable):
     def copy_args(*args, **kwargs):
         return func(
             *(copy.deepcopy(x) for x in args),
-            **{k: copy.deepcopy(v) for k, v in kwargs.items()}
+            **{k: copy.deepcopy(v) for k, v in kwargs.items()},
         )
 
     return copy_args
@@ -45,6 +45,9 @@ def assertTensorAlmostEqual(test, actual, expected, delta=0.0001, mode="sum"):
             torch.sum(torch.abs(actual - expected)).item(), 0.0, delta=delta
         )
     elif mode == "max":
+        # if both tensors are empty, they are equal but there is no max
+        if actual.numel() == expected.numel() == 0:
+            return
         test.assertAlmostEqual(
             torch.max(torch.abs(actual - expected)).item(), 0.0, delta=delta
         )
