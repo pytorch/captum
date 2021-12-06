@@ -50,10 +50,10 @@ class Concept:
         self.data_iter = data_iter
 
     @property
-    def identifier(self):
+    def identifier(self) -> str:
         return "%s-%s" % (self.name, self.id)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return "Concept(%r, %r)" % (self.id, self.name)
 
 

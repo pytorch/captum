@@ -621,21 +621,19 @@ def create_concept(concept_name: str, concept_id: int) -> Concept:
     return concept
 
 
-def create_concepts() -> Tuple[List[Concept], Dict[str, Concept]]:
+def create_concepts() -> Dict[str, Concept]:
 
     # Function to create concept objects from a pre-set concept name list.
 
     concept_names = ["striped", "ceo", "random", "dotted"]
 
-    concept_list = []
     concept_dict: Dict[str, Concept] = defaultdict()
 
     for c, concept_name in enumerate(concept_names):
         concept = create_concept(concept_name, c)
-        concept_list.append(concept)
         concept_dict[concept_name] = concept
 
-    return concept_list, concept_dict
+    return concept_dict
 
 
 def find_concept_by_id(concepts: Set[Concept], id: int) -> Union[Concept, None]:
@@ -651,7 +649,7 @@ def create_TCAV(save_path: str, classifier: Classifier, layers) -> TCAV:
     tcav = TCAV(
         model,
         layers,
-        classifier,
+        classifier=classifier,
         save_path=save_path,
     )
     return tcav
@@ -662,7 +660,7 @@ def init_TCAV(
 ) -> Tuple[TCAV, Dict[str, Concept]]:
 
     # Create Concepts
-    concepts, concepts_dict = create_concepts()
+    concepts_dict = create_concepts()
 
     tcav = create_TCAV(save_path, classifier, layers)
     return tcav, concepts_dict
@@ -780,7 +778,6 @@ class Test(BaseTest):
             )
 
             # Compute CAVs
-
             tcav.compute_cavs(
                 experimental_sets,
                 force_train=force_train,
@@ -846,8 +843,8 @@ class Test(BaseTest):
     def test_TCAV_1(self) -> None:
 
         # Create Concepts
-        concepts, _ = create_concepts()
-        for concept in concepts:
+        concepts_dict = create_concepts()
+        for concept in concepts_dict.values():
             self.assertTrue(concept.data_iter is not None)
             data_iter = cast(DataLoader, concept.data_iter)
             self.assertEqual(
@@ -1127,7 +1124,7 @@ class Test(BaseTest):
     # Testing TCAV with default classifier and experimental sets of varying lengths
     def test_exp_sets_with_diffent_lengths(self) -> None:
         # Create Concepts
-        concepts, concepts_dict = create_concepts()
+        concepts_dict = create_concepts()
 
         # defining experimental sets of different length
         experimental_set_list = [["striped", "random"], ["ceo", "striped", "random"]]
@@ -1190,3 +1187,81 @@ class Test(BaseTest):
                 for c_tcav, s_tcav in zip(combined[1].items(), separate[1].items()):
                     self.assertEqual(c_tcav[0], s_tcav[0])
                     assertTensorAlmostEqual(self, c_tcav[1], s_tcav[1])
+
+    def test_model_ids_in_tcav(
+        self,
+    ) -> None:
+        # creating concepts and mapping between concepts and their names
+        concepts_dict = create_concepts()
+
+        # defining experimental sets of different length
+        experimental_set_list = [["striped", "random"], ["dotted", "random"]]
+        experimental_sets = self._create_experimental_sets(
+            experimental_set_list, concepts_dict
+        )
+        model = BasicModel_ConvNet()
+        model.eval()
+        layer = "conv2"
+        inputs = 100 * get_inputs_tensor()
+
+        with tempfile.TemporaryDirectory() as tmpdirname:
+            tcav1 = TCAV(
+                model,
+                layer,
+                model_id="my_basic_model1",
+                classifier=CustomClassifier(),
+                save_path=tmpdirname,
+            )
+
+            interpret1 = tcav1.interpret(
+                inputs, experimental_sets=experimental_sets, target=0
+            )
+
+            tcav2 = TCAV(
+                model,
+                layer,
+                model_id="my_basic_model2",
+                classifier=CustomClassifier(),
+                save_path=tmpdirname,
+            )
+            interpret2 = tcav2.interpret(
+                inputs, experimental_sets=experimental_sets, target=0
+            )
+
+            # testing that different folders were created for two different
+            # ids of the model
+            self.assertTrue(
+                AV.exists(
+                    tmpdirname,
+                    "my_basic_model1",
+                    concepts_dict["striped"].identifier,
+                    layer,
+                )
+            )
+            self.assertTrue(
+                AV.exists(
+                    tmpdirname,
+                    "my_basic_model2",
+                    concepts_dict["striped"].identifier,
+                    layer,
+                )
+            )
+            for interpret1_elem, interpret2_elem in zip(interpret1, interpret2):
+                for interpret1_sub_elem, interpret2_sub_elem in zip(
+                    interpret1[interpret1_elem], interpret2[interpret2_elem]
+                ):
+                    assertTensorAlmostEqual(
+                        self,
+                        interpret1[interpret1_elem][interpret1_sub_elem]["sign_count"],
+                        interpret2[interpret2_elem][interpret2_sub_elem]["sign_count"],
+                        0.0,
+                    )
+                    assertTensorAlmostEqual(
+                        self,
+                        interpret1[interpret1_elem][interpret1_sub_elem]["magnitude"],
+                        interpret2[interpret2_elem][interpret2_sub_elem]["magnitude"],
+                        0.0,
+                    )
+                    self.assertEqual(interpret1_sub_elem, interpret2_sub_elem)
+
+                self.assertEqual(interpret1_elem, interpret1_elem)

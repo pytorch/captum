@@ -393,7 +393,9 @@ class AV:
         ]
         if len(unsaved_layers) > 0:
             layer_act = LayerActivation(model, layer_modules)
-            new_activations = layer_act.attribute(inputs, additional_forward_args)
+            new_activations = layer_act.attribute.__wrapped__(  # type: ignore
+                layer_act, inputs, additional_forward_args
+            )
             AV.save(path, model_id, identifier, unsaved_layers, new_activations, num_id)
 
         activations: List[Union[Tensor, Tuple[Tensor, ...]]] = []
