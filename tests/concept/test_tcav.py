@@ -1264,4 +1264,4 @@ class Test(BaseTest):
                     )
                     self.assertEqual(interpret1_sub_elem, interpret2_sub_elem)
 
-                self.assertEqual(interpret1_elem, interpret1_elem)
+                self.assertEqual(interpret1_elem, interpret2_elem)
