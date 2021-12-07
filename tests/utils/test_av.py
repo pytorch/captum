@@ -236,7 +236,8 @@ class Test(BaseTest):
             )
 
             AV.save(tmpdir, "dummy", DEFAULT_IDENTIFIER, "layer1.0.conv1", av_0, "0")
-            dataset = AV.load(tmpdir, "dummy", identifier=DEFAULT_IDENTIFIER)
+            model_id = "dummy"
+            dataset = AV.load(tmpdir, model_id, identifier=DEFAULT_IDENTIFIER)
 
             for i, av in enumerate(DataLoader(cast(Dataset, dataset))):
                 assertTensorAlmostEqual(self, av, avs[i])
@@ -411,7 +412,7 @@ class Test(BaseTest):
 
             # First AV generation on last 2 layers
             inputs = torch.stack((mydata[1], mydata[8], mydata[14]))
-            AV.generate_activation(
+            AV._compute_and_save_activations(
                 tmpdir, mymodel, "model_id_1", layers[1:], inputs, "test", "0"
             )
 
@@ -422,7 +423,7 @@ class Test(BaseTest):
             # Second AV generation on first 2 layers.
             # Second layer overlaps with existing activations, should be loaded.
             inputs = torch.stack((mydata[0], mydata[7], mydata[13]))
-            AV.generate_activation(
+            AV._compute_and_save_activations(
                 tmpdir, mymodel, "model_id_1", layers[:2], inputs, "test", "0"
             )
 
@@ -486,8 +487,14 @@ class Test(BaseTest):
 
             # First AV generation on last 2 layers
             test_input = mydata[1].unsqueeze(0)
-            act = AV.generate_activation(
-                tmpdir, mymodel, "id_1", layers[2], test_input, "test", "0"
+            model_id = "id_1"
+            identifier = "test"
+            num_id = "0"
+            AV._compute_and_save_activations(
+                tmpdir, mymodel, model_id, layers[2], test_input, identifier, num_id
             )
+            act_dataset = AV.load(tmpdir, model_id, identifier, layers[2], num_id)
+            _layer_act = [act.squeeze(0) for act in DataLoader(act_dataset)]
+            act = torch.cat(_layer_act)
             out = mymodel(test_input)
             assertTensorAlmostEqual(self, out, act)

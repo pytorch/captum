@@ -333,8 +333,7 @@ class AV:
 
         return unsaved_layers
 
-    @staticmethod
-    def generate_activation(
+    def _compute_and_save_activations(
         path: str,
         model: Module,
         model_id: str,
@@ -344,7 +343,7 @@ class AV:
         num_id: str,
         additional_forward_args: Any = None,
         load_from_disk: bool = True,
-    ) -> Union[List[Union[Tensor, Tuple[Tensor, ...]]], Tensor, Tuple[Tensor, ...]]:
+    ) -> None:
         r"""
         Computes layer activations for the given inputs and specified `layers`
 
@@ -364,21 +363,13 @@ class AV:
             identifier (str or None): An optional identifier for the layer
                     activations. Can be used to distinguish between activations for
                     different training batches.
-            num_id (str): An optional string representing the batch number for which the
+            num_id (str): An required string representing the batch number for which the
                     activation vectors are computed
             additional_forward_args (optional):  Additional arguments that will be
                     passed to `model` after inputs.
                     Default: None
             load_from_disk (bool): Forces function to regenerate activations if False.
                     Default: True
-        Returns:
-            A list of Pytorch Tensor or Tuple of Tensors:
-                    Activations of each neuron in given layer output. Activations will
-                    always be the same size as the output of the given layer.
-                    Activations are returned in a tuple if the layer inputs / outputs
-                    contain multiple tensors, otherwise a single tensor is returned.
-                    Attributions are returned as a list corresponding to the list of
-                    layers for which activations were generated.
         """
         unsaved_layers = AV._manage_loading_layers(
             path,
@@ -397,21 +388,6 @@ class AV:
                 layer_act, inputs, additional_forward_args
             )
             AV.save(path, model_id, identifier, unsaved_layers, new_activations, num_id)
-
-        activations: List[Union[Tensor, Tuple[Tensor, ...]]] = []
-        layers = [layers] if isinstance(layers, str) else layers
-        for layer in layers:
-            if not AV.exists(path, model_id, identifier, layer, num_id):
-                raise RuntimeError(f"Layer {layer} was not found in manifold")
-            else:
-                act_dataset = AV.load(path, model_id, identifier, layer, num_id)
-                _layer_act = [act.squeeze(0) for act in DataLoader(act_dataset)]
-                __layer_act = torch.cat(_layer_act)
-                activations.append(__layer_act)
-
-        return activations if len(layers) > 1 else activations[0]
-        # TODO: return AVDataset instead of actual tensors to be more memory efficient.
-        # see created task
 
     @staticmethod
     def _unpack_data(data: Union[Any, Tuple[Any, Any]]) -> Any:
@@ -477,7 +453,7 @@ class AV:
         )
         if len(unsaved_layers) > 0:
             for i, data in enumerate(dataloader):
-                AV.generate_activation(
+                AV._compute_and_save_activations(
                     path,
                     model,
                     model_id,
