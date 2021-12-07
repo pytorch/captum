@@ -189,6 +189,8 @@ def loss_wrapper(cls: Any) -> Callable:
 class LayerActivation(BaseLoss):
     """
     Maximize activations at the target layer.
+    This is the most basic loss available and it simply returns the activations in
+    their original form.
     """
 
     def __call__(self, targets_to_values: ModuleOutputMapping) -> torch.Tensor:
@@ -201,6 +203,8 @@ class LayerActivation(BaseLoss):
 class ChannelActivation(BaseLoss):
     """
     Maximize activations at the target layer and target channel.
+    This loss maximizes the activations of a target channel in a specified target
+    layer, and can be useful to determine what features the channel is excited by.
     """
 
     def __init__(
@@ -224,6 +228,12 @@ class ChannelActivation(BaseLoss):
 
 @loss_wrapper
 class NeuronActivation(BaseLoss):
+    """
+    This loss maximizes the activations of a target neuron in the specified channel
+    from the specified layer. This loss is useful for determining the type of features
+    that excite a neuron, and thus is often used for circuits and neuron related
+    research.
+    """
     def __init__(
         self,
         target: nn.Module,
@@ -258,6 +268,10 @@ class DeepDream(BaseLoss):
     """
     Maximize 'interestingness' at the target layer.
     Mordvintsev et al., 2015.
+    https://github.com/google/deepdream
+    This loss returns the squared layer activations. When combined with a negative
+    mean loss summarization, this loss will create hallucinogenic visuals commonly
+    referred to as 'Deep Dream'. 
     """
 
     def __call__(self, targets_to_values: ModuleOutputMapping) -> torch.Tensor:
@@ -272,6 +286,9 @@ class TotalVariation(BaseLoss):
     Total variation denoising penalty for activations.
     See Mahendran, V. 2014. Understanding Deep Image Representations by Inverting Them.
     https://arxiv.org/abs/1412.0035
+    This loss attempts to smooth / denoise the target by performing total variance
+    denoising. The target is most often the image that’s being optimized. This loss is
+    often used to remove unwanted visual artifacts.
     """
 
     def __call__(self, targets_to_values: ModuleOutputMapping) -> torch.Tensor:
@@ -334,6 +351,9 @@ class Diversity(BaseLoss):
     Use a cosine similarity penalty to extract features from a polysemantic neuron.
     Olah, Mordvintsev & Schubert, 2017.
     https://distill.pub/2017/feature-visualization/#diversity
+    This loss helps break up polysemantic layers, channels, and neurons by encouraging
+    diversity across the different batches. This loss is to be used along with a main
+    loss.
     """
 
     def __call__(self, targets_to_values: ModuleOutputMapping) -> torch.Tensor:
@@ -359,6 +379,8 @@ class ActivationInterpolation(BaseLoss):
     Interpolate between two different layers & channels.
     Olah, Mordvintsev & Schubert, 2017.
     https://distill.pub/2017/feature-visualization/#Interaction-between-Neurons
+    This loss helps to interpolate or mix visualizations from two activations (layer or
+    channel) by interpolating a linear sum between the two activations.
     """
 
     def __init__(
@@ -410,6 +432,9 @@ class Alignment(BaseLoss):
     similarity between them.
     Olah, Mordvintsev & Schubert, 2017.
     https://distill.pub/2017/feature-visualization/#Interaction-between-Neurons
+    When interpolating between activations, it may be desirable to keep image landmarks
+    in the same position for visual comparison. This loss helps to minimize L2 distance
+    between neighbouring images. 
     """
 
     def __init__(self, target: nn.Module, decay_ratio: float = 2.0) -> None:
@@ -438,6 +463,10 @@ class Direction(BaseLoss):
     Visualize a general direction vector.
     Carter, et al., "Activation Atlas", Distill, 2019.
     https://distill.pub/2019/activation-atlas/#Aggregating-Multiple-Images
+    This loss helps to visualize a specific vector direction in a layer, by maximizing
+    the alignment between the input vector and the layer’s activation vector. The
+    dimensionality of the vector should correspond to the number of channels in the
+    layer.
     """
 
     def __init__(
@@ -464,6 +493,8 @@ class NeuronDirection(BaseLoss):
     Visualize a single (x, y) position for a direction vector.
     Carter, et al., "Activation Atlas", Distill, 2019.
     https://distill.pub/2019/activation-atlas/#Aggregating-Multiple-Images
+    Extends Direction loss by focusing on visualizing a single neuron within the
+    kernel.
     """
 
     def __init__(
@@ -505,6 +536,7 @@ class TensorDirection(BaseLoss):
     Visualize a tensor direction vector.
     Carter, et al., "Activation Atlas", Distill, 2019.
     https://distill.pub/2019/activation-atlas/#Aggregating-Multiple-Images
+    Extends Direction loss by allowing batch-wise direction visualization.
     """
 
     def __init__(
@@ -542,6 +574,8 @@ class TensorDirection(BaseLoss):
 class ActivationWeights(BaseLoss):
     """
     Apply weights to channels, neurons, or spots in the target.
+    This loss weighs specific channels or neurons in a given layer, via a weight
+    vector.
     """
 
     def __init__(
