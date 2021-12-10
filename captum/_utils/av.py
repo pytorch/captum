@@ -333,6 +333,7 @@ class AV:
 
         return unsaved_layers
 
+    @staticmethod
     def _compute_and_save_activations(
         path: str,
         model: Module,
