@@ -389,70 +389,117 @@ class RandomRotation(nn.Module):
     Apply random rotation transforms on a NCHW tensor, using a sequence of degrees.
     """
 
+    __constants__ = ["degrees", "mode", "padding_mode"]
+
     def __init__(
-        self, degrees: Union[List[float], Tuple[float, ...], torch.Tensor]
+        self,
+        degrees: Union[List[float], Tuple[float, ...], torch.Tensor],
+        mode: str = "bilinear",
+        padding_mode: str = "zeros",
     ) -> None:
         """
         Args:
 
             degrees (float, sequence): Tuple, List, or Tensor of degrees to randomly
                 select from.
+            mode (str): Interpolation mode to use. One of; 'bilinear', 'nearest',
+                or 'bicubic'.
+                Default: "bilinear"
+            padding_mode (str): Padding mode for values that fall outside of the grid.
+                One of; 'zeros', 'border', or 'reflection'.
+                Default: "zeros"
         """
         super().__init__()
         assert hasattr(degrees, "__iter__")
         if torch.is_tensor(degrees):
             assert cast(torch.Tensor, degrees).dim() == 1
+            degrees = degrees.tolist()
         assert len(degrees) > 0
-        self.degrees = degrees
+        self.degrees = [float(d) for d in degrees]
+        self.mode = mode
+        self.padding_mode = padding_mode
 
     def _get_rot_mat(
         self,
-        theta: Union[int, float, torch.Tensor],
+        theta: float,
         device: torch.device,
         dtype: torch.dtype,
     ) -> torch.Tensor:
-        if torch.is_tensor(theta):
-            theta = theta.float().to(device)
-        else:
-            theta = torch.tensor(theta, device=device, dtype=dtype)
+        """
+        Create a rotation matrix tensor.
+
+        Args:
+
+            theta (float): The rotation value in degrees.
+
+        Returns:
+            **rot_mat** (torch.Tensor): A rotation matrix.
+        """
+        theta = theta * math.pi / 180.0
         rot_mat = torch.tensor(
             [
-                [torch.cos(theta), -torch.sin(theta), 0],
-                [torch.sin(theta), torch.cos(theta), 0],
+                [math.cos(theta), -math.sin(theta), 0.0],
+                [math.sin(theta), math.cos(theta), 0.0],
             ],
             device=device,
             dtype=dtype,
         )
         return rot_mat
 
-    def _rotate_tensor(
-        self, x: torch.Tensor, theta: Union[int, float, torch.Tensor]
-    ) -> torch.Tensor:
-        theta = theta * math.pi / 180
+    def _rotate_tensor(self, x: torch.Tensor, theta: float) -> torch.Tensor:
+        """
+        Rotate an NCHW image tensor based on a specified degree value.
+
+        Args:
+
+            x (torch.Tensor): The NCHW image tensor to rotate.
+            theta (float): The amount to rotate the NCHW image, in degrees.
+
+        Returns:
+            **x** (torch.Tensor): A rotated NCHW image tensor.
+        """
         rot_matrix = self._get_rot_mat(theta, x.device, x.dtype)[None, ...].repeat(
             x.shape[0], 1, 1
         )
-        if torch.__version__ >= "1.3.0":
+        if torch.__version__ >= "1.3.0" or torch.jit.is_scripting():
             # Pass align_corners explicitly for torch >= 1.3.0
             grid = F.affine_grid(rot_matrix, x.size(), align_corners=False)
-            x = F.grid_sample(x, grid, align_corners=False)
+            x = F.grid_sample(
+                x,
+                grid,
+                mode=self.mode,
+                padding_mode=self.padding_mode,
+                align_corners=False,
+            )
         else:
             grid = F.affine_grid(rot_matrix, x.size())
-            x = F.grid_sample(x, grid)
+            x = F.grid_sample(x, grid, mode=self.mode, padding_mode=self.padding_mode)
         return x
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """
-        Randomly rotate an input tensor.
+        Randomly rotate an NCHW image tensor.
 
         Args:
 
-            input (torch.Tensor): Input to randomly rotate.
+            x (torch.Tensor): NCHW image tensor to randomly rotate.
 
         Returns:
-            **tensor** (torch.Tensor): A randomly rotated *tensor*.
+            **x** (torch.Tensor): A randomly rotated NCHW image *tensor*.
         """
-        rotate_angle = _rand_select(self.degrees)
+        assert x.dim() == 4
+
+        n = int(
+            torch.randint(
+                low=0,
+                high=len(self.degrees),
+                size=[1],
+                dtype=torch.int64,
+                layout=torch.strided,
+                device=x.device,
+            ).item()
+        )
+        rotate_angle = self.degrees[n]
         return self._rotate_tensor(x, rotate_angle)
 
 
