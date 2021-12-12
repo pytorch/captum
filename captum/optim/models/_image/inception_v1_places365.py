@@ -261,7 +261,7 @@ class InceptionV1Places365(nn.Module):
         x = self.drop(x)
         x = self.fc(x)
         if not self.aux_logits:
-            return cast(torch.Tensor, x)
+            return x
         else:
             return x, aux1_output, aux2_output
 

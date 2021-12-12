@@ -62,6 +62,7 @@ class RedirectedReluLayer(nn.Module):
     Class for applying RedirectedReLU
     """
 
+    @torch.jit.ignore
     def forward(self, input: torch.Tensor) -> torch.Tensor:
         return RedirectedReLU.apply(input)
 

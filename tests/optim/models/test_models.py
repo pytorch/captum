@@ -158,6 +158,30 @@ class TestInceptionV1(BaseTest):
         self.assertTrue(outputs.is_cuda)
         self.assertEqual(list(outputs.shape), [1, 1008])
 
+    def test_inceptionv1_load_and_jit_module(self) -> None:
+        if torch.__version__ <= "1.8.0":
+            raise unittest.SkipTest(
+                "Skipping pretrained InceptionV1 load & JIT test"
+                + " due to insufficient Torch version."
+            )
+        x = torch.zeros(1, 3, 224, 224)
+        model = googlenet(pretrained=True)
+        jit_model = torch.jit.script(model)
+        outputs = jit_model(x)
+        self.assertEqual(list(outputs.shape), [1, 1008])
+
+    def test_inceptionv1_load_and_jit_module_no_redirected_relu(self) -> None:
+        if torch.__version__ <= "1.8.0":
+            raise unittest.SkipTest(
+                "Skipping pretrained InceptionV1 load & JIT with no"
+                + " redirected relu test due to insufficient Torch version."
+            )
+        x = torch.zeros(1, 3, 224, 224)
+        model = googlenet(pretrained=True, replace_relus_with_redirectedrelu=False)
+        jit_model = torch.jit.script(model)
+        outputs = jit_model(x)
+        self.assertEqual(list(outputs.shape), [1, 1008])
+
 
 class TestInceptionV1Places365(BaseTest):
     def test_load_inceptionv1_places365_with_redirected_relu(self) -> None:
@@ -280,4 +304,30 @@ class TestInceptionV1Places365(BaseTest):
         self.assertTrue(outputs[0].is_cuda)
         self.assertTrue(outputs[1].is_cuda)
         self.assertTrue(outputs[2].is_cuda)
+        self.assertEqual([list(o.shape) for o in outputs], [[1, 365]] * 3)
+
+    def test_inceptionv1_places365_load_and_jit_module(self) -> None:
+        if torch.__version__ <= "1.8.0":
+            raise unittest.SkipTest(
+                "Skipping pretrained InceptionV1 Places365 load & JIT module test"
+                + " due to insufficient Torch version."
+            )
+        x = torch.zeros(1, 3, 224, 224)
+        model = googlenet_places365(pretrained=True)
+        jit_model = torch.jit.script(model)
+        outputs = jit_model(x)
+        self.assertEqual([list(o.shape) for o in outputs], [[1, 365]] * 3)
+
+    def test_inceptionv1_places365_jit_module_no_redirected_relu(self) -> None:
+        if torch.__version__ <= "1.8.0":
+            raise unittest.SkipTest(
+                "Skipping pretrained InceptionV1 Places365 load & JIT module with no"
+                + " redirected relu test due to insufficient Torch version."
+            )
+        x = torch.zeros(1, 3, 224, 224)
+        model = googlenet_places365(
+            pretrained=True, replace_relus_with_redirectedrelu=False
+        )
+        jit_model = torch.jit.script(model)
+        outputs = jit_model(x)
         self.assertEqual([list(o.shape) for o in outputs], [[1, 365]] * 3)
