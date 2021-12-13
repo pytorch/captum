@@ -15,15 +15,6 @@ from tests.helpers.basic import (
 from tests.optim.helpers import numpy_transforms
 
 
-class TestRandSelect(BaseTest):
-    def test_rand_select(self) -> None:
-        a = (1, 2, 3, 4, 5)
-        b = torch.Tensor([0.1, -5, 56.7, 99.0])
-
-        self.assertIn(transforms._rand_select(a), a)
-        self.assertIn(transforms._rand_select(b), b)
-
-
 class TestRandomScale(BaseTest):
     def test_random_scale(self) -> None:
         scale_module = transforms.RandomScale(scale=(1, 0.975, 1.025, 0.95, 1.05))
@@ -32,14 +23,14 @@ class TestRandomScale(BaseTest):
         # Test rescaling
         assertTensorAlmostEqual(
             self,
-            scale_module.scale_tensor(test_tensor, 0.5),
+            scale_module._scale_tensor(test_tensor, 0.5),
             torch.ones(3, 1).repeat(3, 1, 3).unsqueeze(0),
             0,
         )
 
         assertTensorAlmostEqual(
             self,
-            scale_module.scale_tensor(test_tensor, 1.5),
+            scale_module._scale_tensor(test_tensor, 1.5),
             torch.tensor(
                 [
                     [0.2500, 0.5000, 0.2500],
@@ -59,15 +50,40 @@ class TestRandomScale(BaseTest):
 
         assertTensorAlmostEqual(
             self,
-            scale_module.get_scale_mat(0.5, test_tensor.device, test_tensor.dtype),
+            scale_module._get_scale_mat(0.5, test_tensor.device, test_tensor.dtype),
             torch.tensor([[0.5000, 0.0000, 0.0000], [0.0000, 0.5000, 0.0000]]),
             0,
         )
 
         assertTensorAlmostEqual(
             self,
-            scale_module.get_scale_mat(1.24, test_tensor.device, test_tensor.dtype),
+            scale_module._get_scale_mat(1.24, test_tensor.device, test_tensor.dtype),
             torch.tensor([[1.2400, 0.0000, 0.0000], [0.0000, 1.2400, 0.0000]]),
+            0,
+        )
+
+    def test_random_scale_jit_module(self) -> None:
+        if torch.__version__ <= "1.8.0":
+            raise unittest.SkipTest(
+                "Skipping RandomScale JIT module test due to insufficient"
+                + " Torch version."
+            )
+        scale_module = transforms.RandomScale(scale=[1.5])
+        jit_scale_module = torch.jit.script(scale_module)
+        test_tensor = torch.ones(1, 3, 3, 3)
+
+        assertTensorAlmostEqual(
+            self,
+            jit_scale_module(test_tensor),
+            torch.tensor(
+                [
+                    [0.2500, 0.5000, 0.2500],
+                    [0.5000, 1.0000, 0.5000],
+                    [0.2500, 0.5000, 0.2500],
+                ]
+            )
+            .repeat(3, 1, 1)
+            .unsqueeze(0),
             0,
         )
 
@@ -123,6 +139,28 @@ class TestRandomSpatialJitter(BaseTest):
         assertArraysAlmostEqual(jittered_tensor[0].numpy(), jittered_array, 0)
         assertArraysAlmostEqual(jittered_tensor[1].numpy(), jittered_array, 0)
         assertArraysAlmostEqual(jittered_tensor[2].numpy(), jittered_array, 0)
+
+    def test_random_spatial_jitter_forward(self) -> None:
+        t_val = 3
+
+        spatialjitter = transforms.RandomSpatialJitter(t_val)
+        test_input = torch.eye(4, 4).repeat(3, 1, 1).unsqueeze(0)
+        jittered_tensor = spatialjitter(test_input)
+        self.assertEqual(list(jittered_tensor.shape), list(test_input.shape))
+
+    def test_random_spatial_jitter_forward_jit_module(self) -> None:
+        if torch.__version__ <= "1.8.0":
+            raise unittest.SkipTest(
+                "Skipping RandomSpatialJitter JIT module test due to insufficient"
+                + " Torch version."
+            )
+        t_val = 3
+
+        spatialjitter = transforms.RandomSpatialJitter(t_val)
+        jit_spatialjitter = torch.jit.script(spatialjitter)
+        test_input = torch.eye(4, 4).repeat(3, 1, 1).unsqueeze(0)
+        jittered_tensor = jit_spatialjitter(test_input)
+        self.assertEqual(list(jittered_tensor.shape), list(test_input.shape))
 
 
 class TestCenterCrop(BaseTest):
@@ -242,6 +280,35 @@ class TestCenterCrop(BaseTest):
         cropped_tensor = crop_mod(px)
         assertTensorAlmostEqual(self, x, cropped_tensor)
 
+    def test_center_crop_one_number_exact_jit_module(self) -> None:
+        pad = (1, 1, 1, 1)
+        test_tensor = (
+            F.pad(F.pad(torch.ones(2, 2), pad=pad), pad=pad, value=1)
+            .repeat(3, 1, 1)
+            .unsqueeze(0)
+        )
+
+        crop_vals = 5
+
+        crop_tensor = transforms.CenterCrop(crop_vals, False)
+        jit_crop_tensor = torch.jit.script(crop_tensor)
+        cropped_tensor = jit_crop_tensor(test_tensor)
+        expected_tensor = torch.stack(
+            [
+                torch.tensor(
+                    [
+                        [1.0, 1.0, 1.0, 1.0, 1.0],
+                        [1.0, 0.0, 0.0, 0.0, 0.0],
+                        [1.0, 0.0, 1.0, 1.0, 0.0],
+                        [1.0, 0.0, 1.0, 1.0, 0.0],
+                        [1.0, 0.0, 0.0, 0.0, 0.0],
+                    ]
+                )
+            ]
+            * 3
+        ).unsqueeze(0)
+        assertTensorAlmostEqual(self, cropped_tensor, expected_tensor, 0)
+
 
 class TestCenterCropFunction(BaseTest):
     def test_center_crop_one_number(self) -> None:
@@ -353,6 +420,39 @@ class TestCenterCropFunction(BaseTest):
         )
         assertTensorAlmostEqual(self, x, cropped_tensor)
 
+    def test_center_crop_one_number_exact_jit_module(self) -> None:
+        if torch.__version__ <= "1.8.0":
+            raise unittest.SkipTest(
+                "Skipping center_crop JIT module test due to insufficient"
+                + " Torch version."
+            )
+        pad = (1, 1, 1, 1)
+        test_tensor = (
+            F.pad(F.pad(torch.ones(2, 2), pad=pad), pad=pad, value=1)
+            .repeat(3, 1, 1)
+            .unsqueeze(0)
+        )
+
+        crop_vals = 5
+
+        jit_center_crop = transforms.center_crop
+        cropped_tensor = jit_center_crop(test_tensor, crop_vals, False)
+        expected_tensor = torch.stack(
+            [
+                torch.tensor(
+                    [
+                        [1.0, 1.0, 1.0, 1.0, 1.0],
+                        [1.0, 0.0, 0.0, 0.0, 0.0],
+                        [1.0, 0.0, 1.0, 1.0, 0.0],
+                        [1.0, 0.0, 1.0, 1.0, 0.0],
+                        [1.0, 0.0, 0.0, 0.0, 0.0],
+                    ]
+                )
+            ]
+            * 3
+        ).unsqueeze(0)
+        assertTensorAlmostEqual(self, cropped_tensor, expected_tensor)
+
 
 class TestBlendAlpha(BaseTest):
     def test_blend_alpha(self) -> None:
@@ -374,12 +474,49 @@ class TestBlendAlpha(BaseTest):
 
         assertArraysAlmostEqual(blended_tensor.numpy(), blended_array, 0)
 
+    def test_blend_alpha_jit_module(self) -> None:
+        if torch.__version__ <= "1.8.0":
+            raise unittest.SkipTest(
+                "Skipping BlendAlpha JIT module test due to insufficient"
+                + " Torch version."
+            )
+        rgb_tensor = torch.ones(3, 3, 3)
+        alpha_tensor = ((torch.eye(3, 3) + torch.eye(3, 3).flip(1)) / 2).repeat(1, 1, 1)
+        test_tensor = torch.cat([rgb_tensor, alpha_tensor]).unsqueeze(0)
+
+        background_tensor = torch.ones_like(rgb_tensor) * 5
+        blend_alpha = transforms.BlendAlpha(background=background_tensor)
+        jit_blend_alpha = torch.jit.script(blend_alpha)
+        blended_tensor = jit_blend_alpha(test_tensor)
+
+        rgb_array = np.ones((3, 3, 3))
+        alpha_array = (np.add(np.eye(3, 3), np.flip(np.eye(3, 3), 1)) / 2)[None, :]
+        test_array = np.concatenate([rgb_array, alpha_array])[None, :]
+
+        background_array = np.ones(rgb_array.shape) * 5
+        blend_alpha_np = numpy_transforms.BlendAlpha(background=background_array)
+        blended_array = blend_alpha_np.blend_alpha(test_array)
+
+        assertArraysAlmostEqual(blended_tensor.numpy(), blended_array, 0)
+
 
 class TestIgnoreAlpha(BaseTest):
     def test_ignore_alpha(self) -> None:
         ignore_alpha = transforms.IgnoreAlpha()
         test_input = torch.ones(1, 4, 3, 3)
         rgb_tensor = ignore_alpha(test_input)
+        assert rgb_tensor.size(1) == 3
+
+    def test_ignore_alpha_jit_module(self) -> None:
+        if torch.__version__ <= "1.8.0":
+            raise unittest.SkipTest(
+                "Skipping IgnoreAlpha JIT module test due to insufficient"
+                + " Torch version."
+            )
+        ignore_alpha = transforms.IgnoreAlpha()
+        jit_ignore_alpha = torch.jit.script(ignore_alpha)
+        test_input = torch.ones(1, 4, 3, 3)
+        rgb_tensor = jit_ignore_alpha(test_input)
         assert rgb_tensor.size(1) == 3
 
 
@@ -562,6 +699,29 @@ class TestGaussianSmoothing(BaseTest):
         self.assertLessEqual(t_max, 4.8162e-05)
         self.assertGreaterEqual(t_min, 3.3377e-06)
 
+    def test_gaussian_smoothing_2d_jit_module(self) -> None:
+        if torch.__version__ <= "1.8.0":
+            raise unittest.SkipTest(
+                "Skipping GaussianSmoothing 2D JIT module test due to insufficient"
+                + " Torch version."
+            )
+        channels = 3
+        kernel_size = 3
+        sigma = 2.0
+        dim = 2
+        smoothening_module = transforms.GaussianSmoothing(
+            channels, kernel_size, sigma, dim
+        )
+        jit_smoothening_module = torch.jit.script(smoothening_module)
+
+        test_tensor = torch.tensor([1.0, 5.0]).repeat(3, 6, 3).unsqueeze(0)
+
+        diff_tensor = jit_smoothening_module(test_tensor) - torch.tensor(
+            [2.4467, 3.5533]
+        ).repeat(3, 4, 2).unsqueeze(0)
+        self.assertLessEqual(diff_tensor.max().item(), 4.5539e-05)
+        self.assertGreaterEqual(diff_tensor.min().item(), -4.5539e-05)
+
 
 class TestScaleInputRange(BaseTest):
     def test_scale_input_range(self) -> None:
@@ -570,12 +730,37 @@ class TestScaleInputRange(BaseTest):
         output_tensor = scale_input(x)
         self.assertEqual(output_tensor.mean(), 255.0)
 
+    def test_scale_input_range_jit_module(self) -> None:
+        if torch.__version__ <= "1.8.0":
+            raise unittest.SkipTest(
+                "Skipping ScaleInputRange JIT module test due to insufficient"
+                + " Torch version."
+            )
+        x = torch.ones(1, 3, 4, 4)
+        scale_input = transforms.ScaleInputRange(255)
+        jit_scale_input = torch.jit.script(scale_input)
+        output_tensor = jit_scale_input(x)
+        self.assertEqual(output_tensor.mean(), 255.0)
+
 
 class TestRGBToBGR(BaseTest):
     def test_rgb_to_bgr(self) -> None:
         x = torch.randn(1, 3, 224, 224)
         rgb_to_bgr = transforms.RGBToBGR()
         output_tensor = rgb_to_bgr(x)
+        expected_x = x[:, [2, 1, 0]]
+        assertTensorAlmostEqual(self, output_tensor, expected_x)
+
+    def test_rgb_to_bgr_jit_module(self) -> None:
+        if torch.__version__ <= "1.8.0":
+            raise unittest.SkipTest(
+                "Skipping RGBToBGR JIT module test due to insufficient"
+                + " Torch version."
+            )
+        x = torch.randn(1, 3, 224, 224)
+        rgb_to_bgr = transforms.RGBToBGR()
+        jit_rgb_to_bgr = torch.jit.script(rgb_to_bgr)
+        output_tensor = jit_rgb_to_bgr(x)
         expected_x = x[:, [2, 1, 0]]
         assertTensorAlmostEqual(self, output_tensor, expected_x)
 
@@ -640,13 +825,49 @@ class TestNChannelsToRGB(BaseTest):
         test_output = nchannels_to_rgb(test_input)
         self.assertEqual(list(test_output.size()), [1, 3, 224, 224])
 
+    def test_nchannels_to_rgb_collapse_jit_module(self) -> None:
+        if torch.__version__ <= "1.8.0":
+            raise unittest.SkipTest(
+                "Skipping NChannelsToRGB collapse JIT module test due to insufficient"
+                + " Torch version."
+            )
+        test_input = torch.randn(1, 6, 224, 224)
+        nchannels_to_rgb = transforms.NChannelsToRGB()
+        jit_nchannels_to_rgb = torch.jit.script(nchannels_to_rgb)
+        test_output = jit_nchannels_to_rgb(test_input)
+        self.assertEqual(list(test_output.size()), [1, 3, 224, 224])
+
 
 class TestRandomCrop(BaseTest):
+    def test_random_crop_center_crop(self) -> None:
+        crop_size = [160, 160]
+        crop_transform = transforms.RandomCrop(crop_size=crop_size)
+        x = torch.ones(1, 4, 224, 224)
+
+        x_out = crop_transform._center_crop(x)
+
+        self.assertEqual(list(x_out.shape), [1, 4, 160, 160])
+
     def test_random_crop(self) -> None:
         crop_size = [160, 160]
         crop_transform = transforms.RandomCrop(crop_size=crop_size)
         x = torch.ones(1, 4, 224, 224)
 
         x_out = crop_transform(x)
+
+        self.assertEqual(list(x_out.shape), [1, 4, 160, 160])
+
+    def test_random_crop_jit_module(self) -> None:
+        if torch.__version__ <= "1.8.0":
+            raise unittest.SkipTest(
+                "Skipping RandomCrop JIT module test due to insufficient"
+                + " Torch version."
+            )
+        crop_size = [160, 160]
+        crop_transform = transforms.RandomCrop(crop_size=crop_size)
+        jit_crop_transform = torch.jit.script(crop_transform)
+        x = torch.ones(1, 4, 224, 224)
+
+        x_out = jit_crop_transform(x)
 
         self.assertEqual(list(x_out.shape), [1, 4, 160, 160])

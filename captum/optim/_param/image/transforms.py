@@ -181,6 +181,8 @@ class CenterCrop(torch.nn.Module):
     Center crop a specified amount from a tensor.
     """
 
+    __constants__ = ["crop_vals", "pixels_from_edges", "offset_left"]
+
     def __init__(
         self,
         size: IntSeqOrIntType = 0,
@@ -220,6 +222,7 @@ class CenterCrop(torch.nn.Module):
         )
 
 
+@torch.jit.ignore
 def center_crop(
     input: torch.Tensor,
     crop_vals: IntSeqOrIntType,
@@ -273,79 +276,140 @@ def center_crop(
     return x
 
 
-def _rand_select(
-    transform_values: NumSeqOrTensorType,
-) -> Union[int, float, torch.Tensor]:
-    """
-    Randomly return a single value from the provided tuple, list, or tensor.
-
-    Args:
-
-        transform_values (sequence):  A sequence of values to randomly select from.
-
-    Returns:
-        **value**:  A single value from the specified sequence.
-    """
-    n = torch.randint(low=0, high=len(transform_values), size=[1]).item()
-    return transform_values[n]
-
-
 class RandomScale(nn.Module):
     """
     Apply random rescaling on a NCHW tensor.
     """
 
-    def __init__(self, scale: NumSeqOrTensorType) -> None:
+    __constants__ = [
+        "scale",
+        "mode",
+        "padding_mode",
+        "align_corners",
+        "has_align_corners",
+    ]
+
+    def __init__(
+        self,
+        scale: NumSeqOrTensorType,
+        mode: str = "bilinear",
+        padding_mode: str = "zeros",
+        align_corners: bool = False,
+    ) -> None:
         """
         Args:
 
             scale (float, sequence): Tuple of rescaling values to randomly select from.
+            mode (str, optional): Interpolation mode to use. See documentation of
+                F.grid_sample for more details. One of; "bilinear", "nearest", or
+                "bicubic".
+                Default: "bilinear"
+            padding_mode (str, optional): Padding mode for values that fall outside of
+                the grid. See documentation of F.grid_sample for more details. One of;
+                "zeros", "border", or "reflection".
+                Default: "zeros"
+            align_corners (bool, optional): Whether or not to align corners. See
+                documentation of F.affine_grid & F.grid_sample for more details.
+                Default: False
         """
         super().__init__()
-        self.scale = scale
+        assert hasattr(scale, "__iter__")
+        if torch.is_tensor(scale):
+            assert cast(torch.Tensor, scale).dim() == 1
+            scale = scale.tolist()
+        assert len(scale) > 0
+        self.scale = [float(s) for s in scale]
+        self.mode = mode
+        self.padding_mode = padding_mode
+        self.align_corners = align_corners
+        self.has_align_corners = torch.__version__ >= "1.3.0"
 
-    def get_scale_mat(
-        self, m: IntSeqOrIntType, device: torch.device, dtype: torch.dtype
+    def _get_scale_mat(
+        self,
+        m: float,
+        device: torch.device,
+        dtype: torch.dtype,
     ) -> torch.Tensor:
+        """
+        Create a rotation matrix tensor.
+
+        Args:
+
+            m (float): The scale value to use.
+
+        Returns:
+            **scale_mat** (torch.Tensor): A scale matrix.
+        """
         scale_mat = torch.tensor(
             [[m, 0.0, 0.0], [0.0, m, 0.0]], device=device, dtype=dtype
         )
         return scale_mat
 
-    def scale_tensor(
-        self, x: torch.Tensor, scale: Union[int, float, torch.Tensor]
-    ) -> torch.Tensor:
-        scale_matrix = self.get_scale_mat(scale, x.device, x.dtype)[None, ...].repeat(
+    def _scale_tensor(self, x: torch.Tensor, scale: float) -> torch.Tensor:
+        """
+        Scale an NCHW image tensor based on a specified scale value.
+
+        Args:
+
+            x (torch.Tensor): The NCHW image tensor to scale.
+            scale (float): The amount to scale the NCHW image by.
+
+        Returns:
+            **x** (torch.Tensor): A scaled NCHW image tensor.
+        """
+        scale_matrix = self._get_scale_mat(scale, x.device, x.dtype)[None, ...].repeat(
             x.shape[0], 1, 1
         )
-        if torch.__version__ >= "1.3.0":
+        if self.has_align_corners:
             # Pass align_corners explicitly for torch >= 1.3.0
-            grid = F.affine_grid(scale_matrix, x.size(), align_corners=False)
-            x = F.grid_sample(x, grid, align_corners=False)
+            grid = F.affine_grid(
+                scale_matrix, x.size(), align_corners=self.align_corners
+            )
+            x = F.grid_sample(
+                x,
+                grid,
+                mode=self.mode,
+                padding_mode=self.padding_mode,
+                align_corners=self.align_corners,
+            )
         else:
             grid = F.affine_grid(scale_matrix, x.size())
-            x = F.grid_sample(x, grid)
+            x = F.grid_sample(x, grid, mode=self.mode, padding_mode=self.padding_mode)
         return x
 
     def forward(self, input: torch.Tensor) -> torch.Tensor:
         """
-        Randomly scale / zoom in or out of a tensor.
+        Randomly scale / zoom in or out of an NCHW image tensor.
 
         Args:
 
-            input (torch.Tensor): Input to randomly scale.
+            input (torch.Tensor): NCHW image tensor to randomly scale.
 
         Returns:
-            **tensor** (torch.Tensor): Scaled *tensor*.
+            **tensor** (torch.Tensor): A randomly scaled NCHW image *tensor*.
         """
-        scale = _rand_select(self.scale)
-        return self.scale_tensor(input, scale=scale)
+        assert input.dim() == 4
+
+        n = int(
+            torch.randint(
+                low=0,
+                high=len(self.scale),
+                size=[1],
+                dtype=torch.int64,
+                layout=torch.strided,
+                device=input.device,
+            ).item()
+        )
+        scale = self.scale[n]
+        return self._scale_tensor(input, scale=scale)
 
 
 class RandomSpatialJitter(torch.nn.Module):
     """
     Apply random spatial translations on a NCHW tensor.
     """
+
+    __constants__ = ["pad_range"]
 
     def __init__(self, translate: int) -> None:
         """
@@ -380,7 +444,13 @@ class RandomSpatialJitter(torch.nn.Module):
         Returns:
             **tensor** (torch.Tensor): A randomly translated *tensor*.
         """
-        insets = torch.randint(high=self.pad_range, size=(2,))
+        insets = torch.randint(
+            high=self.pad_range,
+            size=(2,),
+            dtype=input.dtype,
+            layout=input.layout,
+            device=input.device,
+        )
         return self.translate_tensor(input, insets)
 
 
@@ -389,6 +459,8 @@ class ScaleInputRange(nn.Module):
     Multiplies the input by a specified multiplier for models with input ranges other
     than [0,1].
     """
+
+    __constants__ = ["multiplier"]
 
     def __init__(self, multiplier: float = 1.0) -> None:
         """
@@ -473,6 +545,8 @@ class GaussianSmoothing(nn.Module):
     1d, 2d or 3d tensor. Filtering is performed seperately for each channel
     in the input using a depthwise convolution.
     """
+
+    __constants__ = ["groups"]
 
     def __init__(
         self,
@@ -603,6 +677,8 @@ class NChannelsToRGB(nn.Module):
     Convert an NCHW image with n channels into a 3 channel RGB image.
     """
 
+    __constants__ = ["warp"]
+
     def __init__(self, warp: bool = False) -> None:
         """
         Args:
@@ -633,6 +709,8 @@ class RandomCrop(nn.Module):
     Randomly crop out a specific size from an NCHW image tensor.
     """
 
+    __constants__ = ["crop_size"]
+
     def __init__(
         self,
         crop_size: IntSeqOrIntType,
@@ -649,20 +727,50 @@ class RandomCrop(nn.Module):
         assert len(crop_size) == 2
         self.crop_size = crop_size
 
+    def _center_crop(self, x: torch.Tensor) -> torch.Tensor:
+        """
+        Center crop an NCHW image tensor based on self.crop_size.
+
+        Args:
+
+            x (torch.Tensor): The NCHW image tensor to center crop.
+
+        Returns
+            x (torch.Tensor): The center cropped NCHW image tensor.
+        """
+        h, w = x.shape[2:]
+        h_crop = h - int(math.ceil((h - self.crop_size[0]) / 2.0))
+        w_crop = w - int(math.ceil((w - self.crop_size[1]) / 2.0))
+        return x[
+            ...,
+            h_crop - self.crop_size[0] : h_crop,
+            w_crop - self.crop_size[1] : w_crop,
+        ]
+
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         assert x.dim() == 4
         hs = x.shape[2] - self.crop_size[0]
         ws = x.shape[3] - self.crop_size[1]
         shifts = [
-            torch.randint(low=-hs, high=hs, size=[1]),
-            torch.randint(low=-ws, high=ws, size=[1]),
+            torch.randint(
+                low=-hs,
+                high=hs,
+                size=[1],
+                dtype=torch.int64,
+                layout=torch.strided,
+                device=x.device,
+            ),
+            torch.randint(
+                low=-ws,
+                high=ws,
+                size=[1],
+                dtype=torch.int64,
+                layout=torch.strided,
+                device=x.device,
+            ),
         ]
-        x = torch.roll(x, shifts, dims=(2, 3))
-        return center_crop(
-            x,
-            crop_vals=self.crop_size,
-            pixels_from_edges=False,
-        )
+        x = torch.roll(x, [int(s) for s in shifts], dims=(2, 3))
+        return self._center_crop(x)
 
 
 __all__ = [
