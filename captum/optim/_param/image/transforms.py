@@ -399,7 +399,7 @@ class RandomRotation(nn.Module):
 
     def __init__(
         self,
-        degrees: Union[List[float], Tuple[float, ...], torch.Tensor],
+        degrees: NumSeqOrTensorType,
         mode: str = "bilinear",
         padding_mode: str = "zeros",
         align_corners: bool = False,
