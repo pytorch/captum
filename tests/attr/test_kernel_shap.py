@@ -16,6 +16,7 @@ from tests.helpers.basic import (
 from tests.helpers.basic_models import (
     BasicModel_MultiLayer,
     BasicModel_MultiLayer_MultiInput,
+    BasicLinearModel,
 )
 
 
@@ -181,6 +182,34 @@ class Test(BaseTest):
             feature_mask=(mask1, mask2, mask3),
             baselines=(2, 3.0, 4),
             perturbations_per_eval=(1, 2, 3),
+        )
+
+    def test_multi_input_kernel_shap_with_empty_input(self) -> None:
+        net = BasicLinearModel()
+        inp1 = torch.tensor([[23.0, 0.0, 0.0, 23.0, 0.0, 0.0, 23.0]])
+        inp2 = torch.tensor([[]])  # empty input
+        mask1 = torch.tensor([[0, 1, 2, 3, 4, 5, 6]])
+        mask2 = torch.tensor([[]], dtype=torch.long)  # empty mask
+        expected: Tuple[List[List[float]], ...] = (
+            [[-8.0, 0, 0, -2.0, 0, 0, -8.0]],
+            [[]],
+        )
+        # no mask
+        self._kernel_shap_test_assert(
+            net,
+            (inp1, inp2),
+            expected,
+            n_samples=2000,
+            expected_coefs=[-8.0, 0, 0, -2.0, 0, 0, -8.0],
+        )
+        # with mask
+        self._kernel_shap_test_assert(
+            net,
+            (inp1, inp2),
+            expected,
+            n_samples=2000,
+            expected_coefs=[-8.0, 0, 0, -2.0, 0, 0, -8.0],
+            feature_mask=(mask1, mask2),
         )
 
     def test_multi_input_batch_kernel_shap_without_mask(self) -> None:

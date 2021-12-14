@@ -3,7 +3,7 @@
 import io
 import unittest
 import unittest.mock
-from typing import Any, Callable, Generator, Tuple, Union
+from typing import Any, Callable, Generator, Tuple, Union, List
 
 import torch
 from captum._utils.models.linear_model import SkLearnLasso
@@ -24,6 +24,7 @@ from tests.helpers.basic_models import (
     BasicModel_MultiLayer,
     BasicModel_MultiLayer_MultiInput,
     BasicModelBoolInput,
+    BasicLinearModel,
 )
 from torch import Tensor
 
@@ -283,6 +284,34 @@ class Test(BaseTest):
             test_generator=True,
         )
 
+    def test_multi_input_lime_with_empty_input(self) -> None:
+        net = BasicLinearModel()
+        inp1 = torch.tensor([[23.0, 0.0, 0.0, 23.0, 0.0, 0.0, 23.0]])
+        inp2 = torch.tensor([[]])  # empty input
+        mask1 = torch.tensor([[0, 1, 2, 3, 4, 5, 6]])
+        mask2 = torch.tensor([[]], dtype=torch.long)  # empty mask
+        expected: Tuple[List[List[float]], ...] = (
+            [[-4.0, 0, 0, 0, 0, 0, -4.0]],
+            [[]],
+        )
+        # no mask
+        self._lime_test_assert(
+            net,
+            (inp1, inp2),
+            expected,
+            n_samples=2000,
+            expected_coefs_only=[-4.0, 0, 0, 0, 0, 0, -4.0],
+        )
+        # with mask
+        self._lime_test_assert(
+            net,
+            (inp1, inp2),
+            expected,
+            n_samples=2000,
+            expected_coefs_only=[-4.0, 0, 0, 0, 0, 0, -4.0],
+            feature_mask=(mask1, mask2),
+        )
+
     def test_multi_input_batch_lime_without_mask(self) -> None:
         net = BasicModel_MultiLayer_MultiInput()
         inp1 = torch.tensor([[23.0, 0.0, 0.0], [20.0, 50.0, 30.0]])
@@ -517,7 +546,11 @@ class Test(BaseTest):
                 else:
                     formatted_feature_mask = _format_input(feature_mask)
                     num_interp_features = int(
-                        max(torch.max(single_inp).item() for single_inp in feature_mask)
+                        max(
+                            torch.max(single_mask).item()
+                            for single_mask in feature_mask
+                            if single_mask.numel()
+                        )
                         + 1
                     )
                 if batch_attr:
