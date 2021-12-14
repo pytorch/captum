@@ -711,6 +711,7 @@ def _compute_jacobian_wrt_params(
     inputs: Union[Tuple[Tensor], Tensor],
     labels: Optional[Tensor] = None,
     loss_fn: Optional[Union[Module, Callable]] = None,
+    unpack_inputs: bool = False,
 ) -> Tuple[Tensor, ...]:
     r"""
     Computes the Jacobian of a batch of test examples given a model, and optional
@@ -738,7 +739,7 @@ def _compute_jacobian_wrt_params(
                 parameters of the i-th layer, for the j-th member of the minibatch.
     """
     with torch.autograd.set_grad_enabled(True):
-        out = model(inputs)
+        out = model(inputs) if not unpack_inputs else model(*inputs)
         assert out.dim() != 0, "Please ensure model output has at least one dimension."
 
         if labels is not None and loss_fn is not None:
@@ -777,6 +778,7 @@ def _compute_jacobian_wrt_params_autograd_hacks(
     labels: Optional[Tensor] = None,
     loss_fn: Optional[Module] = None,
     reduction_type: Optional[str] = "sum",
+    unpack_inputs: bool = False,
 ) -> Tuple[Any, ...]:
     r"""
     NOT SUPPORTED FOR OPEN SOURCE. This method uses an internal 'hack` and is currently
@@ -818,7 +820,7 @@ def _compute_jacobian_wrt_params_autograd_hacks(
     with torch.autograd.set_grad_enabled(True):
         autograd_hacks.add_hooks(model)
 
-        out = model(inputs)
+        out = model(inputs) if not unpack_inputs else model(*inputs)
         assert out.dim() != 0, "Please ensure model output has at least one dimension."
 
         if labels is not None and loss_fn is not None:
