@@ -131,6 +131,7 @@ class ToRGB(nn.Module):
                 "transform has to be either 'klt', 'i1i2i3'," + " or a matrix tensor."
             )
 
+    @torch.jit.ignore
     def forward(self, x: torch.Tensor, inverse: bool = False) -> torch.Tensor:
         """
         Args:
@@ -181,7 +182,7 @@ class CenterCrop(torch.nn.Module):
     Center crop a specified amount from a tensor.
     """
 
-    __constants__ = ["crop_vals", "pixels_from_edges", "offset_left"]
+    __constants__ = ["size", "pixels_from_edges", "offset_left"]
 
     def __init__(
         self,
@@ -196,36 +197,51 @@ class CenterCrop(torch.nn.Module):
                 pixels_from_edges (bool, optional): Whether to treat crop size
                 values as the number of pixels from the tensor's edge, or an
                 exact shape in the center.
+            pixels_from_edges (bool, optional): Whether to treat crop size
+                values as the number of pixels from the tensor's edge, or an
+                exact shape in the center.
+                Default: False
             offset_left (bool, optional): If the cropped away sides are not
                 equal in size, offset center by +1 to the left and/or top.
                 This parameter is only valid when `pixels_from_edges` is False.
                 Default: False
         """
         super().__init__()
-        self.crop_vals = size
+        if not hasattr(size, "__iter__"):
+            size = [int(size), int(size)]
+        elif isinstance(size, (tuple, list)):
+            if len(size) == 1:
+                size = list((size[0], size[0]))
+            elif len(size) == 2:
+                size = list(size)
+            else:
+                raise ValueError("Crop size length of {} too large".format(len(size)))
+        else:
+            raise ValueError("Unsupported crop size value {}".format(size))
+        assert len(size) == 2
+        self.size = cast(List[int], size)
         self.pixels_from_edges = pixels_from_edges
         self.offset_left = offset_left
 
+    @torch.jit.ignore
     def forward(self, input: torch.Tensor) -> torch.Tensor:
         """
         Center crop an input.
 
         Args:
+
             input (torch.Tensor): Input to center crop.
 
         Returns:
             **tensor** (torch.Tensor): A center cropped *tensor*.
         """
 
-        return center_crop(
-            input, self.crop_vals, self.pixels_from_edges, self.offset_left
-        )
+        return center_crop(input, self.size, self.pixels_from_edges, self.offset_left)
 
 
-@torch.jit.ignore
 def center_crop(
     input: torch.Tensor,
-    crop_vals: IntSeqOrIntType,
+    size: Union[int, List[int]],
     pixels_from_edges: bool = False,
     offset_left: bool = False,
 ) -> torch.Tensor:
@@ -250,35 +266,45 @@ def center_crop(
     """
 
     assert input.dim() == 3 or input.dim() == 4
-    crop_vals = [crop_vals] * 2 if not hasattr(crop_vals, "__iter__") else crop_vals
-    crop_vals = list(crop_vals) * 2 if len(crop_vals) == 1 else crop_vals
-    crop_vals = cast(Union[List[int], Tuple[int, int]], crop_vals)
-    assert len(crop_vals) == 2
+    if isinstance(size, int):
+        size = [int(size), int(size)]
+    elif isinstance(size, (tuple, list)):
+        if len(size) == 1:
+            size = [size[0], size[0]]
+        elif len(size) == 2:
+            size = list(size)
+        else:
+            raise ValueError("Crop size length of {} too large".format(len(size)))
+    else:
+        raise ValueError("Unsupported crop size value {}".format(size))
+    assert len(size) == 2
 
     if input.dim() == 4:
-        h, w = input.size(2), input.size(3)
-    if input.dim() == 3:
-        h, w = input.size(1), input.size(2)
+        h, w = input.shape[2:]
+    elif input.dim() == 3:
+        h, w = input.shape[1:]
+    else:
+        raise ValueError("Input has too many dimensions: {}".format(input.dim()))
 
     if pixels_from_edges:
-        h_crop = h - crop_vals[0]
-        w_crop = w - crop_vals[1]
+        h_crop = h - size[0]
+        w_crop = w - size[1]
         sw, sh = w // 2 - (w_crop // 2), h // 2 - (h_crop // 2)
         x = input[..., sh : sh + h_crop, sw : sw + w_crop]
     else:
-        h_crop = h - int(math.ceil((h - crop_vals[0]) / 2.0))
-        w_crop = w - int(math.ceil((w - crop_vals[1]) / 2.0))
-        if h % 2 == 0 and crop_vals[0] % 2 != 0 or h % 2 != 0 and crop_vals[0] % 2 == 0:
+        h_crop = h - int(math.ceil((h - size[0]) / 2.0))
+        w_crop = w - int(math.ceil((w - size[1]) / 2.0))
+        if h % 2 == 0 and size[0] % 2 != 0 or h % 2 != 0 and size[0] % 2 == 0:
             h_crop = h_crop + 1 if offset_left else h_crop
-        if w % 2 == 0 and crop_vals[1] % 2 != 0 or w % 2 != 0 and crop_vals[1] % 2 == 0:
+        if w % 2 == 0 and size[1] % 2 != 0 or w % 2 != 0 and size[1] % 2 == 0:
             w_crop = w_crop + 1 if offset_left else w_crop
-        x = input[..., h_crop - crop_vals[0] : h_crop, w_crop - crop_vals[1] : w_crop]
+        x = input[..., h_crop - size[0] : h_crop, w_crop - size[1] : w_crop]
     return x
 
 
 class RandomScale(nn.Module):
     """
-    Apply random rescaling on a NCHW tensor.
+    Apply random rescaling on a NCHW tensor using affine transform matrices.
     """
 
     __constants__ = [
@@ -749,8 +775,8 @@ class RandomCrop(nn.Module):
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         assert x.dim() == 4
-        hs = x.shape[2] - self.crop_size[0]
-        ws = x.shape[3] - self.crop_size[1]
+        hs = int(math.ceil((x.shape[2] - self.crop_size[0]) / 2.0))
+        ws = int(math.ceil((x.shape[3] - self.crop_size[1]) / 2.0))
         shifts = [
             torch.randint(
                 low=-hs,
