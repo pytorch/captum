@@ -169,6 +169,11 @@ class TestCompositeLoss(BaseTest):
         )
 
     def test_positive(self) -> None:
+        if torch.__version__ <= "1.3.0":
+            raise unittest.SkipTest(
+                "Skipping postive CompositeLoss test due to insufficient"
+                + " Torch version."
+            )
         model = BasicModel_ConvNet_Optim()
         loss = +opt_loss.ChannelActivation(model.layer, 0)
         self.assertAlmostEqual(
