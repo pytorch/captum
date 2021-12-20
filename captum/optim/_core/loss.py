@@ -448,14 +448,14 @@ class Direction(BaseLoss):
         batch_index: Optional[int] = None,
     ) -> None:
         BaseLoss.__init__(self, target, batch_index)
-        self.direction = vec.reshape((1, -1, 1, 1))
+        self.vec = vec.reshape((1, -1, 1, 1))
         self.cossim_pow = cossim_pow
 
     def __call__(self, targets_to_values: ModuleOutputMapping) -> torch.Tensor:
         activations = targets_to_values[self.target]
         assert activations.size(1) == self.direction.size(1)
         activations = activations[self.batch_index[0] : self.batch_index[1]]
-        return _dot_cossim(self.direction, activations, cossim_pow=self.cossim_pow)
+        return _dot_cossim(self.vec, activations, cossim_pow=self.cossim_pow)
 
 
 @loss_wrapper
@@ -477,7 +477,7 @@ class NeuronDirection(BaseLoss):
         batch_index: Optional[int] = None,
     ) -> None:
         BaseLoss.__init__(self, target, batch_index)
-        self.direction = vec.reshape((1, -1, 1, 1))
+        self.vec = vec.reshape((1, -1, 1, 1))
         self.x = x
         self.y = y
         self.channel_index = channel_index
@@ -496,7 +496,7 @@ class NeuronDirection(BaseLoss):
         ]
         if self.channel_index is not None:
             activations = activations[:, self.channel_index, ...][:, None, ...]
-        return _dot_cossim(self.direction, activations, cossim_pow=self.cossim_pow)
+        return _dot_cossim(self.vec, activations, cossim_pow=self.cossim_pow)
 
 
 @loss_wrapper
@@ -515,7 +515,8 @@ class TensorDirection(BaseLoss):
         batch_index: Optional[int] = None,
     ) -> None:
         BaseLoss.__init__(self, target, batch_index)
-        self.direction = vec
+        assert vec.dim() == 4
+        self.vec = vec
         self.cossim_pow = cossim_pow
 
     def __call__(self, targets_to_values: ModuleOutputMapping) -> torch.Tensor:
@@ -523,8 +524,8 @@ class TensorDirection(BaseLoss):
 
         assert activations.dim() == 4
 
-        H_direction, W_direction = self.direction.size(2), self.direction.size(3)
-        H_activ, W_activ = activations.size(2), activations.size(3)
+        H_direction, W_direction = self.vec.shape[2:]
+        H_activ, W_activ = activations.shape[2:]
 
         H = (H_activ - H_direction) // 2
         W = (W_activ - W_direction) // 2
@@ -535,7 +536,7 @@ class TensorDirection(BaseLoss):
             H : H + H_direction,
             W : W + W_direction,
         ]
-        return _dot_cossim(self.direction, activations, cossim_pow=self.cossim_pow)
+        return _dot_cossim(self.vec, activations, cossim_pow=self.cossim_pow)
 
 
 @loss_wrapper

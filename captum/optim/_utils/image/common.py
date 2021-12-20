@@ -115,14 +115,19 @@ def nchannels_to_rgb(x: torch.Tensor, warp: bool = True) -> torch.Tensor:
     Convert an NCHW image with n channels into a 3 channel RGB image.
 
     Args:
-        x (torch.Tensor):  Image tensor to transform into RGB image.
+
+        x (torch.Tensor):  NCHW image tensor to transform into RGB image.
         warp (bool, optional):  Whether or not to make colors more distinguishable.
             Default: True
+
     Returns:
-        *tensor* RGB image
+        tensor (torch.Tensor): An NCHW RGB image tensor.
     """
 
-    def hue_to_rgb(angle: float) -> torch.Tensor:
+    # Handle older versions of PyTorch
+    torch_norm = torch.linalg.norm if torch.__version__ >= "1.9.0" else torch.norm
+
+    def hue_to_rgb(angle: float, device: torch.device) -> torch.Tensor:
         """
         Create an RGB unit vector based on a hue of the input angle.
         """
@@ -136,7 +141,8 @@ def nchannels_to_rgb(x: torch.Tensor, warp: bool = True) -> torch.Tensor:
                 [0.0, 0.7071, 0.7071],
                 [0.0, 0.0, 1.0],
                 [0.7071, 0.0, 0.7071],
-            ]
+            ],
+            device=device,
         )
 
         idx = math.floor(angle / 60)
@@ -150,7 +156,7 @@ def nchannels_to_rgb(x: torch.Tensor, warp: bool = True) -> torch.Tensor:
             d = adj(d) if idx % 2 == 0 else 1 - adj(1 - d)
 
         vec = (1 - d) * colors[idx] + d * colors[(idx + 1) % 6]
-        return vec / torch.norm(vec)
+        return vec / torch_norm(vec)
 
     assert x.dim() == 4
 
@@ -161,12 +167,12 @@ def nchannels_to_rgb(x: torch.Tensor, warp: bool = True) -> torch.Tensor:
     nc = x.size(1)
     for i in range(nc):
         rgb = rgb + x[:, i][:, None, :, :]
-        rgb = rgb * hue_to_rgb(360 * i / nc).to(device=x.device)[None, :, None, None]
+        rgb = rgb * hue_to_rgb(360 * i / nc, device=x.device)[None, :, None, None]
 
-    rgb = rgb + torch.ones(x.size(2), x.size(3))[None, None, :, :] * (
+    rgb = rgb + torch.ones(x.size(2), x.size(3), device=x.device)[None, None, :, :] * (
         torch.sum(x, 1)[:, None] - torch.max(x, 1)[0][:, None]
     )
-    return (rgb / (1e-4 + torch.norm(rgb, dim=1, keepdim=True))) * torch.norm(
+    return (rgb / (1e-4 + torch_norm(rgb, dim=1, keepdim=True))) * torch_norm(
         x, dim=1, keepdim=True
     )
 

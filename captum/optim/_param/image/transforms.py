@@ -89,9 +89,12 @@ class ToRGB(nn.Module):
             **transform** (torch.Tensor): A Karhunen-Loève transform (KLT) measured on
                 the ImageNet dataset.
         """
+        # Handle older versions of PyTorch
+        torch_norm = torch.linalg.norm if torch.__version__ >= "1.9.0" else torch.norm
+
         KLT = [[0.26, 0.09, 0.02], [0.27, 0.00, -0.05], [0.27, -0.09, 0.03]]
         transform = torch.Tensor(KLT).float()
-        transform = transform / torch.max(torch.norm(transform, dim=0))
+        transform = transform / torch.max(torch_norm(transform, dim=0))
         return transform
 
     @staticmethod
