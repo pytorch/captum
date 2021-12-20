@@ -75,15 +75,23 @@ class TestRandomScale(BaseTest):
 class TestRandomRotation(BaseTest):
     def test_random_rotation_degrees(self) -> None:
         test_degrees = [0.0, 1.0, 2.0, 3.0, 4.0]
-        rot_mod = transforms.RandomRotation(test_degrees)
-        degrees = rot_mod.degrees
+        rotation_module = transforms.RandomRotation(test_degrees)
+        degrees = rotation_module.degrees
         self.assertTrue(hasattr(degrees, "__iter__"))
         self.assertEqual(degrees, test_degrees)
 
+    def test_random_rotation_degrees_distributions(self) -> None:
+        degrees = torch.distributions.Uniform(0.95, 1.05)
+        rotation_module = transforms.RandomRotation(degrees=degrees)
+        self.assertIsInstance(
+            rotation_module.degrees_distribution,
+            torch.distributions.distribution.Distribution,
+        )
+
     def test_random_rotation_matrix(self) -> None:
         theta = 25.1
-        rot_mod = transforms.RandomRotation([theta])
-        rot_matrix = rot_mod._get_rot_mat(
+        rotation_module = transforms.RandomRotation([theta])
+        rot_matrix = rotation_module._get_rot_mat(
             theta, device=torch.device("cpu"), dtype=torch.float32
         )
         expected_matrix = torch.tensor(
@@ -93,10 +101,10 @@ class TestRandomRotation(BaseTest):
         assertTensorAlmostEqual(self, rot_matrix, expected_matrix)
 
     def test_random_rotation_rotate_tensor(self) -> None:
-        rot_mod = transforms.RandomRotation([25.0])
+        rotation_module = transforms.RandomRotation([25.0])
 
         test_input = torch.eye(4, 4).repeat(3, 1, 1).unsqueeze(0)
-        test_output = rot_mod._rotate_tensor(test_input, 25.0)
+        test_output = rotation_module._rotate_tensor(test_input, 25.0)
 
         expected_output = (
             torch.tensor(
@@ -113,11 +121,18 @@ class TestRandomRotation(BaseTest):
         assertTensorAlmostEqual(self, test_output, expected_output, 0.005)
 
     def test_random_rotation_forward(self) -> None:
-        rotate_transform = transforms.RandomRotation(list(range(-25, 25)))
-        x = torch.ones(1, 3, 224, 224)
-        output = rotate_transform(x)
+        degrees = list(range(-25, 25))
+        rotation_module = transforms.RandomRotation(degrees=degrees)
+        test_tensor = torch.ones(1, 3, 10, 10)
+        output_tensor = rotation_module(test_tensor)
+        self.assertEqual(list(output_tensor.shape), list(test_tensor.shape))
 
-        self.assertEqual(output.shape, x.shape)
+    def test_random_rotation_forward_distributions(self) -> None:
+        degrees = torch.distributions.Uniform(-25, 25)
+        rotation_module = transforms.RandomRotation(degrees=degrees)
+        test_tensor = torch.ones(1, 3, 10, 10)
+        output_tensor = rotation_module(test_tensor)
+        self.assertEqual(list(output_tensor.shape), list(test_tensor.shape))
 
     def test_random_rotation_forward_cuda(self) -> None:
         if not torch.cuda.is_available():
@@ -134,8 +149,8 @@ class TestRandomRotation(BaseTest):
 
     def test_random_rotation_matrix_torch_math_module(self) -> None:
         theta = 25.1
-        rot_mod = transforms.RandomRotation([theta])
-        rot_matrix = rot_mod._get_rot_mat(
+        rotation_module = transforms.RandomRotation([theta])
+        rot_matrix = rotation_module._get_rot_mat(
             theta, device=torch.device("cpu"), dtype=torch.float32
         )
 

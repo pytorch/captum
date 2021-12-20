@@ -386,7 +386,8 @@ class RandomSpatialJitter(torch.nn.Module):
 
 class RandomRotation(nn.Module):
     """
-    Apply random rotation transforms on a NCHW tensor, using a sequence of degrees.
+    Apply random rotation transforms on a NCHW tensor, using a sequence of degrees or
+    torch.distributions instance.
     """
 
     __constants__ = [
@@ -395,6 +396,7 @@ class RandomRotation(nn.Module):
         "padding_mode",
         "align_corners",
         "has_align_corners",
+        "is_distribution",
     ]
 
     def __init__(
@@ -407,8 +409,8 @@ class RandomRotation(nn.Module):
         """
         Args:
 
-            degrees (float, sequence): Tuple, List, or Tensor of degrees to randomly
-                select from.
+            degrees (float, sequence, or torch.distribution): Tuple of degrees values
+                to randomly select from, or a torch.distributions instance.
             mode (str, optional): Interpolation mode to use. See documentation of
                 F.grid_sample for more details. One of; "bilinear", "nearest", or
                 "bicubic".
@@ -422,12 +424,20 @@ class RandomRotation(nn.Module):
                 Default: False
         """
         super().__init__()
-        assert hasattr(degrees, "__iter__")
-        if torch.is_tensor(degrees):
-            assert cast(torch.Tensor, degrees).dim() == 1
-            degrees = degrees.tolist()
-        assert len(degrees) > 0
-        self.degrees = [float(d) for d in degrees]
+        if isinstance(degrees, torch.distributions.distribution.Distribution):
+            # Distributions are not supported by TorchScript / JIT yet
+            self.degrees_distribution = degrees
+            self.is_distribution = True
+            self.degrees = []
+        else:
+            assert hasattr(degrees, "__iter__")
+            if torch.is_tensor(degrees):
+                assert cast(torch.Tensor, degrees).dim() == 1
+                degrees = degrees.tolist()
+            assert len(degrees) > 0
+            self.degrees = [float(d) for d in degrees]
+            self.is_distribution = False
+
         self.mode = mode
         self.padding_mode = padding_mode
         self.align_corners = align_corners
@@ -502,18 +512,20 @@ class RandomRotation(nn.Module):
             **x** (torch.Tensor): A randomly rotated NCHW image *tensor*.
         """
         assert x.dim() == 4
-
-        n = int(
-            torch.randint(
-                low=0,
-                high=len(self.degrees),
-                size=[1],
-                dtype=torch.int64,
-                layout=torch.strided,
-                device=x.device,
-            ).item()
-        )
-        rotate_angle = self.degrees[n]
+        if self.is_distribution:
+            rotate_angle = self.degrees_distribution.sample().item()
+        else:
+            n = int(
+                torch.randint(
+                    low=0,
+                    high=len(self.degrees),
+                    size=[1],
+                    dtype=torch.int64,
+                    layout=torch.strided,
+                    device=x.device,
+                ).item()
+            )
+            rotate_angle = self.degrees[n]
         return self._rotate_tensor(x, rotate_angle)
 
 
