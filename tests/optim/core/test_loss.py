@@ -168,6 +168,20 @@ class TestCompositeLoss(BaseTest):
             get_loss_value(model, loss), -CHANNEL_ACTIVATION_0_LOSS, places=6
         )
 
+    def test_positive(self) -> None:
+        model = BasicModel_ConvNet_Optim()
+        loss = +opt_loss.ChannelActivation(model.layer, 0)
+        self.assertAlmostEqual(
+            get_loss_value(model, loss), CHANNEL_ACTIVATION_0_LOSS, places=6
+        )
+
+    def test_abs(self) -> None:
+        model = BasicModel_ConvNet_Optim()
+        loss = abs(-opt_loss.ChannelActivation(model.layer, 0))
+        self.assertAlmostEqual(
+            get_loss_value(model, loss), CHANNEL_ACTIVATION_0_LOSS, places=6
+        )
+
     def test_addition(self) -> None:
         model = BasicModel_ConvNet_Optim()
         loss = (
@@ -242,3 +256,20 @@ class TestCompositeLoss(BaseTest):
     #         opt_loss.ChannelActivation(model.layer, 0) ** opt_loss.ChannelActivation(
     #             model.layer, 1
     #         )
+
+    def test_sum(self) -> None:
+        model = torch.nn.Identity()
+        loss = opt_loss.LayerActivation(model).sum()
+
+        self.assertAlmostEqual(get_loss_value(model, loss), 3.0, places=1)
+
+    def test_mean(self) -> None:
+        model = torch.nn.Identity()
+        loss = opt_loss.LayerActivation(model).mean()
+
+        self.assertAlmostEqual(get_loss_value(model, loss), 1.0, places=1)
+
+
+class TestCompositeLossReductionOP(BaseTest):
+    def test_reduction_op(self) -> None:
+        self.assertEqual(opt_loss.REDUCTION_OP, torch.mean)
