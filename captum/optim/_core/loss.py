@@ -191,8 +191,8 @@ def rmodule_op(
 
 
 def basic_torch_module_op(
-    loss: Union[Loss, List[Loss]],
-    torch_op: Callable[[Union[torch.Tensor, List[torch.Tensor]]], torch.Tensor],
+    loss,
+    torch_op: Callable,
     *args: Any,
     **kwargs: Any,
 ) -> "CompositeLoss":
