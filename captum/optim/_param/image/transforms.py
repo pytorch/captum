@@ -179,7 +179,8 @@ class ToRGB(nn.Module):
 
 class CenterCrop(torch.nn.Module):
     """
-    Center crop a specified amount from a tensor.
+    Center crop a specified amount from a tensor. If input are smaller than the
+    specified crop size, padding will be applied.
     """
 
     __constants__ = [
@@ -272,7 +273,8 @@ def center_crop(
     padding_value: float = 0.0,
 ) -> torch.Tensor:
     """
-    Center crop a specified amount from a tensor.
+    Center crop a specified amount from a tensor. If input are smaller than the
+    specified crop size, padding will be applied.
 
     Args:
 
@@ -336,8 +338,8 @@ def center_crop(
         if size[0] > h or size[1] > w:
             # Padding functionality like Torchvision's center crop
             padding = [
-                (size[1] - w) // 2 if size[1] > w else 0,
-                (size[0] - h) // 2 if size[0] > h else 0,
+                math.ceil((size[1] - w) / 2) if size[1] > w else 0,
+                math.ceil((size[0] - h) / 2) if size[0] > h else 0,
                 (size[1] - w + 1) // 2 if size[1] > w else 0,
                 (size[0] - h + 1) // 2 if size[0] > h else 0,
             ]
@@ -412,7 +414,7 @@ class RandomScale(nn.Module):
         dtype: torch.dtype,
     ) -> torch.Tensor:
         """
-        Create a rotation matrix tensor.
+        Create a scale matrix tensor.
 
         Args:
 
@@ -560,7 +562,7 @@ class RandomScaleAffine(nn.Module):
         dtype: torch.dtype,
     ) -> torch.Tensor:
         """
-        Create a rotation matrix tensor.
+        Create a scale matrix tensor.
 
         Args:
 
@@ -1004,6 +1006,111 @@ class RandomCrop(nn.Module):
         return self._center_crop(x)
 
 
+class TransformationRobustness(nn.Module):
+    """
+    This transform combines the standard transforms together for ease of use.
+
+    Multiple jitter transforms can be used to create roughly gaussian distribution
+    of jitter.
+
+    Outputs can be optionally cropped or padded so that they have the same shape as
+    inputs.
+    """
+
+    __constants__ = ["crop_or_pad_output"]
+
+    def __init__(
+        self,
+        padding_transform: Optional[nn.Module] = None,
+        translate: Optional[Union[int, List[int]]] = [4] * 10,
+        scale: Optional[NumSeqOrTensorOrProbDistType] = [
+            0.995 ** n for n in range(-5, 80)
+        ]
+        + [0.998 ** n for n in 2 * list(range(20, 40))],
+        degrees: Optional[NumSeqOrTensorOrProbDistType] = list(range(-20, 20))
+        + list(range(-10, 10))
+        + list(range(-5, 5))
+        + 5 * [0],
+        final_translate: Optional[int] = 2,
+        crop_or_pad_output: bool = False,
+    ) -> None:
+        """
+        Args:
+
+            padding_transform (nn.Module, optional): A padding module instance. No
+                padding will be applied before transforms if set to None.
+                Default: None
+            translate (int or list of int, optional): The max horizontal and vertical
+                 translation to use for each jitter transform.
+                 Default: [4] * 10
+            scale (float, sequence, or torch.distribution, optional): Sequence of
+                rescaling values to randomly select from, or a torch.distributions
+                instance. If set to None, no rescaling transform will be used.
+                Default: A set of optimal values.
+            degrees (float, sequence, or torch.distribution, optional): Sequence of
+                degrees to randomly select from, or a torch.distributions
+                instance. If set to None, no rotation transform will be used.
+                Default: A set of optimal values.
+            final_translate (int, optional): The max horizontal and vertical
+                 translation to use for the final jitter transform on fractional
+                 pixels.
+                 Default: 2
+            crop_or_pad_output (bool, optional): Whether or not to crop or pad the
+                transformed output so that it is the same shape as the input.
+                Default: False
+        """
+        super().__init__()
+        self.padding_transform = padding_transform
+        if translate is not None:
+            jitter_transforms = []
+            if hasattr(translate, "__iter__"):
+                jitter_transforms = []
+                for t in translate:
+                    jitter_transforms.append(RandomSpatialJitter(t))
+                self.jitter_transforms = nn.Sequential(*jitter_transforms)
+            else:
+                self.jitter_transforms = RandomSpatialJitter(translate)
+        else:
+            self.jitter_transforms = translate
+        self.random_scale = None if scale is None else RandomScale(scale)
+        self.random_rotation = None  # if degrees is None else RandomRotation(degrees)
+        self.final_jitter = (
+            None if final_translate is None else RandomSpatialJitter(final_translate)
+        )
+        self.crop_or_pad_output = crop_or_pad_output
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        assert x.dim() == 4
+        crop_size = x.shape[2:]
+
+        # Apply padding if enabled
+        if self.padding_transform is not None:
+            x = self.padding_transform(x)
+
+        # Jitter real pixels
+        if self.jitter_transforms is not None:
+            x = self.jitter_transforms(x)
+
+        # Apply Random Scaling, turning real pixels into
+        # fractional values of real pixels
+        if self.random_scale is not None:
+            x = self.random_scale(x)
+
+        # Apply Random Rotation
+        if self.random_rotation is not None:
+            x = self.random_rotation(x)
+
+        # Jitter fractional pixels if random_scale is not None
+        if self.final_jitter is not None:
+            x = self.final_jitter(x)
+
+        # Ensure the output is the same shape as the input
+        if self.crop_or_pad_output:
+            x = center_crop(x, size=crop_size)
+            assert x.shape[2:] == crop_size
+        return x
+
+
 __all__ = [
     "BlendAlpha",
     "IgnoreAlpha",
@@ -1018,4 +1125,5 @@ __all__ = [
     "SymmetricPadding",
     "NChannelsToRGB",
     "RandomCrop",
+    "TransformationRobustness",
 ]
