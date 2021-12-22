@@ -1,7 +1,7 @@
 import functools
 import operator
 from abc import ABC, abstractmethod, abstractproperty
-from typing import Any, Callable, Optional, Tuple, Union
+from typing import Any, Callable, List, Optional, Tuple, Union
 
 import torch
 import torch.nn as nn
@@ -62,6 +62,9 @@ class Loss(ABC):
     def __truediv__(self, other: Union[int, float, "Loss"]) -> "CompositeLoss":
         return module_op(self, other, operator.truediv)
 
+    def __floordiv__(self, other: Union[int, float, "Loss"]) -> "CompositeLoss":
+        return module_op(self, other, operator.floordiv)
+
     def __pow__(self, other: Union[int, float, "Loss"]) -> "CompositeLoss":
         return module_op(self, other, operator.pow)
 
@@ -75,40 +78,13 @@ class Loss(ABC):
         return self.__mul__(other)
 
     def __rtruediv__(self, other: Union[int, float, "Loss"]) -> "CompositeLoss":
-        if isinstance(other, (int, float)):
+        rmodule_op(self, other, operator.truediv)
 
-            def loss_fn(module: ModuleOutputMapping) -> torch.Tensor:
-                return operator.truediv(other, REDUCTION_OP(self(module)))
-
-            name = self.__name__
-            target = self.target
-        elif isinstance(other, Loss):
-            # This should never get called because __div__ will be called instead
-            pass
-        else:
-            raise TypeError(
-                "Can only apply math operations with int, float or Loss. Received type "
-                + str(type(other))
-            )
-        return CompositeLoss(loss_fn, name=name, target=target)
+    def __rfloordiv__(self, other: Union[int, float, "Loss"]) -> "CompositeLoss":
+        rmodule_op(self, other, operator.floordiv)
 
     def __rpow__(self, other: Union[int, float, "Loss"]) -> "CompositeLoss":
-        if isinstance(other, (int, float)):
-
-            def loss_fn(module: ModuleOutputMapping) -> torch.Tensor:
-                return operator.pow(other, REDUCTION_OP(self(module)))
-
-            name = self.__name__
-            target = self.target
-        elif isinstance(other, Loss):
-            # This should never get called because __pow__ will be called instead
-            pass
-        else:
-            raise TypeError(
-                "Can only apply math operations with int, float or Loss. Received type "
-                + str(type(other))
-            )
-        return CompositeLoss(loss_fn, name=name, target=target)
+        rmodule_op(self, other, operator.pow)
 
     def mean(self, dim: Optional = None, keepdim: bool = False) -> "CompositeLoss":
         """
@@ -123,20 +99,12 @@ class Loss(ABC):
                 Default: False
 
         Returns:
-            composite_loss (ComposableLoss): A composable loss instance.
+            composite_loss (CompositeLoss): A composable loss instance.
         """
         if dim is None:
-            # dim is equal to all dimensions unless specified
-            def loss_fn(module: ModuleOutputMapping) -> torch.Tensor:
-                return torch.mean(self(module))
-
+            return basic_torch_module_op(self, torch.mean)
         else:
-
-            def loss_fn(module: ModuleOutputMapping) -> torch.Tensor:
-                return torch.mean(self(module), dim=dim, keepdim=keepdim)
-
-        name = "mean(" + self.__name__ + ")"
-        return CompositeLoss(loss_fn, name=name, target=self.target)
+            return basic_torch_module_op(self, torch.mean, dim=dim, keepdim=keepdim)
 
     def sum(self, dim: Optional = None, keepdim: bool = False) -> "CompositeLoss":
         """
@@ -144,6 +112,7 @@ class Loss(ABC):
         https://pytorch.org/docs/stable/generated/torch.sum.html
 
         Args:
+
             dim (int or tuple of int, optional): The dimension or dimensions to reduce.
                 Default: None for all dimension.
             keepdim (bool, optional): Whether the output tensor has dim retained or
@@ -151,20 +120,12 @@ class Loss(ABC):
                 Default: False
 
         Returns:
-            composite_loss (ComposableLoss): A composable loss instance.
+            composite_loss (CompositeLoss): A composable loss instance.
         """
         if dim is None:
-            # dim is equal to all dimensions unless specified
-            def loss_fn(module: ModuleOutputMapping) -> torch.Tensor:
-                return torch.sum(self(module))
-
+            return basic_torch_module_op(self, torch.sum)
         else:
-
-            def loss_fn(module: ModuleOutputMapping) -> torch.Tensor:
-                return torch.sum(self(module), dim=dim, keepdim=keepdim)
-
-        name = "sum(" + self.__name__ + ")"
-        return CompositeLoss(loss_fn, name=name, target=self.target)
+            return basic_torch_module_op(self, torch.sum, dim=dim, keepdim=keepdim)
 
 
 def module_op(
@@ -201,6 +162,100 @@ def module_op(
             "Can only apply math operations with int, float or Loss. Received type "
             + str(type(other))
         )
+    return CompositeLoss(loss_fn, name=name, target=target)
+
+
+def rmodule_op(
+    self: Loss, other: Union[int, float, "Loss"], math_op: Callable
+) -> "CompositeLoss":
+    """
+    This is a general function for applying the "r" versions of math operations to
+    Losses.
+    """
+    if isinstance(other, (int, float)):
+
+        def loss_fn(module: ModuleOutputMapping) -> torch.Tensor:
+            return math_op(other, REDUCTION_OP(self(module)))
+
+        name = self.__name__
+        target = self.target
+    elif isinstance(other, Loss):
+        # This should never get called because __math_op__ will be called instead
+        pass
+    else:
+        raise TypeError(
+            "Can only apply math operations with int, float or Loss. Received type "
+            + str(type(other))
+        )
+    return CompositeLoss(loss_fn, name=name, target=target)
+
+
+def basic_torch_module_op(
+    loss: Union[Loss, List[Loss]],
+    torch_op: Callable[[Union[torch.Tensor, List[torch.Tensor]]], torch.Tensor],
+    *args: Any,
+    **kwargs: Any,
+) -> "CompositeLoss":
+    """
+    Implement composability for PyTorch operation that take a single tensor or list
+    of tensors as it's first input variable.
+    See here for possible torch_op choices: https://pytorch.org/docs/stable/torch.html
+    Some built-in Python functions can also be used as well if supported by PyTorch.
+
+    Args:
+
+        loss (Loss or list of Loss): A loss objective or list of loss objectives.
+        torch_op (Callable): A PyTorch or supported Python function. Ex: torch.mean,
+             torch.sum,, torch.linalg.norm, torch.sin, torch.cat, torch.stack, max, min,
+             sum, math.ceil, and others.
+            Default: torch.mean
+        args (Any, optional): Any additional arguments.
+        kwargs (Any, optional): Any additional arguments.
+        to_scalar_fn (Callable, optional): A function for converting loss function
+            outputs to scalar values, in order to prevent size mismatches. This is
+            variable only used if more than one loss is given.
+            Default: A non-op function.
+
+        Returns:
+            composite_loss (CompositeLoss): A composable loss instance.
+    """
+
+    if isinstance(loss, (tuple, list)):
+
+        def identity(x: torch.Tensor) -> torch.Tensor:
+            return x
+
+        if "to_scalar_fn" not in kwargs:
+            to_scalar_fn = identity
+        else:
+            to_scalar_fn = kwargs["to_scalar_fn"]
+            del kwargs["to_scalar_fn"]
+
+        def loss_fn(module: ModuleOutputMapping) -> torch.Tensor:
+            loss_tensors = [to_scalar_fn(loss_obj(module)) for loss_obj in loss]
+            return torch_op(loss_tensors, *args, **kwargs)
+
+        name_list = ", ".join([loss_obj.__name__ for loss_obj in loss])
+        name = torch_op.__name__ + "(" + name_list + ")"
+
+        # Collect targets from losses
+        target = [
+            target
+            for targets in [
+                [loss_obj.target]
+                if not hasattr(loss_obj.target, "__iter__")
+                else loss_obj.target
+                for loss_obj in loss
+            ]
+            for target in targets
+        ]
+    else:
+
+        def loss_fn(module: ModuleOutputMapping) -> torch.Tensor:
+            return torch_op(loss(module), *args, **kwargs)
+
+        name = torch_op.__name__ + "(" + loss.__name__ + ")"
+        target = loss.target
     return CompositeLoss(loss_fn, name=name, target=target)
 
 
