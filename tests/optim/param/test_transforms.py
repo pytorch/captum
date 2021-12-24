@@ -166,7 +166,7 @@ class TestRandomRotation(BaseTest):
         if torch.__version__ <= "1.2.0":
             raise unittest.SkipTest(
                 "Skipping RandomRotation forward due exact nearest relfection"
-                +" to insufficient Torch version."
+                + " to insufficient Torch version."
             )
         rotation_module = transforms.RandomRotation(
             [45.0], mode="nearest", padding_mode="reflection"
