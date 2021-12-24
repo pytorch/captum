@@ -395,8 +395,8 @@ class RandomRotation(nn.Module):
         "mode",
         "padding_mode",
         "align_corners",
-        "has_align_corners",
-        "is_distribution",
+        "_has_align_corners",
+        "_is_distribution",
     ]
 
     def __init__(
@@ -426,8 +426,9 @@ class RandomRotation(nn.Module):
         super().__init__()
         if isinstance(degrees, torch.distributions.distribution.Distribution):
             # Distributions are not supported by TorchScript / JIT yet
+            assert degrees.batch_shape == torch.Size([])
             self.degrees_distribution = degrees
-            self.is_distribution = True
+            self._is_distribution = True
             self.degrees = []
         else:
             assert hasattr(degrees, "__iter__")
@@ -436,12 +437,12 @@ class RandomRotation(nn.Module):
                 degrees = degrees.tolist()
             assert len(degrees) > 0
             self.degrees = [float(d) for d in degrees]
-            self.is_distribution = False
+            self._is_distribution = False
 
         self.mode = mode
         self.padding_mode = padding_mode
         self.align_corners = align_corners
-        self.has_align_corners = torch.__version__ >= "1.3.0"
+        self._has_align_corners = torch.__version__ >= "1.3.0"
 
     def _get_rot_mat(
         self,
@@ -485,7 +486,7 @@ class RandomRotation(nn.Module):
         rot_matrix = self._get_rot_mat(theta, x.device, x.dtype)[None, ...].repeat(
             x.shape[0], 1, 1
         )
-        if self.has_align_corners:
+        if self._has_align_corners:
             # Pass align_corners explicitly for torch >= 1.3.0
             grid = F.affine_grid(rot_matrix, x.size(), align_corners=self.align_corners)
             x = F.grid_sample(
@@ -512,8 +513,8 @@ class RandomRotation(nn.Module):
             **x** (torch.Tensor): A randomly rotated NCHW image *tensor*.
         """
         assert x.dim() == 4
-        if self.is_distribution:
-            rotate_angle = self.degrees_distribution.sample().item()
+        if self._is_distribution:
+            rotate_angle = float(self.degrees_distribution.sample().item())
         else:
             n = int(
                 torch.randint(
