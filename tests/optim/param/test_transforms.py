@@ -163,6 +163,11 @@ class TestRandomRotation(BaseTest):
         assertTensorAlmostEqual(self, test_output, expected_output, 0.005)
 
     def test_random_rotation_forward_exact_nearest_reflection(self) -> None:
+        if torch.__version__ <= "1.2.0":
+            raise unittest.SkipTest(
+                "Skipping RandomRotation forward due exact nearest relfection"
+                +" to insufficient Torch version."
+            )
         rotation_module = transforms.RandomRotation(
             [45.0], mode="nearest", padding_mode="reflection"
         )
