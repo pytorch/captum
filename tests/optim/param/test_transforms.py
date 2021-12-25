@@ -16,9 +16,25 @@ from tests.optim.helpers import numpy_transforms
 
 
 class TestRandomScale(BaseTest):
-    def test_random_scale_scale(self) -> None:
+    def test_random_scale_init(self) -> None:
         scale_module = transforms.RandomScale(scale=[1, 0.975, 1.025, 0.95, 1.05])
         self.assertEqual(scale_module.scale, [1.0, 0.975, 1.025, 0.95, 1.05])
+        self.assertFalse(scale_module._is_distribution)
+        self.assertEqual(scale_module.mode, "bilinear")
+        self.assertFalse(scale_module.align_corners)
+        self.assertFalse(scale_module.recompute_scale_factor)
+
+    def test_random_scale_tensor_scale(self) -> None:
+        scale = torch.tensor([1, 0.975, 1.025, 0.95, 1.05])
+        scale_module = transforms.RandomScale(scale=scale)
+        self.assertEqual(scale_module.scale, scale.tolist())
+
+    def test_random_scale_int_scale(self) -> None:
+        scale = [1, 2, 3, 4, 5]
+        scale_module = transforms.RandomScale(scale=scale)
+        for s in scale_module.scale:
+            self.assertIsInstance(s, float)
+        self.assertEqual(scale_module.scale, [1.0, 2.0, 3.0, 4.0, 5.0])
 
     def test_random_scale_scale_distributions(self) -> None:
         scale = torch.distributions.Uniform(0.95, 1.05)
@@ -26,6 +42,18 @@ class TestRandomScale(BaseTest):
         self.assertIsInstance(
             scale_module.scale_distribution,
             torch.distributions.distribution.Distribution,
+        )
+        self.assertTrue(scale_module._is_distribution)
+
+    def test_random_scale_torch_version_check(self) -> None:
+        scale_module = transforms.RandomScale([1.0])
+
+        has_align_corners = torch.__version__ >= "1.3.0"
+        self.assertEqual(scale_module._has_align_corners, has_align_corners)
+
+        has_recompute_scale_factor = torch.__version__ >= "1.6.0"
+        self.assertEqual(
+            scale_module._has_recompute_scale_factor, has_recompute_scale_factor
         )
 
     def test_random_scale_downscaling(self) -> None:
@@ -80,22 +108,88 @@ class TestRandomScale(BaseTest):
             0,
         )
 
-    def test_random_scale_matrix(self) -> None:
+    def test_random_forward_exact(self) -> None:
         scale_module = transforms.RandomScale(scale=[0.5])
-        test_tensor = torch.ones(1, 3, 3, 3)
-        # Test scale matrices
+        test_tensor = torch.arange(0, 1 * 1 * 10 * 10).view(1, 1, 10, 10).float()
 
-        assertTensorAlmostEqual(
-            self,
-            scale_module._get_scale_mat(0.5, test_tensor.device, test_tensor.dtype),
-            torch.tensor([[0.5000, 0.0000, 0.0000], [0.0000, 0.5000, 0.0000]]),
-            0,
+        scaled_tensor = scale_module(test_tensor)
+
+        expected_tensor = torch.tensor(
+            [
+                [
+                    [
+                        [5.5000, 7.5000, 9.5000, 11.5000, 13.5000],
+                        [25.5000, 27.5000, 29.5000, 31.5000, 33.5000],
+                        [45.5000, 47.5000, 49.5000, 51.5000, 53.5000],
+                        [65.5000, 67.5000, 69.5000, 71.5000, 73.5000],
+                        [85.5000, 87.5000, 89.5000, 91.5000, 93.5000],
+                    ]
+                ]
+            ]
         )
 
         assertTensorAlmostEqual(
             self,
-            scale_module._get_scale_mat(1.24, test_tensor.device, test_tensor.dtype),
-            torch.tensor([[1.2400, 0.0000, 0.0000], [0.0000, 1.2400, 0.0000]]),
+            scaled_tensor,
+            expected_tensor,
+            0,
+        )
+
+    def test_random_scale_forward_exact_nearest(self) -> None:
+        scale_module = transforms.RandomScale(scale=[0.5], mode="nearest")
+        self.assertIsNone(scale_module.align_corners)
+        self.assertEqual(scale_module.mode, "nearest")
+
+        test_tensor = torch.arange(0, 1 * 1 * 10 * 10).view(1, 1, 10, 10).float()
+
+        scaled_tensor = scale_module(test_tensor)
+
+        expected_tensor = torch.tensor(
+            [
+                [
+                    [
+                        [0.0, 2.0, 4.0, 6.0, 8.0],
+                        [20.0, 22.0, 24.0, 26.0, 28.0],
+                        [40.0, 42.0, 44.0, 46.0, 48.0],
+                        [60.0, 62.0, 64.0, 66.0, 68.0],
+                        [80.0, 82.0, 84.0, 86.0, 88.0],
+                    ]
+                ]
+            ]
+        )
+
+        assertTensorAlmostEqual(
+            self,
+            scaled_tensor,
+            expected_tensor,
+            0,
+        )
+
+    def test_random_scale_forward_exact_align_corners(self) -> None:
+        scale_module = transforms.RandomScale(scale=[0.5], align_corners=True)
+        self.assertTrue(scale_module.align_corners)
+
+        test_tensor = torch.arange(0, 1 * 1 * 10 * 10).view(1, 1, 10, 10).float()
+
+        scaled_tensor = scale_module(test_tensor)
+
+        expected_tensor = torch.tensor(
+            [
+                [
+                    [
+                        [0.0000, 2.2500, 4.5000, 6.7500, 9.0000],
+                        [22.5000, 24.7500, 27.0000, 29.2500, 31.5000],
+                        [45.0000, 47.2500, 49.5000, 51.7500, 54.0000],
+                        [67.5000, 69.7500, 72.0000, 74.2500, 76.5000],
+                        [90.0000, 92.2500, 94.5000, 96.7500, 99.0000],
+                    ]
+                ]
+            ]
+        )
+        assertTensorAlmostEqual(
+            self,
+            scaled_tensor,
+            expected_tensor,
             0,
         )
 
@@ -145,9 +239,25 @@ class TestRandomScale(BaseTest):
 
 
 class TestRandomScaleAffine(BaseTest):
-    def test_random_scale_affine_scale(self) -> None:
+    def test_random_scale_affine_init(self) -> None:
         scale_module = transforms.RandomScaleAffine(scale=[1, 0.975, 1.025, 0.95, 1.05])
         self.assertEqual(scale_module.scale, [1.0, 0.975, 1.025, 0.95, 1.05])
+        self.assertFalse(scale_module._is_distribution)
+        self.assertEqual(scale_module.mode, "bilinear")
+        self.assertEqual(scale_module.padding_mode, "zeros")
+        self.assertFalse(scale_module.align_corners)
+
+    def test_random_scale_affine_tensor_scale(self) -> None:
+        scale = torch.tensor([1, 0.975, 1.025, 0.95, 1.05])
+        scale_module = transforms.RandomScaleAffine(scale=scale)
+        self.assertEqual(scale_module.scale, scale.tolist())
+
+    def test_random_scale_affine_int_scale(self) -> None:
+        scale = [1, 2, 3, 4, 5]
+        scale_module = transforms.RandomScaleAffine(scale=scale)
+        for s in scale_module.scale:
+            self.assertIsInstance(s, float)
+        self.assertEqual(scale_module.scale, [1.0, 2.0, 3.0, 4.0, 5.0])
 
     def test_random_scale_affine_scale_distributions(self) -> None:
         scale = torch.distributions.Uniform(0.95, 1.05)
@@ -155,6 +265,31 @@ class TestRandomScaleAffine(BaseTest):
         self.assertIsInstance(
             scale_module.scale_distribution,
             torch.distributions.distribution.Distribution,
+        )
+        self.assertTrue(scale_module._is_distribution)
+
+    def test_random_scale_affine_torch_version_check(self) -> None:
+        scale_module = transforms.RandomScaleAffine([1.0])
+        _has_align_corners = torch.__version__ >= "1.3.0"
+        self.assertEqual(scale_module._has_align_corners, _has_align_corners)
+
+    def test_random_scale_affine_matrix(self) -> None:
+        scale_module = transforms.RandomScaleAffine(scale=[0.5])
+        test_tensor = torch.ones(1, 3, 3, 3)
+        # Test scale matrices
+
+        assertTensorAlmostEqual(
+            self,
+            scale_module._get_scale_mat(0.5, test_tensor.device, test_tensor.dtype),
+            torch.tensor([[0.5000, 0.0000, 0.0000], [0.0000, 0.5000, 0.0000]]),
+            0,
+        )
+
+        assertTensorAlmostEqual(
+            self,
+            scale_module._get_scale_mat(1.24, test_tensor.device, test_tensor.dtype),
+            torch.tensor([[1.2400, 0.0000, 0.0000], [0.0000, 1.2400, 0.0000]]),
+            0,
         )
 
     def test_random_scale_affine_downscaling(self) -> None:
@@ -187,22 +322,54 @@ class TestRandomScaleAffine(BaseTest):
             0,
         )
 
-    def test_random_scale_affine_matrix(self) -> None:
-        scale_module = transforms.RandomScaleAffine(scale=[0.5])
-        test_tensor = torch.ones(1, 3, 3, 3)
-        # Test scale matrices
+    def test_random_scale_affine_forward_exact(self) -> None:
+        scale_module = transforms.RandomScaleAffine(scale=[1.5])
+        test_tensor = torch.arange(0, 1 * 1 * 4 * 4).view(1, 1, 4, 4).float()
 
+        scaled_tensor = scale_module(test_tensor)
+
+        expected_tensor = torch.tensor(
+            [
+                [
+                    [
+                        [0.0000, 0.1875, 0.5625, 0.1875],
+                        [0.7500, 3.7500, 5.2500, 1.5000],
+                        [2.2500, 9.7500, 11.2500, 3.0000],
+                        [0.7500, 3.1875, 3.5625, 0.9375],
+                    ]
+                ]
+            ]
+        )
         assertTensorAlmostEqual(
             self,
-            scale_module._get_scale_mat(0.5, test_tensor.device, test_tensor.dtype),
-            torch.tensor([[0.5000, 0.0000, 0.0000], [0.0000, 0.5000, 0.0000]]),
+            scaled_tensor,
+            expected_tensor,
             0,
+        )
+
+    def test_random_scale_affine_forward_exact_mode_nearest(self) -> None:
+        scale_module = transforms.RandomScaleAffine(scale=[1.5], mode="nearest")
+        self.assertEqual(scale_module.mode, "nearest")
+        test_tensor = torch.arange(0, 1 * 1 * 4 * 4).view(1, 1, 4, 4).float()
+
+        scaled_tensor = scale_module(test_tensor)
+        expected_tensor = torch.tensor(
+            [
+                [
+                    [
+                        [0.0, 0.0, 0.0, 0.0],
+                        [0.0, 5.0, 6.0, 0.0],
+                        [0.0, 9.0, 10.0, 0.0],
+                        [0.0, 0.0, 0.0, 0.0],
+                    ]
+                ]
+            ]
         )
 
         assertTensorAlmostEqual(
             self,
-            scale_module._get_scale_mat(1.24, test_tensor.device, test_tensor.dtype),
-            torch.tensor([[1.2400, 0.0000, 0.0000], [0.0000, 1.2400, 0.0000]]),
+            scaled_tensor,
+            expected_tensor,
             0,
         )
 
@@ -246,6 +413,13 @@ class TestRandomScaleAffine(BaseTest):
 
 
 class TestRandomSpatialJitter(BaseTest):
+    def test_random_spatial_jitter_init(self) -> None:
+        translate = 3
+        spatialjitter = transforms.RandomSpatialJitter(translate)
+
+        self.assertEqual(spatialjitter.pad_range, translate * 2)
+        self.assertIsInstance(spatialjitter.pad, torch.nn.ReflectionPad2d)
+
     def test_random_spatial_jitter_hw(self) -> None:
         translate_vals = [4, 4]
         t_val = 3
@@ -321,7 +495,15 @@ class TestRandomSpatialJitter(BaseTest):
 
 
 class TestCenterCrop(BaseTest):
-    def test_center_crop_one_number(self) -> None:
+    def test_center_crop_init(self) -> None:
+        crop_module = transforms.CenterCrop(3)
+        self.assertEqual(crop_module.size, [3, 3])
+        self.assertFalse(crop_module.pixels_from_edges)
+        self.assertFalse(crop_module.offset_left)
+        self.assertEqual(crop_module.padding_mode, "constant")
+        self.assertEqual(crop_module.padding_value, 0.0)
+
+    def test_center_crop_forward_one_number(self) -> None:
         pad = (1, 1, 1, 1)
         test_tensor = (
             F.pad(F.pad(torch.ones(2, 2), pad=pad), pad=pad, value=1)
@@ -342,7 +524,60 @@ class TestCenterCrop(BaseTest):
         ).unsqueeze(0)
         assertTensorAlmostEqual(self, cropped_tensor, expected_tensor, 0)
 
-    def test_center_crop_two_numbers(self) -> None:
+    def test_center_crop_forward_one_number_dim_3(self) -> None:
+        pad = (1, 1, 1, 1)
+        test_tensor = F.pad(F.pad(torch.ones(2, 2), pad=pad), pad=pad, value=1).repeat(
+            3, 1, 1
+        )
+        crop_vals = 3
+
+        crop_tensor = transforms.CenterCrop(crop_vals, True)
+        cropped_tensor = crop_tensor(test_tensor)
+
+        crop_mod_np = numpy_transforms.CenterCrop(crop_vals, True)
+        cropped_array = crop_mod_np.forward(test_tensor.numpy())
+
+        assertArraysAlmostEqual(cropped_tensor.numpy(), cropped_array, 0)
+        expected_tensor = torch.stack(
+            [torch.tensor([[1.0, 1.0, 0.0], [1.0, 1.0, 0.0], [0.0, 0.0, 0.0]])] * 3
+        )
+        self.assertEqual(cropped_tensor.shape, expected_tensor.shape)
+        assertTensorAlmostEqual(self, cropped_tensor, expected_tensor, 0)
+
+    def test_center_crop_forward_one_number_list(self) -> None:
+        pad = (1, 1, 1, 1)
+        test_tensor = (
+            F.pad(F.pad(torch.ones(2, 2), pad=pad), pad=pad, value=1)
+            .repeat(3, 1, 1)
+            .unsqueeze(0)
+        )
+        crop_vals = [3]
+
+        crop_tensor = transforms.CenterCrop(crop_vals, True)
+        cropped_tensor = crop_tensor(test_tensor)
+
+        crop_mod_np = numpy_transforms.CenterCrop(crop_vals, True)
+        cropped_array = crop_mod_np.forward(test_tensor.numpy())
+
+        assertArraysAlmostEqual(cropped_tensor.numpy(), cropped_array, 0)
+        expected_tensor = torch.stack(
+            [torch.tensor([[1.0, 1.0, 0.0], [1.0, 1.0, 0.0], [0.0, 0.0, 0.0]])] * 3
+        ).unsqueeze(0)
+        assertTensorAlmostEqual(self, cropped_tensor, expected_tensor, 0)
+
+    def test_center_crop_list_len_3_value_error(self) -> None:
+        crop_vals = [3, 3, 3]
+
+        with self.assertRaises(ValueError):
+            transforms.CenterCrop(crop_vals, True)
+
+    def test_center_crop_str_value_error(self) -> None:
+        crop_vals = "error"
+
+        with self.assertRaises(ValueError):
+            transforms.CenterCrop(crop_vals, True)
+
+    def test_center_crop_forward_two_numbers(self) -> None:
         pad = (1, 1, 1, 1)
         test_tensor = (
             F.pad(F.pad(torch.ones(2, 2), pad=pad), pad=pad, value=1)
@@ -363,7 +598,7 @@ class TestCenterCrop(BaseTest):
         ).unsqueeze(0)
         assertTensorAlmostEqual(self, cropped_tensor, expected_tensor, 0)
 
-    def test_center_crop_one_number_exact(self) -> None:
+    def test_center_crop_forward_one_number_exact(self) -> None:
         pad = (1, 1, 1, 1)
         test_tensor = (
             F.pad(F.pad(torch.ones(2, 2), pad=pad), pad=pad, value=1)
@@ -396,7 +631,7 @@ class TestCenterCrop(BaseTest):
         ).unsqueeze(0)
         assertTensorAlmostEqual(self, cropped_tensor, expected_tensor, 0)
 
-    def test_center_crop_two_numbers_exact(self) -> None:
+    def test_center_crop_forward_two_numbers_exact(self) -> None:
         pad = (1, 1, 1, 1)
         test_tensor = (
             F.pad(F.pad(torch.ones(2, 2), pad=pad), pad=pad, value=1)
@@ -419,7 +654,7 @@ class TestCenterCrop(BaseTest):
         ).unsqueeze(0)
         assertTensorAlmostEqual(self, cropped_tensor, expected_tensor, 0)
 
-    def test_center_crop_offset_left_uneven_sides(self) -> None:
+    def test_center_crop_forward_offset_left_uneven_sides(self) -> None:
         crop_mod = transforms.CenterCrop(
             [5, 5], pixels_from_edges=False, offset_left=True
         )
@@ -428,7 +663,7 @@ class TestCenterCrop(BaseTest):
         cropped_tensor = crop_mod(px)
         assertTensorAlmostEqual(self, x, cropped_tensor)
 
-    def test_center_crop_offset_left_even_sides(self) -> None:
+    def test_center_crop_forward_offset_left_even_sides(self) -> None:
         crop_mod = transforms.CenterCrop(
             [5, 5], pixels_from_edges=False, offset_left=True
         )
@@ -437,7 +672,7 @@ class TestCenterCrop(BaseTest):
         cropped_tensor = crop_mod(px)
         assertTensorAlmostEqual(self, x, cropped_tensor)
 
-    def test_center_crop_padding(self) -> None:
+    def test_center_crop_forward_padding(self) -> None:
         test_tensor = torch.arange(0, 1 * 1 * 4 * 4).view(1, 1, 4, 4).float()
         crop_vals = [6, 6]
 
@@ -456,7 +691,7 @@ class TestCenterCrop(BaseTest):
         )
         assertTensorAlmostEqual(self, cropped_tensor, expected_tensor, 0)
 
-    def test_center_crop_padding_prime_num_pad(self) -> None:
+    def test_center_crop_forward_padding_prime_num_pad(self) -> None:
         test_tensor = torch.arange(0, 1 * 1 * 3 * 3).view(1, 1, 3, 3).float()
         crop_vals = [6, 6]
 
@@ -467,7 +702,7 @@ class TestCenterCrop(BaseTest):
         expected_tensor = torch.nn.functional.pad(test_tensor, [2, 1, 2, 1])
         assertTensorAlmostEqual(self, cropped_tensor, expected_tensor)
 
-    def test_center_crop_padding_prime_num_pad_offset_left(self) -> None:
+    def test_center_crop_forward_padding_prime_num_pad_offset_left(self) -> None:
         test_tensor = torch.arange(0, 1 * 1 * 3 * 3).view(1, 1, 3, 3).float()
         crop_vals = [6, 6]
 
@@ -478,7 +713,7 @@ class TestCenterCrop(BaseTest):
         expected_tensor = torch.nn.functional.pad(test_tensor, [1, 2, 1, 2])
         assertTensorAlmostEqual(self, cropped_tensor, expected_tensor)
 
-    def test_center_crop_one_number_exact_jit_module(self) -> None:
+    def test_center_crop_forward_one_number_exact_jit_module(self) -> None:
         if torch.__version__ <= "1.8.0":
             raise unittest.SkipTest(
                 "Skipping CenterCrop JIT module test due to insufficient"
@@ -512,7 +747,7 @@ class TestCenterCrop(BaseTest):
         ).unsqueeze(0)
         assertTensorAlmostEqual(self, cropped_tensor, expected_tensor, 0)
 
-    def test_center_crop_padding_jit_module(self) -> None:
+    def test_center_crop_forward_padding_jit_module(self) -> None:
         if torch.__version__ <= "1.8.0":
             raise unittest.SkipTest(
                 "Skipping CenterCrop padding JIT module test due to insufficient"
@@ -558,6 +793,69 @@ class TestCenterCropFunction(BaseTest):
             [torch.tensor([[1.0, 1.0, 0.0], [1.0, 1.0, 0.0], [0.0, 0.0, 0.0]])] * 3
         ).unsqueeze(0)
         assertTensorAlmostEqual(self, cropped_tensor, expected_tensor)
+
+    def test_center_crop_one_number_dim_3(self) -> None:
+        pad = (1, 1, 1, 1)
+        test_tensor = F.pad(F.pad(torch.ones(2, 2), pad=pad), pad=pad, value=1).repeat(
+            3, 1, 1
+        )
+        crop_vals = 3
+
+        cropped_tensor = transforms.center_crop(test_tensor, crop_vals, True)
+        cropped_array = numpy_transforms.center_crop(
+            test_tensor.numpy(), crop_vals, True
+        )
+
+        assertArraysAlmostEqual(cropped_tensor.numpy(), cropped_array, 0)
+        expected_tensor = torch.stack(
+            [torch.tensor([[1.0, 1.0, 0.0], [1.0, 1.0, 0.0], [0.0, 0.0, 0.0]])] * 3
+        )
+        self.assertEqual(cropped_tensor.shape, expected_tensor.shape)
+        assertTensorAlmostEqual(self, cropped_tensor, expected_tensor)
+
+    def test_center_crop_one_number_list(self) -> None:
+        pad = (1, 1, 1, 1)
+        test_tensor = (
+            F.pad(F.pad(torch.ones(2, 2), pad=pad), pad=pad, value=1)
+            .repeat(3, 1, 1)
+            .unsqueeze(0)
+        )
+        crop_vals = [3]
+
+        cropped_tensor = transforms.center_crop(test_tensor, crop_vals, True)
+        cropped_array = numpy_transforms.center_crop(
+            test_tensor.numpy(), crop_vals, True
+        )
+
+        assertArraysAlmostEqual(cropped_tensor.numpy(), cropped_array, 0)
+        expected_tensor = torch.stack(
+            [torch.tensor([[1.0, 1.0, 0.0], [1.0, 1.0, 0.0], [0.0, 0.0, 0.0]])] * 3
+        ).unsqueeze(0)
+        assertTensorAlmostEqual(self, cropped_tensor, expected_tensor)
+
+    def test_center_crop_list_len_3_value_error(self) -> None:
+        pad = (1, 1, 1, 1)
+        test_tensor = (
+            F.pad(F.pad(torch.ones(2, 2), pad=pad), pad=pad, value=1)
+            .repeat(3, 1, 1)
+            .unsqueeze(0)
+        )
+        crop_vals = [3, 3, 3]
+
+        with self.assertRaises(ValueError):
+            transforms.center_crop(test_tensor, crop_vals, True)
+
+    def test_center_crop_str_value_error(self) -> None:
+        pad = (1, 1, 1, 1)
+        test_tensor = (
+            F.pad(F.pad(torch.ones(2, 2), pad=pad), pad=pad, value=1)
+            .repeat(3, 1, 1)
+            .unsqueeze(0)
+        )
+        crop_vals = "error"
+
+        with self.assertRaises(ValueError):
+            transforms.center_crop(test_tensor, crop_vals, True)
 
     def test_center_crop_two_numbers(self) -> None:
         pad = (1, 1, 1, 1)
@@ -745,6 +1043,10 @@ class TestCenterCropFunction(BaseTest):
 
 
 class TestBlendAlpha(BaseTest):
+    def test_blend_alpha_init(self) -> None:
+        blend_alpha = transforms.BlendAlpha(background=None)
+        self.assertIsNone(blend_alpha.background)
+
     def test_blend_alpha(self) -> None:
         rgb_tensor = torch.ones(3, 3, 3)
         alpha_tensor = ((torch.eye(3, 3) + torch.eye(3, 3).flip(1)) / 2).repeat(1, 1, 1)
@@ -811,21 +1113,54 @@ class TestIgnoreAlpha(BaseTest):
 
 
 class TestToRGB(BaseTest):
+    def test_to_rgb_init(self) -> None:
+        to_rgb = transforms.ToRGB()
+        self.assertEqual(list(to_rgb.transform.shape), [3, 3])
+        transform = torch.tensor(
+            [
+                [0.5628, 0.1948, 0.0433],
+                [0.5845, 0.0000, -0.1082],
+                [0.5845, -0.1948, 0.0649],
+            ]
+        )
+        assertTensorAlmostEqual(self, to_rgb.transform, transform, 0.001)
+
     def test_to_rgb_i1i2i3(self) -> None:
         to_rgb = transforms.ToRGB(transform="i1i2i3")
         to_rgb_np = numpy_transforms.ToRGB(transform="i1i2i3")
         assertArraysAlmostEqual(to_rgb.transform.numpy(), to_rgb_np.transform)
+        transform = torch.tensor(
+            [
+                [0.3333, 0.3333, 0.3333],
+                [0.5000, 0.0000, -0.5000],
+                [-0.2500, 0.5000, -0.2500],
+            ]
+        )
+        assertTensorAlmostEqual(self, to_rgb.transform, transform, 0.001)
 
     def test_to_rgb_klt(self) -> None:
         to_rgb = transforms.ToRGB(transform="klt")
         to_rgb_np = numpy_transforms.ToRGB(transform="klt")
         assertArraysAlmostEqual(to_rgb.transform.numpy(), to_rgb_np.transform)
+        transform = torch.tensor(
+            [
+                [0.5628, 0.1948, 0.0433],
+                [0.5845, 0.0000, -0.1082],
+                [0.5845, -0.1948, 0.0649],
+            ]
+        )
+        assertTensorAlmostEqual(self, to_rgb.transform, transform, 0.001)
 
     def test_to_rgb_custom(self) -> None:
         matrix = torch.eye(3, 3)
         to_rgb = transforms.ToRGB(transform=matrix)
         to_rgb_np = numpy_transforms.ToRGB(transform=matrix.numpy())
         assertArraysAlmostEqual(to_rgb.transform.numpy(), to_rgb_np.transform)
+        assertTensorAlmostEqual(self, to_rgb.transform, matrix, 0.0)
+
+    def test_to_rgb_init_value_error(self) -> None:
+        with self.assertRaises(ValueError):
+            transforms.ToRGB(transform="error")
 
     def test_to_rgb_klt_forward(self) -> None:
         if torch.__version__ <= "1.2.0":
@@ -862,6 +1197,29 @@ class TestToRGB(BaseTest):
         b = torch.ones(4, 4) * 0.4546
         a = torch.ones(4, 4)
         expected_rgb_tensor = torch.stack([r, g, b, a]).unsqueeze(0)
+
+        assertTensorAlmostEqual(self, rgb_tensor, expected_rgb_tensor, 0.002)
+
+        inverse_tensor = to_rgb(rgb_tensor.clone(), inverse=True)
+        assertTensorAlmostEqual(
+            self, inverse_tensor, torch.ones_like(inverse_tensor.rename(None))
+        )
+
+    def test_to_rgb_alpha_klt_forward_dim_3(self) -> None:
+        if torch.__version__ <= "1.2.0":
+            raise unittest.SkipTest(
+                "Skipping ToRGB with Alpha forward dim 3 due to"
+                + " insufficient Torch version."
+            )
+        to_rgb = transforms.ToRGB(transform="klt")
+        test_tensor = torch.ones(4, 4, 4).refine_names("C", "H", "W")
+        rgb_tensor = to_rgb(test_tensor)
+
+        r = torch.ones(4, 4) * 0.8009
+        g = torch.ones(4, 4) * 0.4762
+        b = torch.ones(4, 4) * 0.4546
+        a = torch.ones(4, 4)
+        expected_rgb_tensor = torch.stack([r, g, b, a])
 
         assertTensorAlmostEqual(self, rgb_tensor, expected_rgb_tensor, 0.002)
 
@@ -959,6 +1317,78 @@ class TestToRGB(BaseTest):
 
 
 class TestGaussianSmoothing(BaseTest):
+    def test_gaussian_smoothing_init_1d(self) -> None:
+        channels = 6
+        kernel_size = 3
+        sigma = 2.0
+        dim = 1
+        smoothening_module = transforms.GaussianSmoothing(
+            channels, kernel_size, sigma, dim
+        )
+        self.assertEqual(smoothening_module.groups, channels)
+        weight = torch.tensor([[0.3192, 0.3617, 0.3192]]).repeat(6, 1, 1)
+        assertTensorAlmostEqual(self, smoothening_module.weight, weight, 0.001)
+
+    def test_gaussian_smoothing_init_2d(self) -> None:
+        channels = 3
+        kernel_size = 3
+        sigma = 2.0
+        dim = 2
+        smoothening_module = transforms.GaussianSmoothing(
+            channels, kernel_size, sigma, dim
+        )
+        self.assertEqual(smoothening_module.groups, channels)
+        weight = torch.tensor(
+            [
+                [
+                    [0.1019, 0.1154, 0.1019],
+                    [0.1154, 0.1308, 0.1154],
+                    [0.1019, 0.1154, 0.1019],
+                ]
+            ]
+        ).repeat(3, 1, 1, 1)
+        assertTensorAlmostEqual(self, smoothening_module.weight, weight, 0.001)
+
+    def test_gaussian_smoothing_init_3d(self) -> None:
+        channels = 4
+        kernel_size = 3
+        sigma = 1.021
+        dim = 3
+        smoothening_module = transforms.GaussianSmoothing(
+            channels, kernel_size, sigma, dim
+        )
+        self.assertEqual(smoothening_module.groups, channels)
+        weight = torch.tensor(
+            [
+                [
+                    [
+                        [0.0212, 0.0342, 0.0212],
+                        [0.0342, 0.0552, 0.0342],
+                        [0.0212, 0.0342, 0.0212],
+                    ],
+                    [
+                        [0.0342, 0.0552, 0.0342],
+                        [0.0552, 0.0892, 0.0552],
+                        [0.0342, 0.0552, 0.0342],
+                    ],
+                    [
+                        [0.0212, 0.0342, 0.0212],
+                        [0.0342, 0.0552, 0.0342],
+                        [0.0212, 0.0342, 0.0212],
+                    ],
+                ]
+            ]
+        ).repeat(4, 1, 1, 1, 1)
+        assertTensorAlmostEqual(self, smoothening_module.weight, weight, 0.01)
+
+    def test_gaussian_smoothing_init_dim_4_runtime_error(self) -> None:
+        channels = 3
+        kernel_size = 3
+        sigma = 2.0
+        dim = 4
+        with self.assertRaises(RuntimeError):
+            transforms.GaussianSmoothing(channels, kernel_size, sigma, dim)
+
     def test_gaussian_smoothing_1d(self) -> None:
         channels = 6
         kernel_size = 3
@@ -1037,6 +1467,10 @@ class TestGaussianSmoothing(BaseTest):
 
 
 class TestScaleInputRange(BaseTest):
+    def test_scale_input_range_init(self) -> None:
+        scale_input = transforms.ScaleInputRange(255)
+        self.assertEqual(scale_input.multiplier, 255)
+
     def test_scale_input_range(self) -> None:
         x = torch.ones(1, 3, 4, 4)
         scale_input = transforms.ScaleInputRange(255)
@@ -1126,6 +1560,10 @@ class TestSymmetricPadding(BaseTest):
 
 
 class TestNChannelsToRGB(BaseTest):
+    def test_nchannels_to_rgb_init(self) -> None:
+        nchannels_to_rgb = transforms.NChannelsToRGB()
+        self.assertFalse(nchannels_to_rgb.warp)
+
     def test_nchannels_to_rgb_collapse(self) -> None:
         test_input = torch.randn(1, 6, 224, 224)
         nchannels_to_rgb = transforms.NChannelsToRGB()
@@ -1189,7 +1627,9 @@ class TestRandomCrop(BaseTest):
 class TestTransformationRobustness(BaseTest):
     def test_transform_robustness_init(self) -> None:
         transform_robustness = transforms.TransformationRobustness()
-        self.assertIsNone(transform_robustness.padding_transform)
+        self.assertIsInstance(
+            transform_robustness.padding_transform, torch.nn.ConstantPad2d
+        )
         self.assertIsInstance(
             transform_robustness.jitter_transforms, torch.nn.Sequential
         )
@@ -1203,6 +1643,29 @@ class TestTransformationRobustness(BaseTest):
             transform_robustness.final_jitter, transforms.RandomSpatialJitter
         )
         self.assertFalse(transform_robustness.crop_or_pad_output)
+
+    def test_transform_robustness_init_transform_values(self) -> None:
+        transform_robustness = transforms.TransformationRobustness()
+        self.assertEqual(transform_robustness.padding_transform.padding, (2, 2, 2, 2))
+        self.assertEqual(transform_robustness.padding_transform.value, 0.5)
+
+        self.assertEqual(len(transform_robustness.jitter_transforms), 10)
+        for module in transform_robustness.jitter_transforms:
+            self.assertEqual(module.pad_range, 2 * 4)
+
+        expected_scale = [0.995 ** n for n in range(-5, 80)] + [
+            0.998 ** n for n in 2 * list(range(20, 40))
+        ]
+        self.assertEqual(transform_robustness.random_scale.scale, expected_scale)
+        # expected_degrees = (
+        #    list(range(-20, 20)) + list(range(-10, 10)) + list(range(-5, 5)) + 5 * [0]
+        # )
+        # expected_degrees = [float(d) for d in expected_degrees]
+        # self.assertEqual(
+        #    transform_robustness.random_rotation.degrees, test_expected_degrees
+        # )
+
+        self.assertEqual(transform_robustness.final_jitter.pad_range, 2 * 2)
 
     def test_transform_robustness_init_single_translate(self) -> None:
         transform_robustness = transforms.TransformationRobustness(translate=4)
@@ -1225,9 +1688,17 @@ class TestTransformationRobustness(BaseTest):
         test_output = transform_robustness(test_input)
         self.assertTrue(torch.is_tensor(test_output))
 
+    def test_transform_robustness_forward_no_padding(self) -> None:
+        transform_robustness = transforms.TransformationRobustness(
+            padding_transform=None
+        )
+        test_input = torch.ones(1, 3, 224, 224)
+        test_output = transform_robustness(test_input)
+        self.assertTrue(torch.is_tensor(test_output))
+
     def test_transform_robustness_forward_crop_output(self) -> None:
         transform_robustness = transforms.TransformationRobustness(
-            crop_or_pad_output=True
+            padding_transform=None, crop_or_pad_output=True
         )
         test_input = torch.ones(1, 3, 224, 224)
         test_output = transform_robustness(test_input)
