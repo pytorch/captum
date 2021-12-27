@@ -130,9 +130,11 @@ class ToRGB(nn.Module):
             raise ValueError(
                 "transform has to be either 'klt', 'i1i2i3'," + " or a matrix tensor."
             )
+        # Check & store whether or not we can use torch.jit.is_scripting()
+        self._supports_is_scripting = torch.__version__ >= "1.6.0"
 
     @torch.jit.ignore
-    def forward(self, x: torch.Tensor, inverse: bool = False) -> torch.Tensor:
+    def _forward(self, x: torch.Tensor, inverse: bool = False) -> torch.Tensor:
         """
         Args:
 
@@ -146,6 +148,12 @@ class ToRGB(nn.Module):
         """
 
         assert x.dim() == 3 or x.dim() == 4
+        assert x.shape[-3] >= 3
+        assert (
+            x.names == ("C", "H", "W")
+            if x.dim() == 3
+            else x.names == ("B", "C", "H", "W")
+        )
 
         # alpha channel is taken off...
         has_alpha = x.size("C") == 4
@@ -175,6 +183,74 @@ class ToRGB(nn.Module):
             chw = torch.cat([chw, alpha_channel], d)
 
         return chw
+
+    def _forward_without_named_dims(
+        self, x: torch.Tensor, inverse: bool = False
+    ) -> torch.Tensor:
+        """
+        JIT compatible forward function for ToRGB.
+
+        Args:
+
+            x (torch.tensor):  A CHW pr NCHW RGB or RGBA image tensor.
+            inverse (bool, optional):  Whether to recorrelate or decorrelate colors.
+                Default: False.
+
+        Returns:
+            chw (torch.tensor):  A tensor with it's colors recorrelated or
+                decorrelated.
+        """
+
+        assert x.dim() == 4 or x.dim() == 3
+        assert x.shape[-3] >= 3
+
+        # alpha channel is taken off...
+        has_alpha = x.shape[-3] == 4
+        if has_alpha:
+            if x.dim() == 3:
+                x, alpha_channel = x[:3], x[3:]
+            else:
+                x, alpha_channel = x[:, :3], x[:, 3:]
+            assert x.dim() == alpha_channel.dim()  # ensure we "keep_dim"
+        else:
+            # JIT requires a placeholder
+            alpha_channel = torch.tensor([0])
+
+        c_dim = 1 if x.dim() == 4 else 0
+        h, w = x.shape[c_dim + 1 :]
+        flat = x.reshape(list(x.shape[: c_dim + 1]) + [h * w])
+
+        if inverse:
+            correct = torch.inverse(self.transform.to(x.device, x.dtype)) @ flat
+        else:
+            correct = self.transform.to(x.device, x.dtype) @ flat
+        chw = correct.reshape(x.shape)
+
+        # ...alpha channel is concatenated on again.
+        if has_alpha:
+            d = 0 if x.dim() == 3 else 1
+            chw = torch.cat([chw, alpha_channel], d)
+
+        return chw
+
+    def forward(self, x: torch.Tensor, inverse: bool = False) -> torch.Tensor:
+        """
+        JIT does not yet support named dimensions.
+
+        Args:
+
+            x (torch.tensor):  A CHW or NCHW RGB or RGBA image tensor.
+            inverse (bool, optional):  Whether to recorrelate or decorrelate colors.
+                Default: False.
+
+        Returns:
+            chw (torch.tensor):  A tensor with it's colors recorrelated or
+                decorrelated.
+        """
+        if self._supports_is_scripting:
+            if torch.jit.is_scripting():
+                return self._forward_without_named_dims(x, inverse)
+        return self._forward(x, inverse)
 
 
 class CenterCrop(torch.nn.Module):

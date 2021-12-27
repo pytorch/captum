@@ -166,6 +166,11 @@ class TestRandomScale(BaseTest):
         )
 
     def test_random_scale_forward_exact_align_corners(self) -> None:
+        if torch.__version__ <= "1.2.0":
+            raise unittest.SkipTest(
+                "Skipping RandomScale exact align corners forward due to"
+                + " insufficient Torch version."
+            )
         scale_module = transforms.RandomScale(scale=[0.5], align_corners=True)
         self.assertTrue(scale_module.align_corners)
 
@@ -1300,7 +1305,7 @@ class TestToRGB(BaseTest):
             )
         to_rgb = transforms.ToRGB(transform="klt")
         jit_to_rgb = torch.jit.script(to_rgb)
-        test_tensor = torch.ones(3, 4, 4).unsqueeze(0).refine_names("B", "C", "H", "W")
+        test_tensor = torch.ones(3, 4, 4).unsqueeze(0)
         rgb_tensor = jit_to_rgb(test_tensor)
 
         r = torch.ones(4, 4) * 0.8009
