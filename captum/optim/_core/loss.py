@@ -191,6 +191,12 @@ class LayerActivation(BaseLoss):
     Maximize activations at the target layer.
     This is the most basic loss available and it simply returns the activations in
     their original form.
+
+    Args:
+        target (nn.Module):  The layer to optimize for.
+        batch_index (int, optional):  The index of the image to optimize if we
+            optimizing a batch of images. If unspecified, defaults to all images
+            in the batch.
     """
 
     def __call__(self, targets_to_values: ModuleOutputMapping) -> torch.Tensor:
@@ -205,6 +211,13 @@ class ChannelActivation(BaseLoss):
     Maximize activations at the target layer and target channel.
     This loss maximizes the activations of a target channel in a specified target
     layer, and can be useful to determine what features the channel is excited by.
+
+    Args:
+        target (nn.Module):  The layer to containing the channel to optimize for.
+        channel_index (int):  The index of the channel to optimize for.
+        batch_index (int, optional):  The index of the image to optimize if we
+            optimizing a batch of images. If unspecified, defaults to all images
+            in the batch.
     """
 
     def __init__(
@@ -233,6 +246,19 @@ class NeuronActivation(BaseLoss):
     from the specified layer. This loss is useful for determining the type of features
     that excite a neuron, and thus is often used for circuits and neuron related
     research.
+
+    Args:
+        target (nn.Module):  The layer to containing the channel to optimize for.
+        channel_index (int):  The index of the channel to optimize for.
+        x (int, optional):  The x coordinate of the neuron to optimize for. If
+            unspecified, defaults to center, or one unit left of center for even
+            lengths.
+        y (int, optional):  The y coordinate of the neuron to optimize for. If
+            unspecified, defaults to center, or one unit up of center for even
+            heights.
+        batch_index (int, optional):  The index of the image to optimize if we
+            optimizing a batch of images. If unspecified, defaults to all images
+            in the batch.
     """
     def __init__(
         self,
@@ -271,7 +297,13 @@ class DeepDream(BaseLoss):
     https://github.com/google/deepdream
     This loss returns the squared layer activations. When combined with a negative
     mean loss summarization, this loss will create hallucinogenic visuals commonly
-    referred to as 'Deep Dream'. 
+    referred to as 'Deep Dream'.
+
+    Args:
+        target (nn.Module):  The layer to optimize for.
+        batch_index (int, optional):  The index of the image to optimize if we
+            optimizing a batch of images. If unspecified, defaults to all images
+            in the batch.
     """
 
     def __call__(self, targets_to_values: ModuleOutputMapping) -> torch.Tensor:
@@ -289,6 +321,12 @@ class TotalVariation(BaseLoss):
     This loss attempts to smooth / denoise the target by performing total variance
     denoising. The target is most often the image that’s being optimized. This loss is
     often used to remove unwanted visual artifacts.
+
+    Args:
+        target (nn.Module):  The layer to optimize for.
+        batch_index (int, optional):  The index of the image to optimize if we
+            optimizing a batch of images. If unspecified, defaults to all images
+            in the batch.
     """
 
     def __call__(self, targets_to_values: ModuleOutputMapping) -> torch.Tensor:
@@ -303,6 +341,14 @@ class TotalVariation(BaseLoss):
 class L1(BaseLoss):
     """
     L1 norm of the target layer, generally used as a penalty.
+
+    Args:
+        target (nn.Module):  The layer to optimize for.
+        constant (float):  Constant threshold to deduct from the activations.
+            Defaults to 0.
+        batch_index (int, optional):  The index of the image to optimize if we
+            optimizing a batch of images. If unspecified, defaults to all images
+            in the batch.
     """
 
     def __init__(
@@ -324,6 +370,15 @@ class L1(BaseLoss):
 class L2(BaseLoss):
     """
     L2 norm of the target layer, generally used as a penalty.
+
+    Args:
+        target (nn.Module):  The layer to optimize for.
+        constant (float):  Constant threshold to deduct from the activations.
+            Defaults to 0.
+        epsilon (float):  Small value to add to L2 prior to sqrt. Defaults to 1e-6.
+        batch_index (int, optional):  The index of the image to optimize if we
+            optimizing a batch of images. If unspecified, defaults to all images
+            in the batch.
     """
 
     def __init__(
@@ -354,6 +409,11 @@ class Diversity(BaseLoss):
     This loss helps break up polysemantic layers, channels, and neurons by encouraging
     diversity across the different batches. This loss is to be used along with a main
     loss.
+
+    Args:
+        target (nn.Module):  The layer to optimize for.
+        batch_index (int, optional):  Unused here since we are optimizing for diversity
+            across the batch.
     """
 
     def __call__(self, targets_to_values: ModuleOutputMapping) -> torch.Tensor:
@@ -381,6 +441,14 @@ class ActivationInterpolation(BaseLoss):
     https://distill.pub/2017/feature-visualization/#Interaction-between-Neurons
     This loss helps to interpolate or mix visualizations from two activations (layer or
     channel) by interpolating a linear sum between the two activations.
+
+    Args:
+        target1 (nn.Module):  The first layer to optimize for.
+        channel_index1 (int):  Index of channel in first layer to optimize. Defaults to
+            all channels.
+        target2 (nn.Module):  The first layer to optimize for.
+        channel_index2 (int):  Index of channel in first layer to optimize. Defaults to
+            all channels.
     """
 
     def __init__(
@@ -434,7 +502,12 @@ class Alignment(BaseLoss):
     https://distill.pub/2017/feature-visualization/#Interaction-between-Neurons
     When interpolating between activations, it may be desirable to keep image landmarks
     in the same position for visual comparison. This loss helps to minimize L2 distance
-    between neighbouring images. 
+    between neighbouring images.
+
+    Args:
+        target (nn.Module):  The layer to optimize for.
+        decay_ratio (float):  How much to decay penalty as images move apart in batch.
+            Defaults to 2.
     """
 
     def __init__(self, target: nn.Module, decay_ratio: float = 2.0) -> None:
@@ -467,6 +540,14 @@ class Direction(BaseLoss):
     the alignment between the input vector and the layer’s activation vector. The
     dimensionality of the vector should correspond to the number of channels in the
     layer.
+
+    Args:
+        target (nn.Module):  The layer to optimize for.
+        vec (torch.Tensor):  Vector representing direction to align to.
+        cossim_pow (float, optional):  The desired cosine similarity power to use.
+        batch_index (int, optional):  The index of the image to optimize if we
+            optimizing a batch of images. If unspecified, defaults to all images
+            in the batch.
     """
 
     def __init__(
@@ -495,6 +576,21 @@ class NeuronDirection(BaseLoss):
     https://distill.pub/2019/activation-atlas/#Aggregating-Multiple-Images
     Extends Direction loss by focusing on visualizing a single neuron within the
     kernel.
+
+    Args:
+        target (nn.Module):  The layer to optimize for.
+        vec (torch.Tensor):  Vector representing direction to align to.
+        x (int, optional):  The x coordinate of the neuron to optimize for. If
+            unspecified, defaults to center, or one unit left of center for even
+            lengths.
+        y (int, optional):  The y coordinate of the neuron to optimize for. If
+            unspecified, defaults to center, or one unit up of center for even
+            heights.
+        channel_index (int):  The index of the channel to optimize for.
+        cossim_pow (float, optional):  The desired cosine similarity power to use.
+        batch_index (int, optional):  The index of the image to optimize if we
+            optimizing a batch of images. If unspecified, defaults to all images
+            in the batch.
     """
 
     def __init__(
@@ -537,6 +633,14 @@ class TensorDirection(BaseLoss):
     Carter, et al., "Activation Atlas", Distill, 2019.
     https://distill.pub/2019/activation-atlas/#Aggregating-Multiple-Images
     Extends Direction loss by allowing batch-wise direction visualization.
+
+    Args:
+        target (nn.Module):  The layer to optimize for.
+        vec (torch.Tensor):  Vector representing direction to align to.
+        cossim_pow (float, optional):  The desired cosine similarity power to use.
+        batch_index (int, optional):  The index of the image to optimize if we
+            optimizing a batch of images. If unspecified, defaults to all images
+            in the batch.
     """
 
     def __init__(
@@ -576,6 +680,21 @@ class ActivationWeights(BaseLoss):
     Apply weights to channels, neurons, or spots in the target.
     This loss weighs specific channels or neurons in a given layer, via a weight
     vector.
+
+    Args:
+        target (nn.Module):  The layer to optimize for.
+        weights (torch.Tensor): Weights to apply to targets.
+        neuron (bool): Whether target is a neuron. Defaults to False.
+        x (int, optional):  The x coordinate of the neuron to optimize for. If
+            unspecified, defaults to center, or one unit left of center for even
+            lengths.
+        y (int, optional):  The y coordinate of the neuron to optimize for. If
+            unspecified, defaults to center, or one unit up of center for even
+            heights.
+        wx (int, optional):  Length of neurons to apply the weights to, along the
+            x-axis.
+        wy (int, optional):  Length of neurons to apply the weights to, along the
+            y-axis.
     """
 
     def __init__(
