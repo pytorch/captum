@@ -260,6 +260,7 @@ class NeuronActivation(BaseLoss):
             optimizing a batch of images. If unspecified, defaults to all images
             in the batch.
     """
+
     def __init__(
         self,
         target: nn.Module,
