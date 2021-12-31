@@ -620,7 +620,7 @@ class NaturalImage(ImageParameterization):
                 nn.Parameter tensor, or stacking init images.
                 Default: 1
             parameterization (ImageParameterization, optional): An image
-                parameterization class.
+                parameterization class, or instance of an image parameterization class.
                 Default: FFTImage
             squash_func (Callable[[torch.Tensor], torch.Tensor]], optional): The squash
                 function to use after color recorrelation. A funtion or lambda function.
@@ -632,8 +632,14 @@ class NaturalImage(ImageParameterization):
                 Default: True
         """
         super().__init__()
+        if not isinstance(parameterization, ImageParameterization):
+            # Verify uninitialized class is correct type
+            assert issubclass(parameterization, ImageParameterization)
+        else:
+            assert isinstance(parameterization, ImageParameterization)
+
         self.decorrelate = decorrelation_module
-        if init is not None:
+        if init is not None and not isinstance(parameterization, ImageParameterization):
             assert init.dim() == 3 or init.dim() == 4
             if decorrelate_init and self.decorrelate is not None:
                 init = (
@@ -647,9 +653,11 @@ class NaturalImage(ImageParameterization):
                 squash_func = self._clamp_image
 
         self.squash_func = torch.sigmoid if squash_func is None else squash_func
-        self.parameterization = parameterization(
-            size=size, channels=channels, batch=batch, init=init
-        )
+        if not isinstance(parameterization, ImageParameterization):
+            parameterization = parameterization(
+                size=size, channels=channels, batch=batch, init=init
+            )
+        self.parameterization = parameterization
 
     @torch.jit.export
     def _clamp_image(self, x: torch.Tensor) -> torch.Tensor:
