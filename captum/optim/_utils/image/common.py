@@ -65,6 +65,21 @@ def save_tensor_as_image(x: torch.Tensor, filename: str, scale: float = 255.0) -
 def get_neuron_pos(
     H: int, W: int, x: Optional[int] = None, y: Optional[int] = None
 ) -> Tuple[int, int]:
+    """
+    Args:
+
+        H (int) The height
+        W (int) The width
+        x (int, optional): Optionally specify and exact x location of the neuron. If
+            set to None, then the center x location will be used.
+            Default: None
+        y (int, optional): Optionally specify and exact y location of the neuron. If
+            set to None, then the center y location will be used.
+            Default: None
+
+    Return:
+        Tuple[_x, _y] (Tuple[int, int]): The x and y dimensions of the neuron.
+    """
     if x is None:
         _x = W // 2
     else:
