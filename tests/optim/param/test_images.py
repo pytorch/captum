@@ -693,7 +693,7 @@ class TestSharedImage(BaseTest):
         self.assertEqual(test_tensor.size(3), size[1])
 
     def test_sharedimage_multiple_shapes_diff_len_forward_jit_module(self) -> None:
-        if torch.__version__ <= "1.2.0":
+        if torch.__version__ <= "1.8.0":
             raise unittest.SkipTest(
                 "Skipping SharedImage JIT module test due to insufficient Torch"
                 + " version."
@@ -727,6 +727,10 @@ class TestSharedImage(BaseTest):
 
 class TestStackImage(BaseTest):
     def test_stackimage_init(self) -> None:
+        if torch.__version__ <= "1.2.0":
+            raise unittest.SkipTest(
+                "Skipping StackImage init test due to insufficient Torch version."
+            )
         size = (4, 4)
         fft_param_1 = images.FFTImage(size=size)
         fft_param_2 = images.FFTImage(size=size)
@@ -738,6 +742,10 @@ class TestStackImage(BaseTest):
             self.assertTrue(image_param().requires_grad)
 
     def test_stackimage_forward(self) -> None:
+        if torch.__version__ <= "1.2.0":
+            raise unittest.SkipTest(
+                "Skipping StackImage forward test due to insufficient Torch version."
+            )
         size = (4, 4)
         fft_param_1 = images.FFTImage(size=size)
         fft_param_2 = images.FFTImage(size=size)
@@ -754,6 +762,11 @@ class TestStackImage(BaseTest):
         self.assertIsNone(stack_param.output_device)
 
     def test_stackimage_forward_diff_image_params(self) -> None:
+        if torch.__version__ <= "1.2.0":
+            raise unittest.SkipTest(
+                "Skipping StackImage forward with diff image params test due to"
+                + " insufficient Torch version."
+            )
         size = (4, 4)
         fft_param = images.FFTImage(size=size)
         pixel_param = images.PixelImage(size=size)
@@ -773,6 +786,11 @@ class TestStackImage(BaseTest):
         self.assertIsNone(stack_param.output_device)
 
     def test_stackimage_forward_diff_image_params_and_tensor_with_grad(self) -> None:
+        if torch.__version__ <= "1.2.0":
+            raise unittest.SkipTest(
+                "Skipping StackImage forward with diff image params and tensor with"
+                + " grad test due to insufficient Torch version."
+            )
         size = (4, 4)
         fft_param = images.FFTImage(size=size)
         pixel_param = images.PixelImage(size=size)
@@ -797,6 +815,11 @@ class TestStackImage(BaseTest):
         self.assertIsNone(stack_param.output_device)
 
     def test_stackimage_forward_diff_image_params_and_tensor_no_grad(self) -> None:
+        if torch.__version__ <= "1.2.0":
+            raise unittest.SkipTest(
+                "Skipping StackImage forward with diff image params and tensor with"
+                + " no grad test due to insufficient Torch version."
+            )
         size = (4, 4)
         fft_param = images.FFTImage(size=size)
         pixel_param = images.PixelImage(size=size)
@@ -824,6 +847,11 @@ class TestStackImage(BaseTest):
         self.assertIsNone(stack_param.output_device)
 
     def test_stackimage_forward_multi_gpu(self) -> None:
+        if torch.__version__ <= "1.2.0":
+            raise unittest.SkipTest(
+                "Skipping StackImage forward multi GPU test due to insufficient"
+                + " Torch version."
+            )
         if not torch.cuda.is_available():
             raise unittest.SkipTest(
                 "Skipping StackImage multi GPU test due to not supporting CUDA."
@@ -869,6 +897,11 @@ class TestStackImage(BaseTest):
         self.assertEqual(stack_param().device, output_device)
 
     def test_stackimage_forward_multi_device_cpu_gpu(self) -> None:
+        if torch.__version__ <= "1.2.0":
+            raise unittest.SkipTest(
+                "Skipping StackImage forward multi device test due to insufficient"
+                + " Torch version."
+            )
         if not torch.cuda.is_available():
             raise unittest.SkipTest(
                 "Skipping StackImage multi device test due to not supporting CUDA."
