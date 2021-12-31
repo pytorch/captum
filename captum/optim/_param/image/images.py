@@ -133,6 +133,10 @@ class ImageParameterization(InputParameterization):
     pass
 
 
+class AugmentedImageParameterization(ImageParameterization):
+    pass
+
+
 class FFTImage(ImageParameterization):
     """
     Parameterize an image using inverse real 2D FFT
@@ -305,8 +309,6 @@ class PixelImage(ImageParameterization):
             assert init.dim() == 3 or init.dim() == 4
             if init.dim() == 3:
                 init = init.unsqueeze(0)
-            assert init.shape[1] == 3, "PixelImage init should have 3 channels, "
-            f"input has {init.shape[1]} channels."
         self.image = nn.Parameter(init)
 
     def forward(self) -> torch.Tensor:
@@ -432,10 +434,14 @@ class SimpleTensorParameterization(ImageParameterization):
         self.tensor = tensor
 
     def forward(self) -> torch.Tensor:
+        """
+        Returns:
+            tensor (torch.Tensor): The tensor stored during initialization.
+        """
         return self.tensor
 
 
-class SharedImage(ImageParameterization):
+class SharedImage(AugmentedImageParameterization):
     """
     Share some image parameters across the batch to increase spatial alignment,
     by using interpolated lower resolution tensors.
@@ -585,6 +591,10 @@ class SharedImage(ImageParameterization):
         return x
 
     def forward(self) -> torch.Tensor:
+        """
+        Returns:
+            output (torch.Tensor): An NCHW image parameterization output.
+        """
         image = self.parameterization()
         x = [
             self._interpolate_tensor(
@@ -606,7 +616,7 @@ class SharedImage(ImageParameterization):
         return output.refine_names("B", "C", "H", "W")
 
 
-class StackImage(ImageParameterization):
+class StackImage(AugmentedImageParameterization):
     """
     Stack multiple NCHW image parameterizations along their batch dimensions.
     """
@@ -691,7 +701,9 @@ class NaturalImage(ImageParameterization):
         channels: int = 3,
         batch: int = 1,
         init: Optional[torch.Tensor] = None,
-        parameterization: ImageParameterization = FFTImage,
+        parameterization: Union[
+            ImageParameterization, AugmentedImageParameterization
+        ] = FFTImage,
         squash_func: Optional[Callable[[torch.Tensor], torch.Tensor]] = None,
         decorrelation_module: Optional[nn.Module] = ToRGB(transform="klt"),
         decorrelate_init: bool = True,
@@ -758,9 +770,11 @@ __all__ = [
     "ImageTensor",
     "InputParameterization",
     "ImageParameterization",
+    "AugmentedImageParameterization",
     "FFTImage",
     "PixelImage",
     "LaplacianImage",
     "SharedImage",
+    "StackImage",
     "NaturalImage",
 ]

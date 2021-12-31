@@ -79,7 +79,7 @@ class TestImageTensor(BaseTest):
         self.assertTrue(torch.is_tensor(new_tensor))
         assertTensorAlmostEqual(self, image_tensor, new_tensor)
 
-    def test_natural_image_cuda(self) -> None:
+    def test_image_tensor_cuda(self) -> None:
         if not torch.cuda.is_available():
             raise unittest.SkipTest(
                 "Skipping ImageTensor CUDA test due to not supporting CUDA."
@@ -88,7 +88,31 @@ class TestImageTensor(BaseTest):
         self.assertTrue(image_t.is_cuda)
 
 
+class TestInputParameterization(BaseTest):
+    def test_subclass(self) -> None:
+        self.assertTrue(issubclass(images.InputParameterization, torch.nn.Module))
+
+
+class TestImageParameterization(BaseTest):
+    def test_subclass(self) -> None:
+        self.assertTrue(
+            issubclass(images.ImageParameterization, images.InputParameterization)
+        )
+
+
+class TestAugmentedImageParameterization(BaseTest):
+    def test_subclass(self) -> None:
+        self.assertTrue(
+            issubclass(
+                images.AugmentedImageParameterization, images.ImageParameterization
+            )
+        )
+
+
 class TestFFTImage(BaseTest):
+    def test_subclass(self) -> None:
+        self.assertTrue(issubclass(images.FFTImage, images.ImageParameterization))
+
     def test_pytorch_fftfreq(self) -> None:
         image = images.FFTImage((1, 1))
         _, _, fftfreq = image.get_fft_funcs()
@@ -219,6 +243,9 @@ class TestFFTImage(BaseTest):
 
 
 class TestPixelImage(BaseTest):
+    def test_subclass(self) -> None:
+        self.assertTrue(issubclass(images.PixelImage, images.ImageParameterization))
+
     def test_pixelimage_random(self) -> None:
         if torch.__version__ <= "1.2.0":
             raise unittest.SkipTest(
@@ -250,17 +277,6 @@ class TestPixelImage(BaseTest):
         self.assertEqual(image_param.image.size(2), size[0])
         self.assertEqual(image_param.image.size(3), size[1])
         assertTensorAlmostEqual(self, image_param.image, init_tensor, 0)
-
-    def test_pixelimage_init_error(self) -> None:
-        if torch.__version__ <= "1.2.0":
-            raise unittest.SkipTest(
-                "Skipping PixelImage init due to insufficient Torch version."
-            )
-        size = (224, 224)
-        channels = 2
-        init_tensor = torch.randn(channels, *size)
-        with self.assertRaises(AssertionError):
-            images.PixelImage(size=size, channels=channels, init=init_tensor)
 
     def test_pixelimage_random_forward(self) -> None:
         if torch.__version__ <= "1.2.0":
@@ -298,6 +314,9 @@ class TestPixelImage(BaseTest):
 
 
 class TestLaplacianImage(BaseTest):
+    def test_subclass(self) -> None:
+        self.assertTrue(issubclass(images.LaplacianImage, images.ImageParameterization))
+
     def test_laplacianimage_random_forward(self) -> None:
         if torch.__version__ <= "1.2.0":
             raise unittest.SkipTest(
@@ -326,6 +345,13 @@ class TestLaplacianImage(BaseTest):
 
 
 class TestSimpleTensorParameterization(BaseTest):
+    def test_subclass(self) -> None:
+        self.assertTrue(
+            issubclass(
+                images.SimpleTensorParameterization, images.ImageParameterization
+            )
+        )
+
     def test_simple_tensor_parameterization_no_grad(self) -> None:
         test_input = torch.randn(1, 3, 4, 4)
         image_param = images.SimpleTensorParameterization(test_input)
@@ -337,6 +363,11 @@ class TestSimpleTensorParameterization(BaseTest):
         self.assertFalse(image_param.tensor.requires_grad)
 
     def test_simple_tensor_parameterization_jit_module_no_grad(self) -> None:
+        if torch.__version__ <= "1.8.0":
+            raise unittest.SkipTest(
+                "Skipping SimpleTensorParameterization JIT module test due to"
+                + "  insufficient Torch version."
+            )
         test_input = torch.randn(1, 3, 4, 4)
         image_param = images.SimpleTensorParameterization(test_input)
         jit_image_param = torch.jit.script(image_param)
@@ -356,6 +387,11 @@ class TestSimpleTensorParameterization(BaseTest):
         self.assertTrue(image_param.tensor.requires_grad)
 
     def test_simple_tensor_parameterization_jit_module_with_grad(self) -> None:
+        if torch.__version__ <= "1.8.0":
+            raise unittest.SkipTest(
+                "Skipping SimpleTensorParameterization JIT module test due to"
+                + "  insufficient Torch version."
+            )
         test_input = torch.nn.Parameter(torch.randn(1, 3, 4, 4))
         image_param = images.SimpleTensorParameterization(test_input)
         jit_image_param = torch.jit.script(image_param)
@@ -383,6 +419,11 @@ class TestSimpleTensorParameterization(BaseTest):
 
 
 class TestSharedImage(BaseTest):
+    def test_subclass(self) -> None:
+        self.assertTrue(
+            issubclass(images.SharedImage, images.AugmentedImageParameterization)
+        )
+
     def test_sharedimage_get_offset_single_number(self) -> None:
         if torch.__version__ <= "1.2.0":
             raise unittest.SkipTest(
@@ -726,6 +767,11 @@ class TestSharedImage(BaseTest):
 
 
 class TestStackImage(BaseTest):
+    def test_subclass(self) -> None:
+        self.assertTrue(
+            issubclass(images.StackImage, images.AugmentedImageParameterization)
+        )
+
     def test_stackimage_init(self) -> None:
         if torch.__version__ <= "1.2.0":
             raise unittest.SkipTest(
@@ -940,6 +986,9 @@ class TestStackImage(BaseTest):
 
 
 class TestNaturalImage(BaseTest):
+    def test_subclass(self) -> None:
+        self.assertTrue(issubclass(images.NaturalImage, images.ImageParameterization))
+
     def test_natural_image_0(self) -> None:
         if torch.__version__ <= "1.2.0":
             raise unittest.SkipTest(
