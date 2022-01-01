@@ -454,7 +454,12 @@ class SharedImage(AugmentedImageParameterization):
     https://distill.pub/2018/differentiable-parameterizations/
     """
 
-    __constants__ = ["offset", "_supports_is_scripting"]
+    __constants__ = [
+        "offset",
+        "_supports_is_scripting",
+        "_has_align_corners",
+        "_has_recompute_scale_factor",
+    ]
 
     def __init__(
         self,
@@ -491,6 +496,8 @@ class SharedImage(AugmentedImageParameterization):
 
         # Check & store whether or not we can use torch.jit.is_scripting()
         self._supports_is_scripting = torch.__version__ >= "1.6.0"
+        self._has_align_corners = torch.__version__ >= "1.3.0"
+        self._has_recompute_scale_factor = torch.__version__ >= "1.6.0"
 
     def _get_offset(self, offset: Union[int, Tuple[int]], n: int) -> List[List[int]]:
         """
@@ -551,7 +558,75 @@ class SharedImage(AugmentedImageParameterization):
             A.append(x)
         return A
 
-    @torch.jit.ignore
+    def _interpolate_bilinear(
+        self,
+        x: torch.Tensor,
+        size: Tuple[int, int],
+    ) -> torch.Tensor:
+        """
+        Perform interpolation without any warnings.
+
+        Args:
+
+            x (torch.Tensor): The NCHW tensor to resize.
+            size (tuple of int): The desired output size to resize the input
+                to, with a format of: [height, width].
+
+        Returns:
+            x (torch.Tensor): A resized NCHW tensor.
+        """
+        assert x.dim() == 4
+        assert len(size) == 2
+
+        if self._has_align_corners:
+            if self._has_recompute_scale_factor:
+                x = F.interpolate(
+                    x,
+                    size=size,
+                    mode="bilinear",
+                    align_corners=False,
+                    recompute_scale_factor=False,
+                )
+            else:
+                x = F.interpolate(x, size=size, mode="bilinear", align_corners=False)
+        else:
+            x = F.interpolate(x, size=size, mode="bilinear")
+        return x
+
+    def _interpolate_trilinear(
+        self,
+        x: torch.Tensor,
+        size: Tuple[int, int, int],
+    ) -> torch.Tensor:
+        """
+        Perform interpolation without any warnings.
+
+        Args:
+
+            x (torch.Tensor): The NCHW tensor to resize.
+            size (tuple of int): The desired output size to resize the input
+                to, with a format of: [channels, height, width].
+
+        Returns:
+            x (torch.Tensor): A resized NCHW tensor.
+        """
+        x = x.unsqueeze(0)
+        assert x.dim() == 5
+        if self._has_align_corners:
+            if self._has_recompute_scale_factor:
+                x = F.interpolate(
+                    x,
+                    size=size,
+                    mode="trilinear",
+                    align_corners=False,
+                    recompute_scale_factor=False,
+                )
+            else:
+                x = F.interpolate(x, size=size, mode="trilinear", align_corners=False)
+        else:
+            x = F.interpolate(x, size=size, mode="trilinear")
+        return x.squeeze(0)
+
     def _interpolate_tensor(
         self, x: torch.Tensor, batch: int, channels: int, height: int, width: int
     ) -> torch.Tensor:
@@ -572,21 +647,14 @@ class SharedImage(AugmentedImageParameterization):
         """
 
         if x.size(1) == channels:
-            mode = "bilinear"
             size = (height, width)
+            x = self._interpolate_bilinear(x, size=size)
         else:
-            mode = "trilinear"
-            x = x.unsqueeze(0)
             size = (channels, height, width)
-        x = F.interpolate(x, size=size, mode=mode)
-        x = x.squeeze(0) if len(size) == 3 else x
+            x = self._interpolate_trilinear(x, size=size)
         if x.size(0) != batch:
             x = x.permute(1, 0, 2, 3)
-            x = F.interpolate(
-                x.unsqueeze(0),
-                size=(batch, x.size(2), x.size(3)),
-                mode="trilinear",
-            ).squeeze(0)
+            x = self._interpolate_trilinear(x, size=(batch, x.size(2), x.size(3)))
             x = x.permute(1, 0, 2, 3)
         return x
 
