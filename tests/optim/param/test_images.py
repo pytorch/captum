@@ -424,6 +424,28 @@ class TestSharedImage(BaseTest):
             issubclass(images.SharedImage, images.AugmentedImageParameterization)
         )
 
+    def test_sharedimage_init(self) -> None:
+        shared_shapes = (
+            (1, 3, 128 // 2, 128 // 2),
+            (1, 3, 128 // 4, 128 // 4),
+            (1, 3, 128 // 8, 128 // 8),
+        )
+        test_param = images.SimpleTensorParameterization(torch.ones(4, 3, 4, 4))
+        shared_param = images.SharedImage(
+            shapes=shared_shapes, parameterization=test_param
+        )
+
+        self.assertIsInstance(shared_param.shared_init, torch.nn.ModuleList)
+        self.assertEqual(len(shared_param.shared_init), len(shared_shapes))
+        for shared_init, shape in zip(shared_param.shared_init, shared_shapes):
+            self.assertIsInstance(shared_init, images.SimpleTensorParameterization)
+            self.assertEqual(list(shared_init().shape), list(shape))
+
+        self.assertIsInstance(
+            shared_param.parameterization, images.SimpleTensorParameterization
+        )
+        self.assertIsNone(shared_param.offset)
+
     def test_sharedimage_interpolate_bilinear(self) -> None:
         shared_shapes = (128 // 2, 128 // 2)
         test_param = lambda: torch.ones(3, 3, 224, 224)  # noqa: E731
@@ -859,10 +881,27 @@ class TestStackImage(BaseTest):
         fft_param_2 = images.FFTImage(size=size)
         param_list = [fft_param_1, fft_param_2]
         stack_param = images.StackImage(parameterizations=param_list)
+
+        self.assertIsInstance(stack_param.parameterizations, torch.nn.ModuleList)
+        self.assertEqual(len(stack_param.parameterizations), 2)
+        self.assertEqual(stack_param.dim, 0)
+
         for image_param in stack_param.parameterizations:
             self.assertIsInstance(image_param, images.FFTImage)
             self.assertEqual(list(image_param().shape), [1, 3] + list(size))
             self.assertTrue(image_param().requires_grad)
+
+    def test_stackimage_dim(self) -> None:
+        img_param_r = images.SimpleTensorParameterization(torch.ones(1, 1, 4, 4))
+        img_param_g = images.SimpleTensorParameterization(torch.ones(1, 1, 4, 4))
+        img_param_b = images.SimpleTensorParameterization(torch.ones(1, 1, 4, 4))
+        param_list = [img_param_r, img_param_g, img_param_b]
+        stack_param = images.StackImage(parameterizations=param_list, dim=1)
+
+        self.assertEqual(stack_param.dim, 1)
+
+        test_output = stack_param()
+        self.assertEqual(list(test_output.shape), [1, 3, 4, 4])
 
     def test_stackimage_forward(self) -> None:
         if torch.__version__ <= "1.2.0":
