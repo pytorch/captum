@@ -892,6 +892,10 @@ class TestStackImage(BaseTest):
             self.assertTrue(image_param().requires_grad)
 
     def test_stackimage_dim(self) -> None:
+        if torch.__version__ <= "1.2.0":
+            raise unittest.SkipTest(
+                "Skipping StackImage dim test due to insufficient Torch version."
+            )
         img_param_r = images.SimpleTensorParameterization(torch.ones(1, 1, 4, 4))
         img_param_g = images.SimpleTensorParameterization(torch.ones(1, 1, 4, 4))
         img_param_b = images.SimpleTensorParameterization(torch.ones(1, 1, 4, 4))
