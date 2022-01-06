@@ -6,13 +6,13 @@ import unittest.mock
 from typing import Any, Callable, Tuple, Union
 
 import torch
-
 from captum._utils.typing import BaselineType, TensorOrTupleOfTensorsGeneric
 from captum.attr._core.shapley_value import ShapleyValues, ShapleyValueSampling
 from tests.helpers.basic import BaseTest, assertTensorTuplesAlmostEqual
 from tests.helpers.basic_models import (
     BasicModel_MultiLayer,
     BasicModel_MultiLayer_MultiInput,
+    BasicModelBoolInput,
 )
 
 
@@ -36,6 +36,29 @@ class Test(BaseTest):
             inp,
             [275.0, 275.0, 115.0],
             feature_mask=torch.tensor([[0, 0, 1]]),
+            perturbations_per_eval=(1, 2, 3),
+        )
+
+    def test_simple_shapley_sampling_boolean(self) -> None:
+        net = BasicModelBoolInput()
+        inp = torch.tensor([[True, False, True]])
+        self._shapley_test_assert(
+            net,
+            inp,
+            [35.0, 35.0, 35.0],
+            feature_mask=torch.tensor([[0, 0, 1]]),
+            perturbations_per_eval=(1, 2, 3),
+        )
+
+    def test_simple_shapley_sampling_boolean_with_baseline(self) -> None:
+        net = BasicModelBoolInput()
+        inp = torch.tensor([[True, False, True]])
+        self._shapley_test_assert(
+            net,
+            inp,
+            [-40.0, -40.0, 0.0],
+            feature_mask=torch.tensor([[0, 0, 1]]),
+            baselines=True,
             perturbations_per_eval=(1, 2, 3),
         )
 
@@ -310,6 +333,7 @@ class Test(BaseTest):
             feature_mask=mask,
             perturbations_per_eval=(1,),
             target=None,
+            n_samples=2500,
         )
 
     def _single_int_input_multi_sample_batch_scalar_shapley_assert(
@@ -325,6 +349,7 @@ class Test(BaseTest):
             feature_mask=mask,
             perturbations_per_eval=(1,),
             target=None,
+            n_samples=2500,
         )
 
     def _multi_input_batch_scalar_shapley_assert(self, func: Callable) -> None:
@@ -348,7 +373,8 @@ class Test(BaseTest):
             feature_mask=(mask1, mask2, mask3),
             perturbations_per_eval=(1,),
             target=None,
-            n_samples=800,
+            n_samples=3500,
+            delta=1.2,
         )
 
     def _shapley_test_assert(

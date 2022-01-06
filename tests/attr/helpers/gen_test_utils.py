@@ -3,11 +3,10 @@
 import typing
 from typing import Any, Dict, List, Tuple, Type, Union, cast
 
-from torch.nn import Module
-
 from captum.attr._core.lime import Lime
 from captum.attr._models.base import _get_deep_layer_name
 from captum.attr._utils.attribution import Attribution
+from torch.nn import Module
 
 
 def gen_test_name(

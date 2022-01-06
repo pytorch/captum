@@ -23,6 +23,8 @@ For model developers, Captum can be used to improve and troubleshoot models by f
 
 Captum helps ML researchers more easily implement interpretability algorithms that can interact with PyTorch models. Captum also allows researchers to quickly benchmark their work against other existing algorithms available in the library.
 
+![Overview of Attribution Algorithms](./docs/Captum_Attribution_Algos.png)
+
 #### Target Audience
 
 The primary audiences for Captum are model developers who are looking to improve their models and understand which features are important and interpretability researchers focused on identifying algorithms that can better interpret many types of models.
@@ -79,10 +81,6 @@ Captum helps you interpret and understand predictions of PyTorch models by
 exploring features that contribute to a prediction the model makes.
 It also helps understand which neurons and layers are important for
 model predictions.
-
-Currently, the library uses gradient-based interpretability algorithms
-and attributes contributions to each input of the model with respect to
-different neurons and layers, both intermediate and final.
 
 Let's apply some of those algorithms to a toy model we have created for
 demonstration purposes.
@@ -392,8 +390,8 @@ Captum Insights also has a Jupyter widget providing the same user interface as t
 To install and enable the widget, run
 
 ```
-jupyter nbextension install --py --symlink --sys-prefix captum.insights.widget
-jupyter nbextension enable captum.insights.widget --py --sys-prefix
+jupyter nbextension install --py --symlink --sys-prefix captum.insights.attr_vis.widget
+jupyter nbextension enable captum.insights.attr_vis.widget --py --sys-prefix
 ```
 
 To build the widget from a checkout in a conda environment run
@@ -410,9 +408,33 @@ If you have questions about using Captum methods, please check this [FAQ](docs/f
 See the [CONTRIBUTING](CONTRIBUTING.md) file for how to help out.
 
 ## Talks and Papers
-The slides of our presentation from NeurIPS 2019 can be found [here](docs/presentations/Captum_NeurIPS_2019_final.key)
+**NeurIPS 2019:**
+The slides of our presentation  can be found [here](docs/presentations/Captum_NeurIPS_2019_final.key)
 
-The slides of our presentation from KDD 2020 tutorial can be found [here](https://pytorch-tutorial-assets.s3.amazonaws.com/Captum_KDD_2020.pdf)
+**KDD 2020:**
+The slides of our presentation from KDD 2020 tutorial can be found [here](https://pytorch-tutorial-assets.s3.amazonaws.com/Captum_KDD_2020.pdf).
+You can watch the recorded talk [here](https://www.youtube.com/watch?v=hY_XzglTkak)
+
+**GTC 2020:**
+Opening Up the Black Box: Model Understanding with Captum and PyTorch.
+You can watch the recorded talk [here](https://www.youtube.com/watch?v=0QLrRyLndFI)
+
+**XAI Summit 2020:**
+Using Captum and Fiddler to Improve Model Understanding with Explainable AI.
+You can watch the recorded talk [here](https://www.youtube.com/watch?v=dvuVld5Hyc8)
+
+**PyTorch Developer Day 2020**
+Model Interpretability.
+You can watch the recorded talk [here](https://www.youtube.com/watch?v=Lj5hHBGue58)
+
+**NAACL 2021**
+Tutorial on Fine-grained Interpretation and Causation Analysis in Deep NLP Models.
+You can watch the recorded talk [here](https://www.youtube.com/watch?v=ayhBHZYjeqs
+)
+
+**ICLR 2021 workshop on Responsible AI**:
+- [Paper](https://arxiv.org/abs/2009.07896) on the Captum Library
+- [Paper](https://arxiv.org/abs/2106.07475) on Invesitgating Sanity Checks for Saliency Maps
 
 ## References of Algorithms
 

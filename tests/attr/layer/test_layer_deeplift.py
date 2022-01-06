@@ -5,13 +5,10 @@ from __future__ import print_function
 from typing import List, Tuple, Union, cast
 
 import torch
-from torch import Tensor
-
 from captum.attr._core.layer.layer_deep_lift import LayerDeepLift, LayerDeepLiftShap
 from tests.helpers.basic import (
     BaseTest,
     assert_delta,
-    assertArraysAlmostEqual,
     assertTensorAlmostEqual,
     assertTensorTuplesAlmostEqual,
 )
@@ -23,6 +20,7 @@ from tests.helpers.basic_models import (
     LinearMaxPoolLinearModel,
     ReLULinearModel,
 )
+from torch import Tensor
 
 
 class TestDeepLift(BaseTest):
@@ -244,8 +242,8 @@ class TestDeepLift(BaseTest):
         )
         expected = [[[-8.0]], [[-7.0]]]
         expected_delta = [0.0, 0.0]
-        assertArraysAlmostEqual(cast(Tensor, attrs).detach().numpy(), expected)
-        assertArraysAlmostEqual(delta.detach().numpy(), expected_delta)
+        assertTensorAlmostEqual(self, cast(Tensor, attrs), expected, 0.0001, "max")
+        assertTensorAlmostEqual(self, delta, expected_delta, 0.0001, "max")
 
     def test_convnet_maxpool2d_classification(self) -> None:
         inputs = 100 * torch.randn(2, 1, 10, 10)

@@ -1,13 +1,9 @@
 #!/usr/bin/env python3
-import functools
 import typing
-import warnings
 from inspect import signature
 from typing import TYPE_CHECKING, Any, Callable, List, Tuple, Union
 
 import torch
-from torch import Tensor
-
 from captum._utils.common import _format_baseline, _format_input, _format_output
 from captum._utils.common import _validate_input as _validate_input_basic
 from captum._utils.typing import (
@@ -17,9 +13,14 @@ from captum._utils.typing import (
     TensorOrTupleOfTensorsGeneric,
 )
 from captum.attr._utils.approximation_methods import SUPPORTED_METHODS
+from torch import Tensor
 
 if TYPE_CHECKING:
     from captum.attr._utils.attribution import GradientAttribution
+
+
+def _sum_rows(input: Tensor) -> Tensor:
+    return input.reshape(input.shape[0], -1).sum(1)
 
 
 def _validate_target(num_samples: int, target: TargetType) -> None:
@@ -365,70 +366,3 @@ def _construct_default_feature_mask(
     total_features = current_num_features
     feature_mask = tuple(feature_mask)
     return feature_mask, total_features
-
-
-def neuron_index_deprecation_decorator(func: Callable) -> Callable:
-    r"""
-    Decorator to deprecate neuron_index parameter for Neuron Attribution methods.
-    """
-
-    @functools.wraps(func)
-    def wrapper(*args: Any, **kwargs: Any):
-        if "neuron_index" in kwargs:
-            kwargs["neuron_selector"] = kwargs["neuron_index"]
-            warnings.warn(
-                "neuron_index is being deprecated and replaced with neuron_selector "
-                "to support more general functionality. Please, update the parameter "
-                "name to neuron_selector. Support for neuron_index will be removed "
-                "in Captum 0.4.0.",
-                DeprecationWarning,
-            )
-            del kwargs["neuron_index"]
-        return func(*args, **kwargs)
-
-    return wrapper
-
-
-def noise_tunnel_n_samples_deprecation_decorator(func: Callable) -> Callable:
-    r"""
-    Decorator to depricate n_samples parameter for NoiseTunnel's `attribute` method.
-    """
-
-    @functools.wraps(func)
-    def wrapper(*args: Any, **kwargs: Any):
-        if "nt_samples" not in kwargs and "n_samples" in kwargs:
-            kwargs["nt_samples"] = kwargs["n_samples"]
-            warnings.warn(
-                "n_samples is being deprecated and replaced with nt_samples "
-                "to avoid argument naming conflicts in the attribute method. "
-                "Please, update the parameter name to nt_samples. Support for "
-                "n_samples will be removed in Captum 0.4.0.",
-                DeprecationWarning,
-            )
-            del kwargs["n_samples"]
-        return func(*args, **kwargs)
-
-    return wrapper
-
-
-def lime_n_perturb_samples_deprecation_decorator(func: Callable) -> Callable:
-    r"""
-    Decorator to depricate n_perturb_samples parameter for Lime's and KernelSHAP's
-    attribute method.
-    """
-
-    @functools.wraps(func)
-    def wrapper(*args: Any, **kwargs: Any):
-        if "n_perturb_samples" in kwargs:
-            kwargs["n_samples"] = kwargs["n_perturb_samples"]
-            warnings.warn(
-                "n_perturb_samples is being deprecated and replaced with n_samples "
-                "to avoid argument naming conflics in the attribute method. "
-                "Please, update the parameter name to n_samples. Support for "
-                "n_perturb_samples will be removed in Captum 0.4.0.",
-                DeprecationWarning,
-            )
-            del kwargs["n_perturb_samples"]
-        return func(*args, **kwargs)
-
-    return wrapper

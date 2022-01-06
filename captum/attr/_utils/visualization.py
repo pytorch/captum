@@ -387,7 +387,7 @@ def visualize_image_attr_multiple(
         >>> attribution, delta = ig.attribute(orig_image, target=3)
         >>> # Displays original image and heat map visualization of
         >>> # computed attributions side by side.
-        >>> _ = visualize_mutliple_image_attr(attribution, orig_image,
+        >>> _ = visualize_image_attr_multiple(attribution, orig_image,
         >>>                     ["original_image", "heat_map"], ["all", "positive"])
     """
     assert len(methods) == len(signs), "Methods and signs array lengths must match."
@@ -437,7 +437,7 @@ class VisualizationDataRecord:
         "true_class",
         "attr_class",
         "attr_score",
-        "raw_input",
+        "raw_input_ids",
         "convergence_score",
     ]
 
@@ -449,7 +449,7 @@ class VisualizationDataRecord:
         true_class,
         attr_class,
         attr_score,
-        raw_input,
+        raw_input_ids,
         convergence_score,
     ) -> None:
         self.word_attributions = word_attributions
@@ -458,7 +458,7 @@ class VisualizationDataRecord:
         self.true_class = true_class
         self.attr_class = attr_class
         self.attr_score = attr_score
-        self.raw_input = raw_input
+        self.raw_input_ids = raw_input_ids
         self.convergence_score = convergence_score
 
 
@@ -541,7 +541,7 @@ def visualize_text(
                     format_classname(datarecord.attr_class),
                     format_classname("{0:.2f}".format(datarecord.attr_score)),
                     format_word_importances(
-                        datarecord.raw_input, datarecord.word_attributions
+                        datarecord.raw_input_ids, datarecord.word_attributions
                     ),
                     "<tr>",
                 ]

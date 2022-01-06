@@ -5,8 +5,6 @@ from __future__ import print_function
 from typing import Tuple, Union
 
 import torch
-from torch import Tensor
-
 from captum._utils.typing import TensorOrTupleOfTensorsGeneric
 from captum.attr._core.neuron.neuron_deep_lift import NeuronDeepLift, NeuronDeepLiftShap
 from tests.attr.layer.test_layer_deeplift import (
@@ -20,6 +18,7 @@ from tests.helpers.basic_models import (
     LinearMaxPoolLinearModel,
     ReLULinearModel,
 )
+from torch import Tensor
 
 
 class Test(BaseTest):

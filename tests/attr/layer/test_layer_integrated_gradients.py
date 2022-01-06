@@ -3,9 +3,6 @@
 from typing import Any, List, Tuple, Union, cast
 
 import torch
-from torch import Tensor
-from torch.nn import Module
-
 from captum.attr._core.integrated_gradients import IntegratedGradients
 from captum.attr._core.layer.layer_activation import LayerActivation
 from captum.attr._core.layer.layer_conductance import LayerConductance
@@ -24,6 +21,8 @@ from tests.helpers.basic_models import (
     BasicModel_MultiLayer,
     BasicModel_MultiLayer_TrueMultiInput,
 )
+from torch import Tensor
+from torch.nn import Module
 
 
 class Test(BaseTest):

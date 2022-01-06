@@ -4,9 +4,6 @@ from enum import Enum
 from typing import Any, Callable, Dict, Tuple, Type, cast
 
 import torch
-from torch import Tensor
-from torch.nn import Module
-
 from captum._utils.common import _format_additional_forward_args, _format_input
 from captum.attr._core.feature_ablation import FeatureAblation
 from captum.attr._core.feature_permutation import FeaturePermutation
@@ -27,6 +24,8 @@ from tests.attr.helpers.gen_test_utils import (
 )
 from tests.attr.helpers.test_config import config
 from tests.helpers.basic import BaseTest, assertTensorTuplesAlmostEqual, deep_copy_args
+from torch import Tensor
+from torch.nn import Module
 
 JIT_SUPPORTED = [
     IntegratedGradients,

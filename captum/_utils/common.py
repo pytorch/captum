@@ -1,14 +1,12 @@
 #!/usr/bin/env python3
 import typing
 from enum import Enum
+from functools import reduce
 from inspect import signature
 from typing import Any, Callable, Dict, List, Tuple, Union, cast, overload
 
 import numpy as np
 import torch
-from torch import Tensor, device
-from torch.nn import Module
-
 from captum._utils.typing import (
     BaselineType,
     Literal,
@@ -16,6 +14,8 @@ from captum._utils.typing import (
     TensorOrTupleOfTensorsGeneric,
     TupleOrTensorOrBoolGeneric,
 )
+from torch import Tensor, device
+from torch.nn import Module
 
 
 class ExpansionTypes(Enum):
@@ -24,17 +24,24 @@ class ExpansionTypes(Enum):
 
 
 def safe_div(
-    numerator: Tensor, denom: Union[Tensor, float], default_value: Tensor
+    numerator: Tensor,
+    denom: Union[Tensor, int, float],
+    default_denom: Union[Tensor, int, float] = 1.0,
 ) -> Tensor:
     r"""
     A simple utility function to perform `numerator / denom`
-    if the statement is undefined => result will be `default_value`
+    if the statement is undefined => result will be `numerator / default_denorm`
     """
-    if isinstance(denom, float):
-        return numerator / denom if denom != 0.0 else default_value
+    if isinstance(denom, (int, float)):
+        return numerator / (denom if denom != 0 else default_denom)
 
-    # if denominator is a tensor
-    return numerator / torch.where(denom != 0.0, denom, default_value)
+    # convert default_denom to tensor if it is float
+    if not torch.is_tensor(default_denom):
+        default_denom = torch.tensor(
+            default_denom, dtype=denom.dtype, device=denom.device
+        )
+
+    return numerator / torch.where(denom != 0, denom, default_denom)
 
 
 @typing.overload
@@ -106,7 +113,7 @@ def _zeros(inputs: Tuple[Tensor, ...]) -> Tuple[int, ...]:
     Takes a tuple of tensors as input and returns a tuple that has the same
     length as `inputs` with each element as the integer 0.
     """
-    return tuple(0 for input in inputs)
+    return tuple(0 if input.dtype is not torch.bool else False for input in inputs)
 
 
 def _format_baseline(
@@ -156,6 +163,19 @@ def _format_tensor_into_tuples(
 
 def _format_input(inputs: Union[Tensor, Tuple[Tensor, ...]]) -> Tuple[Tensor, ...]:
     return _format_tensor_into_tuples(inputs)
+
+
+def _format_float_or_tensor_into_tuples(
+    inputs: Union[float, Tensor, Tuple[Union[float, Tensor], ...]]
+) -> Tuple[Union[float, Tensor], ...]:
+    if not isinstance(inputs, tuple):
+        assert isinstance(
+            inputs, (torch.Tensor, float)
+        ), "`inputs` must have type float or torch.Tensor but {} found: ".format(
+            type(inputs)
+        )
+        inputs = (inputs,)
+    return inputs
 
 
 @overload
@@ -617,3 +637,18 @@ def _flatten_tensor_or_tuple(inp: TensorOrTupleOfTensorsGeneric) -> Tensor:
     if isinstance(inp, Tensor):
         return inp.flatten()
     return torch.cat([single_inp.flatten() for single_inp in inp])
+
+
+def _get_module_from_name(model: Module, layer_name: str) -> Any:
+    r"""
+    Returns the module (layer) object, given its (string) name
+    in the model.
+
+    Args:
+            name (str): Module or nested modules name string in self.model
+
+    Returns:
+            The module (layer) in self.model.
+    """
+
+    return reduce(getattr, layer_name.split("."), model)

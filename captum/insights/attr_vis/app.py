@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 from collections import namedtuple
+from itertools import cycle
 from typing import (
     Any,
     Callable,
@@ -13,9 +14,6 @@ from typing import (
 )
 
 import torch
-from torch import Tensor
-from torch.nn import Module
-
 from captum.attr import IntegratedGradients
 from captum.attr._utils.batching import _batched_generator
 from captum.insights.attr_vis.attribution_calculation import (
@@ -29,6 +27,8 @@ from captum.insights.attr_vis.config import (
 from captum.insights.attr_vis.features import BaseFeature
 from captum.insights.attr_vis.server import namedtuple_to_dict
 from captum.log import log_usage
+from torch import Tensor
+from torch.nn import Module
 
 _CONTEXT_COLAB = "_CONTEXT_COLAB"
 _CONTEXT_IPYTHON = "_CONTEXT_IPYTHON"
@@ -199,6 +199,7 @@ class AttributionVisualizer:
         self._outputs: List[VisualizationOutput] = []
         self._config = FilterConfig(prediction="all", classes=[], num_examples=4)
         self._dataset_iter = iter(dataset)
+        self._dataset_cache: List[Batch] = []
 
     def _calculate_attribution_from_cache(
         self, input_index: int, model_index: int, target: Optional[Tensor]
@@ -227,9 +228,8 @@ class AttributionVisualizer:
 
     @log_usage()
     def render(self, debug=True):
-        from IPython.display import display
-
         from captum.insights.attr_vis.widget import CaptumInsights
+        from IPython.display import display
 
         widget = CaptumInsights(visualizer=self)
         display(widget)
@@ -255,9 +255,8 @@ class AttributionVisualizer:
 
     def _serve_colab(self, blocking=False, debug=False, port=None):
         import ipywidgets as widgets
-        from IPython.display import HTML, display
-
         from captum.insights.attr_vis.server import start_server
+        from IPython.display import HTML, display
 
         # TODO: Output widget only captures beginning of server logs. It seems
         # the context manager isn't respected when the web server is run on a
@@ -439,7 +438,22 @@ class AttributionVisualizer:
         return results if results else None
 
     def _get_outputs(self) -> List[Tuple[List[VisualizationOutput], SampleCache]]:
-        batch_data = next(self._dataset_iter)
+        # If we run out of new batches, then we need to
+        # display data which was already shown before.
+        # However, since the dataset given to us is a generator,
+        # we can't reset it to return to the beginning.
+        # Because of this, we store a small cache of stale
+        # data, and iterate on it after the main generator
+        # stops returning new batches.
+        try:
+            batch_data = next(self._dataset_iter)
+            self._dataset_cache.append(batch_data)
+            if len(self._dataset_cache) > self._config.num_examples:
+                self._dataset_cache.pop(0)
+        except StopIteration:
+            self._dataset_iter = cycle(self._dataset_cache)
+            batch_data = next(self._dataset_iter)
+
         vis_outputs = []
 
         # Type ignore for issue with passing union to function taking generic
@@ -465,10 +479,7 @@ class AttributionVisualizer:
     def visualize(self):
         self._outputs = []
         while len(self._outputs) < self._config.num_examples:
-            try:
-                self._outputs.extend(self._get_outputs())
-            except StopIteration:
-                break
+            self._outputs.extend(self._get_outputs())
         return [o[0] for o in self._outputs]
 
     def get_insights_config(self):

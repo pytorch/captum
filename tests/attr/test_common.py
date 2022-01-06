@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
 import torch
-
 from captum.attr._core.noise_tunnel import SUPPORTED_NOISE_TUNNEL_TYPES
 from captum.attr._utils.common import _validate_input, _validate_noise_tunnel_type
 from tests.helpers.basic import BaseTest

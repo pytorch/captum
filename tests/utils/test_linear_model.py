@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
 import torch
-
 from captum._utils.models.linear_model.model import (
     SGDLasso,
     SGDLinearRegression,
@@ -163,14 +162,7 @@ class TestLinearModel(BaseTest):
         )
 
     def test_simple_linear_classification(self):
-        xs = torch.tensor(
-            [
-                [0.5, 0.5],
-                [-0.5, -0.5],
-                [0.5, -0.5],
-                [-0.5, 0.5],
-            ]
-        )
+        xs = torch.tensor([[0.5, 0.5], [-0.5, -0.5], [0.5, -0.5], [-0.5, 0.5]])
         ys = torch.tensor([1.0, -1.0, 1.0, -1.0])
         self.train_and_compare(
             SGDLinearRegression,
@@ -210,14 +202,7 @@ class TestLinearModel(BaseTest):
         ---|--->
          x | o
         """
-        xs = torch.tensor(
-            [
-                [0.5, 0.5],
-                [-0.5, -0.5],
-                [0.5, -0.5],
-                [-0.5, 0.5],
-            ]
-        )
+        xs = torch.tensor([[0.5, 0.5], [-0.5, -0.5], [0.5, -0.5], [-0.5, 0.5]])
         ys = torch.tensor([1.0, 1.0, -1.0, -1.0])
 
         expected_hyperplane = torch.Tensor([0, 0])
@@ -262,14 +247,7 @@ class TestLinearModel(BaseTest):
         ---|--->
          0 | o
         """
-        xs = torch.tensor(
-            [
-                [0.5, 0.5],
-                [-0.5, -0.5],
-                [0.5, -0.5],
-                [-0.5, 0.5],
-            ]
-        )
+        xs = torch.tensor([[0.5, 0.5], [-0.5, -0.5], [0.5, -0.5], [-0.5, 0.5]])
         ys = torch.tensor([1.0, 1.0, -1.0, -1.0])
         weights = torch.tensor([1.0, 0.0, 1.0, 0.0])
 

@@ -2,15 +2,18 @@
 from typing import Any
 
 import torch
-from torch import Tensor
-from torch.nn import Module
-
 from captum._utils.typing import TensorOrTupleOfTensorsGeneric
 from captum.attr._core.input_x_gradient import InputXGradient
 from captum.attr._core.noise_tunnel import NoiseTunnel
 from tests.attr.test_saliency import _get_basic_config, _get_multiargs_basic_config
-from tests.helpers.basic import BaseTest, assertArraysAlmostEqual
+from tests.helpers.basic import (
+    BaseTest,
+    assertArraysAlmostEqual,
+    assertTensorAlmostEqual,
+)
 from tests.helpers.classification_models import SoftmaxModel
+from torch import Tensor
+from torch.nn import Module
 
 
 class Test(BaseTest):
@@ -66,7 +69,7 @@ class Test(BaseTest):
             attributions = nt.attribute(
                 inputs,
                 nt_type=nt_type,
-                n_samples=10,
+                nt_samples=10,
                 stdevs=0.0002,
                 additional_forward_args=additional_forward_args,
             )
@@ -101,15 +104,12 @@ class Test(BaseTest):
             attributions = input_x_grad.attribute(input, target)
             output = model(input)[:, target]
             output.backward()
-            expercted = input.grad * input
-            self.assertEqual(
-                expercted.detach().numpy().tolist(),
-                attributions.detach().numpy().tolist(),
-            )
+            expected = input.grad * input
+            assertTensorAlmostEqual(self, attributions, expected, 0.00001, "max")
         else:
             nt = NoiseTunnel(input_x_grad)
             attributions = nt.attribute(
-                input, nt_type=nt_type, n_samples=10, stdevs=1.0, target=target
+                input, nt_type=nt_type, nt_samples=10, stdevs=1.0, target=target
             )
 
         self.assertEqual(attributions.shape, input.shape)

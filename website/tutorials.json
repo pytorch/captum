@@ -1,9 +1,11 @@
 {
-  "Using Captum": [
+  "Introduction to Captum": [
      {
       "id": "Titanic_Basic_Interpret",
       "title": "Getting started with Captum"
-    },
+    }
+  ],
+  "Attribution": [
     {
       "id": "IMDB_TorchText_Interpret",
       "title": "Interpreting text models"
@@ -25,14 +27,6 @@
       "title": "Interpreting multimodal models"
     },
     {
-      "id": "Bert_SQUAD_Interpret",
-      "title": "Interpreting question answering with BERT Part 1"
-    },
-    {
-      "id": "Bert_SQUAD_Interpret2",
-      "title": "Interpreting question answering with BERT Part 2"
-    },
-    {
       "id": "House_Prices_Regression_Interpret",
       "title": "Interpreting a regression model of Boston house prices"
     },
@@ -45,16 +39,51 @@
       "title": "Using Captum with torch.distributed"
     },
     {
+      "id": "DLRM_Tutorial",
+      "title": "Interpreting Deep Learning Recommender Models"
+    },
+    {
+      "id": "Image_and_Text_Classification_LIME",
+      "title": "Interpreting vision and text models with LIME"
+    },
+    {
+      "title": "Interpreting BERT",
+      "children": [
+        {
+          "id": "Bert_SQUAD_Interpret",
+          "title": "Interpreting question answering with BERT Part 1"
+        },
+        {
+          "id": "Bert_SQUAD_Interpret2",
+          "title": "Interpreting question answering with BERT Part 2"
+        }
+      ]
+    }
+  ],
+  "Robustness": [
+    {
+      "id": "CIFAR_Captum_Robustness",
+      "title": "Applying robustness attacks and metrics to CIFAR model and dataset"
+    }
+  ],
+  "Concept": [
+    {
+      "id": "TCAV_Image",
+      "title": "TCAV for image classification for googlenet model"
+    },
+    {
+      "id": "TCAV_NLP",
+      "title": "TCAV for NLP sentiment analysis model"
+    }
+  ],
+  "Captum Insight": [
+    {
       "id": "CIFAR_TorchVision_Captum_Insights",
       "title": "Getting started with Captum Insights"
     },
     {
       "id": "Multimodal_VQA_Captum_Insights",
       "title": "Using Captum Insights with multimodal models (VQA)"
-    },
-    {
-      "id": "DLRM_Tutorial",
-      "title": "Interpreting Deep Learning Recommender Models"
     }
   ]
 }

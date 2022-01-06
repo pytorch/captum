@@ -4,8 +4,6 @@ import unittest
 from typing import Any, Tuple, Union, cast
 
 import torch
-from torch.nn import Module
-
 from captum._utils.common import _zeros
 from captum._utils.typing import BaselineType, Tensor, TensorOrTupleOfTensorsGeneric
 from captum.attr._core.integrated_gradients import IntegratedGradients
@@ -25,6 +23,7 @@ from tests.helpers.basic_models import (
     BasicModel6_MultiTensor,
     BasicModel_MultiLayer,
 )
+from torch.nn import Module
 
 
 class Test(BaseTest):
@@ -125,15 +124,14 @@ class Test(BaseTest):
             target=target,
             n_steps=500,
         )
-        with self.assertWarns(DeprecationWarning):
-            attributions = nt.attribute(
-                inputs,
-                nt_type=type,
-                n_samples=n_samples,
-                stdevs=0.0,
-                target=target,
-                n_steps=500,
-            )
+        attributions = nt.attribute(
+            inputs,
+            nt_type=type,
+            nt_samples=n_samples,
+            stdevs=0.0,
+            target=target,
+            n_steps=500,
+        )
         assertTensorAlmostEqual(
             self, attributions_wo_mutliplying_by_inputs * inputs, attributions
         )
@@ -448,26 +446,25 @@ class Test(BaseTest):
                 return_convergence_delta=True,
                 nt_samples_batch_size=nt_samples_batch_size,
             )
-            with self.assertWarns(DeprecationWarning):
-                attributions_without_delta = nt.attribute(
-                    inputs,
-                    nt_type=type,
-                    n_samples=n_samples,
-                    stdevs=0.00000002,
-                    baselines=baselines,
-                    target=target,
-                    additional_forward_args=additional_forward_args,
-                    method=approximation_method,
-                    n_steps=500,
-                    nt_samples_batch_size=3,
-                )
+            attributions_without_delta = nt.attribute(
+                inputs,
+                nt_type=type,
+                nt_samples=n_samples,
+                stdevs=0.00000002,
+                baselines=baselines,
+                target=target,
+                additional_forward_args=additional_forward_args,
+                method=approximation_method,
+                n_steps=500,
+                nt_samples_batch_size=3,
+            )
             self.assertEqual(nt.multiplies_by_inputs, multiply_by_inputs)
             self.assertEqual([inputs[0].shape[0] * n_samples], list(delta.shape))
 
         for input, attribution in zip(inputs, attributions):
             self.assertEqual(attribution.shape, input.shape)
         if multiply_by_inputs:
-            self.assertTrue(all(abs(delta.numpy().flatten()) < 0.07))
+            assertTensorAlmostEqual(self, delta, torch.zeros(delta.shape), 0.07, "max")
 
         # compare attributions retrieved with and without
         # `return_convergence_delta` flag

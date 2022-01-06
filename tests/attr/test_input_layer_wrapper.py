@@ -5,7 +5,6 @@ import inspect
 from typing import Callable, Dict, Tuple
 
 import torch
-
 from captum._utils.gradient import _forward_layer_eval
 from captum.attr import (
     DeepLift,

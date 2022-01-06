@@ -3,9 +3,6 @@ import typing
 from typing import Any, Callable, List, Tuple, Union, cast
 
 import torch
-from torch import Tensor
-from torch.nn import Module
-
 from captum._utils.typing import BaselineType, TargetType, TensorOrTupleOfTensorsGeneric
 from captum.attr import (
     Attribution,
@@ -26,6 +23,8 @@ from tests.helpers.basic_models import (
     BasicModel_ConvNet_One_Conv,
     BasicModel_MultiLayer,
 )
+from torch import Tensor
+from torch.nn import Module
 
 
 @infidelity_perturb_func_decorator(False)

@@ -1,14 +1,12 @@
 #!/usr/bin/env python3
 from typing import Any, Callable, List, Tuple, Union
 
-from torch.nn import Module
-
 from captum._utils.gradient import construct_neuron_grad_fn
 from captum._utils.typing import TensorOrTupleOfTensorsGeneric
 from captum.attr._core.guided_backprop_deconvnet import Deconvolution, GuidedBackprop
 from captum.attr._utils.attribution import GradientAttribution, NeuronAttribution
-from captum.attr._utils.common import neuron_index_deprecation_decorator
 from captum.log import log_usage
+from torch.nn import Module
 
 
 class NeuronDeconvolution(NeuronAttribution, GradientAttribution):
@@ -57,7 +55,6 @@ class NeuronDeconvolution(NeuronAttribution, GradientAttribution):
         self.deconv = Deconvolution(model)
 
     @log_usage()
-    @neuron_index_deprecation_decorator
     def attribute(
         self,
         inputs: TensorOrTupleOfTensorsGeneric,
@@ -212,7 +209,6 @@ class NeuronGuidedBackprop(NeuronAttribution, GradientAttribution):
         self.guided_backprop = GuidedBackprop(model)
 
     @log_usage()
-    @neuron_index_deprecation_decorator
     def attribute(
         self,
         inputs: TensorOrTupleOfTensorsGeneric,

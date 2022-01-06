@@ -15,6 +15,20 @@ the relevant type hints.
 """
 
 
+class BasicLinearReLULinear(nn.Module):
+    def __init__(self, in_features, out_features=5, bias=False):
+        super().__init__()
+        self.fc1 = nn.Linear(in_features, out_features, bias=bias)
+        self.relu1 = nn.ReLU()
+        self.fc2 = nn.Linear(out_features, 1, bias=bias)
+
+    def forward(self, x):
+        x = self.fc1(x)
+        x = self.relu1(x)
+        x = self.fc2(x)
+        return x
+
+
 class MixedKwargsAndArgsModule(nn.Module):
     def __init__(self):
         super().__init__()
@@ -118,6 +132,26 @@ class BasicLinearModel(nn.Module):
 
     def forward(self, x1, x2):
         return self.linear(torch.cat((x1, x2), dim=-1))
+
+
+class BasicLinearModel2(nn.Module):
+    def __init__(self, in_features, out_features):
+        super().__init__()
+        self.linear = nn.Linear(in_features, out_features, bias=False)
+
+    def forward(self, input):
+        return self.linear(input)
+
+
+class BasicLinearModel_Multilayer(nn.Module):
+    def __init__(self, in_features, hidden_nodes, out_features):
+        super().__init__()
+        self.linear1 = nn.Linear(in_features, hidden_nodes, bias=False)
+        self.linear2 = nn.Linear(hidden_nodes, out_features, bias=False)
+
+    def forward(self, input):
+        x = self.linear1(input)
+        return self.linear2(x)
 
 
 class ReLUDeepLiftModel(nn.Module):
@@ -227,9 +261,10 @@ class SimpleLRPModel(nn.Module):
         self.relu = torch.nn.ReLU(inplace=inplace)
         self.linear2 = nn.Linear(3, 1, bias=False)
         self.linear2.weight.data.fill_(3.0)
+        self.dropout = torch.nn.Dropout(p=0.01)
 
     def forward(self, x):
-        return self.linear2(self.relu(self.linear(x)))
+        return self.dropout(self.linear2(self.relu(self.linear(x))))
 
 
 class Conv1dSeqModel(nn.Module):
@@ -360,6 +395,21 @@ class BasicModel_MultiLayer(nn.Module):
             return torch.stack((stack_mid, 4 * stack_mid), dim=3)
         else:
             return lin2_out
+
+
+class BasicModelBoolInput(nn.Module):
+    def __init__(self) -> None:
+        super().__init__()
+        self.mod = BasicModel_MultiLayer()
+
+    def forward(
+        self,
+        x: Tensor,
+        add_input: Optional[Tensor] = None,
+        mult: float = 10.0,
+    ):
+        assert x.dtype is torch.bool, "Input must be boolean"
+        return self.mod(x.float() * mult, add_input)
 
 
 class BasicModel_MultiLayer_MultiInput(nn.Module):

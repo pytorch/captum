@@ -5,9 +5,9 @@ import os
 
 from bs4 import BeautifulSoup
 
-js_scripts = """
+base_scripts = """
 <script type="text/javascript" id="documentation_options" data-url_root="./"
-  src="/js/documentation_options.js"></script>
+src="/js/documentation_options.js"></script>
 <script type="text/javascript" src="/js/jquery.js"></script>
 <script type="text/javascript" src="/js/underscore.js"></script>
 <script type="text/javascript" src="/js/doctools.js"></script>
@@ -16,12 +16,20 @@ js_scripts = """
 """  # noqa: E501
 
 search_js_scripts = """
-  <script type="text/javascript">
+<script type="text/javascript">
     jQuery(function() { Search.loadIndex("/js/searchindex.js"); });
-  </script>
+</script>
 
-  <script type="text/javascript" id="searchindexloader"></script>
+<script type="text/javascript" id="searchindexloader"></script>
 """
+
+katex_scripts = """
+<script src="https://cdn.jsdelivr.net/npm/katex@0.13.11/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.13.11/dist/contrib/auto-render.min.js"></script>
+<script src="/js/katex_autorenderer.js"></script>
+<link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/katex@0.13.11/dist/katex.min.css" />
+<link rel="stylesheet" type="text/css" href="/css/katex-math.css" />
+"""  # noqa: E501
 
 
 def parse_sphinx(input_dir, output_dir):
@@ -31,12 +39,19 @@ def parse_sphinx(input_dir, output_dir):
                 with open(os.path.join(cur, fname), "r") as f:
                     soup = BeautifulSoup(f.read(), "html.parser")
                     doc = soup.find("div", {"class": "document"})
-                    wrapped_doc = doc.wrap(soup.new_tag("div", **{"class": "sphinx"}))
-                # add js
+                    wrapped_doc = doc.wrap(
+                        soup.new_tag("div", **{"class": "sphinx wrapper"})
+                    )
+                # add scripts that sphinx pages need
                 if fname == "search.html":
-                    out = js_scripts + search_js_scripts + str(wrapped_doc)
+                    out = (
+                        base_scripts
+                        + search_js_scripts
+                        + katex_scripts
+                        + str(wrapped_doc)
+                    )
                 else:
-                    out = js_scripts + str(wrapped_doc)
+                    out = base_scripts + katex_scripts + str(wrapped_doc)
                 output_path = os.path.join(output_dir, os.path.relpath(cur, input_dir))
                 os.makedirs(output_path, exist_ok=True)
                 with open(os.path.join(output_path, fname), "w") as fout:

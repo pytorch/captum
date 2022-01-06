@@ -14,15 +14,14 @@ from typing import (
 )
 
 import torch
-from torch import Tensor
-from torch.nn import Module
-
 from captum._utils.common import _run_forward, safe_div
 from captum.insights.attr_vis.config import (
     ATTRIBUTION_METHOD_CONFIG,
     ATTRIBUTION_NAMES_TO_METHODS,
 )
 from captum.insights.attr_vis.features import BaseFeature
+from torch import Tensor
+from torch.nn import Module
 
 OutputScore = namedtuple("OutputScore", "score index label")
 
@@ -152,7 +151,8 @@ class AttributionCalculation:
 
         # normalise the contribution, s.t. sum(abs(x_i)) = 1
         norm = torch.norm(net_contrib, p=1)
-        net_contrib = safe_div(net_contrib, norm, default_value=net_contrib)
+        # if norm is 0, all net_contrib elements are 0
+        net_contrib = safe_div(net_contrib, norm)
 
         return net_contrib.tolist()
 

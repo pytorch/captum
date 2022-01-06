@@ -5,8 +5,6 @@ from __future__ import print_function
 import unittest
 
 import torch
-from torch.nn import Embedding
-
 from captum.attr._models.base import (
     InterpretableEmbeddingBase,
     configure_interpretable_embedding_layer,
@@ -14,6 +12,7 @@ from captum.attr._models.base import (
 )
 from tests.helpers.basic import assertArraysAlmostEqual
 from tests.helpers.basic_models import BasicEmbeddingModel, TextModule
+from torch.nn import Embedding
 
 
 class Test(unittest.TestCase):

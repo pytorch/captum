@@ -3,17 +3,13 @@
 from typing import Any, Callable, Generator, Tuple, Union
 
 import torch
-from torch import Tensor
-from torch.distributions.categorical import Categorical
-
 from captum._utils.models.linear_model import SkLearnLinearRegression
 from captum._utils.typing import BaselineType, TargetType, TensorOrTupleOfTensorsGeneric
 from captum.attr._core.lime import Lime, construct_feature_mask
-from captum.attr._utils.common import (
-    _format_input_baseline,
-    lime_n_perturb_samples_deprecation_decorator,
-)
+from captum.attr._utils.common import _format_input_baseline
 from captum.log import log_usage
+from torch import Tensor
+from torch.distributions.categorical import Categorical
 
 
 class KernelShap(Lime):
@@ -46,7 +42,6 @@ class KernelShap(Lime):
         self.inf_weight = 1000000.0
 
     @log_usage()
-    @lime_n_perturb_samples_deprecation_decorator
     def attribute(  # type: ignore
         self,
         inputs: TensorOrTupleOfTensorsGeneric,

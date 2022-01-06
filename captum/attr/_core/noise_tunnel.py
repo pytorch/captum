@@ -3,8 +3,6 @@ from enum import Enum
 from typing import Any, List, Tuple, Union, cast
 
 import torch
-from torch import Tensor
-
 from captum._utils.common import (
     _expand_and_update_additional_forward_args,
     _expand_and_update_baselines,
@@ -17,11 +15,9 @@ from captum._utils.common import (
 )
 from captum._utils.typing import TensorOrTupleOfTensorsGeneric
 from captum.attr._utils.attribution import Attribution, GradientAttribution
-from captum.attr._utils.common import (
-    _validate_noise_tunnel_type,
-    noise_tunnel_n_samples_deprecation_decorator,
-)
+from captum.attr._utils.common import _validate_noise_tunnel_type
 from captum.log import log_usage
+from torch import Tensor
 
 
 class NoiseTunnelType(Enum):
@@ -78,7 +74,6 @@ class NoiseTunnel(Attribution):
         return self._multiply_by_inputs
 
     @log_usage()
-    @noise_tunnel_n_samples_deprecation_decorator
     def attribute(
         self,
         inputs: Union[Tensor, Tuple[Tensor, ...]],

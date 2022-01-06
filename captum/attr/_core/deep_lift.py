@@ -3,14 +3,9 @@ import typing
 import warnings
 from typing import Any, Callable, List, Tuple, Union, cast
 
-import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from torch import Tensor
-from torch.nn import Module
-from torch.utils.hooks import RemovableHandle
-
 from captum._utils.common import (
     ExpansionTypes,
     _expand_additional_forward_args,
@@ -44,6 +39,9 @@ from captum.attr._utils.common import (
     _validate_input,
 )
 from captum.log import log_usage
+from torch import Tensor
+from torch.nn import Module
+from torch.utils.hooks import RemovableHandle
 
 
 # Check if module backward hook can safely be used for the module that produced
@@ -960,7 +958,7 @@ def softmax(
         abs(delta_in) < eps, new_grad_inp[0], grad_output[0] * delta_out / delta_in
     )
     # normalizing
-    n = np.prod(grad_input[0].shape)
+    n = grad_input[0].numel()
 
     # updating only the first half
     new_grad_inp[0] = grad_input_unnorm - grad_input_unnorm.sum() * 1 / n

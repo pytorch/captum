@@ -3,7 +3,6 @@
 from typing import List, Tuple
 
 import torch
-
 from captum._utils.gradient import (
     apply_gradient_requirements,
     compute_gradients,

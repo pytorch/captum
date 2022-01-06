@@ -2,10 +2,10 @@
 
 from typing import Dict, List, Optional, Tuple, Type, Union
 
-from torch import Tensor
-
+import torch
 from captum.attr._utils.stat import MSE, Count, Max, Mean, Min, Stat, StdDev, Sum, Var
 from captum.log import log_usage
+from torch import Tensor
 
 
 class Summarizer:
@@ -42,7 +42,7 @@ class Summarizer:
 
         return copy.deepcopy(self._stats)
 
-    def update(self, x: Union[Tensor, Tuple[Tensor, ...]]):
+    def update(self, x: Union[float, Tensor, Tuple[Union[float, Tensor], ...]]):
         r"""
         Calls `update` on each `Stat` object within the summarizer
 
@@ -56,9 +56,9 @@ class Summarizer:
             # we want input to be consistently a single input or a tuple
             assert not (self._is_inputs_tuple ^ isinstance(x, tuple))
 
-        from captum._utils.common import _format_tensor_into_tuples
+        from captum._utils.common import _format_float_or_tensor_into_tuples
 
-        x = _format_tensor_into_tuples(x)
+        x = _format_float_or_tensor_into_tuples(x)
 
         for i, inp in enumerate(x):
             if i >= len(self._summarizers):
@@ -76,6 +76,8 @@ class Summarizer:
                         stats=stats, summary_stats_indices=self._summary_stats_indicies
                     )
                 )
+            if not isinstance(inp, torch.Tensor):
+                inp = torch.tensor(inp, dtype=torch.float)
             self._summarizers[i].update(inp)
 
     @property

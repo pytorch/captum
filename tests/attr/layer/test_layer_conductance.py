@@ -4,9 +4,6 @@ import unittest
 from typing import Any, List, Tuple, Union, cast
 
 import torch
-from torch import Tensor
-from torch.nn import Module
-
 from captum._utils.typing import BaselineType
 from captum.attr._core.layer.layer_conductance import LayerConductance
 from tests.attr.helpers.conductance_reference import ConductanceReference
@@ -20,6 +17,8 @@ from tests.helpers.basic_models import (
     BasicModel_MultiLayer,
     BasicModel_MultiLayer_MultiInput,
 )
+from torch import Tensor
+from torch.nn import Module
 
 
 class Test(BaseTest):
@@ -154,7 +153,7 @@ class Test(BaseTest):
                 internal_batch_size=internal_batch_size,
                 return_convergence_delta=True,
             )
-            delta_condition = all(abs(delta.numpy().flatten()) < 0.01)
+            delta_condition = (delta.abs() < 0.01).all()
             self.assertTrue(
                 delta_condition,
                 "Sum of attributions does {}"
@@ -196,7 +195,7 @@ class Test(BaseTest):
                 return_convergence_delta=True,
             ),
         )
-        delta_condition = all(abs(delta.numpy().flatten()) < 0.005)
+        delta_condition = (delta.abs() < 0.005).all()
         self.assertTrue(
             delta_condition,
             "Sum of attribution values does {} "

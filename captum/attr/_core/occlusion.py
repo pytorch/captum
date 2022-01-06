@@ -3,8 +3,6 @@ from typing import Any, Callable, Tuple, Union
 
 import numpy as np
 import torch
-from torch import Tensor
-
 from captum._utils.common import _format_input
 from captum._utils.typing import BaselineType, TargetType, TensorOrTupleOfTensorsGeneric
 from captum.attr._core.feature_ablation import FeatureAblation
@@ -13,6 +11,7 @@ from captum.attr._utils.common import (
     _format_and_verify_strides,
 )
 from captum.log import log_usage
+from torch import Tensor
 
 
 class Occlusion(FeatureAblation):

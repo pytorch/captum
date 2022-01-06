@@ -2,9 +2,6 @@
 from typing import Callable, Tuple, Union
 
 import torch
-from torch import Tensor
-from torch.nn import Module
-
 from captum.attr._core.neuron.neuron_gradient_shap import NeuronGradientShap
 from captum.attr._core.neuron.neuron_integrated_gradients import (
     NeuronIntegratedGradients,
@@ -12,6 +9,8 @@ from captum.attr._core.neuron.neuron_integrated_gradients import (
 from tests.helpers.basic import BaseTest, assertTensorAlmostEqual
 from tests.helpers.basic_models import BasicModel_MultiLayer
 from tests.helpers.classification_models import SoftmaxModel
+from torch import Tensor
+from torch.nn import Module
 
 
 class Test(BaseTest):

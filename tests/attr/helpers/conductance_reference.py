@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 import numpy as np
 import torch
-
 from captum._utils.gradient import (
     apply_gradient_requirements,
     undo_gradient_requirements,

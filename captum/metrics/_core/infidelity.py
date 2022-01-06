@@ -3,8 +3,6 @@
 from typing import Any, Callable, Tuple, Union, cast
 
 import torch
-from torch import Tensor
-
 from captum._utils.common import (
     ExpansionTypes,
     _expand_additional_forward_args,
@@ -19,6 +17,7 @@ from captum._utils.common import (
 from captum._utils.typing import BaselineType, TargetType, TensorOrTupleOfTensorsGeneric
 from captum.log import log_usage
 from captum.metrics._utils.batching import _divide_and_aggregate_metrics
+from torch import Tensor
 
 
 def infidelity_perturb_func_decorator(multipy_by_inputs: bool = True) -> Callable:
@@ -83,7 +82,7 @@ def infidelity_perturb_func_decorator(multipy_by_inputs: bool = True) -> Callabl
                     safe_div(
                         input - input_perturbed,
                         input,
-                        torch.tensor(1.0, device=input.device),
+                        default_denom=1.0,
                     )
                     if multipy_by_inputs
                     else input - input_perturbed
@@ -94,7 +93,7 @@ def infidelity_perturb_func_decorator(multipy_by_inputs: bool = True) -> Callabl
                     safe_div(
                         input - input_perturbed,
                         input - baseline,
-                        torch.tensor(1.0, device=input.device),
+                        default_denom=1.0,
                     )
                     if multipy_by_inputs
                     else input - input_perturbed
@@ -352,11 +351,14 @@ def infidelity(
                 perturbation and the attribution so the infidelity value is invariant
                 to constant scaling of the attribution values. The normalization factor
                 beta is defined as the ratio of two mean values:
-                $$ \beta = \frac{
-                    \mathbb{E}_{I \sim \mu_I} [ I^T \Phi(f, x) (f(x) - f(x - I)) ]
-                }{
-                    \mathbb{E}_{I \sim \mu_I} [ (I^T \Phi(f, x))^2 ]
-                } $$.
+
+                .. math::
+                    \beta = \frac{
+                        \mathbb{E}_{I \sim \mu_I} [ I^T \Phi(f, x) (f(x) - f(x - I)) ]
+                    }{
+                        \mathbb{E}_{I \sim \mu_I} [ (I^T \Phi(f, x))^2 ]
+                    }
+
                 Please refer the original paper for the meaning of the symbols. Same
                 normalization can be found in the paper's official implementation
                 https://github.com/chihkuanyeh/saliency_evaluation
@@ -566,11 +568,7 @@ def infidelity(
         beta_num = agg_tensors[1]
         beta_denorm = agg_tensors[0]
 
-        beta = safe_div(
-            beta_num,
-            beta_denorm,
-            torch.tensor(1.0, dtype=beta_denorm.dtype, device=beta_denorm.device),
-        )
+        beta = safe_div(beta_num, beta_denorm)
 
         infidelity_values = (
             beta ** 2 * agg_tensors[0] - 2 * beta * agg_tensors[1] + agg_tensors[2]

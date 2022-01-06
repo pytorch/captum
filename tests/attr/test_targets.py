@@ -4,9 +4,6 @@
 from typing import Any, Callable, Dict, Optional, Tuple, Type, cast
 
 import torch
-from torch import Tensor
-from torch.nn import Module
-
 from captum._utils.common import _format_additional_forward_args
 from captum.attr._core.feature_permutation import FeaturePermutation
 from captum.attr._core.integrated_gradients import IntegratedGradients
@@ -22,6 +19,8 @@ from tests.attr.helpers.gen_test_utils import (
 from tests.attr.helpers.test_config import config
 from tests.helpers.basic import BaseTest, assertTensorTuplesAlmostEqual, deep_copy_args
 from tests.helpers.basic_models import BasicModel_MultiLayer
+from torch import Tensor
+from torch.nn import Module
 
 """
 Tests in this file are dynamically generated based on the config

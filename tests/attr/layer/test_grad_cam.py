@@ -4,15 +4,14 @@ import unittest
 from typing import Any, List, Tuple, Union
 
 import torch
-from torch import Tensor
-from torch.nn import Module
-
 from captum.attr._core.layer.grad_cam import LayerGradCam
 from tests.helpers.basic import BaseTest, assertTensorTuplesAlmostEqual
 from tests.helpers.basic_models import (
     BasicModel_ConvNet_One_Conv,
     BasicModel_MultiLayer,
 )
+from torch import Tensor
+from torch.nn import Module
 
 
 class Test(BaseTest):

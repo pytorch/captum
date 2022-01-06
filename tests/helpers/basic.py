@@ -6,7 +6,6 @@ from typing import Callable
 
 import numpy as np
 import torch
-
 from captum.log import patch_methods
 
 
@@ -14,7 +13,7 @@ def deep_copy_args(func: Callable):
     def copy_args(*args, **kwargs):
         return func(
             *(copy.deepcopy(x) for x in args),
-            **{k: copy.deepcopy(v) for k, v in kwargs.items()}
+            **{k: copy.deepcopy(v) for k, v in kwargs.items()},
         )
 
     return copy_args
@@ -46,6 +45,9 @@ def assertTensorAlmostEqual(test, actual, expected, delta=0.0001, mode="sum"):
             torch.sum(torch.abs(actual - expected)).item(), 0.0, delta=delta
         )
     elif mode == "max":
+        # if both tensors are empty, they are equal but there is no max
+        if actual.numel() == expected.numel() == 0:
+            return
         test.assertAlmostEqual(
             torch.max(torch.abs(actual - expected)).item(), 0.0, delta=delta
         )
@@ -63,17 +65,12 @@ def assertTensorTuplesAlmostEqual(test, actual, expected, delta=0.0001, mode="su
 
 def assertAttributionComparision(test, attributions1, attributions2):
     for attribution1, attribution2 in zip(attributions1, attributions2):
-        for attr_row1, attr_row2 in zip(
-            attribution1.detach().numpy(), attribution2.detach().numpy()
-        ):
-            if isinstance(attr_row1, np.ndarray):
-                assertArraysAlmostEqual(attr_row1, attr_row2, delta=0.05)
-            else:
-                test.assertAlmostEqual(attr_row1, attr_row2, delta=0.05)
+        for attr_row1, attr_row2 in zip(attribution1, attribution2):
+            assertTensorAlmostEqual(test, attr_row1, attr_row2, 0.05, "max")
 
 
 def assert_delta(test, delta):
-    delta_condition = all(abs(delta.numpy().flatten()) < 0.00001)
+    delta_condition = (delta.abs() < 0.00001).all()
     test.assertTrue(
         delta_condition,
         "The sum of attribution values {} for relu layer is not "
