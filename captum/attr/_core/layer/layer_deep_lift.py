@@ -290,8 +290,10 @@ class LayerDeepLift(LayerAttribution, DeepLift):
         """
         if attribute_to_layer_input:
             warnings.warn(
-                "Attribution to layer input is no longer supported and will be deprecated in Captum 0.4.0 due to changes in PyTorch's full backward hook behavior."
-                " To obtain attributions for a layer's input, please attribute with respect to the previous layer's output"
+                "Attribution to layer input is no longer supported and will be"
+                "deprecated in Captum 0.6.0 due to changes in PyTorch's full"
+                " backward hook behavior. To obtain attributions for a layer's"
+                "input, please attribute with respect to the previous layer's output"
             )
             self.skip_new_hook_layer = self.layer
         else:

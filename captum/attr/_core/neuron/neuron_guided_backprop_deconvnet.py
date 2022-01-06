@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import warnings
 from typing import Any, Callable, List, Tuple, Union
 
 from captum._utils.gradient import construct_neuron_grad_fn
@@ -7,7 +8,7 @@ from captum.attr._core.guided_backprop_deconvnet import Deconvolution, GuidedBac
 from captum.attr._utils.attribution import GradientAttribution, NeuronAttribution
 from captum.log import log_usage
 from torch.nn import Module
-import warnings
+
 
 class NeuronDeconvolution(NeuronAttribution, GradientAttribution):
     r"""
@@ -162,8 +163,10 @@ class NeuronDeconvolution(NeuronAttribution, GradientAttribution):
         """
         if not attribute_to_neuron_input:
             warnings.warn(
-                "Attribution to neuron output is no longer supported and will be deprecated in Captum 0.4.0 due to changes in PyTorch's full backward hook behavior."
-                " To obtain attributions for a neuron's output, please attribute with respect to the next layer's input"
+                "Attribution to neuron output is no longer supported and will be"
+                "deprecated in Captum 0.6.0 due to changes in PyTorch's full"
+                " backward hook behavior. To obtain attributions for a neuron's"
+                "output, please attribute with respect to the next layer's input"
             )
             self.deconv.skip_new_hook_layer = self.layer
         else:
@@ -325,8 +328,10 @@ class NeuronGuidedBackprop(NeuronAttribution, GradientAttribution):
         """
         if not attribute_to_neuron_input:
             warnings.warn(
-                "Attribution to neuron output is no longer supported and will be deprecated in Captum 0.4.0 due to changes in PyTorch's full backward hook behavior."
-                " To obtain attributions for a neuron's output, please attribute with respect to the next layer's input"
+                "Attribution to neuron output is no longer supported and will be"
+                "deprecated in Captum 0.6.0 due to changes in PyTorch's full"
+                " backward hook behavior. To obtain attributions for a neuron's"
+                "output, please attribute with respect to the next layer's input"
             )
             self.guided_backprop.skip_new_hook_layer = self.layer
         else:

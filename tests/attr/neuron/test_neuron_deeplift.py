@@ -2,9 +2,9 @@
 
 from __future__ import print_function
 
+import copy
 from typing import Tuple, Union
 
-import copy
 import torch
 from captum._utils.typing import TensorOrTupleOfTensorsGeneric
 from captum.attr._core.neuron.neuron_deep_lift import NeuronDeepLift, NeuronDeepLiftShap

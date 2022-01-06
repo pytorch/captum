@@ -2,10 +2,10 @@
 
 from __future__ import print_function
 
+import copy
 import unittest
 from typing import Any, List, Tuple, Union
 
-import copy
 import torch
 from captum._utils.typing import TensorOrTupleOfTensorsGeneric
 from captum.attr._core.guided_backprop_deconvnet import Deconvolution

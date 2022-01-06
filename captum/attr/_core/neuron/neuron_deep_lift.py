@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
+import warnings
 from typing import Any, Callable, Tuple, Union, cast
 
-import warnings
 from captum._utils.gradient import construct_neuron_grad_fn
 from captum._utils.typing import BaselineType, TensorOrTupleOfTensorsGeneric
 from captum.attr._core.deep_lift import DeepLift, DeepLiftShap
@@ -230,8 +230,10 @@ class NeuronDeepLift(NeuronAttribution, GradientAttribution):
         dl = DeepLift(cast(Module, self.forward_func), self.multiplies_by_inputs)
         if not attribute_to_neuron_input:
             warnings.warn(
-                "Attribution to neuron output is no longer supported and will be deprecated in Captum 0.4.0 due to changes in PyTorch's full backward hook behavior."
-                " To obtain attributions for a neuron's output, please attribute with respect to the next layer's input"
+                "Attribution to neuron output is no longer supported and will be"
+                "deprecated in Captum 0.6.0 due to changes in PyTorch's full"
+                " backward hook behavior. To obtain attributions for a neuron's"
+                "output, please attribute with respect to the next layer's input"
             )
             dl.skip_new_hook_layer = self.layer
         else:
@@ -461,8 +463,10 @@ class NeuronDeepLiftShap(NeuronAttribution, GradientAttribution):
         dl = DeepLiftShap(cast(Module, self.forward_func), self.multiplies_by_inputs)
         if not attribute_to_neuron_input:
             warnings.warn(
-                "Attribution to neuron output is no longer supported and will be deprecated in Captum 0.4.0 due to changes in PyTorch's full backward hook behavior."
-                " To obtain attributions for a neuron's output, please attribute with respect to the next layer's input"
+                "Attribution to neuron output is no longer supported and will be"
+                "deprecated in Captum 0.6.0 due to changes in PyTorch's full"
+                " backward hook behavior. To obtain attributions for a neuron's"
+                "output, please attribute with respect to the next layer's input"
             )
             dl.skip_new_hook_layer = self.layer
         else:

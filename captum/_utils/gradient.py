@@ -88,7 +88,10 @@ def register_backward_hook(
     module: Module, hook: Callable, attr_obj
 ) -> torch.utils.hooks.RemovableHandle:
     # Special case to avoid edge case with layer / neuron methods
-    if hasattr(attr_obj, "skip_new_hook_layer") and attr_obj.skip_new_hook_layer == module:
+    if (
+        hasattr(attr_obj, "skip_new_hook_layer")
+        and attr_obj.skip_new_hook_layer == module
+    ):
         return module.register_backward_hook(hook)
 
     try:

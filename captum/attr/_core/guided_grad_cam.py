@@ -194,9 +194,18 @@ class GuidedGradCam(GradientAttribution):
                 "outputs is not supported."
             )
             grad_cam_attr = grad_cam_attr[0]
-        self.guided_backprop.layer = (
-            self.grad_cam.layer if attribute_to_layer_input else None
-        )
+
+        if attribute_to_layer_input:
+            warnings.warn(
+                "Attribution to layer input is no longer supported and will be"
+                "deprecated in Captum 0.6.0 due to changes in PyTorch's full"
+                " backward hook behavior. To obtain attributions for a layer's"
+                "input, please attribute with respect to the previous layer's output"
+            )
+            self.guided_backprop.skip_new_hook_layer = self.layer
+        else:
+            self.guided_backprop.skip_new_hook_layer = None
+
         guided_backprop_attr = self.guided_backprop.attribute.__wrapped__(
             self.guided_backprop,  # self
             inputs=inputs,
