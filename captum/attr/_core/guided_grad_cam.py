@@ -202,7 +202,7 @@ class GuidedGradCam(GradientAttribution):
                 " backward hook behavior. To obtain attributions for a layer's"
                 "input, please attribute with respect to the previous layer's output"
             )
-            self.guided_backprop.skip_new_hook_layer = self.layer
+            self.guided_backprop.skip_new_hook_layer = self.grad_cam.layer
         else:
             self.guided_backprop.skip_new_hook_layer = None
 
