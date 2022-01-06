@@ -194,6 +194,9 @@ class GuidedGradCam(GradientAttribution):
                 "outputs is not supported."
             )
             grad_cam_attr = grad_cam_attr[0]
+        self.guided_backprop.layer = (
+            self.grad_cam.layer if attribute_to_layer_input else None
+        )
         guided_backprop_attr = self.guided_backprop.attribute.__wrapped__(
             self.guided_backprop,  # self
             inputs=inputs,

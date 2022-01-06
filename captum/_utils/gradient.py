@@ -85,8 +85,12 @@ def undo_gradient_requirements(
 
 
 def register_backward_hook(
-    module: Module, hook: Callable
+    module: Module, hook: Callable, attr_obj
 ) -> torch.utils.hooks.RemovableHandle:
+    # Special case to avoid edge case with layer / neuron methods
+    if hasattr(attr_obj, "skip_new_hook_layer") and attr_obj.skip_new_hook_layer == module:
+        return module.register_backward_hook(hook)
+
     try:
         # Only support for torch >= 1.8
         return module.register_full_backward_hook(hook)

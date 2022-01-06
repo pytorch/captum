@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import typing
+import warnings
 from typing import Any, List, Tuple, Union, cast
 
 from captum._utils.common import _format_input, _reduce_list, _sort_key_list
@@ -201,6 +202,15 @@ class LayerLRP(LRP, LayerAttribution):
                 >>> attribution = lrp.attribute(input, target=5)
 
         """
+        if attribute_to_layer_input:
+            warnings.warn(
+                "Attribution to layer input is no longer supported and will be deprecated in Captum 0.4.0 due to changes in PyTorch's full backward hook behavior."
+                " To obtain attributions for a layer's input, please attribute with respect to the previous layer's output"
+            )
+            self.skip_new_hook_layer = self.layer
+        else:
+            self.skip_new_hook_layer = None
+
         self.verbose = verbose
         self._original_state_dict = self.model.state_dict()
         self.layers = []

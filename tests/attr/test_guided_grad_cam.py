@@ -35,8 +35,8 @@ class Test(BaseTest):
         ]
         self._guided_grad_cam_test_assert(net, net.conv1, (inp, inp2), (ex, ex))
 
-    def test_simple_multi_input_relu_input_inplace(self) -> None:
-        net = BasicModel_ConvNet_One_Conv(inplace=True)
+    def test_simple_multi_input_relu_input(self) -> None:
+        net = BasicModel_ConvNet_One_Conv(inplace=False)
         inp = torch.arange(16, dtype=torch.float).view(1, 1, 4, 4)
         inp2 = torch.ones((1, 1, 4, 4))
         ex = [
@@ -49,8 +49,8 @@ class Test(BaseTest):
             net, net.relu1, (inp, inp2), (ex, ex), attribute_to_layer_input=True
         )
 
-    def test_simple_multi_input_conv_inplace(self) -> None:
-        net = BasicModel_ConvNet_One_Conv(inplace=True)
+    def test_simple_multi_input_conv(self) -> None:
+        net = BasicModel_ConvNet_One_Conv(inplace=False)
         inp = torch.arange(16, dtype=torch.float).view(1, 1, 4, 4)
         inp2 = torch.ones((1, 1, 4, 4))
         ex = [

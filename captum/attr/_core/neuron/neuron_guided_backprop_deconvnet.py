@@ -7,7 +7,7 @@ from captum.attr._core.guided_backprop_deconvnet import Deconvolution, GuidedBac
 from captum.attr._utils.attribution import GradientAttribution, NeuronAttribution
 from captum.log import log_usage
 from torch.nn import Module
-
+import warnings
 
 class NeuronDeconvolution(NeuronAttribution, GradientAttribution):
     r"""
@@ -53,6 +53,7 @@ class NeuronDeconvolution(NeuronAttribution, GradientAttribution):
         NeuronAttribution.__init__(self, model, layer, device_ids)
         GradientAttribution.__init__(self, model)
         self.deconv = Deconvolution(model)
+        self.deconv.layer = layer
 
     @log_usage()
     def attribute(
@@ -159,6 +160,15 @@ class NeuronDeconvolution(NeuronAttribution, GradientAttribution):
             >>> # index (4,1,2).
             >>> attribution = neuron_deconv.attribute(input, (4,1,2))
         """
+        if not attribute_to_neuron_input:
+            warnings.warn(
+                "Attribution to neuron output is no longer supported and will be deprecated in Captum 0.4.0 due to changes in PyTorch's full backward hook behavior."
+                " To obtain attributions for a neuron's output, please attribute with respect to the next layer's input"
+            )
+            self.deconv.skip_new_hook_layer = self.layer
+        else:
+            self.deconv.skip_new_hook_layer = None
+
         self.deconv.gradient_func = construct_neuron_grad_fn(
             self.layer, neuron_selector, self.device_ids, attribute_to_neuron_input
         )
@@ -313,6 +323,15 @@ class NeuronGuidedBackprop(NeuronAttribution, GradientAttribution):
             >>> # index (4,1,2).
             >>> attribution = neuron_gb.attribute(input, (4,1,2))
         """
+        if not attribute_to_neuron_input:
+            warnings.warn(
+                "Attribution to neuron output is no longer supported and will be deprecated in Captum 0.4.0 due to changes in PyTorch's full backward hook behavior."
+                " To obtain attributions for a neuron's output, please attribute with respect to the next layer's input"
+            )
+            self.guided_backprop.skip_new_hook_layer = self.layer
+        else:
+            self.guided_backprop.skip_new_hook_layer = None
+
         self.guided_backprop.gradient_func = construct_neuron_grad_fn(
             self.layer, neuron_selector, self.device_ids, attribute_to_neuron_input
         )

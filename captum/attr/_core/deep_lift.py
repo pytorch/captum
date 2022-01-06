@@ -528,7 +528,7 @@ class DeepLift(GradientAttribution):
         # adds forward hook to leaf nodes that are non-linear
         forward_handle = module.register_forward_hook(self._forward_hook)
         pre_forward_handle = module.register_forward_pre_hook(self._forward_pre_hook)
-        backward_handle = register_backward_hook(module, self._backward_hook)
+        backward_handle = register_backward_hook(module, self._backward_hook, self)
         self.forward_handles.append(forward_handle)
         self.forward_handles.append(pre_forward_handle)
         self.backward_handles.append(backward_handle)

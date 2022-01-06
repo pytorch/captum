@@ -307,7 +307,7 @@ class LRP(GradientAttribution):
         for layer in self.layers:
             if type(layer) in SUPPORTED_NON_LINEAR_LAYERS:
                 backward_handle = register_backward_hook(
-                    layer, PropagationRule.backward_hook_activation
+                    layer, PropagationRule.backward_hook_activation, self
                 )
                 self.backward_handles.append(backward_handle)
             else:

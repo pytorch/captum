@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import typing
+import warnings
 from typing import Any, Callable, Sequence, Tuple, Union, cast
 
 import torch
@@ -287,6 +288,15 @@ class LayerDeepLift(LayerAttribution, DeepLift):
             >>> # Computes deeplift attribution scores for conv4 layer and class 3.
             >>> attribution = dl.attribute(input, target=1)
         """
+        if attribute_to_layer_input:
+            warnings.warn(
+                "Attribution to layer input is no longer supported and will be deprecated in Captum 0.4.0 due to changes in PyTorch's full backward hook behavior."
+                " To obtain attributions for a layer's input, please attribute with respect to the previous layer's output"
+            )
+            self.skip_new_hook_layer = self.layer
+        else:
+            self.skip_new_hook_layer = None
+
         inputs = _format_input(inputs)
         baselines = _format_baseline(baselines, inputs)
         _validate_input(inputs, baselines)
