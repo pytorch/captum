@@ -43,6 +43,10 @@ class LayerLRP(LRP, LayerAttribution):
                         any modification of it. Custom rules for a given layer need to
                         be defined as attribute
                         `module.rule` and need to be of type PropagationRule.
+                        Model cannot contain any in-place nonlinear submodules;
+                        these are not supported by the register_full_backward_hook
+                        PyTorch API.
+
             layer (torch.nn.Module or list(torch.nn.Module)): Layer or layers
                           for which attributions are computed.
                           The size and dimensionality of the attributions
@@ -204,10 +208,10 @@ class LayerLRP(LRP, LayerAttribution):
         """
         if attribute_to_layer_input:
             warnings.warn(
-                "Attribution to layer input is no longer supported and will be"
-                "deprecated in Captum 0.6.0 due to changes in PyTorch's full"
-                " backward hook behavior. To obtain attributions for a layer's"
-                "input, please attribute with respect to the previous layer's output"
+                "Attribution to layer input for LayerLRP is no longer supported"
+                " and will be deprecated in Captum 0.6.0 due to changes in PyTorch's"
+                " full backward hook behavior. To obtain attributions for a layer's"
+                " input, please attribute with respect to the previous layer's output"
             )
 
             self.skip_new_hook_layer = self.layer

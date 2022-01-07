@@ -51,7 +51,9 @@ class GuidedGradCam(GradientAttribution):
         r"""
         Args:
 
-            model (nn.Module):  The reference to PyTorch model instance.
+            model (nn.Module):  The reference to PyTorch model instance. Model cannot
+                        contain any in-place ReLU submodules; these are not
+                        supported by the register_full_backward_hook PyTorch API.
             layer (torch.nn.Module): Layer for which GradCAM attributions are computed.
                           Currently, only layers with a single tensor output are
                           supported.
@@ -194,17 +196,6 @@ class GuidedGradCam(GradientAttribution):
                 "outputs is not supported."
             )
             grad_cam_attr = grad_cam_attr[0]
-
-        if attribute_to_layer_input:
-            warnings.warn(
-                "Attribution to layer input is no longer supported and will be"
-                "deprecated in Captum 0.6.0 due to changes in PyTorch's full"
-                " backward hook behavior. To obtain attributions for a layer's"
-                "input, please attribute with respect to the previous layer's output"
-            )
-            self.guided_backprop.skip_new_hook_layer = self.grad_cam.layer
-        else:
-            self.guided_backprop.skip_new_hook_layer = None
 
         guided_backprop_attr = self.guided_backprop.attribute.__wrapped__(
             self.guided_backprop,  # self

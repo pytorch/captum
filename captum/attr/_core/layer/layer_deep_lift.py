@@ -70,7 +70,9 @@ class LayerDeepLift(LayerAttribution, DeepLift):
         r"""
         Args:
 
-            model (torch.nn.Module):  The reference to PyTorch model instance.
+            model (nn.Module):  The reference to PyTorch model instance. Model cannot
+                        contain any in-place nonlinear submodules; these are not
+                        supported by the register_full_backward_hook PyTorch API.
             layer (torch.nn.Module): Layer for which attributions are computed.
                         The size and dimensionality of the attributions
                         corresponds to the size and dimensionality of the layer's
@@ -290,10 +292,10 @@ class LayerDeepLift(LayerAttribution, DeepLift):
         """
         if attribute_to_layer_input:
             warnings.warn(
-                "Attribution to layer input is no longer supported and will be"
-                "deprecated in Captum 0.6.0 due to changes in PyTorch's full"
-                " backward hook behavior. To obtain attributions for a layer's"
-                "input, please attribute with respect to the previous layer's output"
+                "Attribution to layer input for LayerDeepLift is no longer supported"
+                " and will be deprecated in Captum 0.6.0 due to changes in PyTorch's"
+                " full backward hook behavior. To obtain attributions for a layer's"
+                " input, please attribute with respect to the previous layer's output"
             )
             self.skip_new_hook_layer = self.layer
         else:
@@ -409,7 +411,9 @@ class LayerDeepLiftShap(LayerDeepLift, DeepLiftShap):
         r"""
         Args:
 
-            model (torch.nn.Module):  The reference to PyTorch model instance.
+            model (nn.Module):  The reference to PyTorch model instance. Model cannot
+                        contain any in-place nonlinear submodules; these are not
+                        supported by the register_full_backward_hook PyTorch API.
             layer (torch.nn.Module): Layer for which attributions are computed.
                         The size and dimensionality of the attributions
                         corresponds to the size and dimensionality of the layer's

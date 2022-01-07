@@ -44,7 +44,9 @@ class LRP(GradientAttribution):
                 it. Custom rules for a given layer need to be defined as attribute
                 `module.rule` and need to be of type PropagationRule. If no rule is
                 specified for a layer, a pre-defined default rule for the module type
-                is used.
+                is used. Model cannot contain any in-place nonlinear submodules;
+                these are not supported by the register_full_backward_hook PyTorch API.
+
         """
         GradientAttribution.__init__(self, model)
         self.model = model
