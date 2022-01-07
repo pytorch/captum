@@ -1,7 +1,7 @@
 import functools
 import operator
 from abc import ABC, abstractmethod, abstractproperty
-from typing import Any, Callable, Optional, Tuple, Union
+from typing import Any, Callable, List, Optional, Tuple, Union
 
 import torch
 import torch.nn as nn
@@ -261,14 +261,20 @@ def basic_torch_module_op(
 
 class BaseLoss(Loss):
     def __init__(
-        self, target: nn.Module = [], batch_index: Optional[int] = None
+        self,
+        target: nn.Module = [],
+        batch_index: Optional[Union[int, List[int]]] = None,
     ) -> None:
         super(BaseLoss, self).__init__()
         self._target = target
         if batch_index is None:
             self._batch_index = (None, None)
+        elif isinstance(batch_index, (list, tuple)):
+            assert len(batch_index) == 2
+            self._batch_index = tuple(batch_index)
         else:
             self._batch_index = (batch_index, batch_index + 1)
+        assert all([isinstance(b, (int, type(None))) for b in self._batch_index])
 
     @property
     def target(self) -> nn.Module:
@@ -459,6 +465,7 @@ class Diversity(BaseLoss):
 
     def __call__(self, targets_to_values: ModuleOutputMapping) -> torch.Tensor:
         activations = targets_to_values[self.target]
+        activations = activations[self.batch_index[0] : self.batch_index[1]]
         batch, channels = activations.shape[:2]
         flattened = activations.view(batch, channels, -1)
         grams = torch.matmul(flattened, torch.transpose(flattened, 1, 2))
@@ -533,12 +540,18 @@ class Alignment(BaseLoss):
     https://distill.pub/2017/feature-visualization/#Interaction-between-Neurons
     """
 
-    def __init__(self, target: nn.Module, decay_ratio: float = 2.0) -> None:
-        BaseLoss.__init__(self, target)
+    def __init__(
+        self,
+        target: nn.Module,
+        decay_ratio: float = 2.0,
+        batch_index: Optional[List[int]] = None,
+    ) -> None:
+        BaseLoss.__init__(self, target, batch_index)
         self.decay_ratio = decay_ratio
 
     def __call__(self, targets_to_values: ModuleOutputMapping) -> torch.Tensor:
         activations = targets_to_values[self.target]
+        activations = activations[self.batch_index[0] : self.batch_index[1]]
         B = activations.size(0)
 
         sum_tensor = torch.zeros(1, device=activations.device)
