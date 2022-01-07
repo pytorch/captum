@@ -85,7 +85,7 @@ def undo_gradient_requirements(
 
 
 def register_backward_hook(
-    module: Module, hook: Callable, attr_obj
+    module: Module, hook: Callable, attr_obj: Any
 ) -> torch.utils.hooks.RemovableHandle:
     # Special case for supporting output attributions for neuron methods
     # This can be removed after deprecation of neuron output attributions
