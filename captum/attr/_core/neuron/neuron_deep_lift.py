@@ -238,9 +238,9 @@ class NeuronDeepLift(NeuronAttribution, GradientAttribution):
                 " behavior. To obtain attributions for a neuron's"
                 " output, please attribute with respect to the next layer's input"
             )
-            dl.skip_new_hook_layer = self.layer
+            dl.skip_new_hook_layer = self.layer  # type: ignore
         else:
-            dl.skip_new_hook_layer = None
+            dl.skip_new_hook_layer = None  # type: ignore
         dl.gradient_func = construct_neuron_grad_fn(
             self.layer,
             neuron_selector,
@@ -474,9 +474,9 @@ class NeuronDeepLiftShap(NeuronAttribution, GradientAttribution):
                 " behavior. To obtain attributions for a neuron's"
                 " output, please attribute with respect to the next layer's input"
             )
-            dl.skip_new_hook_layer = self.layer
+            dl.skip_new_hook_layer = self.layer  # type: ignore
         else:
-            dl.skip_new_hook_layer = None
+            dl.skip_new_hook_layer = None  # type: ignore
         dl.gradient_func = construct_neuron_grad_fn(
             self.layer,
             neuron_selector,

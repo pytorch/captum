@@ -56,7 +56,6 @@ class NeuronDeconvolution(NeuronAttribution, GradientAttribution):
         NeuronAttribution.__init__(self, model, layer, device_ids)
         GradientAttribution.__init__(self, model)
         self.deconv = Deconvolution(model)
-        self.deconv.layer = layer
 
     @log_usage()
     def attribute(
@@ -171,9 +170,9 @@ class NeuronDeconvolution(NeuronAttribution, GradientAttribution):
                 " behavior. To obtain attributions for a neuron's"
                 " output, please attribute with respect to the next layer's input"
             )
-            self.deconv.skip_new_hook_layer = self.layer
+            self.deconv.skip_new_hook_layer = self.layer  # type: ignore
         else:
-            self.deconv.skip_new_hook_layer = None
+            self.deconv.skip_new_hook_layer = None  # type: ignore
 
         self.deconv.gradient_func = construct_neuron_grad_fn(
             self.layer, neuron_selector, self.device_ids, attribute_to_neuron_input
@@ -339,9 +338,9 @@ class NeuronGuidedBackprop(NeuronAttribution, GradientAttribution):
                 " behavior. To obtain attributions for a neuron's"
                 " output, please attribute with respect to the next layer's input"
             )
-            self.guided_backprop.skip_new_hook_layer = self.layer
+            self.guided_backprop.skip_new_hook_layer = self.layer  # type: ignore
         else:
-            self.guided_backprop.skip_new_hook_layer = None
+            self.guided_backprop.skip_new_hook_layer = None  # type: ignore
 
         self.guided_backprop.gradient_func = construct_neuron_grad_fn(
             self.layer, neuron_selector, self.device_ids, attribute_to_neuron_input
