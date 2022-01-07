@@ -87,7 +87,10 @@ def undo_gradient_requirements(
 def register_backward_hook(
     module: Module, hook: Callable, attr_obj
 ) -> torch.utils.hooks.RemovableHandle:
-    # Special case to avoid edge case with layer / neuron methods
+    # Special case for supporting output attributions for neuron methods
+    # This can be removed after deprecation of neuron output attributions
+    # for NeuronDeepLift, NeuronDeconvolution, and NeuronGuidedBackprop
+    # in v0.6.0
     if (
         hasattr(attr_obj, "skip_new_hook_layer")
         and attr_obj.skip_new_hook_layer == module
@@ -95,7 +98,7 @@ def register_backward_hook(
         return module.register_backward_hook(hook)
 
     try:
-        # Only support for torch >= 1.8
+        # Only supported for torch >= 1.8
         return module.register_full_backward_hook(hook)
     except AttributeError:
         # Fallback for previous versions of PyTorch
