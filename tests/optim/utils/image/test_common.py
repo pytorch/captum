@@ -38,6 +38,42 @@ class TestGetNeuronPos(unittest.TestCase):
         self.assertEqual(y, 5)
 
 
+class TestDotCossim(BaseTest):
+    def test_dot_cossim_cossim_pow_0(self) -> None:
+        x = torch.arange(0, 1 * 3 * 4 * 4).view(1, 3, 4, 4).float()
+        y = torch.roll(x.clone(), shifts=(1, 2, 2, 1), dims=(0, 1, 2, 3))
+        test_output = common._dot_cossim(x, y, cossim_pow=0.0)
+
+        expected_output = torch.tensor(
+            [
+                [
+                    [1040.0, 968.0, 1094.0, 1226.0],
+                    [1604.0, 1508.0, 1658.0, 1814.0],
+                    [1112.0, 944.0, 1070.0, 1202.0],
+                    [1676.0, 1484.0, 1634.0, 1790.0],
+                ]
+            ]
+        )
+        assertTensorAlmostEqual(self, test_output, expected_output)
+
+    def test_dot_cossim_cossim_pow_4(self) -> None:
+        x = torch.arange(0, 1 * 3 * 4 * 4).view(1, 3, 4, 4).float()
+        y = torch.roll(x.clone(), shifts=(1, 2, 2, 1), dims=(0, 1, 2, 3))
+        test_output = common._dot_cossim(x, y, cossim_pow=4.0)
+
+        expected_output = torch.tensor(
+            [
+                [
+                    [101.9391, 89.0743, 124.8861, 168.7577],
+                    [314.2930, 282.3505, 352.6324, 432.1260],
+                    [133.2007, 80.3036, 114.3202, 156.4043],
+                    [365.9309, 266.5905, 335.3027, 413.3354],
+                ]
+            ]
+        )
+        assertTensorAlmostEqual(self, test_output, expected_output, delta=0.0005)
+
+
 class TestNChannelsToRGB(BaseTest):
     def test_nchannels_to_rgb_collapse(self) -> None:
         test_input = torch.arange(0, 1 * 4 * 4 * 4).view(1, 4, 4, 4).float()
@@ -66,7 +102,7 @@ class TestNChannelsToRGB(BaseTest):
                 ]
             ]
         )
-        assertTensorAlmostEqual(self, test_output, expected_output, delta=0)
+        assertTensorAlmostEqual(self, test_output, expected_output, delta=0.005)
 
     def test_nchannels_to_rgb_collapse_warp_false(self) -> None:
         test_input = torch.arange(0, 1 * 4 * 4 * 4).view(1, 4, 4, 4).float()
@@ -95,7 +131,7 @@ class TestNChannelsToRGB(BaseTest):
                 ]
             ]
         )
-        assertTensorAlmostEqual(self, test_output, expected_output, delta=0.001)
+        assertTensorAlmostEqual(self, test_output, expected_output, delta=0.005)
 
     def test_nchannels_to_rgb_increase(self) -> None:
         test_input = torch.arange(0, 1 * 2 * 4 * 4).view(1, 2, 4, 4).float()
@@ -124,7 +160,7 @@ class TestNChannelsToRGB(BaseTest):
                 ]
             ]
         )
-        assertTensorAlmostEqual(self, test_output, expected_output, delta=0.001)
+        assertTensorAlmostEqual(self, test_output, expected_output, delta=0.005)
 
     def test_nchannels_to_rgb_cuda(self) -> None:
         if not torch.cuda.is_available():

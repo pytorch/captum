@@ -13,20 +13,24 @@ except (ImportError, AssertionError):
 
 def image_cov(x: torch.Tensor) -> torch.Tensor:
     """
-    Calculate a tensor's RGB covariance matrix.
+    Calculate the average NCHW image tensor color channel covariance matrix for all
+    tensors in the stack.
 
     Args:
 
-        tensor (tensor):  An NCHW image tensor.
+        x (torch.Tensor):  One or more NCHW image tensors stacked across the batch
+            dimension.
 
     Returns:
-        *tensor*:  An RGB covariance matrix for the specified tensor.
+        *tensor* (torch.Tensor):  The average color channel covariance matrix for the
+            for the input tensor, with a shape of: [n_channels, n_channels].
     """
 
-    assert x.dim() > 1
-    x = x.reshape(-1, x.size(1)).T
-    x = x - torch.mean(x, dim=-1).unsqueeze(-1)
-    return 1 / (x.shape[-1] - 1) * x @ x.transpose(-1, -2)
+    assert x.dim() == 4
+    x = x.reshape(x.shape[0], -1, x.shape[1])
+    x = x - x.mean(1, keepdim=True)
+    b_cov_mtx = 1.0 / (x.shape[1] - 1) * x.permute(0, 2, 1) @ x
+    return torch.sum(b_cov_mtx, dim=0) / x.shape[0]
 
 
 def dataset_cov_matrix(
