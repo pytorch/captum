@@ -1,5 +1,5 @@
 import math
-from typing import List, Optional, Tuple
+from typing import List, Optional, Tuple, Union
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -13,25 +13,98 @@ except (ImportError, AssertionError):
     print("The Pillow/PIL library is required to use Captum's Optim library")
 
 
+def make_grid_image(
+    tiles: Union[torch.Tensor, List[torch.Tensor]],
+    nrow: int = 4,
+    padding: int = 2,
+    pad_value: float = 0.0,
+) -> torch.Tensor:
+    """
+    Make grids from NCHW Image tensors in a way similar to torchvision.utils.make_grid,
+    but without any channel duplication or creation behaviour.
+
+    Args:
+
+        tiles (torch.Tensor or list of torch.Tensor): A stack of NCHW image tensors or
+            a list of NCHW image tensors to create a grid from.
+        nrow (int, optional): The number of rows to use for the grid image.
+            Default: 4
+        padding (int, optional): The amount of padding between images in the grid
+            images.
+            padding: 2
+        pad_value (float, optional): The value to use for the padding.
+            Default: 0.0
+
+    Returns:
+        grid_img (torch.Tensor): The full NCHW grid image.
+    """
+    assert padding >= 0 and nrow >= 1
+    if isinstance(tiles, (list, tuple)):
+        assert all([t.device == tiles[0].device for t in tiles])
+        assert all([t.dim() == 4 for t in tiles])
+        tiles = torch.cat(tiles, 0)
+    assert tiles.dim() == 4
+
+    B, C, H, W = tiles.shape
+
+    x_rows = min(nrow, B)
+    y_rows = int(math.ceil(float(B) / x_rows))
+
+    base_height = ((H + padding) * y_rows) + padding
+    base_width = ((W + padding) * x_rows) + padding
+
+    grid_img = torch.ones(1, C, base_height, base_width, device=tiles.device)
+    grid_img = grid_img * pad_value
+
+    n = 0
+    for y in range(y_rows):
+        for x in range(x_rows):
+            if n >= B:
+                break
+            y_idx = ((H + padding) * y) + padding
+            x_idx = ((W + padding) * x) + padding
+            grid_img[..., y_idx : y_idx + H, x_idx : x_idx + W] = tiles[n : n + 1]
+            n += 1
+    return grid_img
+
+
 def show(
-    x: torch.Tensor, figsize: Optional[Tuple[int, int]] = None, scale: float = 255.0
+    x: torch.Tensor,
+    figsize: Optional[Tuple[int, int]] = None,
+    scale: float = 255.0,
+    nrow: Optional[int] = None,
+    padding: int = 2,
+    pad_value: float = 0.0,
 ) -> None:
     """
     Show CHW & NCHW tensors as an image.
 
     Args:
+
         x (torch.Tensor): The tensor you want to display as an image.
         figsize (Tuple[int, int], optional): height & width to use
             for displaying the image figure.
         scale (float): Value to multiply the input tensor by so that
             it's value range is [0-255] for display.
+        nrow (int, optional): The number of rows to use for the grid image. Default
+            is set to None for no grid image creation.
+            Default: None
+        padding (int, optional): The amount of padding between images in the grid
+            images. This parameter only has an effect if nrow is not None.
+            Default: 2
+        pad_value (float, optional): The value to use for the padding. This parameter
+            only has an effect if nrow is not None.
+            Default: 0.0
     """
 
     if x.dim() not in [3, 4]:
         raise ValueError(
             f"Incompatible number of dimensions. x.dim() = {x.dim()}; should be 3 or 4."
         )
-    x = torch.cat([t[0] for t in x.split(1)], dim=2) if x.dim() == 4 else x
+    if nrow is not None:
+        x = make_grid_image(x, nrow=nrow, padding=padding, pad_value=pad_value)[0, ...]
+    else:
+        x = torch.cat([t[0] for t in x.split(1)], dim=2) if x.dim() == 4 else x
     x = x.clone().cpu().detach().permute(1, 2, 0) * scale
     if figsize is not None:
         plt.figure(figsize=figsize)
@@ -40,25 +113,50 @@ def show(
     plt.show()
 
 
-def save_tensor_as_image(x: torch.Tensor, filename: str, scale: float = 255.0) -> None:
+def save_tensor_as_image(
+    x: torch.Tensor,
+    filename: str,
+    scale: float = 255.0,
+    mode: Optional[str] = None,
+    nrow: Optional[int] = None,
+    padding: int = 2,
+    pad_value: float = 0.0,
+) -> None:
     """
     Save RGB & RGBA image tensors with a shape of CHW or NCHW as images.
 
     Args:
+
         x (torch.Tensor): The tensor you want to save as an image.
         filename (str): The filename to use when saving the image.
         scale (float, optional): Value to multiply the input tensor by so that
             it's value range is [0-255] for saving.
+        mode (str, optional): A PIL / Pillow supported colorspace. Default is
+            set to None for automatic RGB / RGBA detection and usage.
+            Default: None
+        nrow (int, optional): The number of rows to use for the grid image. Default
+            is set to None for no grid image creation.
+            Default: None
+        padding (int, optional): The amount of padding between images in the grid
+            images. This parameter only has an effect if `nrow` is not None.
+            Default: 2
+        pad_value (float, optional): The value to use for the padding. This parameter
+            only has an effect if `nrow` is not None.
+            Default: 0.0
     """
 
     if x.dim() not in [3, 4]:
         raise ValueError(
             f"Incompatible number of dimensions. x.dim() = {x.dim()}; should be 3 or 4."
         )
-    x = x[0] if x.dim() == 4 else x
+    if nrow is not None:
+        x = make_grid_image(x, nrow=nrow, padding=padding, pad_value=pad_value)[0, ...]
+    else:
+        x = torch.cat([t[0] for t in x.split(1)], dim=2) if x.dim() == 4 else x
     x = x.clone().cpu().detach().permute(1, 2, 0) * scale
-    colorspace = "RGB" if x.shape[2] == 3 else "RGBA"
-    im = Image.fromarray(x.numpy().astype(np.uint8), colorspace)
+    if mode is None:
+        mode = "RGB" if x.shape[2] == 3 else "RGBA"
+    im = Image.fromarray(x.numpy().astype(np.uint8), mode=mode)
     im.save(filename)
 
 

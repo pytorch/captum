@@ -53,14 +53,15 @@ class ImageTensor(torch.Tensor):
             path (str): A URL or filepath to an image.
             scale (float, optional): The image scale to use.
                 Default: 255.0
-            mode (str, optional): The image loading mode to use.
+            mode (str, optional): The image loading mode / colorspace to use.
                 Default: "RGB"
 
         Returns:
            x (ImageTensor): An `ImageTensor` instance.
         """
         if path.startswith("https://") or path.startswith("http://"):
-            response = requests.get(path, stream=True)
+            headers = {"User-Agent": "Captum"}
+            response = requests.get(path, stream=True, headers=headers)
             img = Image.open(response.raw)
         else:
             img = Image.open(path)
@@ -94,7 +95,12 @@ class ImageTensor(torch.Tensor):
         return super().__torch_function__(func, types, args, kwargs)
 
     def show(
-        self, figsize: Optional[Tuple[int, int]] = None, scale: float = 255.0
+        self,
+        figsize: Optional[Tuple[int, int]] = None,
+        scale: float = 255.0,
+        nrow: Optional[int] = None,
+        padding: int = 2,
+        pad_value: float = 0.0,
     ) -> None:
         """
         Display an `ImageTensor`.
@@ -106,10 +112,34 @@ class ImageTensor(torch.Tensor):
             scale (float, optional): Value to multiply the `ImageTensor` by so that
                 it's value range is [0-255] for display.
                 Default: 255.0
+            nrow (int, optional): The number of rows to use for the grid image. Default
+                is set to None for no grid image creation.
+                Default: None
+            padding (int, optional): The amount of padding between images in the grid
+                images. This parameter only has an effect if `nrow` is not None.
+                Default: 2
+            pad_value (float, optional): The value to use for the padding. This
+                parameter only has an effect if `nrow` is not None.
+                Default: 0.0
         """
-        show(self, figsize=figsize, scale=scale)
+        show(
+            self,
+            figsize=figsize,
+            scale=scale,
+            nrow=nrow,
+            padding=padding,
+            pad_value=pad_value,
+        )
 
-    def export(self, filename: str, scale: float = 255.0) -> None:
+    def export(
+        self,
+        filename: str,
+        scale: float = 255.0,
+        mode: Optional[str] = None,
+        nrow: Optional[int] = None,
+        padding: int = 2,
+        pad_value: float = 0.0,
+    ) -> None:
         """
         Save an `ImageTensor` as an image file.
 
@@ -120,8 +150,28 @@ class ImageTensor(torch.Tensor):
             scale (float, optional): Value to multiply the `ImageTensor` by so that
                 it's value range is [0-255] for saving.
                 Default: 255.0
+            mode (str, optional): A PIL / Pillow supported colorspace. Default is
+                set to None for automatic RGB / RGBA detection and usage.
+                Default: None
+            nrow (int, optional): The number of rows to use for the grid image. Default
+                is set to None for no grid image creation.
+                Default: None
+            padding (int, optional): The amount of padding between images in the grid
+                images. This parameter only has an effect if `nrow` is not None.
+                Default: 2
+            pad_value (float, optional): The value to use for the padding. This
+                parameter only has an effect if `nrow` is not None.
+                Default: 0.0
         """
-        save_tensor_as_image(self, filename=filename, scale=scale)
+        save_tensor_as_image(
+            self,
+            filename=filename,
+            scale=scale,
+            mode=mode,
+            nrow=nrow,
+            padding=padding,
+            pad_value=pad_value,
+        )
 
 
 class InputParameterization(torch.nn.Module):
