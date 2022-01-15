@@ -453,7 +453,7 @@ class Direction(BaseLoss):
 
     def __call__(self, targets_to_values: ModuleOutputMapping) -> torch.Tensor:
         activations = targets_to_values[self.target]
-        assert activations.size(1) == self.direction.size(1)
+        assert activations.size(1) == self.vec.size(1)
         activations = activations[self.batch_index[0] : self.batch_index[1]]
         return _dot_cossim(self.vec, activations, cossim_pow=self.cossim_pow)
 
