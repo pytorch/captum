@@ -159,7 +159,7 @@ class ToRGB(nn.Module):
         )
 
         # alpha channel is taken off...
-        has_alpha = x.size("C") == 4
+        has_alpha = x.size("C") >= 4
         if has_alpha:
             if x.dim() == 3:
                 x, alpha_channel = x[:3], x[3:]
@@ -208,7 +208,7 @@ class ToRGB(nn.Module):
         assert x.shape[-3] >= 3
 
         # alpha channel is taken off...
-        has_alpha = x.shape[-3] == 4
+        has_alpha = x.shape[-3] >= 4
         if has_alpha:
             if x.dim() == 3:
                 x, alpha_channel = x[:3], x[3:]
