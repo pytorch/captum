@@ -10,6 +10,16 @@ from tests.optim.helpers import numpy_common
 
 class TestMakeGridImage(BaseTest):
     def test_make_grid_image_single_tensor(self) -> None:
+        """
+        Border has a size of 1, and we are using 3 in a row:
+        total_w = (n_row * border) + border + (n_row * tensor_dim_w)
+        total_h = (n_column * border) + border + (n_column * tensor_dim_h)
+        (3 * 1) + 1 + (3 * 2) = 10
+        (2 * 1) + 1 + (2 * 2) = 7
+        The n_column value is calculated and used internally by make_grid_image.
+        It's calculated based on the given nrow value and how tensors in the
+        list / batch dimension there are.
+        """
         test_input = torch.ones(6, 1, 2, 2)
         test_output = common.make_grid_image(
             test_input, nrow=3, padding=1, pad_value=0.0
