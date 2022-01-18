@@ -87,6 +87,7 @@ class TestModuleOutputsHook(BaseTest):
     def test_init_hook_duplication_fix(self) -> None:
         model = torch.nn.Sequential(torch.nn.Identity(), torch.nn.Identity())
         for i in range(5):
+            output_hook.cleanup_module_hooks(model)
             _ = output_hook.ModuleOutputsHook([model[1]])
         n_hooks = _count_forward_hooks(model, "module_outputs_forward_hook")
         self.assertEqual(n_hooks, 1)

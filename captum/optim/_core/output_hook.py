@@ -1,6 +1,6 @@
 import warnings
 from collections import OrderedDict
-from typing import Callable, Dict, Iterable, Optional, Tuple
+from typing import Callable, Dict, Iterable, List, Optional, Tuple, Union
 from warnings import warn
 
 import torch
@@ -16,9 +16,6 @@ class ModuleOutputsHook:
 
             target_modules (Iterable of nn.Module): A list of nn.Module targets.
         """
-        for module in target_modules:
-            # Clean up any old hooks that weren't properly deleted
-            _remove_all_forward_hooks(module, "module_outputs_forward_hook")
         self.outputs: ModuleOutputMapping = dict.fromkeys(target_modules, None)
         self.hooks = [
             module.register_forward_hook(self._forward_hook())
@@ -184,3 +181,32 @@ def _remove_all_forward_hooks(
 
     # Remove hooks from the target module
     _remove_hooks(module, hook_fn_name)
+
+
+def cleanup_module_hooks(modules: Union[nn.Module, List[nn.Module]]) -> None:
+    """
+    Remove any InputOptimization hooks from the specified modules. This may be useful
+    in the event that something goes wrong in between creating the InputOptimization
+    instance and running the optimization function, or if InputOptimization fails
+    without properly removing it's hooks.
+
+    Warning: This function will remove all the hooks placed by InputOptimization
+    instances on the target modules, and thus can interfere with using multiple
+    InputOptimization instances.
+
+    Args:
+
+        modules (nn.Module or list of nn.Module): Any module instances that contain
+            hooks created by InputOptimization, for which the removal of the hooks is
+            required.
+    """
+    if not hasattr(modules, "__iter__"):
+        modules = [modules]
+    # Captum ModuleOutputsHook uses "module_outputs_forward_hook" hook functions
+    [
+        _remove_all_forward_hooks(module, "module_outputs_forward_hook")
+        for module in modules
+    ]
+
+
+__all__ = ["cleanup_module_hooks"]
