@@ -12,7 +12,7 @@ class TestMakeGridImage(BaseTest):
     def test_make_grid_image_single_tensor(self) -> None:
         """
         Border has a size of 1, and we are using 3 in a row:
-        total_w = (n_row * border) + border + (n_row * tensor_dim_w)
+        total_w = (img_per_row * border) + border + (img_per_row * tensor_dim_w)
         total_h = (n_column * border) + border + (n_column * tensor_dim_h)
         (3 * 1) + 1 + (3 * 2) = 10
         (2 * 1) + 1 + (2 * 2) = 7
@@ -22,7 +22,7 @@ class TestMakeGridImage(BaseTest):
         """
         test_input = torch.ones(6, 1, 2, 2)
         test_output = common.make_grid_image(
-            test_input, nrow=3, padding=1, pad_value=0.0
+            test_input, images_per_row=3, padding=1, pad_value=0.0
         )
         expected_output = torch.tensor(
             [
@@ -45,7 +45,7 @@ class TestMakeGridImage(BaseTest):
     def test_make_grid_image_tensor_list(self) -> None:
         test_input = [torch.ones(1, 1, 2, 2) for i in range(6)]
         test_output = common.make_grid_image(
-            test_input, nrow=3, padding=1, pad_value=0.0
+            test_input, images_per_row=3, padding=1, pad_value=0.0
         )
         expected_output = torch.tensor(
             [
@@ -68,7 +68,7 @@ class TestMakeGridImage(BaseTest):
     def test_make_grid_image_single_tensor_fewer_tiles(self) -> None:
         test_input = torch.ones(4, 1, 2, 2)
         test_output = common.make_grid_image(
-            test_input, nrow=3, padding=1, pad_value=0.0
+            test_input, images_per_row=3, padding=1, pad_value=0.0
         )
         expected_output = torch.tensor(
             [
@@ -91,7 +91,7 @@ class TestMakeGridImage(BaseTest):
     def test_make_grid_image_single_tensor_padding(self) -> None:
         test_input = torch.ones(4, 1, 2, 2)
         test_output = common.make_grid_image(
-            test_input, nrow=2, padding=2, pad_value=0.0
+            test_input, images_per_row=2, padding=2, pad_value=0.0
         )
         expected_output = torch.tensor(
             [
@@ -117,7 +117,7 @@ class TestMakeGridImage(BaseTest):
     def test_make_grid_image_single_tensor_pad_value(self) -> None:
         test_input = torch.ones(4, 1, 2, 2)
         test_output = common.make_grid_image(
-            test_input, nrow=2, padding=1, pad_value=5.0
+            test_input, images_per_row=2, padding=1, pad_value=5.0
         )
         expected_output = torch.tensor(
             [
@@ -144,7 +144,7 @@ class TestMakeGridImage(BaseTest):
             )
         test_input = torch.ones(4, 1, 2, 2).cuda()
         test_output = common.make_grid_image(
-            test_input, nrow=2, padding=1, pad_value=5.0
+            test_input, images_per_row=2, padding=1, pad_value=5.0
         )
         expected_output = torch.tensor(
             [
@@ -173,7 +173,9 @@ class TestMakeGridImage(BaseTest):
             )
         test_input = torch.ones(4, 1, 2, 2)
         jit_make_grid_image = torch.jit.script(common.make_grid_image)
-        test_output = jit_make_grid_image(test_input, nrow=2, padding=1, pad_value=5.0)
+        test_output = jit_make_grid_image(
+            test_input, images_per_row=2, padding=1, pad_value=5.0
+        )
         expected_output = torch.tensor(
             [
                 [

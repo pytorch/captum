@@ -98,7 +98,7 @@ class ImageTensor(torch.Tensor):
         self,
         figsize: Optional[Tuple[int, int]] = None,
         scale: float = 255.0,
-        nrow: Optional[int] = None,
+        images_per_row: Optional[int] = None,
         padding: int = 2,
         pad_value: float = 0.0,
     ) -> None:
@@ -112,8 +112,8 @@ class ImageTensor(torch.Tensor):
             scale (float, optional): Value to multiply the `ImageTensor` by so that
                 it's value range is [0-255] for display.
                 Default: 255.0
-            nrow (int, optional): The number of rows to use for the grid image. Default
-                is set to None for no grid image creation.
+            images_per_row (int, optional): The number of images per row to use for the
+                grid image. Default is set to None for no grid image creation.
                 Default: None
             padding (int, optional): The amount of padding between images in the grid
                 images. This parameter only has an effect if `nrow` is not None.
@@ -126,7 +126,7 @@ class ImageTensor(torch.Tensor):
             self,
             figsize=figsize,
             scale=scale,
-            nrow=nrow,
+            images_per_row=images_per_row,
             padding=padding,
             pad_value=pad_value,
         )
@@ -136,7 +136,7 @@ class ImageTensor(torch.Tensor):
         filename: str,
         scale: float = 255.0,
         mode: Optional[str] = None,
-        nrow: Optional[int] = None,
+        images_per_row: Optional[int] = None,
         padding: int = 2,
         pad_value: float = 0.0,
     ) -> None:
@@ -153,8 +153,8 @@ class ImageTensor(torch.Tensor):
             mode (str, optional): A PIL / Pillow supported colorspace. Default is
                 set to None for automatic RGB / RGBA detection and usage.
                 Default: None
-            nrow (int, optional): The number of rows to use for the grid image. Default
-                is set to None for no grid image creation.
+            images_per_row (int, optional): The number of images per row to use for the
+                grid image. Default is set to None for no grid image creation.
                 Default: None
             padding (int, optional): The amount of padding between images in the grid
                 images. This parameter only has an effect if `nrow` is not None.
@@ -168,7 +168,7 @@ class ImageTensor(torch.Tensor):
             filename=filename,
             scale=scale,
             mode=mode,
-            nrow=nrow,
+            images_per_row=images_per_row,
             padding=padding,
             pad_value=pad_value,
         )
