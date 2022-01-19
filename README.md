@@ -289,7 +289,7 @@ Here is an example of how we can use `NoiseTunnel` with `IntegratedGradients`.
 ```python
 ig = IntegratedGradients(model)
 nt = NoiseTunnel(ig)
-attributions, delta = nt.attribute(input, nt_type='smoothgrad', stdevs=0.02, n_samples=4,
+attributions, delta = nt.attribute(input, nt_type='smoothgrad', stdevs=0.02, nt_samples=4,
       baselines=baseline, target=0, return_convergence_delta=True)
 print('IG + SmoothGrad Attributions:', attributions)
 print('Convergence Delta:', delta)
@@ -302,8 +302,8 @@ Convergence Delta: tensor([ 0.0000e+00,  2.3842e-07,  0.0000e+00, -2.3842e-07,  
         -4.7684e-07,  0.0000e+00, -4.7684e-07])
 
 ```
-The number of elements in the `delta` tensor is equal to: `n_samples * input.shape[0]`
-In order to get a example-based delta, we can, for example, average them:
+The number of elements in the `delta` tensor is equal to: `nt_samples * input.shape[0]`
+In order to get an example-wise delta, we can, for example, average them:
 ```python
 deltas_per_example = torch.mean(delta.reshape(input.shape[0], -1), dim=1)
 ```
