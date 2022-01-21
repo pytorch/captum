@@ -273,9 +273,7 @@ class LRP(GradientAttribution):
                     layer.rule.relevance_output = {}  # type: ignore
                     pass
                 else:
-                    # we need to check layer.rule is not None
-                    # Otherwise, nn.ReLU() will raise error because it has layer.rule = None 
-                    pass 
+                    pass
             elif type(layer) in SUPPORTED_LAYERS_WITH_RULES.keys():
                 layer.activations = {}  # type: ignore
                 layer.rule = SUPPORTED_LAYERS_WITH_RULES[type(layer)]()  # type: ignore
