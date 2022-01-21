@@ -267,10 +267,15 @@ class LRP(GradientAttribution):
     def _check_and_attach_rules(self) -> None:
         for layer in self.layers:
             if hasattr(layer, "rule"):
-                layer.activations = {}  # type: ignore
-                layer.rule.relevance_input = defaultdict(list)  # type: ignore
-                layer.rule.relevance_output = {}  # type: ignore
-                pass
+                if layer.rule is not None:
+                    layer.activations = {}  # type: ignore
+                    layer.rule.relevance_input = defaultdict(list)  # type: ignore
+                    layer.rule.relevance_output = {}  # type: ignore
+                    pass
+                else:
+                    # we need to check layer.rule is not None
+                    # Otherwise, nn.ReLU() will raise error because it has layer.rule = None 
+                    pass 
             elif type(layer) in SUPPORTED_LAYERS_WITH_RULES.keys():
                 layer.activations = {}  # type: ignore
                 layer.rule = SUPPORTED_LAYERS_WITH_RULES[type(layer)]()  # type: ignore
