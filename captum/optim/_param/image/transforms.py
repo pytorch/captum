@@ -470,6 +470,7 @@ class RandomScale(nn.Module):
                 Default: False
         """
         super().__init__()
+        assert mode in ["nearest", "bilinear", "bicubic", "area"]
         if isinstance(scale, torch.distributions.distribution.Distribution):
             # Distributions are not supported by TorchScript / JIT yet
             assert scale.batch_shape == torch.Size([])
