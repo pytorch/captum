@@ -1,4 +1,4 @@
-from typing import Callable, List, Tuple, Union, cast
+from typing import Callable, List, Optional, Tuple, Union, cast
 
 import torch
 
@@ -56,8 +56,8 @@ def calc_grid_indices(
     This function draws a 2D grid across the irregular grid of points, and then groups
     point indices based on the grid cell they fall within. The grid cells are then
     filled with 1D tensors that have anywhere from 0 to n_indices values in them. The
-    sets of grid indices can then be used with the extract_grid_vectors function to
-    create atlas grid cell direction vectors.
+    sets of grid indices can then be used with the compute_avg_cell_samples function
+    to create atlas grid cell direction vectors.
 
     Indices are stored for grid cells in an xy matrix, where the outer lists represent
     x positions and the inner lists represent y positions. Each grid cell is filled
@@ -105,17 +105,17 @@ def calc_grid_indices(
     return indices
 
 
-def extract_grid_vectors(
+def compute_avg_cell_samples(
     grid_indices: List[List[torch.Tensor]],
-    raw_activations: torch.Tensor,
+    raw_samples: torch.Tensor,
     grid_size: Tuple[int, int],
     min_density: int = 8,
 ) -> Tuple[torch.Tensor, List[Tuple[int, int, int]]]:
     """
-    Create direction vectors for activation samples and grid indices. Grid cells
-    without the minimum number of points as specified by min_density will be
-    ignored. The calc_grid_indices function can be used to produce the values required
-    for the grid_indices variable.
+    Create direction vectors for sets of activation samples, attribution samples, and
+    grid indices. Grid cells without the minimum number of points as specified by
+    min_density will be ignored. The calc_grid_indices function can be used to produce
+    the values required for the grid_indices variable.
 
     Carter, et al., "Activation Atlas", Distill, 2019.
     https://distill.pub/2019/activation-atlas/
@@ -125,8 +125,8 @@ def extract_grid_vectors(
         grid_indices (list of list of torch.tensor): List of lists of grid indices
             stored inside tensors to use. Each 1D tensor of indices has a size of:
             0 to n_indices.
-        raw_activations (torch.tensor): Raw unmodified activation samples, with a shape
-            of: [n_samples, n_channels].
+        raw_samples (torch.tensor): Raw unmodified activation or attribution samples,
+             with a shape of: [n_samples, n_channels].
         grid_size (Tuple[int, int]): The grid_size of grid cells to use. The grid_size
             variable should be in the format of: [width, height].
         min_density (int, optional): The minimum number of points for a cell to be
@@ -142,19 +142,18 @@ def extract_grid_vectors(
             for the cell. The list for each cell is in the format of:
             [x_coord, y_coord, number_of_samples_used].
     """
-
-    assert raw_activations.dim() == 2
+    assert raw_samples.dim() == 2
 
     cell_coords: List[Tuple[int, int, int]] = []
-    average_activations: List[torch.Tensor] = []
+    average_samples: List[torch.Tensor] = []
     for x in range(grid_size[0]):
         for y in range(grid_size[1]):
             indices = grid_indices[x][y]
             if len(indices) >= min_density:
-                average_activations.append(torch.mean(raw_activations[indices], 0))
+                average_samples.append(torch.mean(raw_samples[indices], 0))
                 cell_coords.append((x, y, len(indices)))
     assert len(cell_coords) > 0, "No grid vectors were able to be created."
-    return torch.stack(average_activations), cell_coords
+    return torch.stack(average_samples), cell_coords
 
 
 def create_atlas_vectors(
@@ -211,7 +210,7 @@ def create_atlas_vectors(
     indices = calc_grid_indices(
         xy_grid, grid_size, x_extent=x_extent, y_extent=y_extent
     )
-    grid_vecs, vec_coords = extract_grid_vectors(
+    grid_vecs, vec_coords = compute_avg_cell_samples(
         indices, raw_activations, grid_size, min_density
     )
     return grid_vecs, vec_coords
@@ -280,7 +279,7 @@ def create_atlas(
 __all__ = [
     "normalize_grid",
     "calc_grid_indices",
-    "extract_grid_vectors",
+    "compute_avg_cell_samples",
     "create_atlas_vectors",
     "create_atlas",
 ]
