@@ -40,10 +40,10 @@ class Test(BaseTest):
         self._kernel_shap_test_assert(
             net,
             inp,
-            [40.0, 120.0, 80.0],
+            [[40.0, 120.0, 80.0]],
             n_samples=500,
             baselines=baseline,
-            expected_coefs=[40.0, 120.0, 80.0],
+            expected_coefs=[[40.0, 120.0, 80.0]],
         )
 
     def test_simple_kernel_shap(self) -> None:
@@ -52,7 +52,7 @@ class Test(BaseTest):
         self._kernel_shap_test_assert(
             net,
             inp,
-            [76.66666, 196.66666, 116.66666],
+            [[76.66666, 196.66666, 116.66666]],
             perturbations_per_eval=(1, 2, 3),
             n_samples=500,
         )
@@ -63,10 +63,10 @@ class Test(BaseTest):
         self._kernel_shap_test_assert(
             net,
             inp,
-            [275.0, 275.0, 115.0],
+            [[275.0, 275.0, 115.0]],
             feature_mask=torch.tensor([[0, 0, 1]]),
             perturbations_per_eval=(1, 2, 3),
-            expected_coefs=[275.0, 115.0],
+            expected_coefs=[[275.0, 115.0]],
         )
 
     @unittest.mock.patch("sys.stderr", new_callable=io.StringIO)
@@ -79,7 +79,7 @@ class Test(BaseTest):
             self._kernel_shap_test_assert(
                 net,
                 inp,
-                [76.66666, 196.66666, 116.66666],
+                [[76.66666, 196.66666, 116.66666]],
                 perturbations_per_eval=(bsz,),
                 n_samples=500,
                 show_progress=True,
@@ -101,7 +101,7 @@ class Test(BaseTest):
         self._kernel_shap_test_assert(
             net,
             inp,
-            [248.0, 248.0, 104.0],
+            [[248.0, 248.0, 104.0]],
             feature_mask=torch.tensor([[0, 0, 1]]),
             baselines=4,
             perturbations_per_eval=(1, 2, 3),
@@ -200,7 +200,7 @@ class Test(BaseTest):
             (inp1, inp2),
             expected,
             n_samples=2000,
-            expected_coefs=[-8.0, 0, 0, -2.0, 0, 0, -8.0],
+            expected_coefs=[[-8.0, 0, 0, -2.0, 0, 0, -8.0]],
         )
         # with mask
         self._kernel_shap_test_assert(
@@ -208,7 +208,7 @@ class Test(BaseTest):
             (inp1, inp2),
             expected,
             n_samples=2000,
-            expected_coefs=[-8.0, 0, 0, -2.0, 0, 0, -8.0],
+            expected_coefs=[[-8.0, 0, 0, -2.0, 0, 0, -8.0]],
             feature_mask=(mask1, mask2),
         )
 
@@ -337,9 +337,9 @@ class Test(BaseTest):
         mask2 = torch.tensor([[0, 1, 2]])
         mask3 = torch.tensor([[0, 1, 2]])
         expected = (
-            [[3850.6666, 3850.6666, 3850.6666]],
-            [[306.6666, 3850.6666, 410.6666]],
-            [[306.6666, 3850.6666, 410.6666]],
+            [[3850.6666, 3850.6666, 3850.6666]] * 2,
+            [[306.6666, 3850.6666, 410.6666]] * 2,
+            [[306.6666, 3850.6666, 410.6666]] * 2,
         )
 
         self._kernel_shap_test_assert(
@@ -380,6 +380,7 @@ class Test(BaseTest):
                 n_samples=n_samples,
                 show_progress=show_progress,
             )
+
             assertTensorTuplesAlmostEqual(
                 self, attributions, expected_attr, delta=delta, mode="max"
             )

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-from typing import Any
+from typing import Any, cast
 
 import torch
 from captum._utils.typing import TensorOrTupleOfTensorsGeneric
@@ -84,7 +84,9 @@ class Test(BaseTest):
         elif isinstance(attributions, Tensor):
             if nt_type == "vanilla":
                 self._assert_attribution(expected_grads, inputs, attributions)
-            self.assertEqual(inputs.shape, attributions.shape)
+            self.assertEqual(
+                cast(Tensor, inputs).shape, cast(Tensor, attributions).shape
+            )
 
     def _assert_attribution(self, expected_grad, input, attribution):
         assertArraysAlmostEqual(

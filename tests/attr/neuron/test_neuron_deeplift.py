@@ -83,7 +83,7 @@ class Test(BaseTest):
         model = ReLULinearModel()
         inputs, baselines = _create_inps_and_base_for_deeplift_neuron_layer_testing()
         neuron_dl = NeuronDeepLift(model, model.l3)
-        expected = ([0.0, 0.0, 0.0], [0.0, 0.0, 0.0])
+        expected = ([[0.0, 0.0, 0.0]], [[0.0, 0.0, 0.0]])
         self._relu_custom_attr_func_assert(neuron_dl, inputs, baselines, expected)
 
     def test_relu_neuron_deeplift_shap(self) -> None:
@@ -152,7 +152,7 @@ class Test(BaseTest):
             baselines,
         ) = _create_inps_and_base_for_deepliftshap_neuron_layer_testing()
         neuron_dl = NeuronDeepLiftShap(model, model.l3)
-        expected = (torch.zeros(3, 3), torch.zeros(3, 3))
+        expected = (torch.zeros(1, 3), torch.zeros(1, 3))
         self._relu_custom_attr_func_assert(neuron_dl, inputs, baselines, expected)
 
     def _relu_custom_attr_func_assert(

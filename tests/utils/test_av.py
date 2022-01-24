@@ -240,7 +240,7 @@ class Test(BaseTest):
             dataset = AV.load(tmpdir, model_id, identifier=DEFAULT_IDENTIFIER)
 
             for i, av in enumerate(DataLoader(cast(Dataset, dataset))):
-                assertTensorAlmostEqual(self, av, avs[i])
+                assertTensorAlmostEqual(self, av, avs[i].unsqueeze(0))
 
             # add av_1 to the list of activations
             dataloader_2 = DataLoader(
@@ -257,7 +257,7 @@ class Test(BaseTest):
             dataloader = DataLoader(cast(Dataset, dataset))
             self.assertEqual(len(dataloader), 2)
             for i, av in enumerate(dataloader):
-                assertTensorAlmostEqual(self, av, avs[i])
+                assertTensorAlmostEqual(self, av, avs[i].unsqueeze(0))
 
     def test_av_load_all_identifiers_one_layer(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -292,7 +292,7 @@ class Test(BaseTest):
 
             self.assertEqual(len(dataloader_layer), 3)
             for i, av in enumerate(dataloader_layer):
-                assertTensorAlmostEqual(self, av, avs[i])
+                assertTensorAlmostEqual(self, av, avs[i].unsqueeze(0))
 
             dataloader = DataLoader(cast(Dataset, AV.load(tmpdir, "dummy")))
             self.assertEqual(len(dataloader), 4)
@@ -340,7 +340,7 @@ class Test(BaseTest):
             self.assertEqual(len(dataloader_layer), 3)
 
             for i, av in enumerate(dataloader_layer):
-                assertTensorAlmostEqual(self, av, avs_0[i])
+                assertTensorAlmostEqual(self, av, avs_0[i].unsqueeze(0))
 
             # check activations for idf2
             dataloader_layer = DataLoader(
@@ -348,7 +348,7 @@ class Test(BaseTest):
             )
             self.assertEqual(len(dataloader_layer), 3)
             for i, av in enumerate(dataloader_layer):
-                assertTensorAlmostEqual(self, av, avs_1[i])
+                assertTensorAlmostEqual(self, av, avs_1[i].unsqueeze(0))
 
     def test_av_sort_files(self) -> None:
         files = ["resnet50-cifar-3000", "resnet50-cifar-1000", "resnet50-cifar-2000"]

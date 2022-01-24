@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 
 import unittest
-from typing import Any, Callable, List, Tuple, Union
+from typing import Any, Callable, Tuple, Union
 
 import torch
-from captum._utils.typing import TensorOrTupleOfTensorsGeneric
+from captum._utils.typing import TensorOrTupleOfTensorsGeneric, TensorLikeList
 from captum.attr._core.integrated_gradients import IntegratedGradients
 from captum.attr._core.neuron.neuron_integrated_gradients import (
     NeuronIntegratedGradients,
@@ -27,42 +27,42 @@ class Test(BaseTest):
     def test_simple_ig_input_linear2(self) -> None:
         net = BasicModel_MultiLayer()
         inp = torch.tensor([[0.0, 100.0, 0.0]])
-        self._ig_input_test_assert(net, net.linear2, inp, 0, [0.0, 390.0, 0.0])
+        self._ig_input_test_assert(net, net.linear2, inp, 0, [[0.0, 390.0, 0.0]])
 
     def test_simple_ig_input_linear2_wo_mult_by_inputs(self) -> None:
         net = BasicModel_MultiLayer()
         inp = torch.tensor([[100.0, 100.0, 100.0]])
         self._ig_input_test_assert(
-            net, net.linear2, inp, 0, [3.96, 3.96, 3.96], multiply_by_inputs=False
+            net, net.linear2, inp, 0, [[3.96, 3.96, 3.96]], multiply_by_inputs=False
         )
 
     def test_simple_ig_input_linear1(self) -> None:
         net = BasicModel_MultiLayer()
         inp = torch.tensor([[0.0, 100.0, 0.0]], requires_grad=True)
-        self._ig_input_test_assert(net, net.linear1, inp, (0,), [0.0, 100.0, 0.0])
+        self._ig_input_test_assert(net, net.linear1, inp, (0,), [[0.0, 100.0, 0.0]])
 
     def test_simple_ig_input_relu(self) -> None:
         net = BasicModel_MultiLayer()
         inp = torch.tensor([[0.0, 6.0, 14.0]], requires_grad=True)
-        self._ig_input_test_assert(net, net.relu, inp, (0,), [0.0, 3.0, 7.0])
+        self._ig_input_test_assert(net, net.relu, inp, (0,), [[0.0, 3.0, 7.0]])
 
     def test_simple_ig_input_relu2(self) -> None:
         net = BasicModel_MultiLayer()
         inp = torch.tensor([[0.0, 5.0, 4.0]])
-        self._ig_input_test_assert(net, net.relu, inp, 1, [0.0, 5.0, 4.0])
+        self._ig_input_test_assert(net, net.relu, inp, 1, [[0.0, 5.0, 4.0]])
 
     def test_simple_ig_input_relu_selector_fn(self) -> None:
         net = BasicModel_MultiLayer()
         inp = torch.tensor([[0.0, 5.0, 4.0]])
         self._ig_input_test_assert(
-            net, net.relu, inp, lambda x: torch.sum(x[:, 2:]), [0.0, 10.0, 8.0]
+            net, net.relu, inp, lambda x: torch.sum(x[:, 2:]), [[0.0, 10.0, 8.0]]
         )
 
     def test_simple_ig_input_relu2_agg_neurons(self) -> None:
         net = BasicModel_MultiLayer()
         inp = torch.tensor([[0.0, 5.0, 4.0]])
         self._ig_input_test_assert(
-            net, net.relu, inp, (slice(0, 2, 1),), [0.0, 5.0, 4.0]
+            net, net.relu, inp, (slice(0, 2, 1),), [[0.0, 5.0, 4.0]]
         )
 
     def test_simple_ig_multi_input_linear2(self) -> None:
@@ -136,7 +136,7 @@ class Test(BaseTest):
         target_layer: Module,
         test_input: TensorOrTupleOfTensorsGeneric,
         test_neuron: Union[int, Tuple[Union[int, slice], ...], Callable],
-        expected_input_ig: Union[List[float], Tuple[List[List[float]], ...]],
+        expected_input_ig: Union[TensorLikeList, Tuple[TensorLikeList, ...]],
         additional_input: Any = None,
         multiply_by_inputs: bool = True,
     ) -> None:

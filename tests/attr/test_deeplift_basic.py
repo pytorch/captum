@@ -182,8 +182,8 @@ class Test(BaseTest):
         attr = DeepLiftShap(model, multiply_by_inputs=False).attribute(
             inputs, baselines
         )
-        assertTensorAlmostEqual(self, attr[0], 2 * torch.ones(4, 1))
-        assertTensorAlmostEqual(self, attr[1], 0.5 * torch.ones(4, 1))
+        assertTensorAlmostEqual(self, attr[0], 2 * torch.ones(4, 1, 1, 1))
+        assertTensorAlmostEqual(self, attr[1], 0.5 * torch.ones(4, 1, 1, 1))
 
     def test_relu_deepliftshap_multi_ref(self) -> None:
         x1 = torch.tensor([[1.0]], requires_grad=True)
