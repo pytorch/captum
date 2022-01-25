@@ -49,9 +49,9 @@ class Test(BaseTest):
         for index, (inp, add, targ) in enumerate(
             _batched_generator((inp1, inp2), (inp3, 5), 7, 1)
         ):
-            assertTensorAlmostEqual(self, inp[0], array1[index])
-            assertTensorAlmostEqual(self, inp[1], array2[index])
-            assertTensorAlmostEqual(self, add[0], array3[index])
+            assertTensorAlmostEqual(self, inp[0], [array1[index]])
+            assertTensorAlmostEqual(self, inp[1], [array2[index]])
+            assertTensorAlmostEqual(self, add[0], [array3[index]])
             self.assertEqual(add[1], 5)
             self.assertEqual(targ, 7)
 

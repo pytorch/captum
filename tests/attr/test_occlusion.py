@@ -2,10 +2,15 @@
 import io
 import unittest
 import unittest.mock
-from typing import Any, Callable, List, Tuple, Union
+from typing import Any, Callable, Tuple, Union
 
 import torch
-from captum._utils.typing import BaselineType, TargetType, TensorOrTupleOfTensorsGeneric
+from captum._utils.typing import (
+    BaselineType,
+    TargetType,
+    TensorOrTupleOfTensorsGeneric,
+    TensorLikeList,
+)
 from captum.attr._core.occlusion import Occlusion
 from tests.helpers.basic import BaseTest, assertTensorAlmostEqual
 from tests.helpers.basic_models import (
@@ -94,7 +99,7 @@ class Test(BaseTest):
         self._occlusion_test_assert(
             net,
             inp,
-            [80.0, 200.0, 120.0],
+            [[80.0, 200.0, 120.0]],
             perturbations_per_eval=(1, 2, 3),
             sliding_window_shapes=((1,)),
         )
@@ -106,7 +111,7 @@ class Test(BaseTest):
         self._occlusion_test_assert(
             net,
             (inp1, inp2),
-            ([0.0, 1.0], [0.0, -1.0]),
+            ([[0.0], [1.0]], [[0.0], [-1.0]]),
             sliding_window_shapes=((1,), (1,)),
         )
 
@@ -121,7 +126,7 @@ class Test(BaseTest):
         self._occlusion_test_assert(
             wrapper_func,
             (inp1, inp2),
-            ([0.0, 1.0], [0.0, -1.0]),
+            ([[0.0], [1.0]], [[0.0], [-1.0]]),
             sliding_window_shapes=((1,), (1,)),
         )
 
@@ -132,7 +137,7 @@ class Test(BaseTest):
         self._occlusion_test_assert(
             net,
             (inp1, inp2),
-            ([0.0, 1.0], [0.0, -1.0]),
+            ([[0.0], [1.0]], [[0.0], [-1.0]]),
             sliding_window_shapes=((1,), (1,)),
         )
 
@@ -154,7 +159,7 @@ class Test(BaseTest):
         self._occlusion_test_assert(
             net,
             inp,
-            [200.0, 220.0, 240.0],
+            [[200.0, 220.0, 240.0]],
             perturbations_per_eval=(1, 2, 3),
             sliding_window_shapes=((2,)),
             baselines=torch.tensor([10.0, 10.0, 10.0]),
@@ -166,7 +171,7 @@ class Test(BaseTest):
         self._occlusion_test_assert(
             net,
             inp,
-            [280.0, 280.0, 120.0],
+            [[280.0, 280.0, 120.0]],
             perturbations_per_eval=(1, 2, 3),
             sliding_window_shapes=((2,)),
             strides=2,
@@ -249,16 +254,24 @@ class Test(BaseTest):
             (inp, inp2),
             (
                 [
-                    [17.0, 17.0, 17.0, 17.0],
-                    [17.0, 17.0, 17.0, 17.0],
-                    [64.0, 65.5, 65.5, 67.0],
-                    [64.0, 65.5, 65.5, 67.0],
+                    [
+                        [
+                            [17.0, 17.0, 17.0, 17.0],
+                            [17.0, 17.0, 17.0, 17.0],
+                            [64.0, 65.5, 65.5, 67.0],
+                            [64.0, 65.5, 65.5, 67.0],
+                        ]
+                    ]
                 ],
                 [
-                    [3.0, 3.0, 3.0, 3.0],
-                    [3.0, 3.0, 3.0, 3.0],
-                    [3.0, 3.0, 3.0, 3.0],
-                    [0.0, 0.0, 0.0, 0.0],
+                    [
+                        [
+                            [3.0, 3.0, 3.0, 3.0],
+                            [3.0, 3.0, 3.0, 3.0],
+                            [3.0, 3.0, 3.0, 3.0],
+                            [0.0, 0.0, 0.0, 0.0],
+                        ]
+                    ]
                 ],
             ),
             perturbations_per_eval=(1, 3, 7, 14),
@@ -276,7 +289,7 @@ class Test(BaseTest):
             self._occlusion_test_assert(
                 net,
                 inp,
-                [80.0, 200.0, 120.0],
+                [[80.0, 200.0, 120.0]],
                 perturbations_per_eval=(bsz,),
                 sliding_window_shapes=((1,)),
                 show_progress=True,
@@ -299,9 +312,9 @@ class Test(BaseTest):
         test_input: TensorOrTupleOfTensorsGeneric,
         expected_ablation: Union[
             float,
-            List[float],
-            List[List[float]],
-            Tuple[Union[Tensor, List[float], List[List[float]]], ...],
+            TensorLikeList,
+            Tuple[TensorLikeList, ...],
+            Tuple[Tensor, ...],
         ],
         sliding_window_shapes: Union[Tuple[int, ...], Tuple[Tuple[int, ...], ...]],
         target: TargetType = 0,
@@ -325,9 +338,17 @@ class Test(BaseTest):
             )
             if isinstance(expected_ablation, tuple):
                 for i in range(len(expected_ablation)):
-                    assertTensorAlmostEqual(self, attributions[i], expected_ablation[i])
+                    assertTensorAlmostEqual(
+                        self,
+                        attributions[i],
+                        expected_ablation[i],
+                    )
             else:
-                assertTensorAlmostEqual(self, attributions, expected_ablation)
+                assertTensorAlmostEqual(
+                    self,
+                    attributions,
+                    expected_ablation,
+                )
 
 
 if __name__ == "__main__":

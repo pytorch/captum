@@ -326,7 +326,7 @@ class Test(BaseTest):
             attributions = tuple(attributions)
 
         for attr_lig, attr_ig in zip(attributions, attributions_with_ig):
-            self.assertEqual(attr_lig.shape, attr_ig.shape)
+            self.assertEqual(cast(Tensor, attr_lig).shape, cast(Tensor, attr_ig).shape)
             assertArraysAlmostEqual(attributions, attributions_with_ig)
 
         if multiply_by_inputs:

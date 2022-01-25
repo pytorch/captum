@@ -36,10 +36,13 @@ def assertTensorAlmostEqual(test, actual, expected, delta=0.0001, mode="sum"):
     assert isinstance(actual, torch.Tensor), (
         "Actual parameter given for " "comparison must be a tensor."
     )
-    actual = actual.squeeze().cpu()
     if not isinstance(expected, torch.Tensor):
         expected = torch.tensor(expected, dtype=actual.dtype)
-    expected = expected.squeeze().cpu()
+    assert (
+        actual.shape == expected.shape
+    ), f"Expected tensor with shape: {expected.shape}. Actual shape {actual.shape}."
+    actual = actual.cpu()
+    expected = expected.cpu()
     if mode == "sum":
         test.assertAlmostEqual(
             torch.sum(torch.abs(actual - expected)).item(), 0.0, delta=delta

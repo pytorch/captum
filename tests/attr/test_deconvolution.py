@@ -3,7 +3,7 @@
 from __future__ import print_function
 
 import unittest
-from typing import Any, List, Tuple, Union
+from typing import Any, Tuple, Union
 
 import torch
 from captum._utils.typing import TensorOrTupleOfTensorsGeneric
@@ -26,6 +26,7 @@ class Test(BaseTest):
             [3.0, 5.0, 5.0, 2.0],
             [1.0, 2.0, 2.0, 1.0],
         ]
+        exp = torch.tensor(exp).view(1, 1, 4, 4)
         self._deconv_test_assert(net, (inp,), (exp,))
 
     def test_simple_input_conv_neuron_deconv(self) -> None:
@@ -37,6 +38,7 @@ class Test(BaseTest):
             [3.0, 5.0, 5.0, 2.0],
             [1.0, 2.0, 2.0, 1.0],
         ]
+        exp = torch.tensor(exp).view(1, 1, 4, 4)
         self._neuron_deconv_test_assert(net, net.fc1, (0,), (inp,), (exp,))
 
     def test_simple_input_conv_neuron_deconv_agg_neurons(self) -> None:
@@ -48,6 +50,7 @@ class Test(BaseTest):
             [3.0, 5.0, 5.0, 2.0],
             [1.0, 2.0, 2.0, 1.0],
         ]
+        exp = torch.tensor(exp).view(1, 1, 4, 4)
         self._neuron_deconv_test_assert(net, net.fc1, (slice(0, 1, 1),), (inp,), (exp,))
 
     def test_simple_multi_input_conv_deconv(self) -> None:
@@ -60,6 +63,7 @@ class Test(BaseTest):
             [3.0, 5.0, 5.0, 2.0],
             [1.0, 2.0, 2.0, 1.0],
         ]
+        ex_attr = torch.tensor(ex_attr).view(1, 1, 4, 4)
         self._deconv_test_assert(net, (inp, inp2), (ex_attr, ex_attr))
 
     def test_simple_multi_input_conv_neuron_deconv(self) -> None:
@@ -72,6 +76,7 @@ class Test(BaseTest):
             [3.0, 5.0, 5.0, 2.0],
             [1.0, 2.0, 2.0, 1.0],
         ]
+        ex_attr = torch.tensor(ex_attr).view(1, 1, 4, 4)
         self._neuron_deconv_test_assert(
             net, net.fc1, (3,), (inp, inp2), (ex_attr, ex_attr)
         )
@@ -85,7 +90,7 @@ class Test(BaseTest):
         self,
         model: Module,
         test_input: TensorOrTupleOfTensorsGeneric,
-        expected: Tuple[List[List[float]], ...],
+        expected: Tuple[torch.Tensor, ...],
         additional_input: Any = None,
     ) -> None:
         deconv = Deconvolution(model)
@@ -101,7 +106,7 @@ class Test(BaseTest):
         layer: Module,
         neuron_selector: Union[int, Tuple[Union[int, slice], ...]],
         test_input: TensorOrTupleOfTensorsGeneric,
-        expected: Tuple[List[List[float]], ...],
+        expected: Tuple[torch.Tensor, ...],
         additional_input: Any = None,
     ) -> None:
         deconv = NeuronDeconvolution(model, layer)

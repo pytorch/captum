@@ -163,7 +163,9 @@ class Test(BaseTest):
         for i in range(inp.size(1)):
             if i == target:
                 continue
-            assertTensorAlmostEqual(self, attribs[:, i], 0)
+            assertTensorAlmostEqual(
+                self, attribs[:, i], torch.zeros_like(attribs[:, i])
+            )
 
         y = forward_func(inp)
         actual_diff = torch.stack([(y[0] - y[1])[target], (y[1] - y[0])[target]])
@@ -227,5 +229,5 @@ class Test(BaseTest):
         total_attr1 /= 50
         total_attr2 /= 50
         self.assertEqual(total_attr2.shape, (1,))
-        assertTensorAlmostEqual(self, total_attr1, [0.0, 0.0, 0.0])
+        assertTensorAlmostEqual(self, total_attr1, torch.zeros_like(total_attr1))
         assertTensorAlmostEqual(self, total_attr2, [-6.0], delta=0.2)

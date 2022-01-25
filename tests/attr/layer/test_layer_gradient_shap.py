@@ -51,7 +51,7 @@ class Test(BaseTest):
         model.eval()
 
         inputs = torch.tensor([[0.0, 100.0, 0.0]])
-        expected = ([90.0, 100.0, 100.0, 100.0], [90.0, 100.0, 100.0, 100.0])
+        expected = ([[90.0, 100.0, 100.0, 100.0]], [[90.0, 100.0, 100.0, 100.0]])
         self._assert_attributions(
             model,
             model.multi_relu,
@@ -93,7 +93,7 @@ class Test(BaseTest):
             inputs,
             baselines,
             0,
-            (expected,),
+            expected,
             expected_delta=delta,
             attribute_to_layer_input=True,
         )
