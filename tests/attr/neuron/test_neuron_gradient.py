@@ -10,7 +10,7 @@ from captum.attr._core.neuron.neuron_gradient import NeuronGradient
 from captum.attr._core.saliency import Saliency
 from tests.helpers.basic import (
     BaseTest,
-    assertArraysAlmostEqual,
+    assertTensorAlmostEqual,
     assertTensorTuplesAlmostEqual,
 )
 from tests.helpers.basic_models import (
@@ -150,11 +150,7 @@ class Test(BaseTest):
             # Verify matching sizes
             self.assertEqual(grad_vals.shape, sal_vals.shape)
             self.assertEqual(grad_vals.shape, test_input.shape)
-            assertArraysAlmostEqual(
-                sal_vals.reshape(-1).tolist(),
-                grad_vals.reshape(-1).tolist(),
-                delta=0.001,
-            )
+            assertTensorAlmostEqual(self, sal_vals, grad_vals, delta=0.001, mode="max")
 
 
 if __name__ == "__main__":

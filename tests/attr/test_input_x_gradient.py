@@ -8,7 +8,6 @@ from captum.attr._core.noise_tunnel import NoiseTunnel
 from tests.attr.test_saliency import _get_basic_config, _get_multiargs_basic_config
 from tests.helpers.basic import (
     BaseTest,
-    assertArraysAlmostEqual,
     assertTensorAlmostEqual,
 )
 from tests.helpers.classification_models import SoftmaxModel
@@ -89,9 +88,12 @@ class Test(BaseTest):
             )
 
     def _assert_attribution(self, expected_grad, input, attribution):
-        assertArraysAlmostEqual(
-            attribution.reshape(-1),
-            (expected_grad * input).reshape(-1),
+        assertTensorAlmostEqual(
+            self,
+            attribution,
+            (expected_grad * input),
+            delta=0.05,
+            mode="max",
         )
 
     def _input_x_gradient_classification_assert(self, nt_type: str = "vanilla") -> None:

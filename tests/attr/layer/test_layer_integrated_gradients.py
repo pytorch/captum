@@ -13,7 +13,7 @@ from captum.attr._models.base import (
 )
 from tests.helpers.basic import (
     BaseTest,
-    assertArraysAlmostEqual,
+    assertTensorAlmostEqual,
     assertTensorTuplesAlmostEqual,
 )
 from tests.helpers.basic_models import (
@@ -244,8 +244,10 @@ class Test(BaseTest):
             return_convergence_delta=True,
             attribute_to_layer_input=attribute_to_layer_input,
         )
-        assertArraysAlmostEqual(attribution, attributions2, 0.01)
-        assertArraysAlmostEqual(delta, delta2, 0.5)
+        assertTensorAlmostEqual(
+            self, attribution, attributions2, delta=0.01, mode="max"
+        )
+        assertTensorAlmostEqual(self, delta, delta2, delta=0.5, mode="max")
 
     def _assert_compare_with_emb_patching(
         self,
@@ -327,10 +329,10 @@ class Test(BaseTest):
 
         for attr_lig, attr_ig in zip(attributions, attributions_with_ig):
             self.assertEqual(cast(Tensor, attr_lig).shape, cast(Tensor, attr_ig).shape)
-            assertArraysAlmostEqual(attributions, attributions_with_ig)
+            assertTensorAlmostEqual(self, attr_lig, attr_ig, delta=0.05, mode="max")
 
         if multiply_by_inputs:
-            assertArraysAlmostEqual(delta, delta_with_ig)
+            assertTensorAlmostEqual(self, delta, delta_with_ig, delta=0.05, mode="max")
 
     def _assert_compare_with_expected(
         self,

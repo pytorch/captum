@@ -11,7 +11,7 @@ from captum.attr._core.neuron.neuron_integrated_gradients import (
 )
 from tests.helpers.basic import (
     BaseTest,
-    assertArraysAlmostEqual,
+    assertTensorAlmostEqual,
     assertTensorTuplesAlmostEqual,
 )
 from tests.helpers.basic_models import (
@@ -170,10 +170,8 @@ class Test(BaseTest):
         for i in range(out.shape[1]):
             ig_vals = input_attrib.attribute(test_input, target=i, baselines=baseline)
             neuron_ig_vals = ig_attrib.attribute(test_input, (i,), baselines=baseline)
-            assertArraysAlmostEqual(
-                ig_vals.reshape(-1).tolist(),
-                neuron_ig_vals.reshape(-1).tolist(),
-                delta=0.001,
+            assertTensorAlmostEqual(
+                self, ig_vals, neuron_ig_vals, delta=0.001, mode="max"
             )
             self.assertEqual(neuron_ig_vals.shape, test_input.shape)
 
