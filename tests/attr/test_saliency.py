@@ -8,7 +8,6 @@ from captum.attr._core.noise_tunnel import NoiseTunnel
 from captum.attr._core.saliency import Saliency
 from tests.helpers.basic import (
     BaseTest,
-    assertArraysAlmostEqual,
     assertTensorTuplesAlmostEqual,
     assertTensorAlmostEqual,
 )
@@ -183,11 +182,7 @@ class Test(BaseTest):
         if len(attribution.shape) == 0:
             assert (attribution - expected).abs() < 0.001
         else:
-            assertArraysAlmostEqual(
-                expected.flatten(),
-                attribution.flatten(),
-                delta=0.5,
-            )
+            assertTensorAlmostEqual(self, expected, attribution, delta=0.5, mode="max")
 
     def _saliency_classification_assert(self, nt_type: str = "vanilla") -> None:
         num_in = 5

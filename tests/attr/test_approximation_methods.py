@@ -2,8 +2,9 @@
 
 import unittest
 
+import torch
 from captum.attr._utils.approximation_methods import Riemann, riemann_builders
-from tests.helpers.basic import assertArraysAlmostEqual
+from tests.helpers.basic import assertTensorAlmostEqual
 
 
 class Test(unittest.TestCase):
@@ -81,14 +82,54 @@ class Test(unittest.TestCase):
         step_sizes_right, alphas_right = riemann_builders(Riemann.right)
         step_sizes_middle, alphas_middle = riemann_builders(Riemann.middle)
         step_sizes_trapezoid, alphas_trapezoid = riemann_builders(Riemann.trapezoid)
-        assertArraysAlmostEqual(expected_step_sizes, step_sizes_left(n))
-        assertArraysAlmostEqual(expected_step_sizes, step_sizes_right(n))
-        assertArraysAlmostEqual(expected_step_sizes, step_sizes_middle(n))
-        assertArraysAlmostEqual(expected_step_sizes_trapezoid, step_sizes_trapezoid(n))
-        assertArraysAlmostEqual(expected_left, alphas_left(n))
-        assertArraysAlmostEqual(expected_right, alphas_right(n))
-        assertArraysAlmostEqual(expected_middle, alphas_middle(n))
-        assertArraysAlmostEqual(expected_trapezoid, alphas_trapezoid(n))
+        assertTensorAlmostEqual(
+            self,
+            torch.tensor(expected_step_sizes),
+            step_sizes_left(n),
+            delta=0.05,
+            mode="max",
+        )
+        assertTensorAlmostEqual(
+            self,
+            torch.tensor(expected_step_sizes),
+            step_sizes_right(n),
+            delta=0.05,
+            mode="max",
+        )
+        assertTensorAlmostEqual(
+            self,
+            torch.tensor(expected_step_sizes),
+            step_sizes_middle(n),
+            delta=0.05,
+            mode="max",
+        )
+        assertTensorAlmostEqual(
+            self,
+            torch.tensor(expected_step_sizes_trapezoid),
+            step_sizes_trapezoid(n),
+            delta=0.05,
+            mode="max",
+        )
+        assertTensorAlmostEqual(
+            self, torch.tensor(expected_left), alphas_left(n), delta=0.05, mode="max"
+        )
+        assertTensorAlmostEqual(
+            self, torch.tensor(expected_right), alphas_right(n), delta=0.05, mode="max"
+        )
+        assertTensorAlmostEqual(
+            self,
+            torch.tensor(expected_middle),
+            alphas_middle(n),
+            delta=0.05,
+            mode="max",
+        )
+        assertTensorAlmostEqual(
+            self,
+            torch.tensor(expected_trapezoid),
+            alphas_trapezoid(n),
+            delta=0.05,
+            mode="max",
+        )
 
 
 # TODO write a test case for gauss-legendre

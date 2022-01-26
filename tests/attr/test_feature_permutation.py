@@ -5,7 +5,6 @@ import torch
 from captum.attr._core.feature_permutation import FeaturePermutation, _permute_feature
 from tests.helpers.basic import (
     BaseTest,
-    assertArraysAlmostEqual,
     assertTensorAlmostEqual,
 )
 from tests.helpers.basic_models import BasicModelWithSparseInputs
@@ -97,7 +96,7 @@ class Test(BaseTest):
         attribs = feature_importance.attribute(inp)
 
         self.assertTrue(attribs.squeeze(0).size() == (batch_size,) + input_size)
-        assertArraysAlmostEqual(attribs[:, 0], zeros)
+        assertTensorAlmostEqual(self, attribs[:, 0], zeros, delta=0.05, mode="max")
         self.assertTrue((attribs[:, 1 : input_size[0]].abs() > 0).all())
 
     def test_multi_input(self) -> None:
@@ -200,7 +199,13 @@ class Test(BaseTest):
             for feature in features:
                 m = (fm == feature).bool()
                 attribs_for_feature = attribs[:, m]
-                assertArraysAlmostEqual(attribs_for_feature[0], -attribs_for_feature[1])
+                assertTensorAlmostEqual(
+                    self,
+                    attribs_for_feature[0],
+                    -attribs_for_feature[1],
+                    delta=0.05,
+                    mode="max",
+                )
 
     def test_empty_sparse_features(self) -> None:
         model = BasicModelWithSparseInputs()
