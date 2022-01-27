@@ -1898,9 +1898,9 @@ class TestTransformationRobustness(BaseTest):
         for module in transform_robustness.jitter_transforms:
             self.assertIsInstance(module, transforms.RandomSpatialJitter)
         self.assertIsInstance(transform_robustness.random_scale, transforms.RandomScale)
-        # self.assertIsInstance(
-        #    transform_robustness.random_rotation, transforms.RandomRotation
-        # )
+        self.assertIsInstance(
+            transform_robustness.random_rotation, transforms.RandomRotation
+        )
         self.assertIsInstance(
             transform_robustness.final_jitter, transforms.RandomSpatialJitter
         )
@@ -1919,13 +1919,11 @@ class TestTransformationRobustness(BaseTest):
             0.998 ** n for n in 2 * list(range(20, 40))
         ]
         self.assertEqual(transform_robustness.random_scale.scale, expected_scale)
-        # expected_degrees = (
-        #    list(range(-20, 20)) + list(range(-10, 10)) + list(range(-5, 5)) + 5 * [0]
-        # )
-        # expected_degrees = [float(d) for d in expected_degrees]
-        # self.assertEqual(
-        #    transform_robustness.random_rotation.degrees, test_expected_degrees
-        # )
+        expected_degrees = (
+            list(range(-20, 20)) + list(range(-10, 10)) + list(range(-5, 5)) + 5 * [0]
+        )
+        expected_degrees = [float(d) for d in expected_degrees]
+        self.assertEqual(transform_robustness.random_rotation.degrees, expected_degrees)
 
         self.assertEqual(transform_robustness.final_jitter.pad_range, 2 * 2)
 
