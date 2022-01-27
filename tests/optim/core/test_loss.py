@@ -133,6 +133,31 @@ class TestNeuronDirection(BaseTest):
         self.assertAlmostEqual(get_loss_value(model, loss), dot, places=6)
 
 
+class TestAngledNeuronDirection(BaseTest):
+    def test_angled_neuron_direction(self) -> None:
+        model = BasicModel_ConvNet_Optim()
+        loss = opt_loss.AngledNeuronDirection(
+            model.layer, vec=torch.ones(1, 2), cossim_pow=0
+        )
+        a = 1
+        b = [CHANNEL_ACTIVATION_0_LOSS, CHANNEL_ACTIVATION_1_LOSS]
+        dot = np.sum(np.inner(a, b))
+        self.assertAlmostEqual(np.sum(get_loss_value(model, loss)), dot, places=6)
+
+    def test_angled_neuron_direction_whitened(self) -> None:
+        model = BasicModel_ConvNet_Optim()
+        loss = opt_loss.AngledNeuronDirection(
+            model.layer,
+            vec=torch.ones(1, 2),
+            vec_whitened=torch.ones(2, 2),
+            cossim_pow=0,
+        )
+        a = 1
+        b = [CHANNEL_ACTIVATION_0_LOSS, CHANNEL_ACTIVATION_1_LOSS]
+        dot = np.sum(np.inner(a, b)) * 2
+        self.assertAlmostEqual(np.sum(get_loss_value(model, loss)), dot, places=6)
+
+
 class TestTensorDirection(BaseTest):
     def test_tensor_direction(self) -> None:
         model = BasicModel_ConvNet_Optim()
@@ -242,3 +267,19 @@ class TestCompositeLoss(BaseTest):
     #         opt_loss.ChannelActivation(model.layer, 0) ** opt_loss.ChannelActivation(
     #             model.layer, 1
     #         )
+
+    def test_sum_loss_list(self) -> None:
+        n_batch = 400
+        model = torch.nn.Identity()
+        loss_fn_list = [opt_loss.LayerActivation(model) for i in range(n_batch)]
+        loss_fn = opt_loss.sum_loss_list(loss_fn_list)
+        out = get_loss_value(model, loss_fn, [n_batch, 3, 1, 1])
+        self.assertEqual(out, float(n_batch))
+
+    def test_sum_loss_list_compose_add(self) -> None:
+        n_batch = 400
+        model = torch.nn.Identity()
+        loss_fn_list = [opt_loss.LayerActivation(model) for i in range(n_batch)]
+        loss_fn = opt_loss.sum_loss_list(loss_fn_list) + opt_loss.LayerActivation(model)
+        out = get_loss_value(model, loss_fn, [n_batch, 3, 1, 1])
+        self.assertEqual(out, float(n_batch + 1.0))
