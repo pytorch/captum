@@ -417,6 +417,215 @@ class TestRandomScaleAffine(BaseTest):
         )
 
 
+class TestRandomRotation(BaseTest):
+    def test_random_rotation_init(self) -> None:
+        test_degrees = [0.0, 1.0, 2.0, 3.0, 4.0]
+        rotation_module = transforms.RandomRotation(test_degrees)
+        degrees = rotation_module.degrees
+        self.assertTrue(hasattr(degrees, "__iter__"))
+        self.assertEqual(degrees, test_degrees)
+        self.assertFalse(rotation_module._is_distribution)
+        self.assertEqual(rotation_module.mode, "bilinear")
+        self.assertEqual(rotation_module.padding_mode, "zeros")
+        self.assertFalse(rotation_module.align_corners)
+
+    def test_random_rotation_tensor_degrees(self) -> None:
+        degrees = torch.tensor([0.0, 1.0, 2.0, 3.0, 4.0])
+        rotation_module = transforms.RandomRotation(degrees=degrees)
+        self.assertEqual(rotation_module.degrees, degrees.tolist())
+
+    def test_random_rotation_int_degrees(self) -> None:
+        degrees = [1, 2, 3, 4, 5]
+        rotation_module = transforms.RandomRotation(degrees=degrees)
+        for r in rotation_module.degrees:
+            self.assertIsInstance(r, float)
+        self.assertEqual(rotation_module.degrees, [1.0, 2.0, 3.0, 4.0, 5.0])
+
+    def test_random_rotation_degrees_distributions(self) -> None:
+        degrees = torch.distributions.Uniform(0.95, 1.05)
+        rotation_module = transforms.RandomRotation(degrees=degrees)
+        self.assertIsInstance(
+            rotation_module.degrees_distribution,
+            torch.distributions.distribution.Distribution,
+        )
+        self.assertTrue(rotation_module._is_distribution)
+
+    def test_random_rotation_torch_version_check(self) -> None:
+        rotation_module = transforms.RandomRotation([1.0])
+        _has_align_corners = torch.__version__ >= "1.3.0"
+        self.assertEqual(rotation_module._has_align_corners, _has_align_corners)
+
+    def test_random_rotation_matrix(self) -> None:
+        theta = 25.1
+        rotation_module = transforms.RandomRotation([theta])
+        rot_matrix = rotation_module._get_rot_mat(
+            theta, device=torch.device("cpu"), dtype=torch.float32
+        )
+        expected_matrix = torch.tensor(
+            [[0.9056, -0.4242, 0.0000], [0.4242, 0.9056, 0.0000]]
+        )
+
+        assertTensorAlmostEqual(self, rot_matrix, expected_matrix)
+
+    def test_random_rotation_rotate_tensor(self) -> None:
+        rotation_module = transforms.RandomRotation([25.0])
+
+        test_input = torch.eye(4, 4).repeat(3, 1, 1).unsqueeze(0)
+        test_output = rotation_module._rotate_tensor(test_input, 25.0)
+
+        expected_output = (
+            torch.tensor(
+                [
+                    [0.1143, 0.0000, 0.0000, 0.0000],
+                    [0.5258, 0.6198, 0.2157, 0.0000],
+                    [0.0000, 0.2157, 0.6198, 0.5258],
+                    [0.0000, 0.0000, 0.0000, 0.1143],
+                ]
+            )
+            .repeat(3, 1, 1)
+            .unsqueeze(0)
+        )
+        assertTensorAlmostEqual(self, test_output, expected_output, 0.005)
+
+    def test_random_rotation_forward_exact(self) -> None:
+        rotation_module = transforms.RandomRotation([25.0])
+
+        test_input = torch.eye(4, 4).repeat(3, 1, 1).unsqueeze(0)
+        test_output = rotation_module(test_input)
+
+        expected_output = (
+            torch.tensor(
+                [
+                    [0.1143, 0.0000, 0.0000, 0.0000],
+                    [0.5258, 0.6198, 0.2157, 0.0000],
+                    [0.0000, 0.2157, 0.6198, 0.5258],
+                    [0.0000, 0.0000, 0.0000, 0.1143],
+                ]
+            )
+            .repeat(3, 1, 1)
+            .unsqueeze(0)
+        )
+        assertTensorAlmostEqual(self, test_output, expected_output, 0.005)
+
+    def test_random_rotation_forward_exact_nearest_reflection(self) -> None:
+        if torch.__version__ <= "1.2.0":
+            raise unittest.SkipTest(
+                "Skipping RandomRotation forward due exact nearest relfection"
+                + " to insufficient Torch version."
+            )
+        rotation_module = transforms.RandomRotation(
+            [45.0], mode="nearest", padding_mode="reflection"
+        )
+        self.assertEqual(rotation_module.mode, "nearest")
+        self.assertEqual(rotation_module.padding_mode, "reflection")
+
+        test_input = torch.arange(0, 1 * 1 * 4 * 4).view(1, 1, 4, 4).float()
+        test_output = rotation_module(test_input)
+
+        expected_output = torch.tensor(
+            [
+                [
+                    [
+                        [2.0, 2.0, 7.0, 11.0],
+                        [1.0, 6.0, 10.0, 11.0],
+                        [4.0, 9.0, 10.0, 14.0],
+                        [8.0, 8.0, 13.0, 14.0],
+                    ]
+                ]
+            ]
+        )
+        assertTensorAlmostEqual(self, test_output, expected_output, 0.0)
+
+    def test_random_rotation_forward_exact_nearest(self) -> None:
+        rotation_module = transforms.RandomRotation([45.0], mode="nearest")
+        self.assertEqual(rotation_module.mode, "nearest")
+        self.assertEqual(rotation_module.padding_mode, "zeros")
+
+        test_input = torch.arange(0, 1 * 1 * 4 * 4).view(1, 1, 4, 4).float()
+        test_output = rotation_module(test_input)
+        expected_output = torch.tensor(
+            [
+                [
+                    [
+                        [0.0, 2.0, 7.0, 0.0],
+                        [1.0, 6.0, 10.0, 11.0],
+                        [4.0, 9.0, 10.0, 14.0],
+                        [0.0, 8.0, 13.0, 0.0],
+                    ]
+                ]
+            ]
+        )
+        assertTensorAlmostEqual(self, test_output, expected_output, 0.0)
+
+    def test_random_rotation_forward(self) -> None:
+        degrees = list(range(-25, 25))
+        rotation_module = transforms.RandomRotation(degrees=degrees)
+        test_tensor = torch.ones(1, 3, 10, 10)
+        output_tensor = rotation_module(test_tensor)
+        self.assertEqual(list(output_tensor.shape), list(test_tensor.shape))
+
+    def test_random_rotation_forward_distributions(self) -> None:
+        degrees = torch.distributions.Uniform(-25, 25)
+        rotation_module = transforms.RandomRotation(degrees=degrees)
+        test_tensor = torch.ones(1, 3, 10, 10)
+        output_tensor = rotation_module(test_tensor)
+        self.assertEqual(list(output_tensor.shape), list(test_tensor.shape))
+
+    def test_random_rotation_forward_cuda(self) -> None:
+        if not torch.cuda.is_available():
+            raise unittest.SkipTest(
+                "Skipping RandomRotation forward CUDA test due to not supporting"
+                + " CUDA."
+            )
+        rotate_transform = transforms.RandomRotation(list(range(-25, 25)))
+        x = torch.ones(1, 3, 224, 224).cuda()
+        output = rotate_transform(x)
+
+        self.assertTrue(output.is_cuda)
+        self.assertEqual(output.shape, x.shape)
+
+    def test_random_rotation_matrix_torch_math_module(self) -> None:
+        theta = 25.1
+        rotation_module = transforms.RandomRotation([theta])
+        rot_matrix = rotation_module._get_rot_mat(
+            theta, device=torch.device("cpu"), dtype=torch.float32
+        )
+
+        theta_expected = torch.tensor(theta) * 3.141592653589793 / 180.0
+        expected_matrix = torch.tensor(
+            [
+                [torch.cos(theta_expected), -torch.sin(theta_expected), 0.0],
+                [torch.sin(theta_expected), torch.cos(theta_expected), 0.0],
+            ],
+        )
+
+        assertTensorAlmostEqual(self, rot_matrix, expected_matrix, 0.0)
+
+    def test_random_rotation_jit_module(self) -> None:
+        if torch.__version__ <= "1.8.0":
+            raise unittest.SkipTest(
+                "Skipping RandomRotation JIT test due to insufficient Torch version."
+            )
+        rotation_module = transforms.RandomRotation([25.0])
+        jit_rotation_module = torch.jit.script(rotation_module)
+        test_input = torch.eye(4, 4).repeat(3, 1, 1).unsqueeze(0)
+
+        test_output = jit_rotation_module(test_input)
+        expected_output = (
+            torch.tensor(
+                [
+                    [0.1143, 0.0000, 0.0000, 0.0000],
+                    [0.5258, 0.6198, 0.2157, 0.0000],
+                    [0.0000, 0.2157, 0.6198, 0.5258],
+                    [0.0000, 0.0000, 0.0000, 0.1143],
+                ]
+            )
+            .repeat(3, 1, 1)
+            .unsqueeze(0)
+        )
+        assertTensorAlmostEqual(self, test_output, expected_output, 0.005)
+
+
 class TestRandomSpatialJitter(BaseTest):
     def test_random_spatial_jitter_init(self) -> None:
         translate = 3

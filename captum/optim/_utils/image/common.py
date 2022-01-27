@@ -177,21 +177,23 @@ def weights_to_heatmap_2d(
     colors: List[str] = ["0571b0", "92c5de", "f7f7f7", "f4a582", "ca0020"],
 ) -> torch.Tensor:
     """
-    Create a color heatmap of an input weight tensor.
-    By default red represents excitatory values,
-    blue represents inhibitory values, and white represents
+    Create a color heatmap of an input weight tensor. By default red represents
+    excitatory values, blue represents inhibitory values, and white represents
     no excitation or inhibition.
 
     Args:
         weight (torch.Tensor):  A 2d tensor to create the heatmap from.
-        colors (List of strings):  A list of strings containing color
-        hex values to use for coloring the heatmap.
+        colors (list of str):  A list of 5 strings containing hex triplet
+            (six digit), three-byte hexadecimal color values to use for coloring
+            the heatmap.
+
     Returns:
-        *tensor*:  A weight heatmap.
+        color_tensor (torch.Tensor):  A weight heatmap.
     """
 
     assert weight.dim() == 2
     assert len(colors) == 5
+    assert all([len(c) == 6 for c in colors])
 
     def get_color(x: str, device: torch.device = torch.device("cpu")) -> torch.Tensor:
         def hex2base10(x: str) -> float:
@@ -201,31 +203,19 @@ def weights_to_heatmap_2d(
             [hex2base10(x[0:2]), hex2base10(x[2:4]), hex2base10(x[4:6])], device=device
         )
 
-    def color_scale(x: torch.Tensor) -> torch.Tensor:
-        if x < 0:
-            x = -x
-            if x < 0.5:
-                x = x * 2
-                return (1 - x) * get_color(colors[2], x.device) + x * get_color(
-                    colors[1], x.device
-                )
-            else:
-                x = (x - 0.5) * 2
-                return (1 - x) * get_color(colors[1], x.device) + x * get_color(
-                    colors[0], x.device
-                )
-        else:
-            if x < 0.5:
-                x = x * 2
-                return (1 - x) * get_color(colors[2], x.device) + x * get_color(
-                    colors[3], x.device
-                )
-            else:
-                x = (x - 0.5) * 2
-                return (1 - x) * get_color(colors[3], x.device) + x * get_color(
-                    colors[4], x.device
-                )
+    color_list = [get_color(c, weight.device) for c in colors]
+    x = weight.expand((3, weight.shape[0], weight.shape[1])).permute(1, 2, 0)
 
-    return torch.stack(
-        [torch.stack([color_scale(x) for x in t]) for t in weight]
+    color_tensor = (
+        (x >= 0) * (x < 0.5) * ((1 - x * 2) * color_list[2] + x * 2 * color_list[3])
+        + (x >= 0)
+        * (x >= 0.5)
+        * ((1 - (x - 0.5) * 2) * color_list[3] + (x - 0.5) * 2 * color_list[4])
+        + (x < 0)
+        * (x > -0.5)
+        * ((1 - (-x * 2)) * color_list[2] + (-x * 2) * color_list[1])
+        + (x < 0)
+        * (x <= -0.5)
+        * ((1 - (-x - 0.5) * 2) * color_list[1] + (-x - 0.5) * 2 * color_list[0])
     ).permute(2, 0, 1)
+    return color_tensor
