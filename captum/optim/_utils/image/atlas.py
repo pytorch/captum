@@ -66,9 +66,16 @@ def calc_grid_indices(
     Below is an example of the index list format for a grid_size of (3, 3):
     indices = [x1[y1, y2, y3], x2[y1, y2, y3], x3[y1, y2, y3]]
 
-    Grid cells would then be ordered like this, where each cell contains a list of
-    indices for that particular cell:
+    Grid cells would then be ordered like this:
     indices = [[0, 1, 2], [3, 4, 5], [6, 7, 8]]
+
+    Each cell in the above example would contain a list of indices inside a tensor for
+    that particular cell, like this:
+    indices = [
+        [tensor([0, 5]), tensor([1]), tensor([2, 3])],
+        [tensor([]), tensor([4]), tensor([])],
+        [tensor([6, 7, 8]), tensor([]), tensor([])],
+    ]
 
     Args:
         xy_grid (torch.tensor): The xy coordinate grid activation samples, with a shape
