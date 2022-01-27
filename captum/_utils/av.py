@@ -267,7 +267,9 @@ class AV:
             dataset (AV.AVDataset): AV.AVDataset that allows to iterate
                     over the activation vectors for given layer, identifier (if
                     provided), num_id (if provided).  Returning an AV.AVDataset as
-                    opposed to a DataLoader constructed from it offers more flexibility
+                    opposed to a DataLoader constructed from it offers more
+                    flexibility.  Raises RuntimeError if activation vectors are not
+                    found.
         """
 
         av_save_dir = AV._assemble_model_dir(path, model_id)
@@ -417,7 +419,8 @@ class AV:
         dataloader: DataLoader,
         identifier: str = "default",
         load_from_disk: bool = True,
-    ) -> None:
+        return_activations: bool = False,
+    ) -> Optional[Union[AVDataset, List[AVDataset]]]:
         r"""
         Computes layer activations for a source dataset and specified `layers`. Assumes
         that the dataset returns a single value, or a tuple containing two elements
@@ -441,8 +444,15 @@ class AV:
                     Default: "default"
             load_from_disk (bool): Forces function to regenerate activations if False.
                     Default: True
-        Returns:
-            None. All generate activations are saved on the filesystem.
+            return_activations (bool, optional): Whether to return the activations.
+                    Default: False
+        Returns: If `return_activations == True`, returns a single `AVDataset` if
+                    `layers` is a str, otherwise, a list of `AVDataset`s of the length
+                    of `layers`, where each element corresponds to a layer.  In either
+                    case, `AVDataset`'s represent the activations for a single layer,
+                    over the entire `dataloader`.  If `return_activations == False`,
+                    does not return anything.
+
         """
 
         unsaved_layers = AV._manage_loading_layers(
@@ -464,7 +474,12 @@ class AV:
                     str(i),
                 )
 
-        # TODO: return set of AVDatasets to be more object-oriented. See created task
+        if not return_activations:
+            return None
+        if isinstance(layers, str):
+            return AV.load(path, model_id, identifier, layers)
+        else:
+            return [AV.load(path, model_id, identifier, layer) for layer in layers]
 
     @staticmethod
     def sort_files(files: List[str]) -> List[str]:

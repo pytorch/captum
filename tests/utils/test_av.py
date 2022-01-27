@@ -443,13 +443,14 @@ class Test(BaseTest):
             ]
 
             # First AV generation on last 2 layers
-            AV.generate_dataset_activations(
+            layer_AVDatasets = AV.generate_dataset_activations(
                 tmpdir,
                 mymodel,
                 "model_id1",
                 layers[1:],
                 DataLoader(mydata, batch_size, shuffle=False),
                 "src",
+                return_activations=True,
             )
 
             av_src = AV._construct_file_search(
@@ -458,15 +459,22 @@ class Test(BaseTest):
             av_src = glob.glob(av_src)
             self.assertEqual(len(av_src), high / batch_size * len(layers[1:]))
 
+            self.assertTrue(isinstance(layer_AVDatasets, list))
+            layer_AVDatasets = cast(list, layer_AVDatasets)
+            self.assertEqual(len(layer_AVDatasets), len(layers[1:]))
+            for layer_AVDataset in layer_AVDatasets:
+                self.assertEqual(len(layer_AVDataset), high / batch_size)
+
             # Second AV generation on first 2 layers.
             # Second layer overlaps with existing activations, should be loaded.
-            AV.generate_dataset_activations(
+            layer_AVDatasets = AV.generate_dataset_activations(
                 tmpdir,
                 mymodel,
                 "model_id1",
                 layers[:2],
                 DataLoader(mydata, batch_size, shuffle=False),
                 "src",
+                return_activations=True,
             )
 
             av_src = AV._construct_file_search(
@@ -474,6 +482,25 @@ class Test(BaseTest):
             )
             av_src = glob.glob(av_src)
             self.assertEqual(len(av_src), high / batch_size * len(layers))
+
+            self.assertTrue(isinstance(layer_AVDatasets, list))
+            layer_AVDatasets = cast(list, layer_AVDatasets)
+            self.assertEqual(len(layer_AVDatasets), len(layers[:2]))
+            for layer_AVDataset in layer_AVDatasets:
+                self.assertEqual(len(layer_AVDataset), high / batch_size)
+
+            # check that if return_activations is False, None is returned
+            self.assertIsNone(
+                AV.generate_dataset_activations(
+                    tmpdir,
+                    mymodel,
+                    "model_id1",
+                    layers[:2],
+                    DataLoader(mydata, batch_size, shuffle=False),
+                    "src",
+                    return_activations=False,
+                )
+            )
 
     def test_equal_activation(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
