@@ -270,7 +270,6 @@ class BaseLoss(Loss):
         if batch_index is None:
             self._batch_index = (None, None)
         elif isinstance(batch_index, (list, tuple)):
-            assert len(batch_index) == 2
             self._batch_index = tuple(batch_index)
         else:
             self._batch_index = (batch_index, batch_index + 1)
