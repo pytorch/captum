@@ -30,7 +30,7 @@ def image_cov(x: torch.Tensor) -> torch.Tensor:
     x = x.reshape(x.shape[0], -1, x.shape[1])
     x = x - x.mean(1, keepdim=True)
     b_cov_mtx = 1.0 / (x.shape[1] - 1) * x.permute(0, 2, 1) @ x
-    return torch.sum(b_cov_mtx, dim=0) / x.shape[0]
+    return torch.sum(b_cov_mtx, dim=0)
 
 
 def dataset_cov_matrix(
@@ -58,7 +58,7 @@ def dataset_cov_matrix(
     if show_progress:
         pbar = tqdm(total=len(loader.dataset), unit=" images")  # type: ignore
 
-    cov_mtx = cast(torch.Tensor, 0.0)
+    cov_mtx = torch.zeros([], device=device).float()
     for images, _ in loader:
         assert images.dim() > 1
         images = images.to(device)
