@@ -164,6 +164,7 @@ class DeepLift(GradientAttribution):
         additional_forward_args: Any = None,
         return_convergence_delta: bool = False,
         custom_attribution_func: Union[None, Callable[..., Tuple[Tensor, ...]]] = None,
+        eps: float = 1e-10,        
     ) -> Union[
         TensorOrTupleOfTensorsGeneric, Tuple[TensorOrTupleOfTensorsGeneric, Tensor]
     ]:
@@ -270,6 +271,11 @@ class DeepLift(GradientAttribution):
                         `inputs`.
 
                         Default: None
+            eps (float, optional): A value at which to consider output/input change
+                        significant when computing the gradients for non-linear layers.
+                        This is useful to adjust, depending on your model's bit depth,
+                        to avoid numerical issues during the gradient computation.
+                        Default: 1e-10
 
         Returns:
             **attributions** or 2-element tuple of **attributions**, **delta**:
@@ -322,7 +328,7 @@ class DeepLift(GradientAttribution):
                activations. The hooks and attributes will be removed
             after the attribution is finished"""
         )
-
+        self.eps = eps
         baselines = _tensorize_baseline(inputs, baselines)
         main_model_hooks = []
         try:
@@ -471,7 +477,6 @@ class DeepLift(GradientAttribution):
         module: Module,
         grad_input: Union[Tensor, Tuple[Tensor, ...]],
         grad_output: Union[Tensor, Tuple[Tensor, ...]],
-        eps: float = 1e-10,
     ):
         r"""
         `grad_input` is the gradient of the neuron with respect to its input
@@ -495,7 +500,7 @@ class DeepLift(GradientAttribution):
             )
         multipliers = tuple(
             SUPPORTED_NON_LINEAR[type(module)](
-                module, module.input, module.output, grad_input, grad_output, eps=eps
+                module, module.input, module.output, grad_input, grad_output, eps=self.eps
             )
         )
         # remove all the properies that we set for the inputs and output
