@@ -107,7 +107,7 @@ class DeepLift(GradientAttribution):
                  model: Module,
                  multiply_by_inputs: bool = True,
                  eps: float = 1e-10,
-    ) -> None:
+                 ) -> None:
         r"""
         Args:
 
