@@ -164,7 +164,7 @@ class DeepLift(GradientAttribution):
         additional_forward_args: Any = None,
         return_convergence_delta: bool = False,
         custom_attribution_func: Union[None, Callable[..., Tuple[Tensor, ...]]] = None,
-        eps: float = 1e-10,        
+        eps: float = 1e-10,
     ) -> Union[
         TensorOrTupleOfTensorsGeneric, Tuple[TensorOrTupleOfTensorsGeneric, Tensor]
     ]:
@@ -500,7 +500,8 @@ class DeepLift(GradientAttribution):
             )
         multipliers = tuple(
             SUPPORTED_NON_LINEAR[type(module)](
-                module, module.input, module.output, grad_input, grad_output, eps=self.eps
+                module, module.input, module.output, grad_input, grad_output,
+                eps=self.eps
             )
         )
         # remove all the properies that we set for the inputs and output
