@@ -107,7 +107,7 @@ class DeepLift(GradientAttribution):
                  model: Module,
                  multiply_by_inputs: bool = True,
                  eps: float = 1e-10,
-                ) -> None:
+    ) -> None:
         r"""
         Args:
 
@@ -127,7 +127,7 @@ class DeepLift(GradientAttribution):
                         are being multiplied by (inputs - baselines).
                         This flag applies only if `custom_attribution_func` is
                         set to None.
-                        
+
             eps (float, optional): A value at which to consider output/input change
                         significant when computing the gradients for non-linear layers.
                         This is useful to adjust, depending on your model's bit depth,
