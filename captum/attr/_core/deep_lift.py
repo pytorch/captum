@@ -103,7 +103,11 @@ class DeepLift(GradientAttribution):
     https://pytorch.org/blog/optimizing-cuda-rnn-with-torchscript/
     """
 
-    def __init__(self, model: Module, multiply_by_inputs: bool = True) -> None:
+    def __init__(self,
+                 model: Module,
+                 multiply_by_inputs: bool = True,
+                 eps: float = 1e-10,
+                ) -> None:
         r"""
         Args:
 
@@ -123,9 +127,16 @@ class DeepLift(GradientAttribution):
                         are being multiplied by (inputs - baselines).
                         This flag applies only if `custom_attribution_func` is
                         set to None.
+                        
+            eps (float, optional): A value at which to consider output/input change
+                        significant when computing the gradients for non-linear layers.
+                        This is useful to adjust, depending on your model's bit depth,
+                        to avoid numerical issues during the gradient computation.
+                        Default: 1e-10
         """
         GradientAttribution.__init__(self, model)
         self.model = model
+        self.eps = eps
         self.forward_handles: List[RemovableHandle] = []
         self.backward_handles: List[RemovableHandle] = []
         self._multiply_by_inputs = multiply_by_inputs
@@ -164,7 +175,6 @@ class DeepLift(GradientAttribution):
         additional_forward_args: Any = None,
         return_convergence_delta: bool = False,
         custom_attribution_func: Union[None, Callable[..., Tuple[Tensor, ...]]] = None,
-        eps: float = 1e-10,
     ) -> Union[
         TensorOrTupleOfTensorsGeneric, Tuple[TensorOrTupleOfTensorsGeneric, Tensor]
     ]:
@@ -271,11 +281,6 @@ class DeepLift(GradientAttribution):
                         `inputs`.
 
                         Default: None
-            eps (float, optional): A value at which to consider output/input change
-                        significant when computing the gradients for non-linear layers.
-                        This is useful to adjust, depending on your model's bit depth,
-                        to avoid numerical issues during the gradient computation.
-                        Default: 1e-10
 
         Returns:
             **attributions** or 2-element tuple of **attributions**, **delta**:
@@ -328,7 +333,6 @@ class DeepLift(GradientAttribution):
                activations. The hooks and attributes will be removed
             after the attribution is finished"""
         )
-        self.eps = eps
         baselines = _tensorize_baseline(inputs, baselines)
         main_model_hooks = []
         try:
