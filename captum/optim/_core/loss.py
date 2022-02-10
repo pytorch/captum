@@ -724,7 +724,12 @@ def sum_loss_list(
     target = [
         target
         for targets in [
-            [loss.target] if not hasattr(loss.target, "__iter__") else loss.target
+            [loss.target]
+            if not (
+                hasattr(loss.target, "__iter__")
+                and not isinstance(loss.target, nn.Module)
+            )
+            else loss.target
             for loss in loss_list
         ]
         for target in targets
