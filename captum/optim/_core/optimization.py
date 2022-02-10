@@ -58,13 +58,16 @@ class InputOptimization(Objective, Parameterized):
         """
         self.model = model
         # Grab targets from loss_function
-        if hasattr(loss_function.target, "__iter__"):
+        if hasattr(loss_function.target, "__iter__") and not isinstance(
+            loss_function.target, nn.Module
+        ):
             self.hooks = ModuleOutputsHook(loss_function.target)
         else:
             self.hooks = ModuleOutputsHook([loss_function.target])
         self.input_param = input_param or NaturalImage((224, 224))
         if isinstance(self.model, Iterable):
-            self.input_param.to(next(self.model.parameters()).device)
+            if list(self.model.parameters()) != []:
+                self.input_param.to(next(self.model.parameters()).device)
         self.transform = transform or torch.nn.Sequential(
             RandomScale(scale=(1, 0.975, 1.025, 0.95, 1.05)), RandomSpatialJitter(16)
         )
