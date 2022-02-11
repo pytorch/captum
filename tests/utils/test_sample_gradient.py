@@ -68,8 +68,14 @@ class Test(BaseTest):
             for layer in model.modules():
                 if isinstance(layer, tuple(SUPPORTED_MODULES.keys())):
                     assertTensorAlmostEqual(
-                        self, layer.weight.grad, layer.weight.sample_grad[i], mode="max"
+                        self,
+                        layer.weight.grad,
+                        layer.weight.sample_grad[i],
+                        mode="max",  # type: ignore
                     )
                     assertTensorAlmostEqual(
-                        self, layer.bias.grad, layer.bias.sample_grad[i], mode="max"
+                        self,
+                        layer.bias.grad,
+                        layer.bias.sample_grad[i],
+                        mode="max",  # type: ignore
                     )
