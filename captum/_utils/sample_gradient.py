@@ -28,7 +28,9 @@ def linear_param_grads(
         "n...i,n...j->nij", gradient_out, activation
     )
     if module.bias is not None:
-        module.bias.sample_grad += gradient_out  # type: ignore
+        module.bias.sample_grad += torch.einsum(
+            "n...i->ni", gradient_out  # type: ignore
+        )
 
 
 def conv2d_param_grads(
