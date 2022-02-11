@@ -165,7 +165,7 @@ class SampleGradientWrapper:
             gradients = self.gradient_dict[module]
             assert len(activations) == len(gradients), (
                 "Number of saved activations do not match number of saved gradients."
-                " This may occur if mmultiple forward passes are run without calling"
+                " This may occur if multiple forward passes are run without calling"
                 " reset or computing param gradients."
             )
             for i, (act, grad) in enumerate(
