@@ -463,6 +463,21 @@ class BasicModel_ConvNet_One_Conv(nn.Module):
         return self.relu2(self.fc1(x))
 
 
+class BasicModel_ConvNetWithPaddingDilation(nn.Module):
+    def __init__(self, inplace: bool = False) -> None:
+        super().__init__()
+        self.conv1 = nn.Conv2d(1, 2, 3, padding=3, stride=2, dilation=2)
+        self.relu1 = nn.ReLU(inplace=inplace)
+        self.fc1 = nn.Linear(32, 4)
+
+    @no_type_check
+    def forward(self, x: Tensor):
+        bsz = x.shape[0]
+        x = self.relu1(self.conv1(x))
+        x = x.view(bsz, -1)
+        return self.fc1(x)
+
+
 class BasicModel_ConvNet(nn.Module):
     def __init__(self) -> None:
         super().__init__()
