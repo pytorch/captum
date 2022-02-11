@@ -1,54 +1,70 @@
 from collections import defaultdict
 from enum import Enum
-from typing import Tuple, Union
+from typing import Tuple, Union, cast, Iterable
 
 import torch
+from captum._utils.common import _format_tensor_into_tuples
 from torch import Tensor
 from torch.nn import Module
-
-from captum._utils.common import _format_tensor_into_tuples
 
 
 def linear_param_grads(
     module: Module, activation: Tensor, gradient_out: Tensor, reset: bool = False
-):
-    if reset:
-        module.weight.sample_grad = 0
-        if module.bias is not None:
-            module.bias.sample_grad = 0
-    print(gradient_out.shape)
-    print(activation.shape)
+) -> None:
+    r"""
+    Computes parameter gradients per sample for nn.Linear module, given module
+    input activations and output gradients.
 
-    module.weight.sample_grad += torch.einsum(
+    Gradients are accumulated in the sample_grad attribute of each parameter
+    (weight and bias). If reset = True, any current sample_grad values are reset,
+    otherwise computed gradients are accumulated and added to the existing
+    stored gradients.
+    """
+    if reset:
+        module.weight.sample_grad = 0  # type: ignore
+        if module.bias is not None:
+            module.bias.sample_grad = 0  # type: ignore
+    module.weight.sample_grad += torch.einsum(  # type: ignore
         "n...i,n...j->nij", gradient_out, activation
     )
-    print(module.weight.sample_grad.shape)
     if module.bias is not None:
-        module.bias.sample_grad += gradient_out
+        module.bias.sample_grad += gradient_out  # type: ignore
 
 
 def conv2d_param_grads(
     module: Module, activation: Tensor, gradient_out: Tensor, reset: bool = False
-):
-    if reset:
-        module.weight.sample_grad = 0
-        if module.bias is not None:
-            module.bias.sample_grad = 0
+) -> None:
+    r"""
+    Computes parameter gradients per sample for nn.Conv2d module, given module
+    input activations and output gradients.
 
-    batch_size = activation.shape[0]
+    nn.Conv2d modules with padding set to a string option ('same' or 'valid') are
+    currently unsupported.
+
+    Gradients are accumulated in the sample_grad attribute of each parameter
+    (weight and bias). If reset = True, any current sample_grad values are reset,
+    otherwise computed gradients are accumulated and added to the existing
+    stored gradients.
+    """
+    if reset:
+        module.weight.sample_grad = 0  # type: ignore
+        if module.bias is not None:
+            module.bias.sample_grad = 0  # type: ignore
+
+    batch_size = cast(int, activation.shape[0])
     unfolded_act = torch.nn.functional.unfold(
         activation,
-        module.kernel_size,
-        dilation=module.dilation,
-        padding=module.padding,
-        stride=module.stride,
+        cast(Union[int, Tuple[int, ...]], module.kernel_size),
+        dilation=cast(Union[int, Tuple[int, ...]], module.dilation),
+        padding=cast(Union[int, Tuple[int, ...]], module.padding),
+        stride=cast(Union[int, Tuple[int, ...]], module.stride),
     )
     reshaped_grad = gradient_out.reshape(batch_size, -1, unfolded_act.shape[-1])
     grad1 = torch.einsum("ijk,ilk->ijl", reshaped_grad, unfolded_act)
-    shape = [batch_size] + list(module.weight.shape)
-    module.weight.sample_grad += grad1.reshape(shape)
+    shape = [batch_size] + list(cast(Iterable[int], module.weight.shape))
+    module.weight.sample_grad += grad1.reshape(shape)  # type: ignore
     if module.bias is not None:
-        module.bias.sample_grad += torch.sum(reshaped_grad, dim=2)
+        module.bias.sample_grad += torch.sum(reshaped_grad, dim=2)  # type: ignore
 
 
 SUPPORTED_MODULES = {
@@ -63,6 +79,20 @@ class LossMode(Enum):
 
 
 class SampleGradientWrapper:
+    r"""
+    Wrapper which allows computing sample-wise gradients in a single backward pass.
+
+    This is accomplished by adding hooks to capture activations and output
+    gradients for supported modules, and using these activations and gradients
+    to compute the parameter gradients per-sample.
+
+    Currently, only nn.Linear and nn.Conv2d modules are supported.
+
+    Similar reference implementations of sample-based gradients include:
+    - https://github.com/cybertronai/autograd-hacks
+    - https://github.com/pytorch/opacus/tree/main/opacus/grad_sample
+    """
+
     def __init__(self, model):
         self.model = model
         self.hooks_added = False

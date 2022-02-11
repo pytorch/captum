@@ -12,6 +12,7 @@ from captum._utils.common import (
     _sort_key_list,
     _verify_select_neuron,
 )
+from captum._utils.sample_gradient import SampleGradientWrapper
 from captum._utils.typing import (
     Literal,
     ModuleOrModuleList,
@@ -20,7 +21,6 @@ from captum._utils.typing import (
 )
 from torch import Tensor, device
 from torch.nn import Module
-from captum._utils.sample_gradient import SampleGradientWrapper
 
 
 def apply_gradient_requirements(
