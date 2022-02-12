@@ -1,38 +1,12 @@
 #!/usr/bin/env python3
 import unittest
-from typing import Type
 
 import torch
 
 from captum.optim.models import googlenet
 from captum.optim.models._common import RedirectedReluLayer, SkipLayer
 from tests.helpers.basic import BaseTest, assertTensorAlmostEqual
-
-
-def _check_layer_in_model(
-    self,
-    model: torch.nn.Module,
-    layer: Type[torch.nn.Module],
-) -> None:
-    def check_for_layer_in_model(model, layer) -> bool:
-        for name, child in model._modules.items():
-            if child is not None:
-                if isinstance(child, layer):
-                    return True
-                if check_for_layer_in_model(child, layer):
-                    return True
-        return False
-
-    self.assertTrue(check_for_layer_in_model(model, layer))
-
-
-def _check_layer_not_in_model(
-    self, model: torch.nn.Module, layer: Type[torch.nn.Module]
-) -> None:
-    for name, child in model._modules.items():
-        if child is not None:
-            self.assertNotIsInstance(child, layer)
-            _check_layer_not_in_model(self, child, layer)
+from tests.optim.helpers.models import _check_layer_in_model, _check_layer_not_in_model
 
 
 class TestInceptionV1(BaseTest):
