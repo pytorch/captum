@@ -245,6 +245,7 @@ class TCAV(ConceptInterpreter):
         model_id: str = "default_model_id",
         classifier: Classifier = None,
         layer_attr_method: LayerAttribution = None,
+        attribute_to_layer_input=False,
         save_path: str = "./cav/",
         **classifier_kwargs: Any,
     ) -> None:
@@ -318,6 +319,7 @@ class TCAV(ConceptInterpreter):
             "will use `default_model_id` as its default value."
         )
 
+        self.attribute_to_layer_input = attribute_to_layer_input
         self.save_path = save_path
 
         # Creates CAV save directory if it doesn't exist. It is created once in the
@@ -356,7 +358,9 @@ class TCAV(ConceptInterpreter):
         )
         for i, examples in enumerate(concept.data_iter):
             activations = layer_act.attribute.__wrapped__(  # type: ignore
-                layer_act, examples
+                layer_act,
+                examples,
+                attribute_to_layer_input=self.attribute_to_layer_input,
             )
             for activation, layer_name in zip(activations, layers):
                 activation = torch.reshape(activation, (activation.shape[0], -1))
@@ -640,6 +644,11 @@ class TCAV(ConceptInterpreter):
             >>> #
 
         """
+        assert "attribute_to_layer_input" not in kwargs, (
+            "Please, set `attribute_to_layer_input` flag as a constructor "
+            "argument to TCAV class. In that case it will be applied "
+            "consistently to both layer activation and layer attribution methods."
+        )
         self.compute_cavs(experimental_sets, processes=processes)
 
         scores: Dict[str, Dict[str, Dict[str, Tensor]]] = defaultdict(
@@ -673,23 +682,23 @@ class TCAV(ConceptInterpreter):
         for layer in self.layers:
             layer_module = _get_module_from_name(self.model, layer)
             self.layer_attr_method.layer = layer_module
-
             attribs = self.layer_attr_method.attribute.__wrapped__(  # type: ignore
                 self.layer_attr_method,  # self
                 inputs,
                 target=target,
                 additional_forward_args=additional_forward_args,
+                attribute_to_layer_input=self.attribute_to_layer_input,
                 **kwargs,
             )
 
             attribs = _format_tensor_into_tuples(attribs)
-            # n_inputs x n_features (2 dimensions)
+            # n_inputs x n_features
             attribs = torch.cat(
                 [torch.reshape(attrib, (attrib.shape[0], -1)) for attrib in attribs],
                 dim=1,
             )
 
-            # n_experiments x n_concepts x n_features (3 dimensions)
+            # n_experiments x n_concepts x n_features
             cavs = []
             classes = []
             for concepts in experimental_sets:
@@ -711,7 +720,7 @@ class TCAV(ConceptInterpreter):
                     exp_set_offsets[i] : exp_set_offsets[i + 1]
                 ].tolist()
 
-                # n_experiments x n_concepts x n_features (3 dimensions)
+                # n_experiments x n_concepts x n_features
                 cav_subset = torch.tensor(cav_subset)
                 cav_subset = cav_subset.to(attribs.device)
                 assert len(cav_subset.shape) == 3, (
@@ -743,7 +752,7 @@ class TCAV(ConceptInterpreter):
         classes: List[List[int]],
         experimental_sets: List[List[Concept]],
     ) -> None:
-        # n_inputs x n_concepts (2 dimensions)
+        # n_inputs x n_concepts
         tcav_score = torch.matmul(attribs.float(), torch.transpose(cavs, 1, 2))
         assert len(tcav_score.shape) == 3, (
             "tcav_score should have 3 dimensions: n_experiments x "
@@ -755,13 +764,9 @@ class TCAV(ConceptInterpreter):
             "2nd dimensions respectively (n_inputs)."
         )
         # n_experiments x n_concepts
-        sign_count_score = (
-            torch.sum(tcav_score > 0.0, dim=1).float() / tcav_score.shape[1]
-        )
+        sign_count_score = torch.mean((tcav_score > 0.0).float(), dim=1).float()
 
-        magnitude_score = torch.sum(
-            torch.abs(tcav_score * (tcav_score > 0.0).float()), dim=1
-        ) / torch.sum(torch.abs(tcav_score), dim=1)
+        magnitude_score = torch.mean(tcav_score, dim=1).float()
 
         for i, (cls_set, concepts) in enumerate(zip(classes, experimental_sets)):
             concepts_key = concepts_to_str(concepts)
