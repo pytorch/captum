@@ -103,11 +103,12 @@ class DeepLift(GradientAttribution):
     https://pytorch.org/blog/optimizing-cuda-rnn-with-torchscript/
     """
 
-    def __init__(self,
-                 model: Module,
-                 multiply_by_inputs: bool = True,
-                 eps: float = 1e-10,
-                 ) -> None:
+    def __init__(
+        self,
+        model: Module,
+        multiply_by_inputs: bool = True,
+        eps: float = 1e-10,
+    ) -> None:
         r"""
         Args:
 
