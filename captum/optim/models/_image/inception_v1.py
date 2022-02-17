@@ -6,8 +6,7 @@ import torch.nn as nn
 from captum.optim.models._common import Conv2dSame, RedirectedReluLayer, SkipLayer
 
 GS_SAVED_WEIGHTS_URL = (
-    "https://github.com/pytorch/captum/raw/"
-    + "optim-wip/captum/optim/models/_image/inception5h.pth"
+    "https://pytorch-tutorial-assets.s3.amazonaws.com/captum/inception5h.pth"
 )
 
 
