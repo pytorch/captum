@@ -103,7 +103,12 @@ class DeepLift(GradientAttribution):
     https://pytorch.org/blog/optimizing-cuda-rnn-with-torchscript/
     """
 
-    def __init__(self, model: Module, multiply_by_inputs: bool = True) -> None:
+    def __init__(
+        self,
+        model: Module,
+        multiply_by_inputs: bool = True,
+        eps: float = 1e-10,
+    ) -> None:
         r"""
         Args:
 
@@ -123,9 +128,16 @@ class DeepLift(GradientAttribution):
                         are being multiplied by (inputs - baselines).
                         This flag applies only if `custom_attribution_func` is
                         set to None.
+
+            eps (float, optional): A value at which to consider output/input change
+                        significant when computing the gradients for non-linear layers.
+                        This is useful to adjust, depending on your model's bit depth,
+                        to avoid numerical issues during the gradient computation.
+                        Default: 1e-10
         """
         GradientAttribution.__init__(self, model)
         self.model = model
+        self.eps = eps
         self.forward_handles: List[RemovableHandle] = []
         self.backward_handles: List[RemovableHandle] = []
         self._multiply_by_inputs = multiply_by_inputs
@@ -322,7 +334,6 @@ class DeepLift(GradientAttribution):
                activations. The hooks and attributes will be removed
             after the attribution is finished"""
         )
-
         baselines = _tensorize_baseline(inputs, baselines)
         main_model_hooks = []
         try:
@@ -471,7 +482,6 @@ class DeepLift(GradientAttribution):
         module: Module,
         grad_input: Union[Tensor, Tuple[Tensor, ...]],
         grad_output: Union[Tensor, Tuple[Tensor, ...]],
-        eps: float = 1e-10,
     ):
         r"""
         `grad_input` is the gradient of the neuron with respect to its input
@@ -495,7 +505,12 @@ class DeepLift(GradientAttribution):
             )
         multipliers = tuple(
             SUPPORTED_NON_LINEAR[type(module)](
-                module, module.input, module.output, grad_input, grad_output, eps=eps
+                module,
+                module.input,
+                module.output,
+                grad_input,
+                grad_output,
+                eps=self.eps,
             )
         )
         # remove all the properies that we set for the inputs and output
