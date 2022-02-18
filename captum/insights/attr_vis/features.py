@@ -116,6 +116,10 @@ class ImageFeature(BaseFeature):
         return "image"
 
     def visualize(self, attribution, data, contribution_frac) -> FeatureOutput:
+        print(data)
+        if self.visualization_transform:
+            data = self.visualization_transform(data)
+
         attribution = attribution.squeeze()
         data = data.squeeze()
         data_t = np.transpose(data.cpu().detach().numpy(), (1, 2, 0))
