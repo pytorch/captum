@@ -8,6 +8,12 @@ from torch import Tensor
 from torch.nn import Module
 
 
+def _reset_sample_grads(module: Module):
+    module.weight.sample_grad = 0  # type: ignore
+    if module.bias is not None:
+        module.bias.sample_grad = 0  # type: ignore
+
+
 def linear_param_grads(
     module: Module, activation: Tensor, gradient_out: Tensor, reset: bool = False
 ) -> None:
@@ -21,9 +27,8 @@ def linear_param_grads(
     stored gradients.
     """
     if reset:
-        module.weight.sample_grad = 0  # type: ignore
-        if module.bias is not None:
-            module.bias.sample_grad = 0  # type: ignore
+        _reset_sample_grads(module)
+
     module.weight.sample_grad += torch.einsum(  # type: ignore
         "n...i,n...j->nij", gradient_out, activation
     )
@@ -49,9 +54,7 @@ def conv2d_param_grads(
     stored gradients.
     """
     if reset:
-        module.weight.sample_grad = 0  # type: ignore
-        if module.bias is not None:
-            module.bias.sample_grad = 0  # type: ignore
+        _reset_sample_grads(module)
 
     batch_size = cast(int, activation.shape[0])
     unfolded_act = torch.nn.functional.unfold(
@@ -146,7 +149,7 @@ class SampleGradientWrapper:
         self.forward_hooks = []
         self.backward_hooks = []
 
-    def reset(self):
+    def _reset(self):
         self.activation_dict = defaultdict(list)
         self.gradient_dict = defaultdict(list)
 
@@ -168,9 +171,12 @@ class SampleGradientWrapper:
                 " This may occur if multiple forward passes are run without calling"
                 " reset or computing param gradients."
             )
+            # Reversing grads since when a module is used multiple times,
+            # the activations will be aligned with the reverse order of the gradients,
+            # since the order is reversed in backprop.
             for i, (act, grad) in enumerate(
                 zip(activations, list(reversed(gradients)))
             ):
                 mult = 1 if mode is LossMode.SUM else act.shape[0]
                 sample_grad_fn(module, act, grad * mult, reset=(i == 0))
-        self.reset()
+        self._reset()

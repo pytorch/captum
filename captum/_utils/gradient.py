@@ -780,9 +780,6 @@ def _compute_jacobian_wrt_params_autograd_hacks(
     reduction_type: Optional[str] = "sum",
 ) -> Tuple[Any, ...]:
     r"""
-    NOT SUPPORTED FOR OPEN SOURCE. This method uses an internal 'hack` and is currently
-    not supported.
-
     Computes the Jacobian of a batch of test examples given a model, and optional
     loss function and target labels. This method uses autograd_hacks to fully vectorize
     the Jacobian calculation. Currently, only linear and conv2d layers are supported.
@@ -827,7 +824,9 @@ def _compute_jacobian_wrt_params_autograd_hacks(
             if labels is not None and loss_fn is not None:
                 loss = loss_fn(out, labels)
                 if hasattr(loss_fn, "reduction"):
-                    msg0 = "Please ensure loss_fn.reduction is set to `sum` or `mean`"
+                    msg0 = (
+                        "Please ensure that loss_fn.reduction is set to `sum` or `mean`"
+                    )
                     assert loss_fn.reduction != "none", msg0
                     msg1 = (
                         f"loss_fn.reduction ({loss_fn.reduction}) does not match"
