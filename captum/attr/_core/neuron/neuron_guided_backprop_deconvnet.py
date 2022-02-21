@@ -37,7 +37,8 @@ class NeuronDeconvolution(NeuronAttribution, GradientAttribution):
 
             model (nn.Module):  The reference to PyTorch model instance. Model cannot
                           contain any in-place ReLU submodules; these are not
-                          supported by the register_full_backward_hook PyTorch API.
+                          supported by the register_full_backward_hook PyTorch API
+                          starting from PyTorch v1.8.
             layer (Module): Layer for which attributions are computed.
                           Output size of attribute matches this layer's input or
                           output dimensions, depending on whether we attribute to
@@ -208,7 +209,8 @@ class NeuronGuidedBackprop(NeuronAttribution, GradientAttribution):
 
             model (nn.Module):  The reference to PyTorch model instance. Model cannot
                           contain any in-place ReLU submodules; these are not
-                          supported by the register_full_backward_hook PyTorch API.
+                          supported by the register_full_backward_hook PyTorch API
+                          starting from PyTorch v1.8.
             layer (Module): Layer for which neuron attributions are computed.
                           Attributions for a particular neuron in the output of
                           this layer are computed using the argument neuron_selector

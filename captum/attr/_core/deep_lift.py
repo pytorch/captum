@@ -110,7 +110,8 @@ class DeepLift(GradientAttribution):
 
             model (nn.Module):  The reference to PyTorch model instance. Model cannot
                         contain any in-place nonlinear submodules; these are not
-                        supported by the register_full_backward_hook PyTorch API.
+                        supported by the register_full_backward_hook PyTorch API
+                        starting from PyTorch v1.8.
             multiply_by_inputs (bool, optional): Indicates whether to factor
                         model inputs' multiplier in the final attribution scores.
                         In the literature this is also known as local vs global
