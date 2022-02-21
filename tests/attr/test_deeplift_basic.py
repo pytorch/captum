@@ -8,7 +8,6 @@ from captum.attr._core.deep_lift import DeepLift, DeepLiftShap
 from captum.attr._core.integrated_gradients import IntegratedGradients
 from tests.helpers.basic import (
     BaseTest,
-    assertArraysAlmostEqual,
     assertAttributionComparision,
     assertTensorAlmostEqual,
 )
@@ -154,8 +153,8 @@ class Test(BaseTest):
         attr = DeepLiftShap(model, multiply_by_inputs=False).attribute(
             inputs, baselines
         )
-        assertTensorAlmostEqual(self, attr[0], 2 * torch.ones(4, 1))
-        assertTensorAlmostEqual(self, attr[1], 0.5 * torch.ones(4, 1))
+        assertTensorAlmostEqual(self, attr[0], 2 * torch.ones(4, 1, 1, 1))
+        assertTensorAlmostEqual(self, attr[1], 0.5 * torch.ones(4, 1, 1, 1))
 
     def test_relu_deepliftshap_multi_ref(self) -> None:
         x1 = torch.tensor([[1.0]], requires_grad=True)
@@ -315,7 +314,9 @@ class Test(BaseTest):
                 delta_external = attr_method.compute_convergence_delta(
                     attributions, baselines, inputs
                 )
-                assertArraysAlmostEqual(delta, delta_external, 0.0)
+                assertTensorAlmostEqual(
+                    self, delta, delta_external, delta=0.0, mode="max"
+                )
 
             delta_condition = (delta.abs() < 0.00001).all()
             self.assertTrue(

@@ -14,7 +14,6 @@ from captum.attr import (
 from captum.metrics import infidelity, infidelity_perturb_func_decorator
 from tests.helpers.basic import (
     BaseTest,
-    assertArraysAlmostEqual,
     assertTensorAlmostEqual,
 )
 from tests.helpers.basic_models import (
@@ -145,7 +144,7 @@ class Test(BaseTest):
             n_perturb_samples=5,
             max_batch_size=60,
         )
-        assertArraysAlmostEqual(infid1, infid2, 0.01)
+        assertTensorAlmostEqual(self, infid1, infid2, delta=0.01, mode="max")
 
     def test_basic_infidelity_additional_forward_args1(self) -> None:
         model = BasicModel4_MultiArgs()
@@ -239,7 +238,7 @@ class Test(BaseTest):
             max_batch_size=2,
             multi_input=False,
         )
-        assertArraysAlmostEqual(infid1, infid2, 1e-05)
+        assertTensorAlmostEqual(self, infid1, infid2, delta=1e-05, mode="max")
 
     def test_classification_infidelity_tpl_target_w_baseline(self) -> None:
         model = BasicModel_MultiLayer()

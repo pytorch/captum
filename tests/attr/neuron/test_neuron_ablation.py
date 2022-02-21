@@ -1,10 +1,14 @@
 #!/usr/bin/env python3
 
 import unittest
-from typing import Any, Callable, List, Tuple, Union
+from typing import Any, Callable, Tuple, Union
 
 import torch
-from captum._utils.typing import BaselineType, TensorOrTupleOfTensorsGeneric
+from captum._utils.typing import (
+    BaselineType,
+    TensorOrTupleOfTensorsGeneric,
+    TensorLikeList,
+)
 from captum.attr._core.neuron.neuron_feature_ablation import NeuronFeatureAblation
 from tests.helpers.basic import BaseTest, assertTensorAlmostEqual
 from tests.helpers.basic_models import (
@@ -24,7 +28,7 @@ class Test(BaseTest):
             net,
             net.linear2,
             inp,
-            [280.0, 280.0, 120.0],
+            [[280.0, 280.0, 120.0]],
             feature_mask=torch.tensor([[0, 0, 1]]),
             perturbations_per_eval=(1, 2, 3),
         )
@@ -172,16 +176,24 @@ class Test(BaseTest):
             (inp, inp2),
             (
                 [
-                    [0.0, 2.0, 4.0, 3.0],
-                    [4.0, 9.0, 10.0, 7.0],
-                    [4.0, 13.0, 14.0, 11.0],
-                    [0.0, 0.0, 0.0, 0.0],
+                    [
+                        [
+                            [0.0, 2.0, 4.0, 3.0],
+                            [4.0, 9.0, 10.0, 7.0],
+                            [4.0, 13.0, 14.0, 11.0],
+                            [0.0, 0.0, 0.0, 0.0],
+                        ]
+                    ]
                 ],
                 [
-                    [1.0, 2.0, 2.0, 1.0],
-                    [1.0, 2.0, 2.0, 1.0],
-                    [1.0, 2.0, 2.0, 1.0],
-                    [0.0, 0.0, 0.0, 0.0],
+                    [
+                        [
+                            [1.0, 2.0, 2.0, 1.0],
+                            [1.0, 2.0, 2.0, 1.0],
+                            [1.0, 2.0, 2.0, 1.0],
+                            [0.0, 0.0, 0.0, 0.0],
+                        ]
+                    ]
                 ],
             ),
             perturbations_per_eval=(1, 3, 7, 14),
@@ -216,16 +228,24 @@ class Test(BaseTest):
             (inp, inp2),
             (
                 [
-                    [0.0, 1.0, 2.0, 0.0],
-                    [4.0, 5.0, 6.0, 0.0],
-                    [8.0, 9.0, 10.0, 0.0],
-                    [0.0, 0.0, 0.0, 0.0],
+                    [
+                        [
+                            [0.0, 1.0, 2.0, 0.0],
+                            [4.0, 5.0, 6.0, 0.0],
+                            [8.0, 9.0, 10.0, 0.0],
+                            [0.0, 0.0, 0.0, 0.0],
+                        ]
+                    ]
                 ],
                 [
-                    [1.0, 1.0, 1.0, 0.0],
-                    [1.0, 1.0, 1.0, 0.0],
-                    [1.0, 1.0, 1.0, 0.0],
-                    [0.0, 0.0, 0.0, 0.0],
+                    [
+                        [
+                            [1.0, 1.0, 1.0, 0.0],
+                            [1.0, 1.0, 1.0, 0.0],
+                            [1.0, 1.0, 1.0, 0.0],
+                            [0.0, 0.0, 0.0, 0.0],
+                        ]
+                    ]
                 ],
             ),
             perturbations_per_eval=(1, 3, 7, 14),
@@ -239,10 +259,9 @@ class Test(BaseTest):
         layer: Module,
         test_input: TensorOrTupleOfTensorsGeneric,
         expected_ablation: Union[
-            List[float],
-            List[List[float]],
+            TensorLikeList,
+            Tuple[TensorLikeList, ...],
             Tuple[Tensor, ...],
-            Tuple[List[List[float]], ...],
         ],
         feature_mask: Union[None, TensorOrTupleOfTensorsGeneric] = None,
         additional_input: Any = None,

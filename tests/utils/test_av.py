@@ -240,7 +240,7 @@ class Test(BaseTest):
             dataset = AV.load(tmpdir, model_id, identifier=DEFAULT_IDENTIFIER)
 
             for i, av in enumerate(DataLoader(cast(Dataset, dataset))):
-                assertTensorAlmostEqual(self, av, avs[i])
+                assertTensorAlmostEqual(self, av, avs[i].unsqueeze(0))
 
             # add av_1 to the list of activations
             dataloader_2 = DataLoader(
@@ -257,7 +257,7 @@ class Test(BaseTest):
             dataloader = DataLoader(cast(Dataset, dataset))
             self.assertEqual(len(dataloader), 2)
             for i, av in enumerate(dataloader):
-                assertTensorAlmostEqual(self, av, avs[i])
+                assertTensorAlmostEqual(self, av, avs[i].unsqueeze(0))
 
     def test_av_load_all_identifiers_one_layer(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -292,7 +292,7 @@ class Test(BaseTest):
 
             self.assertEqual(len(dataloader_layer), 3)
             for i, av in enumerate(dataloader_layer):
-                assertTensorAlmostEqual(self, av, avs[i])
+                assertTensorAlmostEqual(self, av, avs[i].unsqueeze(0))
 
             dataloader = DataLoader(cast(Dataset, AV.load(tmpdir, "dummy")))
             self.assertEqual(len(dataloader), 4)
@@ -340,7 +340,7 @@ class Test(BaseTest):
             self.assertEqual(len(dataloader_layer), 3)
 
             for i, av in enumerate(dataloader_layer):
-                assertTensorAlmostEqual(self, av, avs_0[i])
+                assertTensorAlmostEqual(self, av, avs_0[i].unsqueeze(0))
 
             # check activations for idf2
             dataloader_layer = DataLoader(
@@ -348,7 +348,7 @@ class Test(BaseTest):
             )
             self.assertEqual(len(dataloader_layer), 3)
             for i, av in enumerate(dataloader_layer):
-                assertTensorAlmostEqual(self, av, avs_1[i])
+                assertTensorAlmostEqual(self, av, avs_1[i].unsqueeze(0))
 
     def test_av_sort_files(self) -> None:
         files = ["resnet50-cifar-3000", "resnet50-cifar-1000", "resnet50-cifar-2000"]
@@ -443,13 +443,14 @@ class Test(BaseTest):
             ]
 
             # First AV generation on last 2 layers
-            AV.generate_dataset_activations(
+            layer_AVDatasets = AV.generate_dataset_activations(
                 tmpdir,
                 mymodel,
                 "model_id1",
                 layers[1:],
                 DataLoader(mydata, batch_size, shuffle=False),
                 "src",
+                return_activations=True,
             )
 
             av_src = AV._construct_file_search(
@@ -458,15 +459,22 @@ class Test(BaseTest):
             av_src = glob.glob(av_src)
             self.assertEqual(len(av_src), high / batch_size * len(layers[1:]))
 
+            self.assertTrue(isinstance(layer_AVDatasets, list))
+            layer_AVDatasets = cast(list, layer_AVDatasets)
+            self.assertEqual(len(layer_AVDatasets), len(layers[1:]))
+            for layer_AVDataset in layer_AVDatasets:
+                self.assertEqual(len(layer_AVDataset), high / batch_size)
+
             # Second AV generation on first 2 layers.
             # Second layer overlaps with existing activations, should be loaded.
-            AV.generate_dataset_activations(
+            layer_AVDatasets = AV.generate_dataset_activations(
                 tmpdir,
                 mymodel,
                 "model_id1",
                 layers[:2],
                 DataLoader(mydata, batch_size, shuffle=False),
                 "src",
+                return_activations=True,
             )
 
             av_src = AV._construct_file_search(
@@ -474,6 +482,25 @@ class Test(BaseTest):
             )
             av_src = glob.glob(av_src)
             self.assertEqual(len(av_src), high / batch_size * len(layers))
+
+            self.assertTrue(isinstance(layer_AVDatasets, list))
+            layer_AVDatasets = cast(list, layer_AVDatasets)
+            self.assertEqual(len(layer_AVDatasets), len(layers[:2]))
+            for layer_AVDataset in layer_AVDatasets:
+                self.assertEqual(len(layer_AVDataset), high / batch_size)
+
+            # check that if return_activations is False, None is returned
+            self.assertIsNone(
+                AV.generate_dataset_activations(
+                    tmpdir,
+                    mymodel,
+                    "model_id1",
+                    layers[:2],
+                    DataLoader(mydata, batch_size, shuffle=False),
+                    "src",
+                    return_activations=False,
+                )
+            )
 
     def test_equal_activation(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:

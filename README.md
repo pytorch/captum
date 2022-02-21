@@ -2,9 +2,23 @@
 
 <hr/>
 
-[![Conda](https://img.shields.io/conda/v/pytorch/captum.svg)](https://anaconda.org/pytorch/captum)
-[![PyPI](https://img.shields.io/pypi/v/captum.svg)](https://pypi.org/project/captum)
+<!--- BADGES: START --->
+[![GitHub - License](https://img.shields.io/github/license/pytorch/captum?logo=github&style=flat&color=green)][#github-license]
+[![Conda](https://img.shields.io/conda/vn/pytorch/captum?logo=anaconda&style=flat&color=orange)](https://anaconda.org/pytorch/captum)
+[![PyPI](https://img.shields.io/pypi/v/captum.svg)][#pypi-package]
 [![CircleCI](https://circleci.com/gh/pytorch/captum.svg?style=shield)](https://circleci.com/gh/pytorch/captum)
+[![Conda - Platform](https://img.shields.io/conda/pn/conda-forge/captum?logo=anaconda&style=flat)][#conda-forge-package]
+[![Conda (channel only)](https://img.shields.io/conda/vn/conda-forge/captum?logo=anaconda&style=flat&color=orange)][#conda-forge-package]
+[![Conda Recipe](https://img.shields.io/static/v1?logo=conda-forge&style=flat&color=green&label=recipe&message=captum)][#conda-forge-feedstock]
+[![Docs - GitHub.io](https://img.shields.io/static/v1?logo=captum&style=flat&color=pink&label=docs&message=captum)][#docs-package]
+
+[#github-license]: https://github.com/pytorch/captum/blob/master/LICENSE
+[#pypi-package]: https://pypi.org/project/captum/
+[#conda-forge-package]: https://anaconda.org/conda-forge/captum
+[#conda-forge-feedstock]: https://github.com/conda-forge/captum-feedstock
+[#docs-package]: https://captum.ai/
+<!--- BADGES: END --->
+
 
 Captum is a model interpretability and understanding library for PyTorch.
 Captum means comprehension in Latin and contains general purpose implementations
@@ -41,11 +55,26 @@ Captum can also be used by application engineers who are using trained models in
 ##### Installing the latest release
 
 The latest release of Captum is easily installed either via
-[Anaconda](https://www.anaconda.com/distribution/#download-section) (recommended):
-```bash
-conda install captum -c pytorch
-```
-or via `pip`:
+[Anaconda](https://www.anaconda.com/distribution/#download-section) (recommended) or via `pip`.
+
+**with `conda`**
+
+You can install captum from any of the following supported conda channels:
+
+- channel: `pytorch`
+
+  ```sh
+  conda install captum -c pytorch
+  ```
+
+- channel: `conda-forge`
+
+  ```sh
+  conda install captum -c conda-forge
+  ```
+
+**With `pip`**
+
 ```bash
 pip install captum
 ```
@@ -289,7 +318,7 @@ Here is an example of how we can use `NoiseTunnel` with `IntegratedGradients`.
 ```python
 ig = IntegratedGradients(model)
 nt = NoiseTunnel(ig)
-attributions, delta = nt.attribute(input, nt_type='smoothgrad', stdevs=0.02, n_samples=4,
+attributions, delta = nt.attribute(input, nt_type='smoothgrad', stdevs=0.02, nt_samples=4,
       baselines=baseline, target=0, return_convergence_delta=True)
 print('IG + SmoothGrad Attributions:', attributions)
 print('Convergence Delta:', delta)
@@ -302,8 +331,8 @@ Convergence Delta: tensor([ 0.0000e+00,  2.3842e-07,  0.0000e+00, -2.3842e-07,  
         -4.7684e-07,  0.0000e+00, -4.7684e-07])
 
 ```
-The number of elements in the `delta` tensor is equal to: `n_samples * input.shape[0]`
-In order to get a example-based delta, we can, for example, average them:
+The number of elements in the `delta` tensor is equal to: `nt_samples * input.shape[0]`
+In order to get an example-wise delta, we can, for example, average them:
 ```python
 deltas_per_example = torch.mean(delta.reshape(input.shape[0], -1), dim=1)
 ```

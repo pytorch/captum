@@ -23,7 +23,7 @@ class Test(BaseTest):
         ngs = NeuronGradientShap(model, model.linear1, multiply_by_inputs=False)
         attr = ngs.attribute(inputs, 0, baselines=baselines, stdevs=0.0)
         self.assertFalse(ngs.multiplies_by_inputs)
-        assertTensorAlmostEqual(self, attr, [1.0, 1.0, 1.0])
+        assertTensorAlmostEqual(self, attr, [[1.0, 1.0, 1.0]])
 
     def test_basic_multilayer_wo_mult_by_inputs(self) -> None:
         model = BasicModel_MultiLayer(inplace=True)

@@ -23,7 +23,7 @@ class Test(BaseTest):
         self._shapley_test_assert(
             net,
             inp,
-            [76.66666, 196.66666, 116.66666],
+            [[76.66666, 196.66666, 116.66666]],
             perturbations_per_eval=(1, 2, 3),
             n_samples=250,
         )
@@ -34,7 +34,7 @@ class Test(BaseTest):
         self._shapley_test_assert(
             net,
             inp,
-            [275.0, 275.0, 115.0],
+            [[275.0, 275.0, 115.0]],
             feature_mask=torch.tensor([[0, 0, 1]]),
             perturbations_per_eval=(1, 2, 3),
         )
@@ -45,7 +45,7 @@ class Test(BaseTest):
         self._shapley_test_assert(
             net,
             inp,
-            [35.0, 35.0, 35.0],
+            [[35.0, 35.0, 35.0]],
             feature_mask=torch.tensor([[0, 0, 1]]),
             perturbations_per_eval=(1, 2, 3),
         )
@@ -56,7 +56,7 @@ class Test(BaseTest):
         self._shapley_test_assert(
             net,
             inp,
-            [-40.0, -40.0, 0.0],
+            [[-40.0, -40.0, 0.0]],
             feature_mask=torch.tensor([[0, 0, 1]]),
             baselines=True,
             perturbations_per_eval=(1, 2, 3),
@@ -68,7 +68,7 @@ class Test(BaseTest):
         self._shapley_test_assert(
             net,
             inp,
-            [248.0, 248.0, 104.0],
+            [[248.0, 248.0, 104.0]],
             feature_mask=torch.tensor([[0, 0, 1]]),
             baselines=4,
             perturbations_per_eval=(1, 2, 3),
@@ -257,7 +257,7 @@ class Test(BaseTest):
             self._shapley_test_assert(
                 net,
                 inp,
-                [76.66666, 196.66666, 116.66666],
+                [[76.66666, 196.66666, 116.66666]],
                 perturbations_per_eval=(bsz,),
                 n_samples=250,
                 show_progress=True,
@@ -286,7 +286,7 @@ class Test(BaseTest):
             self._shapley_test_assert(
                 net,
                 inp,
-                [275.0, 275.0, 115.0],
+                [[275.0, 275.0, 115.0]],
                 feature_mask=torch.tensor([[0, 0, 1]]),
                 perturbations_per_eval=(bsz,),
                 show_progress=True,

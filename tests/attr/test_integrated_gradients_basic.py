@@ -11,7 +11,6 @@ from captum.attr._core.noise_tunnel import NoiseTunnel
 from captum.attr._utils.common import _tensorize_baseline
 from tests.helpers.basic import (
     BaseTest,
-    assertArraysAlmostEqual,
     assertTensorAlmostEqual,
 )
 from tests.helpers.basic_models import (
@@ -180,15 +179,19 @@ class Test(BaseTest):
             multiply_by_inputs=multiply_by_inputs,
         )
         if type == "vanilla":
-            assertArraysAlmostEqual(
-                attributions1[0].tolist(),
+            assertTensorAlmostEqual(
+                self,
+                attributions1[0],
                 [1.5] if multiply_by_inputs else [0.5],
                 delta=0.05,
+                mode="max",
             )
-            assertArraysAlmostEqual(
-                attributions1[1].tolist(),
+            assertTensorAlmostEqual(
+                self,
+                attributions1[1],
                 [-0.5] if multiply_by_inputs else [-0.5],
                 delta=0.05,
+                mode="max",
             )
         model = BasicModel3()
         attributions2 = self._compute_attribution_and_evaluate(
@@ -200,15 +203,19 @@ class Test(BaseTest):
             multiply_by_inputs=multiply_by_inputs,
         )
         if type == "vanilla":
-            assertArraysAlmostEqual(
-                attributions2[0].tolist(),
+            assertTensorAlmostEqual(
+                self,
+                attributions2[0],
                 [1.5] if multiply_by_inputs else [0.5],
                 delta=0.05,
+                mode="max",
             )
-            assertArraysAlmostEqual(
-                attributions2[1].tolist(),
+            assertTensorAlmostEqual(
+                self,
+                attributions2[1],
                 [-0.5] if multiply_by_inputs else [-0.5],
                 delta=0.05,
+                mode="max",
             )
             # Verifies implementation invariance
             self.assertEqual(
@@ -429,7 +436,7 @@ class Test(BaseTest):
                 target=target,
                 additional_forward_args=additional_forward_args,
             )
-            assertArraysAlmostEqual(delta, delta_external, 0.0)
+            assertTensorAlmostEqual(self, delta, delta_external, delta=0.0, mode="max")
         else:
             nt = NoiseTunnel(ig)
             n_samples = 5
@@ -523,9 +530,12 @@ class Test(BaseTest):
                 )
                 total_delta += abs(delta_indiv).sum().item()
                 for j in range(len(attributions)):
-                    assertArraysAlmostEqual(
-                        attributions[j][i : i + 1].squeeze(0).tolist(),
-                        attributions_indiv[j].squeeze(0).tolist(),
+                    assertTensorAlmostEqual(
+                        self,
+                        attributions[j][i : i + 1].squeeze(0),
+                        attributions_indiv[j].squeeze(0),
+                        delta=0.05,
+                        mode="max",
                     )
             self.assertAlmostEqual(abs(delta).sum().item(), total_delta, delta=0.005)
 

@@ -10,7 +10,7 @@ from captum.attr._core.neuron.neuron_gradient import NeuronGradient
 from captum.attr._core.saliency import Saliency
 from tests.helpers.basic import (
     BaseTest,
-    assertArraysAlmostEqual,
+    assertTensorAlmostEqual,
     assertTensorTuplesAlmostEqual,
 )
 from tests.helpers.basic_models import (
@@ -26,47 +26,47 @@ class Test(BaseTest):
     def test_simple_gradient_input_linear2(self) -> None:
         net = BasicModel_MultiLayer()
         inp = torch.tensor([[0.0, 100.0, 0.0]], requires_grad=True)
-        self._gradient_input_test_assert(net, net.linear2, inp, (0,), [4.0, 4.0, 4.0])
+        self._gradient_input_test_assert(net, net.linear2, inp, (0,), [[4.0, 4.0, 4.0]])
 
     def test_simple_gradient_input_linear1(self) -> None:
         net = BasicModel_MultiLayer()
         inp = torch.tensor([[0.0, 100.0, 0.0]])
-        self._gradient_input_test_assert(net, net.linear1, inp, (0,), [1.0, 1.0, 1.0])
+        self._gradient_input_test_assert(net, net.linear1, inp, (0,), [[1.0, 1.0, 1.0]])
 
     def test_simple_gradient_input_relu_inplace(self) -> None:
         net = BasicModel_MultiLayer(inplace=True)
         inp = torch.tensor([[0.0, 5.0, 4.0]])
         self._gradient_input_test_assert(
-            net, net.relu, inp, (0,), [1.0, 1.0, 1.0], attribute_to_neuron_input=True
+            net, net.relu, inp, (0,), [[1.0, 1.0, 1.0]], attribute_to_neuron_input=True
         )
 
     def test_simple_gradient_input_linear1_inplace(self) -> None:
         net = BasicModel_MultiLayer(inplace=True)
         inp = torch.tensor([[0.0, 5.0, 4.0]])
-        self._gradient_input_test_assert(net, net.linear1, inp, (0,), [1.0, 1.0, 1.0])
+        self._gradient_input_test_assert(net, net.linear1, inp, (0,), [[1.0, 1.0, 1.0]])
 
     def test_simple_gradient_input_relu(self) -> None:
         net = BasicModel_MultiLayer()
         inp = torch.tensor([[0.0, 5.0, 4.0]], requires_grad=True)
-        self._gradient_input_test_assert(net, net.relu, inp, 0, [0.0, 0.0, 0.0])
+        self._gradient_input_test_assert(net, net.relu, inp, 0, [[0.0, 0.0, 0.0]])
 
     def test_simple_gradient_input_relu2(self) -> None:
         net = BasicModel_MultiLayer()
         inp = torch.tensor([[0.0, 5.0, 4.0]])
-        self._gradient_input_test_assert(net, net.relu, inp, 1, [1.0, 1.0, 1.0])
+        self._gradient_input_test_assert(net, net.relu, inp, 1, [[1.0, 1.0, 1.0]])
 
     def test_simple_gradient_input_relu_selector_fn(self) -> None:
         net = BasicModel_MultiLayer()
         inp = torch.tensor([[0.0, 5.0, 4.0]])
         self._gradient_input_test_assert(
-            net, net.relu, inp, lambda x: torch.sum(x), [3.0, 3.0, 3.0]
+            net, net.relu, inp, lambda x: torch.sum(x), [[3.0, 3.0, 3.0]]
         )
 
     def test_simple_gradient_input_relu2_agg_neurons(self) -> None:
         net = BasicModel_MultiLayer()
         inp = torch.tensor([[0.0, 5.0, 4.0]])
         self._gradient_input_test_assert(
-            net, net.relu, inp, (slice(0, 2, 1),), [1.0, 1.0, 1.0]
+            net, net.relu, inp, (slice(0, 2, 1),), [[1.0, 1.0, 1.0]]
         )
 
     def test_simple_gradient_multi_input_linear2(self) -> None:
@@ -79,7 +79,7 @@ class Test(BaseTest):
             net.model.linear2,
             (inp1, inp2, inp3),
             (0,),
-            ([12.0, 12.0, 12.0], [12.0, 12.0, 12.0], [12.0, 12.0, 12.0]),
+            ([[12.0, 12.0, 12.0]], [[12.0, 12.0, 12.0]], [[12.0, 12.0, 12.0]]),
             (3,),
         )
 
@@ -93,7 +93,7 @@ class Test(BaseTest):
             net.model.linear1,
             (inp1, inp2),
             (0,),
-            ([5.0, 5.0, 5.0], [5.0, 5.0, 5.0]),
+            ([[5.0, 5.0, 5.0]], [[5.0, 5.0, 5.0]]),
             (inp3, 5),
         )
 
@@ -113,7 +113,9 @@ class Test(BaseTest):
         target_layer: Module,
         test_input: TensorOrTupleOfTensorsGeneric,
         test_neuron_selector: Union[int, Tuple[Union[int, slice], ...], Callable],
-        expected_input_gradient: Union[List[float], Tuple[List[float], ...]],
+        expected_input_gradient: Union[
+            List[List[float]], Tuple[List[List[float]], ...]
+        ],
         additional_input: Any = None,
         attribute_to_neuron_input: bool = False,
     ) -> None:
@@ -148,11 +150,7 @@ class Test(BaseTest):
             # Verify matching sizes
             self.assertEqual(grad_vals.shape, sal_vals.shape)
             self.assertEqual(grad_vals.shape, test_input.shape)
-            assertArraysAlmostEqual(
-                sal_vals.reshape(-1).tolist(),
-                grad_vals.reshape(-1).tolist(),
-                delta=0.001,
-            )
+            assertTensorAlmostEqual(self, sal_vals, grad_vals, delta=0.001, mode="max")
 
 
 if __name__ == "__main__":

@@ -95,7 +95,7 @@ class Test(BaseTest):
         model.linear2.rule = EpsilonRule()  # type: ignore
         lrp = LRP(model)
         relevance = lrp.attribute(inputs)
-        assertTensorAlmostEqual(self, relevance, torch.tensor([18.0, 36.0, 54.0]))
+        assertTensorAlmostEqual(self, relevance, torch.tensor([[18.0, 36.0, 54.0]]))
 
     def test_lrp_simple_attributions_batch(self) -> None:
         model, inputs = _get_simple_model()
@@ -179,7 +179,7 @@ class Test(BaseTest):
         model.linear2.rule = EpsilonRule()  # type: ignore
         lrp = LRP(model)
         relevance = lrp.attribute(inputs)
-        assertTensorAlmostEqual(self, relevance, torch.tensor([24.0, 36.0, 36.0]))
+        assertTensorAlmostEqual(self, relevance, torch.tensor([[24.0, 36.0, 36.0]]))
 
     def test_lrp_simple2_attributions(self) -> None:
         model, input = _get_simple_model2()
@@ -294,7 +294,7 @@ class Test(BaseTest):
         )
         self.assertEqual(len(input), 2)
         assertTensorAlmostEqual(self, attributions[0], torch.Tensor([[16, 32, 48]]))
-        assertTensorAlmostEqual(self, delta, torch.Tensor(0))
+        assertTensorAlmostEqual(self, delta, torch.Tensor([-104.0]))
 
     def test_lrp_ixg_equivalency(self) -> None:
         model, inputs = _get_simple_model()

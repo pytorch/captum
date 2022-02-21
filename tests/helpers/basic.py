@@ -19,27 +19,17 @@ def deep_copy_args(func: Callable):
     return copy_args
 
 
-def assertArraysAlmostEqual(inputArr, refArr, delta=0.05):
-    for index, (input, ref) in enumerate(zip(inputArr, refArr)):
-        almost_equal = abs(input - ref) <= delta
-        if hasattr(almost_equal, "__iter__"):
-            almost_equal = almost_equal.all()
-        assert (
-            almost_equal
-        ), "Values at index {}, {} and {}, \
-            differ more than by {}".format(
-            index, input, ref, delta
-        )
-
-
 def assertTensorAlmostEqual(test, actual, expected, delta=0.0001, mode="sum"):
     assert isinstance(actual, torch.Tensor), (
         "Actual parameter given for " "comparison must be a tensor."
     )
-    actual = actual.squeeze().cpu()
     if not isinstance(expected, torch.Tensor):
         expected = torch.tensor(expected, dtype=actual.dtype)
-    expected = expected.squeeze().cpu()
+    assert (
+        actual.shape == expected.shape
+    ), f"Expected tensor with shape: {expected.shape}. Actual shape {actual.shape}."
+    actual = actual.cpu()
+    expected = expected.cpu()
     if mode == "sum":
         test.assertAlmostEqual(
             torch.sum(torch.abs(actual - expected)).item(), 0.0, delta=delta
@@ -48,9 +38,21 @@ def assertTensorAlmostEqual(test, actual, expected, delta=0.0001, mode="sum"):
         # if both tensors are empty, they are equal but there is no max
         if actual.numel() == expected.numel() == 0:
             return
-        test.assertAlmostEqual(
-            torch.max(torch.abs(actual - expected)).item(), 0.0, delta=delta
-        )
+
+        if actual.size() == torch.Size([]):
+            test.assertAlmostEqual(
+                torch.max(torch.abs(actual - expected)).item(), 0.0, delta=delta
+            )
+        else:
+            for index, (input, ref) in enumerate(zip(actual, expected)):
+                almost_equal = abs(input - ref) <= delta
+                if hasattr(almost_equal, "__iter__"):
+                    almost_equal = almost_equal.all()
+                assert (
+                    almost_equal
+                ), "Values at index {}, {} and {}, differ more than by {}".format(
+                    index, input, ref, delta
+                )
     else:
         raise ValueError("Mode for assertion comparison must be one of `max` or `sum`.")
 

@@ -5,7 +5,6 @@ import torch
 from captum.attr import MSE, Max, Mean, Min, StdDev, Sum, Summarizer, Var
 from tests.helpers.basic import (
     BaseTest,
-    assertArraysAlmostEqual,
     assertTensorAlmostEqual,
 )
 
@@ -74,22 +73,47 @@ class Test(BaseTest):
 
         summarizer = Summarizer([Mean(), Var()])
         summarizer.update(x1)
-        assertArraysAlmostEqual(summarizer.summary["mean"], x1)
-        assertArraysAlmostEqual(summarizer.summary["variance"], torch.zeros_like(x1))
+        assertTensorAlmostEqual(
+            self, summarizer.summary["mean"], x1, delta=0.05, mode="max"
+        )
+        assertTensorAlmostEqual(
+            self,
+            summarizer.summary["variance"],
+            torch.zeros_like(x1),
+            delta=0.05,
+            mode="max",
+        )
 
         summarizer.update(x2)
-        assertArraysAlmostEqual(
-            summarizer.summary["mean"], torch.tensor([1.5, 1.5, 2.5, 4])
+        assertTensorAlmostEqual(
+            self,
+            summarizer.summary["mean"],
+            torch.tensor([1.5, 1.5, 2.5, 4]),
+            delta=0.05,
+            mode="max",
         )
-        assertArraysAlmostEqual(
-            summarizer.summary["variance"], torch.tensor([0.25, 0.25, 0.25, 0])
+        assertTensorAlmostEqual(
+            self,
+            summarizer.summary["variance"],
+            torch.tensor([0.25, 0.25, 0.25, 0]),
+            delta=0.05,
+            mode="max",
         )
 
         summarizer.update(x3)
-        assertArraysAlmostEqual(summarizer.summary["mean"], torch.tensor([2, 2, 2, 4]))
-        assertArraysAlmostEqual(
+        assertTensorAlmostEqual(
+            self,
+            summarizer.summary["mean"],
+            torch.tensor([2, 2, 2, 4]),
+            delta=0.05,
+            mode="max",
+        )
+        assertTensorAlmostEqual(
+            self,
             summarizer.summary["variance"],
             torch.tensor([2.0 / 3.0, 2.0 / 3.0, 2.0 / 3.0, 0]),
+            delta=0.05,
+            mode="max",
         )
 
     def test_stats_random_data(self):
