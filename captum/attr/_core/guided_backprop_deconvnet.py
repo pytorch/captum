@@ -7,6 +7,7 @@ import torch.nn.functional as F
 from captum._utils.common import _format_input, _format_output, _is_tuple
 from captum._utils.gradient import (
     apply_gradient_requirements,
+    register_backward_hook,
     undo_gradient_requirements,
 )
 from captum._utils.typing import TargetType, TensorOrTupleOfTensorsGeneric
@@ -74,7 +75,7 @@ class ModifiedReluGradientAttribution(GradientAttribution):
 
     def _register_hooks(self, module: Module):
         if isinstance(module, torch.nn.ReLU):
-            hook = module.register_backward_hook(self._backward_hook)
+            hook = register_backward_hook(module, self._backward_hook, self)
             self.backward_hooks.append(hook)
 
     def _backward_hook(
@@ -116,7 +117,9 @@ class GuidedBackprop(ModifiedReluGradientAttribution):
         r"""
         Args:
 
-            model (nn.Module):  The reference to PyTorch model instance.
+            model (nn.Module):  The reference to PyTorch model instance. Model cannot
+                        contain any in-place ReLU submodules; these are not
+                        supported by the register_full_backward_hook PyTorch API.
         """
         ModifiedReluGradientAttribution.__init__(
             self, model, use_relu_grad_output=False
@@ -227,7 +230,9 @@ class Deconvolution(ModifiedReluGradientAttribution):
         r"""
         Args:
 
-            model (nn.Module):  The reference to PyTorch model instance.
+            model (nn.Module):  The reference to PyTorch model instance. Model cannot
+                        contain any in-place ReLU submodules; these are not
+                        supported by the register_full_backward_hook PyTorch API.
         """
         ModifiedReluGradientAttribution.__init__(self, model, use_relu_grad_output=True)
 

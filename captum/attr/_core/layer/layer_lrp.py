@@ -42,6 +42,11 @@ class LayerLRP(LRP, LayerAttribution):
                         any modification of it. Custom rules for a given layer need to
                         be defined as attribute
                         `module.rule` and need to be of type PropagationRule.
+                        Model cannot contain any in-place nonlinear submodules;
+                        these are not supported by the register_full_backward_hook
+                        PyTorch API starting from PyTorch v1.8.
+
+
             layer (torch.nn.Module or list(torch.nn.Module)): Layer or layers
                           for which attributions are computed.
                           The size and dimensionality of the attributions
