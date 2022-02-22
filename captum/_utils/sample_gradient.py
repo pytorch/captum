@@ -3,8 +3,7 @@ from enum import Enum
 from typing import Tuple, Union, cast, Iterable
 
 import torch
-from captum._utils.common import _format_tensor_into_tuples
-from captum._utils.gradient import register_backward_hook
+from captum._utils.common import _format_tensor_into_tuples, _register_backward_hook
 from torch import Tensor
 from torch.nn import Module
 
@@ -119,7 +118,7 @@ class SampleGradientWrapper:
                 module.register_forward_hook(self._forward_hook_fn)
             )
             self.backward_hooks.append(
-                register_backward_hook(module, self._backward_hook_fn, None)
+                _register_backward_hook(module, self._backward_hook_fn, None)
             )
 
     def _forward_hook_fn(

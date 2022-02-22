@@ -5,10 +5,15 @@ from collections import defaultdict
 from typing import Any, List, Tuple, Union, cast
 
 import torch.nn as nn
-from captum._utils.common import _format_input, _format_output, _is_tuple, _run_forward
+from captum._utils.common import (
+    _format_input,
+    _format_output,
+    _is_tuple,
+    _run_forward,
+    _register_backward_hook,
+)
 from captum._utils.gradient import (
     apply_gradient_requirements,
-    register_backward_hook,
     undo_gradient_requirements,
 )
 from captum._utils.typing import Literal, TargetType, TensorOrTupleOfTensorsGeneric
@@ -309,7 +314,7 @@ class LRP(GradientAttribution):
     def _register_forward_hooks(self) -> None:
         for layer in self.layers:
             if type(layer) in SUPPORTED_NON_LINEAR_LAYERS:
-                backward_handle = register_backward_hook(
+                backward_handle = _register_backward_hook(
                     layer, PropagationRule.backward_hook_activation, self
                 )
                 self.backward_handles.append(backward_handle)

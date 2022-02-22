@@ -652,3 +652,24 @@ def _get_module_from_name(model: Module, layer_name: str) -> Any:
     """
 
     return reduce(getattr, layer_name.split("."), model)
+
+
+def _register_backward_hook(
+    module: Module, hook: Callable, attr_obj: Any
+) -> torch.utils.hooks.RemovableHandle:
+    # Special case for supporting output attributions for neuron methods
+    # This can be removed after deprecation of neuron output attributions
+    # for NeuronDeepLift, NeuronDeconvolution, and NeuronGuidedBackprop
+    # in v0.6.0
+    if (
+        hasattr(attr_obj, "skip_new_hook_layer")
+        and attr_obj.skip_new_hook_layer == module
+    ):
+        return module.register_backward_hook(hook)
+
+    try:
+        # Only supported for torch >= 1.8
+        return module.register_full_backward_hook(hook)
+    except AttributeError:
+        # Fallback for previous versions of PyTorch
+        return module.register_backward_hook(hook)
