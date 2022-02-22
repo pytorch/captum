@@ -4,6 +4,7 @@ from typing import Tuple, Union, cast, Iterable
 
 import torch
 from captum._utils.common import _format_tensor_into_tuples
+from captum._utils.gradient import register_backward_hook
 from torch import Tensor
 from torch.nn import Module
 
@@ -25,6 +26,8 @@ def linear_param_grads(
     (weight and bias). If reset = True, any current sample_grad values are reset,
     otherwise computed gradients are accumulated and added to the existing
     stored gradients.
+
+    Inputs with more than 2 dimensions are only supported with torch 1.8 or later
     """
     if reset:
         _reset_sample_grads(module)
@@ -116,7 +119,7 @@ class SampleGradientWrapper:
                 module.register_forward_hook(self._forward_hook_fn)
             )
             self.backward_hooks.append(
-                module.register_full_backward_hook(self._backward_hook_fn)
+                register_backward_hook(module, self._backward_hook_fn, None)
             )
 
     def _forward_hook_fn(
