@@ -299,7 +299,7 @@ class Test(BaseTest):
         model.linear.weight = nn.Parameter(torch.arange(0, 10).view(2, 5).float())
 
         def my_loss(out, label):
-            return torch.square(out - label)
+            return (out - label).pow(2)
 
         a = torch.stack((torch.ones(5), torch.ones(5) * 2))
         label = torch.Tensor([[9, 38], [18, 74]])
@@ -317,7 +317,7 @@ class Test(BaseTest):
         model.linear.weight = nn.Parameter(torch.arange(0, 10).view(2, 5).float())
 
         def my_loss(out, label):
-            return torch.sum(torch.square(out - label))
+            return torch.sum((out - label).pow(2))
 
         a = torch.stack((torch.ones(5), torch.ones(5) * 2))
         label = torch.Tensor([[9, 38], [18, 74]])
@@ -330,7 +330,7 @@ class Test(BaseTest):
         model.linear.weight = nn.Parameter(torch.arange(0, 10).view(2, 5).float())
 
         def my_loss(out, label):
-            return torch.sum(torch.square(out - label))
+            return torch.sum((out - label).pow(2))
 
         a = torch.stack((torch.ones(5), torch.ones(5) * 2))
         label = torch.Tensor([[9, 38], [18, 74]])
@@ -349,7 +349,7 @@ class Test(BaseTest):
         model.linear.weight = nn.Parameter(torch.arange(0, 10).view(2, 5).float())
 
         def my_loss(out, label):
-            return torch.square(out - label)
+            return (out - label).pow(2)
 
         a = torch.stack((torch.ones(5), torch.ones(5) * 2))
         label = torch.Tensor([[9, 38], [18, 74]])
