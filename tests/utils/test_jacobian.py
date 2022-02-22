@@ -334,8 +334,9 @@ class Test(BaseTest):
 
         a = torch.stack((torch.ones(5), torch.ones(5) * 2))
         label = torch.Tensor([[9, 38], [18, 74]])
-        grads = _compute_jacobian_wrt_params_autograd_hacks(model, (a,), label, my_loss)
-
+        grads = _compute_jacobian_wrt_params_autograd_hacks(  # type: ignore
+            model, (a,), label, my_loss
+        )
         assertTensorAlmostEqual(
             self, grads[0][0], torch.stack((2 * (10 - 9) * a[0], 2 * (35 - 38) * a[0]))
         )

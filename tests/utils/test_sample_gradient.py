@@ -70,12 +70,12 @@ class Test(BaseTest):
                     assertTensorAlmostEqual(
                         self,
                         layer.weight.grad,
-                        layer.weight.sample_grad[i],
-                        mode="max",  # type: ignore
+                        layer.weight.sample_grad[i],  # type: ignore
+                        mode="max",
                     )
                     assertTensorAlmostEqual(
                         self,
                         layer.bias.grad,
-                        layer.bias.sample_grad[i],
-                        mode="max",  # type: ignore
+                        layer.bias.sample_grad[i],  # type: ignore
+                        mode="max",
                     )
