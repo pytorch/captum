@@ -47,11 +47,10 @@ src="/js/documentation_options.js"></script>
 <span class="kn">from</span> <span class="nn">captum.concept._core.concept</span> <span class="kn">import</span> <span class="n">Concept</span><span class="p">,</span> <span class="n">ConceptInterpreter</span>
 <span class="kn">from</span> <span class="nn">captum.concept._utils.classifier</span> <span class="kn">import</span> <span class="n">Classifier</span><span class="p">,</span> <span class="n">DefaultClassifier</span>
 <span class="kn">from</span> <span class="nn">captum.concept._utils.common</span> <span class="kn">import</span> <span class="n">concepts_to_str</span>
+<span class="kn">from</span> <span class="nn">captum.log</span> <span class="kn">import</span> <span class="n">log_usage</span>
 <span class="kn">from</span> <span class="nn">torch</span> <span class="kn">import</span> <span class="n">Tensor</span>
 <span class="kn">from</span> <span class="nn">torch.nn</span> <span class="kn">import</span> <span class="n">Module</span>
 <span class="kn">from</span> <span class="nn">torch.utils.data</span> <span class="kn">import</span> <span class="n">DataLoader</span><span class="p">,</span> <span class="n">Dataset</span>
-
-<span class="n">DEFAULT_MODEL_ID</span> <span class="o">=</span> <span class="s2">"default_model_id"</span>
 
 
 <span class="k">class</span> <span class="nc">LabelledDataset</span><span class="p">(</span><span class="n">Dataset</span><span class="p">):</span>
@@ -133,6 +132,7 @@ src="/js/documentation_options.js"></script>
 
 
 <span class="k">def</span> <span class="nf">train_cav</span><span class="p">(</span>
+    <span class="n">model_id</span><span class="p">,</span>
     <span class="n">concepts</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Concept</span><span class="p">],</span>
     <span class="n">layers</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]],</span>
     <span class="n">classifier</span><span class="p">:</span> <span class="n">Classifier</span><span class="p">,</span>
@@ -146,6 +146,9 @@ src="/js/documentation_options.js"></script>
 <span class="sd">    Please see the TCAV class documentation for further information.</span>
 
 <span class="sd">    Args:</span>
+<span class="sd">        model_id (str): A unique identifier for the PyTorch model for which</span>
+<span class="sd">                we would like to load the layer activations and train a</span>
+<span class="sd">                model in order to compute CAVs.</span>
 <span class="sd">        concepts (list[Concept]): A list of Concept objects that are used</span>
 <span class="sd">                to train a classifier and learn decision boundaries between</span>
 <span class="sd">                those concepts for each layer defined in the `layers`</span>
@@ -178,10 +181,10 @@ src="/js/documentation_options.js"></script>
     <span class="k">for</span> <span class="n">layer</span> <span class="ow">in</span> <span class="n">layers</span><span class="p">:</span>
 
         <span class="c1"># Create data loader to initialize the trainer.</span>
-        <span class="n">datasets</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span>
-            <span class="n">AV</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">save_path</span><span class="p">,</span> <span class="n">DEFAULT_MODEL_ID</span><span class="p">,</span> <span class="n">concept</span><span class="o">.</span><span class="n">identifier</span><span class="p">,</span> <span class="n">layer</span><span class="p">)</span>
+        <span class="n">datasets</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">AV</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">save_path</span><span class="p">,</span> <span class="n">model_id</span><span class="p">,</span> <span class="n">concept</span><span class="o">.</span><span class="n">identifier</span><span class="p">,</span> <span class="n">layer</span><span class="p">)</span>
             <span class="k">for</span> <span class="n">concept</span> <span class="ow">in</span> <span class="n">concepts</span>
-        <span class="p">)</span>
+        <span class="p">]</span>
 
         <span class="n">labels</span> <span class="o">=</span> <span class="p">[</span><span class="n">concept</span><span class="o">.</span><span class="n">id</span> <span class="k">for</span> <span class="n">concept</span> <span class="ow">in</span> <span class="n">concepts</span><span class="p">]</span>
 
@@ -220,8 +223,8 @@ src="/js/documentation_options.js"></script>
             <span class="n">layer</span><span class="p">,</span>
             <span class="p">{</span><span class="s2">"weights"</span><span class="p">:</span> <span class="n">weights</span><span class="p">,</span> <span class="s2">"classes"</span><span class="p">:</span> <span class="n">classes</span><span class="p">,</span> <span class="o">**</span><span class="n">classifier_stats_dict</span><span class="p">},</span>
             <span class="n">save_path</span><span class="p">,</span>
+            <span class="n">model_id</span><span class="p">,</span>
         <span class="p">)</span>
-
         <span class="c1"># Saving cavs on the disk</span>
         <span class="n">cavs</span><span class="p">[</span><span class="n">concepts_key</span><span class="p">][</span><span class="n">layer</span><span class="p">]</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
 
@@ -272,6 +275,7 @@ src="/js/documentation_options.js"></script>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">model</span><span class="p">:</span> <span class="n">Module</span><span class="p">,</span>
         <span class="n">layers</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]],</span>
+        <span class="n">model_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"default_model_id"</span><span class="p">,</span>
         <span class="n">classifier</span><span class="p">:</span> <span class="n">Classifier</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">layer_attr_method</span><span class="p">:</span> <span class="n">LayerAttribution</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">save_path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"./cav/"</span><span class="p">,</span>
@@ -284,7 +288,11 @@ src="/js/documentation_options.js"></script>
 <span class="sd">            layers (str, list[str]): A list of layer name(s) that are</span>
 <span class="sd">                    used for computing concept activations (cavs) and layer</span>
 <span class="sd">                    attributions.</span>
-<span class="sd">            classifier (Classifier): A custom classifier class, such as the</span>
+<span class="sd">            model_id (str, optional): A unique identifier for the PyTorch `model`</span>
+<span class="sd">                    passed as first argument to the constructor of TCAV class. It</span>
+<span class="sd">                    is used to store and load activations for given input `model`</span>
+<span class="sd">                    and associated `layers`.</span>
+<span class="sd">            classifier (Classifier, optional): A custom classifier class, such as the</span>
 <span class="sd">                    Sklearn "linear_model" that allows us to train a model</span>
 <span class="sd">                    using the activation vectors extracted for a layer per concept.</span>
 <span class="sd">                    It also allows us to access trained weights of the model</span>
@@ -320,6 +328,7 @@ src="/js/documentation_options.js"></script>
 <span class="sd">        """</span>
         <span class="n">ConceptInterpreter</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">layers</span> <span class="o">=</span> <span class="p">[</span><span class="n">layers</span><span class="p">]</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">layers</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="k">else</span> <span class="n">layers</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">model_id</span> <span class="o">=</span> <span class="n">model_id</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">concepts</span><span class="p">:</span> <span class="n">Set</span><span class="p">[</span><span class="n">Concept</span><span class="p">]</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">classifier</span> <span class="o">=</span> <span class="n">classifier</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">classifier_kwargs</span> <span class="o">=</span> <span class="n">classifier_kwargs</span>
@@ -336,7 +345,19 @@ src="/js/documentation_options.js"></script>
         <span class="k">else</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">layer_attr_method</span> <span class="o">=</span> <span class="n">layer_attr_method</span>
 
+        <span class="k">assert</span> <span class="n">model_id</span><span class="p">,</span> <span class="p">(</span>
+            <span class="s2">"`model_id` cannot be None or empty. Consider giving `model_id` "</span>
+            <span class="s2">"a meaningful name or leave it unspecified. If model_id is unspecified we "</span>
+            <span class="s2">"will use `default_model_id` as its default value."</span>
+        <span class="p">)</span>
+
         <span class="bp">self</span><span class="o">.</span><span class="n">save_path</span> <span class="o">=</span> <span class="n">save_path</span>
+
+        <span class="c1"># Creates CAV save directory if it doesn't exist. It is created once in the</span>
+        <span class="c1"># constructor before generating the CAVs.</span>
+        <span class="c1"># It is assumed that `model_id` can be used as a valid directory name</span>
+        <span class="c1"># otherwise `create_cav_dir_if_missing` will raise an error</span>
+        <span class="n">CAV</span><span class="o">.</span><span class="n">create_cav_dir_if_missing</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">save_path</span><span class="p">,</span> <span class="n">model_id</span><span class="p">)</span>
 
 <div class="viewcode-block" id="TCAV.generate_all_activations"><a class="viewcode-back" href="../../../../concept.html#captum.concept.TCAV.generate_all_activations">[docs]</a>    <span class="k">def</span> <span class="nf">generate_all_activations</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="sa">r</span><span class="sd">"""</span>
@@ -367,12 +388,14 @@ src="/js/documentation_options.js"></script>
             <span class="s2">"</span><span class="si">{}</span><span class="s2"> must be specified"</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">concept</span><span class="o">.</span><span class="n">id</span><span class="p">),</span>
         <span class="p">)</span>
         <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">examples</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">concept</span><span class="o">.</span><span class="n">data_iter</span><span class="p">):</span>
-            <span class="n">activations</span> <span class="o">=</span> <span class="n">layer_act</span><span class="o">.</span><span class="n">attribute</span><span class="p">(</span><span class="n">examples</span><span class="p">)</span>
+            <span class="n">activations</span> <span class="o">=</span> <span class="n">layer_act</span><span class="o">.</span><span class="n">attribute</span><span class="o">.</span><span class="n">__wrapped__</span><span class="p">(</span>  <span class="c1"># type: ignore</span>
+                <span class="n">layer_act</span><span class="p">,</span> <span class="n">examples</span>
+            <span class="p">)</span>
             <span class="k">for</span> <span class="n">activation</span><span class="p">,</span> <span class="n">layer_name</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">activations</span><span class="p">,</span> <span class="n">layers</span><span class="p">):</span>
                 <span class="n">activation</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">activation</span><span class="p">,</span> <span class="p">(</span><span class="n">activation</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="o">-</span><span class="mi">1</span><span class="p">))</span>
                 <span class="n">AV</span><span class="o">.</span><span class="n">save</span><span class="p">(</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">save_path</span><span class="p">,</span>
-                    <span class="n">DEFAULT_MODEL_ID</span><span class="p">,</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">model_id</span><span class="p">,</span>
                     <span class="n">concept</span><span class="o">.</span><span class="n">identifier</span><span class="p">,</span>
                     <span class="n">layer_name</span><span class="p">,</span>
                     <span class="n">activation</span><span class="o">.</span><span class="n">detach</span><span class="p">(),</span>
@@ -426,7 +449,9 @@ src="/js/documentation_options.js"></script>
         <span class="n">concept_layers</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="nb">list</span><span class="p">)</span>
 
         <span class="k">for</span> <span class="n">layer</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">layers</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">cavs</span><span class="p">[</span><span class="n">concepts_key</span><span class="p">][</span><span class="n">layer</span><span class="p">]</span> <span class="o">=</span> <span class="n">CAV</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">save_path</span><span class="p">,</span> <span class="n">concepts</span><span class="p">,</span> <span class="n">layer</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">cavs</span><span class="p">[</span><span class="n">concepts_key</span><span class="p">][</span><span class="n">layer</span><span class="p">]</span> <span class="o">=</span> <span class="n">CAV</span><span class="o">.</span><span class="n">load</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">save_path</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_id</span><span class="p">,</span> <span class="n">concepts</span><span class="p">,</span> <span class="n">layer</span>
+            <span class="p">)</span>
 
             <span class="c1"># If CAV aren't loaded</span>
             <span class="k">if</span> <span class="p">(</span>
@@ -440,7 +465,7 @@ src="/js/documentation_options.js"></script>
                 <span class="k">for</span> <span class="n">concept</span> <span class="ow">in</span> <span class="n">concepts</span><span class="p">:</span>
                     <span class="c1"># Collect not activated layers for this concept</span>
                     <span class="k">if</span> <span class="ow">not</span> <span class="n">AV</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span>
-                        <span class="bp">self</span><span class="o">.</span><span class="n">save_path</span><span class="p">,</span> <span class="n">DEFAULT_MODEL_ID</span><span class="p">,</span> <span class="n">layer</span><span class="p">,</span> <span class="n">concept</span><span class="o">.</span><span class="n">identifier</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">save_path</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_id</span><span class="p">,</span> <span class="n">layer</span><span class="p">,</span> <span class="n">concept</span><span class="o">.</span><span class="n">identifier</span>
                     <span class="p">):</span>
                         <span class="n">concept_layers</span><span class="p">[</span><span class="n">concept</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">layer</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">layers</span><span class="p">,</span> <span class="n">concept_layers</span></div>
@@ -521,6 +546,7 @@ src="/js/documentation_options.js"></script>
                 <span class="n">train_cav</span><span class="p">,</span>
                 <span class="p">[</span>
                     <span class="p">(</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">model_id</span><span class="p">,</span>
                         <span class="n">concepts</span><span class="p">,</span>
                         <span class="n">concept_key_to_layers</span><span class="p">[</span><span class="n">concepts_to_str</span><span class="p">(</span><span class="n">concepts</span><span class="p">)],</span>
                         <span class="bp">self</span><span class="o">.</span><span class="n">classifier</span><span class="p">,</span>
@@ -539,6 +565,7 @@ src="/js/documentation_options.js"></script>
             <span class="k">for</span> <span class="n">concepts</span> <span class="ow">in</span> <span class="n">experimental_sets</span><span class="p">:</span>
                 <span class="n">cavs_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
                     <span class="n">train_cav</span><span class="p">(</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">model_id</span><span class="p">,</span>
                         <span class="n">concepts</span><span class="p">,</span>
                         <span class="n">concept_key_to_layers</span><span class="p">[</span><span class="n">concepts_to_str</span><span class="p">(</span><span class="n">concepts</span><span class="p">)],</span>
                         <span class="n">cast</span><span class="p">(</span><span class="n">Classifier</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">classifier</span><span class="p">),</span>
@@ -554,7 +581,8 @@ src="/js/documentation_options.js"></script>
 
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">cavs</span></div>
 
-<div class="viewcode-block" id="TCAV.interpret"><a class="viewcode-back" href="../../../../concept.html#captum.concept.TCAV.interpret">[docs]</a>    <span class="k">def</span> <span class="nf">interpret</span><span class="p">(</span>
+<div class="viewcode-block" id="TCAV.interpret"><a class="viewcode-back" href="../../../../concept.html#captum.concept.TCAV.interpret">[docs]</a>    <span class="nd">@log_usage</span><span class="p">()</span>
+    <span class="k">def</span> <span class="nf">interpret</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">inputs</span><span class="p">:</span> <span class="n">TensorOrTupleOfTensorsGeneric</span><span class="p">,</span>
         <span class="n">experimental_sets</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">Concept</span><span class="p">]],</span>
@@ -679,7 +707,8 @@ src="/js/documentation_options.js"></script>
             <span class="n">layer_module</span> <span class="o">=</span> <span class="n">_get_module_from_name</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">,</span> <span class="n">layer</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">layer_attr_method</span><span class="o">.</span><span class="n">layer</span> <span class="o">=</span> <span class="n">layer_module</span>
 
-            <span class="n">attribs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">layer_attr_method</span><span class="o">.</span><span class="n">attribute</span><span class="p">(</span>
+            <span class="n">attribs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">layer_attr_method</span><span class="o">.</span><span class="n">attribute</span><span class="o">.</span><span class="n">__wrapped__</span><span class="p">(</span>  <span class="c1"># type: ignore</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">layer_attr_method</span><span class="p">,</span>  <span class="c1"># self</span>
                 <span class="n">inputs</span><span class="p">,</span>
                 <span class="n">target</span><span class="o">=</span><span class="n">target</span><span class="p">,</span>
                 <span class="n">additional_forward_args</span><span class="o">=</span><span class="n">additional_forward_args</span><span class="p">,</span>
@@ -705,7 +734,6 @@ src="/js/documentation_options.js"></script>
             <span class="c1"># sort cavs and classes using the length of the concepts in each set</span>
             <span class="n">cavs_sorted</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">cavs</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">object</span><span class="p">)[</span><span class="n">exp_set_lens_arg_sort</span><span class="p">]</span>
             <span class="n">classes_sorted</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">classes</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">object</span><span class="p">)[</span><span class="n">exp_set_lens_arg_sort</span><span class="p">]</span>
-
             <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span>
             <span class="k">while</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">exp_set_offsets</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">:</span>
                 <span class="n">cav_subset</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span>
@@ -833,7 +861,7 @@ src="/js/documentation_options.js"></script>
 </div>
 </div>
 <div class="clearer"></div>
-</div></div></div><footer class="nav-footer" id="footer"><section class="sitemap"><div class="footerSection"><h5>Docs</h5><a href="/docs/introduction">Introduction</a><a href="/docs/getting_started">Getting Started</a><a href="/tutorials/">Tutorials</a><a href="/api/">API Reference</a></div><div class="footerSection"><h5>Legal</h5><a href="https://opensource.facebook.com/legal/privacy/" target="_blank" rel="noreferrer noopener">Privacy</a><a href="https://opensource.facebook.com/legal/terms/" target="_blank" rel="noreferrer noopener">Terms</a></div><div class="footerSection"><h5>Social</h5><div class="social"><a class="github-button" href="https://github.com/pytorch/captum" data-count-href="https://github.com/pytorch/captum/stargazers" data-show-count="true" data-count-aria-label="# stargazers on GitHub" aria-label="Star Captum on GitHub">captum</a></div></div></section><a href="https://opensource.facebook.com/" target="_blank" rel="noreferrer noopener" class="fbOpenSource"><img src="/img/oss_logo.png" alt="Facebook Open Source" width="170" height="45"/></a><section class="copyright"> Copyright © 2021 Facebook Inc.</section><script>
+</div></div></div><footer class="nav-footer" id="footer"><section class="sitemap"><div class="footerSection"><h5>Docs</h5><a href="/docs/introduction">Introduction</a><a href="/docs/getting_started">Getting Started</a><a href="/tutorials/">Tutorials</a><a href="/api/">API Reference</a></div><div class="footerSection"><h5>Legal</h5><a href="https://opensource.facebook.com/legal/privacy/" target="_blank" rel="noreferrer noopener">Privacy</a><a href="https://opensource.facebook.com/legal/terms/" target="_blank" rel="noreferrer noopener">Terms</a></div><div class="footerSection"><h5>Social</h5><div class="social"><a class="github-button" href="https://github.com/pytorch/captum" data-count-href="https://github.com/pytorch/captum/stargazers" data-show-count="true" data-count-aria-label="# stargazers on GitHub" aria-label="Star Captum on GitHub">captum</a></div></div></section><a href="https://opensource.facebook.com/" target="_blank" rel="noreferrer noopener" class="fbOpenSource"><img src="/img/oss_logo.png" alt="Facebook Open Source" width="170" height="45"/></a><section class="copyright"> Copyright © 2022 Facebook Inc.</section><script>
             (function() {
               var BAD_BASE = '/captum/';
               if (window.location.origin !== 'https://captum.ai') {

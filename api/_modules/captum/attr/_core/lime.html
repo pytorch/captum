@@ -687,7 +687,11 @@ src="/js/documentation_options.js"></script>
     <span class="k">else</span><span class="p">:</span>
         <span class="n">feature_mask</span> <span class="o">=</span> <span class="n">_format_input</span><span class="p">(</span><span class="n">feature_mask</span><span class="p">)</span>
         <span class="n">min_interp_features</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span>
-            <span class="nb">min</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">single_inp</span><span class="p">)</span><span class="o">.</span><span class="n">item</span><span class="p">()</span> <span class="k">for</span> <span class="n">single_inp</span> <span class="ow">in</span> <span class="n">feature_mask</span><span class="p">)</span>
+            <span class="nb">min</span><span class="p">(</span>
+                <span class="n">torch</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">single_mask</span><span class="p">)</span><span class="o">.</span><span class="n">item</span><span class="p">()</span>
+                <span class="k">for</span> <span class="n">single_mask</span> <span class="ow">in</span> <span class="n">feature_mask</span>
+                <span class="k">if</span> <span class="n">single_mask</span><span class="o">.</span><span class="n">numel</span><span class="p">()</span>
+            <span class="p">)</span>
         <span class="p">)</span>
         <span class="k">if</span> <span class="n">min_interp_features</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
             <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
@@ -695,11 +699,16 @@ src="/js/documentation_options.js"></script>
                 <span class="s2">" start at 0."</span>
             <span class="p">)</span>
             <span class="n">feature_mask</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span>
-                <span class="n">single_inp</span> <span class="o">-</span> <span class="n">min_interp_features</span> <span class="k">for</span> <span class="n">single_inp</span> <span class="ow">in</span> <span class="n">feature_mask</span>
+                <span class="n">single_mask</span> <span class="o">-</span> <span class="n">min_interp_features</span> <span class="k">for</span> <span class="n">single_mask</span> <span class="ow">in</span> <span class="n">feature_mask</span>
             <span class="p">)</span>
 
         <span class="n">num_interp_features</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span>
-            <span class="nb">max</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">single_inp</span><span class="p">)</span><span class="o">.</span><span class="n">item</span><span class="p">()</span> <span class="k">for</span> <span class="n">single_inp</span> <span class="ow">in</span> <span class="n">feature_mask</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
+            <span class="nb">max</span><span class="p">(</span>
+                <span class="n">torch</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">single_mask</span><span class="p">)</span><span class="o">.</span><span class="n">item</span><span class="p">()</span>
+                <span class="k">for</span> <span class="n">single_mask</span> <span class="ow">in</span> <span class="n">feature_mask</span>
+                <span class="k">if</span> <span class="n">single_mask</span><span class="o">.</span><span class="n">numel</span><span class="p">()</span>
+            <span class="p">)</span>
+            <span class="o">+</span> <span class="mi">1</span>
         <span class="p">)</span>
     <span class="k">return</span> <span class="n">feature_mask</span><span class="p">,</span> <span class="n">num_interp_features</span>
 
@@ -1307,7 +1316,7 @@ src="/js/documentation_options.js"></script>
 </div>
 </div>
 <div class="clearer"></div>
-</div></div></div><footer class="nav-footer" id="footer"><section class="sitemap"><div class="footerSection"><h5>Docs</h5><a href="/docs/introduction">Introduction</a><a href="/docs/getting_started">Getting Started</a><a href="/tutorials/">Tutorials</a><a href="/api/">API Reference</a></div><div class="footerSection"><h5>Legal</h5><a href="https://opensource.facebook.com/legal/privacy/" target="_blank" rel="noreferrer noopener">Privacy</a><a href="https://opensource.facebook.com/legal/terms/" target="_blank" rel="noreferrer noopener">Terms</a></div><div class="footerSection"><h5>Social</h5><div class="social"><a class="github-button" href="https://github.com/pytorch/captum" data-count-href="https://github.com/pytorch/captum/stargazers" data-show-count="true" data-count-aria-label="# stargazers on GitHub" aria-label="Star Captum on GitHub">captum</a></div></div></section><a href="https://opensource.facebook.com/" target="_blank" rel="noreferrer noopener" class="fbOpenSource"><img src="/img/oss_logo.png" alt="Facebook Open Source" width="170" height="45"/></a><section class="copyright"> Copyright © 2021 Facebook Inc.</section><script>
+</div></div></div><footer class="nav-footer" id="footer"><section class="sitemap"><div class="footerSection"><h5>Docs</h5><a href="/docs/introduction">Introduction</a><a href="/docs/getting_started">Getting Started</a><a href="/tutorials/">Tutorials</a><a href="/api/">API Reference</a></div><div class="footerSection"><h5>Legal</h5><a href="https://opensource.facebook.com/legal/privacy/" target="_blank" rel="noreferrer noopener">Privacy</a><a href="https://opensource.facebook.com/legal/terms/" target="_blank" rel="noreferrer noopener">Terms</a></div><div class="footerSection"><h5>Social</h5><div class="social"><a class="github-button" href="https://github.com/pytorch/captum" data-count-href="https://github.com/pytorch/captum/stargazers" data-show-count="true" data-count-aria-label="# stargazers on GitHub" aria-label="Star Captum on GitHub">captum</a></div></div></section><a href="https://opensource.facebook.com/" target="_blank" rel="noreferrer noopener" class="fbOpenSource"><img src="/img/oss_logo.png" alt="Facebook Open Source" width="170" height="45"/></a><section class="copyright"> Copyright © 2022 Facebook Inc.</section><script>
             (function() {
               var BAD_BASE = '/captum/';
               if (window.location.origin !== 'https://captum.ai') {

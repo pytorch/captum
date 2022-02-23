@@ -51,6 +51,7 @@ src="/js/documentation_options.js"></script>
     <span class="n">_is_tuple</span><span class="p">,</span>
     <span class="n">_run_forward</span><span class="p">,</span>
     <span class="n">_select_targets</span><span class="p">,</span>
+    <span class="n">_register_backward_hook</span><span class="p">,</span>
 <span class="p">)</span>
 <span class="kn">from</span> <span class="nn">captum._utils.gradient</span> <span class="kn">import</span> <span class="p">(</span>
     <span class="n">apply_gradient_requirements</span><span class="p">,</span>
@@ -136,11 +137,19 @@ src="/js/documentation_options.js"></script>
 <span class="sd">    https://pytorch.org/blog/optimizing-cuda-rnn-with-torchscript/</span>
 <span class="sd">    """</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model</span><span class="p">:</span> <span class="n">Module</span><span class="p">,</span> <span class="n">multiply_by_inputs</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">model</span><span class="p">:</span> <span class="n">Module</span><span class="p">,</span>
+        <span class="n">multiply_by_inputs</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="n">eps</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1e-10</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        Args:</span>
 
-<span class="sd">            model (nn.Module):  The reference to PyTorch model instance.</span>
+<span class="sd">            model (nn.Module):  The reference to PyTorch model instance. Model cannot</span>
+<span class="sd">                        contain any in-place nonlinear submodules; these are not</span>
+<span class="sd">                        supported by the register_full_backward_hook PyTorch API</span>
+<span class="sd">                        starting from PyTorch v1.8.</span>
 <span class="sd">            multiply_by_inputs (bool, optional): Indicates whether to factor</span>
 <span class="sd">                        model inputs' multiplier in the final attribution scores.</span>
 <span class="sd">                        In the literature this is also known as local vs global</span>
@@ -156,9 +165,16 @@ src="/js/documentation_options.js"></script>
 <span class="sd">                        are being multiplied by (inputs - baselines).</span>
 <span class="sd">                        This flag applies only if `custom_attribution_func` is</span>
 <span class="sd">                        set to None.</span>
+
+<span class="sd">            eps (float, optional): A value at which to consider output/input change</span>
+<span class="sd">                        significant when computing the gradients for non-linear layers.</span>
+<span class="sd">                        This is useful to adjust, depending on your model's bit depth,</span>
+<span class="sd">                        to avoid numerical issues during the gradient computation.</span>
+<span class="sd">                        Default: 1e-10</span>
 <span class="sd">        """</span>
         <span class="n">GradientAttribution</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">model</span> <span class="o">=</span> <span class="n">model</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">eps</span> <span class="o">=</span> <span class="n">eps</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">forward_handles</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">RemovableHandle</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">backward_handles</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">RemovableHandle</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_multiply_by_inputs</span> <span class="o">=</span> <span class="n">multiply_by_inputs</span>
@@ -355,7 +371,6 @@ src="/js/documentation_options.js"></script>
 <span class="sd">               activations. The hooks and attributes will be removed</span>
 <span class="sd">            after the attribution is finished"""</span>
         <span class="p">)</span>
-
         <span class="n">baselines</span> <span class="o">=</span> <span class="n">_tensorize_baseline</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">baselines</span><span class="p">)</span>
         <span class="n">main_model_hooks</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="k">try</span><span class="p">:</span>
@@ -504,7 +519,6 @@ src="/js/documentation_options.js"></script>
         <span class="n">module</span><span class="p">:</span> <span class="n">Module</span><span class="p">,</span>
         <span class="n">grad_input</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">]],</span>
         <span class="n">grad_output</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">]],</span>
-        <span class="n">eps</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1e-10</span><span class="p">,</span>
     <span class="p">):</span>
         <span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        `grad_input` is the gradient of the neuron with respect to its input</span>
@@ -528,7 +542,12 @@ src="/js/documentation_options.js"></script>
             <span class="p">)</span>
         <span class="n">multipliers</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span>
             <span class="n">SUPPORTED_NON_LINEAR</span><span class="p">[</span><span class="nb">type</span><span class="p">(</span><span class="n">module</span><span class="p">)](</span>
-                <span class="n">module</span><span class="p">,</span> <span class="n">module</span><span class="o">.</span><span class="n">input</span><span class="p">,</span> <span class="n">module</span><span class="o">.</span><span class="n">output</span><span class="p">,</span> <span class="n">grad_input</span><span class="p">,</span> <span class="n">grad_output</span><span class="p">,</span> <span class="n">eps</span><span class="o">=</span><span class="n">eps</span>
+                <span class="n">module</span><span class="p">,</span>
+                <span class="n">module</span><span class="o">.</span><span class="n">input</span><span class="p">,</span>
+                <span class="n">module</span><span class="o">.</span><span class="n">output</span><span class="p">,</span>
+                <span class="n">grad_input</span><span class="p">,</span>
+                <span class="n">grad_output</span><span class="p">,</span>
+                <span class="n">eps</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">eps</span><span class="p">,</span>
             <span class="p">)</span>
         <span class="p">)</span>
         <span class="c1"># remove all the properies that we set for the inputs and output</span>
@@ -560,7 +579,7 @@ src="/js/documentation_options.js"></script>
         <span class="c1"># adds forward hook to leaf nodes that are non-linear</span>
         <span class="n">forward_handle</span> <span class="o">=</span> <span class="n">module</span><span class="o">.</span><span class="n">register_forward_hook</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_forward_hook</span><span class="p">)</span>
         <span class="n">pre_forward_handle</span> <span class="o">=</span> <span class="n">module</span><span class="o">.</span><span class="n">register_forward_pre_hook</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_forward_pre_hook</span><span class="p">)</span>
-        <span class="n">backward_handle</span> <span class="o">=</span> <span class="n">module</span><span class="o">.</span><span class="n">register_backward_hook</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_backward_hook</span><span class="p">)</span>
+        <span class="n">backward_handle</span> <span class="o">=</span> <span class="n">_register_backward_hook</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_backward_hook</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">forward_handles</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">forward_handle</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">forward_handles</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">pre_forward_handle</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">backward_handles</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">backward_handle</span><span class="p">)</span>
@@ -640,7 +659,9 @@ src="/js/documentation_options.js"></script>
         <span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        Args:</span>
 
-<span class="sd">            model (nn.Module):  The reference to PyTorch model instance.</span>
+<span class="sd">            model (nn.Module):  The reference to PyTorch model instance. Model cannot</span>
+<span class="sd">                        contain any in-place nonlinear submodules; these are not</span>
+<span class="sd">                        supported by the register_full_backward_hook PyTorch API.</span>
 <span class="sd">            multiply_by_inputs (bool, optional): Indicates whether to factor</span>
 <span class="sd">                        model inputs' multiplier in the final attribution scores.</span>
 <span class="sd">                        In the literature this is also known as local vs global</span>
@@ -1209,7 +1230,7 @@ src="/js/documentation_options.js"></script>
 </div>
 </div>
 <div class="clearer"></div>
-</div></div></div><footer class="nav-footer" id="footer"><section class="sitemap"><div class="footerSection"><h5>Docs</h5><a href="/docs/introduction">Introduction</a><a href="/docs/getting_started">Getting Started</a><a href="/tutorials/">Tutorials</a><a href="/api/">API Reference</a></div><div class="footerSection"><h5>Legal</h5><a href="https://opensource.facebook.com/legal/privacy/" target="_blank" rel="noreferrer noopener">Privacy</a><a href="https://opensource.facebook.com/legal/terms/" target="_blank" rel="noreferrer noopener">Terms</a></div><div class="footerSection"><h5>Social</h5><div class="social"><a class="github-button" href="https://github.com/pytorch/captum" data-count-href="https://github.com/pytorch/captum/stargazers" data-show-count="true" data-count-aria-label="# stargazers on GitHub" aria-label="Star Captum on GitHub">captum</a></div></div></section><a href="https://opensource.facebook.com/" target="_blank" rel="noreferrer noopener" class="fbOpenSource"><img src="/img/oss_logo.png" alt="Facebook Open Source" width="170" height="45"/></a><section class="copyright"> Copyright © 2021 Facebook Inc.</section><script>
+</div></div></div><footer class="nav-footer" id="footer"><section class="sitemap"><div class="footerSection"><h5>Docs</h5><a href="/docs/introduction">Introduction</a><a href="/docs/getting_started">Getting Started</a><a href="/tutorials/">Tutorials</a><a href="/api/">API Reference</a></div><div class="footerSection"><h5>Legal</h5><a href="https://opensource.facebook.com/legal/privacy/" target="_blank" rel="noreferrer noopener">Privacy</a><a href="https://opensource.facebook.com/legal/terms/" target="_blank" rel="noreferrer noopener">Terms</a></div><div class="footerSection"><h5>Social</h5><div class="social"><a class="github-button" href="https://github.com/pytorch/captum" data-count-href="https://github.com/pytorch/captum/stargazers" data-show-count="true" data-count-aria-label="# stargazers on GitHub" aria-label="Star Captum on GitHub">captum</a></div></div></section><a href="https://opensource.facebook.com/" target="_blank" rel="noreferrer noopener" class="fbOpenSource"><img src="/img/oss_logo.png" alt="Facebook Open Source" width="170" height="45"/></a><section class="copyright"> Copyright © 2022 Facebook Inc.</section><script>
             (function() {
               var BAD_BASE = '/captum/';
               if (window.location.origin !== 'https://captum.ai') {

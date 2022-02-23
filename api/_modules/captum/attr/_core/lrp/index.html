@@ -38,7 +38,13 @@ src="/js/documentation_options.js"></script>
 <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Union</span><span class="p">,</span> <span class="n">cast</span>
 
 <span class="kn">import</span> <span class="nn">torch.nn</span> <span class="k">as</span> <span class="nn">nn</span>
-<span class="kn">from</span> <span class="nn">captum._utils.common</span> <span class="kn">import</span> <span class="n">_format_input</span><span class="p">,</span> <span class="n">_format_output</span><span class="p">,</span> <span class="n">_is_tuple</span><span class="p">,</span> <span class="n">_run_forward</span>
+<span class="kn">from</span> <span class="nn">captum._utils.common</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">_format_input</span><span class="p">,</span>
+    <span class="n">_format_output</span><span class="p">,</span>
+    <span class="n">_is_tuple</span><span class="p">,</span>
+    <span class="n">_run_forward</span><span class="p">,</span>
+    <span class="n">_register_backward_hook</span><span class="p">,</span>
+<span class="p">)</span>
 <span class="kn">from</span> <span class="nn">captum._utils.gradient</span> <span class="kn">import</span> <span class="p">(</span>
     <span class="n">apply_gradient_requirements</span><span class="p">,</span>
     <span class="n">undo_gradient_requirements</span><span class="p">,</span>
@@ -76,7 +82,10 @@ src="/js/documentation_options.js"></script>
 <span class="sd">                it. Custom rules for a given layer need to be defined as attribute</span>
 <span class="sd">                `module.rule` and need to be of type PropagationRule. If no rule is</span>
 <span class="sd">                specified for a layer, a pre-defined default rule for the module type</span>
-<span class="sd">                is used.</span>
+<span class="sd">                is used. Model cannot contain any in-place nonlinear submodules;</span>
+<span class="sd">                these are not supported by the register_full_backward_hook</span>
+<span class="sd">                PyTorch API starting from PyTorch v1.8.</span>
+
 <span class="sd">        """</span>
         <span class="n">GradientAttribution</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">model</span> <span class="o">=</span> <span class="n">model</span>
@@ -338,8 +347,8 @@ src="/js/documentation_options.js"></script>
     <span class="k">def</span> <span class="nf">_register_forward_hooks</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">for</span> <span class="n">layer</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">layers</span><span class="p">:</span>
             <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">layer</span><span class="p">)</span> <span class="ow">in</span> <span class="n">SUPPORTED_NON_LINEAR_LAYERS</span><span class="p">:</span>
-                <span class="n">backward_handle</span> <span class="o">=</span> <span class="n">layer</span><span class="o">.</span><span class="n">register_backward_hook</span><span class="p">(</span>
-                    <span class="n">PropagationRule</span><span class="o">.</span><span class="n">backward_hook_activation</span>
+                <span class="n">backward_handle</span> <span class="o">=</span> <span class="n">_register_backward_hook</span><span class="p">(</span>
+                    <span class="n">layer</span><span class="p">,</span> <span class="n">PropagationRule</span><span class="o">.</span><span class="n">backward_hook_activation</span><span class="p">,</span> <span class="bp">self</span>
                 <span class="p">)</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">backward_handles</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">backward_handle</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
@@ -491,7 +500,7 @@ src="/js/documentation_options.js"></script>
 </div>
 </div>
 <div class="clearer"></div>
-</div></div></div><footer class="nav-footer" id="footer"><section class="sitemap"><div class="footerSection"><h5>Docs</h5><a href="/docs/introduction">Introduction</a><a href="/docs/getting_started">Getting Started</a><a href="/tutorials/">Tutorials</a><a href="/api/">API Reference</a></div><div class="footerSection"><h5>Legal</h5><a href="https://opensource.facebook.com/legal/privacy/" target="_blank" rel="noreferrer noopener">Privacy</a><a href="https://opensource.facebook.com/legal/terms/" target="_blank" rel="noreferrer noopener">Terms</a></div><div class="footerSection"><h5>Social</h5><div class="social"><a class="github-button" href="https://github.com/pytorch/captum" data-count-href="https://github.com/pytorch/captum/stargazers" data-show-count="true" data-count-aria-label="# stargazers on GitHub" aria-label="Star Captum on GitHub">captum</a></div></div></section><a href="https://opensource.facebook.com/" target="_blank" rel="noreferrer noopener" class="fbOpenSource"><img src="/img/oss_logo.png" alt="Facebook Open Source" width="170" height="45"/></a><section class="copyright"> Copyright © 2021 Facebook Inc.</section><script>
+</div></div></div><footer class="nav-footer" id="footer"><section class="sitemap"><div class="footerSection"><h5>Docs</h5><a href="/docs/introduction">Introduction</a><a href="/docs/getting_started">Getting Started</a><a href="/tutorials/">Tutorials</a><a href="/api/">API Reference</a></div><div class="footerSection"><h5>Legal</h5><a href="https://opensource.facebook.com/legal/privacy/" target="_blank" rel="noreferrer noopener">Privacy</a><a href="https://opensource.facebook.com/legal/terms/" target="_blank" rel="noreferrer noopener">Terms</a></div><div class="footerSection"><h5>Social</h5><div class="social"><a class="github-button" href="https://github.com/pytorch/captum" data-count-href="https://github.com/pytorch/captum/stargazers" data-show-count="true" data-count-aria-label="# stargazers on GitHub" aria-label="Star Captum on GitHub">captum</a></div></div></section><a href="https://opensource.facebook.com/" target="_blank" rel="noreferrer noopener" class="fbOpenSource"><img src="/img/oss_logo.png" alt="Facebook Open Source" width="170" height="45"/></a><section class="copyright"> Copyright © 2022 Facebook Inc.</section><script>
             (function() {
               var BAD_BASE = '/captum/';
               if (window.location.origin !== 'https://captum.ai') {

@@ -32,6 +32,7 @@ src="/js/documentation_options.js"></script>
 <div class="body" role="main">
 <h1>Source code for captum.attr._core.neuron.neuron_deep_lift</h1><div class="highlight"><pre>
 <span></span><span class="ch">#!/usr/bin/env python3</span>
+<span class="kn">import</span> <span class="nn">warnings</span>
 <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Union</span><span class="p">,</span> <span class="n">cast</span>
 
 <span class="kn">from</span> <span class="nn">captum._utils.gradient</span> <span class="kn">import</span> <span class="n">construct_neuron_grad_fn</span>
@@ -78,7 +79,10 @@ src="/js/documentation_options.js"></script>
         <span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        Args:</span>
 
-<span class="sd">            model (torch.nn.Module):  The reference to PyTorch model instance.</span>
+<span class="sd">            model (nn.Module):  The reference to PyTorch model instance. Model cannot</span>
+<span class="sd">                        contain any in-place nonlinear submodules; these are not</span>
+<span class="sd">                        supported by the register_full_backward_hook PyTorch API</span>
+<span class="sd">                        starting from PyTorch v1.8.</span>
 <span class="sd">            layer (torch.nn.Module): Layer for which neuron attributions are computed.</span>
 <span class="sd">                        Attributions for a particular neuron for the input or output</span>
 <span class="sd">                        of this layer are computed using the argument neuron_selector</span>
@@ -260,6 +264,17 @@ src="/js/documentation_options.js"></script>
 <span class="sd">            &gt;&gt;&gt; attribution = dl.attribute(input, (4,1,2))</span>
 <span class="sd">        """</span>
         <span class="n">dl</span> <span class="o">=</span> <span class="n">DeepLift</span><span class="p">(</span><span class="n">cast</span><span class="p">(</span><span class="n">Module</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">forward_func</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">multiplies_by_inputs</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">attribute_to_neuron_input</span><span class="p">:</span>
+            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+                <span class="s2">"Attribution to neuron output is no longer supported for"</span>
+                <span class="s2">" NeuronDeepLift and will be deprecated in Captum"</span>
+                <span class="s2">" 0.6.0 due to changes in PyTorch's full backward hook"</span>
+                <span class="s2">" behavior. To obtain attributions for a neuron's"</span>
+                <span class="s2">" output, please attribute with respect to the next layer's input"</span>
+            <span class="p">)</span>
+            <span class="n">dl</span><span class="o">.</span><span class="n">skip_new_hook_layer</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">layer</span>  <span class="c1"># type: ignore</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">dl</span><span class="o">.</span><span class="n">skip_new_hook_layer</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1"># type: ignore</span>
         <span class="n">dl</span><span class="o">.</span><span class="n">gradient_func</span> <span class="o">=</span> <span class="n">construct_neuron_grad_fn</span><span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">layer</span><span class="p">,</span>
             <span class="n">neuron_selector</span><span class="p">,</span>
@@ -307,7 +322,10 @@ src="/js/documentation_options.js"></script>
         <span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        Args:</span>
 
-<span class="sd">            model (torch.nn.Module):  The reference to PyTorch model instance.</span>
+<span class="sd">            model (nn.Module):  The reference to PyTorch model instance. Model cannot</span>
+<span class="sd">                        contain any in-place nonlinear submodules; these are not</span>
+<span class="sd">                        supported by the register_full_backward_hook PyTorch API</span>
+<span class="sd">                        starting from PyTorch v1.8.</span>
 <span class="sd">            layer (torch.nn.Module): Layer for which neuron attributions are computed.</span>
 <span class="sd">                        Attributions for a particular neuron for the input or output</span>
 <span class="sd">                        of this layer are computed using the argument neuron_selector</span>
@@ -481,7 +499,19 @@ src="/js/documentation_options.js"></script>
 <span class="sd">            &gt;&gt;&gt; # index (4,1,2).</span>
 <span class="sd">            &gt;&gt;&gt; attribution = dl.attribute(input, (4,1,2))</span>
 <span class="sd">        """</span>
+
         <span class="n">dl</span> <span class="o">=</span> <span class="n">DeepLiftShap</span><span class="p">(</span><span class="n">cast</span><span class="p">(</span><span class="n">Module</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">forward_func</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">multiplies_by_inputs</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">attribute_to_neuron_input</span><span class="p">:</span>
+            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+                <span class="s2">"Attribution to neuron output is no longer supported for"</span>
+                <span class="s2">" NeuronDeepLiftShap and will be deprecated in Captum"</span>
+                <span class="s2">" 0.6.0 due to changes in PyTorch's full backward hook"</span>
+                <span class="s2">" behavior. To obtain attributions for a neuron's"</span>
+                <span class="s2">" output, please attribute with respect to the next layer's input"</span>
+            <span class="p">)</span>
+            <span class="n">dl</span><span class="o">.</span><span class="n">skip_new_hook_layer</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">layer</span>  <span class="c1"># type: ignore</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">dl</span><span class="o">.</span><span class="n">skip_new_hook_layer</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1"># type: ignore</span>
         <span class="n">dl</span><span class="o">.</span><span class="n">gradient_func</span> <span class="o">=</span> <span class="n">construct_neuron_grad_fn</span><span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">layer</span><span class="p">,</span>
             <span class="n">neuron_selector</span><span class="p">,</span>
@@ -547,7 +577,7 @@ src="/js/documentation_options.js"></script>
 </div>
 </div>
 <div class="clearer"></div>
-</div></div></div><footer class="nav-footer" id="footer"><section class="sitemap"><div class="footerSection"><h5>Docs</h5><a href="/docs/introduction">Introduction</a><a href="/docs/getting_started">Getting Started</a><a href="/tutorials/">Tutorials</a><a href="/api/">API Reference</a></div><div class="footerSection"><h5>Legal</h5><a href="https://opensource.facebook.com/legal/privacy/" target="_blank" rel="noreferrer noopener">Privacy</a><a href="https://opensource.facebook.com/legal/terms/" target="_blank" rel="noreferrer noopener">Terms</a></div><div class="footerSection"><h5>Social</h5><div class="social"><a class="github-button" href="https://github.com/pytorch/captum" data-count-href="https://github.com/pytorch/captum/stargazers" data-show-count="true" data-count-aria-label="# stargazers on GitHub" aria-label="Star Captum on GitHub">captum</a></div></div></section><a href="https://opensource.facebook.com/" target="_blank" rel="noreferrer noopener" class="fbOpenSource"><img src="/img/oss_logo.png" alt="Facebook Open Source" width="170" height="45"/></a><section class="copyright"> Copyright © 2021 Facebook Inc.</section><script>
+</div></div></div><footer class="nav-footer" id="footer"><section class="sitemap"><div class="footerSection"><h5>Docs</h5><a href="/docs/introduction">Introduction</a><a href="/docs/getting_started">Getting Started</a><a href="/tutorials/">Tutorials</a><a href="/api/">API Reference</a></div><div class="footerSection"><h5>Legal</h5><a href="https://opensource.facebook.com/legal/privacy/" target="_blank" rel="noreferrer noopener">Privacy</a><a href="https://opensource.facebook.com/legal/terms/" target="_blank" rel="noreferrer noopener">Terms</a></div><div class="footerSection"><h5>Social</h5><div class="social"><a class="github-button" href="https://github.com/pytorch/captum" data-count-href="https://github.com/pytorch/captum/stargazers" data-show-count="true" data-count-aria-label="# stargazers on GitHub" aria-label="Star Captum on GitHub">captum</a></div></div></section><a href="https://opensource.facebook.com/" target="_blank" rel="noreferrer noopener" class="fbOpenSource"><img src="/img/oss_logo.png" alt="Facebook Open Source" width="170" height="45"/></a><section class="copyright"> Copyright © 2022 Facebook Inc.</section><script>
             (function() {
               var BAD_BASE = '/captum/';
               if (window.location.origin !== 'https://captum.ai') {
