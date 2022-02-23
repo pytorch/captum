@@ -12,6 +12,7 @@ from captum._utils.common import (
     _sort_key_list,
     _verify_select_neuron,
 )
+from captum._utils.sample_gradient import SampleGradientWrapper
 from captum._utils.typing import (
     Literal,
     ModuleOrModuleList,
@@ -779,9 +780,6 @@ def _compute_jacobian_wrt_params_autograd_hacks(
     reduction_type: Optional[str] = "sum",
 ) -> Tuple[Any, ...]:
     r"""
-    NOT SUPPORTED FOR OPEN SOURCE. This method uses an internal 'hack` and is currently
-    not supported.
-
     Computes the Jacobian of a batch of test examples given a model, and optional
     loss function and target labels. This method uses autograd_hacks to fully vectorize
     the Jacobian calculation. Currently, only linear and conv2d layers are supported.
@@ -813,48 +811,52 @@ def _compute_jacobian_wrt_params_autograd_hacks(
                 batch. For example, grads[i][j] would reference the gradients for the
                 parameters of the i-th layer, for the j-th member of the minibatch.
     """
-    from captum._utils.fb import autograd_hacks
-
     with torch.autograd.set_grad_enabled(True):
-        autograd_hacks.add_hooks(model)
+        sample_grad_wrapper = SampleGradientWrapper(model)
+        try:
+            sample_grad_wrapper.add_hooks()
 
-        out = model(*inputs)
-        assert out.dim() != 0, "Please ensure model output has at least one dimension."
+            out = model(*inputs)
+            assert (
+                out.dim() != 0
+            ), "Please ensure model output has at least one dimension."
 
-        if labels is not None and loss_fn is not None:
-            loss = loss_fn(out, labels)
-            if hasattr(loss_fn, "reduction"):
-                msg0 = "Please ensure loss_fn.reduction is set to `sum` or `mean`"
-                assert loss_fn.reduction != "none", msg0
-                msg1 = (
-                    f"loss_fn.reduction ({loss_fn.reduction}) does not match reduction "
-                    f"type ({reduction_type}). Please ensure they are matching."
+            if labels is not None and loss_fn is not None:
+                loss = loss_fn(out, labels)
+                if hasattr(loss_fn, "reduction"):
+                    msg0 = (
+                        "Please ensure that loss_fn.reduction is set to `sum` or `mean`"
+                    )
+                    assert loss_fn.reduction != "none", msg0
+                    msg1 = (
+                        f"loss_fn.reduction ({loss_fn.reduction}) does not match"
+                        f"reduction type ({reduction_type}). Please ensure they are"
+                        " matching."
+                    )
+                    assert loss_fn.reduction == reduction_type, msg1
+                msg2 = (
+                    "Please ensure custom loss function is applying either a "
+                    "sum or mean reduction."
                 )
-                assert loss_fn.reduction == reduction_type, msg1
-            msg2 = (
-                "Please ensure custom loss function is applying either a "
-                "sum or mean reduction."
+                assert out.shape != loss.shape, msg2
+
+                if reduction_type != "sum" and reduction_type != "mean":
+                    raise ValueError(
+                        f"{reduction_type} is not a valid value for reduction_type. "
+                        "Must be either 'sum' or 'mean'."
+                    )
+                out = loss
+
+            sample_grad_wrapper.compute_param_sample_gradients(
+                out, loss_mode=reduction_type
             )
-            assert out.shape != loss.shape, msg2
 
-            if reduction_type != "sum" and reduction_type != "mean":
-                raise ValueError(
-                    f"{reduction_type} is not a valid value for reduction_type. "
-                    "Must be either 'sum' or 'mean'."
-                )
-            out = loss
-
-        model.zero_grad()
-        out.backward(gradient=torch.ones_like(out))
-        autograd_hacks.compute_grad1(model, loss_type=reduction_type)
-
-        grads = tuple(
-            param.grad1  # type: ignore
-            for param in model.parameters()
-            if hasattr(param, "grad1")
-        )
-
-        autograd_hacks.clear_backprops(model)
-        autograd_hacks.remove_hooks(model)
+            grads = tuple(
+                param.sample_grad  # type: ignore
+                for param in model.parameters()
+                if hasattr(param, "sample_grad")
+            )
+        finally:
+            sample_grad_wrapper.remove_hooks()
 
         return grads

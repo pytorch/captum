@@ -5,7 +5,6 @@ from collections import namedtuple
 from io import BytesIO
 from typing import Callable, List, Optional, Union
 
-import numpy as np
 from captum._utils.common import safe_div
 from captum.attr._utils import visualization as viz
 from captum.insights.attr_vis._utils.transforms import format_transforms
@@ -116,12 +115,13 @@ class ImageFeature(BaseFeature):
         return "image"
 
     def visualize(self, attribution, data, contribution_frac) -> FeatureOutput:
-        attribution = attribution.squeeze()
-        data = data.squeeze()
-        data_t = np.transpose(data.cpu().detach().numpy(), (1, 2, 0))
-        attribution_t = np.transpose(
-            attribution.squeeze().cpu().detach().numpy(), (1, 2, 0)
-        )
+        if self.visualization_transform:
+            data = self.visualization_transform(data)
+
+        data_t, attribution_t = [
+            t.detach().squeeze().permute((1, 2, 0)).cpu().numpy()
+            for t in (data, attribution)
+        ]
 
         orig_fig, _ = viz.visualize_image_attr(
             attribution_t, data_t, method="original_image", use_pyplot=False

@@ -18,6 +18,7 @@ from captum._utils.common import (
     _is_tuple,
     _run_forward,
     _select_targets,
+    _register_backward_hook,
 )
 from captum._utils.gradient import (
     apply_gradient_requirements,
@@ -103,11 +104,19 @@ class DeepLift(GradientAttribution):
     https://pytorch.org/blog/optimizing-cuda-rnn-with-torchscript/
     """
 
-    def __init__(self, model: Module, multiply_by_inputs: bool = True) -> None:
+    def __init__(
+        self,
+        model: Module,
+        multiply_by_inputs: bool = True,
+        eps: float = 1e-10,
+    ) -> None:
         r"""
         Args:
 
-            model (nn.Module):  The reference to PyTorch model instance.
+            model (nn.Module):  The reference to PyTorch model instance. Model cannot
+                        contain any in-place nonlinear submodules; these are not
+                        supported by the register_full_backward_hook PyTorch API
+                        starting from PyTorch v1.8.
             multiply_by_inputs (bool, optional): Indicates whether to factor
                         model inputs' multiplier in the final attribution scores.
                         In the literature this is also known as local vs global
@@ -123,9 +132,16 @@ class DeepLift(GradientAttribution):
                         are being multiplied by (inputs - baselines).
                         This flag applies only if `custom_attribution_func` is
                         set to None.
+
+            eps (float, optional): A value at which to consider output/input change
+                        significant when computing the gradients for non-linear layers.
+                        This is useful to adjust, depending on your model's bit depth,
+                        to avoid numerical issues during the gradient computation.
+                        Default: 1e-10
         """
         GradientAttribution.__init__(self, model)
         self.model = model
+        self.eps = eps
         self.forward_handles: List[RemovableHandle] = []
         self.backward_handles: List[RemovableHandle] = []
         self._multiply_by_inputs = multiply_by_inputs
@@ -322,7 +338,6 @@ class DeepLift(GradientAttribution):
                activations. The hooks and attributes will be removed
             after the attribution is finished"""
         )
-
         baselines = _tensorize_baseline(inputs, baselines)
         main_model_hooks = []
         try:
@@ -471,7 +486,6 @@ class DeepLift(GradientAttribution):
         module: Module,
         grad_input: Union[Tensor, Tuple[Tensor, ...]],
         grad_output: Union[Tensor, Tuple[Tensor, ...]],
-        eps: float = 1e-10,
     ):
         r"""
         `grad_input` is the gradient of the neuron with respect to its input
@@ -495,7 +509,12 @@ class DeepLift(GradientAttribution):
             )
         multipliers = tuple(
             SUPPORTED_NON_LINEAR[type(module)](
-                module, module.input, module.output, grad_input, grad_output, eps=eps
+                module,
+                module.input,
+                module.output,
+                grad_input,
+                grad_output,
+                eps=self.eps,
             )
         )
         # remove all the properies that we set for the inputs and output
@@ -527,7 +546,7 @@ class DeepLift(GradientAttribution):
         # adds forward hook to leaf nodes that are non-linear
         forward_handle = module.register_forward_hook(self._forward_hook)
         pre_forward_handle = module.register_forward_pre_hook(self._forward_pre_hook)
-        backward_handle = module.register_backward_hook(self._backward_hook)
+        backward_handle = _register_backward_hook(module, self._backward_hook, self)
         self.forward_handles.append(forward_handle)
         self.forward_handles.append(pre_forward_handle)
         self.backward_handles.append(backward_handle)
@@ -607,7 +626,9 @@ class DeepLiftShap(DeepLift):
         r"""
         Args:
 
-            model (nn.Module):  The reference to PyTorch model instance.
+            model (nn.Module):  The reference to PyTorch model instance. Model cannot
+                        contain any in-place nonlinear submodules; these are not
+                        supported by the register_full_backward_hook PyTorch API.
             multiply_by_inputs (bool, optional): Indicates whether to factor
                         model inputs' multiplier in the final attribution scores.
                         In the literature this is also known as local vs global
