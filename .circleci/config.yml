@@ -245,12 +245,12 @@ workflows:
       - test_py36_pip_torch_1_6:
           filters: *exclude_ghpages_fbconfig
       - test_py36_pip_torch_1_7:
-        filters: *exclude_ghpages_fbconfig
+          filters: *exclude_ghpages_fbconfig
       - test_py36_pip_torch_1_8:
           filters: *exclude_ghpages_fbconfig
       - test_py36_pip_torch_1_9:
           filters: *exclude_ghpages_fbconfig
-        - test_cuda_multi_gpu:
+      - test_cuda_multi_gpu:
           filters: *exclude_ghpages_fbconfig
 
   auto_deploy_site:
