@@ -4,10 +4,14 @@ from typing import Any, List, Tuple, Union
 
 import torch
 import torch.nn.functional as F
-from captum._utils.common import _format_input, _format_output, _is_tuple
+from captum._utils.common import (
+    _format_input,
+    _format_output,
+    _is_tuple,
+    _register_backward_hook,
+)
 from captum._utils.gradient import (
     apply_gradient_requirements,
-    register_backward_hook,
     undo_gradient_requirements,
 )
 from captum._utils.typing import TargetType, TensorOrTupleOfTensorsGeneric
@@ -75,7 +79,7 @@ class ModifiedReluGradientAttribution(GradientAttribution):
 
     def _register_hooks(self, module: Module):
         if isinstance(module, torch.nn.ReLU):
-            hook = register_backward_hook(module, self._backward_hook, self)
+            hook = _register_backward_hook(module, self._backward_hook, self)
             self.backward_hooks.append(hook)
 
     def _backward_hook(
