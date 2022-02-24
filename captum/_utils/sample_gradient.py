@@ -164,7 +164,7 @@ class SampleGradientWrapper:
         self.model.zero_grad()
         loss_blob.backward(gradient=torch.ones_like(loss_blob))
 
-        for module in self.activation_dict:
+        for module in self.gradient_dict:
             sample_grad_fn = SUPPORTED_MODULES[type(module)]
             activations = self.activation_dict[module]
             gradients = self.gradient_dict[module]
