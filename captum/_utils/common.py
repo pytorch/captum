@@ -667,9 +667,9 @@ def _register_backward_hook(
     ):
         return module.register_backward_hook(hook)
 
-    try:
-        # Only supported for torch >= 1.8
+    if torch.__version__ >= '1.9':
+        # Only supported for torch >= 1.9
         return module.register_full_backward_hook(hook)
-    except AttributeError:
+    else:
         # Fallback for previous versions of PyTorch
         return module.register_backward_hook(hook)

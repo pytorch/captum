@@ -54,7 +54,7 @@ class GuidedGradCam(GradientAttribution):
             model (nn.Module):  The reference to PyTorch model instance. Model cannot
                         contain any in-place ReLU submodules; these are not
                         supported by the register_full_backward_hook PyTorch API
-                        starting from PyTorch v1.8.
+                        starting from PyTorch v1.9.
             layer (torch.nn.Module): Layer for which GradCAM attributions are computed.
                           Currently, only layers with a single tensor output are
                           supported.
