@@ -653,7 +653,7 @@ More details on how to build custom RNNs can be found here:
 <li><p><strong>model</strong> (<em>nn.Module</em>) – The reference to PyTorch model instance. Model cannot
 contain any in-place nonlinear submodules; these are not
 supported by the register_full_backward_hook PyTorch API
-starting from PyTorch v1.8.</p></li>
+starting from PyTorch v1.9.</p></li>
 <li><p><strong>layer</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/generated/torch.nn.Module.html#torch.nn.Module" title="(in PyTorch v1.10.0)"><em>torch.nn.Module</em></a>) – Layer for which neuron attributions are computed.
 Attributions for a particular neuron for the input or output
 of this layer are computed using the argument neuron_selector
@@ -868,7 +868,7 @@ model across multiple explanations can be complex and non-linear.</p>
 <li><p><strong>model</strong> (<em>nn.Module</em>) – The reference to PyTorch model instance. Model cannot
 contain any in-place nonlinear submodules; these are not
 supported by the register_full_backward_hook PyTorch API
-starting from PyTorch v1.8.</p></li>
+starting from PyTorch v1.9.</p></li>
 <li><p><strong>layer</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/generated/torch.nn.Module.html#torch.nn.Module" title="(in PyTorch v1.10.0)"><em>torch.nn.Module</em></a>) – Layer for which neuron attributions are computed.
 Attributions for a particular neuron for the input or output
 of this layer are computed using the argument neuron_selector
@@ -1271,7 +1271,7 @@ If nn.functional.ReLU is used, gradients are not overridden appropriately.</p>
 <li><p><strong>model</strong> (<em>nn.Module</em>) – The reference to PyTorch model instance. Model cannot
 contain any in-place ReLU submodules; these are not
 supported by the register_full_backward_hook PyTorch API
-starting from PyTorch v1.8.</p></li>
+starting from PyTorch v1.9.</p></li>
 <li><p><strong>layer</strong> (<em>Module</em>) – Layer for which neuron attributions are computed.
 Attributions for a particular neuron in the output of
 this layer are computed using the argument neuron_selector
@@ -1423,7 +1423,7 @@ If nn.functional.ReLU is used, gradients are not overridden appropriately.</p>
 <li><p><strong>model</strong> (<em>nn.Module</em>) – The reference to PyTorch model instance. Model cannot
 contain any in-place ReLU submodules; these are not
 supported by the register_full_backward_hook PyTorch API
-starting from PyTorch v1.8.</p></li>
+starting from PyTorch v1.9.</p></li>
 <li><p><strong>layer</strong> (<em>Module</em>) – Layer for which attributions are computed.
 Output size of attribute matches this layer’s input or
 output dimensions, depending on whether we attribute to

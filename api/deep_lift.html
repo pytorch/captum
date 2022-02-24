@@ -65,7 +65,7 @@ More details on how to build custom RNNs can be found here:
 <li><p><strong>model</strong> (<em>nn.Module</em>) – The reference to PyTorch model instance. Model cannot
 contain any in-place nonlinear submodules; these are not
 supported by the register_full_backward_hook PyTorch API
-starting from PyTorch v1.8.</p></li>
+starting from PyTorch v1.9.</p></li>
 <li><p><strong>multiply_by_inputs</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.10)"><em>bool</em></a><em>, </em><em>optional</em>) – <p>Indicates whether to factor
 model inputs’ multiplier in the final attribution scores.
 In the literature this is also known as local vs global

@@ -955,7 +955,7 @@ More details on how to build custom RNNs can be found here:
 <li><p><strong>model</strong> (<em>nn.Module</em>) – The reference to PyTorch model instance. Model cannot
 contain any in-place nonlinear submodules; these are not
 supported by the register_full_backward_hook PyTorch API
-starting from PyTorch v1.8.</p></li>
+starting from PyTorch v1.9.</p></li>
 <li><p><strong>layer</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/generated/torch.nn.Module.html#torch.nn.Module" title="(in PyTorch v1.10.0)"><em>torch.nn.Module</em></a>) – Layer for which attributions are computed.
 The size and dimensionality of the attributions
 corresponds to the size and dimensionality of the layer’s
@@ -1182,7 +1182,7 @@ model across multiple explanations can be complex and non-linear.</p>
 <li><p><strong>model</strong> (<em>nn.Module</em>) – The reference to PyTorch model instance. Model cannot
 contain any in-place nonlinear submodules; these are not
 supported by the register_full_backward_hook PyTorch API
-starting from PyTorch v1.8.</p></li>
+starting from PyTorch v1.9.</p></li>
 <li><p><strong>layer</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/generated/torch.nn.Module.html#torch.nn.Module" title="(in PyTorch v1.10.0)"><em>torch.nn.Module</em></a>) – Layer for which attributions are computed.
 The size and dimensionality of the attributions
 corresponds to the size and dimensionality of the layer’s
@@ -2101,7 +2101,7 @@ be defined as attribute
 <cite>module.rule</cite> and need to be of type PropagationRule.
 Model cannot contain any in-place nonlinear submodules;
 these are not supported by the register_full_backward_hook
-PyTorch API starting from PyTorch v1.8.</p></li>
+PyTorch API starting from PyTorch v1.9.</p></li>
 <li><p><strong>layer</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/generated/torch.nn.Module.html#torch.nn.Module" title="(in PyTorch v1.10.0)"><em>torch.nn.Module</em></a><em> or </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.10)"><em>list</em></a><em>(</em><a class="reference external" href="https://pytorch.org/docs/stable/generated/torch.nn.Module.html#torch.nn.Module" title="(in PyTorch v1.10.0)"><em>torch.nn.Module</em></a><em>)</em>) – Layer or layers
 for which attributions are computed.
 The size and dimensionality of the attributions
