@@ -667,7 +667,7 @@ def _register_backward_hook(
     ):
         return module.register_backward_hook(hook)
 
-    if torch.__version__ >= '1.9':
+    if torch.__version__ >= "1.9":
         # Only supported for torch >= 1.9
         return module.register_full_backward_hook(hook)
     else:
