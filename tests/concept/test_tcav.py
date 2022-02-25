@@ -643,7 +643,12 @@ def find_concept_by_id(concepts: Set[Concept], id: int) -> Union[Concept, None]:
     return None
 
 
-def create_TCAV(save_path: str, classifier: Classifier, layers) -> TCAV:
+def create_TCAV(
+    save_path: str,
+    classifier: Classifier,
+    layers: Union[str, List[str]],
+    attribute_to_layer_input: bool = False,
+) -> TCAV:
 
     model = BasicModel_ConvNet()
     tcav = TCAV(
@@ -651,18 +656,24 @@ def create_TCAV(save_path: str, classifier: Classifier, layers) -> TCAV:
         layers,
         classifier=classifier,
         save_path=save_path,
+        attribute_to_layer_input=attribute_to_layer_input,
     )
     return tcav
 
 
 def init_TCAV(
-    save_path: str, classifier: Classifier, layers: Union[str, List[str]]
+    save_path: str,
+    classifier: Classifier,
+    layers: Union[str, List[str]],
+    attribute_to_layer_input: bool = False,
 ) -> Tuple[TCAV, Dict[str, Concept]]:
 
     # Create Concepts
     concepts_dict = create_concepts()
 
-    tcav = create_TCAV(save_path, classifier, layers)
+    tcav = create_TCAV(
+        save_path, classifier, layers, attribute_to_layer_input=attribute_to_layer_input
+    )
     return tcav, concepts_dict
 
 
@@ -743,6 +754,7 @@ class Test(BaseTest):
         processes: int = 1,
         remove_activation: bool = False,
         layers: Union[str, List[str]] = "conv2",
+        attribute_to_layer_input: bool = False,
     ) -> None:
         classifier = CustomClassifier()
         self._compute_cavs_interpret(
@@ -755,23 +767,38 @@ class Test(BaseTest):
             processes=processes,
             remove_activation=remove_activation,
             layers=layers,
+            attribute_to_layer_input=attribute_to_layer_input,
         )
 
     def _compute_cavs_interpret(
         self,
         experimental_set_list: List[List[str]],
         force_train: bool,
-        accs: float,
-        sign_count: float,
-        magnitude: float,
+        accs: Union[float, List[float]],
+        sign_count: Union[float, List[float]],
+        magnitude: Union[float, List[float]],
         classifier: Classifier,
         processes: int = 1,
         remove_activation: bool = False,
         layers: Union[str, List[str]] = "conv2",
+        attribute_to_layer_input: bool = False,
     ) -> None:
+        def wrap_in_list_if_not_already(input):
+            return (
+                input
+                if isinstance(input, list)
+                else [
+                    input,
+                ]
+            )
 
         with tempfile.TemporaryDirectory() as tmpdirname:
-            tcav, concept_dict = init_TCAV(tmpdirname, classifier, layers)
+            tcav, concept_dict = init_TCAV(
+                tmpdirname,
+                classifier,
+                layers,
+                attribute_to_layer_input=attribute_to_layer_input,
+            )
 
             experimental_sets = self._create_experimental_sets(
                 experimental_set_list, concept_dict
@@ -785,47 +812,53 @@ class Test(BaseTest):
             )
             concepts_key = concepts_to_str(experimental_sets[0])
 
-            stats = cast(
-                Dict[str, Tensor], tcav.cavs[concepts_key][tcav.layers[0]].stats
-            )
-            self.assertEqual(
-                stats["weights"].shape,
-                torch.Size([2, 16]),
-            )
+            layers = wrap_in_list_if_not_already(layers)
+            accs = wrap_in_list_if_not_already(accs)
+            sign_counts = wrap_in_list_if_not_already(sign_count)
+            magnitudes = wrap_in_list_if_not_already(magnitude)
 
-            if not isinstance(classifier, CustomClassifier_WO_Returning_Metrics):
+            for layer, acc, sign_count, magnitude in zip(
+                layers, accs, sign_counts, magnitudes
+            ):
+                stats = cast(Dict[str, Tensor], tcav.cavs[concepts_key][layer].stats)
+                self.assertEqual(
+                    stats["weights"].shape,
+                    torch.Size([2, 16]),
+                )
+
+                if not isinstance(classifier, CustomClassifier_WO_Returning_Metrics):
+                    self.assertAlmostEqual(
+                        stats["accs"].item(),
+                        acc,
+                        delta=0.0001,
+                    )
+
+                # Provoking a CAV absence by deleting the .pkl files and one
+                # activation
+                if remove_activation:
+                    remove_pkls(tmpdirname)
+                    for fl in glob.glob(tmpdirname + "/av/" + layer + "/random-*-*"):
+                        os.remove(fl)
+
+                # Interpret
+                inputs = 100 * get_inputs_tensor()
+                scores = tcav.interpret(
+                    inputs=inputs,
+                    experimental_sets=experimental_sets,
+                    target=0,
+                    processes=processes,
+                )
                 self.assertAlmostEqual(
-                    stats["accs"].item(),
-                    accs,
+                    cast(float, scores[concepts_key][layer]["sign_count"][0].item()),
+                    sign_count,
                     delta=0.0001,
                 )
 
-            # Provoking a CAV absence by deleting the .pkl files and one
-            # activation
-            if remove_activation:
-                remove_pkls(tmpdirname)
-                for fl in glob.glob(tmpdirname + "/av/conv2/random-*-*"):
-                    os.remove(fl)
-
-            # Interpret
-            inputs = 100 * get_inputs_tensor()
-            scores = tcav.interpret(
-                inputs=inputs,
-                experimental_sets=experimental_sets,
-                target=0,
-                processes=processes,
-            )
-            self.assertAlmostEqual(
-                cast(float, scores[concepts_key]["conv2"]["sign_count"][0].item()),
-                sign_count,
-                delta=0.0001,
-            )
-
-            self.assertAlmostEqual(
-                cast(float, scores[concepts_key]["conv2"]["magnitude"][0].item()),
-                magnitude,
-                delta=0.0001,
-            )
+                self.assertAlmostEqual(
+                    cast(float, scores[concepts_key][layer]["magnitude"][0].item()),
+                    magnitude,
+                    delta=0.0001,
+                )
 
     def _create_experimental_sets(
         self, experimental_set_list: List[List[str]], concept_dict: Dict[str, Concept]
@@ -946,7 +979,7 @@ class Test(BaseTest):
             True,
             0.4848,
             0.5000,
-            0.9512,
+            8.185208066890937e-09,
             processes=5,
         )
 
@@ -956,14 +989,14 @@ class Test(BaseTest):
             True,
             -1.0,  # acc is not defined, this field will not be asserted
             0.5000,
-            0.9512,
+            8.185208066890937e-09,
             CustomClassifier_WO_Returning_Metrics(),
             processes=2,
         )
 
     def test_TCAV_1_1_b(self) -> None:
         self.compute_cavs_interpret(
-            [["striped", "random"]], True, 0.4848, 0.5000, 0.9512
+            [["striped", "random"]], True, 0.4848, 0.5000, 8.185208066890937e-09
         )
 
     def test_TCAV_1_1_c(self) -> None:
@@ -972,7 +1005,7 @@ class Test(BaseTest):
             True,
             0.4848,
             0.5000,
-            0.9512,
+            8.185208066890937e-09,
             processes=6,
         )
 
@@ -983,7 +1016,7 @@ class Test(BaseTest):
             True,
             0.4848,
             0.5000,
-            0.9512,
+            8.185208066890937e-09,
             processes=4,
         )
 
@@ -994,8 +1027,20 @@ class Test(BaseTest):
             True,
             0.4848,
             0.5000,
-            0.9512,
+            8.185208066890937e-09,
             processes=2,
+        )
+
+    def test_TCAV_0_1_attr_to_inputs(self) -> None:
+        self.compute_cavs_interpret(
+            [["striped", "random"], ["ceo", "random"]],
+            True,
+            0.4848,
+            0.5000,
+            8.185208066890937e-09,
+            processes=2,
+            layers="relu2",
+            attribute_to_layer_input=True,
         )
 
     # Do not Force Train
@@ -1005,7 +1050,7 @@ class Test(BaseTest):
             False,
             0.4848,
             0.5000,
-            0.9512,
+            8.185208066890937e-09,
             processes=2,
         )
 
@@ -1016,7 +1061,7 @@ class Test(BaseTest):
             False,
             0.4848,
             0.5000,
-            0.9512,
+            8.185208066890937e-09,
             processes=5,
         )
 
@@ -1027,7 +1072,7 @@ class Test(BaseTest):
             False,
             0.4848,
             0.5000,
-            0.9512,
+            8.185208066890937e-09,
             processes=5,
             remove_activation=True,
         )
@@ -1041,7 +1086,7 @@ class Test(BaseTest):
             True,
             0.4848,
             0.5000,
-            0.9512,
+            8.185208066890937e-09,
             processes=1,
         )
 
@@ -1051,7 +1096,7 @@ class Test(BaseTest):
             True,
             0.4848,
             0.5000,
-            0.9512,
+            8.185208066890937e-09,
             processes=1,
         )
 
@@ -1061,7 +1106,7 @@ class Test(BaseTest):
             True,
             0.4848,
             0.5000,
-            0.9512,
+            8.185208066890937e-09,
             processes=1,
         )
 
@@ -1072,7 +1117,7 @@ class Test(BaseTest):
             True,
             0.4848,
             0.5000,
-            0.9512,
+            8.185208066890937e-09,
             processes=1,
         )
 
@@ -1083,8 +1128,21 @@ class Test(BaseTest):
             False,
             0.4848,
             0.5000,
-            0.9512,
+            8.185208066890937e-09,
             processes=1,
+        )
+
+    def test_TCAV_x_1_0_1_attr_to_inputs(self) -> None:
+        self.compute_cavs_interpret(
+            [["striped", "random"], ["ceo", "random"]],
+            False,
+            0.4848,
+            0.5000,
+            8.185208066890937e-09,
+            processes=1,
+            remove_activation=True,
+            layers="relu2",
+            attribute_to_layer_input=True,
         )
 
     # Non-existing concept in the experimental set ("dotted"), do Not Force Train
@@ -1094,7 +1152,7 @@ class Test(BaseTest):
             False,
             0.4848,
             0.5000,
-            0.9512,
+            8.185208066890937e-09,
             processes=1,
         )
 
@@ -1105,7 +1163,7 @@ class Test(BaseTest):
             False,
             0.4848,
             0.5000,
-            0.9512,
+            8.185208066890937e-09,
             processes=1,
             remove_activation=True,
         )
@@ -1116,7 +1174,7 @@ class Test(BaseTest):
             False,
             0.4848,
             0.5000,
-            0.9512,
+            8.185208066890937e-09,
             CustomClassifier_W_Flipped_Class_Id(),
             processes=1,
         )
