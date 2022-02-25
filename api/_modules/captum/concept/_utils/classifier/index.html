@@ -228,6 +228,10 @@ src="/js/documentation_options.js"></script>
 <span class="sd">            weights (tensor): A torch Tensor with the weights resulting from</span>
 <span class="sd">                the model training.</span>
 <span class="sd">        """</span>
+        <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">lm</span><span class="o">.</span><span class="n">linear</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">,</span> <span class="p">(</span>
+            <span class="s2">"The weights cannot be obtained because no model was trained."</span>
+            <span class="s2">"In order to train the model call `train_and_eval` method first."</span>
+        <span class="p">)</span>
         <span class="n">weights</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">lm</span><span class="o">.</span><span class="n">representation</span><span class="p">()</span>
         <span class="k">if</span> <span class="n">weights</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
             <span class="c1"># if there are two concepts, there is only one label. We split it in two.</span>

@@ -55,7 +55,7 @@ random.seed(123)
 np.random.seed(123)
 
 
-# In[ ]:
+# In[2]:
 
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
@@ -63,7 +63,7 @@ device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 # Defining torchtext data `Field` so that we can load the vocabulary for IMDB dataset the way that was done to train IMDB model. 
 
-# In[ ]:
+# In[3]:
 
 
 TEXT = torchtext.data.Field(lower=True, tokenize='spacy')
@@ -72,7 +72,7 @@ Label = torchtext.data.LabelField(dtype = torch.float)
 
 # Reading IMDB dataset the same way we did for training sensitivity analysis model. This will help us to load correct token to embedding mapping using Glove.
 
-# In[ ]:
+# In[4]:
 
 
 train, _ = torchtext.datasets.IMDB.splits(text_field=TEXT,
@@ -237,7 +237,7 @@ class CNN(nn.Module):
         return self.fc(cat)
 
 
-# In[ ]:
+# In[13]:
 
 
 model = torch.load('models/imdb-model-cnn-large.pt')
@@ -264,7 +264,7 @@ positive_concept = assemble_concept('positive-adjectives', 5,                   
 
 # Below we define five experimental sets consisting of `Positive Adjective` vs `Neutral` concept pairs. TCAV trains a model for each pair, and estimates tcav scores for each experimental set in given input layers. In this case we chose `convs.2` and `convs.1` layers. TCAV score indicates the importance of a concept in a given layer. The higher the TCAV score, the more important is that concept for given layer in making a prediction for a given set of samples.
 
-# In[ ]:
+# In[15]:
 
 
 experimental_sets=[[positive_concept, neutral_concept],
@@ -350,7 +350,7 @@ def plot_tcav_scores(experimental_sets, tcav_scores, layers = ['convs.2'], score
 # In[20]:
 
 
-plot_tcav_scores(experimental_sets, positive_interpretations, ['convs.1', 'convs.2'], score_type='magnitude')
+plot_tcav_scores(experimental_sets, positive_interpretations, ['convs.1', 'convs.2'], score_type='sign_count')
 
 
 # Now let's perform the same experiment for examples that have negative sentiment.
@@ -370,7 +370,7 @@ negative_interpretations = tcav.interpret(neg_input_text_indices, experimental_s
 # In[22]:
 
 
-plot_tcav_scores(experimental_sets, negative_interpretations, ['convs.1', 'convs.2'], score_type='magnitude')
+plot_tcav_scores(experimental_sets, negative_interpretations, ['convs.1', 'convs.2'], score_type='sign_count')
 
 
 # # Statistical significance testing of concepts
@@ -438,11 +438,11 @@ def show_boxplots(layer, scores, metric='sign_count'):
 # In[25]:
 
 
-show_boxplots("convs.2", positive_interpretations, metric='magnitude')
+show_boxplots("convs.2", positive_interpretations, metric='sign_count')
 
 
 # In[26]:
 
 
-show_boxplots("convs.1", positive_interpretations, metric='magnitude')
+show_boxplots("convs.1", positive_interpretations, metric='sign_count')
 

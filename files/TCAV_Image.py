@@ -25,7 +25,7 @@
 
 
 import numpy as np
-import os, glob, sys
+import os, glob
 
 import matplotlib.pyplot as plt
 
@@ -178,7 +178,7 @@ model = model.eval()
 
 # The custom classifier will be trained to learn classification boundaries between concepts. We offer a default implementation of Custom Classifier in captum library so that the users do not need to define it. Captum users, hoowever, are welcome to define their own classifers with any custom logic. CustomClassifier class extends abstract Classifier class and provides implementations for training workflow for the classifier and means to access trained weights and classes. Typically, this can be, but is not limited to a classier, from sklearn library. In this case CustomClassifier wraps `linear_model.SGDClassifier` algorithm from sklearn library.
 
-# In[ ]:
+# In[8]:
 
 
 layers=['inception4c', 'inception4d', 'inception4e']
@@ -286,7 +286,7 @@ def plot_tcav_scores(experimental_sets, tcav_scores):
             pos.append([(x + barWidth) for x in pos[i-1]])
         _ax = (ax[idx_es] if len(experimental_sets) > 1 else ax)
         for i in range(len(concepts)):
-            val = [format_float(scores['magnitude'][i]) for layer, scores in tcav_scores[concepts_key].items()]
+            val = [format_float(scores['sign_count'][i]) for layer, scores in tcav_scores[concepts_key].items()]
             _ax.bar(pos[i], val, width=barWidth, edgecolor='white', label=concepts[i].name)
 
         # Add xticks on the middle of the group bars

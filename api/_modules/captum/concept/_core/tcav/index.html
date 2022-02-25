@@ -278,6 +278,7 @@ src="/js/documentation_options.js"></script>
         <span class="n">model_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"default_model_id"</span><span class="p">,</span>
         <span class="n">classifier</span><span class="p">:</span> <span class="n">Classifier</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">layer_attr_method</span><span class="p">:</span> <span class="n">LayerAttribution</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">attribute_to_layer_input</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
         <span class="n">save_path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"./cav/"</span><span class="p">,</span>
         <span class="o">**</span><span class="n">classifier_kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
@@ -351,6 +352,7 @@ src="/js/documentation_options.js"></script>
             <span class="s2">"will use `default_model_id` as its default value."</span>
         <span class="p">)</span>
 
+        <span class="bp">self</span><span class="o">.</span><span class="n">attribute_to_layer_input</span> <span class="o">=</span> <span class="n">attribute_to_layer_input</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">save_path</span> <span class="o">=</span> <span class="n">save_path</span>
 
         <span class="c1"># Creates CAV save directory if it doesn't exist. It is created once in the</span>
@@ -389,7 +391,9 @@ src="/js/documentation_options.js"></script>
         <span class="p">)</span>
         <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">examples</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">concept</span><span class="o">.</span><span class="n">data_iter</span><span class="p">):</span>
             <span class="n">activations</span> <span class="o">=</span> <span class="n">layer_act</span><span class="o">.</span><span class="n">attribute</span><span class="o">.</span><span class="n">__wrapped__</span><span class="p">(</span>  <span class="c1"># type: ignore</span>
-                <span class="n">layer_act</span><span class="p">,</span> <span class="n">examples</span>
+                <span class="n">layer_act</span><span class="p">,</span>
+                <span class="n">examples</span><span class="p">,</span>
+                <span class="n">attribute_to_layer_input</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">attribute_to_layer_input</span><span class="p">,</span>
             <span class="p">)</span>
             <span class="k">for</span> <span class="n">activation</span><span class="p">,</span> <span class="n">layer_name</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">activations</span><span class="p">,</span> <span class="n">layers</span><span class="p">):</span>
                 <span class="n">activation</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">activation</span><span class="p">,</span> <span class="p">(</span><span class="n">activation</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="o">-</span><span class="mi">1</span><span class="p">))</span>
@@ -673,6 +677,11 @@ src="/js/documentation_options.js"></script>
 <span class="sd">            &gt;&gt;&gt; #</span>
 
 <span class="sd">        """</span>
+        <span class="k">assert</span> <span class="s2">"attribute_to_layer_input"</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">,</span> <span class="p">(</span>
+            <span class="s2">"Please, set `attribute_to_layer_input` flag as a constructor "</span>
+            <span class="s2">"argument to TCAV class. In that case it will be applied "</span>
+            <span class="s2">"consistently to both layer activation and layer attribution methods."</span>
+        <span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">compute_cavs</span><span class="p">(</span><span class="n">experimental_sets</span><span class="p">,</span> <span class="n">processes</span><span class="o">=</span><span class="n">processes</span><span class="p">)</span>
 
         <span class="n">scores</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Tensor</span><span class="p">]]]</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span>
@@ -706,23 +715,23 @@ src="/js/documentation_options.js"></script>
         <span class="k">for</span> <span class="n">layer</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">layers</span><span class="p">:</span>
             <span class="n">layer_module</span> <span class="o">=</span> <span class="n">_get_module_from_name</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">,</span> <span class="n">layer</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">layer_attr_method</span><span class="o">.</span><span class="n">layer</span> <span class="o">=</span> <span class="n">layer_module</span>
-
             <span class="n">attribs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">layer_attr_method</span><span class="o">.</span><span class="n">attribute</span><span class="o">.</span><span class="n">__wrapped__</span><span class="p">(</span>  <span class="c1"># type: ignore</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">layer_attr_method</span><span class="p">,</span>  <span class="c1"># self</span>
                 <span class="n">inputs</span><span class="p">,</span>
                 <span class="n">target</span><span class="o">=</span><span class="n">target</span><span class="p">,</span>
                 <span class="n">additional_forward_args</span><span class="o">=</span><span class="n">additional_forward_args</span><span class="p">,</span>
+                <span class="n">attribute_to_layer_input</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">attribute_to_layer_input</span><span class="p">,</span>
                 <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
             <span class="p">)</span>
 
             <span class="n">attribs</span> <span class="o">=</span> <span class="n">_format_tensor_into_tuples</span><span class="p">(</span><span class="n">attribs</span><span class="p">)</span>
-            <span class="c1"># n_inputs x n_features (2 dimensions)</span>
+            <span class="c1"># n_inputs x n_features</span>
             <span class="n">attribs</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">(</span>
                 <span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">attrib</span><span class="p">,</span> <span class="p">(</span><span class="n">attrib</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="o">-</span><span class="mi">1</span><span class="p">))</span> <span class="k">for</span> <span class="n">attrib</span> <span class="ow">in</span> <span class="n">attribs</span><span class="p">],</span>
                 <span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
             <span class="p">)</span>
 
-            <span class="c1"># n_experiments x n_concepts x n_features (3 dimensions)</span>
+            <span class="c1"># n_experiments x n_concepts x n_features</span>
             <span class="n">cavs</span> <span class="o">=</span> <span class="p">[]</span>
             <span class="n">classes</span> <span class="o">=</span> <span class="p">[]</span>
             <span class="k">for</span> <span class="n">concepts</span> <span class="ow">in</span> <span class="n">experimental_sets</span><span class="p">:</span>
@@ -744,7 +753,7 @@ src="/js/documentation_options.js"></script>
                     <span class="n">exp_set_offsets</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="p">:</span> <span class="n">exp_set_offsets</span><span class="p">[</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span>
                 <span class="p">]</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
 
-                <span class="c1"># n_experiments x n_concepts x n_features (3 dimensions)</span>
+                <span class="c1"># n_experiments x n_concepts x n_features</span>
                 <span class="n">cav_subset</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="n">cav_subset</span><span class="p">)</span>
                 <span class="n">cav_subset</span> <span class="o">=</span> <span class="n">cav_subset</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">attribs</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
                 <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">cav_subset</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">==</span> <span class="mi">3</span><span class="p">,</span> <span class="p">(</span>
@@ -776,7 +785,7 @@ src="/js/documentation_options.js"></script>
         <span class="n">classes</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]],</span>
         <span class="n">experimental_sets</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">Concept</span><span class="p">]],</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="c1"># n_inputs x n_concepts (2 dimensions)</span>
+        <span class="c1"># n_inputs x n_concepts</span>
         <span class="n">tcav_score</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">matmul</span><span class="p">(</span><span class="n">attribs</span><span class="o">.</span><span class="n">float</span><span class="p">(),</span> <span class="n">torch</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="n">cavs</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span>
         <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">tcav_score</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">==</span> <span class="mi">3</span><span class="p">,</span> <span class="p">(</span>
             <span class="s2">"tcav_score should have 3 dimensions: n_experiments x "</span>
@@ -788,13 +797,9 @@ src="/js/documentation_options.js"></script>
             <span class="s2">"2nd dimensions respectively (n_inputs)."</span>
         <span class="p">)</span>
         <span class="c1"># n_experiments x n_concepts</span>
-        <span class="n">sign_count_score</span> <span class="o">=</span> <span class="p">(</span>
-            <span class="n">torch</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">tcav_score</span> <span class="o">&gt;</span> <span class="mf">0.0</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">float</span><span class="p">()</span> <span class="o">/</span> <span class="n">tcav_score</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
-        <span class="p">)</span>
+        <span class="n">sign_count_score</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">mean</span><span class="p">((</span><span class="n">tcav_score</span> <span class="o">&gt;</span> <span class="mf">0.0</span><span class="p">)</span><span class="o">.</span><span class="n">float</span><span class="p">(),</span> <span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
 
-        <span class="n">magnitude_score</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span>
-            <span class="n">torch</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">tcav_score</span> <span class="o">*</span> <span class="p">(</span><span class="n">tcav_score</span> <span class="o">&gt;</span> <span class="mf">0.0</span><span class="p">)</span><span class="o">.</span><span class="n">float</span><span class="p">()),</span> <span class="n">dim</span><span class="o">=</span><span class="mi">1</span>
-        <span class="p">)</span> <span class="o">/</span> <span class="n">torch</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">tcav_score</span><span class="p">),</span> <span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">magnitude_score</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">tcav_score</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
 
         <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="p">(</span><span class="n">cls_set</span><span class="p">,</span> <span class="n">concepts</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">classes</span><span class="p">,</span> <span class="n">experimental_sets</span><span class="p">)):</span>
             <span class="n">concepts_key</span> <span class="o">=</span> <span class="n">concepts_to_str</span><span class="p">(</span><span class="n">concepts</span><span class="p">)</span>
