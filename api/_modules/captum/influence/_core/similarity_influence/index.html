@@ -1,0 +1,409 @@
+<!DOCTYPE html><html lang="en"><head><meta charSet="utf-8"/><meta http-equiv="X-UA-Compatible" content="IE=edge"/><title>Captum · Model Interpretability for PyTorch</title><meta name="viewport" content="width=device-width"/><meta name="generator" content="Docusaurus"/><meta name="description" content="Model Interpretability for PyTorch"/><meta name="docsearch:language" content="en"/><meta property="og:title" content="Captum · Model Interpretability for PyTorch"/><meta property="og:type" content="website"/><meta property="og:url" content="https://captum.ai/"/><meta property="og:description" content="Model Interpretability for PyTorch"/><meta property="og:image" content="https://captum.ai/img/captum-icon.png"/><meta name="twitter:card" content="summary"/><meta name="twitter:image" content="https://captum.ai/img/captum.png"/><link rel="shortcut icon" href="/img/captum.ico"/><link rel="stylesheet" href="https://cdn.jsdelivr.net/docsearch.js/1/docsearch.min.css"/><link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/default.min.css"/><script>
+              (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+              (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+              m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+              })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+              ga('create', 'UA-44373548-48', 'auto');
+              ga('send', 'pageview');
+            </script><link rel="stylesheet" href="/css/code_block_buttons.css"/><script type="text/javascript" src="https://buttons.github.io/buttons.js"></script><script type="text/javascript" src="/js/code_block_buttons.js"></script><script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.0/clipboard.min.js"></script><script src="https://unpkg.com/vanilla-back-to-top@7.1.14/dist/vanilla-back-to-top.min.js"></script><script>
+        document.addEventListener('DOMContentLoaded', function() {
+          addBackToTop(
+            {"zIndex":100}
+          )
+        });
+        </script><script src="/js/scrollSpy.js"></script><link rel="stylesheet" href="/css/main.css"/><script src="/js/codetabs.js"></script></head><body><div class="fixedHeaderContainer"><div class="headerWrapper wrapper"><header><a href="/"><img class="logo" src="/img/captum_logo.svg" alt="Captum"/></a><div class="navigationWrapper navigationSlider"><nav class="slidingNav"><ul class="nav-site nav-site-internal"><li class=""><a href="/docs/introduction" target="_self">Docs</a></li><li class=""><a href="/tutorials/" target="_self">Tutorials</a></li><li class=""><a href="/api/" target="_self">API Reference</a></li><li class=""><a href="https://github.com/pytorch/captum" target="_self">GitHub</a></li><li class="navSearchWrapper reactNavSearchWrapper"><input type="text" id="search_input_react" placeholder="Search" title="Search"/></li></ul></nav></div></header></div></div><div class="navPusher"><div>
+<script type="text/javascript" id="documentation_options" data-url_root="./"
+src="/js/documentation_options.js"></script>
+<script type="text/javascript" src="/js/jquery.js"></script>
+<script type="text/javascript" src="/js/underscore.js"></script>
+<script type="text/javascript" src="/js/doctools.js"></script>
+<script type="text/javascript" src="/js/language_data.js"></script>
+<script type="text/javascript" src="/js/searchtools.js"></script>
+
+<script src="https://cdn.jsdelivr.net/npm/katex@0.13.11/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.13.11/dist/contrib/auto-render.min.js"></script>
+<script src="/js/katex_autorenderer.js"></script>
+<link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/katex@0.13.11/dist/katex.min.css" />
+<link rel="stylesheet" type="text/css" href="/css/katex-math.css" />
+<div class="sphinx wrapper"><div class="document">
+<div class="documentwrapper">
+<div class="bodywrapper">
+<div class="body" role="main">
+<h1>Source code for captum.influence._core.similarity_influence</h1><div class="highlight"><pre>
+<span></span><span class="ch">#!/usr/bin/env python3</span>
+
+<span class="kn">import</span> <span class="nn">warnings</span>
+<span class="kn">from</span> <span class="nn">functools</span> <span class="kn">import</span> <span class="n">partial</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Union</span>
+
+<span class="kn">import</span> <span class="nn">captum._utils.common</span> <span class="k">as</span> <span class="nn">common</span>
+<span class="kn">import</span> <span class="nn">torch</span>
+<span class="kn">from</span> <span class="nn">captum._utils.av</span> <span class="kn">import</span> <span class="n">AV</span>
+<span class="kn">from</span> <span class="nn">captum.attr</span> <span class="kn">import</span> <span class="n">LayerActivation</span>
+<span class="kn">from</span> <span class="nn">captum.influence._core.influence</span> <span class="kn">import</span> <span class="n">DataInfluence</span>
+<span class="kn">from</span> <span class="nn">torch</span> <span class="kn">import</span> <span class="n">Tensor</span>
+<span class="kn">from</span> <span class="nn">torch.nn</span> <span class="kn">import</span> <span class="n">Module</span>
+<span class="kn">from</span> <span class="nn">torch.utils.data</span> <span class="kn">import</span> <span class="n">DataLoader</span><span class="p">,</span> <span class="n">Dataset</span>
+
+<span class="sa">r</span><span class="sd">"""</span>
+<span class="sd">Additional helper functions to calculate similarity metrics.</span>
+<span class="sd">"""</span>
+
+
+<span class="k">def</span> <span class="nf">euclidean_distance</span><span class="p">(</span><span class="n">test</span><span class="p">,</span> <span class="n">train</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tensor</span><span class="p">:</span>
+    <span class="sa">r</span><span class="sd">"""</span>
+<span class="sd">    Calculates the pairwise euclidean distance for batches of feature vectors.</span>
+<span class="sd">    Tensors test and train have shape (batch_size_1, *), and (batch_size_2, *).</span>
+<span class="sd">    Returns pairwise euclidean distance Tensor of shape (batch_size_1, batch_size_2).</span>
+<span class="sd">    """</span>
+    <span class="n">similarity</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cdist</span><span class="p">(</span>
+        <span class="n">test</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="n">test</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="mi">0</span><span class="p">),</span>
+        <span class="n">train</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="n">train</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="mi">0</span><span class="p">),</span>
+    <span class="p">)</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">similarity</span>
+
+
+<span class="k">def</span> <span class="nf">cosine_similarity</span><span class="p">(</span><span class="n">test</span><span class="p">,</span> <span class="n">train</span><span class="p">,</span> <span class="n">replace_nan</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tensor</span><span class="p">:</span>
+    <span class="sa">r</span><span class="sd">"""</span>
+<span class="sd">    Calculates the pairwise cosine similarity for batches of feature vectors.</span>
+<span class="sd">    Tensors test and train have shape (batch_size_1, *), and (batch_size_2, *).</span>
+<span class="sd">    Returns pairwise cosine similarity Tensor of shape (batch_size_1, batch_size_2).</span>
+<span class="sd">    """</span>
+    <span class="n">test</span> <span class="o">=</span> <span class="n">test</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="n">test</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">train</span> <span class="o">=</span> <span class="n">train</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="n">train</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">torch</span><span class="o">.</span><span class="n">__version__</span> <span class="o">&lt;=</span> <span class="s2">"1.6.0"</span><span class="p">:</span>
+        <span class="n">test_norm</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">test</span><span class="p">,</span> <span class="n">p</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">keepdim</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">train_norm</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">train</span><span class="p">,</span> <span class="n">p</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">keepdim</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">test_norm</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">test</span><span class="p">,</span> <span class="nb">ord</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">keepdim</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">train_norm</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">train</span><span class="p">,</span> <span class="nb">ord</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">keepdim</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+    <span class="n">test</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">test_norm</span> <span class="o">!=</span> <span class="mf">0.0</span><span class="p">,</span> <span class="n">test</span> <span class="o">/</span> <span class="n">test_norm</span><span class="p">,</span> <span class="n">Tensor</span><span class="p">([</span><span class="n">replace_nan</span><span class="p">]))</span>
+    <span class="n">train</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">train_norm</span> <span class="o">!=</span> <span class="mf">0.0</span><span class="p">,</span> <span class="n">train</span> <span class="o">/</span> <span class="n">train_norm</span><span class="p">,</span> <span class="n">Tensor</span><span class="p">([</span><span class="n">replace_nan</span><span class="p">]))</span><span class="o">.</span><span class="n">T</span>
+
+    <span class="n">similarity</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">mm</span><span class="p">(</span><span class="n">test</span><span class="p">,</span> <span class="n">train</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">similarity</span>
+
+
+<span class="sa">r</span><span class="sd">"""</span>
+<span class="sd">Implements abstract DataInfluence class and provides implementation details for</span>
+<span class="sd">similarity metric-based influence computation. Similarity metrics can be used to compare</span>
+<span class="sd">intermediate or final activation vectors of a model for different sets of input. Then,</span>
+<span class="sd">these can be used to draw conclusions about influential instances.</span>
+
+<span class="sd">Some standard similarity metrics such as dot product similarity or euclidean distance</span>
+<span class="sd">are provided, but the user can provide any custom similarity metric as well.</span>
+<span class="sd">"""</span>
+
+
+<div class="viewcode-block" id="SimilarityInfluence"><a class="viewcode-back" href="../../../../influence.html#captum.influence.SimilarityInfluence">[docs]</a><span class="k">class</span> <span class="nc">SimilarityInfluence</span><span class="p">(</span><span class="n">DataInfluence</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">module</span><span class="p">:</span> <span class="n">Module</span><span class="p">,</span>
+        <span class="n">layers</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]],</span>
+        <span class="n">influence_src_dataset</span><span class="p">:</span> <span class="n">Dataset</span><span class="p">,</span>
+        <span class="n">activation_dir</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">model_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span><span class="p">,</span>
+        <span class="n">similarity_metric</span><span class="p">:</span> <span class="n">Callable</span> <span class="o">=</span> <span class="n">cosine_similarity</span><span class="p">,</span>
+        <span class="n">similarity_direction</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"max"</span><span class="p">,</span>
+        <span class="n">batch_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="sa">r</span><span class="sd">"""</span>
+<span class="sd">        Args:</span>
+<span class="sd">            module (torch.nn.Module): An instance of pytorch model. This model should</span>
+<span class="sd">                    define all of its layers as attributes of the model.</span>
+<span class="sd">            layers (str or List of str): The fully qualified layer(s) for which the</span>
+<span class="sd">                    activation vectors are computed.</span>
+<span class="sd">            influence_src_dataset (torch.utils.data.Dataset): PyTorch Dataset that is</span>
+<span class="sd">                    used to create a PyTorch Dataloader to iterate over the dataset and</span>
+<span class="sd">                    its labels. This is the dataset for which we will be seeking for</span>
+<span class="sd">                    influential instances. In most cases this is the training dataset.</span>
+<span class="sd">            activation_dir (str): The directory of the path to store</span>
+<span class="sd">                    and retrieve activation computations. Best practice would be to use</span>
+<span class="sd">                    an absolute path.</span>
+<span class="sd">            model_id (str): The name/version of the model for which layer</span>
+<span class="sd">                        activations are being computed. Activations will be stored and</span>
+<span class="sd">                        loaded under the subdirectory with this name if provided.</span>
+<span class="sd">            similarity_metric (Callable): This is a callable function that computes a</span>
+<span class="sd">                    similarity metric between two representations. For example, the</span>
+<span class="sd">                    representations pair could be from the training and test sets.</span>
+
+<span class="sd">                    This function must adhere to certain standards. The inputs should be</span>
+<span class="sd">                    torch Tensors with shape (batch_size_i/j, feature dimensions). The</span>
+<span class="sd">                    output Tensor should have shape (batch_size_i, batch_size_j) with</span>
+<span class="sd">                    scalar values corresponding to the similarity metric used for each</span>
+<span class="sd">                    pairwise combination from the two batches.</span>
+
+<span class="sd">                    For example, suppose we use `batch_size_1 = 16` for iterating</span>
+<span class="sd">                    through `influence_src_dataset`, and for the `inputs` argument</span>
+<span class="sd">                    we pass in a Tensor with 3 examples, i.e. batch_size_2 = 3. Also,</span>
+<span class="sd">                    suppose that our inputs and intermediate activations throughout the</span>
+<span class="sd">                    model will have dimension (N, C, H, W). Then, the feature dimensions</span>
+<span class="sd">                    should be flattened within this function. For example, let</span>
+
+<span class="sd">                    ```</span>
+<span class="sd">                    av_test.shape = torch.Size([3, N, C, H, W])</span>
+<span class="sd">                    av_src.shape = torch.Size([16, N, C, H, W])</span>
+<span class="sd">                    ```</span>
+
+<span class="sd">                    Then, using `torch.view(av_test.shape[0], -1)` we have</span>
+
+<span class="sd">                    `av_test.shape = torch.Size([3, N x C x H x W])</span>
+
+<span class="sd">                    and similarly for av_src. The similarity_metric should then use</span>
+<span class="sd">                    these flattened tensors to return the pairwise similarity matrix.</span>
+<span class="sd">                    For example, `similarity_metric(av_test, av_src)` should return a</span>
+<span class="sd">                    tensor of shape (3, 16).</span>
+
+<span class="sd">            batch_size (int): Batch size for iterating through `influence_src_dataset`.</span>
+<span class="sd">            **kwargs: Additional key-value arguments that are necessary for specific</span>
+<span class="sd">                    implementation of `DataInfluence` abstract class.</span>
+<span class="sd">        """</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">module</span> <span class="o">=</span> <span class="n">module</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">layers</span> <span class="o">=</span> <span class="p">[</span><span class="n">layers</span><span class="p">]</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">layers</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="k">else</span> <span class="n">layers</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">influence_src_dataset</span> <span class="o">=</span> <span class="n">influence_src_dataset</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">activation_dir</span> <span class="o">=</span> <span class="n">activation_dir</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">model_id</span> <span class="o">=</span> <span class="n">model_id</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">batch_size</span> <span class="o">=</span> <span class="n">batch_size</span>
+
+        <span class="k">if</span> <span class="n">similarity_direction</span> <span class="o">==</span> <span class="s2">"max"</span> <span class="ow">or</span> <span class="n">similarity_direction</span> <span class="o">==</span> <span class="s2">"min"</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">similarity_direction</span> <span class="o">=</span> <span class="n">similarity_direction</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">similarity_direction</span><span class="si">}</span><span class="s2"> is not a valid value. "</span>
+                <span class="s2">"Must be either 'max' or 'min'"</span>
+            <span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">similarity_metric</span> <span class="ow">is</span> <span class="n">cosine_similarity</span><span class="p">:</span>
+            <span class="k">if</span> <span class="s2">"replace_nan"</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">replace_nan</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s2">"replace_nan"</span><span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">replace_nan</span> <span class="o">=</span> <span class="o">-</span><span class="mi">2</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">similarity_direction</span> <span class="o">==</span> <span class="s2">"max"</span> <span class="k">else</span> <span class="mi">2</span>
+            <span class="n">similarity_metric</span> <span class="o">=</span> <span class="n">partial</span><span class="p">(</span><span class="n">cosine_similarity</span><span class="p">,</span> <span class="n">replace_nan</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">replace_nan</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">similarity_metric</span> <span class="o">=</span> <span class="n">similarity_metric</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">influence_src_dataloader</span> <span class="o">=</span> <span class="n">DataLoader</span><span class="p">(</span>
+            <span class="n">influence_src_dataset</span><span class="p">,</span> <span class="n">batch_size</span><span class="p">,</span> <span class="n">shuffle</span><span class="o">=</span><span class="kc">False</span>
+        <span class="p">)</span>
+
+<div class="viewcode-block" id="SimilarityInfluence.influence"><a class="viewcode-back" href="../../../../influence.html#captum.influence.SimilarityInfluence.influence">[docs]</a>    <span class="k">def</span> <span class="nf">influence</span><span class="p">(</span>  <span class="c1"># type: ignore[override]</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">inputs</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">]],</span>
+        <span class="n">top_k</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
+        <span class="n">additional_forward_args</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">load_src_from_disk</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">:</span>
+        <span class="sa">r</span><span class="sd">"""</span>
+<span class="sd">        Args:</span>
+<span class="sd">            inputs (tensor or tuple of tensors): Batch of examples for which influential</span>
+<span class="sd">                    instances are computed. They are passed to the forward_func. The</span>
+<span class="sd">                    first dimension in `inputs` tensor or tuple of tensors corresponds</span>
+<span class="sd">                    to the batch size. A tuple of tensors is only passed in if this</span>
+<span class="sd">                    is the input form that `module` accepts.</span>
+<span class="sd">            top_k (int): The number of top-matchinig activations to return</span>
+<span class="sd">            additional_forward_args (optional):  Additional arguments that will be</span>
+<span class="sd">                    passed to forward_func after inputs.</span>
+<span class="sd">            load_src_from_disk (bool): Loads activations for `influence_src_dataset`</span>
+<span class="sd">                    where possible. Setting to False would force regeneration of</span>
+<span class="sd">                    activations.</span>
+<span class="sd">            load_input_from_disk (bool): Regenerates activations for inputs by default</span>
+<span class="sd">                    and removes previous `inputs` activations that are flagged with</span>
+<span class="sd">                    `inputs_id`. Setting to True will load prior matching inputs</span>
+<span class="sd">                    activations. Note that this could lead to unexpected behavior if</span>
+<span class="sd">                    `inputs_id` is not configured properly and activations are loaded</span>
+<span class="sd">                    for a different, prior `inputs`.</span>
+<span class="sd">            inputs_id (str): Used to identify inputs for loading activations.</span>
+
+<span class="sd">            **kwargs: Additional key-value arguments that are necessary for specific</span>
+<span class="sd">                    implementation of `DataInfluence` abstract class.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            influences (dictionary): Returns the influential instances retrieved from</span>
+<span class="sd">                    `influence_src_dataset` for each test example represented through a</span>
+<span class="sd">                    tensor or a tuple of tensor in `inputs`. Returned influential</span>
+<span class="sd">                    examples are represented as dict, with keys corresponding to</span>
+<span class="sd">                    the layer names passed in `layers`. Each value in the dict is a</span>
+<span class="sd">                    tuple containing the indices and values for the top k similarities</span>
+<span class="sd">                    from `influence_src_dataset` by the chosen metric. The first value</span>
+<span class="sd">                    in the tuple corresponds to the indices corresponding to the top k</span>
+<span class="sd">                    most similar examples, and the second value is the similarity score.</span>
+<span class="sd">                    The batch dimension corresponds to the batch dimension of `inputs`.</span>
+<span class="sd">                    If inputs.shape[0] == 5, then dict[`layer_name`][0].shape[0] == 5.</span>
+<span class="sd">                    These tensors will be of shape (inputs.shape[0], top_k).</span>
+<span class="sd">        """</span>
+        <span class="n">inputs_batch_size</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">inputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)</span> <span class="k">else</span> <span class="n">inputs</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="p">)</span>
+
+        <span class="n">influences</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+
+        <span class="n">layer_AVDatasets</span> <span class="o">=</span> <span class="n">AV</span><span class="o">.</span><span class="n">generate_dataset_activations</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">activation_dir</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">module</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">model_id</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">layers</span><span class="p">,</span>
+            <span class="n">DataLoader</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">influence_src_dataset</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">batch_size</span><span class="p">,</span> <span class="n">shuffle</span><span class="o">=</span><span class="kc">False</span><span class="p">),</span>
+            <span class="n">identifier</span><span class="o">=</span><span class="s2">"src"</span><span class="p">,</span>
+            <span class="n">load_from_disk</span><span class="o">=</span><span class="n">load_src_from_disk</span><span class="p">,</span>
+            <span class="n">return_activations</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="k">assert</span> <span class="n">layer_AVDatasets</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span>
+            <span class="n">layer_AVDatasets</span><span class="p">,</span> <span class="n">AV</span><span class="o">.</span><span class="n">AVDataset</span>
+        <span class="p">)</span>
+
+        <span class="n">layer_modules</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">common</span><span class="o">.</span><span class="n">_get_module_from_name</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">module</span><span class="p">,</span> <span class="n">layer</span><span class="p">)</span> <span class="k">for</span> <span class="n">layer</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">layers</span>
+        <span class="p">]</span>
+        <span class="n">test_activations</span> <span class="o">=</span> <span class="n">LayerActivation</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">module</span><span class="p">,</span> <span class="n">layer_modules</span><span class="p">)</span><span class="o">.</span><span class="n">attribute</span><span class="p">(</span>
+            <span class="n">inputs</span><span class="p">,</span> <span class="n">additional_forward_args</span>
+        <span class="p">)</span>
+
+        <span class="n">minmax</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">similarity_direction</span> <span class="o">==</span> <span class="s2">"max"</span>
+
+        <span class="c1"># av_inputs shape: (inputs_batch_size, *) e.g. (inputs_batch_size, N, C, H, W)</span>
+        <span class="c1"># av_src shape: (self.batch_size, *) e.g. (self.batch_size, N, C, H, W)</span>
+        <span class="n">test_activations</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">test_activations</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">layers</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="k">else</span> <span class="p">[</span><span class="n">test_activations</span><span class="p">]</span>
+        <span class="p">)</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="p">(</span><span class="n">layer</span><span class="p">,</span> <span class="n">layer_AVDataset</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span>
+            <span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">layers</span><span class="p">,</span> <span class="n">layer_AVDatasets</span><span class="p">)</span>
+        <span class="p">):</span>
+            <span class="n">topk_val</span><span class="p">,</span> <span class="n">topk_idx</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">(),</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">()</span><span class="o">.</span><span class="n">long</span><span class="p">()</span>
+            <span class="n">zero_acts</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">()</span><span class="o">.</span><span class="n">long</span><span class="p">()</span>
+
+            <span class="n">av_inputs</span> <span class="o">=</span> <span class="n">test_activations</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+            <span class="n">src_loader</span> <span class="o">=</span> <span class="n">DataLoader</span><span class="p">(</span><span class="n">layer_AVDataset</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">j</span><span class="p">,</span> <span class="n">av_src</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">src_loader</span><span class="p">):</span>
+                <span class="n">av_src</span> <span class="o">=</span> <span class="n">av_src</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+
+                <span class="n">similarity</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">similarity_metric</span><span class="p">(</span><span class="n">av_inputs</span><span class="p">,</span> <span class="n">av_src</span><span class="p">)</span>
+                <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
+                    <span class="s2">"Output of custom similarity does not meet required dimensions. "</span>
+                    <span class="sa">f</span><span class="s2">"Your output has shape </span><span class="si">{</span><span class="n">similarity</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s2">.</span><span class="se">\n</span><span class="s2">Please ensure the "</span>
+                    <span class="s2">"output shape matches (inputs_batch_size, src_dataset_batch_size), "</span>
+                    <span class="sa">f</span><span class="s2">"which should be </span><span class="si">{</span><span class="p">(</span><span class="n">inputs_batch_size</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">batch_size</span><span class="p">)</span><span class="si">}</span><span class="s2">."</span>
+                <span class="p">)</span>
+                <span class="k">assert</span> <span class="n">similarity</span><span class="o">.</span><span class="n">shape</span> <span class="o">==</span> <span class="p">(</span><span class="n">inputs_batch_size</span><span class="p">,</span> <span class="n">av_src</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="n">msg</span>
+                <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">"replace_nan"</span><span class="p">):</span>
+                    <span class="n">idx</span> <span class="o">=</span> <span class="p">(</span><span class="n">similarity</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">replace_nan</span><span class="p">)</span><span class="o">.</span><span class="n">nonzero</span><span class="p">()</span>
+                    <span class="n">zero_acts</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">((</span><span class="n">zero_acts</span><span class="p">,</span> <span class="n">idx</span><span class="p">))</span>
+
+                <span class="sa">r</span><span class="sd">"""</span>
+<span class="sd">                TODO: For models that can have tuples as activations, we should</span>
+<span class="sd">                allow similarity metrics to accept tuples, support topk selection.</span>
+<span class="sd">                """</span>
+
+                <span class="n">topk_batch</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">top_k</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">batch_size</span><span class="p">)</span>
+                <span class="n">values</span><span class="p">,</span> <span class="n">indices</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">topk</span><span class="p">(</span>
+                    <span class="n">similarity</span><span class="p">,</span> <span class="n">topk_batch</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">largest</span><span class="o">=</span><span class="n">minmax</span>
+                <span class="p">)</span>
+                <span class="n">indices</span> <span class="o">+=</span> <span class="nb">int</span><span class="p">(</span><span class="n">j</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">batch_size</span><span class="p">)</span>
+
+                <span class="n">topk_val</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">((</span><span class="n">topk_val</span><span class="p">,</span> <span class="n">values</span><span class="p">),</span> <span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+                <span class="n">topk_idx</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">((</span><span class="n">topk_idx</span><span class="p">,</span> <span class="n">indices</span><span class="p">),</span> <span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+                <span class="c1"># can modify how often to sort for efficiency? minor</span>
+                <span class="n">sort_idx</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">argsort</span><span class="p">(</span><span class="n">topk_val</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">descending</span><span class="o">=</span><span class="n">minmax</span><span class="p">)</span>
+                <span class="n">topk_val</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">gather</span><span class="p">(</span><span class="n">topk_val</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">sort_idx</span><span class="p">[:,</span> <span class="p">:</span><span class="n">top_k</span><span class="p">])</span>
+                <span class="n">topk_idx</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">gather</span><span class="p">(</span><span class="n">topk_idx</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">sort_idx</span><span class="p">[:,</span> <span class="p">:</span><span class="n">top_k</span><span class="p">])</span>
+
+            <span class="n">influences</span><span class="p">[</span><span class="n">layer</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">topk_idx</span><span class="p">,</span> <span class="n">topk_val</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">torch</span><span class="o">.</span><span class="n">numel</span><span class="p">(</span><span class="n">zero_acts</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">):</span>
+                <span class="n">zero_warning</span> <span class="o">=</span> <span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">"Layer </span><span class="si">{</span><span class="n">layer</span><span class="si">}</span><span class="s2"> has zero-vector activations for some inputs. This "</span>
+                    <span class="s2">"may cause undefined behavior for cosine similarity. The indices "</span>
+                    <span class="s2">"for the offending inputs will be included under the key "</span>
+                    <span class="sa">f</span><span class="s2">"'zero_acts-</span><span class="si">{</span><span class="n">layer</span><span class="si">}</span><span class="s2">' in the output dictionary. Indices are "</span>
+                    <span class="s2">"returned as a tensor with [inputs_idx, src_dataset_idx] pairs "</span>
+                    <span class="s2">"which may have corrupted similarity scores."</span>
+                <span class="p">)</span>
+                <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="n">zero_warning</span><span class="p">,</span> <span class="ne">RuntimeWarning</span><span class="p">)</span>
+                <span class="n">key</span> <span class="o">=</span> <span class="s2">"-"</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="s2">"zero_acts"</span><span class="p">,</span> <span class="n">layer</span><span class="p">])</span>
+                <span class="n">influences</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">zero_acts</span>
+
+        <span class="k">return</span> <span class="n">influences</span></div></div>
+</pre></div>
+</div>
+</div>
+</div>
+<div aria-label="main navigation" class="sphinxsidebar" role="navigation">
+<div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../../index.html">Captum</a></h1>
+<h3>Navigation</h3>
+<p class="caption" role="heading"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../attribution.html">Attribution</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../noise_tunnel.html">NoiseTunnel</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../layer.html">Layer Attribution</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../neuron.html">Neuron Attribution</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../metrics.html">Metrics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../robust.html">Robustness</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../concept.html">Concept-based Interpretability</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../influence.html">Influential Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../utilities.html">Utilities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../base_classes.html">Base Classes</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Insights API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../insights.html">Insights</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../insights.html#features">Features</a></li>
+</ul>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+<li><a href="../../../../index.html">Documentation overview</a><ul>
+<li><a href="../../../index.html">Module code</a><ul>
+</ul></li>
+</ul></li>
+</ul>
+</div>
+<div id="searchbox" role="search" style="display: none">
+<h3 id="searchlabel">Quick search</h3>
+<div class="searchformwrapper">
+<form action="../../../../search.html" class="search" method="get">
+<input aria-labelledby="searchlabel" autocapitalize="off" autocomplete="off" autocorrect="off" name="q" spellcheck="false" type="text"/>
+<input type="submit" value="Go"/>
+</form>
+</div>
+</div>
+<script>$('#searchbox').show(0);</script>
+</div>
+</div>
+<div class="clearer"></div>
+</div></div></div><footer class="nav-footer" id="footer"><section class="sitemap"><div class="footerSection"><h5>Docs</h5><a href="/docs/introduction">Introduction</a><a href="/docs/getting_started">Getting Started</a><a href="/tutorials/">Tutorials</a><a href="/api/">API Reference</a></div><div class="footerSection"><h5>Legal</h5><a href="https://opensource.facebook.com/legal/privacy/" target="_blank" rel="noreferrer noopener">Privacy</a><a href="https://opensource.facebook.com/legal/terms/" target="_blank" rel="noreferrer noopener">Terms</a></div><div class="footerSection"><h5>Social</h5><div class="social"><a class="github-button" href="https://github.com/pytorch/captum" data-count-href="https://github.com/pytorch/captum/stargazers" data-show-count="true" data-count-aria-label="# stargazers on GitHub" aria-label="Star Captum on GitHub">captum</a></div></div></section><a href="https://opensource.facebook.com/" target="_blank" rel="noreferrer noopener" class="fbOpenSource"><img src="/img/oss_logo.png" alt="Facebook Open Source" width="170" height="45"/></a><section class="copyright"> Copyright © 2022 Facebook Inc.</section><script>
+            (function() {
+              var BAD_BASE = '/captum/';
+              if (window.location.origin !== 'https://captum.ai') {
+                var pathname = window.location.pathname;
+                var newPathname = pathname.slice(pathname.indexOf(BAD_BASE) === 0 ? BAD_BASE.length : 1);
+                var newLocation = 'https://captum.ai/' + newPathname;
+                console.log('redirecting to ' + newLocation);
+                window.location.href = newLocation;
+              }
+            })();
+          </script></footer></div><script type="text/javascript" src="https://cdn.jsdelivr.net/docsearch.js/1/docsearch.min.js"></script><script>
+                document.addEventListener('keyup', function(e) {
+                  if (e.target !== document.body) {
+                    return;
+                  }
+                  // keyCode for '/' (slash)
+                  if (e.keyCode === 191) {
+                    const search = document.getElementById('search_input_react');
+                    search && search.focus();
+                  }
+                });
+              </script><script>
+              var search = docsearch({
+                
+                apiKey: '207c27d819f967749142d8611de7cb19',
+                indexName: 'captum',
+                inputSelector: '#search_input_react'
+              });
+            </script></body></html>

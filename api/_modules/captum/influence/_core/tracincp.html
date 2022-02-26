@@ -1,0 +1,771 @@
+<!DOCTYPE html><html lang="en"><head><meta charSet="utf-8"/><meta http-equiv="X-UA-Compatible" content="IE=edge"/><title>Captum · Model Interpretability for PyTorch</title><meta name="viewport" content="width=device-width"/><meta name="generator" content="Docusaurus"/><meta name="description" content="Model Interpretability for PyTorch"/><meta name="docsearch:language" content="en"/><meta property="og:title" content="Captum · Model Interpretability for PyTorch"/><meta property="og:type" content="website"/><meta property="og:url" content="https://captum.ai/"/><meta property="og:description" content="Model Interpretability for PyTorch"/><meta property="og:image" content="https://captum.ai/img/captum-icon.png"/><meta name="twitter:card" content="summary"/><meta name="twitter:image" content="https://captum.ai/img/captum.png"/><link rel="shortcut icon" href="/img/captum.ico"/><link rel="stylesheet" href="https://cdn.jsdelivr.net/docsearch.js/1/docsearch.min.css"/><link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/default.min.css"/><script>
+              (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+              (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+              m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+              })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+              ga('create', 'UA-44373548-48', 'auto');
+              ga('send', 'pageview');
+            </script><link rel="stylesheet" href="/css/code_block_buttons.css"/><script type="text/javascript" src="https://buttons.github.io/buttons.js"></script><script type="text/javascript" src="/js/code_block_buttons.js"></script><script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.0/clipboard.min.js"></script><script src="https://unpkg.com/vanilla-back-to-top@7.1.14/dist/vanilla-back-to-top.min.js"></script><script>
+        document.addEventListener('DOMContentLoaded', function() {
+          addBackToTop(
+            {"zIndex":100}
+          )
+        });
+        </script><script src="/js/scrollSpy.js"></script><link rel="stylesheet" href="/css/main.css"/><script src="/js/codetabs.js"></script></head><body><div class="fixedHeaderContainer"><div class="headerWrapper wrapper"><header><a href="/"><img class="logo" src="/img/captum_logo.svg" alt="Captum"/></a><div class="navigationWrapper navigationSlider"><nav class="slidingNav"><ul class="nav-site nav-site-internal"><li class=""><a href="/docs/introduction" target="_self">Docs</a></li><li class=""><a href="/tutorials/" target="_self">Tutorials</a></li><li class=""><a href="/api/" target="_self">API Reference</a></li><li class=""><a href="https://github.com/pytorch/captum" target="_self">GitHub</a></li><li class="navSearchWrapper reactNavSearchWrapper"><input type="text" id="search_input_react" placeholder="Search" title="Search"/></li></ul></nav></div></header></div></div><div class="navPusher"><div>
+<script type="text/javascript" id="documentation_options" data-url_root="./"
+src="/js/documentation_options.js"></script>
+<script type="text/javascript" src="/js/jquery.js"></script>
+<script type="text/javascript" src="/js/underscore.js"></script>
+<script type="text/javascript" src="/js/doctools.js"></script>
+<script type="text/javascript" src="/js/language_data.js"></script>
+<script type="text/javascript" src="/js/searchtools.js"></script>
+
+<script src="https://cdn.jsdelivr.net/npm/katex@0.13.11/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.13.11/dist/contrib/auto-render.min.js"></script>
+<script src="/js/katex_autorenderer.js"></script>
+<link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/katex@0.13.11/dist/katex.min.css" />
+<link rel="stylesheet" type="text/css" href="/css/katex-math.css" />
+<div class="sphinx wrapper"><div class="document">
+<div class="documentwrapper">
+<div class="bodywrapper">
+<div class="body" role="main">
+<h1>Source code for captum.influence._core.tracincp</h1><div class="highlight"><pre>
+<span></span><span class="ch">#!/usr/bin/env python3</span>
+
+<span class="kn">import</span> <span class="nn">glob</span>
+<span class="kn">from</span> <span class="nn">abc</span> <span class="kn">import</span> <span class="n">abstractmethod</span>
+<span class="kn">from</span> <span class="nn">os.path</span> <span class="kn">import</span> <span class="n">join</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Iterator</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Union</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">NamedTuple</span>
+
+<span class="kn">import</span> <span class="nn">torch</span>
+<span class="kn">from</span> <span class="nn">captum._utils.av</span> <span class="kn">import</span> <span class="n">AV</span>
+<span class="kn">from</span> <span class="nn">captum._utils.gradient</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">_compute_jacobian_wrt_params</span><span class="p">,</span>
+    <span class="n">_compute_jacobian_wrt_params_autograd_hacks</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span> <span class="nn">captum.influence._core.influence</span> <span class="kn">import</span> <span class="n">DataInfluence</span>
+<span class="kn">from</span> <span class="nn">captum.influence._utils.common</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">_gradient_dot_product</span><span class="p">,</span>
+    <span class="n">_load_flexible_state_dict</span><span class="p">,</span>
+    <span class="n">_get_k_most_influential_helper</span><span class="p">,</span>
+    <span class="n">_format_inputs</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span> <span class="nn">torch</span> <span class="kn">import</span> <span class="n">Tensor</span>
+<span class="kn">from</span> <span class="nn">torch.nn</span> <span class="kn">import</span> <span class="n">Module</span>
+<span class="kn">from</span> <span class="nn">torch.utils.data</span> <span class="kn">import</span> <span class="n">DataLoader</span><span class="p">,</span> <span class="n">Dataset</span>
+
+
+<span class="sa">r</span><span class="sd">"""</span>
+
+<span class="sd">Note: methods starting with "_" are protected, not private, and can be overridden in</span>
+<span class="sd">child classes.  They are not part of the API.</span>
+
+<span class="sd">Implements abstract DataInfluence class and provides implementation details for</span>
+<span class="sd">influence computation based on the logic provided in TracIn paper</span>
+<span class="sd">(https://arxiv.org/pdf/2002.08484.pdf).</span>
+
+<span class="sd">The TracIn paper proposes an idealized notion of influence which can be represented by</span>
+<span class="sd">the total amount a training example reduces loss for a test example via a training</span>
+<span class="sd">process such as stochastic gradient descent. As this idealized notion of influence is</span>
+<span class="sd">impractical to compute, the TracIn paper proposes instead to compute an influence</span>
+<span class="sd">score, which uses a first-order approximation for the change in loss for a test example</span>
+<span class="sd">by a training example, which is accumulated across saved model checkpoints. This</span>
+<span class="sd">influence score is accumulated via a summed dot-product of gradient vectors for the</span>
+<span class="sd">scores/loss of a test and training example.</span>
+<span class="sd">"""</span>
+
+<span class="sd">"""</span>
+<span class="sd">TODO: Support for checkpoint type. Currently only supports model parameters as saved</span>
+<span class="sd">checkpoints. Can use enum or string.</span>
+
+<span class="sd">Potential implementation from design doc:</span>
+<span class="sd">checkpoint_type (Enum = [Parameters | Loss_Grad]): For performance,</span>
+<span class="sd">                saved / loaded checkpoints can be either model parameters, or</span>
+<span class="sd">                gradient of the loss function on an input w.r.t parameters.</span>
+<span class="sd">"""</span>
+
+
+<span class="k">class</span> <span class="nc">KMostInfluentialResults</span><span class="p">(</span><span class="n">NamedTuple</span><span class="p">):</span>
+    <span class="sd">"""</span>
+<span class="sd">    This namedtuple stores the results of using the `influence` method. This method</span>
+<span class="sd">    is implemented by all subclasses of `TracInCPBase` to calculate</span>
+<span class="sd">    proponents / opponents. The `indices` field stores the indices of the</span>
+<span class="sd">    proponents / opponents for each example in the test batch. For example, if finding</span>
+<span class="sd">    opponents, `indices[i][j]` stores the index in the training data of the example</span>
+<span class="sd">    with the `j`-th highest influence score on the `i`-th example in the test batch.</span>
+<span class="sd">    Similarly, the `influence_scores` field stores the actual influence scores, so that</span>
+<span class="sd">    `influence_scores[i][j]` is the influence score of example `indices[i][j]` in the</span>
+<span class="sd">    training data on example `i` of the test batch. Please see `TracInCPBase.influence`</span>
+<span class="sd">    for more details.</span>
+<span class="sd">    """</span>
+
+    <span class="n">indices</span><span class="p">:</span> <span class="n">Tensor</span>
+    <span class="n">influence_scores</span><span class="p">:</span> <span class="n">Tensor</span>
+
+
+<div class="viewcode-block" id="TracInCPBase"><a class="viewcode-back" href="../../../../influence.html#captum.influence.TracInCPBase">[docs]</a><span class="k">class</span> <span class="nc">TracInCPBase</span><span class="p">(</span><span class="n">DataInfluence</span><span class="p">):</span>
+    <span class="sd">"""</span>
+<span class="sd">    To implement the `influence` method, classes inheriting from `TracInCPBase` will</span>
+<span class="sd">    separately implement the private `_self_influence`, `_get_k_most_influential`,</span>
+<span class="sd">    and `_influence` methods. The public `influence` method is a wrapper for these</span>
+<span class="sd">    private methods.</span>
+<span class="sd">    """</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">model</span><span class="p">:</span> <span class="n">Module</span><span class="p">,</span>
+        <span class="n">influence_src_dataset</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Dataset</span><span class="p">,</span> <span class="n">DataLoader</span><span class="p">],</span>
+        <span class="n">checkpoints</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">Iterator</span><span class="p">],</span>
+        <span class="n">checkpoints_load_func</span><span class="p">:</span> <span class="n">Callable</span> <span class="o">=</span> <span class="n">_load_flexible_state_dict</span><span class="p">,</span>
+        <span class="n">loss_fn</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">Module</span><span class="p">,</span> <span class="n">Callable</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">batch_size</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="sa">r</span><span class="sd">"""</span>
+<span class="sd">        Args:</span>
+<span class="sd">            model (torch.nn.Module): An instance of pytorch model. This model should</span>
+<span class="sd">                    define all of its layers as attributes of the model.</span>
+<span class="sd">            influence_src_dataset (torch.utils.data.Dataset or torch.utils.DataLoader):</span>
+<span class="sd">                    In the `influence` method, we either compute the influence score of</span>
+<span class="sd">                    training examples on examples in a test batch, or self influence</span>
+<span class="sd">                    scores for those training examples, depending on which mode is used.</span>
+<span class="sd">                    This argument represents the training dataset containing those</span>
+<span class="sd">                    training examples. In order to compute those influence scores, we</span>
+<span class="sd">                    will create a Pytorch DataLoader yielding batches of training</span>
+<span class="sd">                    examples that is then used for processing. If this argument is</span>
+<span class="sd">                    already a Pytorch Dataloader, that DataLoader can be directly</span>
+<span class="sd">                    used for processing. If it is instead a Pytorch Dataset, we will</span>
+<span class="sd">                    create a DataLoader using it, with batch size specified by</span>
+<span class="sd">                    `batch_size`. For efficiency purposes, the batch size of the</span>
+<span class="sd">                    DataLoader used for processing should be as large as possible, but</span>
+<span class="sd">                    not too large, so that certain intermediate quantities created</span>
+<span class="sd">                    from a batch still fit in memory. Therefore, if</span>
+<span class="sd">                    `influence_src_dataset` is a Dataset, `batch_size` should be large.</span>
+<span class="sd">                    If `influence_src_dataset` was already a DataLoader to begin with,</span>
+<span class="sd">                    it should have been constructed to have a large batch size.</span>
+<span class="sd">            checkpoints (str or List of str or Iterator): Either the directory of the</span>
+<span class="sd">                    path to store and retrieve model checkpoints, a list of</span>
+<span class="sd">                    filepaths with checkpoints from which to load, or an iterator which</span>
+<span class="sd">                    returns objects from which to load checkpoints.</span>
+<span class="sd">            checkpoints_load_func (Callable, optional): The function to load a saved</span>
+<span class="sd">                    checkpoint into a model to update its parameters, and get the</span>
+<span class="sd">                    learning rate if it is saved. By default uses a utility to load a</span>
+<span class="sd">                    model saved as a state dict.</span>
+<span class="sd">                    Default: _load_flexible_state_dict</span>
+<span class="sd">            layers (List of str or None, optional): A list of layer names for which</span>
+<span class="sd">                    gradients should be computed. If `layers` is None, gradients will</span>
+<span class="sd">                    be computed for all layers. Otherwise, they will only be computed</span>
+<span class="sd">                    for the layers specified in `layers`.</span>
+<span class="sd">                    Default: None</span>
+<span class="sd">            loss_fn (Callable, optional): The loss function applied to model.</span>
+<span class="sd">                    Default: None</span>
+<span class="sd">            batch_size (int or None, optional): Batch size of the DataLoader created to</span>
+<span class="sd">                    iterate through `influence_src_dataset`, if it is a Dataset.</span>
+<span class="sd">                    `batch_size` should be chosen as large as possible so that certain</span>
+<span class="sd">                    intermediate quantities created from a batch still fit in memory.</span>
+<span class="sd">                    Specific implementations of `TracInCPBase` will detail the size of</span>
+<span class="sd">                    the intermediate quantities. `batch_size` must be an int if</span>
+<span class="sd">                    `influence_src_dataset` is a Dataset. If `influence_src_dataset`</span>
+<span class="sd">                    is a DataLoader, then `batch_size` is ignored as an argument.</span>
+<span class="sd">                    Default: 1</span>
+<span class="sd">        """</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">model</span> <span class="o">=</span> <span class="n">model</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">checkpoints</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">checkpoints</span> <span class="o">=</span> <span class="n">AV</span><span class="o">.</span><span class="n">sort_files</span><span class="p">(</span><span class="n">glob</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="n">join</span><span class="p">(</span><span class="n">checkpoints</span><span class="p">,</span> <span class="s2">"*"</span><span class="p">)))</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">checkpoints</span><span class="p">,</span> <span class="n">List</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">checkpoints</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">checkpoints</span> <span class="o">=</span> <span class="n">AV</span><span class="o">.</span><span class="n">sort_files</span><span class="p">(</span><span class="n">checkpoints</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">checkpoints</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">checkpoints</span><span class="p">)</span>  <span class="c1"># cast to avoid mypy error</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">checkpoints</span><span class="p">,</span> <span class="n">List</span><span class="p">):</span>
+            <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">checkpoints</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">"No checkpoints saved!"</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">checkpoints_load_func</span> <span class="o">=</span> <span class="n">checkpoints_load_func</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">loss_fn</span> <span class="o">=</span> <span class="n">loss_fn</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">batch_size</span> <span class="o">=</span> <span class="n">batch_size</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">influence_src_dataset</span><span class="p">,</span> <span class="n">DataLoader</span><span class="p">):</span>
+            <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">batch_size</span><span class="p">,</span> <span class="nb">int</span><span class="p">),</span> <span class="p">(</span>
+                <span class="s2">"since the `influence_src_dataset` argument was a `Dataset`, "</span>
+                <span class="s2">"`batch_size` must be an int."</span>
+            <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">influence_src_dataloader</span> <span class="o">=</span> <span class="n">DataLoader</span><span class="p">(</span>
+                <span class="n">influence_src_dataset</span><span class="p">,</span> <span class="n">batch_size</span><span class="p">,</span> <span class="n">shuffle</span><span class="o">=</span><span class="kc">False</span>
+            <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">influence_src_dataloader</span> <span class="o">=</span> <span class="n">influence_src_dataset</span>
+
+    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="nf">_self_influence</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">"""</span>
+<span class="sd">        Returns:</span>
+<span class="sd">            self influence scores (tensor): 1D tensor containing self influence</span>
+<span class="sd">                    scores for all examples in training dataset</span>
+<span class="sd">                    `influence_src_dataset`.</span>
+<span class="sd">        """</span>
+        <span class="k">pass</span>
+
+    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="nf">_get_k_most_influential</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">inputs</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span>
+        <span class="n">targets</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Tensor</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">k</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">5</span><span class="p">,</span>
+        <span class="n">proponents</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">KMostInfluentialResults</span><span class="p">:</span>
+        <span class="sa">r</span><span class="sd">"""</span>
+<span class="sd">        Args:</span>
+<span class="sd">            inputs (Tuple of Any): A tuple that represents a batch of examples. It does</span>
+<span class="sd">                    not represent labels, which are passed as `targets`.</span>
+<span class="sd">            targets (tensor, optional): If computing influence scores on a loss</span>
+<span class="sd">                    function, these are the labels corresponding to the batch `inputs`.</span>
+<span class="sd">                    Default: None</span>
+<span class="sd">            k (int, optional): The number of proponents or opponents to return per test</span>
+<span class="sd">                    example.</span>
+<span class="sd">                    Default: 5</span>
+<span class="sd">            proponents (bool, optional): Whether seeking proponents (`proponents=True`)</span>
+<span class="sd">                    or opponents (`proponents=False`)</span>
+<span class="sd">                    Default: True</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            (indices, influence_scores) (namedtuple): `indices` is a torch.long Tensor</span>
+<span class="sd">                    that contains the indices of the proponents (or opponents) for each</span>
+<span class="sd">                    test example. Its dimension is `(inputs_batch_size, k)`, where</span>
+<span class="sd">                    `inputs_batch_size` is the number of examples in `inputs`. For</span>
+<span class="sd">                    example, if `proponents==True`, `indices[i][j]` is the index of the</span>
+<span class="sd">                    example in training dataset `influence_src_dataset` with the</span>
+<span class="sd">                    k-th highest influence score for the j-th example in `inputs`.</span>
+<span class="sd">                    `indices` is a `torch.long` tensor so that it can directly be used</span>
+<span class="sd">                    to index other tensors. Each row of `influence_scores` contains the</span>
+<span class="sd">                    influence scores for a different test example, in sorted order. In</span>
+<span class="sd">                    particular, `influence_scores[i][j]` is the influence score of</span>
+<span class="sd">                    example `indices[i][j]` in training dataset `influence_src_dataset`</span>
+<span class="sd">                    on example `i` in the test batch represented by `inputs` and</span>
+<span class="sd">                    `targets`.</span>
+<span class="sd">        """</span>
+        <span class="k">pass</span>
+
+    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="nf">_influence</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">inputs</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span>
+        <span class="n">targets</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Tensor</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tensor</span><span class="p">:</span>
+        <span class="sa">r</span><span class="sd">"""</span>
+<span class="sd">        Args:</span>
+<span class="sd">            inputs (Tuple of Any): A batch of examples. Does not represent labels,</span>
+<span class="sd">                    which are passed as `targets`. The assumption is that</span>
+<span class="sd">                    `self.model(*inputs)` produces the predictions for the batch.</span>
+<span class="sd">            targets (tensor, optional): If computing influence scores on a loss</span>
+<span class="sd">                    function, these are the labels corresponding to the batch</span>
+<span class="sd">                    `inputs`.</span>
+<span class="sd">                    Default: None</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            influence_scores (tensor): Influence scores over the entire</span>
+<span class="sd">                    training dataset `influence_src_dataset`. Dimensionality is</span>
+<span class="sd">                    (inputs_batch_size, src_dataset_size). For example:</span>
+<span class="sd">                    influence_scores[i][j] = the influence score for the j-th training</span>
+<span class="sd">                    example to the i-th input example.</span>
+<span class="sd">        """</span>
+        <span class="k">pass</span>
+
+<div class="viewcode-block" id="TracInCPBase.influence"><a class="viewcode-back" href="../../../../influence.html#captum.influence.TracInCPBase.influence">[docs]</a>    <span class="k">def</span> <span class="nf">influence</span><span class="p">(</span>  <span class="c1"># type: ignore[override]</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">inputs</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">targets</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Tensor</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">k</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">proponents</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="n">unpack_inputs</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">KMostInfluentialResults</span><span class="p">]:</span>
+        <span class="sa">r</span><span class="sd">"""</span>
+<span class="sd">        This is the key method of this class, and can be run in 3 different modes,</span>
+<span class="sd">        where the mode that is run depends on the arguments passed to this method.</span>
+<span class="sd">        - self influence mode: This mode is used if `inputs` is None. This mode</span>
+<span class="sd">                computes the self influence scores for every example in</span>
+<span class="sd">                the training dataset `influence_src_dataset`.</span>
+<span class="sd">        - influence score mode: This mode is used if `inputs` is not None, and `k` is</span>
+<span class="sd">                None. This mode computes the influence score of every example in</span>
+<span class="sd">                training dataset `influence_src_dataset` on every example in the test</span>
+<span class="sd">                batch represented by `inputs` and `targets`.</span>
+<span class="sd">        - k-most influential mode: This mode is used if `inputs` is not None, and</span>
+<span class="sd">                `k` is not None, and an int. This mode computes the proponents or</span>
+<span class="sd">                opponents of every example in the test batch represented by `inputs`</span>
+<span class="sd">                and `targets`. In particular, for each test example in the test batch,</span>
+<span class="sd">                this mode computes its proponents (resp. opponents), which are the</span>
+<span class="sd">                indices in the training dataset `influence_src_dataset` of the training</span>
+<span class="sd">                examples with the `k` highest (resp. lowest) influence scores on the</span>
+<span class="sd">                test example. Proponents are computed if `proponents` is True.</span>
+<span class="sd">                Otherwise, opponents are computed. For each test example, this method</span>
+<span class="sd">                also returns the actual influence score of each proponent (resp.</span>
+<span class="sd">                opponent) on the test example.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            inputs (Any, optional): If not provided or `None`, the self influence mode</span>
+<span class="sd">                    will be run. Otherwise, `inputs` is the test batch that will be</span>
+<span class="sd">                    used when running in either influence score or k-most influential</span>
+<span class="sd">                    mode. If the argument `unpack_inputs` is False, the</span>
+<span class="sd">                    assumption is that `self.model(inputs)` produces the predictions</span>
+<span class="sd">                    for a batch, and `inputs` can be of any type. Otherwise if the</span>
+<span class="sd">                    argument `unpack_inputs` is True, the assumption is that</span>
+<span class="sd">                    `self.model(*inputs)` produces the predictions for a batch, and</span>
+<span class="sd">                    `inputs` will need to be a tuple. In other words, `inputs` will be</span>
+<span class="sd">                    unpacked as an argument when passing to `self.model`.</span>
+<span class="sd">                    Default: None</span>
+<span class="sd">            targets (tensor, optional): If computing influence scores on a loss</span>
+<span class="sd">                    function, these are the labels corresponding to the batch `inputs`.</span>
+<span class="sd">                    Default: None</span>
+<span class="sd">            k (int, optional): If not provided or `None`, the influence score mode will</span>
+<span class="sd">                    be run. Otherwise, the k-most influential mode will be run,</span>
+<span class="sd">                    and `k` is the number of proponents / opponents to return per</span>
+<span class="sd">                    example in the test batch.</span>
+<span class="sd">                    Default: None</span>
+<span class="sd">            proponents (bool, optional): Whether seeking proponents (`proponents=True`)</span>
+<span class="sd">                    or opponents (`proponents=False`), if running in k-most influential</span>
+<span class="sd">                    mode.</span>
+<span class="sd">                    Default: True</span>
+<span class="sd">            unpack_inputs (bool, optional): Whether to unpack the `inputs` argument to</span>
+<span class="sd">                    when passing it to `model`, if `inputs` is a tuple (no unpacking</span>
+<span class="sd">                    done otherwise).</span>
+<span class="sd">                    Default: True</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            The return value of this method depends on which mode is run.</span>
+<span class="sd">            - self influence mode: if this mode is run (`inputs` is None), returns a 1D</span>
+<span class="sd">                    tensor of self influence scores over training dataset</span>
+<span class="sd">                    `influence_src_dataset`. The length of this tensor is the number of</span>
+<span class="sd">                    examples in `influence_src_dataset`, regardless of whether it is a</span>
+<span class="sd">                    Dataset or DataLoader.</span>
+<span class="sd">            - influence score mode: if this mode is run (`inputs is not None, `k` is</span>
+<span class="sd">                    None), returns a 2D tensor `influence_scores` of shape</span>
+<span class="sd">                    `(input_size, influence_src_dataset_size)`, where `input_size` is</span>
+<span class="sd">                    the number of examples in the test batch, and</span>
+<span class="sd">                    `influence_src_dataset_size` is the number of examples in</span>
+<span class="sd">                    training dataset `influence_src_dataset`. In other words,</span>
+<span class="sd">                    `influence_scores[i][j]` is the influence score of the `j`-th</span>
+<span class="sd">                    example in `influence_src_dataset` on the `i`-th example in the</span>
+<span class="sd">                    test batch.</span>
+<span class="sd">           - k-most influential mode: if this mode is run (`inputs` is not None,</span>
+<span class="sd">                    `k` is an int), returns a namedtuple `(indices, influence_scores)`.</span>
+<span class="sd">                    `indices` is a 2D tensor of shape `(input_size, k)`, where</span>
+<span class="sd">                    `input_size` is the number of examples in the test batch. If</span>
+<span class="sd">                    computing proponents (resp. opponents), `indices[i][j]` is the</span>
+<span class="sd">                    index in training dataset `influence_src_dataset` of the example</span>
+<span class="sd">                    with the `j`-th highest (resp. lowest) influence score (out of the</span>
+<span class="sd">                    examples in `influence_src_dataset`) on the `i`-th example in the</span>
+<span class="sd">                    test batch. `influence_scores` contains the corresponding influence</span>
+<span class="sd">                    scores. In particular, `influence_scores[i][j]` is the influence</span>
+<span class="sd">                    score of example `indices[i][j]` in `influence_src_dataset` on</span>
+<span class="sd">                    example `i` in the test batch represented by `inputs` and</span>
+<span class="sd">                    `targets`.</span>
+<span class="sd">        """</span>
+        <span class="n">_inputs</span> <span class="o">=</span> <span class="n">_format_inputs</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">unpack_inputs</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">inputs</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_self_influence</span><span class="p">()</span>
+        <span class="k">elif</span> <span class="n">k</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_influence</span><span class="p">(</span><span class="n">_inputs</span><span class="p">,</span> <span class="n">targets</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_k_most_influential</span><span class="p">(</span><span class="n">_inputs</span><span class="p">,</span> <span class="n">targets</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">proponents</span><span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="TracInCP"><a class="viewcode-back" href="../../../../influence.html#captum.influence.TracInCP">[docs]</a><span class="k">class</span> <span class="nc">TracInCP</span><span class="p">(</span><span class="n">TracInCPBase</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">model</span><span class="p">:</span> <span class="n">Module</span><span class="p">,</span>
+        <span class="n">influence_src_dataset</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Dataset</span><span class="p">,</span> <span class="n">DataLoader</span><span class="p">],</span>
+        <span class="n">checkpoints</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">Iterator</span><span class="p">],</span>
+        <span class="n">checkpoints_load_func</span><span class="p">:</span> <span class="n">Callable</span> <span class="o">=</span> <span class="n">_load_flexible_state_dict</span><span class="p">,</span>
+        <span class="n">layers</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">loss_fn</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">Module</span><span class="p">,</span> <span class="n">Callable</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">batch_size</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
+        <span class="n">use_autograd_hacks</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="sa">r</span><span class="sd">"""</span>
+<span class="sd">        Args:</span>
+<span class="sd">            model (torch.nn.Module): An instance of pytorch model. This model should</span>
+<span class="sd">                    define all of its layers as attributes of the model.</span>
+<span class="sd">            influence_src_dataset (torch.utils.data.Dataset or torch.utils.DataLoader):</span>
+<span class="sd">                    In the `influence` method, we either compute the influence score of</span>
+<span class="sd">                    training examples on examples in a test batch, or self influence</span>
+<span class="sd">                    scores for those training examples, depending on which mode is used.</span>
+<span class="sd">                    This argument represents the training dataset containing those</span>
+<span class="sd">                    training examples. In order to compute those influence scores, we</span>
+<span class="sd">                    will create a Pytorch DataLoader yielding batches of training</span>
+<span class="sd">                    examples that is then used for processing. If this argument is</span>
+<span class="sd">                    already a Pytorch Dataloader, that DataLoader can be directly</span>
+<span class="sd">                    used for processing. If it is instead a Pytorch Dataset, we will</span>
+<span class="sd">                    create a DataLoader using it, with batch size specified by</span>
+<span class="sd">                    `batch_size`. For efficiency purposes, the batch size of the</span>
+<span class="sd">                    DataLoader used for processing should be as large as possible, but</span>
+<span class="sd">                    not too large, so that certain intermediate quantities created</span>
+<span class="sd">                    from a batch still fit in memory. Therefore, if</span>
+<span class="sd">                    `influence_src_dataset` is a Dataset, `batch_size` should be large.</span>
+<span class="sd">                    If `influence_src_dataset` was already a DataLoader to begin with,</span>
+<span class="sd">                    it should have been constructed to have a large batch size.</span>
+<span class="sd">            checkpoints (str or List of str or Iterator): Either the directory of the</span>
+<span class="sd">                    path to store and retrieve model checkpoints, a list of</span>
+<span class="sd">                    filepaths with checkpoints from which to load, or an iterator which</span>
+<span class="sd">                    returns objects from which to load checkpoints.</span>
+<span class="sd">            checkpoints_load_func (Callable, optional): The function to load a saved</span>
+<span class="sd">                    checkpoint into a model to update its parameters, and get the</span>
+<span class="sd">                    learning rate if it is saved. By default uses a utility to load a</span>
+<span class="sd">                    model saved as a state dict.</span>
+<span class="sd">                    Default: _load_flexible_state_dict</span>
+<span class="sd">            layers (List of str or None, optional): A list of layer names for which</span>
+<span class="sd">                    gradients should be computed. If `layers` is None, gradients will</span>
+<span class="sd">                    be computed for all layers. Otherwise, they will only be computed</span>
+<span class="sd">                    for the layers specified in `layers`.</span>
+<span class="sd">                    Default: None</span>
+<span class="sd">            loss_fn (Callable, optional): The loss function applied to model.</span>
+<span class="sd">                    Default: None</span>
+<span class="sd">            batch_size (int or None, optional): Batch size of the DataLoader created to</span>
+<span class="sd">                    iterate through `influence_src_dataset`, if it is a Dataset.</span>
+<span class="sd">                    `batch_size` should be chosen as large as possible so that certain</span>
+<span class="sd">                    intermediate quantities created from a batch still fit in memory.</span>
+<span class="sd">                    Specific implementations of `TracInCPBase` will detail the size of</span>
+<span class="sd">                    the intermediate quantities. `batch_size` must be an int if</span>
+<span class="sd">                    `influence_src_dataset` is a Dataset. If `influence_src_dataset`</span>
+<span class="sd">                    is a DataLoader, then `batch_size` is ignored as an argument.</span>
+<span class="sd">                    Default: 1</span>
+<span class="sd">            use_autograd_hacks (bool, optional): Experimental mode that vectorize</span>
+<span class="sd">                    jacobian computation w.r.t parameters for a batch of inputs. Based</span>
+<span class="sd">                    on support in autograd_hacks.</span>
+<span class="sd">                    Default: False</span>
+<span class="sd">        """</span>
+
+        <span class="n">TracInCPBase</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
+            <span class="bp">self</span><span class="p">,</span>
+            <span class="n">model</span><span class="p">,</span>
+            <span class="n">influence_src_dataset</span><span class="p">,</span>
+            <span class="n">checkpoints</span><span class="p">,</span>
+            <span class="n">checkpoints_load_func</span><span class="p">,</span>
+            <span class="n">loss_fn</span><span class="p">,</span>
+            <span class="n">batch_size</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">use_autograd_hacks</span> <span class="o">=</span> <span class="n">use_autograd_hacks</span>
+
+        <span class="k">if</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">use_autograd_hacks</span>
+            <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">loss_fn</span><span class="p">,</span> <span class="n">Module</span><span class="p">)</span>  <span class="c1"># TODO: allow loss_fn to be Callable</span>
+            <span class="ow">and</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">loss_fn</span><span class="p">,</span> <span class="s2">"reduction"</span><span class="p">)</span>
+        <span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">reduction_type</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">loss_fn</span><span class="o">.</span><span class="n">reduction</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">reduction_type</span> <span class="o">=</span> <span class="s2">"sum"</span>
+
+        <span class="sa">r</span><span class="sd">"""</span>
+<span class="sd">        TODO: Either restore model state after done (would have to place functionality</span>
+<span class="sd">        within influence to restore after every influence call)? or make a copy so that</span>
+<span class="sd">        changes to grad_requires aren't persistent after using TracIn.</span>
+<span class="sd">        """</span>
+        <span class="k">if</span> <span class="n">layers</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">layers</span><span class="p">,</span> <span class="n">List</span><span class="p">),</span> <span class="s2">"`layers` should be a list!"</span>
+            <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">layers</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">"`layers` cannot be empty!"</span>
+            <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span>
+                <span class="n">layers</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="nb">str</span>
+            <span class="p">),</span> <span class="s2">"`layers` should contain str layer names."</span>
+            <span class="n">layerstr</span> <span class="o">=</span> <span class="s2">" "</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">layers</span><span class="p">)</span>
+            <span class="n">gradset</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="k">for</span> <span class="n">layer</span> <span class="ow">in</span> <span class="n">layers</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">param</span> <span class="ow">in</span> <span class="n">model</span><span class="o">.</span><span class="n">named_parameters</span><span class="p">():</span>
+                    <span class="n">param</span><span class="o">.</span><span class="n">requires_grad</span> <span class="o">=</span> <span class="kc">False</span>
+                    <span class="k">if</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">layerstr</span> <span class="ow">or</span> <span class="n">layer</span> <span class="ow">in</span> <span class="n">name</span><span class="p">:</span>
+                        <span class="n">param</span><span class="o">.</span><span class="n">requires_grad</span> <span class="o">=</span> <span class="kc">True</span>
+                        <span class="n">gradset</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="k">assert</span> <span class="n">gradset</span><span class="p">,</span> <span class="s2">"At least one parameter of network must require gradient."</span>
+
+    <span class="k">def</span> <span class="nf">_influence_batch_tracincp</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">inputs</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span>
+        <span class="n">targets</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Tensor</span><span class="p">],</span>
+        <span class="n">batch</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span>
+    <span class="p">):</span>
+        <span class="sd">"""</span>
+<span class="sd">        computes influence scores for a single training batch</span>
+<span class="sd">        """</span>
+
+        <span class="k">def</span> <span class="nf">get_checkpoint_contribution</span><span class="p">(</span><span class="n">checkpoint</span><span class="p">):</span>
+
+            <span class="k">assert</span> <span class="p">(</span>
+                <span class="n">checkpoint</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+            <span class="p">),</span> <span class="s2">"None returned from `checkpoints`, cannot load."</span>
+
+            <span class="n">learning_rate</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">checkpoints_load_func</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">,</span> <span class="n">checkpoint</span><span class="p">)</span>
+
+            <span class="n">input_jacobians</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_basic_computation_tracincp</span><span class="p">(</span>
+                <span class="n">inputs</span><span class="p">,</span>
+                <span class="n">targets</span><span class="p">,</span>
+            <span class="p">)</span>
+
+            <span class="k">return</span> <span class="p">(</span>
+                <span class="n">_gradient_dot_product</span><span class="p">(</span>
+                    <span class="n">input_jacobians</span><span class="p">,</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_basic_computation_tracincp</span><span class="p">(</span><span class="n">batch</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">batch</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]),</span>
+                <span class="p">)</span>
+                <span class="o">*</span> <span class="n">learning_rate</span>
+            <span class="p">)</span>
+
+        <span class="n">batch_tracin_scores</span> <span class="o">=</span> <span class="n">get_checkpoint_contribution</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">checkpoints</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+
+        <span class="k">for</span> <span class="n">checkpoint</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">checkpoints</span><span class="p">[</span><span class="mi">1</span><span class="p">:]:</span>
+            <span class="n">batch_tracin_scores</span> <span class="o">+=</span> <span class="n">get_checkpoint_contribution</span><span class="p">(</span><span class="n">checkpoint</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">batch_tracin_scores</span>
+
+    <span class="k">def</span> <span class="nf">_influence</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">inputs</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span>
+        <span class="n">targets</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Tensor</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tensor</span><span class="p">:</span>
+        <span class="sa">r</span><span class="sd">"""</span>
+<span class="sd">        Computes the influence of examples in training dataset `influence_src_dataset`</span>
+<span class="sd">        on the examples in the test batch represented by `inputs` and `targets`.</span>
+<span class="sd">        This implementation does not require knowing the number of training examples</span>
+<span class="sd">        in advance. Instead, the number of training examples is inferred from the</span>
+<span class="sd">        output of `self._basic_computation_tracincp`.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            inputs (Tuple of Any): A test batch of examples. Does not represent labels,</span>
+<span class="sd">                    which are passed as `targets`. The assumption is that</span>
+<span class="sd">                    `self.model(*inputs)` produces the predictions for the batch.</span>
+<span class="sd">            targets (tensor, optional): If computing influence scores on a loss</span>
+<span class="sd">                    function, these are the labels corresponding to the batch `inputs`.</span>
+<span class="sd">                    Default: None</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            influence_scores (tensor): Influence scores from the TracInCP method.</span>
+<span class="sd">            Its shape is `(input_size, influence_src_dataset_size)`, where `input_size`</span>
+<span class="sd">            is the number of examples in the test batch, and</span>
+<span class="sd">            `influence_src_dataset_size` is the number of examples in</span>
+<span class="sd">            training dataset `influence_src_dataset`. For example:</span>
+<span class="sd">            `influence_scores[i][j]` is the influence score for the j-th training</span>
+<span class="sd">            example to the i-th input example.</span>
+<span class="sd">        """</span>
+        <span class="k">return</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">(</span>
+            <span class="p">[</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_influence_batch_tracincp</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">targets</span><span class="p">,</span> <span class="n">batch</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">batch</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">influence_src_dataloader</span>
+            <span class="p">],</span>
+            <span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_get_k_most_influential</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">inputs</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span>
+        <span class="n">targets</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Tensor</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">k</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">5</span><span class="p">,</span>
+        <span class="n">proponents</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">KMostInfluentialResults</span><span class="p">:</span>
+        <span class="sa">r</span><span class="sd">"""</span>
+<span class="sd">        Args:</span>
+<span class="sd">            inputs (Tuple of Any): A tuple that represents a batch of examples. It does</span>
+<span class="sd">                    not represent labels, which are passed as `targets`.</span>
+<span class="sd">            targets (Tensor, optional): If computing influence scores on a loss</span>
+<span class="sd">                    function, these are the labels corresponding to the batch `inputs`.</span>
+<span class="sd">                    Default: None</span>
+<span class="sd">            k (int, optional): The number of proponents or opponents to return per test</span>
+<span class="sd">                    example.</span>
+<span class="sd">                    Default: 5</span>
+<span class="sd">            proponents (bool, optional): Whether seeking proponents (`proponents=True`)</span>
+<span class="sd">                    or opponents (`proponents=False`)</span>
+<span class="sd">                    Default: True</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            (indices, influence_scores) (namedtuple): `indices` is a torch.long Tensor</span>
+<span class="sd">                    that contains the indices of the proponents (or opponents) for each</span>
+<span class="sd">                    test example. Its dimension is `(inputs_batch_size, k)`, where</span>
+<span class="sd">                    `inputs_batch_size` is the number of examples in `inputs`. For</span>
+<span class="sd">                    example, if `proponents==True`, `indices[i][j]` is the index of the</span>
+<span class="sd">                    example in training dataset `influence_src_dataset` with the</span>
+<span class="sd">                    k-th highest influence score for the j-th example in `inputs`.</span>
+<span class="sd">                    `indices` is a `torch.long` tensor so that it can directly be used</span>
+<span class="sd">                    to index other tensors. Each row of `influence_scores` contains the</span>
+<span class="sd">                    influence scores for a different test example, in sorted order. In</span>
+<span class="sd">                    particular, `influence_scores[i][j]` is the influence score of</span>
+<span class="sd">                    example `indices[i][j]` in training dataset `influence_src_dataset`</span>
+<span class="sd">                    on example `i` in the test batch represented by `inputs` and</span>
+<span class="sd">                    `targets`.</span>
+<span class="sd">        """</span>
+        <span class="k">return</span> <span class="n">KMostInfluentialResults</span><span class="p">(</span>
+            <span class="o">*</span><span class="n">_get_k_most_influential_helper</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">influence_src_dataloader</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_influence_batch_tracincp</span><span class="p">,</span>
+                <span class="n">inputs</span><span class="p">,</span>
+                <span class="n">targets</span><span class="p">,</span>
+                <span class="n">k</span><span class="p">,</span>
+                <span class="n">proponents</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_self_influence_batch_tracincp</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">batch</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="o">...</span><span class="p">]):</span>
+        <span class="sd">"""</span>
+<span class="sd">        Computes self influence scores for a single batch</span>
+<span class="sd">        """</span>
+
+        <span class="k">def</span> <span class="nf">get_checkpoint_contribution</span><span class="p">(</span><span class="n">checkpoint</span><span class="p">):</span>
+
+            <span class="k">assert</span> <span class="p">(</span>
+                <span class="n">checkpoint</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+            <span class="p">),</span> <span class="s2">"None returned from `checkpoints`, cannot load."</span>
+
+            <span class="n">learning_rate</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">checkpoints_load_func</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">,</span> <span class="n">checkpoint</span><span class="p">)</span>
+
+            <span class="n">layer_jacobians</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_basic_computation_tracincp</span><span class="p">(</span><span class="n">batch</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">batch</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+
+            <span class="c1"># note that all variables in this function are for an entire batch.</span>
+            <span class="c1"># each `layer_jacobian` in `layer_jacobians` corresponds to a different</span>
+            <span class="c1"># layer. `layer_jacobian` is the jacobian w.r.t to a given layer's</span>
+            <span class="c1"># parameters. if the given layer's parameters are of shape *, then</span>
+            <span class="c1"># `layer_jacobian` is of shape (batch_size, *). for each layer, we need</span>
+            <span class="c1"># the squared jacobian for each example. so we square the jacobian and</span>
+            <span class="c1"># sum over all dimensions except the 0-th (the batch dimension). We then</span>
+            <span class="c1"># sum the contribution over all layers.</span>
+            <span class="k">return</span> <span class="p">(</span>
+                <span class="n">torch</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span>
+                    <span class="n">torch</span><span class="o">.</span><span class="n">stack</span><span class="p">(</span>
+                        <span class="p">[</span>
+                            <span class="n">torch</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">layer_jacobian</span><span class="o">.</span><span class="n">flatten</span><span class="p">(</span><span class="n">start_dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+                            <span class="k">for</span> <span class="n">layer_jacobian</span> <span class="ow">in</span> <span class="n">layer_jacobians</span>
+                        <span class="p">],</span>
+                        <span class="n">dim</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+                    <span class="p">),</span>
+                    <span class="n">dim</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+                <span class="p">)</span>
+                <span class="o">*</span> <span class="n">learning_rate</span>
+            <span class="p">)</span>
+
+        <span class="n">batch_self_tracin_scores</span> <span class="o">=</span> <span class="n">get_checkpoint_contribution</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">checkpoints</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+
+        <span class="k">for</span> <span class="n">checkpoint</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">checkpoints</span><span class="p">[</span><span class="mi">1</span><span class="p">:]:</span>
+            <span class="n">batch_self_tracin_scores</span> <span class="o">+=</span> <span class="n">get_checkpoint_contribution</span><span class="p">(</span><span class="n">checkpoint</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">batch_self_tracin_scores</span>
+
+    <span class="k">def</span> <span class="nf">_self_influence</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">"""</span>
+<span class="sd">        Returns:</span>
+<span class="sd">            self influence scores (tensor): 1D tensor containing self influence</span>
+<span class="sd">                    scores for all examples in training dataset</span>
+<span class="sd">                    `influence_src_dataset`.</span>
+<span class="sd">        """</span>
+        <span class="k">return</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">(</span>
+            <span class="p">[</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_self_influence_batch_tracincp</span><span class="p">(</span><span class="n">batch</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">batch</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">influence_src_dataloader</span>
+            <span class="p">],</span>
+            <span class="n">dim</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_basic_computation_tracincp</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">inputs</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span>
+        <span class="n">targets</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Tensor</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span>
+        <span class="sd">"""</span>
+<span class="sd">        For instances of TracInCP, computation of influence scores or self influence</span>
+<span class="sd">        scores repeatedly calls this function for different checkpoints</span>
+<span class="sd">        and batches.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            inputs (Tuple of Any): A batch of examples, which could be a training batch</span>
+<span class="sd">                    or test batch, depending which method is the caller. Does not</span>
+<span class="sd">                    represent labels, which are passed as `targets`. The assumption is</span>
+<span class="sd">                    that `self.model(*inputs)` produces the predictions for the batch.</span>
+<span class="sd">            targets (tensor or None): If computing influence scores on a loss function,</span>
+<span class="sd">                    these are the labels corresponding to the batch `inputs`.</span>
+<span class="sd">        """</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">use_autograd_hacks</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">_compute_jacobian_wrt_params_autograd_hacks</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">,</span>
+                <span class="n">inputs</span><span class="p">,</span>
+                <span class="n">targets</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">loss_fn</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">reduction_type</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="k">return</span> <span class="n">_compute_jacobian_wrt_params</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">,</span>
+            <span class="n">inputs</span><span class="p">,</span>
+            <span class="n">targets</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">loss_fn</span><span class="p">,</span>
+        <span class="p">)</span></div>
+</pre></div>
+</div>
+</div>
+</div>
+<div aria-label="main navigation" class="sphinxsidebar" role="navigation">
+<div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../../index.html">Captum</a></h1>
+<h3>Navigation</h3>
+<p class="caption" role="heading"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../attribution.html">Attribution</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../noise_tunnel.html">NoiseTunnel</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../layer.html">Layer Attribution</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../neuron.html">Neuron Attribution</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../metrics.html">Metrics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../robust.html">Robustness</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../concept.html">Concept-based Interpretability</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../influence.html">Influential Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../utilities.html">Utilities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../base_classes.html">Base Classes</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Insights API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../insights.html">Insights</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../insights.html#features">Features</a></li>
+</ul>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+<li><a href="../../../../index.html">Documentation overview</a><ul>
+<li><a href="../../../index.html">Module code</a><ul>
+</ul></li>
+</ul></li>
+</ul>
+</div>
+<div id="searchbox" role="search" style="display: none">
+<h3 id="searchlabel">Quick search</h3>
+<div class="searchformwrapper">
+<form action="../../../../search.html" class="search" method="get">
+<input aria-labelledby="searchlabel" autocapitalize="off" autocomplete="off" autocorrect="off" name="q" spellcheck="false" type="text"/>
+<input type="submit" value="Go"/>
+</form>
+</div>
+</div>
+<script>$('#searchbox').show(0);</script>
+</div>
+</div>
+<div class="clearer"></div>
+</div></div></div><footer class="nav-footer" id="footer"><section class="sitemap"><div class="footerSection"><h5>Docs</h5><a href="/docs/introduction">Introduction</a><a href="/docs/getting_started">Getting Started</a><a href="/tutorials/">Tutorials</a><a href="/api/">API Reference</a></div><div class="footerSection"><h5>Legal</h5><a href="https://opensource.facebook.com/legal/privacy/" target="_blank" rel="noreferrer noopener">Privacy</a><a href="https://opensource.facebook.com/legal/terms/" target="_blank" rel="noreferrer noopener">Terms</a></div><div class="footerSection"><h5>Social</h5><div class="social"><a class="github-button" href="https://github.com/pytorch/captum" data-count-href="https://github.com/pytorch/captum/stargazers" data-show-count="true" data-count-aria-label="# stargazers on GitHub" aria-label="Star Captum on GitHub">captum</a></div></div></section><a href="https://opensource.facebook.com/" target="_blank" rel="noreferrer noopener" class="fbOpenSource"><img src="/img/oss_logo.png" alt="Facebook Open Source" width="170" height="45"/></a><section class="copyright"> Copyright © 2022 Facebook Inc.</section><script>
+            (function() {
+              var BAD_BASE = '/captum/';
+              if (window.location.origin !== 'https://captum.ai') {
+                var pathname = window.location.pathname;
+                var newPathname = pathname.slice(pathname.indexOf(BAD_BASE) === 0 ? BAD_BASE.length : 1);
+                var newLocation = 'https://captum.ai/' + newPathname;
+                console.log('redirecting to ' + newLocation);
+                window.location.href = newLocation;
+              }
+            })();
+          </script></footer></div><script type="text/javascript" src="https://cdn.jsdelivr.net/docsearch.js/1/docsearch.min.js"></script><script>
+                document.addEventListener('keyup', function(e) {
+                  if (e.target !== document.body) {
+                    return;
+                  }
+                  // keyCode for '/' (slash)
+                  if (e.keyCode === 191) {
+                    const search = document.getElementById('search_input_react');
+                    search && search.focus();
+                  }
+                });
+              </script><script>
+              var search = docsearch({
+                
+                apiKey: '207c27d819f967749142d8611de7cb19',
+                indexName: 'captum',
+                inputSelector: '#search_input_react'
+              });
+            </script></body></html>

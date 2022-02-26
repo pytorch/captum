@@ -18,6 +18,7 @@ Captum API Reference
    metrics
    robust
    concept
+   influence
    utilities
    base_classes
 
