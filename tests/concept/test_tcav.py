@@ -812,13 +812,13 @@ class Test(BaseTest):
             )
             concepts_key = concepts_to_str(experimental_sets[0])
 
-            layers = wrap_in_list_if_not_already(layers)
-            accs = wrap_in_list_if_not_already(accs)
-            sign_counts = wrap_in_list_if_not_already(sign_count)
-            magnitudes = wrap_in_list_if_not_already(magnitude)
+            _layers: List[str] = wrap_in_list_if_not_already(layers)
+            _accs: List[float] = wrap_in_list_if_not_already(accs)
+            _sign_counts: List[float] = wrap_in_list_if_not_already(sign_count)
+            _magnitudes: List[float] = wrap_in_list_if_not_already(magnitude)
 
             for layer, acc, sign_count, magnitude in zip(
-                layers, accs, sign_counts, magnitudes
+                _layers, _accs, _sign_counts, _magnitudes
             ):
                 stats = cast(Dict[str, Tensor], tcav.cavs[concepts_key][layer].stats)
                 self.assertEqual(
