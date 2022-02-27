@@ -9,7 +9,7 @@ import torch
 from captum._utils.av import AV
 from captum._utils.gradient import (
     _compute_jacobian_wrt_params,
-    _compute_jacobian_wrt_params_autograd_hacks,
+    _compute_jacobian_wrt_params_with_sample_wise_trick,
 )
 from captum.influence._core.influence import DataInfluence
 from captum.influence._utils.common import (
@@ -347,7 +347,7 @@ class TracInCP(TracInCPBase):
         layers: Optional[List[str]] = None,
         loss_fn: Optional[Union[Module, Callable]] = None,
         batch_size: Union[int, None] = 1,
-        use_autograd_hacks: bool = False,
+        sample_wise_grads_per_batch: bool = False,
     ) -> None:
         r"""
         Args:
@@ -396,9 +396,18 @@ class TracInCP(TracInCPBase):
                     `influence_src_dataset` is a Dataset. If `influence_src_dataset`
                     is a DataLoader, then `batch_size` is ignored as an argument.
                     Default: 1
-            use_autograd_hacks (bool, optional): Experimental mode that vectorize
-                    jacobian computation w.r.t parameters for a batch of inputs. Based
-                    on support in autograd_hacks.
+            sample_wise_grads_per_batch (bool, optional): PyTorch's native gradient
+                    computations w.r.t. model parameters aggregates the results for a
+                    batch and does not allow to access sample-wise gradients w.r.t.
+                    model parameters. This forces us to iterate over each sample in
+                    the batch if we want sample-wise gradients which is computationally
+                    inefficient. We offer an implementation of batch-wise gradient
+                    computations w.r.t. to model parameters which is computationally
+                    more efficient. This implementation can be enabled by setting
+                    `sample_wise_grad_per_batch` argument to `True`. Note that our
+                    current implementation enables batch-wise gradient computations
+                    only for a limited number of PyTorch nn.Modules: Conv2D and Linear.
+                    This list will be expanded in the near future.
                     Default: False
         """
 
@@ -412,10 +421,10 @@ class TracInCP(TracInCPBase):
             batch_size,
         )
 
-        self.use_autograd_hacks = use_autograd_hacks
+        self.sample_wise_grads_per_batch = sample_wise_grads_per_batch
 
         if (
-            self.use_autograd_hacks
+            self.sample_wise_grads_per_batch
             and isinstance(loss_fn, Module)  # TODO: allow loss_fn to be Callable
             and hasattr(loss_fn, "reduction")
         ):
@@ -644,8 +653,8 @@ class TracInCP(TracInCPBase):
             targets (tensor or None): If computing influence scores on a loss function,
                     these are the labels corresponding to the batch `inputs`.
         """
-        if self.use_autograd_hacks:
-            return _compute_jacobian_wrt_params_autograd_hacks(
+        if self.sample_wise_grads_per_batch:
+            return _compute_jacobian_wrt_params_with_sample_wise_trick(
                 self.model,
                 inputs,
                 targets,

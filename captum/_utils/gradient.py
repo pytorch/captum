@@ -772,7 +772,7 @@ def _compute_jacobian_wrt_params(
         return tuple(grads)
 
 
-def _compute_jacobian_wrt_params_autograd_hacks(
+def _compute_jacobian_wrt_params_with_sample_wise_trick(
     model: Module,
     inputs: Tuple[Any, ...],
     labels: Optional[Tensor] = None,
@@ -781,8 +781,9 @@ def _compute_jacobian_wrt_params_autograd_hacks(
 ) -> Tuple[Any, ...]:
     r"""
     Computes the Jacobian of a batch of test examples given a model, and optional
-    loss function and target labels. This method uses autograd_hacks to fully vectorize
-    the Jacobian calculation. Currently, only linear and conv2d layers are supported.
+    loss function and target labels. This method uses sample-wise gradients per
+    batch trick to fully vectorize the Jacobian calculation. Currently, only
+    linear and conv2d layers are supported.
 
     User must `add_hooks(model)` before calling this function.
 

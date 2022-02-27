@@ -7,10 +7,10 @@ from tests.influence._utils.common import (
     _TestTracInRegression20DCheckIdx,
     _TestTracInXORCheckIdx,
     _TestTracInIdentityRegressionCheckIdx,
-    _TestTracInRegression1DCheckAutogradHacks,
-    _TestTracInRegression20DCheckAutogradHacks,
-    _TestTracInXORCheckAutogradHacks,
-    _TestTracInIdentityRegressionCheckAutogradHacks,
+    _TestTracInRegression1DCheckSampleWiseTrick,
+    _TestTracInRegression20DCheckSampleWiseTrick,
+    _TestTracInXORCheckSampleWiseTrick,
+    _TestTracInIdentityRegressionCheckSampleWiseTrick,
     _TestTracInRegression1DNumerical,
     _TestTracInGetKMostInfluential,
     _TestTracInSelfInfluence,
@@ -38,29 +38,29 @@ class TestTracInCP(
                 tmpdir,
                 batch_size=batch_size,
                 loss_fn=loss_fn,
-                use_autograd_hacks=False,
+                sample_wise_grads_per_batch=False,
             )
         )
         super(TestTracInCP, self).setUp()
 
 
-class TestTracInCPCheckAutogradHacks(
-    _TestTracInRegression1DCheckAutogradHacks,
-    _TestTracInRegression20DCheckAutogradHacks,
-    _TestTracInXORCheckAutogradHacks,
-    _TestTracInIdentityRegressionCheckAutogradHacks,
+class TestTracInCPCheckSampleWiseTrick(
+    _TestTracInRegression1DCheckSampleWiseTrick,
+    _TestTracInRegression20DCheckSampleWiseTrick,
+    _TestTracInXORCheckSampleWiseTrick,
+    _TestTracInIdentityRegressionCheckSampleWiseTrick,
     BaseTest,
 ):
     def setUp(self):
         self.tracin_constructor = (
-            lambda net, dataset, tmpdir, batch_size, loss_fn, use_autograd_hacks: (
+            lambda net, dataset, tmpdir, batch_size, loss_fn, sample_wise_trick: (
                 TracInCP(
                     net,
                     dataset,
                     tmpdir,
                     batch_size=batch_size,
                     loss_fn=loss_fn,
-                    use_autograd_hacks=use_autograd_hacks,
+                    sample_wise_grads_per_batch=sample_wise_trick,
                 )
             )
         )
@@ -82,6 +82,6 @@ class TestTracInCPFastRandProjTests(
                 tmpdir,
                 batch_size=batch_size,
                 loss_fn=loss_fn,
-                use_autograd_hacks=True,
+                sample_wise_grads_per_batch=True,
             )
         )
