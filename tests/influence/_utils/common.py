@@ -215,7 +215,7 @@ class _TestTracInRegression:
                 for i in range(len(idx)):
                     self.assertTrue(isSorted(idx[i]))
 
-            if mode == "check_autograd_hacks":
+            if mode == "sample_wise_trick":
 
                 criterion = nn.MSELoss(reduction="none")
 
@@ -228,19 +228,27 @@ class _TestTracInRegression:
                     False,
                 )
 
-                # With autograd hacks
+                # With sample-wise trick
                 criterion = nn.MSELoss(reduction="sum")
-                tracin_hack = self.tracin_constructor(
+                tracin_sample_wise_trick = self.tracin_constructor(
                     net, dataset, tmpdir, batch_size, criterion, True
                 )
 
                 train_scores = tracin.influence(train_inputs, train_labels)
-                train_scores_hack = tracin_hack.influence(train_inputs, train_labels)
-                assertTensorAlmostEqual(self, train_scores, train_scores_hack)
+                train_scores_sample_wise_trick = tracin_sample_wise_trick.influence(
+                    train_inputs, train_labels
+                )
+                assertTensorAlmostEqual(
+                    self, train_scores, train_scores_sample_wise_trick
+                )
 
                 test_scores = tracin.influence(test_inputs, test_labels)
-                test_scores_hack = tracin_hack.influence(test_inputs, test_labels)
-                assertTensorAlmostEqual(self, test_scores, test_scores_hack)
+                test_scores_sample_wise_trick = tracin_sample_wise_trick.influence(
+                    test_inputs, test_labels
+                )
+                assertTensorAlmostEqual(
+                    self, test_scores, test_scores_sample_wise_trick
+                )
 
 
 class _TestTracInRegression1DCheckIdx(_TestTracInRegression):
@@ -248,9 +256,9 @@ class _TestTracInRegression1DCheckIdx(_TestTracInRegression):
         self._test_tracin_regression(1, "check_idx")
 
 
-class _TestTracInRegression1DCheckAutogradHacks(_TestTracInRegression):
-    def test_tracin_regression_1D_check_autograd_hacks(self):
-        self._test_tracin_regression(1, "check_autograd_hacks")
+class _TestTracInRegression1DCheckSampleWiseTrick(_TestTracInRegression):
+    def test_tracin_regression_1D_check_sample_wise_trick(self):
+        self._test_tracin_regression(1, "sample_wise_trick")
 
 
 class _TestTracInRegression20DCheckIdx(_TestTracInRegression):
@@ -258,9 +266,9 @@ class _TestTracInRegression20DCheckIdx(_TestTracInRegression):
         self._test_tracin_regression(20, "check_idx")
 
 
-class _TestTracInRegression20DCheckAutogradHacks(_TestTracInRegression):
-    def test_tracin_regression_20D_check_autograd_hacks(self):
-        self._test_tracin_regression(20, "check_autograd_hacks")
+class _TestTracInRegression20DCheckSampleWiseTrick(_TestTracInRegression):
+    def test_tracin_regression_20D_check_sample_wise_trick(self):
+        self._test_tracin_regression(20, "sample_wise_tricksample_wise_trick")
 
 
 class _TestTracInXOR:
@@ -434,7 +442,7 @@ class _TestTracInXOR:
                     influence_labels = dataset.labels[idx[i][0:5], 0]
                     self.assertTrue(torch.all(testlabels[i, 0] == influence_labels))
 
-            if mode == "check_autograd_hacks":
+            if mode == "sample_wise_trick":
 
                 criterion = nn.MSELoss(reduction="none")
 
@@ -447,9 +455,9 @@ class _TestTracInXOR:
                     False,
                 )
 
-                # With autograd hacks
+                # With sample-wise trick
                 criterion = nn.MSELoss(reduction="sum")
-                tracin_hack = self.tracin_constructor(
+                tracin_sample_wise_trick = self.tracin_constructor(
                     net,
                     dataset,
                     tmpdir,
@@ -459,8 +467,12 @@ class _TestTracInXOR:
                 )
 
                 test_scores = tracin.influence(testset, testlabels)
-                test_scores_hack = tracin_hack.influence(testset, testlabels)
-                assertTensorAlmostEqual(self, test_scores, test_scores_hack)
+                test_scores_sample_wise_trick = tracin_sample_wise_trick.influence(
+                    testset, testlabels
+                )
+                assertTensorAlmostEqual(
+                    self, test_scores, test_scores_sample_wise_trick
+                )
 
 
 class _TestTracInXORCheckIdx(_TestTracInXOR):
@@ -468,9 +480,9 @@ class _TestTracInXORCheckIdx(_TestTracInXOR):
         self._test_tracin_xor("check_idx")
 
 
-class _TestTracInXORCheckAutogradHacks(_TestTracInXOR):
-    def test_tracin_xor_check_autograd_hacks(self):
-        self._test_tracin_xor("check_autograd_hacks")
+class _TestTracInXORCheckSampleWiseTrick(_TestTracInXOR):
+    def test_tracin_xor_check_sample_wise_trick(self):
+        self._test_tracin_xor("sample_wise_trick")
 
 
 class _TestTracInIdentityRegression:
@@ -537,7 +549,7 @@ class _TestTracInIdentityRegression:
                 for i in range(len(idx)):
                     self.assertEqual(idx[i][0], i)
 
-            if mode == "check_autograd_hacks":
+            if mode == "sample_wise_trick":
 
                 criterion = nn.MSELoss(reduction="none")
 
@@ -550,9 +562,9 @@ class _TestTracInIdentityRegression:
                     False,
                 )
 
-                # With autograd hacks
+                # With sample-wise trick
                 criterion = nn.MSELoss(reduction="sum")
-                tracin_hack = self.tracin_constructor(
+                tracin_sample_wise_trick = self.tracin_constructor(
                     net,
                     dataset,
                     tmpdir,
@@ -562,8 +574,12 @@ class _TestTracInIdentityRegression:
                 )
 
                 train_scores = tracin.influence(train_inputs, train_labels)
-                train_scores_hack = tracin_hack.influence(train_inputs, train_labels)
-                assertTensorAlmostEqual(self, train_scores, train_scores_hack)
+                train_scores_tracin_sample_wise_trick = (
+                    tracin_sample_wise_trick.influence(train_inputs, train_labels)
+                )
+                assertTensorAlmostEqual(
+                    self, train_scores, train_scores_tracin_sample_wise_trick
+                )
 
 
 class _TestTracInIdentityRegressionCheckIdx(_TestTracInIdentityRegression):
@@ -571,9 +587,9 @@ class _TestTracInIdentityRegressionCheckIdx(_TestTracInIdentityRegression):
         self._test_tracin_identity_regression("check_idx")
 
 
-class _TestTracInIdentityRegressionCheckAutogradHacks(_TestTracInIdentityRegression):
-    def test_tracin_identity_regression_check_autograd_hacks(self):
-        self._test_tracin_identity_regression("check_autograd_hacks")
+class _TestTracInIdentityRegressionCheckSampleWiseTrick(_TestTracInIdentityRegression):
+    def test_tracin_identity_regression_check_sample_wise_trick(self):
+        self._test_tracin_identity_regression("sample_wise_trick")
 
 
 class _TestTracInRandomProjectionRegression:
