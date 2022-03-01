@@ -109,16 +109,15 @@ class SimilarityInfluence(DataInfluence):
                     we pass in a Tensor with 3 examples, i.e. batch_size_2 = 3. Also,
                     suppose that our inputs and intermediate activations throughout the
                     model will have dimension (N, C, H, W). Then, the feature dimensions
-                    should be flattened within this function. For example, let
+                    should be flattened within this function. For example::
 
-                    ```
-                    av_test.shape = torch.Size([3, N, C, H, W])
-                    av_src.shape = torch.Size([16, N, C, H, W])
-                    ```
-
-                    Then, using `torch.view(av_test.shape[0], -1)` we have
-
-                    `av_test.shape = torch.Size([3, N x C x H x W])
+                        >>> av_test.shape
+                        torch.Size([3, N, C, H, W])
+                        >>> av_src.shape
+                        torch.Size([16, N, C, H, W])
+                        >>> av_test = torch.view(av_test.shape[0], -1)
+                        >>> av_test.shape
+                        torch.Size([3, N x C x H x W])
 
                     and similarly for av_src. The similarity_metric should then use
                     these flattened tensors to return the pairwise similarity matrix.
