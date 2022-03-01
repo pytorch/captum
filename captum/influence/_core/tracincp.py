@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import glob
+import warnings
 from abc import abstractmethod
 from os.path import join
 from typing import Any, Callable, Iterator, List, Optional, Union, Tuple, NamedTuple
@@ -385,7 +386,23 @@ class TracInCP(TracInCPBase):
                     be computed for all layers. Otherwise, they will only be computed
                     for the layers specified in `layers`.
                     Default: None
-            loss_fn (Callable, optional): The loss function applied to model.
+            loss_fn (Callable, optional): The loss function applied to model. There
+                    are two options for the return type of `loss_fn`. First, `loss_fn`
+                    can be a "per-example" loss function - returns a 1D Tensor of
+                    losses for each example in a batch. `nn.BCELoss(reduction="none")`
+                    would be an "per-example" loss function. Second, `loss_fn` can be
+                    a "reduction" loss function that reduces the per-example losses,
+                    in a batch, and returns a single scalar Tensor. For this option,
+                    the reduction must be the *sum* or the *mean* of the per-example
+                    losses. For instance, `nn.BCELoss(reduction="sum")` is acceptable.
+                    Note for the first option, the `sample_wise_grads_per_batch`
+                    argument must be False, and for the second option,
+                    `sample_wise_grads_per_batch` must be True.  Also note that for
+                    the second option, if `loss_fn` has no "reduction" attribute,
+                    the implementation assumes that the reduction is the *sum* of the
+                    per-example losses.  If this is not the case, i.e. the reduction
+                    is the *mean*, please set the "reduction" attribute of `loss_fn`
+                    to "mean", i.e. `loss_fn.reduction = "mean"`.
                     Default: None
             batch_size (int or None, optional): Batch size of the DataLoader created to
                     iterate through `influence_src_dataset`, if it is a Dataset.
@@ -404,10 +421,16 @@ class TracInCP(TracInCPBase):
                     inefficient. We offer an implementation of batch-wise gradient
                     computations w.r.t. to model parameters which is computationally
                     more efficient. This implementation can be enabled by setting the
-                    `sample_wise_grad_per_batch` argument to `True`. Note that our
+                    `sample_wise_grad_per_batch` argument to `True`, and should be
+                    enabled if and only if the `loss_fn` argument is a "reduction" loss
+                    function. For example, `nn.BCELoss(reduction="sum")` would be a
+                    valid `loss_fn` if this implementation is enabled (see
+                    documentation for `loss_fn` for more details). Note that our
                     current implementation enables batch-wise gradient computations
                     only for a limited number of PyTorch nn.Modules: Conv2D and Linear.
-                    This list will be expanded in the near future.
+                    This list will be expanded in the near future.  Therefore, please
+                    do not enable this implementation if gradients will be computed
+                    for other kinds of layers.
                     Default: False
         """
 
@@ -423,14 +446,47 @@ class TracInCP(TracInCPBase):
 
         self.sample_wise_grads_per_batch = sample_wise_grads_per_batch
 
-        if (
-            self.sample_wise_grads_per_batch
-            and isinstance(loss_fn, Module)  # TODO: allow loss_fn to be Callable
-            and hasattr(loss_fn, "reduction")
-        ):
-            self.reduction_type = str(loss_fn.reduction)
+        # If we are able to access the reduction used by `loss_fn`, we check whether
+        # the reduction is compatible with `sample_wise_grads_per_batch`
+        if isinstance(loss_fn, Module) and hasattr(
+            loss_fn, "reduction"
+        ):  # TODO: allow loss_fn to be Callable
+            if self.sample_wise_grads_per_batch:
+                assert loss_fn.reduction in ["sum", "mean"], (
+                    'reduction for `loss_fn` must be "sum" or "mean" when '
+                    "`sample_wise_grads_per_batch` is True"
+                )
+                self.reduction_type = str(loss_fn.reduction)
+            else:
+                assert loss_fn.reduction == "none", (
+                    'reduction for `loss_fn` must be "none" when '
+                    "`sample_wise_grads_per_batch` is False"
+                )
         else:
-            self.reduction_type = "sum"
+            # if we are unable to access the reduction used by `loss_fn`, we warn
+            # the user about the assumptions we are making regarding the reduction
+            # used by `loss_fn`
+            if self.sample_wise_grads_per_batch:
+                warnings.warn(
+                    'Since `loss_fn` has no "reduction" attribute, and '
+                    "`sample_wise_grads_per_batch` is True, the implementation assumes "
+                    'that `loss_fn` is a "reduction" loss function that reduces the '
+                    "per-example losses by taking their *sum*. If `loss_fn` "
+                    "instead reduces the per-example losses by taking their mean, "
+                    'please set the reduction attribute of `loss_fn` to "mean", i.e. '
+                    '`loss_fn.reduction = "mean"`. Note that if '
+                    "`sample_wise_grads_per_batch` is True, the implementation "
+                    "assumes the reduction is either a sum or mean reduction."
+                )
+                self.reduction_type = "sum"
+            else:
+                warnings.warn(
+                    'Since `loss_fn` has no "reduction" attribute, and '
+                    "`sample_wise_grads_per_batch` is False, the implementation "
+                    'assumes that `loss_fn` is a "per-example" loss function (see '
+                    "documentation for `loss_fn` for details).  Please ensure that "
+                    "this is the case."
+                )
 
         r"""
         TODO: Either restore model state after done (would have to place functionality
