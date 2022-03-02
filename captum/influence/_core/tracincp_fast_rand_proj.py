@@ -141,7 +141,7 @@ class TracInCPFast(TracInCPBase):
 
         self.vectorize = vectorize
 
-        "TODO: restore prior state"
+        # TODO: restore prior state
         self.final_fc_layer = final_fc_layer
         if isinstance(self.final_fc_layer, str):
             self.final_fc_layer = _get_module_from_name(model, self.final_fc_layer)
