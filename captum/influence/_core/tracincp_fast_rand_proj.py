@@ -114,8 +114,13 @@ class TracInCPFast(TracInCPBase):
                     learning rate if it is saved. By default uses a utility to load a
                     model saved as a state dict.
                     Default: _load_flexible_state_dict
-            loss_fn (Callable or Module): The loss function applied to model. This must
-                    be specified.
+            loss_fn (Callable, optional): The loss function applied to model. `loss_fn`
+                    must be a "reduction" loss function that reduces the per-example
+                    losses in a batch, and returns a single scalar Tensor. Furthermore,
+                    the reduction must be the *sum* of the per-example losses. For
+                    instance, `nn.BCELoss(reduction="sum")` is acceptable, but
+                    `nn.BCELoss(reduction="mean")` is *not* acceptable.
+                    Default: None
             batch_size (int or None, optional): Batch size of the DataLoader created to
                     iterate through `influence_src_dataset`, if it is a Dataset.
                     `batch_size` should be chosen as large as possible so that certain
@@ -150,10 +155,12 @@ class TracInCPFast(TracInCPBase):
             param.requires_grad = True
 
         assert loss_fn is not None, "loss function must not be none"
+        # If we are able to access the reduction used by `loss_fn`, we check whether
+        # the reduction is "sum", as required.
         # TODO: allow loss_fn to be Callable
         if isinstance(loss_fn, Module) and hasattr(loss_fn, "reduction"):
-            msg = "loss_fn.reduction should be `sum` or `mean`."
-            assert loss_fn.reduction != "none", msg
+            msg = "`loss_fn.reduction` must be `sum`."
+            assert loss_fn.reduction == "sum", msg
 
     def _influence_batch_tracincp_fast(
         self,
@@ -442,8 +449,13 @@ class TracInCPFastRandProj(TracInCPFast):
                     learning rate if it is saved. By default uses a utility to load a
                     model saved as a state dict.
                     Default: _load_flexible_state_dict
-            loss_fn (Callable or Module): The loss function applied to model. This must
-                    be specified.
+            loss_fn (Callable, optional): The loss function applied to model. `loss_fn`
+                    must be a "reduction" loss function that reduces the per-example
+                    losses in a batch, and returns a single scalar Tensor. Furthermore,
+                    the reduction must be the *sum* of the per-example losses. For
+                    instance, `nn.BCELoss(reduction="sum")` is acceptable, but
+                    `nn.BCELoss(reduction="mean")` is *not* acceptable.
+                    Default: None
             batch_size (int or None, optional): Batch size of the DataLoader created to
                     iterate through `influence_src_dataset`, if it is a Dataset.
                     `batch_size` should be chosen as large as possible so that certain
