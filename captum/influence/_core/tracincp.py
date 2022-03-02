@@ -249,25 +249,26 @@ class TracInCPBase(DataInfluence):
     ) -> Union[Tensor, KMostInfluentialResults]:
         r"""
         This is the key method of this class, and can be run in 3 different modes,
-        where the mode that is run depends on the arguments passed to this method.
+        where the mode that is run depends on the arguments passed to this method:
+
         - self influence mode: This mode is used if `inputs` is None. This mode
-                computes the self influence scores for every example in
-                the training dataset `influence_src_dataset`.
+          computes the self influence scores for every example in
+          the training dataset `influence_src_dataset`.
         - influence score mode: This mode is used if `inputs` is not None, and `k` is
-                None. This mode computes the influence score of every example in
-                training dataset `influence_src_dataset` on every example in the test
-                batch represented by `inputs` and `targets`.
+          None. This mode computes the influence score of every example in
+          training dataset `influence_src_dataset` on every example in the test
+          batch represented by `inputs` and `targets`.
         - k-most influential mode: This mode is used if `inputs` is not None, and
-                `k` is not None, and an int. This mode computes the proponents or
-                opponents of every example in the test batch represented by `inputs`
-                and `targets`. In particular, for each test example in the test batch,
-                this mode computes its proponents (resp. opponents), which are the
-                indices in the training dataset `influence_src_dataset` of the training
-                examples with the `k` highest (resp. lowest) influence scores on the
-                test example. Proponents are computed if `proponents` is True.
-                Otherwise, opponents are computed. For each test example, this method
-                also returns the actual influence score of each proponent (resp.
-                opponent) on the test example.
+          `k` is not None, and an int. This mode computes the proponents or
+          opponents of every example in the test batch represented by `inputs`
+          and `targets`. In particular, for each test example in the test batch,
+          this mode computes its proponents (resp. opponents), which are the
+          indices in the training dataset `influence_src_dataset` of the training
+          examples with the `k` highest (resp. lowest) influence scores on the
+          test example. Proponents are computed if `proponents` is True.
+          Otherwise, opponents are computed. For each test example, this method
+          also returns the actual influence score of each proponent (resp.
+          opponent) on the test example.
 
         Args:
             inputs (Any, optional): If not provided or `None`, the self influence mode
@@ -300,33 +301,34 @@ class TracInCPBase(DataInfluence):
 
         Returns:
             The return value of this method depends on which mode is run.
+
             - self influence mode: if this mode is run (`inputs` is None), returns a 1D
-                    tensor of self influence scores over training dataset
-                    `influence_src_dataset`. The length of this tensor is the number of
-                    examples in `influence_src_dataset`, regardless of whether it is a
-                    Dataset or DataLoader.
+              tensor of self influence scores over training dataset
+              `influence_src_dataset`. The length of this tensor is the number of
+              examples in `influence_src_dataset`, regardless of whether it is a
+              Dataset or DataLoader.
             - influence score mode: if this mode is run (`inputs is not None, `k` is
-                    None), returns a 2D tensor `influence_scores` of shape
-                    `(input_size, influence_src_dataset_size)`, where `input_size` is
-                    the number of examples in the test batch, and
-                    `influence_src_dataset_size` is the number of examples in
-                    training dataset `influence_src_dataset`. In other words,
-                    `influence_scores[i][j]` is the influence score of the `j`-th
-                    example in `influence_src_dataset` on the `i`-th example in the
-                    test batch.
-           - k-most influential mode: if this mode is run (`inputs` is not None,
-                    `k` is an int), returns a namedtuple `(indices, influence_scores)`.
-                    `indices` is a 2D tensor of shape `(input_size, k)`, where
-                    `input_size` is the number of examples in the test batch. If
-                    computing proponents (resp. opponents), `indices[i][j]` is the
-                    index in training dataset `influence_src_dataset` of the example
-                    with the `j`-th highest (resp. lowest) influence score (out of the
-                    examples in `influence_src_dataset`) on the `i`-th example in the
-                    test batch. `influence_scores` contains the corresponding influence
-                    scores. In particular, `influence_scores[i][j]` is the influence
-                    score of example `indices[i][j]` in `influence_src_dataset` on
-                    example `i` in the test batch represented by `inputs` and
-                    `targets`.
+              None), returns a 2D tensor `influence_scores` of shape
+              `(input_size, influence_src_dataset_size)`, where `input_size` is
+              the number of examples in the test batch, and
+              `influence_src_dataset_size` is the number of examples in
+              training dataset `influence_src_dataset`. In other words,
+              `influence_scores[i][j]` is the influence score of the `j`-th
+              example in `influence_src_dataset` on the `i`-th example in the
+              test batch.
+            - k-most influential mode: if this mode is run (`inputs` is not None,
+              `k` is an int), returns a namedtuple `(indices, influence_scores)`.
+              `indices` is a 2D tensor of shape `(input_size, k)`, where
+              `input_size` is the number of examples in the test batch. If
+              computing proponents (resp. opponents), `indices[i][j]` is the
+              index in training dataset `influence_src_dataset` of the example
+              with the `j`-th highest (resp. lowest) influence score (out of the
+              examples in `influence_src_dataset`) on the `i`-th example in the
+              test batch. `influence_scores` contains the corresponding influence
+              scores. In particular, `influence_scores[i][j]` is the influence
+              score of example `indices[i][j]` in `influence_src_dataset` on
+              example `i` in the test batch represented by `inputs` and
+              `targets`.
         """
         _inputs = _format_inputs(inputs, unpack_inputs)
 

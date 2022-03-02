@@ -146,7 +146,7 @@ class TracInCPFast(TracInCPBase):
 
         self.vectorize = vectorize
 
-        "TODO: restore prior state"
+        # TODO: restore prior state
         self.final_fc_layer = final_fc_layer
         if isinstance(self.final_fc_layer, str):
             self.final_fc_layer = _get_module_from_name(model, self.final_fc_layer)
@@ -673,22 +673,25 @@ class TracInCPFastRandProj(TracInCPFast):
     ) -> Union[Tensor, KMostInfluentialResults]:
         r"""
         This is the key method of this class, and can be run in 2 different modes,
-        where the mode that is run depends on the arguments passed to this method.
+        where the mode that is run depends on the arguments passed to this method
+
         - influence score mode: This mode is used if `inputs` is not None, and `k` is
-                None. This mode computes the influence score of every example in
-                training dataset `influence_src_dataset` on every example in the test
-                batch represented by `inputs` and `targets`.
+          None. This mode computes the influence score of every example in
+          training dataset `influence_src_dataset` on every example in the test
+          batch represented by `inputs` and `targets`.
+
         - k-most influential mode: This mode is used if `inputs` is not None, and
-                `k` is not None, and an int. This mode computes the proponents or
-                opponents of every example in the test batch represented by `inputs`
-                and `targets`. In particular, for each test example in the test batch,
-                this mode computes its proponents (resp. opponents), which are the
-                indices in the training dataset `influence_src_dataset` of the training
-                examples with the `k` highest (resp. lowest) influence scores on the
-                test example. Proponents are computed if `proponents` is True.
-                Otherwise, opponents are computed. For each test example, this method
-                also returns the actual influence score of each proponent (resp.
-                opponent) on the test example.
+          `k` is not None, and an int. This mode computes the proponents or
+          opponents of every example in the test batch represented by `inputs`
+          and `targets`. In particular, for each test example in the test batch,
+          this mode computes its proponents (resp. opponents), which are the
+          indices in the training dataset `influence_src_dataset` of the training
+          examples with the `k` highest (resp. lowest) influence scores on the
+          test example. Proponents are computed if `proponents` is True.
+          Otherwise, opponents are computed. For each test example, this method
+          also returns the actual influence score of each proponent (resp.
+          opponent) on the test example.
+
         Note that unlike `TracInCPFast`, this class should *not* be run in self
         influence mode.  To compute self influence scores when only considering
         gradients in the last fully-connected layer, please use `TracInCPFast` instead.
@@ -723,24 +726,26 @@ class TracInCPFastRandProj(TracInCPFast):
                     Default: True
 
         Returns:
-            The return value of this method depends on which mode is run.
+
+            The return value of this method depends on which mode is run
+
             - influence score mode: if this mode is run (`inputs is not None, `k` is
-                    None), returns a 2D tensor `influence_scores` of shape
-                    `(input_size, influence_src_dataset_size)`, where `input_size` is
-                    the number of examples in the test batch, and
-                    `influence_src_dataset_size` is the number of examples in
-                    training dataset `influence_src_dataset`. In other words,
-                    `influence_scores[i][j]` is the influence score of the `j`-th
-                    example in `influence_src_dataset` on the `i`-th example in the
-                    test batch.
-            - k-most influential mode: if this mode is run (`inputs` is not None,
-                    `k` is an int), returns `indices`, which is a 2D tensor of shape
-                    `(input_size, k)`, where `input_size` is the number of examples
-                    in the test batch. If computing proponents (resp. opponents),
-                    `indices[i][j]` is the index in training dataset
-                    `influence_src_dataset` of the example with the `j`-th highest
-                    (resp. lowest) influence score (out of the examples in
-                    `influence_src_dataset`) on the `i`-th example in the test batch.
+              None), returns a 2D tensor `influence_scores` of shape
+              `(input_size, influence_src_dataset_size)`, where `input_size` is
+              the number of examples in the test batch, and
+              `influence_src_dataset_size` is the number of examples in
+              training dataset `influence_src_dataset`. In other words,
+              `influence_scores[i][j]` is the influence score of the `j`-th
+              example in `influence_src_dataset` on the `i`-th example in the
+              test batch.
+            - most influential mode: if this mode is run (`inputs` is not None,
+              `k` is an int), returns `indices`, which is a 2D tensor of shape
+              `(input_size, k)`, where `input_size` is the number of examples
+              in the test batch. If computing proponents (resp. opponents),
+              `indices[i][j]` is the index in training dataset
+              `influence_src_dataset` of the example with the `j`-th highest
+              (resp. lowest) influence score (out of the examples in
+              `influence_src_dataset`) on the `i`-th example in the test batch.
         """
         msg = (
             "Since `inputs` is None, this suggests `TracInCPFastRandProj` is being "
