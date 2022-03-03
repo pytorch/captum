@@ -34,6 +34,7 @@ src="/js/documentation_options.js"></script>
 <span></span><span class="ch">#!/usr/bin/env python3</span>
 
 <span class="kn">import</span> <span class="nn">glob</span>
+<span class="kn">import</span> <span class="nn">warnings</span>
 <span class="kn">from</span> <span class="nn">abc</span> <span class="kn">import</span> <span class="n">abstractmethod</span>
 <span class="kn">from</span> <span class="nn">os.path</span> <span class="kn">import</span> <span class="n">join</span>
 <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Iterator</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Union</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">NamedTuple</span>
@@ -42,7 +43,7 @@ src="/js/documentation_options.js"></script>
 <span class="kn">from</span> <span class="nn">captum._utils.av</span> <span class="kn">import</span> <span class="n">AV</span>
 <span class="kn">from</span> <span class="nn">captum._utils.gradient</span> <span class="kn">import</span> <span class="p">(</span>
     <span class="n">_compute_jacobian_wrt_params</span><span class="p">,</span>
-    <span class="n">_compute_jacobian_wrt_params_autograd_hacks</span><span class="p">,</span>
+    <span class="n">_compute_jacobian_wrt_params_with_sample_wise_trick</span><span class="p">,</span>
 <span class="p">)</span>
 <span class="kn">from</span> <span class="nn">captum.influence._core.influence</span> <span class="kn">import</span> <span class="n">DataInfluence</span>
 <span class="kn">from</span> <span class="nn">captum.influence._utils.common</span> <span class="kn">import</span> <span class="p">(</span>
@@ -281,25 +282,26 @@ src="/js/documentation_options.js"></script>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">KMostInfluentialResults</span><span class="p">]:</span>
         <span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        This is the key method of this class, and can be run in 3 different modes,</span>
-<span class="sd">        where the mode that is run depends on the arguments passed to this method.</span>
+<span class="sd">        where the mode that is run depends on the arguments passed to this method:</span>
+
 <span class="sd">        - self influence mode: This mode is used if `inputs` is None. This mode</span>
-<span class="sd">                computes the self influence scores for every example in</span>
-<span class="sd">                the training dataset `influence_src_dataset`.</span>
+<span class="sd">          computes the self influence scores for every example in</span>
+<span class="sd">          the training dataset `influence_src_dataset`.</span>
 <span class="sd">        - influence score mode: This mode is used if `inputs` is not None, and `k` is</span>
-<span class="sd">                None. This mode computes the influence score of every example in</span>
-<span class="sd">                training dataset `influence_src_dataset` on every example in the test</span>
-<span class="sd">                batch represented by `inputs` and `targets`.</span>
+<span class="sd">          None. This mode computes the influence score of every example in</span>
+<span class="sd">          training dataset `influence_src_dataset` on every example in the test</span>
+<span class="sd">          batch represented by `inputs` and `targets`.</span>
 <span class="sd">        - k-most influential mode: This mode is used if `inputs` is not None, and</span>
-<span class="sd">                `k` is not None, and an int. This mode computes the proponents or</span>
-<span class="sd">                opponents of every example in the test batch represented by `inputs`</span>
-<span class="sd">                and `targets`. In particular, for each test example in the test batch,</span>
-<span class="sd">                this mode computes its proponents (resp. opponents), which are the</span>
-<span class="sd">                indices in the training dataset `influence_src_dataset` of the training</span>
-<span class="sd">                examples with the `k` highest (resp. lowest) influence scores on the</span>
-<span class="sd">                test example. Proponents are computed if `proponents` is True.</span>
-<span class="sd">                Otherwise, opponents are computed. For each test example, this method</span>
-<span class="sd">                also returns the actual influence score of each proponent (resp.</span>
-<span class="sd">                opponent) on the test example.</span>
+<span class="sd">          `k` is not None, and an int. This mode computes the proponents or</span>
+<span class="sd">          opponents of every example in the test batch represented by `inputs`</span>
+<span class="sd">          and `targets`. In particular, for each test example in the test batch,</span>
+<span class="sd">          this mode computes its proponents (resp. opponents), which are the</span>
+<span class="sd">          indices in the training dataset `influence_src_dataset` of the training</span>
+<span class="sd">          examples with the `k` highest (resp. lowest) influence scores on the</span>
+<span class="sd">          test example. Proponents are computed if `proponents` is True.</span>
+<span class="sd">          Otherwise, opponents are computed. For each test example, this method</span>
+<span class="sd">          also returns the actual influence score of each proponent (resp.</span>
+<span class="sd">          opponent) on the test example.</span>
 
 <span class="sd">        Args:</span>
 <span class="sd">            inputs (Any, optional): If not provided or `None`, the self influence mode</span>
@@ -332,33 +334,34 @@ src="/js/documentation_options.js"></script>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            The return value of this method depends on which mode is run.</span>
+
 <span class="sd">            - self influence mode: if this mode is run (`inputs` is None), returns a 1D</span>
-<span class="sd">                    tensor of self influence scores over training dataset</span>
-<span class="sd">                    `influence_src_dataset`. The length of this tensor is the number of</span>
-<span class="sd">                    examples in `influence_src_dataset`, regardless of whether it is a</span>
-<span class="sd">                    Dataset or DataLoader.</span>
+<span class="sd">              tensor of self influence scores over training dataset</span>
+<span class="sd">              `influence_src_dataset`. The length of this tensor is the number of</span>
+<span class="sd">              examples in `influence_src_dataset`, regardless of whether it is a</span>
+<span class="sd">              Dataset or DataLoader.</span>
 <span class="sd">            - influence score mode: if this mode is run (`inputs is not None, `k` is</span>
-<span class="sd">                    None), returns a 2D tensor `influence_scores` of shape</span>
-<span class="sd">                    `(input_size, influence_src_dataset_size)`, where `input_size` is</span>
-<span class="sd">                    the number of examples in the test batch, and</span>
-<span class="sd">                    `influence_src_dataset_size` is the number of examples in</span>
-<span class="sd">                    training dataset `influence_src_dataset`. In other words,</span>
-<span class="sd">                    `influence_scores[i][j]` is the influence score of the `j`-th</span>
-<span class="sd">                    example in `influence_src_dataset` on the `i`-th example in the</span>
-<span class="sd">                    test batch.</span>
-<span class="sd">           - k-most influential mode: if this mode is run (`inputs` is not None,</span>
-<span class="sd">                    `k` is an int), returns a namedtuple `(indices, influence_scores)`.</span>
-<span class="sd">                    `indices` is a 2D tensor of shape `(input_size, k)`, where</span>
-<span class="sd">                    `input_size` is the number of examples in the test batch. If</span>
-<span class="sd">                    computing proponents (resp. opponents), `indices[i][j]` is the</span>
-<span class="sd">                    index in training dataset `influence_src_dataset` of the example</span>
-<span class="sd">                    with the `j`-th highest (resp. lowest) influence score (out of the</span>
-<span class="sd">                    examples in `influence_src_dataset`) on the `i`-th example in the</span>
-<span class="sd">                    test batch. `influence_scores` contains the corresponding influence</span>
-<span class="sd">                    scores. In particular, `influence_scores[i][j]` is the influence</span>
-<span class="sd">                    score of example `indices[i][j]` in `influence_src_dataset` on</span>
-<span class="sd">                    example `i` in the test batch represented by `inputs` and</span>
-<span class="sd">                    `targets`.</span>
+<span class="sd">              None), returns a 2D tensor `influence_scores` of shape</span>
+<span class="sd">              `(input_size, influence_src_dataset_size)`, where `input_size` is</span>
+<span class="sd">              the number of examples in the test batch, and</span>
+<span class="sd">              `influence_src_dataset_size` is the number of examples in</span>
+<span class="sd">              training dataset `influence_src_dataset`. In other words,</span>
+<span class="sd">              `influence_scores[i][j]` is the influence score of the `j`-th</span>
+<span class="sd">              example in `influence_src_dataset` on the `i`-th example in the</span>
+<span class="sd">              test batch.</span>
+<span class="sd">            - k-most influential mode: if this mode is run (`inputs` is not None,</span>
+<span class="sd">              `k` is an int), returns a namedtuple `(indices, influence_scores)`.</span>
+<span class="sd">              `indices` is a 2D tensor of shape `(input_size, k)`, where</span>
+<span class="sd">              `input_size` is the number of examples in the test batch. If</span>
+<span class="sd">              computing proponents (resp. opponents), `indices[i][j]` is the</span>
+<span class="sd">              index in training dataset `influence_src_dataset` of the example</span>
+<span class="sd">              with the `j`-th highest (resp. lowest) influence score (out of the</span>
+<span class="sd">              examples in `influence_src_dataset`) on the `i`-th example in the</span>
+<span class="sd">              test batch. `influence_scores` contains the corresponding influence</span>
+<span class="sd">              scores. In particular, `influence_scores[i][j]` is the influence</span>
+<span class="sd">              score of example `indices[i][j]` in `influence_src_dataset` on</span>
+<span class="sd">              example `i` in the test batch represented by `inputs` and</span>
+<span class="sd">              `targets`.</span>
 <span class="sd">        """</span>
         <span class="n">_inputs</span> <span class="o">=</span> <span class="n">_format_inputs</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">unpack_inputs</span><span class="p">)</span>
 
@@ -380,7 +383,7 @@ src="/js/documentation_options.js"></script>
         <span class="n">layers</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">loss_fn</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">Module</span><span class="p">,</span> <span class="n">Callable</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">batch_size</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
-        <span class="n">use_autograd_hacks</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="n">sample_wise_grads_per_batch</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        Args:</span>
@@ -418,7 +421,23 @@ src="/js/documentation_options.js"></script>
 <span class="sd">                    be computed for all layers. Otherwise, they will only be computed</span>
 <span class="sd">                    for the layers specified in `layers`.</span>
 <span class="sd">                    Default: None</span>
-<span class="sd">            loss_fn (Callable, optional): The loss function applied to model.</span>
+<span class="sd">            loss_fn (Callable, optional): The loss function applied to model. There</span>
+<span class="sd">                    are two options for the return type of `loss_fn`. First, `loss_fn`</span>
+<span class="sd">                    can be a "per-example" loss function - returns a 1D Tensor of</span>
+<span class="sd">                    losses for each example in a batch. `nn.BCELoss(reduction="none")`</span>
+<span class="sd">                    would be an "per-example" loss function. Second, `loss_fn` can be</span>
+<span class="sd">                    a "reduction" loss function that reduces the per-example losses,</span>
+<span class="sd">                    in a batch, and returns a single scalar Tensor. For this option,</span>
+<span class="sd">                    the reduction must be the *sum* or the *mean* of the per-example</span>
+<span class="sd">                    losses. For instance, `nn.BCELoss(reduction="sum")` is acceptable.</span>
+<span class="sd">                    Note for the first option, the `sample_wise_grads_per_batch`</span>
+<span class="sd">                    argument must be False, and for the second option,</span>
+<span class="sd">                    `sample_wise_grads_per_batch` must be True.  Also note that for</span>
+<span class="sd">                    the second option, if `loss_fn` has no "reduction" attribute,</span>
+<span class="sd">                    the implementation assumes that the reduction is the *sum* of the</span>
+<span class="sd">                    per-example losses.  If this is not the case, i.e. the reduction</span>
+<span class="sd">                    is the *mean*, please set the "reduction" attribute of `loss_fn`</span>
+<span class="sd">                    to "mean", i.e. `loss_fn.reduction = "mean"`.</span>
 <span class="sd">                    Default: None</span>
 <span class="sd">            batch_size (int or None, optional): Batch size of the DataLoader created to</span>
 <span class="sd">                    iterate through `influence_src_dataset`, if it is a Dataset.</span>
@@ -429,9 +448,24 @@ src="/js/documentation_options.js"></script>
 <span class="sd">                    `influence_src_dataset` is a Dataset. If `influence_src_dataset`</span>
 <span class="sd">                    is a DataLoader, then `batch_size` is ignored as an argument.</span>
 <span class="sd">                    Default: 1</span>
-<span class="sd">            use_autograd_hacks (bool, optional): Experimental mode that vectorize</span>
-<span class="sd">                    jacobian computation w.r.t parameters for a batch of inputs. Based</span>
-<span class="sd">                    on support in autograd_hacks.</span>
+<span class="sd">            sample_wise_grads_per_batch (bool, optional): PyTorch's native gradient</span>
+<span class="sd">                    computations w.r.t. model parameters aggregates the results for a</span>
+<span class="sd">                    batch and does not allow to access sample-wise gradients w.r.t.</span>
+<span class="sd">                    model parameters. This forces us to iterate over each sample in</span>
+<span class="sd">                    the batch if we want sample-wise gradients which is computationally</span>
+<span class="sd">                    inefficient. We offer an implementation of batch-wise gradient</span>
+<span class="sd">                    computations w.r.t. to model parameters which is computationally</span>
+<span class="sd">                    more efficient. This implementation can be enabled by setting the</span>
+<span class="sd">                    `sample_wise_grad_per_batch` argument to `True`, and should be</span>
+<span class="sd">                    enabled if and only if the `loss_fn` argument is a "reduction" loss</span>
+<span class="sd">                    function. For example, `nn.BCELoss(reduction="sum")` would be a</span>
+<span class="sd">                    valid `loss_fn` if this implementation is enabled (see</span>
+<span class="sd">                    documentation for `loss_fn` for more details). Note that our</span>
+<span class="sd">                    current implementation enables batch-wise gradient computations</span>
+<span class="sd">                    only for a limited number of PyTorch nn.Modules: Conv2D and Linear.</span>
+<span class="sd">                    This list will be expanded in the near future.  Therefore, please</span>
+<span class="sd">                    do not enable this implementation if gradients will be computed</span>
+<span class="sd">                    for other kinds of layers.</span>
 <span class="sd">                    Default: False</span>
 <span class="sd">        """</span>
 
@@ -445,16 +479,49 @@ src="/js/documentation_options.js"></script>
             <span class="n">batch_size</span><span class="p">,</span>
         <span class="p">)</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">use_autograd_hacks</span> <span class="o">=</span> <span class="n">use_autograd_hacks</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sample_wise_grads_per_batch</span> <span class="o">=</span> <span class="n">sample_wise_grads_per_batch</span>
 
-        <span class="k">if</span> <span class="p">(</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">use_autograd_hacks</span>
-            <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">loss_fn</span><span class="p">,</span> <span class="n">Module</span><span class="p">)</span>  <span class="c1"># TODO: allow loss_fn to be Callable</span>
-            <span class="ow">and</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">loss_fn</span><span class="p">,</span> <span class="s2">"reduction"</span><span class="p">)</span>
-        <span class="p">):</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">reduction_type</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">loss_fn</span><span class="o">.</span><span class="n">reduction</span><span class="p">)</span>
+        <span class="c1"># If we are able to access the reduction used by `loss_fn`, we check whether</span>
+        <span class="c1"># the reduction is compatible with `sample_wise_grads_per_batch`</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">loss_fn</span><span class="p">,</span> <span class="n">Module</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">hasattr</span><span class="p">(</span>
+            <span class="n">loss_fn</span><span class="p">,</span> <span class="s2">"reduction"</span>
+        <span class="p">):</span>  <span class="c1"># TODO: allow loss_fn to be Callable</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">sample_wise_grads_per_batch</span><span class="p">:</span>
+                <span class="k">assert</span> <span class="n">loss_fn</span><span class="o">.</span><span class="n">reduction</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">"sum"</span><span class="p">,</span> <span class="s2">"mean"</span><span class="p">],</span> <span class="p">(</span>
+                    <span class="s1">'reduction for `loss_fn` must be "sum" or "mean" when '</span>
+                    <span class="s2">"`sample_wise_grads_per_batch` is True"</span>
+                <span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">reduction_type</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">loss_fn</span><span class="o">.</span><span class="n">reduction</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">assert</span> <span class="n">loss_fn</span><span class="o">.</span><span class="n">reduction</span> <span class="o">==</span> <span class="s2">"none"</span><span class="p">,</span> <span class="p">(</span>
+                    <span class="s1">'reduction for `loss_fn` must be "none" when '</span>
+                    <span class="s2">"`sample_wise_grads_per_batch` is False"</span>
+                <span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">reduction_type</span> <span class="o">=</span> <span class="s2">"sum"</span>
+            <span class="c1"># if we are unable to access the reduction used by `loss_fn`, we warn</span>
+            <span class="c1"># the user about the assumptions we are making regarding the reduction</span>
+            <span class="c1"># used by `loss_fn`</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">sample_wise_grads_per_batch</span><span class="p">:</span>
+                <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+                    <span class="s1">'Since `loss_fn` has no "reduction" attribute, and '</span>
+                    <span class="s2">"`sample_wise_grads_per_batch` is True, the implementation assumes "</span>
+                    <span class="s1">'that `loss_fn` is a "reduction" loss function that reduces the '</span>
+                    <span class="s2">"per-example losses by taking their *sum*. If `loss_fn` "</span>
+                    <span class="s2">"instead reduces the per-example losses by taking their mean, "</span>
+                    <span class="s1">'please set the reduction attribute of `loss_fn` to "mean", i.e. '</span>
+                    <span class="s1">'`loss_fn.reduction = "mean"`. Note that if '</span>
+                    <span class="s2">"`sample_wise_grads_per_batch` is True, the implementation "</span>
+                    <span class="s2">"assumes the reduction is either a sum or mean reduction."</span>
+                <span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">reduction_type</span> <span class="o">=</span> <span class="s2">"sum"</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+                    <span class="s1">'Since `loss_fn` has no "reduction" attribute, and '</span>
+                    <span class="s2">"`sample_wise_grads_per_batch` is False, the implementation "</span>
+                    <span class="s1">'assumes that `loss_fn` is a "per-example" loss function (see '</span>
+                    <span class="s2">"documentation for `loss_fn` for details).  Please ensure that "</span>
+                    <span class="s2">"this is the case."</span>
+                <span class="p">)</span>
 
         <span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        TODO: Either restore model state after done (would have to place functionality</span>
@@ -677,8 +744,8 @@ src="/js/documentation_options.js"></script>
 <span class="sd">            targets (tensor or None): If computing influence scores on a loss function,</span>
 <span class="sd">                    these are the labels corresponding to the batch `inputs`.</span>
 <span class="sd">        """</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">use_autograd_hacks</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">_compute_jacobian_wrt_params_autograd_hacks</span><span class="p">(</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">sample_wise_grads_per_batch</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">_compute_jacobian_wrt_params_with_sample_wise_trick</span><span class="p">(</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">,</span>
                 <span class="n">inputs</span><span class="p">,</span>
                 <span class="n">targets</span><span class="p">,</span>

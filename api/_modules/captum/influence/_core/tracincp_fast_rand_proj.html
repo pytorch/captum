@@ -147,8 +147,13 @@ src="/js/documentation_options.js"></script>
 <span class="sd">                    learning rate if it is saved. By default uses a utility to load a</span>
 <span class="sd">                    model saved as a state dict.</span>
 <span class="sd">                    Default: _load_flexible_state_dict</span>
-<span class="sd">            loss_fn (Callable or Module): The loss function applied to model. This must</span>
-<span class="sd">                    be specified.</span>
+<span class="sd">            loss_fn (Callable, optional): The loss function applied to model. `loss_fn`</span>
+<span class="sd">                    must be a "reduction" loss function that reduces the per-example</span>
+<span class="sd">                    losses in a batch, and returns a single scalar Tensor. Furthermore,</span>
+<span class="sd">                    the reduction must be the *sum* of the per-example losses. For</span>
+<span class="sd">                    instance, `nn.BCELoss(reduction="sum")` is acceptable, but</span>
+<span class="sd">                    `nn.BCELoss(reduction="mean")` is *not* acceptable.</span>
+<span class="sd">                    Default: None</span>
 <span class="sd">            batch_size (int or None, optional): Batch size of the DataLoader created to</span>
 <span class="sd">                    iterate through `influence_src_dataset`, if it is a Dataset.</span>
 <span class="sd">                    `batch_size` should be chosen as large as possible so that certain</span>
@@ -174,7 +179,7 @@ src="/js/documentation_options.js"></script>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">vectorize</span> <span class="o">=</span> <span class="n">vectorize</span>
 
-        <span class="s2">"TODO: restore prior state"</span>
+        <span class="c1"># TODO: restore prior state</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">final_fc_layer</span> <span class="o">=</span> <span class="n">final_fc_layer</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">final_fc_layer</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">final_fc_layer</span> <span class="o">=</span> <span class="n">_get_module_from_name</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">final_fc_layer</span><span class="p">)</span>
@@ -183,10 +188,12 @@ src="/js/documentation_options.js"></script>
             <span class="n">param</span><span class="o">.</span><span class="n">requires_grad</span> <span class="o">=</span> <span class="kc">True</span>
 
         <span class="k">assert</span> <span class="n">loss_fn</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">,</span> <span class="s2">"loss function must not be none"</span>
+        <span class="c1"># If we are able to access the reduction used by `loss_fn`, we check whether</span>
+        <span class="c1"># the reduction is "sum", as required.</span>
         <span class="c1"># TODO: allow loss_fn to be Callable</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">loss_fn</span><span class="p">,</span> <span class="n">Module</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">loss_fn</span><span class="p">,</span> <span class="s2">"reduction"</span><span class="p">):</span>
-            <span class="n">msg</span> <span class="o">=</span> <span class="s2">"loss_fn.reduction should be `sum` or `mean`."</span>
-            <span class="k">assert</span> <span class="n">loss_fn</span><span class="o">.</span><span class="n">reduction</span> <span class="o">!=</span> <span class="s2">"none"</span><span class="p">,</span> <span class="n">msg</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="s2">"`loss_fn.reduction` must be `sum`."</span>
+            <span class="k">assert</span> <span class="n">loss_fn</span><span class="o">.</span><span class="n">reduction</span> <span class="o">==</span> <span class="s2">"sum"</span><span class="p">,</span> <span class="n">msg</span>
 
     <span class="k">def</span> <span class="nf">_influence_batch_tracincp_fast</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
@@ -475,8 +482,13 @@ src="/js/documentation_options.js"></script>
 <span class="sd">                    learning rate if it is saved. By default uses a utility to load a</span>
 <span class="sd">                    model saved as a state dict.</span>
 <span class="sd">                    Default: _load_flexible_state_dict</span>
-<span class="sd">            loss_fn (Callable or Module): The loss function applied to model. This must</span>
-<span class="sd">                    be specified.</span>
+<span class="sd">            loss_fn (Callable, optional): The loss function applied to model. `loss_fn`</span>
+<span class="sd">                    must be a "reduction" loss function that reduces the per-example</span>
+<span class="sd">                    losses in a batch, and returns a single scalar Tensor. Furthermore,</span>
+<span class="sd">                    the reduction must be the *sum* of the per-example losses. For</span>
+<span class="sd">                    instance, `nn.BCELoss(reduction="sum")` is acceptable, but</span>
+<span class="sd">                    `nn.BCELoss(reduction="mean")` is *not* acceptable.</span>
+<span class="sd">                    Default: None</span>
 <span class="sd">            batch_size (int or None, optional): Batch size of the DataLoader created to</span>
 <span class="sd">                    iterate through `influence_src_dataset`, if it is a Dataset.</span>
 <span class="sd">                    `batch_size` should be chosen as large as possible so that certain</span>
@@ -694,22 +706,25 @@ src="/js/documentation_options.js"></script>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">KMostInfluentialResults</span><span class="p">]:</span>
         <span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        This is the key method of this class, and can be run in 2 different modes,</span>
-<span class="sd">        where the mode that is run depends on the arguments passed to this method.</span>
+<span class="sd">        where the mode that is run depends on the arguments passed to this method</span>
+
 <span class="sd">        - influence score mode: This mode is used if `inputs` is not None, and `k` is</span>
-<span class="sd">                None. This mode computes the influence score of every example in</span>
-<span class="sd">                training dataset `influence_src_dataset` on every example in the test</span>
-<span class="sd">                batch represented by `inputs` and `targets`.</span>
+<span class="sd">          None. This mode computes the influence score of every example in</span>
+<span class="sd">          training dataset `influence_src_dataset` on every example in the test</span>
+<span class="sd">          batch represented by `inputs` and `targets`.</span>
+
 <span class="sd">        - k-most influential mode: This mode is used if `inputs` is not None, and</span>
-<span class="sd">                `k` is not None, and an int. This mode computes the proponents or</span>
-<span class="sd">                opponents of every example in the test batch represented by `inputs`</span>
-<span class="sd">                and `targets`. In particular, for each test example in the test batch,</span>
-<span class="sd">                this mode computes its proponents (resp. opponents), which are the</span>
-<span class="sd">                indices in the training dataset `influence_src_dataset` of the training</span>
-<span class="sd">                examples with the `k` highest (resp. lowest) influence scores on the</span>
-<span class="sd">                test example. Proponents are computed if `proponents` is True.</span>
-<span class="sd">                Otherwise, opponents are computed. For each test example, this method</span>
-<span class="sd">                also returns the actual influence score of each proponent (resp.</span>
-<span class="sd">                opponent) on the test example.</span>
+<span class="sd">          `k` is not None, and an int. This mode computes the proponents or</span>
+<span class="sd">          opponents of every example in the test batch represented by `inputs`</span>
+<span class="sd">          and `targets`. In particular, for each test example in the test batch,</span>
+<span class="sd">          this mode computes its proponents (resp. opponents), which are the</span>
+<span class="sd">          indices in the training dataset `influence_src_dataset` of the training</span>
+<span class="sd">          examples with the `k` highest (resp. lowest) influence scores on the</span>
+<span class="sd">          test example. Proponents are computed if `proponents` is True.</span>
+<span class="sd">          Otherwise, opponents are computed. For each test example, this method</span>
+<span class="sd">          also returns the actual influence score of each proponent (resp.</span>
+<span class="sd">          opponent) on the test example.</span>
+
 <span class="sd">        Note that unlike `TracInCPFast`, this class should *not* be run in self</span>
 <span class="sd">        influence mode.  To compute self influence scores when only considering</span>
 <span class="sd">        gradients in the last fully-connected layer, please use `TracInCPFast` instead.</span>
@@ -744,24 +759,26 @@ src="/js/documentation_options.js"></script>
 <span class="sd">                    Default: True</span>
 
 <span class="sd">        Returns:</span>
-<span class="sd">            The return value of this method depends on which mode is run.</span>
+
+<span class="sd">            The return value of this method depends on which mode is run</span>
+
 <span class="sd">            - influence score mode: if this mode is run (`inputs is not None, `k` is</span>
-<span class="sd">                    None), returns a 2D tensor `influence_scores` of shape</span>
-<span class="sd">                    `(input_size, influence_src_dataset_size)`, where `input_size` is</span>
-<span class="sd">                    the number of examples in the test batch, and</span>
-<span class="sd">                    `influence_src_dataset_size` is the number of examples in</span>
-<span class="sd">                    training dataset `influence_src_dataset`. In other words,</span>
-<span class="sd">                    `influence_scores[i][j]` is the influence score of the `j`-th</span>
-<span class="sd">                    example in `influence_src_dataset` on the `i`-th example in the</span>
-<span class="sd">                    test batch.</span>
-<span class="sd">            - k-most influential mode: if this mode is run (`inputs` is not None,</span>
-<span class="sd">                    `k` is an int), returns `indices`, which is a 2D tensor of shape</span>
-<span class="sd">                    `(input_size, k)`, where `input_size` is the number of examples</span>
-<span class="sd">                    in the test batch. If computing proponents (resp. opponents),</span>
-<span class="sd">                    `indices[i][j]` is the index in training dataset</span>
-<span class="sd">                    `influence_src_dataset` of the example with the `j`-th highest</span>
-<span class="sd">                    (resp. lowest) influence score (out of the examples in</span>
-<span class="sd">                    `influence_src_dataset`) on the `i`-th example in the test batch.</span>
+<span class="sd">              None), returns a 2D tensor `influence_scores` of shape</span>
+<span class="sd">              `(input_size, influence_src_dataset_size)`, where `input_size` is</span>
+<span class="sd">              the number of examples in the test batch, and</span>
+<span class="sd">              `influence_src_dataset_size` is the number of examples in</span>
+<span class="sd">              training dataset `influence_src_dataset`. In other words,</span>
+<span class="sd">              `influence_scores[i][j]` is the influence score of the `j`-th</span>
+<span class="sd">              example in `influence_src_dataset` on the `i`-th example in the</span>
+<span class="sd">              test batch.</span>
+<span class="sd">            - most influential mode: if this mode is run (`inputs` is not None,</span>
+<span class="sd">              `k` is an int), returns `indices`, which is a 2D tensor of shape</span>
+<span class="sd">              `(input_size, k)`, where `input_size` is the number of examples</span>
+<span class="sd">              in the test batch. If computing proponents (resp. opponents),</span>
+<span class="sd">              `indices[i][j]` is the index in training dataset</span>
+<span class="sd">              `influence_src_dataset` of the example with the `j`-th highest</span>
+<span class="sd">              (resp. lowest) influence score (out of the examples in</span>
+<span class="sd">              `influence_src_dataset`) on the `i`-th example in the test batch.</span>
 <span class="sd">        """</span>
         <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
             <span class="s2">"Since `inputs` is None, this suggests `TracInCPFastRandProj` is being "</span>

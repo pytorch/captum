@@ -142,16 +142,15 @@ src="/js/documentation_options.js"></script>
 <span class="sd">                    we pass in a Tensor with 3 examples, i.e. batch_size_2 = 3. Also,</span>
 <span class="sd">                    suppose that our inputs and intermediate activations throughout the</span>
 <span class="sd">                    model will have dimension (N, C, H, W). Then, the feature dimensions</span>
-<span class="sd">                    should be flattened within this function. For example, let</span>
+<span class="sd">                    should be flattened within this function. For example::</span>
 
-<span class="sd">                    ```</span>
-<span class="sd">                    av_test.shape = torch.Size([3, N, C, H, W])</span>
-<span class="sd">                    av_src.shape = torch.Size([16, N, C, H, W])</span>
-<span class="sd">                    ```</span>
-
-<span class="sd">                    Then, using `torch.view(av_test.shape[0], -1)` we have</span>
-
-<span class="sd">                    `av_test.shape = torch.Size([3, N x C x H x W])</span>
+<span class="sd">                        &gt;&gt;&gt; av_test.shape</span>
+<span class="sd">                        torch.Size([3, N, C, H, W])</span>
+<span class="sd">                        &gt;&gt;&gt; av_src.shape</span>
+<span class="sd">                        torch.Size([16, N, C, H, W])</span>
+<span class="sd">                        &gt;&gt;&gt; av_test = torch.view(av_test.shape[0], -1)</span>
+<span class="sd">                        &gt;&gt;&gt; av_test.shape</span>
+<span class="sd">                        torch.Size([3, N x C x H x W])</span>
 
 <span class="sd">                    and similarly for av_src. The similarity_metric should then use</span>
 <span class="sd">                    these flattened tensors to return the pairwise similarity matrix.</span>
@@ -205,7 +204,7 @@ src="/js/documentation_options.js"></script>
 <span class="sd">                    first dimension in `inputs` tensor or tuple of tensors corresponds</span>
 <span class="sd">                    to the batch size. A tuple of tensors is only passed in if this</span>
 <span class="sd">                    is the input form that `module` accepts.</span>
-<span class="sd">            top_k (int): The number of top-matchinig activations to return</span>
+<span class="sd">            top_k (int): The number of top-matching activations to return</span>
 <span class="sd">            additional_forward_args (optional):  Additional arguments that will be</span>
 <span class="sd">                    passed to forward_func after inputs.</span>
 <span class="sd">            load_src_from_disk (bool): Loads activations for `influence_src_dataset`</span>
@@ -223,18 +222,19 @@ src="/js/documentation_options.js"></script>
 <span class="sd">                    implementation of `DataInfluence` abstract class.</span>
 
 <span class="sd">        Returns:</span>
-<span class="sd">            influences (dictionary): Returns the influential instances retrieved from</span>
-<span class="sd">                    `influence_src_dataset` for each test example represented through a</span>
-<span class="sd">                    tensor or a tuple of tensor in `inputs`. Returned influential</span>
-<span class="sd">                    examples are represented as dict, with keys corresponding to</span>
-<span class="sd">                    the layer names passed in `layers`. Each value in the dict is a</span>
-<span class="sd">                    tuple containing the indices and values for the top k similarities</span>
-<span class="sd">                    from `influence_src_dataset` by the chosen metric. The first value</span>
-<span class="sd">                    in the tuple corresponds to the indices corresponding to the top k</span>
-<span class="sd">                    most similar examples, and the second value is the similarity score.</span>
-<span class="sd">                    The batch dimension corresponds to the batch dimension of `inputs`.</span>
-<span class="sd">                    If inputs.shape[0] == 5, then dict[`layer_name`][0].shape[0] == 5.</span>
-<span class="sd">                    These tensors will be of shape (inputs.shape[0], top_k).</span>
+
+<span class="sd">            influences (dict): Returns the influential instances retrieved from</span>
+<span class="sd">            `influence_src_dataset` for each test example represented through a</span>
+<span class="sd">            tensor or a tuple of tensor in `inputs`. Returned influential</span>
+<span class="sd">            examples are represented as dict, with keys corresponding to</span>
+<span class="sd">            the layer names passed in `layers`. Each value in the dict is a</span>
+<span class="sd">            tuple containing the indices and values for the top k similarities</span>
+<span class="sd">            from `influence_src_dataset` by the chosen metric. The first value</span>
+<span class="sd">            in the tuple corresponds to the indices corresponding to the top k</span>
+<span class="sd">            most similar examples, and the second value is the similarity score.</span>
+<span class="sd">            The batch dimension corresponds to the batch dimension of `inputs`.</span>
+<span class="sd">            If inputs.shape[0] == 5, then dict[`layer_name`][0].shape[0] == 5.</span>
+<span class="sd">            These tensors will be of shape (inputs.shape[0], top_k).</span>
 <span class="sd">        """</span>
         <span class="n">inputs_batch_size</span> <span class="o">=</span> <span class="p">(</span>
             <span class="n">inputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)</span> <span class="k">else</span> <span class="n">inputs</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
