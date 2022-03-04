@@ -5,7 +5,13 @@ from collections import defaultdict
 from typing import Any, List, Tuple, Union, cast
 
 import torch.nn as nn
-from captum._utils.common import _format_input, _format_output, _is_tuple, _run_forward
+from captum._utils.common import (
+    _format_input,
+    _format_output,
+    _is_tuple,
+    _run_forward,
+    _register_backward_hook,
+)
 from captum._utils.gradient import (
     apply_gradient_requirements,
     undo_gradient_requirements,
@@ -43,7 +49,10 @@ class LRP(GradientAttribution):
                 it. Custom rules for a given layer need to be defined as attribute
                 `module.rule` and need to be of type PropagationRule. If no rule is
                 specified for a layer, a pre-defined default rule for the module type
-                is used.
+                is used. Model cannot contain any in-place nonlinear submodules;
+                these are not supported by the register_full_backward_hook
+                PyTorch API starting from PyTorch v1.9.
+
         """
         GradientAttribution.__init__(self, model)
         self.model = model
@@ -305,8 +314,8 @@ class LRP(GradientAttribution):
     def _register_forward_hooks(self) -> None:
         for layer in self.layers:
             if type(layer) in SUPPORTED_NON_LINEAR_LAYERS:
-                backward_handle = layer.register_backward_hook(
-                    PropagationRule.backward_hook_activation
+                backward_handle = _register_backward_hook(
+                    layer, PropagationRule.backward_hook_activation, self
                 )
                 self.backward_handles.append(backward_handle)
             else:

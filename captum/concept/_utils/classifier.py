@@ -195,6 +195,10 @@ class DefaultClassifier(Classifier):
             weights (tensor): A torch Tensor with the weights resulting from
                 the model training.
         """
+        assert self.lm.linear is not None, (
+            "The weights cannot be obtained because no model was trained."
+            "In order to train the model call `train_and_eval` method first."
+        )
         weights = self.lm.representation()
         if weights.shape[0] == 1:
             # if there are two concepts, there is only one label. We split it in two.
