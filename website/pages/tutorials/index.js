@@ -149,6 +149,14 @@ class TutorialHome extends React.Component {
                 positive sentiment.
                 Find the tutorial <a href="TCAV_NLP">here</a>.
 
+                <h3>Influential Examples</h3>
+
+                <h4>Identifying influential examples and mis-labelled examples with TracInCP:</h4>
+                This tutorial demonstrates two use cases of the TracInCP method: providing interpretability by identifying influential training examples
+                for a given prediction, and identifying mis-labelled examples. These two use cases are demonstrated using the CIFAR dataset and
+                checkpoints obtained from training a simple CNN model on it (which can also be downloaded to avoid training).
+                Find the tutorial <a href="TracInCP_Tutorial">here</a>.
+
                 <h3>Captum Insight</h3>
 
                 <h4>Getting Started with Captum Insights:</h4>

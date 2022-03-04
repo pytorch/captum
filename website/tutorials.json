@@ -76,6 +76,12 @@
       "title": "TCAV for NLP sentiment analysis model"
     }
   ],
+  "Influential Examples": [
+    {
+      "id": "TracInCP_Tutorial",
+      "title": "Identifying influential examples and mis-labelled examples with TracInCP"
+    }
+  ],
   "Captum Insight": [
     {
       "id": "CIFAR_TorchVision_Captum_Insights",
