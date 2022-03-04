@@ -312,3 +312,25 @@ div.sphinx div.document {
 
 @media only screen and (min-width: 1500px) {
 }
+
+/* Social Banner */
+
+.SocialBannerWrapper {
+	padding: 0 0;
+	background-color: black;
+}
+  
+.SocialBanner {
+	font-weight: bold;
+	font-size: 20px;
+	padding: 20px;
+	max-width: 768px;
+	margin: 0 auto;
+	color: white;
+	text-align: center;
+}
+  
+.SocialBanner a {
+	text-decoration: underline;
+	color: white;
+}
