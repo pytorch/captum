@@ -709,7 +709,7 @@ def construct_neuron_grad_fn(
 
 def _compute_jacobian_wrt_params(
     model: Module,
-    inputs: Union[Tuple[Tensor], Tensor],
+    inputs: Tuple[Any, ...],
     labels: Optional[Tensor] = None,
     loss_fn: Optional[Union[Module, Callable]] = None,
 ) -> Tuple[Tensor, ...]:
@@ -720,9 +720,9 @@ def _compute_jacobian_wrt_params(
 
     Args:
         model (torch.nn.Module): The trainable model providing the forward pass
-        inputs (Tensor): The minibatch for which the forward pass is computed.
-                The dimensions of input are (N, *) where N is the batch_size.
-                The input must have a batch dimension, even if batch_size = 1.
+        inputs (tuple of Any): The minibatch for which the forward pass is computed.
+                It is unpacked before passing to `model`, so it must be a tuple.  The
+                individual elements of `inputs` can be anything.
         labels (Tensor or None): Labels for input if computing a loss function.
         loss_fn (torch.nn.Module or Callable or None): The loss function. If a library
                 defined loss function is provided, it would be expected to be a
@@ -772,25 +772,26 @@ def _compute_jacobian_wrt_params(
         return tuple(grads)
 
 
-def _compute_jacobian_wrt_params_autograd_hacks(
+def _compute_jacobian_wrt_params_with_sample_wise_trick(
     model: Module,
-    inputs: Union[Tuple[Tensor], Tensor],
+    inputs: Tuple[Any, ...],
     labels: Optional[Tensor] = None,
-    loss_fn: Optional[Module] = None,
+    loss_fn: Optional[Union[Module, Callable]] = None,
     reduction_type: Optional[str] = "sum",
 ) -> Tuple[Any, ...]:
     r"""
     Computes the Jacobian of a batch of test examples given a model, and optional
-    loss function and target labels. This method uses autograd_hacks to fully vectorize
-    the Jacobian calculation. Currently, only linear and conv2d layers are supported.
+    loss function and target labels. This method uses sample-wise gradients per
+    batch trick to fully vectorize the Jacobian calculation. Currently, only
+    linear and conv2d layers are supported.
 
     User must `add_hooks(model)` before calling this function.
 
     Args:
         model (torch.nn.Module): The trainable model providing the forward pass
-        inputs (Tensor): The minibatch for which the forward pass is computed.
-                The dimensions of input are (N, *) where N is the batch_size.
-                The input must have a batch dimension, even if batch_size = 1.
+        inputs (tuple of Any): The minibatch for which the forward pass is computed.
+                It is unpacked before passing to `model`, so it must be a tuple.  The
+                individual elements of `inputs` can be anything.
         labels (Tensor or None): Labels for input if computing a loss function.
         loss_fn (torch.nn.Module or Callable or None): The loss function. If a library
                 defined loss function is provided, it would be expected to be a
@@ -823,10 +824,12 @@ def _compute_jacobian_wrt_params_autograd_hacks(
 
             if labels is not None and loss_fn is not None:
                 loss = loss_fn(out, labels)
-                if hasattr(loss_fn, "reduction"):
+                # TODO: allow loss_fn to be Callable
+                if isinstance(loss_fn, Module) and hasattr(loss_fn, "reduction"):
                     msg0 = (
                         "Please ensure that loss_fn.reduction is set to `sum` or `mean`"
                     )
+
                     assert loss_fn.reduction != "none", msg0
                     msg1 = (
                         f"loss_fn.reduction ({loss_fn.reduction}) does not match"

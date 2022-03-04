@@ -51,7 +51,7 @@ class LRP(GradientAttribution):
                 specified for a layer, a pre-defined default rule for the module type
                 is used. Model cannot contain any in-place nonlinear submodules;
                 these are not supported by the register_full_backward_hook
-                PyTorch API starting from PyTorch v1.8.
+                PyTorch API starting from PyTorch v1.9.
 
         """
         GradientAttribution.__init__(self, model)

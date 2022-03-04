@@ -4,7 +4,7 @@ import torch
 import torch.nn as nn
 from captum._utils.gradient import (
     _compute_jacobian_wrt_params,
-    _compute_jacobian_wrt_params_autograd_hacks,
+    _compute_jacobian_wrt_params_with_sample_wise_trick,
 )
 from tests.helpers.basic import BaseTest, assertTensorAlmostEqual
 from tests.helpers.basic_models import BasicLinearModel2, BasicLinearModel_Multilayer
@@ -20,7 +20,7 @@ class Test(BaseTest):
         grads = _compute_jacobian_wrt_params(model, (a,))
         assertTensorAlmostEqual(self, grads[0][0], a)
 
-        grads = _compute_jacobian_wrt_params_autograd_hacks(model, (a,))
+        grads = _compute_jacobian_wrt_params_with_sample_wise_trick(model, (a,))
         assertTensorAlmostEqual(self, grads[0][0], a)
 
     def test_jacobian_scores_single_vector(self) -> None:
@@ -31,7 +31,7 @@ class Test(BaseTest):
         grads = _compute_jacobian_wrt_params(model, (a,))
         assertTensorAlmostEqual(self, grads[0][0], torch.cat((a, a)))
 
-        grads = _compute_jacobian_wrt_params_autograd_hacks(model, (a,))
+        grads = _compute_jacobian_wrt_params_with_sample_wise_trick(model, (a,))
         assertTensorAlmostEqual(self, grads[0][0], torch.cat((a, a)))
 
     def test_jacobian_scores_single_scalar_multilayer(self) -> None:
@@ -45,7 +45,7 @@ class Test(BaseTest):
         assertTensorAlmostEqual(self, grads[0][0], torch.cat((a, 2 * a)))
         assertTensorAlmostEqual(self, grads[1][0], torch.Tensor([[10, 35]]))
 
-        grads = _compute_jacobian_wrt_params_autograd_hacks(model, (a,))
+        grads = _compute_jacobian_wrt_params_with_sample_wise_trick(model, (a,))
         assertTensorAlmostEqual(self, grads[0][0], torch.cat((a, 2 * a)))
         assertTensorAlmostEqual(self, grads[1][0], torch.Tensor([[10, 35]]))
 
@@ -60,7 +60,7 @@ class Test(BaseTest):
         assertTensorAlmostEqual(self, grads[0][0], torch.cat((2 * a, 4 * a)))
         assertTensorAlmostEqual(self, grads[1][0], torch.Tensor([[10, 35], [10, 35]]))
 
-        grads = _compute_jacobian_wrt_params_autograd_hacks(model, (a,))
+        grads = _compute_jacobian_wrt_params_with_sample_wise_trick(model, (a,))
         assertTensorAlmostEqual(self, grads[0][0], torch.cat((2 * a, 4 * a)))
         assertTensorAlmostEqual(self, grads[1][0], torch.Tensor([[10, 35], [10, 35]]))
 
@@ -74,7 +74,7 @@ class Test(BaseTest):
         assertTensorAlmostEqual(self, grads[0][0], a[0:1])
         assertTensorAlmostEqual(self, grads[0][1], a[1:2])
 
-        grads = _compute_jacobian_wrt_params_autograd_hacks(model, (a,))
+        grads = _compute_jacobian_wrt_params_with_sample_wise_trick(model, (a,))
         assertTensorAlmostEqual(self, grads[0][0], a[0:1])
         assertTensorAlmostEqual(self, grads[0][1], a[1:2])
 
@@ -88,7 +88,7 @@ class Test(BaseTest):
         assertTensorAlmostEqual(self, grads[0][0], torch.stack((a[0], a[0])))
         assertTensorAlmostEqual(self, grads[0][1], torch.stack((a[1], a[1])))
 
-        grads = _compute_jacobian_wrt_params_autograd_hacks(model, (a,))
+        grads = _compute_jacobian_wrt_params_with_sample_wise_trick(model, (a,))
         assertTensorAlmostEqual(self, grads[0][0], torch.stack((a[0], a[0])))
         assertTensorAlmostEqual(self, grads[0][1], torch.stack((a[1], a[1])))
 
@@ -105,7 +105,7 @@ class Test(BaseTest):
         assertTensorAlmostEqual(self, grads[0][1], torch.stack((a[1], 2 * a[1])))
         assertTensorAlmostEqual(self, grads[1][1], torch.Tensor([[20, 70]]))
 
-        grads = _compute_jacobian_wrt_params_autograd_hacks(model, (a,))
+        grads = _compute_jacobian_wrt_params_with_sample_wise_trick(model, (a,))
         assertTensorAlmostEqual(self, grads[0][0], torch.stack((a[0], 2 * a[0])))
         assertTensorAlmostEqual(self, grads[1][0], torch.Tensor([[10, 35]]))
         assertTensorAlmostEqual(self, grads[0][1], torch.stack((a[1], 2 * a[1])))
@@ -124,7 +124,7 @@ class Test(BaseTest):
         assertTensorAlmostEqual(self, grads[0][1], torch.stack((2 * a[1], 4 * a[1])))
         assertTensorAlmostEqual(self, grads[1][1], torch.Tensor([[20, 70], [20, 70]]))
 
-        grads = _compute_jacobian_wrt_params_autograd_hacks(model, (a,))
+        grads = _compute_jacobian_wrt_params_with_sample_wise_trick(model, (a,))
         assertTensorAlmostEqual(self, grads[0][0], torch.stack((2 * a[0], 4 * a[0])))
         assertTensorAlmostEqual(self, grads[1][0], torch.Tensor([[10, 35], [10, 35]]))
         assertTensorAlmostEqual(self, grads[0][1], torch.stack((2 * a[1], 4 * a[1])))
@@ -142,7 +142,9 @@ class Test(BaseTest):
         assertTensorAlmostEqual(self, grads[0][0], 2 * (10 - 9) * a)
 
         loss_fn = nn.MSELoss(reduction="sum")
-        grads = _compute_jacobian_wrt_params_autograd_hacks(model, (a,), label, loss_fn)
+        grads = _compute_jacobian_wrt_params_with_sample_wise_trick(
+            model, (a,), label, loss_fn
+        )
         assertTensorAlmostEqual(self, grads[0][0], 2 * (10 - 9) * a)
 
     def test_jacobian_loss_single_vector(self) -> None:
@@ -159,7 +161,9 @@ class Test(BaseTest):
         )
 
         loss_fn = nn.MSELoss(reduction="sum")
-        grads = _compute_jacobian_wrt_params_autograd_hacks(model, (a,), label, loss_fn)
+        grads = _compute_jacobian_wrt_params_with_sample_wise_trick(
+            model, (a,), label, loss_fn
+        )
         assertTensorAlmostEqual(
             self, grads[0][0], torch.cat((2 * (10 - 9) * a, 2 * (35 - 38) * a))
         )
@@ -178,7 +182,9 @@ class Test(BaseTest):
         assertTensorAlmostEqual(self, grads[0][1], 2 * (20 - 18) * a[1:2])
 
         loss_fn = nn.MSELoss(reduction="sum")
-        grads = _compute_jacobian_wrt_params_autograd_hacks(model, (a,), label, loss_fn)
+        grads = _compute_jacobian_wrt_params_with_sample_wise_trick(
+            model, (a,), label, loss_fn
+        )
 
         assertTensorAlmostEqual(self, grads[0][0], 2 * (10 - 9) * a[0:1])
         assertTensorAlmostEqual(self, grads[0][1], 2 * (20 - 18) * a[1:2])
@@ -200,7 +206,9 @@ class Test(BaseTest):
         )
 
         loss_fn = nn.MSELoss(reduction="sum")
-        grads = _compute_jacobian_wrt_params_autograd_hacks(model, (a,), label, loss_fn)
+        grads = _compute_jacobian_wrt_params_with_sample_wise_trick(
+            model, (a,), label, loss_fn
+        )
         assertTensorAlmostEqual(
             self, grads[0][0], torch.stack((2 * (10 - 9) * a[0], 2 * (35 - 38) * a[0]))
         )
@@ -226,7 +234,9 @@ class Test(BaseTest):
         )
 
         loss_fn = nn.MSELoss(reduction="sum")
-        grads = _compute_jacobian_wrt_params_autograd_hacks(model, (a,), label, loss_fn)
+        grads = _compute_jacobian_wrt_params_with_sample_wise_trick(
+            model, (a,), label, loss_fn
+        )
         assertTensorAlmostEqual(
             self, grads[0][0], torch.cat((2 * (80 - 78) * a, 2 * 2 * (80 - 78) * a))
         )
@@ -286,7 +296,7 @@ class Test(BaseTest):
         )
 
         loss_fn = nn.MSELoss(reduction="sum")
-        grads_h = _compute_jacobian_wrt_params_autograd_hacks(
+        grads_h = _compute_jacobian_wrt_params_with_sample_wise_trick(
             model, (a,), label, loss_fn
         )
         assertTensorAlmostEqual(self, grads_h[0][0], grads[0][0])
@@ -325,7 +335,7 @@ class Test(BaseTest):
         with self.assertRaises(AssertionError):
             _compute_jacobian_wrt_params(model, (a,), label, my_loss)
 
-    def test_jacobian_loss_custom_correct_hack(self) -> None:
+    def test_jacobian_loss_custom_correct_sample_wise_trick(self) -> None:
         model = BasicLinearModel2(5, 2)
         model.linear.weight = nn.Parameter(torch.arange(0, 10).view(2, 5).float())
 
@@ -334,7 +344,7 @@ class Test(BaseTest):
 
         a = torch.stack((torch.ones(5), torch.ones(5) * 2))
         label = torch.Tensor([[9, 38], [18, 74]])
-        grads = _compute_jacobian_wrt_params_autograd_hacks(
+        grads = _compute_jacobian_wrt_params_with_sample_wise_trick(
             model, (a,), label, my_loss  # type: ignore
         )
         assertTensorAlmostEqual(
@@ -344,7 +354,7 @@ class Test(BaseTest):
             self, grads[0][1], torch.stack((2 * (20 - 18) * a[1], 2 * (70 - 74) * a[1]))
         )
 
-    def test_jacobian_loss_custom_wrong_hack(self) -> None:
+    def test_jacobian_loss_custom_wrong_sample_wise_trick(self) -> None:
         model = BasicLinearModel2(5, 2)
         model.linear.weight = nn.Parameter(torch.arange(0, 10).view(2, 5).float())
 
@@ -355,11 +365,11 @@ class Test(BaseTest):
         label = torch.Tensor([[9, 38], [18, 74]])
 
         with self.assertRaises(AssertionError):
-            _compute_jacobian_wrt_params_autograd_hacks(
+            _compute_jacobian_wrt_params_with_sample_wise_trick(
                 model, (a,), label, my_loss  # type: ignore
             )
 
-    def test_jacobian_loss_wrong_reduction_hack(self) -> None:
+    def test_jacobian_loss_wrong_reduction_sample_wise_trick(self) -> None:
         model = BasicLinearModel2(5, 2)
         model.linear.weight = nn.Parameter(torch.arange(0, 10).view(2, 5).float())
         loss_fn = nn.MSELoss(reduction="none")
@@ -368,4 +378,6 @@ class Test(BaseTest):
         label = torch.Tensor([[9, 38], [18, 74]])
 
         with self.assertRaises(AssertionError):
-            _compute_jacobian_wrt_params_autograd_hacks(model, (a,), label, loss_fn)
+            _compute_jacobian_wrt_params_with_sample_wise_trick(
+                model, (a,), label, loss_fn
+            )

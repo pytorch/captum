@@ -267,7 +267,7 @@ More details about infidelity measure can be found here:
 Sensitivity measures the degree of explanation changes to subtle input perturbations using Monte Carlo sampling-based approximation and is defined
 as follows:
 ![sensitivity_eq](/img/sensitivity_eq.png)
-In order to opproximate sensitivity measure, by default, we sample from a sub-space of an L-Infinity ball with a default radius.
+In order to approximate sensitivity measure, by default, we sample from a sub-space of an L-Infinity ball with a default radius.
 The users can modify both the radius of the ball and the sampling function.
-More details about seensitivity measure can be found here:
+More details about sensitivity measure can be found here:
 - [Original paper](https://arxiv.org/pdf/1901.09392.pdf)
