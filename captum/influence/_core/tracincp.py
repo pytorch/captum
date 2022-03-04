@@ -19,6 +19,7 @@ from captum.influence._utils.common import (
     _get_k_most_influential_helper,
     _format_inputs,
 )
+from captum.log import log_usage
 from torch import Tensor
 from torch.nn import Module
 from torch.utils.data import DataLoader, Dataset
@@ -239,6 +240,7 @@ class TracInCPBase(DataInfluence):
         """
         pass
 
+    @log_usage()
     def influence(  # type: ignore[override]
         self,
         inputs: Any = None,

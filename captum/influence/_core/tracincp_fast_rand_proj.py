@@ -17,6 +17,7 @@ from captum.influence._utils.nearest_neighbors import (
     NearestNeighbors,
     AnnoyNearestNeighbors,
 )
+from captum.log import log_usage
 from torch import Tensor
 from torch.nn import Module
 from torch.utils.data import DataLoader, Dataset
@@ -663,6 +664,7 @@ class TracInCPFastRandProj(TracInCPFast):
         )
         raise NotImplementedError
 
+    @log_usage()
     def influence(  # type: ignore[override]
         self,
         inputs: Any,
