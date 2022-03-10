@@ -76,6 +76,7 @@ DEV_REQUIRES = (
         "usort==0.6.4",
         "ufmt",
         "scikit-learn",
+        "annoy",
     ]
 )
 
