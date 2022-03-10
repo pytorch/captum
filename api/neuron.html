@@ -44,7 +44,7 @@ respect to the inputs of the network.</p>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>forward_func</strong> (<em>callable</em>) – The forward function of the model or any
 modification of it</p></li>
-<li><p><strong>layer</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/generated/torch.nn.Module.html#torch.nn.Module" title="(in PyTorch v1.10.0)"><em>torch.nn.Module</em></a>) – Layer for which attributions are computed.
+<li><p><strong>layer</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/generated/torch.nn.Module.html#torch.nn.Module" title="(in PyTorch v1.11.0)"><em>torch.nn.Module</em></a>) – Layer for which attributions are computed.
 Output size of attribute matches this layer’s input or
 output dimensions, depending on whether we attribute to
 the inputs or outputs of the layer, corresponding to
@@ -191,7 +191,7 @@ where the output is the output of the identified neuron.</p>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>forward_func</strong> (<em>callable</em>) – The forward function of the model or any
 modification of it</p></li>
-<li><p><strong>layer</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/generated/torch.nn.Module.html#torch.nn.Module" title="(in PyTorch v1.10.0)"><em>torch.nn.Module</em></a>) – Layer for which attributions are computed.
+<li><p><strong>layer</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/generated/torch.nn.Module.html#torch.nn.Module" title="(in PyTorch v1.11.0)"><em>torch.nn.Module</em></a>) – Layer for which attributions are computed.
 Output size of attribute matches this layer’s input or
 output dimensions, depending on whether we attribute to
 the inputs or outputs of the layer, corresponding to
@@ -400,7 +400,7 @@ The details of the approach can be found here:
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>forward_func</strong> (<em>callable</em>) – The forward function of the model or any
 modification of it</p></li>
-<li><p><strong>layer</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/generated/torch.nn.Module.html#torch.nn.Module" title="(in PyTorch v1.10.0)"><em>torch.nn.Module</em></a>) – Layer for which neuron attributions are computed.
+<li><p><strong>layer</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/generated/torch.nn.Module.html#torch.nn.Module" title="(in PyTorch v1.11.0)"><em>torch.nn.Module</em></a>) – Layer for which neuron attributions are computed.
 Attributions for a particular neuron in the input or output
 of this layer are computed using the argument neuron_selector
 in the attribute method.
@@ -654,7 +654,7 @@ More details on how to build custom RNNs can be found here:
 contain any in-place nonlinear submodules; these are not
 supported by the register_full_backward_hook PyTorch API
 starting from PyTorch v1.9.</p></li>
-<li><p><strong>layer</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/generated/torch.nn.Module.html#torch.nn.Module" title="(in PyTorch v1.10.0)"><em>torch.nn.Module</em></a>) – Layer for which neuron attributions are computed.
+<li><p><strong>layer</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/generated/torch.nn.Module.html#torch.nn.Module" title="(in PyTorch v1.11.0)"><em>torch.nn.Module</em></a>) – Layer for which neuron attributions are computed.
 Attributions for a particular neuron for the input or output
 of this layer are computed using the argument neuron_selector
 in the attribute method.
@@ -869,7 +869,7 @@ model across multiple explanations can be complex and non-linear.</p>
 contain any in-place nonlinear submodules; these are not
 supported by the register_full_backward_hook PyTorch API
 starting from PyTorch v1.9.</p></li>
-<li><p><strong>layer</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/generated/torch.nn.Module.html#torch.nn.Module" title="(in PyTorch v1.10.0)"><em>torch.nn.Module</em></a>) – Layer for which neuron attributions are computed.
+<li><p><strong>layer</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/generated/torch.nn.Module.html#torch.nn.Module" title="(in PyTorch v1.11.0)"><em>torch.nn.Module</em></a>) – Layer for which neuron attributions are computed.
 Attributions for a particular neuron for the input or output
 of this layer are computed using the argument neuron_selector
 in the attribute method.
@@ -1077,7 +1077,7 @@ samples and compute the expectation (smoothgrad).</p>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>forward_func</strong> (<em>callable</em>) – The forward function of the model or any
 modification of it</p></li>
-<li><p><strong>layer</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/generated/torch.nn.Module.html#torch.nn.Module" title="(in PyTorch v1.10.0)"><em>torch.nn.Module</em></a>) – Layer for which neuron attributions are computed.
+<li><p><strong>layer</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/generated/torch.nn.Module.html#torch.nn.Module" title="(in PyTorch v1.11.0)"><em>torch.nn.Module</em></a>) – Layer for which neuron attributions are computed.
 The output size of the attribute method matches the
 dimensions of the inputs or ouputs of the neuron with
 index <cite>neuron_selector</cite> in this layer, depending on whether
@@ -1575,7 +1575,7 @@ group.</p>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>forward_func</strong> (<em>callable</em>) – The forward function of the model or any
 modification of it</p></li>
-<li><p><strong>layer</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/generated/torch.nn.Module.html#torch.nn.Module" title="(in PyTorch v1.10.0)"><em>torch.nn.Module</em></a>) – Layer for which attributions are computed.
+<li><p><strong>layer</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/generated/torch.nn.Module.html#torch.nn.Module" title="(in PyTorch v1.11.0)"><em>torch.nn.Module</em></a>) – Layer for which attributions are computed.
 Attributions for a particular neuron in the input or output
 of this layer are computed using the argument neuron_selector
 in the attribute method.
