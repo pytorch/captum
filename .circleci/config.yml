@@ -240,11 +240,13 @@ workflows:
 
   lint_and_test:
     jobs:
-      - lint_test_py36_pip:
+      - lint_py36:
           filters: *exclude_ghpages_fbconfig
-      - lint_test_py36_pip_release:
+      - test_py36_pip:
           filters: *exclude_ghpages_fbconfig
-      - lint_test_py37_conda:
+      - test_py36_pip_release:
+          filters: *exclude_ghpages_fbconfig
+      - test_py37_conda:
           filters: *exclude_ghpages_fbconfig
       - test_py36_pip_torch_1_6:
           filters: *exclude_ghpages_fbconfig
