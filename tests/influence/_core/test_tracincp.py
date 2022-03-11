@@ -14,7 +14,6 @@ from tests.influence._utils.common import (
     _TestTracInRegression1DNumerical,
     _TestTracInGetKMostInfluential,
     _TestTracInSelfInfluence,
-    _TestTracInDataLoader,
 )
 
 
@@ -25,7 +24,6 @@ class TestTracInCP(
     _TestTracInIdentityRegressionCheckIdx,
     _TestTracInGetKMostInfluential,
     _TestTracInSelfInfluence,
-    _TestTracInDataLoader,
     BaseTest,
 ):
     def setUp(self):
