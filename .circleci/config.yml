@@ -161,7 +161,6 @@ jobs:
       - checkout
       - pip_install:
           args: "-v 1.6"
-      - mypy_check
       - unit_tests
 
   test_py36_pip_torch_1_7:
@@ -171,7 +170,6 @@ jobs:
       - checkout
       - pip_install:
           args: "-v 1.7"
-      - mypy_check
       - unit_tests
 
   test_py36_pip_torch_1_8:
@@ -181,7 +179,6 @@ jobs:
       - checkout
       - pip_install:
           args: "-v 1.8"
-      - mypy_check
       - unit_tests
 
   test_py36_pip_torch_1_9:
@@ -191,7 +188,6 @@ jobs:
       - checkout
       - pip_install:
           args: "-v 1.9"
-      - mypy_check
       - unit_tests
 
 
