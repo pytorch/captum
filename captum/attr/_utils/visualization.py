@@ -326,7 +326,7 @@ def visualize_image_attr_multiple(
     titles: Union[None, List[str]] = None,
     fig_size: Tuple[int, int] = (8, 6),
     use_pyplot: bool = True,
-    **kwargs: Any
+    **kwargs: Any,
 ):
     r"""
     Visualizes attribution using multiple visualization methods displayed
@@ -414,7 +414,7 @@ def visualize_image_attr_multiple(
             plt_fig_axis=(plt_fig, plt_axis[i]),
             use_pyplot=False,
             title=titles[i] if titles else None,
-            **kwargs
+            **kwargs,
         )
     plt_fig.tight_layout()
     if use_pyplot:
