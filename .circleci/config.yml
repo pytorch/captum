@@ -125,19 +125,7 @@ commands:
 
 jobs:
 
-  lint_test_py36_pip:
-    docker:
-      - image: circleci/python:3.6.8
-    steps:
-      - checkout
-      - pip_install:
-          args: "-n"
-      - lint_flake8
-      - ufmt_check
-      - unit_tests
-      - sphinx
-
-  lint_test_py36_pip_release:
+  lint_py36:
     docker:
       - image: circleci/python:3.6.8
     steps:
@@ -145,9 +133,26 @@ jobs:
       - pip_install
       - lint_flake8
       - ufmt_check
+      - sphinx
+
+  test_py36_pip:
+    docker:
+      - image: circleci/python:3.6.8
+    steps:
+      - checkout
+      - pip_install:
+          args: "-n"
       - mypy_check
       - unit_tests
-      - sphinx
+
+  test_py36_pip_release:
+    docker:
+      - image: circleci/python:3.6.8
+    steps:
+      - checkout
+      - pip_install
+      - mypy_check
+      - unit_tests
 
   test_py36_pip_torch_1_6:
     docker:
@@ -156,6 +161,7 @@ jobs:
       - checkout
       - pip_install:
           args: "-v 1.6"
+      - mypy_check
       - unit_tests
 
   test_py36_pip_torch_1_7:
@@ -165,6 +171,7 @@ jobs:
       - checkout
       - pip_install:
           args: "-v 1.7"
+      - mypy_check
       - unit_tests
 
   test_py36_pip_torch_1_8:
@@ -174,6 +181,7 @@ jobs:
       - checkout
       - pip_install:
           args: "-v 1.8"
+      - mypy_check
       - unit_tests
 
   test_py36_pip_torch_1_9:
@@ -183,20 +191,19 @@ jobs:
       - checkout
       - pip_install:
           args: "-v 1.9"
+      - mypy_check
       - unit_tests
 
 
-  lint_test_py37_conda:
+  test_py37_conda:
     docker:
       - image: continuumio/miniconda3
     steps:
       - checkout
       - conda_install:
           args: "-n"
-      - lint_flake8
-      - ufmt_check
       - unit_tests
-      - sphinx
+
 
   test_cuda_multi_gpu:
     machine:
@@ -216,10 +223,6 @@ jobs:
       - checkout
       - pip_install:
           args: "-n -d"
-      - lint_flake8
-      - ufmt_check
-      - unit_tests
-      - sphinx
       - configure_github_bot
       - deploy_site
 
