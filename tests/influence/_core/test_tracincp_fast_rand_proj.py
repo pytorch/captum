@@ -14,7 +14,6 @@ from tests.influence._utils.common import (
     _TestTracInIdentityRegressionCheckIdx,
     _TestTracInGetKMostInfluential,
     _TestTracInSelfInfluence,
-    _TestTracInDataLoader,
 )
 
 
@@ -25,7 +24,6 @@ class TestTracInCPFast(
     _TestTracInIdentityRegressionCheckIdx,
     _TestTracInGetKMostInfluential,
     _TestTracInSelfInfluence,
-    _TestTracInDataLoader,
     BaseTest,
 ):
     def setUp(self):
@@ -49,7 +47,6 @@ class TestTracInCPFastRandProjNoProjection(
     _TestTracInRegression1DNumerical,
     _TestTracInIdentityRegressionCheckIdx,
     _TestTracInGetKMostInfluential,
-    _TestTracInDataLoader,
     BaseTest,
 ):
     def setUp(self):
@@ -80,7 +77,6 @@ class TestTracInCPFastRandProjNoProjection(
 class TestTracInCPFastRandProj1DimensionalProjection(
     _TestTracInRegression1DCheckIdx,
     _TestTracInRegression20DCheckIdx,
-    _TestTracInDataLoader,
     BaseTest,
 ):
     def setUp(self):

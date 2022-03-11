@@ -61,7 +61,7 @@ INSIGHTS_FILE_SUBDIRS = [
 
 TUTORIALS_REQUIRES = INSIGHTS_REQUIRES + ["torchtext", "torchvision"]
 
-TEST_REQUIRES = ["pytest", "pytest-cov"]
+TEST_REQUIRES = ["pytest", "pytest-cov", "parameterized"]
 
 DEV_REQUIRES = (
     INSIGHTS_REQUIRES

@@ -34,7 +34,7 @@ else
 fi
 
 # install other deps
-conda install -y numpy sphinx pytest flake8 ipywidgets ipython scikit-learn
+conda install -y numpy sphinx pytest flake8 ipywidgets ipython scikit-learn parameterized
 conda install -y -c conda-forge matplotlib pytest-cov sphinx-autodoc-typehints mypy flask flask-compress
 # deps not available in conda
 pip install sphinxcontrib-katex

@@ -1,13 +1,23 @@
+import inspect
 import os
 import tempfile
+import unittest
 from collections import OrderedDict
-from typing import Optional, Callable
+from functools import partial
+from typing import Optional, Callable, List, Union, Iterator
 
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from tests.helpers.basic import BaseTest
-from tests.helpers.basic import assertTensorAlmostEqual
+from captum.influence import DataInfluence
+from captum.influence._core.tracincp_fast_rand_proj import (
+    TracInCPFast,
+    TracInCPFastRandProj,
+)
+from parameterized import parameterized
+from parameterized.parameterized import param
+from tests.helpers.basic import BaseTest, assertTensorAlmostEqual
+from torch.nn import Module
 from torch.utils.data import Dataset, DataLoader
 
 
@@ -912,67 +922,104 @@ class _TestTracInSelfInfluence:
         self._test_tracin_self_influence(unpack_inputs=True)
 
 
-class _TestTracInDataLoader:
-    """
-    This tests that the influence score computed when a Dataset is fed to the
-    `self.tracin_constructor` and when a DataLoader constructed using the same
-    Dataset is fed to `self.tracin_constructor` gives the same results.
-    """
+class DataInfluenceConstructor:
+    name: str = ""
+    data_influence_class: type
 
-    reduction: Optional[str] = None
-    tracin_constructor: Optional[Callable] = None
+    def __init__(
+        self, data_influence_class: type, name: Optional[str] = None, **kwargs
+    ):
+        self.data_influence_class = data_influence_class
+        self.name = name if name else data_influence_class.__name__
+        self.kwargs = kwargs
 
-    def _test_tracin_dataloader_helper(self, unpack_inputs):
+    def __repr__(self):
+        return self.name
 
-        with tempfile.TemporaryDirectory() as tmpdir:
-
-            batch_size = 5
-
-            (
+    def __call__(
+        self,
+        net: Module,
+        dataset: Union[Dataset, DataLoader],
+        tmpdir: Union[str, List[str], Iterator],
+        batch_size: Union[int, None],
+        loss_fn: Optional[Union[Module, Callable]],
+        **kwargs,
+    ) -> DataInfluence:
+        constuctor_kwargs = self.kwargs.copy()
+        constuctor_kwargs.update(kwargs)
+        if self.data_influence_class is TracInCPFastRandProj:
+            self.check_annoy()
+        if self.data_influence_class in [TracInCPFast, TracInCPFastRandProj]:
+            return self.data_influence_class(
                 net,
-                train_dataset,
-                test_samples,
-                test_labels,
-            ) = get_random_model_and_data(tmpdir, unpack_inputs, return_test_data=True)
-
-            assert isinstance(self.reduction, str)
-            criterion = nn.MSELoss(reduction=self.reduction)
-
-            assert callable(self.tracin_constructor)
-            tracin = self.tracin_constructor(
-                net,
-                train_dataset,
+                list(net.children())[-1],
+                dataset,
                 tmpdir,
-                batch_size,
-                criterion,
+                loss_fn=loss_fn,
+                batch_size=batch_size,
+                **constuctor_kwargs,
             )
-
-            train_scores = tracin.influence(
-                test_samples, test_labels, k=None, unpack_inputs=unpack_inputs
-            )
-
-            tracin_dataloader = self.tracin_constructor(
+        else:
+            return self.data_influence_class(
                 net,
-                DataLoader(train_dataset, batch_size=batch_size, shuffle=False),
+                dataset,
                 tmpdir,
-                None,
-                criterion,
+                batch_size=batch_size,
+                loss_fn=loss_fn,
+                **constuctor_kwargs,
             )
 
-            train_scores_dataloader = tracin_dataloader.influence(
-                test_samples, test_labels, k=None, unpack_inputs=unpack_inputs
+    def check_annoy(self) -> None:
+        try:
+            import annoy  # noqa
+        except ImportError:
+            raise unittest.SkipTest(
+                (
+                    f"Skipping tests for {self.data_influence_class.__name__}, "
+                    "because it requires the Annoy module."
+                )
             )
 
-            assertTensorAlmostEqual(
-                self,
-                train_scores,
-                train_scores_dataloader,
-                delta=0.0,
-                mode="max",
-            )
 
-    def test_tracin_dataloader(self):
-        self._test_tracin_dataloader_helper(unpack_inputs=False)
+def generate_test_name(
+    testcase_func: Callable,
+    param_num: str,
+    param: param,
+    args_to_skip: Optional[List[str]] = None,
+) -> str:
+    """
+    Creates human readable names for parameterized tests
+    """
 
-    def test_tracin_dataloader_unpack(self):
-        self._test_tracin_dataloader_helper(unpack_inputs=True)
+    if args_to_skip is None:
+        args_to_skip = []
+    param_strs = []
+
+    func_param_names = list(inspect.signature(testcase_func).parameters)
+    # skip the first 'self' parameter
+    if func_param_names[0] == "self":
+        func_param_names = func_param_names[1:]
+
+    for i, arg in enumerate(param.args):
+        if func_param_names[i] in args_to_skip:
+            continue
+        if isinstance(arg, bool):
+            if arg:
+                param_strs.append(func_param_names[i])
+        else:
+            args_str = str(arg)
+            if args_str.isnumeric():
+                param_strs.append(func_param_names[i])
+            param_strs.append(args_str)
+    return "%s_%s" % (
+        testcase_func.__name__,
+        parameterized.to_safe_name("_".join(param_strs)),
+    )
+
+
+def build_test_name_func(args_to_skip: Optional[List[str]] = None):
+    """
+    Returns function to generate human readable names for parameterized tests
+    """
+
+    return partial(generate_test_name, args_to_skip=args_to_skip)
