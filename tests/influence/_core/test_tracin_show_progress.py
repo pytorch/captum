@@ -8,6 +8,7 @@ import torch.nn as nn
 from captum.influence._core.tracincp import TracInCP
 from captum.influence._core.tracincp_fast_rand_proj import (
     TracInCPFast,
+    TracInCPFastRandProj,
 )
 from parameterized import parameterized
 from tests.helpers.basic import BaseTest
@@ -48,7 +49,8 @@ class TestTracInShowProgress(BaseTest):
                 ),
             ]
             for mode in ["self influence", "influence", "k-most"]
-        ],
+        ]
+        + [("sum", DataInfluenceConstructor(TracInCPFastRandProj), "pre-processing")],
         name_func=build_test_name_func(args_to_skip=["reduction"]),
     )
     @unittest.mock.patch("sys.stderr", new_callable=io.StringIO)
@@ -77,89 +79,107 @@ class TestTracInShowProgress(BaseTest):
             criterion = nn.MSELoss(reduction=reduction)
 
             self.assertTrue(callable(tracin_constructor))
-            tracin = tracin_constructor(
-                net,
-                train_dataset,
-                tmpdir,
-                batch_size,
-                criterion,
-            )
+            if mode != "pre-processing":
+                tracin = tracin_constructor(
+                    net,
+                    train_dataset,
+                    tmpdir,
+                    batch_size,
+                    criterion,
+                )
 
-            if mode == "self influence":
-                tracin.influence(show_progress=True)
-                output = mock_stderr.getvalue()
-                self.assertTrue(
-                    (
+                if mode == "self influence":
+                    tracin.influence(show_progress=True)
+                    output = mock_stderr.getvalue()
+                    self.assertTrue(
                         (
-                            f"Using {tracin.get_name()} to compute self influence "
-                            "for training batches: 100%"
-                        )
-                        in output
-                    ),
-                    f"Error progress output: {repr(output)}",
-                )
-            elif mode == "influence":
+                            (
+                                f"Using {tracin.get_name()} to compute self influence "
+                                "for training batches: 100%"
+                            )
+                            in output
+                        ),
+                        f"Error progress output: {repr(output)}",
+                    )
+                elif mode == "influence":
 
-                tracin.influence(
-                    test_samples,
-                    test_labels,
-                    k=None,
-                    show_progress=True,
-                )
-                output = mock_stderr.getvalue()
-                self.assertTrue(
-                    (
+                    tracin.influence(
+                        test_samples,
+                        test_labels,
+                        k=None,
+                        show_progress=True,
+                    )
+                    output = mock_stderr.getvalue()
+                    self.assertTrue(
                         (
-                            f"Using {tracin.get_name()} to compute influence "
-                            "for training batches: 100%"
-                        )
-                        in output
-                    ),
-                    f"Error progress output: {repr(output)}",
-                )
-            elif mode == "k-most":
+                            (
+                                f"Using {tracin.get_name()} to compute influence "
+                                "for training batches: 100%"
+                            )
+                            in output
+                        ),
+                        f"Error progress output: {repr(output)}",
+                    )
+                elif mode == "k-most":
 
-                tracin.influence(
-                    test_samples,
-                    test_labels,
-                    k=2,
-                    proponents=True,
-                    show_progress=True,
-                )
-                output = mock_stderr.getvalue()
-                self.assertTrue(
-                    (
+                    tracin.influence(
+                        test_samples,
+                        test_labels,
+                        k=2,
+                        proponents=True,
+                        show_progress=True,
+                    )
+                    output = mock_stderr.getvalue()
+                    self.assertTrue(
                         (
-                            f"Using {tracin.get_name()} to perform computation for "
-                            "getting proponents. Processing training batches: 100%"
-                        )
-                        in output
-                    ),
-                    f"Error progress output: {repr(output)}",
-                )
-                mock_stderr.seek(0)
-                mock_stderr.truncate(0)
+                            (
+                                f"Using {tracin.get_name()} to perform computation for "
+                                "getting proponents. Processing training batches: 100%"
+                            )
+                            in output
+                        ),
+                        f"Error progress output: {repr(output)}",
+                    )
+                    mock_stderr.seek(0)
+                    mock_stderr.truncate(0)
 
-                tracin.influence(
-                    test_samples,
-                    test_labels,
-                    k=2,
-                    proponents=False,
-                    show_progress=True,
-                )
-                output = mock_stderr.getvalue()
-                self.assertTrue(
-                    (
+                    tracin.influence(
+                        test_samples,
+                        test_labels,
+                        k=2,
+                        proponents=False,
+                        show_progress=True,
+                    )
+                    output = mock_stderr.getvalue()
+                    self.assertTrue(
                         (
-                            f"Using {tracin.get_name()} to perform computation for "
-                            "getting opponents. Processing training batches: 100%"
-                        )
-                        in output
-                    ),
-                    f"Error progress output: {repr(output)}",
-                )
+                            (
+                                f"Using {tracin.get_name()} to perform computation for "
+                                "getting opponents. Processing training batches: 100%"
+                            )
+                            in output
+                        ),
+                        f"Error progress output: {repr(output)}",
+                    )
+                else:
+                    raise Exception("unknown test mode")
             else:
-                raise Exception("unknown test mode")
-
+                tracin = tracin_constructor(
+                    net,
+                    train_dataset,
+                    tmpdir,
+                    batch_size,
+                    criterion,
+                    show_progress=True,
+                )
+                output = mock_stderr.getvalue()
+                self.assertTrue(
+                    (
+                        f"doing preprocessing when initializing {tracin.get_name()}. "
+                        'computing "embedding" vectors for batches: 100%'
+                    )
+                    in output,
+                    f"Error progress output: {repr(output)}",
+                )
             mock_stderr.seek(0)
             mock_stderr.truncate(0)
