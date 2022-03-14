@@ -125,19 +125,7 @@ commands:
 
 jobs:
 
-  lint_test_py36_pip:
-    docker:
-      - image: circleci/python:3.6.8
-    steps:
-      - checkout
-      - pip_install:
-          args: "-n"
-      - lint_flake8
-      - ufmt_check
-      - unit_tests
-      - sphinx
-
-  lint_test_py36_pip_release:
+  lint_py36:
     docker:
       - image: circleci/python:3.6.8
     steps:
@@ -145,9 +133,26 @@ jobs:
       - pip_install
       - lint_flake8
       - ufmt_check
+      - sphinx
+
+  test_py36_pip:
+    docker:
+      - image: circleci/python:3.6.8
+    steps:
+      - checkout
+      - pip_install:
+          args: "-n"
       - mypy_check
       - unit_tests
-      - sphinx
+
+  test_py36_pip_release:
+    docker:
+      - image: circleci/python:3.6.8
+    steps:
+      - checkout
+      - pip_install
+      - mypy_check
+      - unit_tests
 
   test_py36_pip_torch_1_6:
     docker:
@@ -186,17 +191,15 @@ jobs:
       - unit_tests
 
 
-  lint_test_py37_conda:
+  test_py37_conda:
     docker:
       - image: continuumio/miniconda3
     steps:
       - checkout
       - conda_install:
           args: "-n"
-      - lint_flake8
-      - ufmt_check
       - unit_tests
-      - sphinx
+
 
   test_cuda_multi_gpu:
     machine:
@@ -216,10 +219,6 @@ jobs:
       - checkout
       - pip_install:
           args: "-n -d"
-      - lint_flake8
-      - ufmt_check
-      - unit_tests
-      - sphinx
       - configure_github_bot
       - deploy_site
 
@@ -237,11 +236,13 @@ workflows:
 
   lint_and_test:
     jobs:
-      - lint_test_py36_pip:
+      - lint_py36:
           filters: *exclude_ghpages_fbconfig
-      - lint_test_py36_pip_release:
+      - test_py36_pip:
           filters: *exclude_ghpages_fbconfig
-      - lint_test_py37_conda:
+      - test_py36_pip_release:
+          filters: *exclude_ghpages_fbconfig
+      - test_py37_conda:
           filters: *exclude_ghpages_fbconfig
       - test_py36_pip_torch_1_6:
           filters: *exclude_ghpages_fbconfig
