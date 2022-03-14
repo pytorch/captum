@@ -4,7 +4,17 @@ import glob
 import warnings
 from abc import abstractmethod
 from os.path import join
-from typing import Any, Callable, Iterator, List, Optional, Union, Tuple, NamedTuple
+from typing import (
+    Any,
+    Callable,
+    Iterator,
+    List,
+    Optional,
+    Union,
+    Tuple,
+    NamedTuple,
+    Type,
+)
 
 import torch
 from captum._utils.av import AV
@@ -12,6 +22,7 @@ from captum._utils.gradient import (
     _compute_jacobian_wrt_params,
     _compute_jacobian_wrt_params_with_sample_wise_trick,
 )
+from captum._utils.progress import progress
 from captum.influence._core.influence import DataInfluence
 from captum.influence._utils.common import (
     _gradient_dot_product,
@@ -165,13 +176,33 @@ class TracInCPBase(DataInfluence):
         else:
             self.influence_src_dataloader = influence_src_dataset
 
+        self.influence_src_dataloader_len: Optional[int] = None
+        try:
+
+            # since we will calculate the number of batches in
+            # `self.influence_src_dataloader` whenever we use progress bar, calculate
+            # it once in initialization, for re-use.
+            self.influence_src_dataloader_len = len(self.influence_src_dataloader)
+        except AttributeError:
+            pass
+
     @abstractmethod
-    def _self_influence(self):
+    def _self_influence(self, show_progress: bool = False):
         """
         Returns:
             self influence scores (tensor): 1D tensor containing self influence
                     scores for all examples in training dataset
                     `influence_src_dataset`.
+            show_progress (bool, optional): To compute the self influence scores for
+                    all examples in training dataset `influence_src_dataset`, we
+                    compute the self influence scores for each batch. If
+                    `show_progress`is true, the progress of this computation will be
+                    displayed. In particular, the number of batches for which self
+                    influence scores have been computed will be displayed. It will
+                    try to use tqdm if available for advanced features (e.g. time
+                    estimation). Otherwise, it will fallback to a simple output of
+                    progress.
+                    Default: False
         """
         pass
 
@@ -182,6 +213,7 @@ class TracInCPBase(DataInfluence):
         targets: Optional[Tensor] = None,
         k: int = 5,
         proponents: bool = True,
+        show_progress: bool = False,
     ) -> KMostInfluentialResults:
         r"""
         Args:
@@ -196,6 +228,15 @@ class TracInCPBase(DataInfluence):
             proponents (bool, optional): Whether seeking proponents (`proponents=True`)
                     or opponents (`proponents=False`)
                     Default: True
+            show_progress (bool, optional): To compute the proponents (or opponents)
+                    for the batch of examples, we perform computation for each batch in
+                    training dataset `influence_src_dataset`, If `show_progress`is
+                    true, the progress of this computation will be displayed. In
+                    particular, the number of batches for which the computation has
+                    been performed will be displayed. It will try to use tqdm if
+                    available for advanced features (e.g. time estimation). Otherwise,
+                    it will fallback to a simple output of progress.
+                    Default: False
 
         Returns:
             (indices, influence_scores) (namedtuple): `indices` is a torch.long Tensor
@@ -220,6 +261,7 @@ class TracInCPBase(DataInfluence):
         self,
         inputs: Tuple[Any, ...],
         targets: Optional[Tensor] = None,
+        show_progress: bool = False,
     ) -> Tensor:
         r"""
         Args:
@@ -237,6 +279,15 @@ class TracInCPBase(DataInfluence):
                     (inputs_batch_size, src_dataset_size). For example:
                     influence_scores[i][j] = the influence score for the j-th training
                     example to the i-th input example.
+            show_progress (bool, optional): To compute the influence of examples in
+                    training dataset `influence_src_dataset`, we compute the influence
+                    of each batch. If `show_progress`is true, the progress of this
+                    computation will be displayed. In particular, the number of batches
+                    for which influence has been computed will be displayed. It will
+                    try to use tqdm if available for advanced features (e.g. time
+                    estimation). Otherwise, it will fallback to a simple output of
+                    progress.
+                    Default: False
         """
         pass
 
@@ -248,6 +299,7 @@ class TracInCPBase(DataInfluence):
         k: Optional[int] = None,
         proponents: bool = True,
         unpack_inputs: bool = True,
+        show_progress: bool = False,
     ) -> Union[Tensor, KMostInfluentialResults]:
         r"""
         This is the key method of this class, and can be run in 3 different modes,
@@ -300,6 +352,16 @@ class TracInCPBase(DataInfluence):
                     when passing it to `model`, if `inputs` is a tuple (no unpacking
                     done otherwise).
                     Default: True
+            show_progress (bool, optional): For all modes, computation of results
+                    requires "training dataset computations": computations for each
+                    batch in the training dataset `influence_src_dataset`, which may
+                    take a long time. If `show_progress`is true, the progress of
+                    "training dataset computations" will be displayed. In particular,
+                    the number of batches for which computations have been performed
+                    will be displayed. It will try to use tqdm if available for
+                    advanced features (e.g. time estimation). Otherwise, it will
+                    fallback to a simple output of progress.
+                    Default: False
 
         Returns:
             The return value of this method depends on which mode is run.
@@ -335,11 +397,25 @@ class TracInCPBase(DataInfluence):
         _inputs = _format_inputs(inputs, unpack_inputs)
 
         if inputs is None:
-            return self._self_influence()
+            return self._self_influence(show_progress)
         elif k is None:
-            return self._influence(_inputs, targets)
+            return self._influence(_inputs, targets, show_progress)
         else:
-            return self._get_k_most_influential(_inputs, targets, k, proponents)
+            return self._get_k_most_influential(
+                _inputs, targets, k, proponents, show_progress
+            )
+
+    @classmethod
+    def get_name(cls: Type["TracInCPBase"]) -> str:
+        r"""
+        Create readable class name.  Due to the nature of the names of `TracInCPBase`
+        subclasses, simplies returns the class name.  For example, for a class called
+        TracInCP, we return the string TracInCP.
+
+        Returns:
+            name (str): a readable class name
+        """
+        return cls.__name__
 
 
 class TracInCP(TracInCPBase):
@@ -555,6 +631,7 @@ class TracInCP(TracInCPBase):
         self,
         inputs: Tuple[Any, ...],
         targets: Optional[Tensor] = None,
+        show_progress: bool = False,
     ) -> Tensor:
         r"""
         Computes the influence of examples in training dataset `influence_src_dataset`
@@ -570,6 +647,15 @@ class TracInCP(TracInCPBase):
             targets (tensor, optional): If computing influence scores on a loss
                     function, these are the labels corresponding to the batch `inputs`.
                     Default: None
+            show_progress (bool, optional): To compute the influence of examples in
+                    training dataset `influence_src_dataset`, we compute the influence
+                    of each batch. If `show_progress`is true, the progress of this
+                    computation will be displayed. In particular, the number of batches
+                    for which influence has been computed will be displayed. It will
+                    try to use tqdm if available for advanced features (e.g. time
+                    estimation). Otherwise, it will fallback to a simple output of
+                    progress.
+                    Default: False
 
         Returns:
             influence_scores (tensor): Influence scores from the TracInCP method.
@@ -580,10 +666,22 @@ class TracInCP(TracInCPBase):
             `influence_scores[i][j]` is the influence score for the j-th training
             example to the i-th input example.
         """
+        influence_src_dataloader = self.influence_src_dataloader
+
+        if show_progress:
+            influence_src_dataloader = progress(
+                influence_src_dataloader,
+                desc=(
+                    f"Using {self.get_name()} to compute "
+                    "influence for training batches"
+                ),
+                total=self.influence_src_dataloader_len,
+            )
+
         return torch.cat(
             [
                 self._influence_batch_tracincp(inputs, targets, batch)
-                for batch in self.influence_src_dataloader
+                for batch in influence_src_dataloader
             ],
             dim=1,
         )
@@ -594,6 +692,7 @@ class TracInCP(TracInCPBase):
         targets: Optional[Tensor] = None,
         k: int = 5,
         proponents: bool = True,
+        show_progress: bool = False,
     ) -> KMostInfluentialResults:
         r"""
         Args:
@@ -608,6 +707,15 @@ class TracInCP(TracInCPBase):
             proponents (bool, optional): Whether seeking proponents (`proponents=True`)
                     or opponents (`proponents=False`)
                     Default: True
+            show_progress (bool, optional): To compute the proponents (or opponents)
+                    for the batch of examples, we perform computation for each batch in
+                    training dataset `influence_src_dataset`, If `show_progress`is
+                    true, the progress of this computation will be displayed. In
+                    particular, the number of batches for which the computation has
+                    been performed will be displayed. It will try to use tqdm if
+                    available for advanced features (e.g. time estimation). Otherwise,
+                    it will fallback to a simple output of progress.
+                    Default: False
 
         Returns:
             (indices, influence_scores) (namedtuple): `indices` is a torch.long Tensor
@@ -625,6 +733,17 @@ class TracInCP(TracInCPBase):
                     on example `i` in the test batch represented by `inputs` and
                     `targets`.
         """
+        desc = (
+            None
+            if not show_progress
+            else (
+                (
+                    f"Using {self.get_name()} to perform computation for "
+                    f'getting {"proponents" if proponents else "opponents"}. '
+                    "Processing training batches: 100%"
+                )
+            )
+        )
         return KMostInfluentialResults(
             *_get_k_most_influential_helper(
                 self.influence_src_dataloader,
@@ -633,6 +752,8 @@ class TracInCP(TracInCPBase):
                 targets,
                 k,
                 proponents,
+                show_progress,
+                desc,
             )
         )
 
@@ -680,17 +801,39 @@ class TracInCP(TracInCPBase):
 
         return batch_self_tracin_scores
 
-    def _self_influence(self):
+    def _self_influence(self, show_progress: bool = False):
         """
         Returns:
             self influence scores (tensor): 1D tensor containing self influence
                     scores for all examples in training dataset
                     `influence_src_dataset`.
+            show_progress (bool, optional): To compute the self influence scores for
+                    all examples in training dataset `influence_src_dataset`, we
+                    compute the self influence scores for each batch. If
+                    `show_progress`is true, the progress of this computation will be
+                    displayed. In particular, the number of batches for which self
+                    influence scores have been computed will be displayed. It will
+                    try to use tqdm if available for advanced features (e.g. time
+                    estimation). Otherwise, it will fallback to a simple output of
+                    progress.
+                    Default: False
         """
+        influence_src_dataloader = self.influence_src_dataloader
+
+        if show_progress:
+            influence_src_dataloader = progress(
+                influence_src_dataloader,
+                desc=(
+                    f"Using {self.get_name()} to compute self "
+                    "influence for training batches"
+                ),
+                total=self.influence_src_dataloader_len,
+            )
+
         return torch.cat(
             [
                 self._self_influence_batch_tracincp(batch)
-                for batch in self.influence_src_dataloader
+                for batch in influence_src_dataloader
             ],
             dim=0,
         )

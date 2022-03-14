@@ -5,6 +5,7 @@ from typing import Any, Callable, Iterator, List, Optional, Union, Tuple
 
 import torch
 from captum._utils.common import _get_module_from_name
+from captum._utils.progress import progress
 from captum.influence._core.tracincp import TracInCPBase, KMostInfluentialResults
 from captum.influence._utils.common import (
     _jacobian_loss_wrt_inputs,
@@ -12,6 +13,7 @@ from captum.influence._utils.common import (
     _tensor_batch_dot,
     _get_k_most_influential_helper,
     _DatasetFromList,
+    _format_inputs,
 )
 from captum.influence._utils.nearest_neighbors import (
     NearestNeighbors,
@@ -207,6 +209,7 @@ class TracInCPFast(TracInCPBase):
         self,
         inputs: Tuple[Any, ...],
         targets: Tensor,
+        show_progress: bool = False,
     ) -> Tensor:
         r"""
         Computes the influence of examples in training dataset `influence_src_dataset`
@@ -222,6 +225,15 @@ class TracInCPFast(TracInCPBase):
             targets (tensor): The labels corresponding to the batch `inputs`. This
                     method is designed to be applied for a loss function, so labels
                     are required.
+            show_progress (bool, optional): To compute the influence of examples in
+                    training dataset `influence_src_dataset`, we compute the influence
+                    of each batch. If `show_progress`is true, the progress of this
+                    computation will be displayed. In particular, the number of batches
+                    for which influence has been computed will be displayed. It will
+                    try to use tqdm if available for advanced features (e.g. time
+                    estimation). Otherwise, it will fallback to a simple output of
+                    progress.
+                    Default: False
 
         Returns:
             influence_scores (tensor): Influence scores from the TracInCPFast method.
@@ -233,10 +245,23 @@ class TracInCPFast(TracInCPBase):
             example to the i-th input example.
         """
         assert targets is not None
+
+        influence_src_dataloader = self.influence_src_dataloader
+
+        if show_progress:
+            influence_src_dataloader = progress(
+                influence_src_dataloader,
+                desc=(
+                    f"Using {self.get_name()} to compute "
+                    "influence for training batches"
+                ),
+                total=self.influence_src_dataloader_len,
+            )
+
         return torch.cat(
             [
                 self._influence_batch_tracincp_fast(inputs, targets, batch)
-                for batch in self.influence_src_dataloader
+                for batch in influence_src_dataloader
             ],
             dim=1,
         )
@@ -247,6 +272,7 @@ class TracInCPFast(TracInCPBase):
         targets: Tensor,
         k: int = 5,
         proponents: bool = True,
+        show_progress: bool = False,
     ) -> KMostInfluentialResults:
         r"""
         Args:
@@ -261,6 +287,15 @@ class TracInCPFast(TracInCPBase):
             proponents (bool, optional): Whether seeking proponents (`proponents=True`)
                     or opponents (`proponents=False`)
                     Default: True
+            show_progress (bool, optional): To compute the proponents (or opponents)
+                    for the batch of examples, we perform computation for each batch in
+                    training dataset `influence_src_dataset`, If `show_progress`is
+                    true, the progress of this computation will be displayed. In
+                    particular, the number of batches for which the computation has
+                    been performed will be displayed. It will try to use tqdm if
+                    available for advanced features (e.g. time estimation). Otherwise,
+                    it will fallback to a simple output of progress.
+                    Default: False
 
         Returns:
             (indices, influence_scores) (namedtuple): `indices` is a torch.long Tensor
@@ -278,6 +313,17 @@ class TracInCPFast(TracInCPBase):
                     on example `i` in the test batch represented by `inputs` and
                     `targets`.
         """
+        desc = (
+            None
+            if not show_progress
+            else (
+                (
+                    f"Using {self.get_name()} to perform computation for "
+                    f'getting {"proponents" if proponents else "opponents"}. '
+                    "Processing training batches: 100%"
+                )
+            )
+        )
         return KMostInfluentialResults(
             *_get_k_most_influential_helper(
                 self.influence_src_dataloader,
@@ -286,6 +332,8 @@ class TracInCPFast(TracInCPBase):
                 targets,
                 k,
                 proponents,
+                show_progress,
+                desc,
             )
         )
 
@@ -319,17 +367,39 @@ class TracInCPFast(TracInCPBase):
 
         return batch_self_tracin_scores
 
-    def _self_influence(self):
+    def _self_influence(self, show_progress: bool = False):
         """
         Returns:
             self influence scores (tensor): 1D tensor containing self influence
                     scores for all examples in training dataset
                     `influence_src_dataset`.
+            show_progress (bool, optional): To compute the self influence scores for
+                    all examples in training dataset `influence_src_dataset`, we
+                    compute the self influence scores for each batch. If
+                    `show_progress`is true, the progress of this computation will be
+                    displayed. In particular, the number of batches for which self
+                    influence scores have been computed will be displayed. It will
+                    try to use tqdm if available for advanced features (e.g. time
+                    estimation). Otherwise, it will fallback to a simple output of
+                    progress.
+                    Default: False
         """
+        influence_src_dataloader = self.influence_src_dataloader
+
+        if show_progress:
+            influence_src_dataloader = progress(
+                influence_src_dataloader,
+                desc=(
+                    f"Using {self.get_name()} to compute self "
+                    "influence for training batches"
+                ),
+                total=self.influence_src_dataloader_len,
+            )
+
         return torch.cat(
             [
                 self._self_influence_batch_tracincp_fast(batch)
-                for batch in self.influence_src_dataloader
+                for batch in influence_src_dataloader
             ],
             dim=0,
         )
@@ -740,14 +810,19 @@ class TracInCPFastRandProj(TracInCPFast):
               `influence_scores[i][j]` is the influence score of the `j`-th
               example in `influence_src_dataset` on the `i`-th example in the
               test batch.
-            - most influential mode: if this mode is run (`inputs` is not None,
-              `k` is an int), returns `indices`, which is a 2D tensor of shape
-              `(input_size, k)`, where `input_size` is the number of examples
-              in the test batch. If computing proponents (resp. opponents),
-              `indices[i][j]` is the index in training dataset
-              `influence_src_dataset` of the example with the `j`-th highest
-              (resp. lowest) influence score (out of the examples in
-              `influence_src_dataset`) on the `i`-th example in the test batch.
+            - k-most influential mode: if this mode is run (`inputs` is not None,
+              `k` is an int), returns a namedtuple `(indices, influence_scores)`.
+              `indices` is a 2D tensor of shape `(input_size, k)`, where
+              `input_size` is the number of examples in the test batch. If
+              computing proponents (resp. opponents), `indices[i][j]` is the
+              index in training dataset `influence_src_dataset` of the example
+              with the `j`-th highest (resp. lowest) influence score (out of the
+              examples in `influence_src_dataset`) on the `i`-th example in the
+              test batch. `influence_scores` contains the corresponding influence
+              scores. In particular, `influence_scores[i][j]` is the influence
+              score of example `indices[i][j]` in `influence_src_dataset` on
+              example `i` in the test batch represented by `inputs` and
+              `targets`.
         """
         msg = (
             "Since `inputs` is None, this suggests `TracInCPFastRandProj` is being "
@@ -757,9 +832,20 @@ class TracInCPFastRandProj(TracInCPFast):
             "please use `TracInCPFast` instead."
         )
         assert inputs is not None, msg
-        return TracInCPBase.influence(
-            self, inputs, targets, k, proponents, unpack_inputs
-        )
+
+        _inputs = _format_inputs(inputs, unpack_inputs)
+
+        if inputs is None:
+            return self._self_influence()
+        elif k is None:
+            return self._influence(_inputs, targets)
+        else:
+            return self._get_k_most_influential(
+                _inputs,
+                targets,
+                k,
+                proponents,
+            )
 
     def _set_projections_tracincp_fast_rand_proj(
         self,

@@ -4,6 +4,7 @@ from typing import Callable, Optional, Tuple, Union, Any, List
 
 import torch
 import torch.nn as nn
+from captum._utils.progress import progress
 from torch import Tensor
 from torch.nn import Module
 from torch.utils.data import DataLoader, Dataset
@@ -141,6 +142,8 @@ def _get_k_most_influential_helper(
     targets: Optional[Tensor],
     k: int = 5,
     proponents: bool = True,
+    show_progress: bool = False,
+    desc: Optional[str] = None,
 ) -> Tuple[Tensor, Tensor]:
     r"""
     Helper function that computes the quantities returned by
@@ -164,6 +167,19 @@ def _get_k_most_influential_helper(
         proponents (bool, optional): Whether seeking proponents (`proponents=True`)
                 or opponents (`proponents=False`)
                 Default: True
+        show_progress (bool, optional): To compute the proponents (or opponents)
+                for the batch of examples, we perform computation for each batch in
+                training dataset `influence_src_dataloader`, If `show_progress`is
+                true, the progress of this computation will be displayed. In
+                particular, the number of batches for which the computation has
+                been performed will be displayed. It will try to use tqdm if
+                available for advanced features (e.g. time estimation). Otherwise,
+                it will fallback to a simple output of progress.
+                Default: False
+        desc (str, optional): If `show_progress` is true, this is the description to
+                show when displaying progress. If `desc` is none, no description is
+                shown.
+                Default: None
 
     Returns:
         (indices, influence_scores): `indices` is a torch.long Tensor that contains the
@@ -189,6 +205,19 @@ def _get_k_most_influential_helper(
 
     # needed to map from relative index in a batch fo index within entire `dataloader`
     num_instances_processed = 0
+
+    # if show_progress, create progress bar
+    total: Optional[int] = None
+    if show_progress:
+        try:
+            total = len(influence_src_dataloader)
+        except AttributeError:
+            pass
+        influence_src_dataloader = progress(
+            influence_src_dataloader,
+            desc=desc,
+            total=total,
+        )
 
     for batch in influence_src_dataloader:
 
