@@ -39,7 +39,7 @@ class InputOptimization(Objective, Parameterized):
 
     def __init__(
         self,
-        model: nn.Module,
+        model: Optional[nn.Module],
         loss_function: LossFunction,
         input_param: Optional[InputParameterization] = None,
         transform: Optional[nn.Module] = None,
@@ -56,7 +56,7 @@ class InputOptimization(Objective, Parameterized):
                         optimization.
             lr (float): The learning rate to use with the Adam optimizer.
         """
-        self.model = model
+        self.model = model or nn.Identity()
         # Grab targets from loss_function
         if hasattr(loss_function.target, "__iter__") and not isinstance(
             loss_function.target, nn.Module
