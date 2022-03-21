@@ -58,9 +58,8 @@ class InputOptimization(Objective, Parameterized):
         """
         self.model = model or nn.Identity()
         # Grab targets from loss_function
-        if hasattr(loss_function.target, "__iter__") and not isinstance(
-            loss_function.target, nn.Module
-        ):
+        assert hasattr(loss_function, "target")
+        if isinstance(loss_function.target, list):
             self.hooks = ModuleOutputsHook(loss_function.target)
         else:
             self.hooks = ModuleOutputsHook([loss_function.target])
