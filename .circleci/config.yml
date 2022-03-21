@@ -234,7 +234,7 @@ aliases:
 
 workflows:
 
-  lint_and_test:
+  lint_test_and_deploy_site:
     jobs:
       - lint_py36:
           filters: *exclude_ghpages_fbconfig
@@ -255,9 +255,17 @@ workflows:
       - test_cuda_multi_gpu:
           filters: *exclude_ghpages_fbconfig
 
-  auto_deploy_site:
-    jobs:
       - auto_deploy_site:
+          requires:
+            - lint_py36
+            - test_py36_pip
+            - test_py36_pip_release
+            - test_py37_conda
+            - test_py36_pip_torch_1_6
+            - test_py36_pip_torch_1_7
+            - test_py36_pip_torch_1_8
+            - test_py36_pip_torch_1_9
+            - test_cuda_multi_gpu
           filters:
             branches:
               only:
