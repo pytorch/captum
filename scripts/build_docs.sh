@@ -50,7 +50,7 @@ WEBSITE_SPHINX_DIR='website/static/_sphinx/'
 mkdir -p $WEBSITE_SPHINX_DIR
 
 # move static files from /sphinx/build/html/_static/*:
-for js_file in 'documentation_options.js' \
+for sphinx_static_file in 'documentation_options.js' \
                'jquery.js' \
                'underscore.js' \
                'doctools.js' \
@@ -60,7 +60,7 @@ for js_file in 'documentation_options.js' \
                'pygments.css' \
                'katex-math.css'
 do
-  cp "${SPHINX_STATIC_DIR}${js_file}" "${WEBSITE_SPHINX_DIR}${js_file}"
+  cp "${SPHINX_STATIC_DIR}${sphinx_static_file}" "${WEBSITE_SPHINX_DIR}${sphinx_static_file}"
 done
 
 # searchindex.js is not static util
