@@ -5,8 +5,8 @@ from typing import Any, List, Tuple, Union
 import torch
 import torch.nn.functional as F
 from captum._utils.common import (
-    _format_input,
     _format_output,
+    _format_tensor_into_tuples,
     _is_tuple,
     _register_backward_hook,
 )
@@ -57,7 +57,7 @@ class ModifiedReluGradientAttribution(GradientAttribution):
         # converting it into a tuple.
         is_inputs_tuple = _is_tuple(inputs)
 
-        inputs = _format_input(inputs)
+        inputs = _format_tensor_into_tuples(inputs)
         gradient_mask = apply_gradient_requirements(inputs)
 
         # set hooks for overriding ReLU gradients

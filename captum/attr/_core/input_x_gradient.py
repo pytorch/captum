@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 from typing import Any, Callable
 
-from captum._utils.common import _format_input, _format_output, _is_tuple
+from captum._utils.common import _format_output, _format_tensor_into_tuples, _is_tuple
 from captum._utils.gradient import (
     apply_gradient_requirements,
     undo_gradient_requirements,
@@ -111,7 +111,7 @@ class InputXGradient(GradientAttribution):
         # converting it into a tuple.
         is_inputs_tuple = _is_tuple(inputs)
 
-        inputs = _format_input(inputs)
+        inputs = _format_tensor_into_tuples(inputs)
         gradient_mask = apply_gradient_requirements(inputs)
 
         gradients = self.gradient_func(

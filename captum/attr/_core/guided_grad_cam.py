@@ -3,7 +3,7 @@ import warnings
 from typing import Any, List, Union
 
 import torch
-from captum._utils.common import _format_input, _format_output, _is_tuple
+from captum._utils.common import _format_output, _format_tensor_into_tuples, _is_tuple
 from captum._utils.typing import TargetType, TensorOrTupleOfTensorsGeneric
 from captum.attr._core.guided_backprop_deconvnet import GuidedBackprop
 from captum.attr._core.layer.grad_cam import LayerGradCam
@@ -182,7 +182,7 @@ class GuidedGradCam(GradientAttribution):
             >>> attribution = guided_gc.attribute(input, 3)
         """
         is_inputs_tuple = _is_tuple(inputs)
-        inputs = _format_input(inputs)
+        inputs = _format_tensor_into_tuples(inputs)
         grad_cam_attr = self.grad_cam.attribute.__wrapped__(
             self.grad_cam,  # self
             inputs=inputs,

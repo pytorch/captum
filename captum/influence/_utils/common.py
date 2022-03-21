@@ -124,16 +124,6 @@ def _load_flexible_state_dict(
     return learning_rate
 
 
-def _format_inputs(inputs: Any, unpack_inputs: bool):
-    if inputs is None:
-        return None
-    return (
-        inputs
-        if (isinstance(inputs, tuple) or isinstance(inputs, list)) and unpack_inputs
-        else (inputs,)
-    )
-
-
 def _get_k_most_influential_helper(
     influence_src_dataloader: DataLoader,
     influence_batch_fn: Callable,

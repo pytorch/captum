@@ -9,7 +9,6 @@ from captum._utils.common import (
     _expand_target,
     _format_additional_forward_args,
     _format_baseline,
-    _format_input,
     _format_tensor_into_tuples,
     _run_forward,
     safe_div,
@@ -74,8 +73,8 @@ def infidelity_perturb_func_decorator(multipy_by_inputs: bool = True) -> Callabl
                 if baselines is not None
                 else pertub_func(inputs)
             )
-            inputs_perturbed = _format_input(inputs_perturbed)
-            inputs = _format_input(inputs)
+            inputs_perturbed = _format_tensor_into_tuples(inputs_perturbed)
+            inputs = _format_tensor_into_tuples(inputs)
             baselines = _format_baseline(baselines, inputs)
             if baselines is None:
                 perturbations = tuple(
@@ -533,7 +532,7 @@ def infidelity(
         return tuple(agg_t + t for agg_t, t in zip(agg_tensors, tensors))
 
     # perform argument formattings
-    inputs = _format_input(inputs)  # type: ignore
+    inputs = _format_tensor_into_tuples(inputs)  # type: ignore
     if baselines is not None:
         baselines = _format_baseline(baselines, cast(Tuple[Tensor, ...], inputs))
     additional_forward_args = _format_additional_forward_args(additional_forward_args)

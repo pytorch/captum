@@ -4,8 +4,12 @@ from inspect import signature
 from typing import TYPE_CHECKING, Any, Callable, List, Tuple, Union
 
 import torch
-from captum._utils.common import _format_baseline, _format_input, _format_output
-from captum._utils.common import _validate_input as _validate_input_basic
+from captum._utils.common import (
+    _format_baseline,
+    _format_output,
+    _format_tensor_into_tuples,
+    _validate_input as _validate_input_basic,
+)
 from captum._utils.typing import (
     BaselineType,
     Literal,
@@ -81,7 +85,7 @@ def _format_input_baseline(
 def _format_input_baseline(
     inputs: Union[Tensor, Tuple[Tensor, ...]], baselines: BaselineType
 ) -> Tuple[Tuple[Tensor, ...], Tuple[Union[Tensor, int, float], ...]]:
-    inputs = _format_input(inputs)
+    inputs = _format_tensor_into_tuples(inputs)
     baselines = _format_baseline(baselines, inputs)
     return inputs, baselines
 
@@ -137,7 +141,7 @@ def _format_callable_baseline(
             baselines = baselines()
         else:
             baselines = baselines(inputs)
-    return _format_baseline(baselines, _format_input(inputs))
+    return _format_baseline(baselines, _format_tensor_into_tuples(inputs))
 
 
 def _format_and_verify_strides(

@@ -6,8 +6,8 @@ from typing import Any, Callable, Iterator, Tuple, Union
 import torch
 from captum._utils.common import (
     _format_additional_forward_args,
-    _format_input,
     _format_output,
+    _format_tensor_into_tuples,
     _reduce_list,
 )
 from captum._utils.typing import (
@@ -139,7 +139,7 @@ def _batched_generator(
     assert internal_batch_size is None or (
         isinstance(internal_batch_size, int) and internal_batch_size > 0
     ), "Batch size must be greater than 0."
-    inputs = _format_input(inputs)
+    inputs = _format_tensor_into_tuples(inputs)
     additional_forward_args = _format_additional_forward_args(additional_forward_args)
     num_examples = inputs[0].shape[0]
     # TODO Reconsider this check if _batched_generator is used for non gradient-based

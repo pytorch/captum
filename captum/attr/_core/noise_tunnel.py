@@ -8,7 +8,6 @@ from captum._utils.common import (
     _expand_and_update_baselines,
     _expand_and_update_feature_mask,
     _expand_and_update_target,
-    _format_input,
     _format_output,
     _format_tensor_into_tuples,
     _is_tuple,
@@ -342,7 +341,7 @@ class NoiseTunnel(Attribution):
             # converting it into a tuple.
             is_inputs_tuple = isinstance(inputs, tuple)
 
-            inputs = _format_input(inputs)  # type: ignore
+            inputs = _format_tensor_into_tuples(inputs)  # type: ignore
 
             _validate_noise_tunnel_type(nt_type, SUPPORTED_NOISE_TUNNEL_TYPES)
 

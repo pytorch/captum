@@ -10,7 +10,6 @@ from captum._utils.common import (
     _expand_and_update_baselines,
     _expand_and_update_target,
     _format_baseline,
-    _format_input,
     _format_tensor_into_tuples,
 )
 from captum._utils.typing import TensorOrTupleOfTensorsGeneric
@@ -46,7 +45,7 @@ def default_perturb_func(
                 original inputs.
 
     """
-    inputs = _format_input(inputs)
+    inputs = _format_tensor_into_tuples(inputs)
     perturbed_input = tuple(
         input
         + torch.FloatTensor(input.size())  # type: ignore
@@ -301,7 +300,7 @@ def sensitivity_max(
         )
         return max_values(sensitivities_norm.view(bsz, -1))
 
-    inputs = _format_input(inputs)  # type: ignore
+    inputs = _format_tensor_into_tuples(inputs)  # type: ignore
 
     bsz = inputs[0].size(0)
 

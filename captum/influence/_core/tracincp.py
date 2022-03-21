@@ -8,16 +8,16 @@ from typing import Any, Callable, Iterator, List, Optional, Union, Tuple, NamedT
 
 import torch
 from captum._utils.av import AV
+from captum._utils.common import _format_inputs
 from captum._utils.gradient import (
     _compute_jacobian_wrt_params,
     _compute_jacobian_wrt_params_with_sample_wise_trick,
 )
 from captum.influence._core.influence import DataInfluence
 from captum.influence._utils.common import (
+    _get_k_most_influential_helper,
     _gradient_dot_product,
     _load_flexible_state_dict,
-    _get_k_most_influential_helper,
-    _format_inputs,
 )
 from captum.log import log_usage
 from torch import Tensor

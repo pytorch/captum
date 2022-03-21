@@ -10,8 +10,8 @@ from captum._utils.common import (
     _expand_additional_forward_args,
     _expand_target,
     _format_additional_forward_args,
-    _format_input,
     _format_output,
+    _format_tensor_into_tuples,
     _is_tuple,
     _run_forward,
 )
@@ -276,7 +276,11 @@ class ShapleyValueSampling(PerturbationAttribution):
         additional_forward_args = _format_additional_forward_args(
             additional_forward_args
         )
-        feature_mask = _format_input(feature_mask) if feature_mask is not None else None
+        feature_mask = (
+            _format_tensor_into_tuples(feature_mask)
+            if feature_mask is not None
+            else None
+        )
         assert (
             isinstance(perturbations_per_eval, int) and perturbations_per_eval >= 1
         ), "Ablations per evaluation must be at least 1."
@@ -712,7 +716,9 @@ class ShapleyValues(ShapleyValueSampling):
             >>> attr = sv.attribute(input, target=1, feature_mask=feature_mask)
         """
         if feature_mask is None:
-            total_features = sum(torch.numel(inp[0]) for inp in _format_input(inputs))
+            total_features = sum(
+                torch.numel(inp[0]) for inp in _format_tensor_into_tuples(inputs)
+            )
         else:
             total_features = (
                 int(max(torch.max(single_mask).item() for single_mask in feature_mask))

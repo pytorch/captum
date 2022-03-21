@@ -12,7 +12,6 @@ from captum._utils.common import (
     _expand_target,
     _format_additional_forward_args,
     _format_baseline,
-    _format_input,
     _format_output,
     _format_tensor_into_tuples,
     _is_tuple,
@@ -325,7 +324,7 @@ class DeepLift(GradientAttribution):
         # converting it into a tuple.
         is_inputs_tuple = _is_tuple(inputs)
 
-        inputs = _format_input(inputs)
+        inputs = _format_tensor_into_tuples(inputs)
         baselines = _format_baseline(baselines, inputs)
 
         gradient_mask = apply_gradient_requirements(inputs)
@@ -840,7 +839,7 @@ class DeepLiftShap(DeepLift):
         # converting it into a tuple.
         is_inputs_tuple = _is_tuple(inputs)
 
-        inputs = _format_input(inputs)
+        inputs = _format_tensor_into_tuples(inputs)
 
         # batch sizes
         inp_bsz = inputs[0].shape[0]

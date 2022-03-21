@@ -10,8 +10,8 @@ from captum._utils.common import (
     _expand_additional_forward_args,
     _expand_target,
     _flatten_tensor_or_tuple,
-    _format_input,
     _format_output,
+    _format_tensor_into_tuples,
     _is_tuple,
     _reduce_list,
     _run_forward,
@@ -652,7 +652,7 @@ def construct_feature_mask(feature_mask, formatted_inputs):
             formatted_inputs
         )
     else:
-        feature_mask = _format_input(feature_mask)
+        feature_mask = _format_tensor_into_tuples(feature_mask)
         min_interp_features = int(
             min(
                 torch.min(single_mask).item()

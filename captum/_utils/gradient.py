@@ -194,7 +194,7 @@ def _forward_layer_eval(
 @typing.overload
 def _forward_layer_distributed_eval(
     forward_fn: Callable,
-    inputs: Union[Tensor, Tuple[Tensor, ...]],
+    inputs: Any,
     layer: ModuleOrModuleList,
     target_ind: TargetType = None,
     additional_forward_args: Any = None,
@@ -208,7 +208,7 @@ def _forward_layer_distributed_eval(
 @typing.overload
 def _forward_layer_distributed_eval(
     forward_fn: Callable,
-    inputs: Union[Tensor, Tuple[Tensor, ...]],
+    inputs: Any,
     layer: ModuleOrModuleList,
     target_ind: TargetType = None,
     additional_forward_args: Any = None,
@@ -222,7 +222,7 @@ def _forward_layer_distributed_eval(
 
 def _forward_layer_distributed_eval(
     forward_fn: Callable,
-    inputs: Union[Tensor, Tuple[Tensor, ...]],
+    inputs: Any,
     layer: ModuleOrModuleList,
     target_ind: TargetType = None,
     additional_forward_args: Any = None,

@@ -5,8 +5,8 @@ import torch
 from captum._utils.common import (
     _extract_device,
     _format_additional_forward_args,
-    _format_input,
     _format_output,
+    _format_tensor_into_tuples,
     _run_forward,
 )
 from captum._utils.gradient import _forward_layer_eval
@@ -269,7 +269,7 @@ class LayerFeatureAblation(LayerAttribution, PerturbationAttribution):
             return eval
 
         with torch.no_grad():
-            inputs = _format_input(inputs)
+            inputs = _format_tensor_into_tuples(inputs)
             additional_forward_args = _format_additional_forward_args(
                 additional_forward_args
             )

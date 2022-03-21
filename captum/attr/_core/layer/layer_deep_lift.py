@@ -8,7 +8,7 @@ from captum._utils.common import (
     _expand_target,
     _format_additional_forward_args,
     _format_baseline,
-    _format_input,
+    _format_tensor_into_tuples,
 )
 from captum._utils.gradient import compute_layer_gradients_and_eval
 from captum._utils.typing import (
@@ -290,7 +290,7 @@ class LayerDeepLift(LayerAttribution, DeepLift):
             >>> # Computes deeplift attribution scores for conv4 layer and class 3.
             >>> attribution = dl.attribute(input, target=1)
         """
-        inputs = _format_input(inputs)
+        inputs = _format_tensor_into_tuples(inputs)
         baselines = _format_baseline(baselines, inputs)
         _validate_input(inputs, baselines)
 
@@ -624,7 +624,7 @@ class LayerDeepLiftShap(LayerDeepLift, DeepLiftShap):
             >>> # Computes shap values using deeplift for class 3.
             >>> attribution = dl.attribute(input, target=3)
         """
-        inputs = _format_input(inputs)
+        inputs = _format_tensor_into_tuples(inputs)
         baselines = _format_callable_baseline(baselines, inputs)
 
         assert isinstance(baselines[0], torch.Tensor) and baselines[0].shape[0] > 1, (
