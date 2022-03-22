@@ -5,19 +5,22 @@ import os
 
 from bs4 import BeautifulSoup
 
+# no need to import css from built path
+# coz docusaurus merge all css files within static folder automatically
+# https://v1.docusaurus.io/docs/en/api-pages#styles
 base_scripts = """
 <script type="text/javascript" id="documentation_options" data-url_root="./"
-src="/js/documentation_options.js"></script>
-<script type="text/javascript" src="/js/jquery.js"></script>
-<script type="text/javascript" src="/js/underscore.js"></script>
-<script type="text/javascript" src="/js/doctools.js"></script>
-<script type="text/javascript" src="/js/language_data.js"></script>
-<script type="text/javascript" src="/js/searchtools.js"></script>
+src="/_sphinx/documentation_options.js"></script>
+<script type="text/javascript" src="/_sphinx/jquery.js"></script>
+<script type="text/javascript" src="/_sphinx/underscore.js"></script>
+<script type="text/javascript" src="/_sphinx/doctools.js"></script>
+<script type="text/javascript" src="/_sphinx/language_data.js"></script>
+<script type="text/javascript" src="/_sphinx/searchtools.js"></script>
 """  # noqa: E501
 
 search_js_scripts = """
 <script type="text/javascript">
-    jQuery(function() { Search.loadIndex("/js/searchindex.js"); });
+    jQuery(function() { Search.loadIndex("/_sphinx/searchindex.js"); });
 </script>
 
 <script type="text/javascript" id="searchindexloader"></script>
@@ -26,9 +29,8 @@ search_js_scripts = """
 katex_scripts = """
 <script src="https://cdn.jsdelivr.net/npm/katex@0.13.11/dist/katex.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/katex@0.13.11/dist/contrib/auto-render.min.js"></script>
-<script src="/js/katex_autorenderer.js"></script>
+<script src="/_sphinx/katex_autorenderer.js"></script>
 <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/katex@0.13.11/dist/katex.min.css" />
-<link rel="stylesheet" type="text/css" href="/css/katex-math.css" />
 """  # noqa: E501
 
 
@@ -57,15 +59,6 @@ def parse_sphinx(input_dir, output_dir):
                 with open(os.path.join(output_path, fname), "w") as fout:
                     fout.write(out)
 
-    # update reference in JS file
-    with open(os.path.join(input_dir, "_static/searchtools.js"), "r") as js_file:
-        js = js_file.read()
-    js = js.replace(
-        "DOCUMENTATION_OPTIONS.URL_ROOT + '_sources/'", "'_sphinx-sources/'"
-    )
-    with open(os.path.join(input_dir, "_static/searchtools.js"), "w") as js_file:
-        js_file.write(js)
-
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Strip HTML body from Sphinx docs.")
@@ -81,7 +74,7 @@ if __name__ == "__main__":
         "--output_dir",
         metavar="path",
         required=True,
-        help="Output directory in Docusaurus.",
+        help="Output directory in website.",
     )
     args = parser.parse_args()
     parse_sphinx(args.input_dir, args.output_dir)
