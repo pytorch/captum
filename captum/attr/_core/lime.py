@@ -398,8 +398,8 @@ class LimeBase(PerturbationAttribution):
             >>>                                      **kwargs):
             >>>     return curr_sample
             >>>
-            >>> # Generating random input with size 2 x 5
-            >>> input = torch.randn(2, 5)
+            >>> # Generating random input with size 1 x 5
+            >>> input = torch.randn(1, 5)
             >>> # Defining LimeBase interpreter
             >>> lime_attr = LimeBase(net,
                                      SkLearnLinearModel("linear_model.Ridge"),
