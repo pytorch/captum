@@ -426,8 +426,12 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">            &gt;&gt;&gt; # input will be different and may have a smaller feature set, so</span>
 <span class="sd">            &gt;&gt;&gt; # an appropriate transformation function should be provided.</span>
 <span class="sd">            &gt;&gt;&gt;</span>
-<span class="sd">            &gt;&gt;&gt; # Generating random input with size 2 x 5</span>
-<span class="sd">            &gt;&gt;&gt; input = torch.randn(2, 5)</span>
+<span class="sd">            &gt;&gt;&gt; def to_interp_transform(curr_sample, original_inp,</span>
+<span class="sd">            &gt;&gt;&gt;                                      **kwargs):</span>
+<span class="sd">            &gt;&gt;&gt;     return curr_sample</span>
+<span class="sd">            &gt;&gt;&gt;</span>
+<span class="sd">            &gt;&gt;&gt; # Generating random input with size 1 x 5</span>
+<span class="sd">            &gt;&gt;&gt; input = torch.randn(1, 5)</span>
 <span class="sd">            &gt;&gt;&gt; # Defining LimeBase interpreter</span>
 <span class="sd">            &gt;&gt;&gt; lime_attr = LimeBase(net,</span>
 <span class="sd">                                     SkLearnLinearModel("linear_model.Ridge"),</span>
@@ -435,7 +439,7 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">                                     perturb_func=perturb_func,</span>
 <span class="sd">                                     perturb_interpretable_space=False,</span>
 <span class="sd">                                     from_interp_rep_transform=None,</span>
-<span class="sd">                                     to_interp_rep_transform=lambda x: x)</span>
+<span class="sd">                                     to_interp_rep_transform=to_interp_transform)</span>
 <span class="sd">            &gt;&gt;&gt; # Computes interpretable model, returning coefficients of linear</span>
 <span class="sd">            &gt;&gt;&gt; # model.</span>
 <span class="sd">            &gt;&gt;&gt; attr_coefs = lime_attr.attribute(input, target=1, kernel_width=1.1)</span>

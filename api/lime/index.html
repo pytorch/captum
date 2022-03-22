@@ -344,8 +344,12 @@ linear surrogate model.</p>
 <span class="gp">&gt;&gt;&gt; </span><span class="c1"># input will be different and may have a smaller feature set, so</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="c1"># an appropriate transformation function should be provided.</span>
 <span class="go">&gt;&gt;&gt;</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="c1"># Generating random input with size 2 x 5</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="nb">input</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">5</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">def</span> <span class="nf">to_interp_transform</span><span class="p">(</span><span class="n">curr_sample</span><span class="p">,</span> <span class="n">original_inp</span><span class="p">,</span>
+<span class="gp">&gt;&gt;&gt; </span>                                     <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="k">return</span> <span class="n">curr_sample</span>
+<span class="go">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># Generating random input with size 1 x 5</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">input</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">5</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="c1"># Defining LimeBase interpreter</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">lime_attr</span> <span class="o">=</span> <span class="n">LimeBase</span><span class="p">(</span><span class="n">net</span><span class="p">,</span>
 <span class="go">                         SkLearnLinearModel("linear_model.Ridge"),</span>
@@ -353,7 +357,7 @@ linear surrogate model.</p>
 <span class="go">                         perturb_func=perturb_func,</span>
 <span class="go">                         perturb_interpretable_space=False,</span>
 <span class="go">                         from_interp_rep_transform=None,</span>
-<span class="go">                         to_interp_rep_transform=lambda x: x)</span>
+<span class="go">                         to_interp_rep_transform=to_interp_transform)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="c1"># Computes interpretable model, returning coefficients of linear</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="c1"># model.</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">attr_coefs</span> <span class="o">=</span> <span class="n">lime_attr</span><span class="o">.</span><span class="n">attribute</span><span class="p">(</span><span class="nb">input</span><span class="p">,</span> <span class="n">target</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">kernel_width</span><span class="o">=</span><span class="mf">1.1</span><span class="p">)</span>
