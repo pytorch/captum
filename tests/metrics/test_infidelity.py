@@ -473,7 +473,7 @@ class Test(BaseTest):
         multi_input: bool = True,
         perturb_func: Callable = _local_perturb_func,
         normalize: bool = False,
-        **kwargs: Any
+        **kwargs: Any,
     ) -> Tensor:
         infid = infidelity(
             model,

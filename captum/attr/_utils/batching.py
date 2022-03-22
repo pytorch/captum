@@ -25,7 +25,7 @@ def _batch_attribution(
     internal_batch_size,
     n_steps,
     include_endpoint=False,
-    **kwargs
+    **kwargs,
 ):
     """
     This method applies internal batching to given attribution method, dividing
@@ -177,7 +177,7 @@ def _batched_operator(
     additional_forward_args: Any = None,
     target_ind: TargetType = None,
     internal_batch_size: Union[None, int] = None,
-    **kwargs: Any
+    **kwargs: Any,
 ) -> TupleOrTensorOrBoolGeneric:
     """
     Batches the operation of the given operator, applying the given batch size
@@ -189,7 +189,7 @@ def _batched_operator(
             inputs=input,
             additional_forward_args=additional,
             target_ind=target,
-            **kwargs
+            **kwargs,
         )
         for input, additional, target in _batched_generator(
             inputs, additional_forward_args, target_ind, internal_batch_size
