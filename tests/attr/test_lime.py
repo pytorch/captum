@@ -12,8 +12,8 @@ from captum.attr._core.lime import Lime, LimeBase, get_exp_kernel_similarity_fun
 from captum.attr._utils.batching import _batch_example_iterator
 from captum.attr._utils.common import (
     _construct_default_feature_mask,
-    _format_input,
     _format_input_baseline,
+    _format_tensor_into_tuples,
 )
 from tests.helpers.basic import (
     BaseTest,
@@ -544,7 +544,7 @@ class Test(BaseTest):
                         num_interp_features,
                     ) = _construct_default_feature_mask(formatted_inputs)
                 else:
-                    formatted_feature_mask = _format_input(feature_mask)
+                    formatted_feature_mask = _format_tensor_into_tuples(feature_mask)
                     num_interp_features = int(
                         max(
                             torch.max(single_mask).item()

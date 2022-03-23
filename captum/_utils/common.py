@@ -161,8 +161,12 @@ def _format_tensor_into_tuples(
     return inputs
 
 
-def _format_input(inputs: Union[Tensor, Tuple[Tensor, ...]]) -> Tuple[Tensor, ...]:
-    return _format_tensor_into_tuples(inputs)
+def _format_inputs(inputs: Any, unpack_inputs: bool = True) -> Any:
+    return (
+        inputs
+        if (isinstance(inputs, tuple) or isinstance(inputs, list)) and unpack_inputs
+        else (inputs,)
+    )
 
 
 def _format_float_or_tensor_into_tuples(
@@ -439,7 +443,7 @@ def _format_outputs(
 
 def _run_forward(
     forward_func: Callable,
-    inputs: Union[Tensor, Tuple[Tensor, ...]],
+    inputs: Any,
     target: TargetType = None,
     additional_forward_args: Any = None,
 ) -> Tensor:
@@ -450,7 +454,7 @@ def _run_forward(
 
     # make everything a tuple so that it is easy to unpack without
     # using if-statements
-    inputs = _format_input(inputs)
+    inputs = _format_inputs(inputs)
     additional_forward_args = _format_additional_forward_args(additional_forward_args)
 
     output = forward_func(

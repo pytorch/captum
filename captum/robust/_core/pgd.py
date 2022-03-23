@@ -3,7 +3,7 @@ from typing import Any, Callable
 
 import torch
 import torch.nn.functional as F
-from captum._utils.common import _format_input, _format_output, _is_tuple
+from captum._utils.common import _format_output, _format_tensor_into_tuples, _is_tuple
 from captum._utils.typing import TensorOrTupleOfTensorsGeneric
 from captum.robust._core.fgsm import FGSM
 from captum.robust._core.perturbation import Perturbation
@@ -153,7 +153,7 @@ class PGD(Perturbation):
                 raise AssertionError("Norm constraint must be L2 or Linf.")
 
         is_inputs_tuple = _is_tuple(inputs)
-        formatted_inputs = _format_input(inputs)
+        formatted_inputs = _format_tensor_into_tuples(inputs)
         perturbed_inputs = formatted_inputs
         if random_start:
             perturbed_inputs = tuple(

@@ -4,8 +4,8 @@ from typing import Any, Callable, Tuple
 import torch
 from captum._utils.common import (
     _format_additional_forward_args,
-    _format_input,
     _format_output,
+    _format_tensor_into_tuples,
     _is_tuple,
     _select_targets,
 )
@@ -133,7 +133,7 @@ class FGSM(Perturbation):
                         corresponding sized tensors is returned.
         """
         is_inputs_tuple = _is_tuple(inputs)
-        inputs: Tuple[Tensor, ...] = _format_input(inputs)
+        inputs: Tuple[Tensor, ...] = _format_tensor_into_tuples(inputs)
         gradient_mask = apply_gradient_requirements(inputs)
 
         def _forward_with_loss() -> Tensor:

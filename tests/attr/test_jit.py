@@ -4,7 +4,10 @@ from enum import Enum
 from typing import Any, Callable, Dict, Tuple, Type, cast
 
 import torch
-from captum._utils.common import _format_additional_forward_args, _format_input
+from captum._utils.common import (
+    _format_additional_forward_args,
+    _format_tensor_into_tuples,
+)
 from captum.attr._core.feature_ablation import FeatureAblation
 from captum.attr._core.feature_permutation import FeaturePermutation
 from captum.attr._core.gradient_shap import GradientShap
@@ -158,11 +161,11 @@ class JITMeta(type):
                 mode is JITCompareMode.cpu_jit_trace
                 or JITCompareMode.data_parallel_jit_trace
             ):
-                all_inps = _format_input(args["inputs"]) + (
+                all_inps = _format_tensor_into_tuples(args["inputs"]) + (
                     _format_additional_forward_args(args["additional_forward_args"])
                     if "additional_forward_args" in args
                     and args["additional_forward_args"] is not None
-                    else tuple()
+                    else ()
                 )
                 model_2 = torch.jit.trace(model_1, all_inps)  # type: ignore
             else:

@@ -5,8 +5,8 @@ import torch
 import torch.nn.functional as F
 from captum._utils.common import (
     _format_additional_forward_args,
-    _format_input,
     _format_output,
+    _format_tensor_into_tuples,
 )
 from captum._utils.gradient import compute_layer_gradients_and_eval
 from captum._utils.typing import TargetType
@@ -181,7 +181,7 @@ class LayerGradCam(LayerAttribution, GradientAttribution):
             >>> # This can be done with LayerAttribution's interpolate method.
             >>> upsampled_attr = LayerAttribution.interpolate(attr, (32, 32))
         """
-        inputs = _format_input(inputs)
+        inputs = _format_tensor_into_tuples(inputs)
         additional_forward_args = _format_additional_forward_args(
             additional_forward_args
         )

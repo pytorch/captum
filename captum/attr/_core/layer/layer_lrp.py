@@ -2,7 +2,11 @@
 import typing
 from typing import Any, List, Tuple, Union, cast
 
-from captum._utils.common import _format_input, _reduce_list, _sort_key_list
+from captum._utils.common import (
+    _format_tensor_into_tuples,
+    _reduce_list,
+    _sort_key_list,
+)
 from captum._utils.gradient import (
     apply_gradient_requirements,
     compute_gradients,
@@ -215,7 +219,7 @@ class LayerLRP(LRP, LayerAttribution):
         self.backward_handles = []
         self.forward_handles = []
 
-        inputs = _format_input(inputs)
+        inputs = _format_tensor_into_tuples(inputs)
         gradient_mask = apply_gradient_requirements(inputs)
 
         try:
