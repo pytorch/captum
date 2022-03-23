@@ -16,19 +16,16 @@ def get_model_layers(model: nn.Module) -> List[str]:
     """
     layers = []
 
-    def get_layers(net: nn.Module, prefix: List = []) -> None:
-        if hasattr(net, "_modules"):
-            for name, layer in net.named_children():
-                if layer is None:
-                    continue
-                name_str = "".join(
-                    [
-                        ("[" + str(i) + "]" if str(i).isdigit() else "." + i)
-                        for i in prefix + [name]
-                    ]
-                ).strip()
-                layers.append(name_str[1:] if name_str[0] == "." else name_str)
-                get_layers(layer, prefix=prefix + [name])
+    def get_layers(net: nn.Module, prefix: str = "") -> None:
+        for name, layer in net.named_children():
+            delimiter = "." if prefix else ""
+            name_str = (
+                f"{prefix}[{name}]"
+                if str(name).isdigit()
+                else f"{prefix}{delimiter}{name}"
+            )
+            layers.append(name_str)
+            get_layers(layer, prefix=name_str)
 
     get_layers(model)
     return layers
