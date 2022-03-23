@@ -40,7 +40,6 @@ src="/_sphinx/documentation_options.js"></script>
     <span class="n">_expand_and_update_baselines</span><span class="p">,</span>
     <span class="n">_expand_and_update_feature_mask</span><span class="p">,</span>
     <span class="n">_expand_and_update_target</span><span class="p">,</span>
-    <span class="n">_format_input</span><span class="p">,</span>
     <span class="n">_format_output</span><span class="p">,</span>
     <span class="n">_format_tensor_into_tuples</span><span class="p">,</span>
     <span class="n">_is_tuple</span><span class="p">,</span>
@@ -374,7 +373,7 @@ src="/_sphinx/documentation_options.js"></script>
             <span class="c1"># converting it into a tuple.</span>
             <span class="n">is_inputs_tuple</span> <span class="o">=</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)</span>
 
-            <span class="n">inputs</span> <span class="o">=</span> <span class="n">_format_input</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span>  <span class="c1"># type: ignore</span>
+            <span class="n">inputs</span> <span class="o">=</span> <span class="n">_format_tensor_into_tuples</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span>  <span class="c1"># type: ignore</span>
 
             <span class="n">_validate_noise_tunnel_type</span><span class="p">(</span><span class="n">nt_type</span><span class="p">,</span> <span class="n">SUPPORTED_NOISE_TUNNEL_TYPES</span><span class="p">)</span>
 

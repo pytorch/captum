@@ -40,16 +40,16 @@ src="/_sphinx/documentation_options.js"></script>
 
 <span class="kn">import</span> <span class="nn">torch</span>
 <span class="kn">from</span> <span class="nn">captum._utils.av</span> <span class="kn">import</span> <span class="n">AV</span>
+<span class="kn">from</span> <span class="nn">captum._utils.common</span> <span class="kn">import</span> <span class="n">_format_inputs</span>
 <span class="kn">from</span> <span class="nn">captum._utils.gradient</span> <span class="kn">import</span> <span class="p">(</span>
     <span class="n">_compute_jacobian_wrt_params</span><span class="p">,</span>
     <span class="n">_compute_jacobian_wrt_params_with_sample_wise_trick</span><span class="p">,</span>
 <span class="p">)</span>
 <span class="kn">from</span> <span class="nn">captum.influence._core.influence</span> <span class="kn">import</span> <span class="n">DataInfluence</span>
 <span class="kn">from</span> <span class="nn">captum.influence._utils.common</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">_get_k_most_influential_helper</span><span class="p">,</span>
     <span class="n">_gradient_dot_product</span><span class="p">,</span>
     <span class="n">_load_flexible_state_dict</span><span class="p">,</span>
-    <span class="n">_get_k_most_influential_helper</span><span class="p">,</span>
-    <span class="n">_format_inputs</span><span class="p">,</span>
 <span class="p">)</span>
 <span class="kn">from</span> <span class="nn">captum.log</span> <span class="kn">import</span> <span class="n">log_usage</span>
 <span class="kn">from</span> <span class="nn">torch</span> <span class="kn">import</span> <span class="n">Tensor</span>
