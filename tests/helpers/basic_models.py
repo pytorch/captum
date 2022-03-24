@@ -194,6 +194,16 @@ class BasicModelWithReusableModules(nn.Module):
         return self.relu(self.lin2(self.relu(self.lin1(inputs))))
 
 
+class BasicModelWithReusableLinear(nn.Module):
+    def __init__(self) -> None:
+        super().__init__()
+        self.lin1 = nn.Linear(3, 3)
+        self.relu = nn.ReLU()
+
+    def forward(self, inputs):
+        return self.relu(self.lin1(self.relu(self.lin1(inputs))))
+
+
 class BasicModelWithSparseInputs(nn.Module):
     def __init__(self) -> None:
         super().__init__()

@@ -70,6 +70,13 @@ class PropagationRule(ABC):
     def forward_hook_weights(self, module, inputs, outputs):
         """Save initial activations a_j before modules are changed"""
         device = inputs[0].device if isinstance(inputs, tuple) else inputs.device
+        if hasattr(module, "activations") and device in module.activations:
+            raise RuntimeError(
+                "Module {} is being used more than once in the network, which "
+                "is not supported by LRP. "
+                "Please ensure that module is being used only once in the "
+                "network.".format(module)
+            )
         module.activations[device] = tuple(input.data for input in inputs)
         self._manipulate_weights(module, inputs, outputs)
 

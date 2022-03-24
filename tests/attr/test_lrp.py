@@ -14,6 +14,7 @@ from tests.helpers.basic import BaseTest, assertTensorAlmostEqual
 from tests.helpers.basic_models import (
     BasicModel_ConvNet_One_Conv,
     BasicModel_MultiLayer,
+    BasicModelWithReusableLinear,
     SimpleLRPModel,
 )
 from torch import Tensor
@@ -305,3 +306,10 @@ class Test(BaseTest):
         assertTensorAlmostEqual(
             self, attributions_lrp, attributions_ixg
         )  # Divide by score because LRP relevance is normalized.
+
+    def test_lrp_repeated_module(self) -> None:
+        model = BasicModelWithReusableLinear()
+        inp = torch.ones(2, 3)
+        lrp = LRP(model)
+        with self.assertRaisesRegexp(RuntimeError, "more than once"):
+            lrp.attribute(inp, target=0)
