@@ -1,3 +1,11 @@
 #!/usr/bin/env python3
+import captum.attr as attr
+import captum.concept as concept
+import captum.influence as influence
+import captum.insights as insights
+import captum.log as log
+import captum.metrics as metrics
+import captum.robust as robust
+
 
 __version__ = "0.5.0"
