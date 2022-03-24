@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
-import captum.attr as attr
-import captum.concept as concept
-import captum.influence as influence
-import captum.insights as insights
-import captum.log as log
-import captum.metrics as metrics
-import captum.robust as robust
+import captum.attr as attr  # noqa
+import captum.concept as concept  # noqa
+import captum.influence as influence  # noqa
+import captum.insights as insights  # noqa
+import captum.log as log  # noqa
+import captum.metrics as metrics  # noqa
+import captum.robust as robust  # noqa
 
 
 __version__ = "0.5.0"
