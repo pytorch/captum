@@ -469,9 +469,13 @@ Default: _load_flexible_state_dict</p></li>
 <li><p><strong>loss_fn</strong> (<em>Callable</em><em>, </em><em>optional</em>) – The loss function applied to model. <cite>loss_fn</cite>
 must be a “reduction” loss function that reduces the per-example
 losses in a batch, and returns a single scalar Tensor. Furthermore,
-the reduction must be the <em>sum</em> of the per-example losses. For
-instance, <cite>nn.BCELoss(reduction=”sum”)</cite> is acceptable, but
-<cite>nn.BCELoss(reduction=”mean”)</cite> is <em>not</em> acceptable.
+the reduction must be the <em>sum</em> or the <em>mean</em> of the per-example
+losses. For instance, <cite>nn.BCELoss(reduction=”sum”)</cite> is acceptable.
+Also note that if <cite>loss_fn</cite> has no “reduction” attribute,
+the implementation assumes that the reduction is the <em>sum</em> of the
+per-example losses.  If this is not the case, i.e. the reduction
+is the <em>mean</em>, please set the “reduction” attribute of <cite>loss_fn</cite>
+to “mean”, i.e. <cite>loss_fn.reduction = “mean”</cite>.
 Default: None</p></li>
 <li><p><strong>batch_size</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><em>int</em></a><em> or </em><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.10)"><em>None</em></a><em>, </em><em>optional</em>) – Batch size of the DataLoader created to
 iterate through <cite>influence_src_dataset</cite>, if it is a Dataset.

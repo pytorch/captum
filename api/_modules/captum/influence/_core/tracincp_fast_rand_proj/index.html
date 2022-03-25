@@ -150,9 +150,13 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">            loss_fn (Callable, optional): The loss function applied to model. `loss_fn`</span>
 <span class="sd">                    must be a "reduction" loss function that reduces the per-example</span>
 <span class="sd">                    losses in a batch, and returns a single scalar Tensor. Furthermore,</span>
-<span class="sd">                    the reduction must be the *sum* of the per-example losses. For</span>
-<span class="sd">                    instance, `nn.BCELoss(reduction="sum")` is acceptable, but</span>
-<span class="sd">                    `nn.BCELoss(reduction="mean")` is *not* acceptable.</span>
+<span class="sd">                    the reduction must be the *sum* or the *mean* of the per-example</span>
+<span class="sd">                    losses. For instance, `nn.BCELoss(reduction="sum")` is acceptable.</span>
+<span class="sd">                    Also note that if `loss_fn` has no "reduction" attribute,</span>
+<span class="sd">                    the implementation assumes that the reduction is the *sum* of the</span>
+<span class="sd">                    per-example losses.  If this is not the case, i.e. the reduction</span>
+<span class="sd">                    is the *mean*, please set the "reduction" attribute of `loss_fn`</span>
+<span class="sd">                    to "mean", i.e. `loss_fn.reduction = "mean"`.</span>
 <span class="sd">                    Default: None</span>
 <span class="sd">            batch_size (int or None, optional): Batch size of the DataLoader created to</span>
 <span class="sd">                    iterate through `influence_src_dataset`, if it is a Dataset.</span>
@@ -188,12 +192,30 @@ src="/_sphinx/documentation_options.js"></script>
             <span class="n">param</span><span class="o">.</span><span class="n">requires_grad</span> <span class="o">=</span> <span class="kc">True</span>
 
         <span class="k">assert</span> <span class="n">loss_fn</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">,</span> <span class="s2">"loss function must not be none"</span>
+
         <span class="c1"># If we are able to access the reduction used by `loss_fn`, we check whether</span>
-        <span class="c1"># the reduction is "sum", as required.</span>
-        <span class="c1"># TODO: allow loss_fn to be Callable</span>
-        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">loss_fn</span><span class="p">,</span> <span class="n">Module</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">loss_fn</span><span class="p">,</span> <span class="s2">"reduction"</span><span class="p">):</span>
-            <span class="n">msg</span> <span class="o">=</span> <span class="s2">"`loss_fn.reduction` must be `sum`."</span>
-            <span class="k">assert</span> <span class="n">loss_fn</span><span class="o">.</span><span class="n">reduction</span> <span class="o">==</span> <span class="s2">"sum"</span><span class="p">,</span> <span class="n">msg</span>
+        <span class="c1"># the reduction is either 'sum' or 'mean', as required</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">loss_fn</span><span class="p">,</span> <span class="n">Module</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">hasattr</span><span class="p">(</span>
+            <span class="n">loss_fn</span><span class="p">,</span> <span class="s2">"reduction"</span>
+        <span class="p">):</span>  <span class="c1"># TODO: allow loss_fn to be Callable</span>
+            <span class="k">assert</span> <span class="n">loss_fn</span><span class="o">.</span><span class="n">reduction</span> <span class="ow">in</span> <span class="p">[</span>
+                <span class="s2">"sum"</span><span class="p">,</span>
+                <span class="s2">"mean"</span><span class="p">,</span>
+            <span class="p">],</span> <span class="s1">'reduction for `loss_fn` must be "sum" or "mean"'</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">reduction_type</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">loss_fn</span><span class="o">.</span><span class="n">reduction</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># if we are unable to access the reduction used by `loss_fn`, we warn</span>
+            <span class="c1"># the user about the assumptions we are making regarding the reduction</span>
+            <span class="c1"># used by `loss_fn`</span>
+            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+                <span class="s1">'Since `loss_fn` has no "reduction" attribute, the implementation '</span>
+                <span class="s1">'assumes that `loss_fn` is a "reduction" loss function that '</span>
+                <span class="s2">"reduces the per-example losses by taking their *sum*. If "</span>
+                <span class="s2">"`loss_fn` instead reduces the per-example losses by taking their "</span>
+                <span class="s1">'mean, please set the reduction attribute of `loss_fn` to "mean", '</span>
+                <span class="s1">'i.e. `loss_fn.reduction = "mean"`.'</span>
+            <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">reduction_type</span> <span class="o">=</span> <span class="s2">"sum"</span>
 
     <span class="k">def</span> <span class="nf">_influence_batch_tracincp_fast</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
@@ -379,6 +401,11 @@ src="/_sphinx/documentation_options.js"></script>
 
 <span class="sd">    Args:</span>
 <span class="sd">        influence_instance (TracInCPFast): A instance of TracInCPFast or its children.</span>
+<span class="sd">                We assume `influence_instance` has a `loss_fn` attribute, i.e. the loss</span>
+<span class="sd">                function applied to the output of the last fully-connected layer, as</span>
+<span class="sd">                well as a `reduction_type` attribute, which indicates whether `loss_fn`</span>
+<span class="sd">                reduces the per-example losses by using their mean or sum. The</span>
+<span class="sd">                `reduction_type` attribute must either be "mean" or "sum".</span>
 <span class="sd">        inputs (Tuple of Any): A batch of examples, which could be a training batch</span>
 <span class="sd">                or test batch, depending which method is the caller. Does not</span>
 <span class="sd">                represent labels, which are passed as `targets`. The assumption is</span>
@@ -392,12 +419,22 @@ src="/_sphinx/documentation_options.js"></script>
     <span class="n">handle</span> <span class="o">=</span> <span class="n">influence_instance</span><span class="o">.</span><span class="n">final_fc_layer</span><span class="o">.</span><span class="n">register_forward_hook</span><span class="p">(</span><span class="n">_capture_inputs</span><span class="p">)</span>
     <span class="n">out</span> <span class="o">=</span> <span class="n">influence_instance</span><span class="o">.</span><span class="n">model</span><span class="p">(</span><span class="o">*</span><span class="n">inputs</span><span class="p">)</span>
 
-    <span class="k">assert</span> <span class="n">influence_instance</span><span class="o">.</span><span class="n">loss_fn</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+    <span class="k">assert</span> <span class="n">influence_instance</span><span class="o">.</span><span class="n">loss_fn</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">,</span> <span class="s2">"loss function is required"</span>
+    <span class="k">assert</span> <span class="n">influence_instance</span><span class="o">.</span><span class="n">reduction_type</span> <span class="ow">in</span> <span class="p">[</span>
+        <span class="s2">"sum"</span><span class="p">,</span>
+        <span class="s2">"mean"</span><span class="p">,</span>
+    <span class="p">],</span> <span class="s1">'reduction_type must be either "mean" or "sum"'</span>
     <span class="n">input_jacobians</span> <span class="o">=</span> <span class="n">_jacobian_loss_wrt_inputs</span><span class="p">(</span>
-        <span class="n">influence_instance</span><span class="o">.</span><span class="n">loss_fn</span><span class="p">,</span> <span class="n">out</span><span class="p">,</span> <span class="n">targets</span><span class="p">,</span> <span class="n">influence_instance</span><span class="o">.</span><span class="n">vectorize</span>
+        <span class="n">influence_instance</span><span class="o">.</span><span class="n">loss_fn</span><span class="p">,</span>
+        <span class="n">out</span><span class="p">,</span>
+        <span class="n">targets</span><span class="p">,</span>
+        <span class="n">influence_instance</span><span class="o">.</span><span class="n">vectorize</span><span class="p">,</span>
+        <span class="n">influence_instance</span><span class="o">.</span><span class="n">reduction_type</span><span class="p">,</span>
     <span class="p">)</span>
     <span class="n">handle</span><span class="o">.</span><span class="n">remove</span><span class="p">()</span>
     <span class="n">_layer_inputs</span> <span class="o">=</span> <span class="n">layer_inputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+    <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">input_jacobians</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span>
 
     <span class="k">return</span> <span class="n">input_jacobians</span><span class="p">,</span> <span class="n">_layer_inputs</span>
 
