@@ -50,6 +50,8 @@ class TestTracInRegression(BaseTest):
                 ("sample_wise_trick", None, DataInfluenceConstructor(TracInCP)),
                 ("check_idx", "sum", DataInfluenceConstructor(TracInCPFast)),
                 ("check_idx", "sum", DataInfluenceConstructor(TracInCPFastRandProj)),
+                ("check_idx", "mean", DataInfluenceConstructor(TracInCPFast)),
+                ("check_idx", "mean", DataInfluenceConstructor(TracInCPFastRandProj)),
                 (
                     "check_idx",
                     "sum",
@@ -168,6 +170,8 @@ class TestTracInRegression(BaseTest):
             ),
             ("sum", DataInfluenceConstructor(TracInCPFast)),
             ("sum", DataInfluenceConstructor(TracInCPFastRandProj)),
+            ("mean", DataInfluenceConstructor(TracInCPFast)),
+            ("mean", DataInfluenceConstructor(TracInCPFastRandProj)),
         ],
         name_func=build_test_name_func(),
     )
@@ -248,6 +252,8 @@ class TestTracInRegression(BaseTest):
             ("sample_wise_trick", None, DataInfluenceConstructor(TracInCP)),
             ("check_idx", "sum", DataInfluenceConstructor(TracInCPFast)),
             ("check_idx", "sum", DataInfluenceConstructor(TracInCPFastRandProj)),
+            ("check_idx", "mean", DataInfluenceConstructor(TracInCPFast)),
+            ("check_idx", "mean", DataInfluenceConstructor(TracInCPFastRandProj)),
         ],
         name_func=build_test_name_func(),
     )

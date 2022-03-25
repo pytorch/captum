@@ -31,6 +31,7 @@ class TestTracInSelfInfluence(BaseTest):
                     ),
                 ),
                 ("sum", DataInfluenceConstructor(TracInCPFast)),
+                ("mean", DataInfluenceConstructor(TracInCPFast)),
             ]
         ],
         name_func=build_test_name_func(args_to_skip=["reduction"]),

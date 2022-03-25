@@ -59,21 +59,84 @@ def _gradient_dot_product(
 
 
 def _jacobian_loss_wrt_inputs(
-    loss_fn: Union[Module, Callable], out: Tensor, targets: Tensor, vectorize: bool
+    loss_fn: Union[Module, Callable],
+    out: Tensor,
+    targets: Tensor,
+    vectorize: bool,
+    reduction_type: str,
 ) -> Tensor:
     r"""
-    Helper function to handle dealing with pytorch version differences for vectorized
-    jacobian calculation of loss wrt inputs.
+    Often, we have a loss function that computes a per-sample loss given a 1D tensor
+    input, and we want to calculate the jacobian of the loss w.r.t. that input.  For
+    example, the input could be a length K tensor specifying the probability a given
+    sample belongs to each of K possible classes, and the loss function could be
+    cross-entropy loss. This function performs that calculation, but does so for a
+    *batch* of inputs. We create this helper function for two reasons: 1) to handle
+    differences between Pytorch versiosn for vectorized jacobian calculations, and
+    2) this function does not accept the aforementioned per-sample loss function.
+    Instead, it accepts a "reduction" loss function that *reduces* the per-sample loss
+    for a batch into a single loss. Using a "reduction" loss improves speed.
+    We will allow this reduction to either be the mean or sum of the per-sample losses,
+    and this function provides an uniform way to handle different possible reductions,
+    and also check if the reduction used is valid. Regardless of the reduction used,
+    this function returns the jacobian for the per-sample loss (for each sample in the
+    batch).
+
+    Args:
+        loss_fn (torch.nn.Module or Callable or None): The loss function. If a library
+                defined loss function is provided, it would be expected to be a
+                torch.nn.Module. If a custom loss is provided, it can be either type,
+                but must behave as a library loss function would if `reduction='sum'`
+                or `reduction='mean'`.
+        out (tensor): This is a tensor that represents the batch of inputs to
+                `loss_fn`. In practice, this will be the output of a model; this is
+                why this argument is named `out`. `out` is a 2D tensor of shape
+                (batch size, model output dimensionality). We will call `loss_fn` via
+                `loss_fn(out, targets)`.
+        targets (tensor): The labels for the batch of inputs.
+        vectorize (bool): Flag to use experimental vectorize functionality for
+                `torch.autograd.functional.jacobian`.
+        reduction_type (str): The type of reduction used by `loss_fn`. If `loss_fn`
+                has the "reduction" attribute, we will check that they match. Can
+                only be "mean" or "sum".
+
+    Returns:
+        jacobians (tensor): Returns the jacobian of the per-sample loss (implicitly
+                defined by `loss_fn` and `reduction_type`) w.r.t each sample
+                in the batch represented by `out`. This is a 2D tensor, where the
+                first dimension is the batch dimension.
     """
+    # TODO: allow loss_fn to be Callable
+    if isinstance(loss_fn, Module) and hasattr(loss_fn, "reduction"):
+        msg0 = "Please ensure that loss_fn.reduction is set to `sum` or `mean`"
+
+        assert loss_fn.reduction != "none", msg0
+        msg1 = (
+            f"loss_fn.reduction ({loss_fn.reduction}) does not match"
+            f"reduction type ({reduction_type}). Please ensure they are"
+            " matching."
+        )
+        assert loss_fn.reduction == reduction_type, msg1
+
+    if reduction_type != "sum" and reduction_type != "mean":
+        raise ValueError(
+            f"{reduction_type} is not a valid value for reduction_type. "
+            "Must be either 'sum' or 'mean'."
+        )
 
     if torch.__version__ >= "1.8":
-        return torch.autograd.functional.jacobian(
+        input_jacobians = torch.autograd.functional.jacobian(
             lambda out: loss_fn(out, targets), out, vectorize=vectorize
         )
     else:
-        return torch.autograd.functional.jacobian(
+        input_jacobians = torch.autograd.functional.jacobian(
             lambda out: loss_fn(out, targets), out
         )
+
+    if reduction_type == "mean":
+        input_jacobians = input_jacobians * len(input_jacobians)
+
+    return input_jacobians
 
 
 def _load_flexible_state_dict(

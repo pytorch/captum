@@ -48,6 +48,8 @@ class TestTracInGetKMostInfluential(BaseTest):
                 ),
                 ("sum", DataInfluenceConstructor(TracInCPFast)),
                 ("sum", DataInfluenceConstructor(TracInCPFastRandProj)),
+                ("mean", DataInfluenceConstructor(TracInCPFast)),
+                ("mean", DataInfluenceConstructor(TracInCPFastRandProj)),
             ]
         ],
         name_func=build_test_name_func(),
