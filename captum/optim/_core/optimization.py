@@ -65,8 +65,9 @@ class InputOptimization(Objective, Parameterized):
             self.hooks = ModuleOutputsHook([loss_function.target])
         self.input_param = input_param or NaturalImage((224, 224))
         if isinstance(self.model, Iterable):
-            if list(self.model.parameters()) != []:
-                self.input_param.to(next(self.model.parameters()).device)
+            param = next(self.model.parameters(), None)
+            if param:
+                self.input_param = self.input_param.to(param.device)
         self.transform = transform or torch.nn.Sequential(
             RandomScale(scale=(1, 0.975, 1.025, 0.95, 1.05)), RandomSpatialJitter(16)
         )
