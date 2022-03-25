@@ -47,14 +47,13 @@ class InputOptimization(Objective, Parameterized):
         r"""
         Args:
 
-            model (nn.Module):  The reference to PyTorch model instance.
+            model (nn.Module, optional):  The reference to PyTorch model instance.
             input_param (nn.Module, optional):  A module that generates an input,
                         consumed by the model.
             transform (nn.Module, optional):  A module that transforms or preprocesses
                         the input before being passed to the model.
             loss_function (callable): The loss function to minimize during optimization
                         optimization.
-            lr (float): The learning rate to use with the Adam optimizer.
         """
         self.model = model or nn.Identity()
         # Grab targets from loss_function
