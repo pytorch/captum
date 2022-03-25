@@ -118,9 +118,13 @@ class TracInCPFast(TracInCPBase):
             loss_fn (Callable, optional): The loss function applied to model. `loss_fn`
                     must be a "reduction" loss function that reduces the per-example
                     losses in a batch, and returns a single scalar Tensor. Furthermore,
-                    the reduction must be the *sum* of the per-example losses. For
-                    instance, `nn.BCELoss(reduction="sum")` is acceptable, but
-                    `nn.BCELoss(reduction="mean")` is *not* acceptable.
+                    the reduction must be the *sum* or the *mean* of the per-example
+                    losses. For instance, `nn.BCELoss(reduction="sum")` is acceptable.
+                    Also note that if `loss_fn` has no "reduction" attribute,
+                    the implementation assumes that the reduction is the *sum* of the
+                    per-example losses.  If this is not the case, i.e. the reduction
+                    is the *mean*, please set the "reduction" attribute of `loss_fn`
+                    to "mean", i.e. `loss_fn.reduction = "mean"`.
                     Default: None
             batch_size (int or None, optional): Batch size of the DataLoader created to
                     iterate through `influence_src_dataset`, if it is a Dataset.
@@ -156,12 +160,30 @@ class TracInCPFast(TracInCPBase):
             param.requires_grad = True
 
         assert loss_fn is not None, "loss function must not be none"
+
         # If we are able to access the reduction used by `loss_fn`, we check whether
-        # the reduction is "sum", as required.
-        # TODO: allow loss_fn to be Callable
-        if isinstance(loss_fn, Module) and hasattr(loss_fn, "reduction"):
-            msg = "`loss_fn.reduction` must be `sum`."
-            assert loss_fn.reduction == "sum", msg
+        # the reduction is either 'sum' or 'mean', as required
+        if isinstance(loss_fn, Module) and hasattr(
+            loss_fn, "reduction"
+        ):  # TODO: allow loss_fn to be Callable
+            assert loss_fn.reduction in [
+                "sum",
+                "mean",
+            ], 'reduction for `loss_fn` must be "sum" or "mean"'
+            self.reduction_type = str(loss_fn.reduction)
+        else:
+            # if we are unable to access the reduction used by `loss_fn`, we warn
+            # the user about the assumptions we are making regarding the reduction
+            # used by `loss_fn`
+            warnings.warn(
+                'Since `loss_fn` has no "reduction" attribute, the implementation '
+                'assumes that `loss_fn` is a "reduction" loss function that '
+                "reduces the per-example losses by taking their *sum*. If "
+                "`loss_fn` instead reduces the per-example losses by taking their "
+                'mean, please set the reduction attribute of `loss_fn` to "mean", '
+                'i.e. `loss_fn.reduction = "mean"`.'
+            )
+            self.reduction_type = "sum"
 
     def _influence_batch_tracincp_fast(
         self,
@@ -347,6 +369,11 @@ def _basic_computation_tracincp_fast(
 
     Args:
         influence_instance (TracInCPFast): A instance of TracInCPFast or its children.
+                We assume `influence_instance` has a `loss_fn` attribute, i.e. the loss
+                function applied to the output of the last fully-connected layer, as
+                well as a `reduction_type` attribute, which indicates whether `loss_fn`
+                reduces the per-example losses by using their mean or sum. The
+                `reduction_type` attribute must either be "mean" or "sum".
         inputs (Tuple of Any): A batch of examples, which could be a training batch
                 or test batch, depending which method is the caller. Does not
                 represent labels, which are passed as `targets`. The assumption is
@@ -360,12 +387,22 @@ def _basic_computation_tracincp_fast(
     handle = influence_instance.final_fc_layer.register_forward_hook(_capture_inputs)
     out = influence_instance.model(*inputs)
 
-    assert influence_instance.loss_fn is not None
+    assert influence_instance.loss_fn is not None, "loss function is required"
+    assert influence_instance.reduction_type in [
+        "sum",
+        "mean",
+    ], 'reduction_type must be either "mean" or "sum"'
     input_jacobians = _jacobian_loss_wrt_inputs(
-        influence_instance.loss_fn, out, targets, influence_instance.vectorize
+        influence_instance.loss_fn,
+        out,
+        targets,
+        influence_instance.vectorize,
+        influence_instance.reduction_type,
     )
     handle.remove()
     _layer_inputs = layer_inputs[0]
+
+    assert len(input_jacobians.shape) == 2
 
     return input_jacobians, _layer_inputs
 
