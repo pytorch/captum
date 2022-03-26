@@ -4,8 +4,12 @@ import warnings
 from typing import Any, Callable, Iterator, List, Optional, Union, Tuple
 
 import torch
-from captum._utils.common import _get_module_from_name
-from captum.influence._core.tracincp import TracInCPBase, KMostInfluentialResults
+from captum._utils.common import _get_module_from_name, _format_inputs
+from captum.influence._core.tracincp import (
+    TracInCPBase,
+    KMostInfluentialResults,
+    _influence_route_to_helpers,
+)
 from captum.influence._utils.common import (
     _jacobian_loss_wrt_inputs,
     _load_flexible_state_dict,
@@ -184,6 +188,108 @@ class TracInCPFast(TracInCPBase):
                 'i.e. `loss_fn.reduction = "mean"`.'
             )
             self.reduction_type = "sum"
+
+    @log_usage()
+    def influence(  # type: ignore[override]
+        self,
+        inputs: Any = None,
+        targets: Optional[Tensor] = None,
+        k: Optional[int] = None,
+        proponents: bool = True,
+        unpack_inputs: bool = True,
+    ) -> Union[Tensor, KMostInfluentialResults]:
+        r"""
+        This is the key method of this class, and can be run in 3 different modes,
+        where the mode that is run depends on the arguments passed to this method:
+
+        - self influence mode: This mode is used if `inputs` is None. This mode
+          computes the self influence scores for every example in
+          the training dataset `influence_src_dataset`.
+        - influence score mode: This mode is used if `inputs` is not None, and `k` is
+          None. This mode computes the influence score of every example in
+          training dataset `influence_src_dataset` on every example in the test
+          batch represented by `inputs` and `targets`.
+        - k-most influential mode: This mode is used if `inputs` is not None, and
+          `k` is not None, and an int. This mode computes the proponents or
+          opponents of every example in the test batch represented by `inputs`
+          and `targets`. In particular, for each test example in the test batch,
+          this mode computes its proponents (resp. opponents), which are the
+          indices in the training dataset `influence_src_dataset` of the training
+          examples with the `k` highest (resp. lowest) influence scores on the
+          test example. Proponents are computed if `proponents` is True.
+          Otherwise, opponents are computed. For each test example, this method
+          also returns the actual influence score of each proponent (resp.
+          opponent) on the test example.
+
+        Args:
+            inputs (Any, optional): If not provided or `None`, the self influence mode
+                    will be run. Otherwise, `inputs` is the test batch that will be
+                    used when running in either influence score or k-most influential
+                    mode. If the argument `unpack_inputs` is False, the
+                    assumption is that `self.model(inputs)` produces the predictions
+                    for a batch, and `inputs` can be of any type. Otherwise if the
+                    argument `unpack_inputs` is True, the assumption is that
+                    `self.model(*inputs)` produces the predictions for a batch, and
+                    `inputs` will need to be a tuple. In other words, `inputs` will be
+                    unpacked as an argument when passing to `self.model`.
+                    Default: None
+            targets (tensor, optional): The labels corresponding to the batch `inputs`.
+                    This method is designed to be applied for a loss function, so
+                    `targets` is required, unless running in "self influence" mode.
+                    Default: None
+            k (int, optional): If not provided or `None`, the influence score mode will
+                    be run. Otherwise, the k-most influential mode will be run,
+                    and `k` is the number of proponents / opponents to return per
+                    example in the test batch.
+                    Default: None
+            proponents (bool, optional): Whether seeking proponents (`proponents=True`)
+                    or opponents (`proponents=False`), if running in k-most influential
+                    mode.
+                    Default: True
+            unpack_inputs (bool, optional): Whether to unpack the `inputs` argument to
+                    when passing it to `model`, if `inputs` is a tuple (no unpacking
+                    done otherwise).
+                    Default: True
+
+        Returns:
+            The return value of this method depends on which mode is run.
+
+            - self influence mode: if this mode is run (`inputs` is None), returns a 1D
+              tensor of self influence scores over training dataset
+              `influence_src_dataset`. The length of this tensor is the number of
+              examples in `influence_src_dataset`, regardless of whether it is a
+              Dataset or DataLoader.
+            - influence score mode: if this mode is run (`inputs is not None, `k` is
+              None), returns a 2D tensor `influence_scores` of shape
+              `(input_size, influence_src_dataset_size)`, where `input_size` is
+              the number of examples in the test batch, and
+              `influence_src_dataset_size` is the number of examples in
+              training dataset `influence_src_dataset`. In other words,
+              `influence_scores[i][j]` is the influence score of the `j`-th
+              example in `influence_src_dataset` on the `i`-th example in the
+              test batch.
+            - k-most influential mode: if this mode is run (`inputs` is not None,
+              `k` is an int), returns a namedtuple `(indices, influence_scores)`.
+              `indices` is a 2D tensor of shape `(input_size, k)`, where
+              `input_size` is the number of examples in the test batch. If
+              computing proponents (resp. opponents), `indices[i][j]` is the
+              index in training dataset `influence_src_dataset` of the example
+              with the `j`-th highest (resp. lowest) influence score (out of the
+              examples in `influence_src_dataset`) on the `i`-th example in the
+              test batch. `influence_scores` contains the corresponding influence
+              scores. In particular, `influence_scores[i][j]` is the influence
+              score of example `indices[i][j]` in `influence_src_dataset` on
+              example `i` in the test batch represented by `inputs` and
+              `targets`.
+        """
+        return _influence_route_to_helpers(
+            self,
+            inputs,
+            targets,
+            k,
+            proponents,
+            unpack_inputs,
+        )
 
     def _influence_batch_tracincp_fast(
         self,
@@ -748,8 +854,8 @@ class TracInCPFastRandProj(TracInCPFast):
                     unpacked as an argument when passing to `self.model`.
                     Default: None
             targets (tensor): The labels corresponding to the batch `inputs`. This
-                    method is designed to be applied for a loss function, so labels
-                    are required, unless running in "self influence" mode.
+                    method is designed to be applied for a loss function, so `targets`
+                    is required.
             k (int, optional): If not provided or `None`, the influence score mode will
                     be run. Otherwise, the k-most influential mode will be run,
                     and `k` is the number of proponents / opponents to return per
@@ -766,7 +872,7 @@ class TracInCPFastRandProj(TracInCPFast):
 
         Returns:
 
-            The return value of this method depends on which mode is run
+            The return value of this method depends on which mode is run.
 
             - influence score mode: if this mode is run (`inputs is not None, `k` is
               None), returns a 2D tensor `influence_scores` of shape
@@ -777,14 +883,19 @@ class TracInCPFastRandProj(TracInCPFast):
               `influence_scores[i][j]` is the influence score of the `j`-th
               example in `influence_src_dataset` on the `i`-th example in the
               test batch.
-            - most influential mode: if this mode is run (`inputs` is not None,
-              `k` is an int), returns `indices`, which is a 2D tensor of shape
-              `(input_size, k)`, where `input_size` is the number of examples
-              in the test batch. If computing proponents (resp. opponents),
-              `indices[i][j]` is the index in training dataset
-              `influence_src_dataset` of the example with the `j`-th highest
-              (resp. lowest) influence score (out of the examples in
-              `influence_src_dataset`) on the `i`-th example in the test batch.
+            - k-most influential mode: if this mode is run (`inputs` is not None,
+              `k` is an int), returns a namedtuple `(indices, influence_scores)`.
+              `indices` is a 2D tensor of shape `(input_size, k)`, where
+              `input_size` is the number of examples in the test batch. If
+              computing proponents (resp. opponents), `indices[i][j]` is the
+              index in training dataset `influence_src_dataset` of the example
+              with the `j`-th highest (resp. lowest) influence score (out of the
+              examples in `influence_src_dataset`) on the `i`-th example in the
+              test batch. `influence_scores` contains the corresponding influence
+              scores. In particular, `influence_scores[i][j]` is the influence
+              score of example `indices[i][j]` in `influence_src_dataset` on
+              example `i` in the test batch represented by `inputs` and
+              `targets`.
         """
         msg = (
             "Since `inputs` is None, this suggests `TracInCPFastRandProj` is being "
@@ -794,9 +905,15 @@ class TracInCPFastRandProj(TracInCPFast):
             "please use `TracInCPFast` instead."
         )
         assert inputs is not None, msg
-        return TracInCPBase.influence(
-            self, inputs, targets, k, proponents, unpack_inputs
-        )
+
+        _inputs = _format_inputs(inputs, unpack_inputs)
+
+        if inputs is None:
+            return self._self_influence()
+        elif k is None:
+            return self._influence(_inputs, targets)
+        else:
+            return self._get_k_most_influential(_inputs, targets, k, proponents)
 
     def _set_projections_tracincp_fast_rand_proj(
         self,
