@@ -231,7 +231,7 @@ Default: 1</p></li>
 </dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="captum.influence.TracInCPBase.influence">
-<span class="sig-name descname"><span class="pre">influence</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inputs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">targets</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">k</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">proponents</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">unpack_inputs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/influence/_core/tracincp.html#TracInCPBase.influence"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum.influence.TracInCPBase.influence" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">influence</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inputs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">targets</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">k</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">proponents</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">unpack_inputs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/influence/_core/tracincp.html#TracInCPBase.influence"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum.influence.TracInCPBase.influence" title="Permalink to this definition">¶</a></dt>
 <dd><p>This is the key method of this class, and can be run in 3 different modes,
 where the mode that is run depends on the arguments passed to this method:</p>
 <ul class="simple">
@@ -416,6 +416,101 @@ Default: False</p></li>
 </ul>
 </dd>
 </dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="captum.influence.TracInCP.influence">
+<span class="sig-name descname"><span class="pre">influence</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inputs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">targets</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">k</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">proponents</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">unpack_inputs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/influence/_core/tracincp.html#TracInCP.influence"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum.influence.TracInCP.influence" title="Permalink to this definition">¶</a></dt>
+<dd><p>This is the key method of this class, and can be run in 3 different modes,
+where the mode that is run depends on the arguments passed to this method:</p>
+<ul class="simple">
+<li><p>self influence mode: This mode is used if <cite>inputs</cite> is None. This mode
+computes the self influence scores for every example in
+the training dataset <cite>influence_src_dataset</cite>.</p></li>
+<li><p>influence score mode: This mode is used if <cite>inputs</cite> is not None, and <cite>k</cite> is
+None. This mode computes the influence score of every example in
+training dataset <cite>influence_src_dataset</cite> on every example in the test
+batch represented by <cite>inputs</cite> and <cite>targets</cite>.</p></li>
+<li><p>k-most influential mode: This mode is used if <cite>inputs</cite> is not None, and
+<cite>k</cite> is not None, and an int. This mode computes the proponents or
+opponents of every example in the test batch represented by <cite>inputs</cite>
+and <cite>targets</cite>. In particular, for each test example in the test batch,
+this mode computes its proponents (resp. opponents), which are the
+indices in the training dataset <cite>influence_src_dataset</cite> of the training
+examples with the <cite>k</cite> highest (resp. lowest) influence scores on the
+test example. Proponents are computed if <cite>proponents</cite> is True.
+Otherwise, opponents are computed. For each test example, this method
+also returns the actual influence score of each proponent (resp.
+opponent) on the test example.</p></li>
+</ul>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>inputs</strong> (<em>Any</em><em>, </em><em>optional</em>) – If not provided or <cite>None</cite>, the self influence mode
+will be run. Otherwise, <cite>inputs</cite> is the test batch that will be
+used when running in either influence score or k-most influential
+mode. If the argument <cite>unpack_inputs</cite> is False, the
+assumption is that <cite>self.model(inputs)</cite> produces the predictions
+for a batch, and <cite>inputs</cite> can be of any type. Otherwise if the
+argument <cite>unpack_inputs</cite> is True, the assumption is that
+<cite>self.model(*inputs)</cite> produces the predictions for a batch, and
+<cite>inputs</cite> will need to be a tuple. In other words, <cite>inputs</cite> will be
+unpacked as an argument when passing to <cite>self.model</cite>.
+Default: None</p></li>
+<li><p><strong>targets</strong> (<em>tensor</em><em>, </em><em>optional</em>) – If computing influence scores on a loss
+function, these are the labels corresponding to the batch <cite>inputs</cite>.
+Default: None</p></li>
+<li><p><strong>k</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><em>int</em></a><em>, </em><em>optional</em>) – If not provided or <cite>None</cite>, the influence score mode will
+be run. Otherwise, the k-most influential mode will be run,
+and <cite>k</cite> is the number of proponents / opponents to return per
+example in the test batch.
+Default: None</p></li>
+<li><p><strong>proponents</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.10)"><em>bool</em></a><em>, </em><em>optional</em>) – Whether seeking proponents (<cite>proponents=True</cite>)
+or opponents (<cite>proponents=False</cite>), if running in k-most influential
+mode.
+Default: True</p></li>
+<li><p><strong>unpack_inputs</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.10)"><em>bool</em></a><em>, </em><em>optional</em>) – Whether to unpack the <cite>inputs</cite> argument to
+when passing it to <cite>model</cite>, if <cite>inputs</cite> is a tuple (no unpacking
+done otherwise).
+Default: True</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Union" title="(in Python v3.10)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code></a>[<a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.11.0)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tensor</span></code></a>, <code class="xref py py-class docutils literal notranslate"><span class="pre">KMostInfluentialResults</span></code>]</p>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><p>The return value of this method depends on which mode is run.</p>
+<ul class="simple">
+<li><p>self influence mode: if this mode is run (<cite>inputs</cite> is None), returns a 1D
+tensor of self influence scores over training dataset
+<cite>influence_src_dataset</cite>. The length of this tensor is the number of
+examples in <cite>influence_src_dataset</cite>, regardless of whether it is a
+Dataset or DataLoader.</p></li>
+<li><p>influence score mode: if this mode is run (<cite>inputs is not None, `k</cite> is
+None), returns a 2D tensor <cite>influence_scores</cite> of shape
+<cite>(input_size, influence_src_dataset_size)</cite>, where <cite>input_size</cite> is
+the number of examples in the test batch, and
+<cite>influence_src_dataset_size</cite> is the number of examples in
+training dataset <cite>influence_src_dataset</cite>. In other words,
+<cite>influence_scores[i][j]</cite> is the influence score of the <cite>j</cite>-th
+example in <cite>influence_src_dataset</cite> on the <cite>i</cite>-th example in the
+test batch.</p></li>
+<li><p>k-most influential mode: if this mode is run (<cite>inputs</cite> is not None,
+<cite>k</cite> is an int), returns a namedtuple <cite>(indices, influence_scores)</cite>.
+<cite>indices</cite> is a 2D tensor of shape <cite>(input_size, k)</cite>, where
+<cite>input_size</cite> is the number of examples in the test batch. If
+computing proponents (resp. opponents), <cite>indices[i][j]</cite> is the
+index in training dataset <cite>influence_src_dataset</cite> of the example
+with the <cite>j</cite>-th highest (resp. lowest) influence score (out of the
+examples in <cite>influence_src_dataset</cite>) on the <cite>i</cite>-th example in the
+test batch. <cite>influence_scores</cite> contains the corresponding influence
+scores. In particular, <cite>influence_scores[i][j]</cite> is the influence
+score of example <cite>indices[i][j]</cite> in <cite>influence_src_dataset</cite> on
+example <cite>i</cite> in the test batch represented by <cite>inputs</cite> and
+<cite>targets</cite>.</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+</dd></dl>
 </dd></dl>
 </section>
 <section id="tracincpfast">
@@ -492,6 +587,102 @@ Default: False</p></li>
 </ul>
 </dd>
 </dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="captum.influence.TracInCPFast.influence">
+<span class="sig-name descname"><span class="pre">influence</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inputs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">targets</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">k</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">proponents</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">unpack_inputs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/influence/_core/tracincp_fast_rand_proj.html#TracInCPFast.influence"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum.influence.TracInCPFast.influence" title="Permalink to this definition">¶</a></dt>
+<dd><p>This is the key method of this class, and can be run in 3 different modes,
+where the mode that is run depends on the arguments passed to this method:</p>
+<ul class="simple">
+<li><p>self influence mode: This mode is used if <cite>inputs</cite> is None. This mode
+computes the self influence scores for every example in
+the training dataset <cite>influence_src_dataset</cite>.</p></li>
+<li><p>influence score mode: This mode is used if <cite>inputs</cite> is not None, and <cite>k</cite> is
+None. This mode computes the influence score of every example in
+training dataset <cite>influence_src_dataset</cite> on every example in the test
+batch represented by <cite>inputs</cite> and <cite>targets</cite>.</p></li>
+<li><p>k-most influential mode: This mode is used if <cite>inputs</cite> is not None, and
+<cite>k</cite> is not None, and an int. This mode computes the proponents or
+opponents of every example in the test batch represented by <cite>inputs</cite>
+and <cite>targets</cite>. In particular, for each test example in the test batch,
+this mode computes its proponents (resp. opponents), which are the
+indices in the training dataset <cite>influence_src_dataset</cite> of the training
+examples with the <cite>k</cite> highest (resp. lowest) influence scores on the
+test example. Proponents are computed if <cite>proponents</cite> is True.
+Otherwise, opponents are computed. For each test example, this method
+also returns the actual influence score of each proponent (resp.
+opponent) on the test example.</p></li>
+</ul>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>inputs</strong> (<em>Any</em><em>, </em><em>optional</em>) – If not provided or <cite>None</cite>, the self influence mode
+will be run. Otherwise, <cite>inputs</cite> is the test batch that will be
+used when running in either influence score or k-most influential
+mode. If the argument <cite>unpack_inputs</cite> is False, the
+assumption is that <cite>self.model(inputs)</cite> produces the predictions
+for a batch, and <cite>inputs</cite> can be of any type. Otherwise if the
+argument <cite>unpack_inputs</cite> is True, the assumption is that
+<cite>self.model(*inputs)</cite> produces the predictions for a batch, and
+<cite>inputs</cite> will need to be a tuple. In other words, <cite>inputs</cite> will be
+unpacked as an argument when passing to <cite>self.model</cite>.
+Default: None</p></li>
+<li><p><strong>targets</strong> (<em>tensor</em><em>, </em><em>optional</em>) – The labels corresponding to the batch <cite>inputs</cite>.
+This method is designed to be applied for a loss function, so
+<cite>targets</cite> is required, unless running in “self influence” mode.
+Default: None</p></li>
+<li><p><strong>k</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><em>int</em></a><em>, </em><em>optional</em>) – If not provided or <cite>None</cite>, the influence score mode will
+be run. Otherwise, the k-most influential mode will be run,
+and <cite>k</cite> is the number of proponents / opponents to return per
+example in the test batch.
+Default: None</p></li>
+<li><p><strong>proponents</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.10)"><em>bool</em></a><em>, </em><em>optional</em>) – Whether seeking proponents (<cite>proponents=True</cite>)
+or opponents (<cite>proponents=False</cite>), if running in k-most influential
+mode.
+Default: True</p></li>
+<li><p><strong>unpack_inputs</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.10)"><em>bool</em></a><em>, </em><em>optional</em>) – Whether to unpack the <cite>inputs</cite> argument to
+when passing it to <cite>model</cite>, if <cite>inputs</cite> is a tuple (no unpacking
+done otherwise).
+Default: True</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Union" title="(in Python v3.10)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code></a>[<a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.11.0)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tensor</span></code></a>, <code class="xref py py-class docutils literal notranslate"><span class="pre">KMostInfluentialResults</span></code>]</p>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><p>The return value of this method depends on which mode is run.</p>
+<ul class="simple">
+<li><p>self influence mode: if this mode is run (<cite>inputs</cite> is None), returns a 1D
+tensor of self influence scores over training dataset
+<cite>influence_src_dataset</cite>. The length of this tensor is the number of
+examples in <cite>influence_src_dataset</cite>, regardless of whether it is a
+Dataset or DataLoader.</p></li>
+<li><p>influence score mode: if this mode is run (<cite>inputs is not None, `k</cite> is
+None), returns a 2D tensor <cite>influence_scores</cite> of shape
+<cite>(input_size, influence_src_dataset_size)</cite>, where <cite>input_size</cite> is
+the number of examples in the test batch, and
+<cite>influence_src_dataset_size</cite> is the number of examples in
+training dataset <cite>influence_src_dataset</cite>. In other words,
+<cite>influence_scores[i][j]</cite> is the influence score of the <cite>j</cite>-th
+example in <cite>influence_src_dataset</cite> on the <cite>i</cite>-th example in the
+test batch.</p></li>
+<li><p>k-most influential mode: if this mode is run (<cite>inputs</cite> is not None,
+<cite>k</cite> is an int), returns a namedtuple <cite>(indices, influence_scores)</cite>.
+<cite>indices</cite> is a 2D tensor of shape <cite>(input_size, k)</cite>, where
+<cite>input_size</cite> is the number of examples in the test batch. If
+computing proponents (resp. opponents), <cite>indices[i][j]</cite> is the
+index in training dataset <cite>influence_src_dataset</cite> of the example
+with the <cite>j</cite>-th highest (resp. lowest) influence score (out of the
+examples in <cite>influence_src_dataset</cite>) on the <cite>i</cite>-th example in the
+test batch. <cite>influence_scores</cite> contains the corresponding influence
+scores. In particular, <cite>influence_scores[i][j]</cite> is the influence
+score of example <cite>indices[i][j]</cite> in <cite>influence_src_dataset</cite> on
+example <cite>i</cite> in the test batch represented by <cite>inputs</cite> and
+<cite>targets</cite>.</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+</dd></dl>
 </dd></dl>
 </section>
 <section id="tracincpfastrandproj">
@@ -654,8 +845,8 @@ argument <cite>unpack_inputs</cite> is True, the assumption is that
 unpacked as an argument when passing to <cite>self.model</cite>.
 Default: None</p></li>
 <li><p><strong>targets</strong> (<em>tensor</em>) – The labels corresponding to the batch <cite>inputs</cite>. This
-method is designed to be applied for a loss function, so labels
-are required, unless running in “self influence” mode.</p></li>
+method is designed to be applied for a loss function, so <cite>targets</cite>
+is required.</p></li>
 <li><p><strong>k</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><em>int</em></a><em>, </em><em>optional</em>) – If not provided or <cite>None</cite>, the influence score mode will
 be run. Otherwise, the k-most influential mode will be run,
 and <cite>k</cite> is the number of proponents / opponents to return per
@@ -675,7 +866,7 @@ Default: True</p></li>
 <dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Union" title="(in Python v3.10)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code></a>[<a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.11.0)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tensor</span></code></a>, <code class="xref py py-class docutils literal notranslate"><span class="pre">KMostInfluentialResults</span></code>]</p>
 </dd>
 <dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p><p>The return value of this method depends on which mode is run</p>
+<dd class="field-odd"><p><p>The return value of this method depends on which mode is run.</p>
 <ul class="simple">
 <li><p>influence score mode: if this mode is run (<cite>inputs is not None, `k</cite> is
 None), returns a 2D tensor <cite>influence_scores</cite> of shape
@@ -686,14 +877,19 @@ training dataset <cite>influence_src_dataset</cite>. In other words,
 <cite>influence_scores[i][j]</cite> is the influence score of the <cite>j</cite>-th
 example in <cite>influence_src_dataset</cite> on the <cite>i</cite>-th example in the
 test batch.</p></li>
-<li><p>most influential mode: if this mode is run (<cite>inputs</cite> is not None,
-<cite>k</cite> is an int), returns <cite>indices</cite>, which is a 2D tensor of shape
-<cite>(input_size, k)</cite>, where <cite>input_size</cite> is the number of examples
-in the test batch. If computing proponents (resp. opponents),
-<cite>indices[i][j]</cite> is the index in training dataset
-<cite>influence_src_dataset</cite> of the example with the <cite>j</cite>-th highest
-(resp. lowest) influence score (out of the examples in
-<cite>influence_src_dataset</cite>) on the <cite>i</cite>-th example in the test batch.</p></li>
+<li><p>k-most influential mode: if this mode is run (<cite>inputs</cite> is not None,
+<cite>k</cite> is an int), returns a namedtuple <cite>(indices, influence_scores)</cite>.
+<cite>indices</cite> is a 2D tensor of shape <cite>(input_size, k)</cite>, where
+<cite>input_size</cite> is the number of examples in the test batch. If
+computing proponents (resp. opponents), <cite>indices[i][j]</cite> is the
+index in training dataset <cite>influence_src_dataset</cite> of the example
+with the <cite>j</cite>-th highest (resp. lowest) influence score (out of the
+examples in <cite>influence_src_dataset</cite>) on the <cite>i</cite>-th example in the
+test batch. <cite>influence_scores</cite> contains the corresponding influence
+scores. In particular, <cite>influence_scores[i][j]</cite> is the influence
+score of example <cite>indices[i][j]</cite> in <cite>influence_src_dataset</cite> on
+example <cite>i</cite> in the test batch represented by <cite>inputs</cite> and
+<cite>targets</cite>.</p></li>
 </ul>
 </p>
 </dd>

@@ -272,7 +272,7 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">        """</span>
         <span class="k">pass</span>
 
-<div class="viewcode-block" id="TracInCPBase.influence"><a class="viewcode-back" href="../../../../influence.html#captum.influence.TracInCPBase.influence">[docs]</a>    <span class="nd">@log_usage</span><span class="p">()</span>
+<div class="viewcode-block" id="TracInCPBase.influence"><a class="viewcode-back" href="../../../../influence.html#captum.influence.TracInCPBase.influence">[docs]</a>    <span class="nd">@abstractmethod</span>
     <span class="k">def</span> <span class="nf">influence</span><span class="p">(</span>  <span class="c1"># type: ignore[override]</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">inputs</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -364,14 +364,37 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">              example `i` in the test batch represented by `inputs` and</span>
 <span class="sd">              `targets`.</span>
 <span class="sd">        """</span>
-        <span class="n">_inputs</span> <span class="o">=</span> <span class="n">_format_inputs</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">unpack_inputs</span><span class="p">)</span>
+        <span class="k">pass</span></div></div>
 
-        <span class="k">if</span> <span class="n">inputs</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_self_influence</span><span class="p">()</span>
-        <span class="k">elif</span> <span class="n">k</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_influence</span><span class="p">(</span><span class="n">_inputs</span><span class="p">,</span> <span class="n">targets</span><span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_k_most_influential</span><span class="p">(</span><span class="n">_inputs</span><span class="p">,</span> <span class="n">targets</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">proponents</span><span class="p">)</span></div></div>
+
+<span class="k">def</span> <span class="nf">_influence_route_to_helpers</span><span class="p">(</span>
+    <span class="n">influence_instance</span><span class="p">:</span> <span class="n">TracInCPBase</span><span class="p">,</span>
+    <span class="n">inputs</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">targets</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Tensor</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">k</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">proponents</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+    <span class="n">unpack_inputs</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">KMostInfluentialResults</span><span class="p">]:</span>
+    <span class="sd">"""</span>
+<span class="sd">    This is a helper function called by `TracInCP.influence` and</span>
+<span class="sd">    `TracInCPFast.influence`. Those methods share a common logic in that they assume</span>
+<span class="sd">    an instance of their respective classes implement 3 private methods</span>
+<span class="sd">    (`_self_influence`, `_influence`, `_get_k_most_influential`), and the logic of</span>
+<span class="sd">    which private method to call is common, as described in the documentation of the</span>
+<span class="sd">    `influence` method. The arguments and return values of this function are the exact</span>
+<span class="sd">    same as the `influence` method. Note that `influence_instance` refers to the</span>
+<span class="sd">    instance for which the `influence` method was called.</span>
+<span class="sd">    """</span>
+    <span class="n">_inputs</span> <span class="o">=</span> <span class="n">_format_inputs</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">unpack_inputs</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">inputs</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">influence_instance</span><span class="o">.</span><span class="n">_self_influence</span><span class="p">()</span>
+    <span class="k">elif</span> <span class="n">k</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">influence_instance</span><span class="o">.</span><span class="n">_influence</span><span class="p">(</span><span class="n">_inputs</span><span class="p">,</span> <span class="n">targets</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">influence_instance</span><span class="o">.</span><span class="n">_get_k_most_influential</span><span class="p">(</span>
+            <span class="n">_inputs</span><span class="p">,</span> <span class="n">targets</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">proponents</span>
+        <span class="p">)</span>
 
 
 <div class="viewcode-block" id="TracInCP"><a class="viewcode-back" href="../../../../influence.html#captum.influence.TracInCP">[docs]</a><span class="k">class</span> <span class="nc">TracInCP</span><span class="p">(</span><span class="n">TracInCPBase</span><span class="p">):</span>
@@ -544,6 +567,107 @@ src="/_sphinx/documentation_options.js"></script>
                         <span class="n">param</span><span class="o">.</span><span class="n">requires_grad</span> <span class="o">=</span> <span class="kc">True</span>
                         <span class="n">gradset</span> <span class="o">=</span> <span class="kc">True</span>
             <span class="k">assert</span> <span class="n">gradset</span><span class="p">,</span> <span class="s2">"At least one parameter of network must require gradient."</span>
+
+<div class="viewcode-block" id="TracInCP.influence"><a class="viewcode-back" href="../../../../influence.html#captum.influence.TracInCP.influence">[docs]</a>    <span class="nd">@log_usage</span><span class="p">()</span>
+    <span class="k">def</span> <span class="nf">influence</span><span class="p">(</span>  <span class="c1"># type: ignore[override]</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">inputs</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">targets</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Tensor</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">k</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">proponents</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="n">unpack_inputs</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">KMostInfluentialResults</span><span class="p">]:</span>
+        <span class="sa">r</span><span class="sd">"""</span>
+<span class="sd">        This is the key method of this class, and can be run in 3 different modes,</span>
+<span class="sd">        where the mode that is run depends on the arguments passed to this method:</span>
+
+<span class="sd">        - self influence mode: This mode is used if `inputs` is None. This mode</span>
+<span class="sd">          computes the self influence scores for every example in</span>
+<span class="sd">          the training dataset `influence_src_dataset`.</span>
+<span class="sd">        - influence score mode: This mode is used if `inputs` is not None, and `k` is</span>
+<span class="sd">          None. This mode computes the influence score of every example in</span>
+<span class="sd">          training dataset `influence_src_dataset` on every example in the test</span>
+<span class="sd">          batch represented by `inputs` and `targets`.</span>
+<span class="sd">        - k-most influential mode: This mode is used if `inputs` is not None, and</span>
+<span class="sd">          `k` is not None, and an int. This mode computes the proponents or</span>
+<span class="sd">          opponents of every example in the test batch represented by `inputs`</span>
+<span class="sd">          and `targets`. In particular, for each test example in the test batch,</span>
+<span class="sd">          this mode computes its proponents (resp. opponents), which are the</span>
+<span class="sd">          indices in the training dataset `influence_src_dataset` of the training</span>
+<span class="sd">          examples with the `k` highest (resp. lowest) influence scores on the</span>
+<span class="sd">          test example. Proponents are computed if `proponents` is True.</span>
+<span class="sd">          Otherwise, opponents are computed. For each test example, this method</span>
+<span class="sd">          also returns the actual influence score of each proponent (resp.</span>
+<span class="sd">          opponent) on the test example.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            inputs (Any, optional): If not provided or `None`, the self influence mode</span>
+<span class="sd">                    will be run. Otherwise, `inputs` is the test batch that will be</span>
+<span class="sd">                    used when running in either influence score or k-most influential</span>
+<span class="sd">                    mode. If the argument `unpack_inputs` is False, the</span>
+<span class="sd">                    assumption is that `self.model(inputs)` produces the predictions</span>
+<span class="sd">                    for a batch, and `inputs` can be of any type. Otherwise if the</span>
+<span class="sd">                    argument `unpack_inputs` is True, the assumption is that</span>
+<span class="sd">                    `self.model(*inputs)` produces the predictions for a batch, and</span>
+<span class="sd">                    `inputs` will need to be a tuple. In other words, `inputs` will be</span>
+<span class="sd">                    unpacked as an argument when passing to `self.model`.</span>
+<span class="sd">                    Default: None</span>
+<span class="sd">            targets (tensor, optional): If computing influence scores on a loss</span>
+<span class="sd">                    function, these are the labels corresponding to the batch `inputs`.</span>
+<span class="sd">                    Default: None</span>
+<span class="sd">            k (int, optional): If not provided or `None`, the influence score mode will</span>
+<span class="sd">                    be run. Otherwise, the k-most influential mode will be run,</span>
+<span class="sd">                    and `k` is the number of proponents / opponents to return per</span>
+<span class="sd">                    example in the test batch.</span>
+<span class="sd">                    Default: None</span>
+<span class="sd">            proponents (bool, optional): Whether seeking proponents (`proponents=True`)</span>
+<span class="sd">                    or opponents (`proponents=False`), if running in k-most influential</span>
+<span class="sd">                    mode.</span>
+<span class="sd">                    Default: True</span>
+<span class="sd">            unpack_inputs (bool, optional): Whether to unpack the `inputs` argument to</span>
+<span class="sd">                    when passing it to `model`, if `inputs` is a tuple (no unpacking</span>
+<span class="sd">                    done otherwise).</span>
+<span class="sd">                    Default: True</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            The return value of this method depends on which mode is run.</span>
+
+<span class="sd">            - self influence mode: if this mode is run (`inputs` is None), returns a 1D</span>
+<span class="sd">              tensor of self influence scores over training dataset</span>
+<span class="sd">              `influence_src_dataset`. The length of this tensor is the number of</span>
+<span class="sd">              examples in `influence_src_dataset`, regardless of whether it is a</span>
+<span class="sd">              Dataset or DataLoader.</span>
+<span class="sd">            - influence score mode: if this mode is run (`inputs is not None, `k` is</span>
+<span class="sd">              None), returns a 2D tensor `influence_scores` of shape</span>
+<span class="sd">              `(input_size, influence_src_dataset_size)`, where `input_size` is</span>
+<span class="sd">              the number of examples in the test batch, and</span>
+<span class="sd">              `influence_src_dataset_size` is the number of examples in</span>
+<span class="sd">              training dataset `influence_src_dataset`. In other words,</span>
+<span class="sd">              `influence_scores[i][j]` is the influence score of the `j`-th</span>
+<span class="sd">              example in `influence_src_dataset` on the `i`-th example in the</span>
+<span class="sd">              test batch.</span>
+<span class="sd">            - k-most influential mode: if this mode is run (`inputs` is not None,</span>
+<span class="sd">              `k` is an int), returns a namedtuple `(indices, influence_scores)`.</span>
+<span class="sd">              `indices` is a 2D tensor of shape `(input_size, k)`, where</span>
+<span class="sd">              `input_size` is the number of examples in the test batch. If</span>
+<span class="sd">              computing proponents (resp. opponents), `indices[i][j]` is the</span>
+<span class="sd">              index in training dataset `influence_src_dataset` of the example</span>
+<span class="sd">              with the `j`-th highest (resp. lowest) influence score (out of the</span>
+<span class="sd">              examples in `influence_src_dataset`) on the `i`-th example in the</span>
+<span class="sd">              test batch. `influence_scores` contains the corresponding influence</span>
+<span class="sd">              scores. In particular, `influence_scores[i][j]` is the influence</span>
+<span class="sd">              score of example `indices[i][j]` in `influence_src_dataset` on</span>
+<span class="sd">              example `i` in the test batch represented by `inputs` and</span>
+<span class="sd">              `targets`.</span>
+<span class="sd">        """</span>
+        <span class="k">return</span> <span class="n">_influence_route_to_helpers</span><span class="p">(</span>
+            <span class="bp">self</span><span class="p">,</span>
+            <span class="n">inputs</span><span class="p">,</span>
+            <span class="n">targets</span><span class="p">,</span>
+            <span class="n">k</span><span class="p">,</span>
+            <span class="n">proponents</span><span class="p">,</span>
+            <span class="n">unpack_inputs</span><span class="p">,</span>
+        <span class="p">)</span></div>
 
     <span class="k">def</span> <span class="nf">_influence_batch_tracincp</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
