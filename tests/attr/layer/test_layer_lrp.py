@@ -3,7 +3,7 @@
 import torch
 import torch.nn as nn
 from captum.attr import LayerLRP
-from captum.attr._utils.lrp_rules import Alpha1_Beta0_Rule, EpsilonRule, GammaRule
+from captum.attr._utils.lrp_rules import EpsilonRule, GammaRule, ZPlusRule
 
 from ...helpers.basic import BaseTest, assertTensorAlmostEqual
 from ...helpers.basic_models import BasicModel_ConvNet_One_Conv, SimpleLRPModel
@@ -81,7 +81,7 @@ class Test(BaseTest):
         model, inputs = _get_simple_model()
         model.eval()
         model.linear.rule = GammaRule()
-        model.linear2.rule = Alpha1_Beta0_Rule()
+        model.linear2.rule = ZPlusRule()
         output = model(inputs)
         lrp = LayerLRP(model, model.linear)
         _ = lrp.attribute(inputs)
@@ -125,8 +125,8 @@ class Test(BaseTest):
         with torch.no_grad():
             model.linear.weight.data[0][0] = -2
         model.eval()
-        model.linear.rule = Alpha1_Beta0_Rule()
-        model.linear2.rule = Alpha1_Beta0_Rule()
+        model.linear.rule = ZPlusRule()
+        model.linear2.rule = ZPlusRule()
         lrp = LayerLRP(model, model.linear)
         relevance = lrp.attribute(inputs)
         assertTensorAlmostEqual(self, relevance[0], torch.tensor([24.0, 36.0, 36.0]))
