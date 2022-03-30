@@ -191,7 +191,7 @@ def collect_activations(
     """
     Collect target activations for a model.
     """
-    if not hasattr(targets, "__iter__"):
+    if not isinstance(targets, list):
         targets = [targets]
     catch_activ = ActivationFetcher(model, targets)
     activ_out = catch_activ(model_input)
