@@ -772,9 +772,11 @@ class TCAV(ConceptInterpreter):
             concepts_key = concepts_to_str(concepts)
 
             # sort classes / concepts in the order specified in concept_keys
-            concept_ord = {concept.id: ci for ci, concept in enumerate(concepts)}
+            concept_ord = [concept.id for concept in concepts]
+            class_ord = {cls_: idx for idx, cls_ in enumerate(cls_set)}
+
             new_ord = torch.tensor(
-                [concept_ord[cls] for cls in cls_set], device=tcav_score.device
+                [class_ord[cncpt] for cncpt in concept_ord], device=tcav_score.device
             )
 
             # sort based on classes
