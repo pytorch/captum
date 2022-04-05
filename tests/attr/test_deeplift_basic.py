@@ -12,7 +12,7 @@ from tests.helpers.basic import (
     assertTensorAlmostEqual,
 )
 from tests.helpers.basic_models import (
-    BasicModelWithReusableModules,
+    BasicModelWithReusedModules,
     Conv1dSeqModel,
     LinearMaxPoolLinearModel,
     ReLUDeepLiftModel,
@@ -247,7 +247,7 @@ class Test(BaseTest):
         self.assertEqual(attr.shape, rand_seq_data.shape)
 
     def test_reusable_modules(self) -> None:
-        model = BasicModelWithReusableModules()
+        model = BasicModelWithReusedModules()
         input = torch.rand(1, 3)
         dl = DeepLift(model)
         with self.assertRaises(RuntimeError):
