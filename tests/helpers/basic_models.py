@@ -183,7 +183,7 @@ class LinearMaxPoolLinearModel(nn.Module):
         return self.lin2(self.pool1(self.lin1(x))[:, 0, :])
 
 
-class BasicModelWithReusableModules(nn.Module):
+class BasicModelWithReusedModules(nn.Module):
     def __init__(self) -> None:
         super().__init__()
         self.lin1 = nn.Linear(3, 2)
@@ -192,6 +192,16 @@ class BasicModelWithReusableModules(nn.Module):
 
     def forward(self, inputs):
         return self.relu(self.lin2(self.relu(self.lin1(inputs))))
+
+
+class BasicModelWithReusedLinear(nn.Module):
+    def __init__(self) -> None:
+        super().__init__()
+        self.lin1 = nn.Linear(3, 3)
+        self.relu = nn.ReLU()
+
+    def forward(self, inputs):
+        return self.relu(self.lin1(self.relu(self.lin1(inputs))))
 
 
 class BasicModelWithSparseInputs(nn.Module):
