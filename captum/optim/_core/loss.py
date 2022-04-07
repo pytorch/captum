@@ -724,6 +724,9 @@ def sum_loss_list(
         ]
         for target in targets
     ]
+
+    # Filter out duplicate targets
+    target = list(dict.fromkeys(target))
     return CompositeLoss(loss_fn, name=name, target=target)
 
 
