@@ -130,6 +130,9 @@ def module_op(
         target = (self.target if isinstance(self.target, list) else [self.target]) + (
             other.target if isinstance(other.target, list) else [other.target]
         )
+
+        # Filter out duplicate targets
+        target = list(dict.fromkeys(target))
     else:
         raise TypeError(
             "Can only apply math operations with int, float or Loss. Received type "
