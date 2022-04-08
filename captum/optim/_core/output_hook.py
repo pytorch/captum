@@ -1,9 +1,9 @@
 import warnings
 from typing import Callable, Iterable, Tuple
+from warnings import warn
 
 import torch
 import torch.nn as nn
-from warnings import warn
 
 from captum.optim._utils.typing import ModuleOutputMapping, TupleOfTensorsOrTensorType
 
