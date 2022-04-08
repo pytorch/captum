@@ -15,31 +15,306 @@ from tests.helpers.basic import (
 from tests.optim.helpers import numpy_transforms
 
 
-class TestRandSelect(BaseTest):
-    def test_rand_select(self) -> None:
-        a = (1, 2, 3, 4, 5)
-        b = torch.Tensor([0.1, -5, 56.7, 99.0])
-
-        self.assertIn(transforms._rand_select(a), a)
-        self.assertIn(transforms._rand_select(b), b)
-
-
 class TestRandomScale(BaseTest):
-    def test_random_scale(self) -> None:
-        scale_module = transforms.RandomScale(scale=(1, 0.975, 1.025, 0.95, 1.05))
-        test_tensor = torch.ones(1, 3, 3, 3)
+    def test_random_scale_init(self) -> None:
+        scale_module = transforms.RandomScale(scale=[1, 0.975, 1.025, 0.95, 1.05])
+        self.assertEqual(scale_module.scale, [1.0, 0.975, 1.025, 0.95, 1.05])
+        self.assertFalse(scale_module._is_distribution)
+        self.assertEqual(scale_module.mode, "bilinear")
+        self.assertFalse(scale_module.align_corners)
+        self.assertFalse(scale_module.recompute_scale_factor)
 
-        # Test rescaling
+    def test_random_scale_tensor_scale(self) -> None:
+        scale = torch.tensor([1, 0.975, 1.025, 0.95, 1.05])
+        scale_module = transforms.RandomScale(scale=scale)
+        self.assertEqual(scale_module.scale, scale.tolist())
+
+    def test_random_scale_int_scale(self) -> None:
+        scale = [1, 2, 3, 4, 5]
+        scale_module = transforms.RandomScale(scale=scale)
+        for s in scale_module.scale:
+            self.assertIsInstance(s, float)
+        self.assertEqual(scale_module.scale, [1.0, 2.0, 3.0, 4.0, 5.0])
+
+    def test_random_scale_scale_distributions(self) -> None:
+        scale = torch.distributions.Uniform(0.95, 1.05)
+        scale_module = transforms.RandomScale(scale=scale)
+        self.assertIsInstance(
+            scale_module.scale_distribution,
+            torch.distributions.distribution.Distribution,
+        )
+        self.assertTrue(scale_module._is_distribution)
+
+    def test_random_scale_torch_version_check(self) -> None:
+        scale_module = transforms.RandomScale([1.0])
+
+        has_align_corners = torch.__version__ >= "1.3.0"
+        self.assertEqual(scale_module._has_align_corners, has_align_corners)
+
+        has_recompute_scale_factor = torch.__version__ >= "1.6.0"
+        self.assertEqual(
+            scale_module._has_recompute_scale_factor, has_recompute_scale_factor
+        )
+
+    def test_random_scale_downscaling(self) -> None:
+        scale_module = transforms.RandomScale(scale=[0.5])
+        test_tensor = torch.arange(0, 1 * 1 * 10 * 10).view(1, 1, 10, 10).float()
+
+        scaled_tensor = scale_module._scale_tensor(test_tensor, 0.5)
+
+        expected_tensor = torch.tensor(
+            [
+                [
+                    [
+                        [5.5000, 7.5000, 9.5000, 11.5000, 13.5000],
+                        [25.5000, 27.5000, 29.5000, 31.5000, 33.5000],
+                        [45.5000, 47.5000, 49.5000, 51.5000, 53.5000],
+                        [65.5000, 67.5000, 69.5000, 71.5000, 73.5000],
+                        [85.5000, 87.5000, 89.5000, 91.5000, 93.5000],
+                    ]
+                ]
+            ]
+        )
+
         assertTensorAlmostEqual(
             self,
-            scale_module.scale_tensor(test_tensor, 0.5),
-            torch.ones(3, 1).repeat(3, 1, 3).unsqueeze(0),
+            scaled_tensor,
+            expected_tensor,
+            0,
+        )
+
+    def test_random_scale_upscaling(self) -> None:
+        scale_module = transforms.RandomScale(scale=[0.5])
+        test_tensor = torch.arange(0, 1 * 1 * 2 * 2).view(1, 1, 2, 2).float()
+
+        scaled_tensor = scale_module._scale_tensor(test_tensor, 1.5)
+
+        expected_tensor = torch.tensor(
+            [
+                [
+                    [
+                        [0.0000, 0.5000, 1.0000],
+                        [1.0000, 1.5000, 2.0000],
+                        [2.0000, 2.5000, 3.0000],
+                    ]
+                ]
+            ]
+        )
+
+        assertTensorAlmostEqual(
+            self,
+            scaled_tensor,
+            expected_tensor,
+            0,
+        )
+
+    def test_random_forward_exact(self) -> None:
+        scale_module = transforms.RandomScale(scale=[0.5])
+        test_tensor = torch.arange(0, 1 * 1 * 10 * 10).view(1, 1, 10, 10).float()
+
+        scaled_tensor = scale_module(test_tensor)
+
+        expected_tensor = torch.tensor(
+            [
+                [
+                    [
+                        [5.5000, 7.5000, 9.5000, 11.5000, 13.5000],
+                        [25.5000, 27.5000, 29.5000, 31.5000, 33.5000],
+                        [45.5000, 47.5000, 49.5000, 51.5000, 53.5000],
+                        [65.5000, 67.5000, 69.5000, 71.5000, 73.5000],
+                        [85.5000, 87.5000, 89.5000, 91.5000, 93.5000],
+                    ]
+                ]
+            ]
+        )
+
+        assertTensorAlmostEqual(
+            self,
+            scaled_tensor,
+            expected_tensor,
+            0,
+        )
+
+    def test_random_scale_forward_exact_nearest(self) -> None:
+        scale_module = transforms.RandomScale(scale=[0.5], mode="nearest")
+        self.assertIsNone(scale_module.align_corners)
+        self.assertEqual(scale_module.mode, "nearest")
+
+        test_tensor = torch.arange(0, 1 * 1 * 10 * 10).view(1, 1, 10, 10).float()
+
+        scaled_tensor = scale_module(test_tensor)
+
+        expected_tensor = torch.tensor(
+            [
+                [
+                    [
+                        [0.0, 2.0, 4.0, 6.0, 8.0],
+                        [20.0, 22.0, 24.0, 26.0, 28.0],
+                        [40.0, 42.0, 44.0, 46.0, 48.0],
+                        [60.0, 62.0, 64.0, 66.0, 68.0],
+                        [80.0, 82.0, 84.0, 86.0, 88.0],
+                    ]
+                ]
+            ]
+        )
+
+        assertTensorAlmostEqual(
+            self,
+            scaled_tensor,
+            expected_tensor,
+            0,
+        )
+
+    def test_random_scale_forward_exact_align_corners(self) -> None:
+        if torch.__version__ <= "1.2.0":
+            raise unittest.SkipTest(
+                "Skipping RandomScale exact align corners forward due to"
+                + " insufficient Torch version."
+            )
+        scale_module = transforms.RandomScale(scale=[0.5], align_corners=True)
+        self.assertTrue(scale_module.align_corners)
+
+        test_tensor = torch.arange(0, 1 * 1 * 10 * 10).view(1, 1, 10, 10).float()
+
+        scaled_tensor = scale_module(test_tensor)
+
+        expected_tensor = torch.tensor(
+            [
+                [
+                    [
+                        [0.0000, 2.2500, 4.5000, 6.7500, 9.0000],
+                        [22.5000, 24.7500, 27.0000, 29.2500, 31.5000],
+                        [45.0000, 47.2500, 49.5000, 51.7500, 54.0000],
+                        [67.5000, 69.7500, 72.0000, 74.2500, 76.5000],
+                        [90.0000, 92.2500, 94.5000, 96.7500, 99.0000],
+                    ]
+                ]
+            ]
+        )
+        assertTensorAlmostEqual(
+            self,
+            scaled_tensor,
+            expected_tensor,
+            0,
+        )
+
+    def test_random_scale_forward(self) -> None:
+        scale_module = transforms.RandomScale(scale=[0.5])
+        test_tensor = torch.ones(1, 3, 10, 10)
+        output_tensor = scale_module(test_tensor)
+        self.assertEqual(list(output_tensor.shape), [1, 3, 5, 5])
+
+    def test_random_scale_forward_distributions(self) -> None:
+        scale = torch.distributions.Uniform(0.95, 1.05)
+        scale_module = transforms.RandomScale(scale=scale)
+        test_tensor = torch.ones(1, 3, 10, 10)
+        output_tensor = scale_module(test_tensor)
+        self.assertTrue(torch.is_tensor(output_tensor))
+
+    def test_random_scale_jit_module(self) -> None:
+        if torch.__version__ <= "1.8.0":
+            raise unittest.SkipTest(
+                "Skipping RandomScale JIT module test due to insufficient"
+                + " Torch version."
+            )
+        scale_module = transforms.RandomScale(scale=[1.5])
+        jit_scale_module = torch.jit.script(scale_module)
+
+        test_tensor = torch.arange(0, 1 * 1 * 2 * 2).view(1, 1, 2, 2).float()
+        scaled_tensor = jit_scale_module(test_tensor)
+
+        expected_tensor = torch.tensor(
+            [
+                [
+                    [
+                        [0.0000, 0.5000, 1.0000],
+                        [1.0000, 1.5000, 2.0000],
+                        [2.0000, 2.5000, 3.0000],
+                    ]
+                ]
+            ]
+        )
+
+        assertTensorAlmostEqual(
+            self,
+            scaled_tensor,
+            expected_tensor,
+            0,
+        )
+
+
+class TestRandomScaleAffine(BaseTest):
+    def test_random_scale_affine_init(self) -> None:
+        scale_module = transforms.RandomScaleAffine(scale=[1, 0.975, 1.025, 0.95, 1.05])
+        self.assertEqual(scale_module.scale, [1.0, 0.975, 1.025, 0.95, 1.05])
+        self.assertFalse(scale_module._is_distribution)
+        self.assertEqual(scale_module.mode, "bilinear")
+        self.assertEqual(scale_module.padding_mode, "zeros")
+        self.assertFalse(scale_module.align_corners)
+
+    def test_random_scale_affine_tensor_scale(self) -> None:
+        scale = torch.tensor([1, 0.975, 1.025, 0.95, 1.05])
+        scale_module = transforms.RandomScaleAffine(scale=scale)
+        self.assertEqual(scale_module.scale, scale.tolist())
+
+    def test_random_scale_affine_int_scale(self) -> None:
+        scale = [1, 2, 3, 4, 5]
+        scale_module = transforms.RandomScaleAffine(scale=scale)
+        for s in scale_module.scale:
+            self.assertIsInstance(s, float)
+        self.assertEqual(scale_module.scale, [1.0, 2.0, 3.0, 4.0, 5.0])
+
+    def test_random_scale_affine_scale_distributions(self) -> None:
+        scale = torch.distributions.Uniform(0.95, 1.05)
+        scale_module = transforms.RandomScaleAffine(scale=scale)
+        self.assertIsInstance(
+            scale_module.scale_distribution,
+            torch.distributions.distribution.Distribution,
+        )
+        self.assertTrue(scale_module._is_distribution)
+
+    def test_random_scale_affine_torch_version_check(self) -> None:
+        scale_module = transforms.RandomScaleAffine([1.0])
+        _has_align_corners = torch.__version__ >= "1.3.0"
+        self.assertEqual(scale_module._has_align_corners, _has_align_corners)
+
+    def test_random_scale_affine_matrix(self) -> None:
+        scale_module = transforms.RandomScaleAffine(scale=[0.5])
+        test_tensor = torch.ones(1, 3, 3, 3)
+        # Test scale matrices
+
+        assertTensorAlmostEqual(
+            self,
+            scale_module._get_scale_mat(0.5, test_tensor.device, test_tensor.dtype),
+            torch.tensor([[0.5000, 0.0000, 0.0000], [0.0000, 0.5000, 0.0000]]),
             0,
         )
 
         assertTensorAlmostEqual(
             self,
-            scale_module.scale_tensor(test_tensor, 1.5),
+            scale_module._get_scale_mat(1.24, test_tensor.device, test_tensor.dtype),
+            torch.tensor([[1.2400, 0.0000, 0.0000], [0.0000, 1.2400, 0.0000]]),
+            0,
+        )
+
+    def test_random_scale_affine_downscaling(self) -> None:
+        scale_module = transforms.RandomScaleAffine(scale=[0.5])
+        test_tensor = torch.ones(1, 3, 3, 3)
+
+        assertTensorAlmostEqual(
+            self,
+            scale_module._scale_tensor(test_tensor, 0.5),
+            torch.ones(3, 1).repeat(3, 1, 3).unsqueeze(0),
+            0,
+        )
+
+    def test_random_scale_affine_upscaling(self) -> None:
+        scale_module = transforms.RandomScaleAffine(scale=[1.5])
+        test_tensor = torch.ones(1, 3, 3, 3)
+
+        assertTensorAlmostEqual(
+            self,
+            scale_module._scale_tensor(test_tensor, 1.5),
             torch.tensor(
                 [
                     [0.2500, 0.5000, 0.2500],
@@ -52,22 +327,92 @@ class TestRandomScale(BaseTest):
             0,
         )
 
-    def test_random_scale_matrix(self) -> None:
-        scale_module = transforms.RandomScale(scale=(1, 0.975, 1.025, 0.95, 1.05))
-        test_tensor = torch.ones(1, 3, 3, 3)
-        # Test scale matrices
+    def test_random_scale_affine_forward_exact(self) -> None:
+        scale_module = transforms.RandomScaleAffine(scale=[1.5])
+        test_tensor = torch.arange(0, 1 * 1 * 4 * 4).view(1, 1, 4, 4).float()
 
+        scaled_tensor = scale_module(test_tensor)
+
+        expected_tensor = torch.tensor(
+            [
+                [
+                    [
+                        [0.0000, 0.1875, 0.5625, 0.1875],
+                        [0.7500, 3.7500, 5.2500, 1.5000],
+                        [2.2500, 9.7500, 11.2500, 3.0000],
+                        [0.7500, 3.1875, 3.5625, 0.9375],
+                    ]
+                ]
+            ]
+        )
         assertTensorAlmostEqual(
             self,
-            scale_module.get_scale_mat(0.5, test_tensor.device, test_tensor.dtype),
-            torch.tensor([[0.5000, 0.0000, 0.0000], [0.0000, 0.5000, 0.0000]]),
+            scaled_tensor,
+            expected_tensor,
             0,
+        )
+
+    def test_random_scale_affine_forward_exact_mode_nearest(self) -> None:
+        scale_module = transforms.RandomScaleAffine(scale=[1.5], mode="nearest")
+        self.assertEqual(scale_module.mode, "nearest")
+        test_tensor = torch.arange(0, 1 * 1 * 4 * 4).view(1, 1, 4, 4).float()
+
+        scaled_tensor = scale_module(test_tensor)
+        expected_tensor = torch.tensor(
+            [
+                [
+                    [
+                        [0.0, 0.0, 0.0, 0.0],
+                        [0.0, 5.0, 6.0, 0.0],
+                        [0.0, 9.0, 10.0, 0.0],
+                        [0.0, 0.0, 0.0, 0.0],
+                    ]
+                ]
+            ]
         )
 
         assertTensorAlmostEqual(
             self,
-            scale_module.get_scale_mat(1.24, test_tensor.device, test_tensor.dtype),
-            torch.tensor([[1.2400, 0.0000, 0.0000], [0.0000, 1.2400, 0.0000]]),
+            scaled_tensor,
+            expected_tensor,
+            0,
+        )
+
+    def test_random_scale_affine_forward(self) -> None:
+        scale_module = transforms.RandomScaleAffine(scale=[0.5])
+        test_tensor = torch.ones(1, 3, 10, 10)
+        output_tensor = scale_module(test_tensor)
+        self.assertEqual(list(output_tensor.shape), list(test_tensor.shape))
+
+    def test_random_scale_affine_forward_distributions(self) -> None:
+        scale = torch.distributions.Uniform(0.95, 1.05)
+        scale_module = transforms.RandomScaleAffine(scale=scale)
+        test_tensor = torch.ones(1, 3, 10, 10)
+        output_tensor = scale_module(test_tensor)
+        self.assertEqual(list(output_tensor.shape), list(test_tensor.shape))
+
+    def test_random_scale_affine_jit_module(self) -> None:
+        if torch.__version__ <= "1.8.0":
+            raise unittest.SkipTest(
+                "Skipping RandomScaleAffine JIT module test due to insufficient"
+                + " Torch version."
+            )
+        scale_module = transforms.RandomScaleAffine(scale=[1.5])
+        jit_scale_module = torch.jit.script(scale_module)
+        test_tensor = torch.ones(1, 3, 3, 3)
+
+        assertTensorAlmostEqual(
+            self,
+            jit_scale_module(test_tensor),
+            torch.tensor(
+                [
+                    [0.2500, 0.5000, 0.2500],
+                    [0.5000, 1.0000, 0.5000],
+                    [0.2500, 0.5000, 0.2500],
+                ]
+            )
+            .repeat(3, 1, 1)
+            .unsqueeze(0),
             0,
         )
 
