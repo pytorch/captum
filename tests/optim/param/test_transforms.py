@@ -335,7 +335,15 @@ class TestRandomSpatialJitter(BaseTest):
 
 
 class TestCenterCrop(BaseTest):
-    def test_center_crop_one_number(self) -> None:
+    def test_center_crop_init(self) -> None:
+        crop_module = transforms.CenterCrop(3)
+        self.assertEqual(crop_module.size, [3, 3])
+        self.assertFalse(crop_module.pixels_from_edges)
+        self.assertFalse(crop_module.offset_left)
+        self.assertEqual(crop_module.padding_mode, "constant")
+        self.assertEqual(crop_module.padding_value, 0.0)
+
+    def test_center_crop_forward_one_number(self) -> None:
         pad = (1, 1, 1, 1)
         test_tensor = (
             F.pad(F.pad(torch.ones(2, 2), pad=pad), pad=pad, value=1)
@@ -356,7 +364,60 @@ class TestCenterCrop(BaseTest):
         ).unsqueeze(0)
         assertTensorAlmostEqual(self, cropped_tensor, expected_tensor, 0)
 
-    def test_center_crop_two_numbers(self) -> None:
+    def test_center_crop_forward_one_number_dim_3(self) -> None:
+        pad = (1, 1, 1, 1)
+        test_tensor = F.pad(F.pad(torch.ones(2, 2), pad=pad), pad=pad, value=1).repeat(
+            3, 1, 1
+        )
+        crop_vals = 3
+
+        crop_tensor = transforms.CenterCrop(crop_vals, True)
+        cropped_tensor = crop_tensor(test_tensor)
+
+        crop_mod_np = numpy_transforms.CenterCrop(crop_vals, True)
+        cropped_array = crop_mod_np.forward(test_tensor.numpy())
+
+        assertArraysAlmostEqual(cropped_tensor.numpy(), cropped_array, 0)
+        expected_tensor = torch.stack(
+            [torch.tensor([[1.0, 1.0, 0.0], [1.0, 1.0, 0.0], [0.0, 0.0, 0.0]])] * 3
+        )
+        self.assertEqual(cropped_tensor.shape, expected_tensor.shape)
+        assertTensorAlmostEqual(self, cropped_tensor, expected_tensor, 0)
+
+    def test_center_crop_forward_one_number_list(self) -> None:
+        pad = (1, 1, 1, 1)
+        test_tensor = (
+            F.pad(F.pad(torch.ones(2, 2), pad=pad), pad=pad, value=1)
+            .repeat(3, 1, 1)
+            .unsqueeze(0)
+        )
+        crop_vals = [3]
+
+        crop_tensor = transforms.CenterCrop(crop_vals, True)
+        cropped_tensor = crop_tensor(test_tensor)
+
+        crop_mod_np = numpy_transforms.CenterCrop(crop_vals, True)
+        cropped_array = crop_mod_np.forward(test_tensor.numpy())
+
+        assertArraysAlmostEqual(cropped_tensor.numpy(), cropped_array, 0)
+        expected_tensor = torch.stack(
+            [torch.tensor([[1.0, 1.0, 0.0], [1.0, 1.0, 0.0], [0.0, 0.0, 0.0]])] * 3
+        ).unsqueeze(0)
+        assertTensorAlmostEqual(self, cropped_tensor, expected_tensor, 0)
+
+    def test_center_crop_list_len_3_value_error(self) -> None:
+        crop_vals = [3, 3, 3]
+
+        with self.assertRaises(ValueError):
+            transforms.CenterCrop(crop_vals, True)
+
+    def test_center_crop_str_value_error(self) -> None:
+        crop_vals = "error"
+
+        with self.assertRaises(ValueError):
+            transforms.CenterCrop(crop_vals, True)
+
+    def test_center_crop_forward_two_numbers(self) -> None:
         pad = (1, 1, 1, 1)
         test_tensor = (
             F.pad(F.pad(torch.ones(2, 2), pad=pad), pad=pad, value=1)
@@ -377,7 +438,7 @@ class TestCenterCrop(BaseTest):
         ).unsqueeze(0)
         assertTensorAlmostEqual(self, cropped_tensor, expected_tensor, 0)
 
-    def test_center_crop_one_number_exact(self) -> None:
+    def test_center_crop_forward_one_number_exact(self) -> None:
         pad = (1, 1, 1, 1)
         test_tensor = (
             F.pad(F.pad(torch.ones(2, 2), pad=pad), pad=pad, value=1)
@@ -410,7 +471,7 @@ class TestCenterCrop(BaseTest):
         ).unsqueeze(0)
         assertTensorAlmostEqual(self, cropped_tensor, expected_tensor, 0)
 
-    def test_center_crop_two_numbers_exact(self) -> None:
+    def test_center_crop_forward_two_numbers_exact(self) -> None:
         pad = (1, 1, 1, 1)
         test_tensor = (
             F.pad(F.pad(torch.ones(2, 2), pad=pad), pad=pad, value=1)
@@ -433,7 +494,7 @@ class TestCenterCrop(BaseTest):
         ).unsqueeze(0)
         assertTensorAlmostEqual(self, cropped_tensor, expected_tensor, 0)
 
-    def test_center_crop_offset_left_uneven_sides(self) -> None:
+    def test_center_crop_forward_offset_left_uneven_sides(self) -> None:
         crop_mod = transforms.CenterCrop(
             [5, 5], pixels_from_edges=False, offset_left=True
         )
@@ -442,7 +503,7 @@ class TestCenterCrop(BaseTest):
         cropped_tensor = crop_mod(px)
         assertTensorAlmostEqual(self, x, cropped_tensor)
 
-    def test_center_crop_offset_left_even_sides(self) -> None:
+    def test_center_crop_forward_offset_left_even_sides(self) -> None:
         crop_mod = transforms.CenterCrop(
             [5, 5], pixels_from_edges=False, offset_left=True
         )
@@ -450,6 +511,106 @@ class TestCenterCrop(BaseTest):
         px = F.pad(x, (5, 5, 5, 5), value=float("-inf"))
         cropped_tensor = crop_mod(px)
         assertTensorAlmostEqual(self, x, cropped_tensor)
+
+    def test_center_crop_forward_padding(self) -> None:
+        test_tensor = torch.arange(0, 1 * 1 * 4 * 4).view(1, 1, 4, 4).float()
+        crop_vals = [6, 6]
+
+        center_crop_module = transforms.CenterCrop(crop_vals, offset_left=False)
+        cropped_tensor = center_crop_module(test_tensor)
+
+        expected_tensor = torch.tensor(
+            [
+                [0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+                [0.0, 0.0, 1.0, 2.0, 3.0, 0.0],
+                [0.0, 4.0, 5.0, 6.0, 7.0, 0.0],
+                [0.0, 8.0, 9.0, 10.0, 11.0, 0.0],
+                [0.0, 12.0, 13.0, 14.0, 15.0, 0.0],
+                [0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+            ]
+        )
+        assertTensorAlmostEqual(self, cropped_tensor, expected_tensor, 0)
+
+    def test_center_crop_forward_padding_prime_num_pad(self) -> None:
+        test_tensor = torch.arange(0, 1 * 1 * 3 * 3).view(1, 1, 3, 3).float()
+        crop_vals = [6, 6]
+
+        center_crop_module = transforms.CenterCrop(crop_vals, offset_left=False)
+
+        cropped_tensor = center_crop_module(test_tensor)
+
+        expected_tensor = torch.nn.functional.pad(test_tensor, [2, 1, 2, 1])
+        assertTensorAlmostEqual(self, cropped_tensor, expected_tensor)
+
+    def test_center_crop_forward_padding_prime_num_pad_offset_left(self) -> None:
+        test_tensor = torch.arange(0, 1 * 1 * 3 * 3).view(1, 1, 3, 3).float()
+        crop_vals = [6, 6]
+
+        center_crop_module = transforms.CenterCrop(crop_vals, offset_left=True)
+
+        cropped_tensor = center_crop_module(test_tensor)
+
+        expected_tensor = torch.nn.functional.pad(test_tensor, [1, 2, 1, 2])
+        assertTensorAlmostEqual(self, cropped_tensor, expected_tensor)
+
+    def test_center_crop_forward_one_number_exact_jit_module(self) -> None:
+        if torch.__version__ <= "1.8.0":
+            raise unittest.SkipTest(
+                "Skipping CenterCrop JIT module test due to insufficient"
+                + " Torch version."
+            )
+        pad = (1, 1, 1, 1)
+        test_tensor = (
+            F.pad(F.pad(torch.ones(2, 2), pad=pad), pad=pad, value=1)
+            .repeat(3, 1, 1)
+            .unsqueeze(0)
+        )
+
+        crop_vals = 5
+
+        crop_tensor = transforms.CenterCrop(crop_vals, False)
+        jit_crop_tensor = torch.jit.script(crop_tensor)
+        cropped_tensor = jit_crop_tensor(test_tensor)
+        expected_tensor = torch.stack(
+            [
+                torch.tensor(
+                    [
+                        [1.0, 1.0, 1.0, 1.0, 1.0],
+                        [1.0, 0.0, 0.0, 0.0, 0.0],
+                        [1.0, 0.0, 1.0, 1.0, 0.0],
+                        [1.0, 0.0, 1.0, 1.0, 0.0],
+                        [1.0, 0.0, 0.0, 0.0, 0.0],
+                    ]
+                )
+            ]
+            * 3
+        ).unsqueeze(0)
+        assertTensorAlmostEqual(self, cropped_tensor, expected_tensor, 0)
+
+    def test_center_crop_forward_padding_jit_module(self) -> None:
+        if torch.__version__ <= "1.8.0":
+            raise unittest.SkipTest(
+                "Skipping CenterCrop padding JIT module test due to insufficient"
+                + " Torch version."
+            )
+        test_tensor = torch.arange(0, 1 * 1 * 4 * 4).view(1, 1, 4, 4).float()
+        crop_vals = [6, 6]
+
+        center_crop_module = transforms.CenterCrop(crop_vals, offset_left=False)
+        jit_center_crop = torch.jit.script(center_crop_module)
+        cropped_tensor = jit_center_crop(test_tensor)
+
+        expected_tensor = torch.tensor(
+            [
+                [0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+                [0.0, 0.0, 1.0, 2.0, 3.0, 0.0],
+                [0.0, 4.0, 5.0, 6.0, 7.0, 0.0],
+                [0.0, 8.0, 9.0, 10.0, 11.0, 0.0],
+                [0.0, 12.0, 13.0, 14.0, 15.0, 0.0],
+                [0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+            ]
+        )
+        assertTensorAlmostEqual(self, cropped_tensor, expected_tensor, 0)
 
 
 class TestCenterCropFunction(BaseTest):
@@ -472,6 +633,69 @@ class TestCenterCropFunction(BaseTest):
             [torch.tensor([[1.0, 1.0, 0.0], [1.0, 1.0, 0.0], [0.0, 0.0, 0.0]])] * 3
         ).unsqueeze(0)
         assertTensorAlmostEqual(self, cropped_tensor, expected_tensor)
+
+    def test_center_crop_one_number_dim_3(self) -> None:
+        pad = (1, 1, 1, 1)
+        test_tensor = F.pad(F.pad(torch.ones(2, 2), pad=pad), pad=pad, value=1).repeat(
+            3, 1, 1
+        )
+        crop_vals = 3
+
+        cropped_tensor = transforms.center_crop(test_tensor, crop_vals, True)
+        cropped_array = numpy_transforms.center_crop(
+            test_tensor.numpy(), crop_vals, True
+        )
+
+        assertArraysAlmostEqual(cropped_tensor.numpy(), cropped_array, 0)
+        expected_tensor = torch.stack(
+            [torch.tensor([[1.0, 1.0, 0.0], [1.0, 1.0, 0.0], [0.0, 0.0, 0.0]])] * 3
+        )
+        self.assertEqual(cropped_tensor.shape, expected_tensor.shape)
+        assertTensorAlmostEqual(self, cropped_tensor, expected_tensor)
+
+    def test_center_crop_one_number_list(self) -> None:
+        pad = (1, 1, 1, 1)
+        test_tensor = (
+            F.pad(F.pad(torch.ones(2, 2), pad=pad), pad=pad, value=1)
+            .repeat(3, 1, 1)
+            .unsqueeze(0)
+        )
+        crop_vals = [3]
+
+        cropped_tensor = transforms.center_crop(test_tensor, crop_vals, True)
+        cropped_array = numpy_transforms.center_crop(
+            test_tensor.numpy(), crop_vals, True
+        )
+
+        assertArraysAlmostEqual(cropped_tensor.numpy(), cropped_array, 0)
+        expected_tensor = torch.stack(
+            [torch.tensor([[1.0, 1.0, 0.0], [1.0, 1.0, 0.0], [0.0, 0.0, 0.0]])] * 3
+        ).unsqueeze(0)
+        assertTensorAlmostEqual(self, cropped_tensor, expected_tensor)
+
+    def test_center_crop_list_len_3_value_error(self) -> None:
+        pad = (1, 1, 1, 1)
+        test_tensor = (
+            F.pad(F.pad(torch.ones(2, 2), pad=pad), pad=pad, value=1)
+            .repeat(3, 1, 1)
+            .unsqueeze(0)
+        )
+        crop_vals = [3, 3, 3]
+
+        with self.assertRaises(ValueError):
+            transforms.center_crop(test_tensor, crop_vals, True)
+
+    def test_center_crop_str_value_error(self) -> None:
+        pad = (1, 1, 1, 1)
+        test_tensor = (
+            F.pad(F.pad(torch.ones(2, 2), pad=pad), pad=pad, value=1)
+            .repeat(3, 1, 1)
+            .unsqueeze(0)
+        )
+        crop_vals = "error"
+
+        with self.assertRaises(ValueError):
+            transforms.center_crop(test_tensor, crop_vals, True)
 
     def test_center_crop_two_numbers(self) -> None:
         pad = (1, 1, 1, 1)
@@ -550,7 +774,7 @@ class TestCenterCropFunction(BaseTest):
         x = torch.ones(1, 3, 5, 5)
         px = F.pad(x, (5, 4, 5, 4), value=float("-inf"))
         cropped_tensor = transforms.center_crop(
-            px, crop_vals=[5, 5], pixels_from_edges=False, offset_left=True
+            px, size=[5, 5], pixels_from_edges=False, offset_left=True
         )
         assertTensorAlmostEqual(self, x, cropped_tensor)
 
@@ -558,9 +782,104 @@ class TestCenterCropFunction(BaseTest):
         x = torch.ones(1, 3, 5, 5)
         px = F.pad(x, (5, 5, 5, 5), value=float("-inf"))
         cropped_tensor = transforms.center_crop(
-            px, crop_vals=[5, 5], pixels_from_edges=False, offset_left=True
+            px, size=[5, 5], pixels_from_edges=False, offset_left=True
         )
         assertTensorAlmostEqual(self, x, cropped_tensor)
+
+    def test_center_crop_padding(self) -> None:
+        test_tensor = torch.arange(0, 1 * 1 * 4 * 4).view(1, 1, 4, 4).float()
+        crop_vals = [6, 6]
+
+        cropped_tensor = transforms.center_crop(test_tensor, crop_vals)
+
+        expected_tensor = torch.tensor(
+            [
+                [0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+                [0.0, 0.0, 1.0, 2.0, 3.0, 0.0],
+                [0.0, 4.0, 5.0, 6.0, 7.0, 0.0],
+                [0.0, 8.0, 9.0, 10.0, 11.0, 0.0],
+                [0.0, 12.0, 13.0, 14.0, 15.0, 0.0],
+                [0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+            ]
+        )
+        assertTensorAlmostEqual(self, cropped_tensor, expected_tensor, 0)
+
+    def test_center_crop_padding_prime_num_pad(self) -> None:
+        test_tensor = torch.arange(0, 1 * 1 * 3 * 3).view(1, 1, 3, 3).float()
+        crop_vals = [6, 6]
+
+        cropped_tensor = transforms.center_crop(test_tensor, crop_vals)
+
+        expected_tensor = torch.nn.functional.pad(test_tensor, [2, 1, 2, 1])
+        assertTensorAlmostEqual(self, cropped_tensor, expected_tensor)
+
+    def test_center_crop_padding_prime_num_pad_offset_left(self) -> None:
+        test_tensor = torch.arange(0, 1 * 1 * 3 * 3).view(1, 1, 3, 3).float()
+        crop_vals = [6, 6]
+
+        cropped_tensor = transforms.center_crop(
+            test_tensor, crop_vals, offset_left=True
+        )
+
+        expected_tensor = torch.nn.functional.pad(test_tensor, [1, 2, 1, 2])
+        assertTensorAlmostEqual(self, cropped_tensor, expected_tensor)
+
+    def test_center_crop_one_number_exact_jit_module(self) -> None:
+        if torch.__version__ <= "1.8.0":
+            raise unittest.SkipTest(
+                "Skipping center_crop JIT module test due to insufficient"
+                + " Torch version."
+            )
+        pad = (1, 1, 1, 1)
+        test_tensor = (
+            F.pad(F.pad(torch.ones(2, 2), pad=pad), pad=pad, value=1)
+            .repeat(3, 1, 1)
+            .unsqueeze(0)
+        )
+
+        crop_vals = 5
+
+        jit_center_crop = transforms.center_crop
+        cropped_tensor = jit_center_crop(test_tensor, crop_vals, False)
+        expected_tensor = torch.stack(
+            [
+                torch.tensor(
+                    [
+                        [1.0, 1.0, 1.0, 1.0, 1.0],
+                        [1.0, 0.0, 0.0, 0.0, 0.0],
+                        [1.0, 0.0, 1.0, 1.0, 0.0],
+                        [1.0, 0.0, 1.0, 1.0, 0.0],
+                        [1.0, 0.0, 0.0, 0.0, 0.0],
+                    ]
+                )
+            ]
+            * 3
+        ).unsqueeze(0)
+        assertTensorAlmostEqual(self, cropped_tensor, expected_tensor)
+
+    def test_center_crop_padding_jit_module(self) -> None:
+        if torch.__version__ <= "1.8.0":
+            raise unittest.SkipTest(
+                "Skipping center_crop padding JIT module test due to insufficient"
+                + " Torch version."
+            )
+        test_tensor = torch.arange(0, 1 * 1 * 4 * 4).view(1, 1, 4, 4).float()
+        crop_vals = [6, 6]
+
+        jit_center_crop = torch.jit.script(transforms.center_crop)
+        cropped_tensor = jit_center_crop(test_tensor, crop_vals)
+
+        expected_tensor = torch.tensor(
+            [
+                [0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+                [0.0, 0.0, 1.0, 2.0, 3.0, 0.0],
+                [0.0, 4.0, 5.0, 6.0, 7.0, 0.0],
+                [0.0, 8.0, 9.0, 10.0, 11.0, 0.0],
+                [0.0, 12.0, 13.0, 14.0, 15.0, 0.0],
+                [0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+            ]
+        )
+        assertTensorAlmostEqual(self, cropped_tensor, expected_tensor, 0)
 
 
 class TestBlendAlpha(BaseTest):
@@ -851,11 +1170,35 @@ class TestNChannelsToRGB(BaseTest):
 
 
 class TestRandomCrop(BaseTest):
+    def test_random_crop_center_crop(self) -> None:
+        crop_size = [160, 160]
+        crop_transform = transforms.RandomCrop(crop_size=crop_size)
+        x = torch.ones(1, 4, 224, 224)
+
+        x_out = crop_transform._center_crop(x)
+
+        self.assertEqual(list(x_out.shape), [1, 4, 160, 160])
+
     def test_random_crop(self) -> None:
         crop_size = [160, 160]
         crop_transform = transforms.RandomCrop(crop_size=crop_size)
         x = torch.ones(1, 4, 224, 224)
 
         x_out = crop_transform(x)
+
+        self.assertEqual(list(x_out.shape), [1, 4, 160, 160])
+
+    def test_random_crop_jit_module(self) -> None:
+        if torch.__version__ <= "1.8.0":
+            raise unittest.SkipTest(
+                "Skipping RandomCrop JIT module test due to insufficient"
+                + " Torch version."
+            )
+        crop_size = [160, 160]
+        crop_transform = transforms.RandomCrop(crop_size=crop_size)
+        jit_crop_transform = torch.jit.script(crop_transform)
+        x = torch.ones(1, 4, 224, 224)
+
+        x_out = jit_crop_transform(x)
 
         self.assertEqual(list(x_out.shape), [1, 4, 160, 160])
