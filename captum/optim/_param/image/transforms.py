@@ -1000,6 +1000,7 @@ __all__ = [
     "CenterCrop",
     "center_crop",
     "RandomScale",
+    "RandomScaleAffine",
     "RandomSpatialJitter",
     "RandomRotation",
     "ScaleInputRange",
