@@ -285,6 +285,8 @@ class RandomScale(nn.Module):
         "_has_align_corners",
         "recompute_scale_factor",
         "_has_recompute_scale_factor",
+        "antialias",
+        "_has_antialias",
         "_is_distribution",
     ]
 
@@ -294,9 +296,11 @@ class RandomScale(nn.Module):
         mode: str = "bilinear",
         align_corners: Optional[bool] = False,
         recompute_scale_factor: bool = False,
+        antialias: bool = False,
     ) -> None:
         """
         Args:
+
             scale (float, sequence, or torch.distribution): Sequence of rescaling
                 values to randomly select from, or a torch.distributions instance.
             mode (str, optional): Interpolation mode to use. See documentation of
@@ -308,6 +312,10 @@ class RandomScale(nn.Module):
                 Default: False
             recompute_scale_factor (bool, optional): Whether or not to recompute the
                 scale factor See documentation of F.interpolate for more details.
+                Default: False
+            antialias (bool, optional): Whether or not use to anti-aliasing. This
+                feature is currently only available for "bilinear" and "bicubic"
+                modes. See documentation of F.interpolate for more details.
                 Default: False
         """
         super().__init__()
@@ -329,27 +337,42 @@ class RandomScale(nn.Module):
         self.mode = mode
         self.align_corners = align_corners if mode not in ["nearest", "area"] else None
         self.recompute_scale_factor = recompute_scale_factor
+        self.antialias = antialias
         self._has_align_corners = torch.__version__ >= "1.3.0"
         self._has_recompute_scale_factor = torch.__version__ >= "1.6.0"
+        self._has_antialias = torch.__version__ >= "1.11.0"
 
     def _scale_tensor(self, x: torch.Tensor, scale: float) -> torch.Tensor:
         """
         Scale an NCHW image tensor based on a specified scale value.
+
         Args:
+
             x (torch.Tensor): The NCHW image tensor to scale.
             scale (float): The amount to scale the NCHW image by.
+
         Returns:
             **x** (torch.Tensor): A scaled NCHW image tensor.
         """
         if self._has_align_corners:
             if self._has_recompute_scale_factor:
-                x = F.interpolate(
-                    x,
-                    scale_factor=scale,
-                    mode=self.mode,
-                    align_corners=self.align_corners,
-                    recompute_scale_factor=self.recompute_scale_factor,
-                )
+                if self._has_antialias:
+                    x = F.interpolate(
+                        x,
+                        scale_factor=scale,
+                        mode=self.mode,
+                        align_corners=self.align_corners,
+                        recompute_scale_factor=self.recompute_scale_factor,
+                        antialias=self.antialias,
+                    )
+                else:
+                    x = F.interpolate(
+                        x,
+                        scale_factor=scale,
+                        mode=self.mode,
+                        align_corners=self.align_corners,
+                        recompute_scale_factor=self.recompute_scale_factor,
+                    )
             else:
                 x = F.interpolate(
                     x,
@@ -364,8 +387,11 @@ class RandomScale(nn.Module):
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """
         Randomly scale an NCHW image tensor.
+
         Args:
+
             x (torch.Tensor): NCHW image tensor to randomly scale.
+
         Returns:
             **x** (torch.Tensor): A randomly scaled NCHW image *tensor*.
         """
@@ -417,6 +443,7 @@ class RandomScaleAffine(nn.Module):
     ) -> None:
         """
         Args:
+
             scale (float, sequence, or torch.distribution): Sequence of rescaling
                 values to randomly select from, or a torch.distributions instance.
             mode (str, optional): Interpolation mode to use. See documentation of
@@ -459,8 +486,11 @@ class RandomScaleAffine(nn.Module):
     ) -> torch.Tensor:
         """
         Create a scale matrix tensor.
+
         Args:
+
             m (float): The scale value to use.
+
         Returns:
             **scale_mat** (torch.Tensor): A scale matrix.
         """
@@ -472,9 +502,12 @@ class RandomScaleAffine(nn.Module):
     def _scale_tensor(self, x: torch.Tensor, scale: float) -> torch.Tensor:
         """
         Scale an NCHW image tensor based on a specified scale value.
+
         Args:
+
             x (torch.Tensor): The NCHW image tensor to scale.
             scale (float): The amount to scale the NCHW image by.
+
         Returns:
             **x** (torch.Tensor): A scaled NCHW image tensor.
         """
@@ -501,8 +534,11 @@ class RandomScaleAffine(nn.Module):
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """
         Randomly scale an NCHW image tensor.
+
         Args:
+
             x (torch.Tensor): NCHW image tensor to randomly scale.
+
         Returns:
             **x** (torch.Tensor): A randomly scaled NCHW image *tensor*.
         """
