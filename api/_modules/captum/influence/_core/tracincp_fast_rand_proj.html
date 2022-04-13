@@ -37,6 +37,7 @@ src="/_sphinx/documentation_options.js"></script>
 
 <span class="kn">import</span> <span class="nn">torch</span>
 <span class="kn">from</span> <span class="nn">captum._utils.common</span> <span class="kn">import</span> <span class="n">_get_module_from_name</span><span class="p">,</span> <span class="n">_format_inputs</span>
+<span class="kn">from</span> <span class="nn">captum._utils.progress</span> <span class="kn">import</span> <span class="n">progress</span>
 <span class="kn">from</span> <span class="nn">captum.influence._core.tracincp</span> <span class="kn">import</span> <span class="p">(</span>
     <span class="n">TracInCPBase</span><span class="p">,</span>
     <span class="n">KMostInfluentialResults</span><span class="p">,</span>
@@ -229,6 +230,7 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="n">k</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">proponents</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
         <span class="n">unpack_inputs</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="n">show_progress</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">KMostInfluentialResults</span><span class="p">]:</span>
         <span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        This is the key method of this class, and can be run in 3 different modes,</span>
@@ -282,6 +284,16 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">                    when passing it to `model`, if `inputs` is a tuple (no unpacking</span>
 <span class="sd">                    done otherwise).</span>
 <span class="sd">                    Default: True</span>
+<span class="sd">            show_progress (bool, optional): For all modes, computation of results</span>
+<span class="sd">                    requires "training dataset computations": computations for each</span>
+<span class="sd">                    batch in the training dataset `influence_src_dataset`, which may</span>
+<span class="sd">                    take a long time. If `show_progress`is true, the progress of</span>
+<span class="sd">                    "training dataset computations" will be displayed. In particular,</span>
+<span class="sd">                    the number of batches for which computations have been performed</span>
+<span class="sd">                    will be displayed. It will try to use tqdm if available for</span>
+<span class="sd">                    advanced features (e.g. time estimation). Otherwise, it will</span>
+<span class="sd">                    fallback to a simple output of progress.</span>
+<span class="sd">                    Default: False</span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            The return value of this method depends on which mode is run.</span>
@@ -321,6 +333,7 @@ src="/_sphinx/documentation_options.js"></script>
             <span class="n">k</span><span class="p">,</span>
             <span class="n">proponents</span><span class="p">,</span>
             <span class="n">unpack_inputs</span><span class="p">,</span>
+            <span class="n">show_progress</span><span class="p">,</span>
         <span class="p">)</span></div>
 
     <span class="k">def</span> <span class="nf">_influence_batch_tracincp_fast</span><span class="p">(</span>
@@ -367,6 +380,7 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">inputs</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span>
         <span class="n">targets</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">,</span>
+        <span class="n">show_progress</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tensor</span><span class="p">:</span>
         <span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        Computes the influence of examples in training dataset `influence_src_dataset`</span>
@@ -382,6 +396,15 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">            targets (tensor): The labels corresponding to the batch `inputs`. This</span>
 <span class="sd">                    method is designed to be applied for a loss function, so labels</span>
 <span class="sd">                    are required.</span>
+<span class="sd">            show_progress (bool, optional): To compute the influence of examples in</span>
+<span class="sd">                    training dataset `influence_src_dataset`, we compute the influence</span>
+<span class="sd">                    of each batch. If `show_progress`is true, the progress of this</span>
+<span class="sd">                    computation will be displayed. In particular, the number of batches</span>
+<span class="sd">                    for which influence has been computed will be displayed. It will</span>
+<span class="sd">                    try to use tqdm if available for advanced features (e.g. time</span>
+<span class="sd">                    estimation). Otherwise, it will fallback to a simple output of</span>
+<span class="sd">                    progress.</span>
+<span class="sd">                    Default: False</span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            influence_scores (tensor): Influence scores from the TracInCPFast method.</span>
@@ -393,10 +416,23 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">            example to the i-th input example.</span>
 <span class="sd">        """</span>
         <span class="k">assert</span> <span class="n">targets</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+
+        <span class="n">influence_src_dataloader</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">influence_src_dataloader</span>
+
+        <span class="k">if</span> <span class="n">show_progress</span><span class="p">:</span>
+            <span class="n">influence_src_dataloader</span> <span class="o">=</span> <span class="n">progress</span><span class="p">(</span>
+                <span class="n">influence_src_dataloader</span><span class="p">,</span>
+                <span class="n">desc</span><span class="o">=</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">"Using </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">get_name</span><span class="p">()</span><span class="si">}</span><span class="s2"> to compute "</span>
+                    <span class="s2">"influence for training batches"</span>
+                <span class="p">),</span>
+                <span class="n">total</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">influence_src_dataloader_len</span><span class="p">,</span>
+            <span class="p">)</span>
+
         <span class="k">return</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">(</span>
             <span class="p">[</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_influence_batch_tracincp_fast</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">targets</span><span class="p">,</span> <span class="n">batch</span><span class="p">)</span>
-                <span class="k">for</span> <span class="n">batch</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">influence_src_dataloader</span>
+                <span class="k">for</span> <span class="n">batch</span> <span class="ow">in</span> <span class="n">influence_src_dataloader</span>
             <span class="p">],</span>
             <span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
         <span class="p">)</span>
@@ -407,6 +443,7 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="n">targets</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">,</span>
         <span class="n">k</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">5</span><span class="p">,</span>
         <span class="n">proponents</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="n">show_progress</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">KMostInfluentialResults</span><span class="p">:</span>
         <span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        Args:</span>
@@ -421,6 +458,15 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">            proponents (bool, optional): Whether seeking proponents (`proponents=True`)</span>
 <span class="sd">                    or opponents (`proponents=False`)</span>
 <span class="sd">                    Default: True</span>
+<span class="sd">            show_progress (bool, optional): To compute the proponents (or opponents)</span>
+<span class="sd">                    for the batch of examples, we perform computation for each batch in</span>
+<span class="sd">                    training dataset `influence_src_dataset`, If `show_progress`is</span>
+<span class="sd">                    true, the progress of this computation will be displayed. In</span>
+<span class="sd">                    particular, the number of batches for which the computation has</span>
+<span class="sd">                    been performed will be displayed. It will try to use tqdm if</span>
+<span class="sd">                    available for advanced features (e.g. time estimation). Otherwise,</span>
+<span class="sd">                    it will fallback to a simple output of progress.</span>
+<span class="sd">                    Default: False</span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            (indices, influence_scores) (namedtuple): `indices` is a torch.long Tensor</span>
@@ -438,6 +484,17 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">                    on example `i` in the test batch represented by `inputs` and</span>
 <span class="sd">                    `targets`.</span>
 <span class="sd">        """</span>
+        <span class="n">desc</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="kc">None</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">show_progress</span>
+            <span class="k">else</span> <span class="p">(</span>
+                <span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">"Using </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">get_name</span><span class="p">()</span><span class="si">}</span><span class="s2"> to perform computation for "</span>
+                    <span class="sa">f</span><span class="s1">'getting </span><span class="si">{</span><span class="s2">"proponents"</span> <span class="k">if</span> <span class="n">proponents</span> <span class="k">else</span> <span class="s2">"opponents"</span><span class="si">}</span><span class="s1">. '</span>
+                    <span class="s2">"Processing training batches: 100%"</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
         <span class="k">return</span> <span class="n">KMostInfluentialResults</span><span class="p">(</span>
             <span class="o">*</span><span class="n">_get_k_most_influential_helper</span><span class="p">(</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">influence_src_dataloader</span><span class="p">,</span>
@@ -446,6 +503,8 @@ src="/_sphinx/documentation_options.js"></script>
                 <span class="n">targets</span><span class="p">,</span>
                 <span class="n">k</span><span class="p">,</span>
                 <span class="n">proponents</span><span class="p">,</span>
+                <span class="n">show_progress</span><span class="p">,</span>
+                <span class="n">desc</span><span class="p">,</span>
             <span class="p">)</span>
         <span class="p">)</span>
 
@@ -479,17 +538,39 @@ src="/_sphinx/documentation_options.js"></script>
 
         <span class="k">return</span> <span class="n">batch_self_tracin_scores</span>
 
-    <span class="k">def</span> <span class="nf">_self_influence</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_self_influence</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">show_progress</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">):</span>
         <span class="sd">"""</span>
 <span class="sd">        Returns:</span>
 <span class="sd">            self influence scores (tensor): 1D tensor containing self influence</span>
 <span class="sd">                    scores for all examples in training dataset</span>
 <span class="sd">                    `influence_src_dataset`.</span>
+<span class="sd">            show_progress (bool, optional): To compute the self influence scores for</span>
+<span class="sd">                    all examples in training dataset `influence_src_dataset`, we</span>
+<span class="sd">                    compute the self influence scores for each batch. If</span>
+<span class="sd">                    `show_progress`is true, the progress of this computation will be</span>
+<span class="sd">                    displayed. In particular, the number of batches for which self</span>
+<span class="sd">                    influence scores have been computed will be displayed. It will</span>
+<span class="sd">                    try to use tqdm if available for advanced features (e.g. time</span>
+<span class="sd">                    estimation). Otherwise, it will fallback to a simple output of</span>
+<span class="sd">                    progress.</span>
+<span class="sd">                    Default: False</span>
 <span class="sd">        """</span>
+        <span class="n">influence_src_dataloader</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">influence_src_dataloader</span>
+
+        <span class="k">if</span> <span class="n">show_progress</span><span class="p">:</span>
+            <span class="n">influence_src_dataloader</span> <span class="o">=</span> <span class="n">progress</span><span class="p">(</span>
+                <span class="n">influence_src_dataloader</span><span class="p">,</span>
+                <span class="n">desc</span><span class="o">=</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">"Using </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">get_name</span><span class="p">()</span><span class="si">}</span><span class="s2"> to compute self "</span>
+                    <span class="s2">"influence for training batches"</span>
+                <span class="p">),</span>
+                <span class="n">total</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">influence_src_dataloader_len</span><span class="p">,</span>
+            <span class="p">)</span>
+
         <span class="k">return</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">(</span>
             <span class="p">[</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_self_influence_batch_tracincp_fast</span><span class="p">(</span><span class="n">batch</span><span class="p">)</span>
-                <span class="k">for</span> <span class="n">batch</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">influence_src_dataloader</span>
+                <span class="k">for</span> <span class="n">batch</span> <span class="ow">in</span> <span class="n">influence_src_dataloader</span>
             <span class="p">],</span>
             <span class="n">dim</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
         <span class="p">)</span></div>

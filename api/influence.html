@@ -230,8 +230,23 @@ Default: 1</p></li>
 </dd>
 </dl>
 <dl class="py method">
+<dt class="sig sig-object py" id="captum.influence.TracInCPBase.get_name">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">get_name</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/influence/_core/tracincp.html#TracInCPBase.get_name"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum.influence.TracInCPBase.get_name" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create readable class name.  Due to the nature of the names of <cite>TracInCPBase</cite>
+subclasses, simplies returns the class name.  For example, for a class called
+TracInCP, we return the string TracInCP.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>a readable class name</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>name (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)">str</a>)</p>
+</dd>
+</dl>
+</dd></dl>
+<dl class="py method">
 <dt class="sig sig-object py" id="captum.influence.TracInCPBase.influence">
-<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">influence</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inputs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">targets</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">k</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">proponents</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">unpack_inputs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/influence/_core/tracincp.html#TracInCPBase.influence"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum.influence.TracInCPBase.influence" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">influence</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inputs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">targets</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">k</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">proponents</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">unpack_inputs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">show_progress</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/influence/_core/tracincp.html#TracInCPBase.influence"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum.influence.TracInCPBase.influence" title="Permalink to this definition">¶</a></dt>
 <dd><p>This is the key method of this class, and can be run in 3 different modes,
 where the mode that is run depends on the arguments passed to this method:</p>
 <ul class="simple">
@@ -284,6 +299,16 @@ Default: True</p></li>
 when passing it to <cite>model</cite>, if <cite>inputs</cite> is a tuple (no unpacking
 done otherwise).
 Default: True</p></li>
+<li><p><strong>show_progress</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.10)"><em>bool</em></a><em>, </em><em>optional</em>) – For all modes, computation of results
+requires “training dataset computations”: computations for each
+batch in the training dataset <cite>influence_src_dataset</cite>, which may
+take a long time. If <a href="#id1"><span class="problematic" id="id2">`</span></a>show_progress`is true, the progress of
+“training dataset computations” will be displayed. In particular,
+the number of batches for which computations have been performed
+will be displayed. It will try to use tqdm if available for
+advanced features (e.g. time estimation). Otherwise, it will
+fallback to a simple output of progress.
+Default: False</p></li>
 </ul>
 </dd>
 <dt class="field-even">Return type</dt>
@@ -418,7 +443,7 @@ Default: False</p></li>
 </dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="captum.influence.TracInCP.influence">
-<span class="sig-name descname"><span class="pre">influence</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inputs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">targets</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">k</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">proponents</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">unpack_inputs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/influence/_core/tracincp.html#TracInCP.influence"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum.influence.TracInCP.influence" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">influence</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inputs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">targets</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">k</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">proponents</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">unpack_inputs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">show_progress</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/influence/_core/tracincp.html#TracInCP.influence"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum.influence.TracInCP.influence" title="Permalink to this definition">¶</a></dt>
 <dd><p>This is the key method of this class, and can be run in 3 different modes,
 where the mode that is run depends on the arguments passed to this method:</p>
 <ul class="simple">
@@ -471,6 +496,16 @@ Default: True</p></li>
 when passing it to <cite>model</cite>, if <cite>inputs</cite> is a tuple (no unpacking
 done otherwise).
 Default: True</p></li>
+<li><p><strong>show_progress</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.10)"><em>bool</em></a><em>, </em><em>optional</em>) – For all modes, computation of results
+requires “training dataset computations”: computations for each
+batch in the training dataset <cite>influence_src_dataset</cite>, which may
+take a long time. If <a href="#id3"><span class="problematic" id="id4">`</span></a>show_progress`is true, the progress of
+“training dataset computations” will be displayed. In particular,
+the number of batches for which computations have been performed
+will be displayed. It will try to use tqdm if available for
+advanced features (e.g. time estimation). Otherwise, it will
+fallback to a simple output of progress.
+Default: False</p></li>
 </ul>
 </dd>
 <dt class="field-even">Return type</dt>
@@ -589,7 +624,7 @@ Default: False</p></li>
 </dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="captum.influence.TracInCPFast.influence">
-<span class="sig-name descname"><span class="pre">influence</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inputs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">targets</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">k</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">proponents</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">unpack_inputs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/influence/_core/tracincp_fast_rand_proj.html#TracInCPFast.influence"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum.influence.TracInCPFast.influence" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">influence</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inputs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">targets</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">k</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">proponents</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">unpack_inputs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">show_progress</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/influence/_core/tracincp_fast_rand_proj.html#TracInCPFast.influence"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum.influence.TracInCPFast.influence" title="Permalink to this definition">¶</a></dt>
 <dd><p>This is the key method of this class, and can be run in 3 different modes,
 where the mode that is run depends on the arguments passed to this method:</p>
 <ul class="simple">
@@ -643,6 +678,16 @@ Default: True</p></li>
 when passing it to <cite>model</cite>, if <cite>inputs</cite> is a tuple (no unpacking
 done otherwise).
 Default: True</p></li>
+<li><p><strong>show_progress</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.10)"><em>bool</em></a><em>, </em><em>optional</em>) – For all modes, computation of results
+requires “training dataset computations”: computations for each
+batch in the training dataset <cite>influence_src_dataset</cite>, which may
+take a long time. If <a href="#id5"><span class="problematic" id="id6">`</span></a>show_progress`is true, the progress of
+“training dataset computations” will be displayed. In particular,
+the number of batches for which computations have been performed
+will be displayed. It will try to use tqdm if available for
+advanced features (e.g. time estimation). Otherwise, it will
+fallback to a simple output of progress.
+Default: False</p></li>
 </ul>
 </dd>
 <dt class="field-even">Return type</dt>
@@ -712,7 +757,7 @@ of the TracIn paper). This class should only be used if calls to <cite>influence
 to obtain proponents / opponents or influence scores will be made in an
 “interactive” manner, and there is sufficient memory to store vectors for the
 entire <cite>influence_src_dataset</cite>. This is because in order to enable interactive
-analysis, this implementation incures overhead in <a href="#id1"><span class="problematic" id="id2">``</span></a>__init__` to setup the
+analysis, this implementation incures overhead in <a href="#id7"><span class="problematic" id="id8">``</span></a>__init__` to setup the
 nearest-neighbors data structure, which is both time and memory intensive, as
 vectors corresponding to all training examples needed to be stored. To reduce
 memory usage, this implementation enables random projections of those vectors.
