@@ -9,7 +9,7 @@ from captum._utils.gradient import (
     compute_layer_gradients_and_eval,
     undo_gradient_requirements,
 )
-from tests.helpers.basic import BaseTest, assertTensorAlmostEqual
+from tests.helpers.basic import assertTensorAlmostEqual, BaseTest
 from tests.helpers.basic_models import (
     BasicModel,
     BasicModel2,

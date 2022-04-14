@@ -12,7 +12,7 @@ from tests.attr.layer.test_layer_deeplift import (
     _create_inps_and_base_for_deeplift_neuron_layer_testing,
     _create_inps_and_base_for_deepliftshap_neuron_layer_testing,
 )
-from tests.helpers.basic import BaseTest, assertTensorAlmostEqual
+from tests.helpers.basic import assertTensorAlmostEqual, BaseTest
 from tests.helpers.basic_models import (
     BasicModel_ConvNet,
     BasicModel_ConvNet_MaxPool3d,

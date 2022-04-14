@@ -4,11 +4,11 @@ from typing import List
 import torch
 import torch.nn as nn
 from captum.influence._core.similarity_influence import (
-    SimilarityInfluence,
     cosine_similarity,
     euclidean_distance,
+    SimilarityInfluence,
 )
-from tests.helpers.basic import BaseTest, assertTensorAlmostEqual
+from tests.helpers.basic import assertTensorAlmostEqual, BaseTest
 from torch.utils.data import Dataset
 
 

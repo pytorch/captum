@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 
-from typing import List, Tuple, cast
+from typing import cast, List, Tuple
 
 import torch
-from captum._utils.common import safe_div, _reduce_list, _select_targets, _sort_key_list
-from tests.helpers.basic import BaseTest, assertTensorAlmostEqual
+from captum._utils.common import _reduce_list, _select_targets, _sort_key_list, safe_div
+from tests.helpers.basic import assertTensorAlmostEqual, BaseTest
 
 
 class Test(BaseTest):

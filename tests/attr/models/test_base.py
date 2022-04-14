@@ -6,8 +6,8 @@ import unittest
 
 import torch
 from captum.attr._models.base import (
-    InterpretableEmbeddingBase,
     configure_interpretable_embedding_layer,
+    InterpretableEmbeddingBase,
     remove_interpretable_embedding_layer,
 )
 from tests.helpers.basic import assertTensorAlmostEqual

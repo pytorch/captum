@@ -1,6 +1,6 @@
 import os
 import tempfile
-from typing import Optional, Callable, cast
+from typing import Callable, cast, Optional
 
 import torch
 import torch.nn as nn
@@ -10,15 +10,14 @@ from captum.influence._core.tracincp_fast_rand_proj import (
     TracInCPFastRandProj,
 )
 from parameterized import parameterized
-from tests.helpers.basic import BaseTest
-from tests.helpers.basic import assertTensorAlmostEqual
+from tests.helpers.basic import assertTensorAlmostEqual, BaseTest
 from tests.influence._utils.common import (
-    RangeDataset,
-    CoefficientNet,
-    isSorted,
-    DataInfluenceConstructor,
     build_test_name_func,
+    CoefficientNet,
+    DataInfluenceConstructor,
     IdentityDataset,
+    isSorted,
+    RangeDataset,
 )
 
 

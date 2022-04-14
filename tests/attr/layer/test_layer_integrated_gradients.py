@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-from typing import Any, List, Tuple, Union, cast
+from typing import Any, cast, List, Tuple, Union
 
 import torch
 from captum.attr._core.integrated_gradients import IntegratedGradients
@@ -12,9 +12,9 @@ from captum.attr._models.base import (
     remove_interpretable_embedding_layer,
 )
 from tests.helpers.basic import (
-    BaseTest,
     assertTensorAlmostEqual,
     assertTensorTuplesAlmostEqual,
+    BaseTest,
 )
 from tests.helpers.basic_models import (
     BasicEmbeddingModel,

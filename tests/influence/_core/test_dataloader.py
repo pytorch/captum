@@ -8,12 +8,11 @@ from captum.influence._core.tracincp_fast_rand_proj import (
     TracInCPFastRandProj,
 )
 from parameterized import parameterized
-from tests.helpers.basic import BaseTest
-from tests.helpers.basic import assertTensorAlmostEqual
+from tests.helpers.basic import assertTensorAlmostEqual, BaseTest
 from tests.influence._utils.common import (
-    get_random_model_and_data,
-    DataInfluenceConstructor,
     build_test_name_func,
+    DataInfluenceConstructor,
+    get_random_model_and_data,
 )
 from torch.utils.data import DataLoader
 

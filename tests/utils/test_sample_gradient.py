@@ -1,15 +1,15 @@
 #!/usr/bin/env python3
 
 import unittest
-from typing import Tuple, Callable
+from typing import Callable, Tuple
 
 import torch
 from captum._utils.sample_gradient import SampleGradientWrapper, SUPPORTED_MODULES
-from tests.helpers.basic import BaseTest, assertTensorAlmostEqual
+from tests.helpers.basic import assertTensorAlmostEqual, BaseTest
 from tests.helpers.basic_models import (
     BasicModel_ConvNet_One_Conv,
-    BasicModel_MultiLayer,
     BasicModel_ConvNetWithPaddingDilation,
+    BasicModel_MultiLayer,
 )
 from torch import Tensor
 from torch.nn import Module

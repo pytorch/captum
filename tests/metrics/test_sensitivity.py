@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 import typing
-from typing import Any, Callable, List, Tuple, Union, cast
+from typing import Any, Callable, cast, List, Tuple, Union
 
 import torch
 from captum._utils.typing import BaselineType, TargetType, TensorOrTupleOfTensorsGeneric
@@ -13,7 +13,7 @@ from captum.attr import (
 )
 from captum.metrics import sensitivity_max
 from captum.metrics._core.sensitivity import default_perturb_func
-from tests.helpers.basic import BaseTest, assertTensorAlmostEqual
+from tests.helpers.basic import assertTensorAlmostEqual, BaseTest
 from tests.helpers.basic_models import (
     BasicModel2,
     BasicModel4_MultiArgs,

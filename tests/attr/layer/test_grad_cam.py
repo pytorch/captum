@@ -6,7 +6,7 @@ from typing import Any, Tuple, Union
 import torch
 from captum._utils.typing import TensorLikeList
 from captum.attr._core.layer.grad_cam import LayerGradCam
-from tests.helpers.basic import BaseTest, assertTensorTuplesAlmostEqual
+from tests.helpers.basic import assertTensorTuplesAlmostEqual, BaseTest
 from tests.helpers.basic_models import (
     BasicModel_ConvNet_One_Conv,
     BasicModel_MultiLayer,

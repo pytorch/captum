@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 import torch
 from captum.robust import PGD
-from tests.helpers.basic import BaseTest, assertTensorAlmostEqual
+from tests.helpers.basic import assertTensorAlmostEqual, BaseTest
 from tests.helpers.basic_models import BasicModel, BasicModel2, BasicModel_MultiLayer
 from torch.nn import CrossEntropyLoss
 

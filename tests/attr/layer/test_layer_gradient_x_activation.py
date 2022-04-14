@@ -6,7 +6,7 @@ import torch
 from captum._utils.typing import ModuleOrModuleList
 from captum.attr._core.layer.layer_activation import LayerActivation
 from captum.attr._core.layer.layer_gradient_x_activation import LayerGradientXActivation
-from tests.helpers.basic import BaseTest, assertTensorTuplesAlmostEqual
+from tests.helpers.basic import assertTensorTuplesAlmostEqual, BaseTest
 from tests.helpers.basic_models import (
     BasicEmbeddingModel,
     BasicModel_MultiLayer,

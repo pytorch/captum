@@ -4,15 +4,15 @@ import unittest
 from typing import Any, Callable, Tuple, Union
 
 import torch
-from captum._utils.typing import TensorOrTupleOfTensorsGeneric, TensorLikeList
+from captum._utils.typing import TensorLikeList, TensorOrTupleOfTensorsGeneric
 from captum.attr._core.integrated_gradients import IntegratedGradients
 from captum.attr._core.neuron.neuron_integrated_gradients import (
     NeuronIntegratedGradients,
 )
 from tests.helpers.basic import (
-    BaseTest,
     assertTensorAlmostEqual,
     assertTensorTuplesAlmostEqual,
+    BaseTest,
 )
 from tests.helpers.basic_models import (
     BasicModel_ConvNet,

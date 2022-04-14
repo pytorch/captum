@@ -1,11 +1,11 @@
 import glob
 import tempfile
 from datetime import datetime
-from typing import List, cast
+from typing import cast, List
 
 import torch
 from captum._utils.av import AV
-from tests.helpers.basic import BaseTest, assertTensorAlmostEqual
+from tests.helpers.basic import assertTensorAlmostEqual, BaseTest
 from tests.helpers.basic_models import BasicLinearReLULinear
 from torch.utils.data import DataLoader, Dataset
 

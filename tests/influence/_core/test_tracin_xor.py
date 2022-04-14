@@ -1,20 +1,19 @@
 import os
 import tempfile
 from collections import OrderedDict
-from typing import Optional, Callable, cast
+from typing import Callable, cast, Optional
 
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from captum.influence._core.tracincp import TracInCP
 from parameterized import parameterized
-from tests.helpers.basic import BaseTest
-from tests.helpers.basic import assertTensorAlmostEqual
+from tests.helpers.basic import assertTensorAlmostEqual, BaseTest
 from tests.influence._utils.common import (
     BasicLinearNet,
     BinaryDataset,
-    DataInfluenceConstructor,
     build_test_name_func,
+    DataInfluenceConstructor,
 )
 
 

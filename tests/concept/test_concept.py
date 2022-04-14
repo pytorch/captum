@@ -1,6 +1,6 @@
 #!/usr/bin/env python3import
 
-from typing import Iterable, cast
+from typing import cast, Iterable
 
 import torch
 from captum.concept._core.concept import Concept

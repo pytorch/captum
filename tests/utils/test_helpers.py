@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 import torch
-from tests.helpers.basic import BaseTest, assertTensorAlmostEqual
+from tests.helpers.basic import assertTensorAlmostEqual, BaseTest
 
 
 class HelpersTest(BaseTest):

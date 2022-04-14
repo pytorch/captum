@@ -6,11 +6,11 @@ from typing import Any, Callable, Tuple, Union
 import torch
 from captum._utils.typing import (
     BaselineType,
-    TensorOrTupleOfTensorsGeneric,
     TensorLikeList,
+    TensorOrTupleOfTensorsGeneric,
 )
 from captum.attr._core.neuron.neuron_feature_ablation import NeuronFeatureAblation
-from tests.helpers.basic import BaseTest, assertTensorAlmostEqual
+from tests.helpers.basic import assertTensorAlmostEqual, BaseTest
 from tests.helpers.basic_models import (
     BasicModel_ConvNet_One_Conv,
     BasicModel_MultiLayer,

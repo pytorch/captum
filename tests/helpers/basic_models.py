@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-from typing import Optional, Tuple, no_type_check
+from typing import no_type_check, Optional, Tuple
 
 import torch
 import torch.nn as nn

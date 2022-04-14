@@ -6,7 +6,7 @@ from captum.attr._core.neuron.neuron_gradient_shap import NeuronGradientShap
 from captum.attr._core.neuron.neuron_integrated_gradients import (
     NeuronIntegratedGradients,
 )
-from tests.helpers.basic import BaseTest, assertTensorAlmostEqual
+from tests.helpers.basic import assertTensorAlmostEqual, BaseTest
 from tests.helpers.basic_models import BasicModel_MultiLayer
 from tests.helpers.classification_models import SoftmaxModel
 from torch import Tensor

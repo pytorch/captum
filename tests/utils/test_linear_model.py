@@ -6,7 +6,7 @@ from captum._utils.models.linear_model.model import (
     SGDLinearRegression,
     SGDRidge,
 )
-from tests.helpers.basic import BaseTest, assertTensorAlmostEqual
+from tests.helpers.basic import assertTensorAlmostEqual, BaseTest
 
 
 def _evaluate(test_data, classifier):

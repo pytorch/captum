@@ -3,8 +3,8 @@ import collections
 from typing import List
 
 import torch
-from captum.robust import FGSM, AttackComparator
-from tests.helpers.basic import BaseTest, assertTensorAlmostEqual
+from captum.robust import AttackComparator, FGSM
+from tests.helpers.basic import assertTensorAlmostEqual, BaseTest
 from tests.helpers.basic_models import BasicModel, BasicModel_MultiLayer
 from torch import Tensor
 

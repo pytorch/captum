@@ -2,7 +2,7 @@ import inspect
 import os
 import unittest
 from functools import partial
-from typing import Optional, Callable, List, Union, Iterator
+from typing import Callable, Iterator, List, Optional, Union
 
 import torch
 import torch.nn as nn
@@ -15,7 +15,7 @@ from captum.influence._core.tracincp_fast_rand_proj import (
 from parameterized import parameterized
 from parameterized.parameterized import param
 from torch.nn import Module
-from torch.utils.data import Dataset, DataLoader
+from torch.utils.data import DataLoader, Dataset
 
 
 def isSorted(x, key=lambda x: x, descending=True):

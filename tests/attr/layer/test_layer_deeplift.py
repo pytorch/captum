@@ -2,15 +2,15 @@
 
 from __future__ import print_function
 
-from typing import List, Tuple, Union, cast
+from typing import cast, List, Tuple, Union
 
 import torch
 from captum.attr._core.layer.layer_deep_lift import LayerDeepLift, LayerDeepLiftShap
 from tests.helpers.basic import (
-    BaseTest,
     assert_delta,
     assertTensorAlmostEqual,
     assertTensorTuplesAlmostEqual,
+    BaseTest,
 )
 from tests.helpers.basic_models import (
     BasicModel_ConvNet,

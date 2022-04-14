@@ -7,9 +7,9 @@ from captum.attr._core.gradient_shap import GradientShap
 from captum.attr._core.layer.layer_gradient_shap import LayerGradientShap
 from tests.attr.test_gradient_shap import _assert_attribution_delta
 from tests.helpers.basic import (
-    BaseTest,
     assertTensorAlmostEqual,
     assertTensorTuplesAlmostEqual,
+    BaseTest,
 )
 from tests.helpers.basic_models import (
     BasicModel_MultiLayer,
