@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 import math
-from typing import Any, Callable, Tuple, Union, cast
+from typing import Any, Callable, cast, Tuple, Union
 
 import torch
 from captum._utils.common import (
@@ -18,7 +18,7 @@ from captum._utils.typing import BaselineType, TargetType, TensorOrTupleOfTensor
 from captum.attr._utils.attribution import PerturbationAttribution
 from captum.attr._utils.common import _format_input_baseline
 from captum.log import log_usage
-from torch import Tensor, dtype
+from torch import dtype, Tensor
 
 
 class FeatureAblation(PerturbationAttribution):

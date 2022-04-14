@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 import warnings
-from typing import Any, Callable, Tuple, Union, cast
+from typing import Any, Callable, cast, Tuple, Union
 
 from captum._utils.gradient import construct_neuron_grad_fn
 from captum._utils.typing import BaselineType, TensorOrTupleOfTensorsGeneric

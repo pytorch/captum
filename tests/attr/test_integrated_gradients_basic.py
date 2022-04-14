@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 import unittest
-from typing import Any, Tuple, Union, cast
+from typing import Any, cast, Tuple, Union
 
 import torch
 from captum._utils.common import _zeros
@@ -9,10 +9,7 @@ from captum._utils.typing import BaselineType, Tensor, TensorOrTupleOfTensorsGen
 from captum.attr._core.integrated_gradients import IntegratedGradients
 from captum.attr._core.noise_tunnel import NoiseTunnel
 from captum.attr._utils.common import _tensorize_baseline
-from tests.helpers.basic import (
-    BaseTest,
-    assertTensorAlmostEqual,
-)
+from tests.helpers.basic import assertTensorAlmostEqual, BaseTest
 from tests.helpers.basic_models import (
     BasicModel,
     BasicModel2,

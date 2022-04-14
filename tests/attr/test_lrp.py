@@ -1,16 +1,16 @@
 #!/usr/bin/env python3
-from typing import Tuple, cast
+from typing import cast, Tuple
 
 import torch
 import torch.nn as nn
-from captum.attr import LRP, InputXGradient
+from captum.attr import InputXGradient, LRP
 from captum.attr._utils.lrp_rules import (
     Alpha1_Beta0_Rule,
     EpsilonRule,
     GammaRule,
     IdentityRule,
 )
-from tests.helpers.basic import BaseTest, assertTensorAlmostEqual
+from tests.helpers.basic import assertTensorAlmostEqual, BaseTest
 from tests.helpers.basic_models import (
     BasicModel_ConvNet_One_Conv,
     BasicModel_MultiLayer,

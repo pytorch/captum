@@ -7,9 +7,9 @@ import torch
 from captum.attr._core.deep_lift import DeepLift, DeepLiftShap
 from captum.attr._core.integrated_gradients import IntegratedGradients
 from tests.helpers.basic import (
-    BaseTest,
     assertAttributionComparision,
     assertTensorAlmostEqual,
+    BaseTest,
 )
 from tests.helpers.basic_models import (
     BasicModelWithReusedModules,

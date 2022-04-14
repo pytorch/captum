@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-from typing import TYPE_CHECKING, Any, Callable, List, Optional
+from typing import Any, Callable, List, Optional, TYPE_CHECKING
 
 import torch
 from torch import Tensor

@@ -3,12 +3,12 @@
 import io
 import unittest
 import unittest.mock
-from typing import Any, Callable, Generator, Tuple, Union, List
+from typing import Any, Callable, Generator, List, Tuple, Union
 
 import torch
 from captum._utils.models.linear_model import SkLearnLasso
 from captum._utils.typing import BaselineType, TensorOrTupleOfTensorsGeneric
-from captum.attr._core.lime import Lime, LimeBase, get_exp_kernel_similarity_function
+from captum.attr._core.lime import get_exp_kernel_similarity_function, Lime, LimeBase
 from captum.attr._utils.batching import _batch_example_iterator
 from captum.attr._utils.common import (
     _construct_default_feature_mask,
@@ -16,15 +16,15 @@ from captum.attr._utils.common import (
     _format_tensor_into_tuples,
 )
 from tests.helpers.basic import (
-    BaseTest,
     assertTensorAlmostEqual,
     assertTensorTuplesAlmostEqual,
+    BaseTest,
 )
 from tests.helpers.basic_models import (
+    BasicLinearModel,
     BasicModel_MultiLayer,
     BasicModel_MultiLayer_MultiInput,
     BasicModelBoolInput,
-    BasicLinearModel,
 )
 from torch import Tensor
 

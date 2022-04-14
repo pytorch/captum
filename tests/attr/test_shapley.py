@@ -8,7 +8,7 @@ from typing import Any, Callable, Tuple, Union
 import torch
 from captum._utils.typing import BaselineType, TensorOrTupleOfTensorsGeneric
 from captum.attr._core.shapley_value import ShapleyValues, ShapleyValueSampling
-from tests.helpers.basic import BaseTest, assertTensorTuplesAlmostEqual
+from tests.helpers.basic import assertTensorTuplesAlmostEqual, BaseTest
 from tests.helpers.basic_models import (
     BasicModel_MultiLayer,
     BasicModel_MultiLayer_MultiInput,

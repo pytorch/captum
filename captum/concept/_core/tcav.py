@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 from collections import defaultdict
-from typing import Any, Dict, List, Set, Tuple, Union, cast
+from typing import Any, cast, Dict, List, Set, Tuple, Union
 
 import numpy as np
 import torch

@@ -3,7 +3,7 @@ import threading
 import typing
 import warnings
 from collections import defaultdict
-from typing import Any, Callable, Dict, List, Optional, Tuple, Union, cast
+from typing import Any, Callable, cast, Dict, List, Optional, Tuple, Union
 
 import torch
 from captum._utils.common import (
@@ -19,7 +19,7 @@ from captum._utils.typing import (
     TargetType,
     TensorOrTupleOfTensorsGeneric,
 )
-from torch import Tensor, device
+from torch import device, Tensor
 from torch.nn import Module
 
 

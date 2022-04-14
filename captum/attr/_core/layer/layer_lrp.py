@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 import typing
-from typing import Any, List, Tuple, Union, cast
+from typing import Any, cast, List, Tuple, Union
 
 from captum._utils.common import (
     _format_tensor_into_tuples,

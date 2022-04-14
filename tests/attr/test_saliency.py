@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-from typing import Any, Tuple, Union, cast
+from typing import Any, cast, Tuple, Union
 
 import torch
 from captum._utils.gradient import compute_gradients
@@ -7,9 +7,9 @@ from captum._utils.typing import TensorOrTupleOfTensorsGeneric
 from captum.attr._core.noise_tunnel import NoiseTunnel
 from captum.attr._core.saliency import Saliency
 from tests.helpers.basic import (
-    BaseTest,
-    assertTensorTuplesAlmostEqual,
     assertTensorAlmostEqual,
+    assertTensorTuplesAlmostEqual,
+    BaseTest,
 )
 from tests.helpers.basic_models import BasicModel, BasicModel5_MultiArgs
 from tests.helpers.classification_models import SoftmaxModel

@@ -1,16 +1,16 @@
 #!/usr/bin/env python3
 
-from typing import Any, Callable, Tuple, Union, cast
+from typing import Any, Callable, cast, Tuple, Union
 
 import torch
 from captum._utils.common import (
-    ExpansionTypes,
     _expand_additional_forward_args,
     _expand_target,
     _format_additional_forward_args,
     _format_baseline,
     _format_tensor_into_tuples,
     _run_forward,
+    ExpansionTypes,
     safe_div,
 )
 from captum._utils.typing import BaselineType, TargetType, TensorOrTupleOfTensorsGeneric

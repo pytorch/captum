@@ -3,6 +3,7 @@ import inspect
 from collections import namedtuple
 from typing import (
     Callable,
+    cast,
     Dict,
     Iterable,
     List,
@@ -10,7 +11,6 @@ from typing import (
     Sequence,
     Tuple,
     Union,
-    cast,
 )
 
 import torch

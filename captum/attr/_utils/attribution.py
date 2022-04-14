@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-from typing import Any, Callable, Generic, List, Tuple, Type, Union, cast
+from typing import Any, Callable, cast, Generic, List, Tuple, Type, Union
 
 import torch
 import torch.nn.functional as F

@@ -2,11 +2,8 @@
 import random
 
 import torch
-from captum.attr import MSE, Max, Mean, Min, StdDev, Sum, Summarizer, Var
-from tests.helpers.basic import (
-    BaseTest,
-    assertTensorAlmostEqual,
-)
+from captum.attr import Max, Mean, Min, MSE, StdDev, Sum, Summarizer, Var
+from tests.helpers.basic import assertTensorAlmostEqual, BaseTest
 
 
 def get_values(n=100, lo=None, hi=None, integers=False):

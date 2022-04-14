@@ -1,14 +1,14 @@
 #!/usr/bin/env python3
 import typing
-from typing import Any, Callable, Sequence, Tuple, Union, cast
+from typing import Any, Callable, cast, Sequence, Tuple, Union
 
 import torch
 from captum._utils.common import (
-    ExpansionTypes,
     _expand_target,
     _format_additional_forward_args,
     _format_baseline,
     _format_tensor_into_tuples,
+    ExpansionTypes,
 )
 from captum._utils.gradient import compute_layer_gradients_and_eval
 from captum._utils.typing import (

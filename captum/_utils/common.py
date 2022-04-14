@@ -3,7 +3,7 @@ import typing
 from enum import Enum
 from functools import reduce
 from inspect import signature
-from typing import Any, Callable, Dict, List, Tuple, Union, cast, overload
+from typing import Any, Callable, cast, Dict, List, overload, Tuple, Union
 
 import numpy as np
 import torch
@@ -14,7 +14,7 @@ from captum._utils.typing import (
     TensorOrTupleOfTensorsGeneric,
     TupleOrTensorOrBoolGeneric,
 )
-from torch import Tensor, device
+from torch import device, Tensor
 from torch.nn import Module
 
 

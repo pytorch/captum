@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 import functools
 import warnings
-from typing import Any, Callable, List, Tuple, Union, overload
+from typing import Any, Callable, List, overload, Tuple, Union
 
 import torch
 from captum._utils.common import (

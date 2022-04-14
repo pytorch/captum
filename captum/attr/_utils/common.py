@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 import typing
 from inspect import signature
-from typing import TYPE_CHECKING, Any, Callable, List, Tuple, Union
+from typing import Any, Callable, List, Tuple, TYPE_CHECKING, Union
 
 import torch
 from captum._utils.common import (

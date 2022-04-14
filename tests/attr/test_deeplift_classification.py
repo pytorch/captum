@@ -6,7 +6,7 @@ import torch
 from captum._utils.typing import TargetType
 from captum.attr._core.deep_lift import DeepLift, DeepLiftShap
 from captum.attr._core.integrated_gradients import IntegratedGradients
-from tests.helpers.basic import BaseTest, assertAttributionComparision
+from tests.helpers.basic import assertAttributionComparision, BaseTest
 from tests.helpers.basic_models import (
     BasicModel_ConvNet,
     BasicModel_ConvNet_MaxPool1d,

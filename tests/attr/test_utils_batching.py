@@ -6,7 +6,7 @@ from captum.attr._utils.batching import (
     _batched_operator,
     _tuple_splice_range,
 )
-from tests.helpers.basic import BaseTest, assertTensorAlmostEqual
+from tests.helpers.basic import assertTensorAlmostEqual, BaseTest
 
 
 class Test(BaseTest):

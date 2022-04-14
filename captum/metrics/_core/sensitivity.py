@@ -2,7 +2,7 @@
 
 from copy import deepcopy
 from inspect import signature
-from typing import Any, Callable, Tuple, Union, cast
+from typing import Any, Callable, cast, Tuple, Union
 
 import torch
 from captum._utils.common import (

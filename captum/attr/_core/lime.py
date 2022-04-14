@@ -3,7 +3,7 @@ import inspect
 import math
 import typing
 import warnings
-from typing import Any, Callable, List, Optional, Tuple, Union, cast
+from typing import Any, Callable, cast, List, Optional, Tuple, Union
 
 import torch
 from captum._utils.common import (

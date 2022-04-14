@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 import math
 from enum import Enum
-from typing import Any, Callable, Dict, Generator, List, Optional, Tuple, Union, cast
+from typing import Any, Callable, cast, Dict, Generator, List, Optional, Tuple, Union
 
 import torch
 from captum._utils.common import (

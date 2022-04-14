@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 import unittest
 from enum import Enum
-from typing import Any, Callable, Dict, Tuple, Type, cast
+from typing import Any, Callable, cast, Dict, Tuple, Type
 
 import torch
 from captum._utils.common import (
@@ -26,7 +26,7 @@ from tests.attr.helpers.gen_test_utils import (
     should_create_generated_test,
 )
 from tests.attr.helpers.test_config import config
-from tests.helpers.basic import BaseTest, assertTensorTuplesAlmostEqual, deep_copy_args
+from tests.helpers.basic import assertTensorTuplesAlmostEqual, BaseTest, deep_copy_args
 from torch import Tensor
 from torch.nn import Module
 

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 import typing
-from typing import Any, Callable, List, Tuple, Union, cast
+from typing import Any, Callable, cast, List, Tuple, Union
 
 import numpy as np
 import torch

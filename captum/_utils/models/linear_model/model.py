@@ -1,4 +1,4 @@
-from typing import Callable, List, Optional, cast
+from typing import Callable, cast, List, Optional
 
 import torch.nn as nn
 from captum._utils.models.model import Model

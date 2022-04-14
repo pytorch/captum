@@ -1,13 +1,12 @@
 #!/usr/bin/env python3
 import typing
 import warnings
-from typing import Any, Callable, List, Tuple, Union, cast
+from typing import Any, Callable, cast, List, Tuple, Union
 
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from captum._utils.common import (
-    ExpansionTypes,
     _expand_additional_forward_args,
     _expand_target,
     _format_additional_forward_args,
@@ -15,9 +14,10 @@ from captum._utils.common import (
     _format_output,
     _format_tensor_into_tuples,
     _is_tuple,
+    _register_backward_hook,
     _run_forward,
     _select_targets,
-    _register_backward_hook,
+    ExpansionTypes,
 )
 from captum._utils.gradient import (
     apply_gradient_requirements,

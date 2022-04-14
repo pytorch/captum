@@ -1,6 +1,6 @@
 from collections import defaultdict
 from enum import Enum
-from typing import Tuple, Union, cast, Iterable
+from typing import cast, Iterable, Tuple, Union
 
 import torch
 from captum._utils.common import _format_tensor_into_tuples, _register_backward_hook

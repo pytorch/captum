@@ -2,7 +2,7 @@
 
 import typing
 from collections import defaultdict
-from typing import Any, List, Tuple, Union, cast
+from typing import Any, cast, List, Tuple, Union
 
 import torch.nn as nn
 from captum._utils.common import (

@@ -2,7 +2,7 @@
 import ipywidgets as widgets
 from captum.insights import AttributionVisualizer
 from captum.insights.attr_vis.server import namedtuple_to_dict
-from traitlets import Dict, Instance, List, Unicode, observe
+from traitlets import Dict, Instance, List, observe, Unicode
 
 
 @widgets.register

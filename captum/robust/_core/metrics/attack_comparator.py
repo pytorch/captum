@@ -4,6 +4,7 @@ from collections import namedtuple
 from typing import (
     Any,
     Callable,
+    cast,
     Dict,
     Generic,
     List,
@@ -12,7 +13,6 @@ from typing import (
     Tuple,
     TypeVar,
     Union,
-    cast,
 )
 
 from captum._utils.common import (
