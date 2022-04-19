@@ -1110,6 +1110,16 @@ class Test(BaseTest):
             processes=1,
         )
 
+    def test_TCAV_x_1_1_c_concept_order_changed(self) -> None:
+        self.compute_cavs_interpret(
+            [["random", "striped"], ["random", "ceo"], ["ceo", "striped"]],
+            True,
+            0.4848,
+            0.5000,
+            8.185208066890937e-09,
+            processes=1,
+        )
+
     # Non-existing concept in the experimental set ("dotted")
     def test_TCAV_x_1_1_d(self) -> None:
         self.compute_cavs_interpret(
