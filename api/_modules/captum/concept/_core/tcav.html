@@ -804,9 +804,11 @@ src="/_sphinx/documentation_options.js"></script>
             <span class="n">concepts_key</span> <span class="o">=</span> <span class="n">concepts_to_str</span><span class="p">(</span><span class="n">concepts</span><span class="p">)</span>
 
             <span class="c1"># sort classes / concepts in the order specified in concept_keys</span>
-            <span class="n">concept_ord</span> <span class="o">=</span> <span class="p">{</span><span class="n">concept</span><span class="o">.</span><span class="n">id</span><span class="p">:</span> <span class="n">ci</span> <span class="k">for</span> <span class="n">ci</span><span class="p">,</span> <span class="n">concept</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">concepts</span><span class="p">)}</span>
+            <span class="n">concept_ord</span> <span class="o">=</span> <span class="p">[</span><span class="n">concept</span><span class="o">.</span><span class="n">id</span> <span class="k">for</span> <span class="n">concept</span> <span class="ow">in</span> <span class="n">concepts</span><span class="p">]</span>
+            <span class="n">class_ord</span> <span class="o">=</span> <span class="p">{</span><span class="n">cls_</span><span class="p">:</span> <span class="n">idx</span> <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">cls_</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">cls_set</span><span class="p">)}</span>
+
             <span class="n">new_ord</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span>
-                <span class="p">[</span><span class="n">concept_ord</span><span class="p">[</span><span class="bp">cls</span><span class="p">]</span> <span class="k">for</span> <span class="bp">cls</span> <span class="ow">in</span> <span class="n">cls_set</span><span class="p">],</span> <span class="n">device</span><span class="o">=</span><span class="n">tcav_score</span><span class="o">.</span><span class="n">device</span>
+                <span class="p">[</span><span class="n">class_ord</span><span class="p">[</span><span class="n">cncpt</span><span class="p">]</span> <span class="k">for</span> <span class="n">cncpt</span> <span class="ow">in</span> <span class="n">concept_ord</span><span class="p">],</span> <span class="n">device</span><span class="o">=</span><span class="n">tcav_score</span><span class="o">.</span><span class="n">device</span>
             <span class="p">)</span>
 
             <span class="c1"># sort based on classes</span>
