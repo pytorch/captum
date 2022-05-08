@@ -110,6 +110,7 @@ def _dot_cossim(
     return dot * torch.clamp(torch.cosine_similarity(x, y, eps=eps), 0.1) ** cossim_pow
 
 
+@torch.jit.ignore
 def nchannels_to_rgb(x: torch.Tensor, warp: bool = True) -> torch.Tensor:
     """
     Convert an NCHW image with n channels into a 3 channel RGB image.

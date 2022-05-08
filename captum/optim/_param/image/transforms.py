@@ -8,7 +8,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 from captum.optim._utils.image.common import nchannels_to_rgb
-from captum.optim._utils.typing import IntSeqOrIntType, NumSeqOrTensorType
+from captum.optim._utils.typing import IntSeqOrIntType, NumSeqOrTensorOrProbDistType
 
 
 class BlendAlpha(nn.Module):
@@ -80,6 +80,8 @@ class ToRGB(nn.Module):
     https://www.sciencedirect.com/science/article/pii/0146664X80900477
     """
 
+    __constants__ = ["_supports_is_scripting", "_supports_named_dims"]
+
     @staticmethod
     def klt_transform() -> torch.Tensor:
         """
@@ -130,8 +132,12 @@ class ToRGB(nn.Module):
             raise ValueError(
                 "transform has to be either 'klt', 'i1i2i3'," + " or a matrix tensor."
             )
+        # Check & store whether or not we can use torch.jit.is_scripting()
+        self._supports_is_scripting = torch.__version__ >= "1.6.0"
+        self._supports_named_dims = torch.__version__ >= "1.3.0"
 
-    def forward(self, x: torch.Tensor, inverse: bool = False) -> torch.Tensor:
+    @torch.jit.ignore
+    def _forward(self, x: torch.Tensor, inverse: bool = False) -> torch.Tensor:
         """
         Args:
 
@@ -145,9 +151,15 @@ class ToRGB(nn.Module):
         """
 
         assert x.dim() == 3 or x.dim() == 4
+        assert x.shape[-3] >= 3
+        assert (
+            x.names == ("C", "H", "W")
+            if x.dim() == 3
+            else x.names == ("B", "C", "H", "W")
+        )
 
         # alpha channel is taken off...
-        has_alpha = x.size("C") == 4
+        has_alpha = x.size("C") >= 4
         if has_alpha:
             if x.dim() == 3:
                 x, alpha_channel = x[:3], x[3:]
@@ -175,17 +187,99 @@ class ToRGB(nn.Module):
 
         return chw
 
+    def _forward_without_named_dims(
+        self, x: torch.Tensor, inverse: bool = False
+    ) -> torch.Tensor:
+        """
+        JIT compatible forward function for ToRGB.
+
+        Args:
+
+            x (torch.tensor):  A CHW pr NCHW RGB or RGBA image tensor.
+            inverse (bool, optional):  Whether to recorrelate or decorrelate colors.
+                Default: False.
+
+        Returns:
+            chw (torch.tensor):  A tensor with it's colors recorrelated or
+                decorrelated.
+        """
+
+        assert x.dim() == 4 or x.dim() == 3
+        assert x.shape[-3] >= 3
+
+        # alpha channel is taken off...
+        has_alpha = x.shape[-3] >= 4
+        if has_alpha:
+            if x.dim() == 3:
+                x, alpha_channel = x[:3], x[3:]
+            else:
+                x, alpha_channel = x[:, :3], x[:, 3:]
+            assert x.dim() == alpha_channel.dim()  # ensure we "keep_dim"
+        else:
+            # JIT requires a placeholder
+            alpha_channel = torch.tensor([0])
+
+        c_dim = 1 if x.dim() == 4 else 0
+        h, w = x.shape[c_dim + 1 :]
+        flat = x.reshape(list(x.shape[: c_dim + 1]) + [h * w])
+
+        if inverse:
+            correct = torch.inverse(self.transform.to(x.device, x.dtype)) @ flat
+        else:
+            correct = self.transform.to(x.device, x.dtype) @ flat
+        chw = correct.reshape(x.shape)
+
+        # ...alpha channel is concatenated on again.
+        if has_alpha:
+            d = 0 if x.dim() == 3 else 1
+            chw = torch.cat([chw, alpha_channel], d)
+
+        return chw
+
+    def forward(self, x: torch.Tensor, inverse: bool = False) -> torch.Tensor:
+        """
+        JIT does not yet support named dimensions.
+
+        Args:
+
+            x (torch.tensor):  A CHW or NCHW RGB or RGBA image tensor.
+            inverse (bool, optional):  Whether to recorrelate or decorrelate colors.
+                Default: False.
+
+        Returns:
+            chw (torch.tensor):  A tensor with it's colors recorrelated or
+                decorrelated.
+        """
+        if self._supports_is_scripting:
+            if torch.jit.is_scripting():
+                return self._forward_without_named_dims(x, inverse)
+        if self._supports_named_dims:
+            if list(x.names) in [[None] * 3, [None] * 4]:
+                return self._forward_without_named_dims(x, inverse)
+        return self._forward(x, inverse)
+
 
 class CenterCrop(torch.nn.Module):
     """
-    Center crop a specified amount from a tensor.
+    Center crop a specified amount from a tensor. If input are smaller than the
+    specified crop size, padding will be applied.
     """
+
+    __constants__ = [
+        "size",
+        "pixels_from_edges",
+        "offset_left",
+        "padding_mode",
+        "padding_value",
+    ]
 
     def __init__(
         self,
         size: IntSeqOrIntType = 0,
         pixels_from_edges: bool = False,
         offset_left: bool = False,
+        padding_mode: str = "constant",
+        padding_value: float = 0.0,
     ) -> None:
         """
         Args:
@@ -194,21 +288,48 @@ class CenterCrop(torch.nn.Module):
                 pixels_from_edges (bool, optional): Whether to treat crop size
                 values as the number of pixels from the tensor's edge, or an
                 exact shape in the center.
+            pixels_from_edges (bool, optional): Whether to treat crop size
+                values as the number of pixels from the tensor's edge, or an
+                exact shape in the center.
+                Default: False
             offset_left (bool, optional): If the cropped away sides are not
                 equal in size, offset center by +1 to the left and/or top.
                 This parameter is only valid when `pixels_from_edges` is False.
                 Default: False
+            padding_mode (optional, str): One of "constant", "reflect", "replicate"
+                or "circular". This parameter is only used if the crop size is larger
+                than the image size.
+                Default: "constant"
+            padding_value (float, optional): fill value for "constant" padding. This
+                parameter is only used if the crop size is larger than the image size.
+                Default: 0.0
         """
         super().__init__()
-        self.crop_vals = size
+        if not hasattr(size, "__iter__"):
+            size = [int(size), int(size)]
+        elif isinstance(size, (tuple, list)):
+            if len(size) == 1:
+                size = list((size[0], size[0]))
+            elif len(size) == 2:
+                size = list(size)
+            else:
+                raise ValueError("Crop size length of {} too large".format(len(size)))
+        else:
+            raise ValueError("Unsupported crop size value {}".format(size))
+        assert len(size) == 2
+        self.size = cast(List[int], size)
         self.pixels_from_edges = pixels_from_edges
         self.offset_left = offset_left
+        self.padding_mode = padding_mode
+        self.padding_value = padding_value
 
+    @torch.jit.ignore
     def forward(self, input: torch.Tensor) -> torch.Tensor:
         """
         Center crop an input.
 
         Args:
+
             input (torch.Tensor): Input to center crop.
 
         Returns:
@@ -216,18 +337,26 @@ class CenterCrop(torch.nn.Module):
         """
 
         return center_crop(
-            input, self.crop_vals, self.pixels_from_edges, self.offset_left
+            input,
+            self.size,
+            self.pixels_from_edges,
+            self.offset_left,
+            self.padding_mode,
+            self.padding_value,
         )
 
 
 def center_crop(
     input: torch.Tensor,
-    crop_vals: IntSeqOrIntType,
+    size: Union[int, List[int]],
     pixels_from_edges: bool = False,
     offset_left: bool = False,
+    padding_mode: str = "constant",
+    padding_value: float = 0.0,
 ) -> torch.Tensor:
     """
-    Center crop a specified amount from a tensor.
+    Center crop a specified amount from a tensor. If input are smaller than the
+    specified crop size, padding will be applied.
 
     Args:
 
@@ -241,111 +370,343 @@ def center_crop(
             equal in size, offset center by +1 to the left and/or top.
             This parameter is only valid when `pixels_from_edges` is False.
             Default: False
+        padding_mode (optional, str): One of "constant", "reflect", "replicate" or
+            "circular". This parameter is only used if the crop size is larger than
+            the image size.
+            Default: "constant"
+        padding_value (float, optional): fill value for "constant" padding. This
+            parameter is only used if the crop size is larger than the image size.
+            Default: 0.0
 
     Returns:
         **tensor**:  A center cropped *tensor*.
     """
 
     assert input.dim() == 3 or input.dim() == 4
-    crop_vals = [crop_vals] * 2 if not hasattr(crop_vals, "__iter__") else crop_vals
-    crop_vals = list(crop_vals) * 2 if len(crop_vals) == 1 else crop_vals
-    crop_vals = cast(Union[List[int], Tuple[int, int]], crop_vals)
-    assert len(crop_vals) == 2
+    if isinstance(size, int):
+        size = [int(size), int(size)]
+    elif isinstance(size, (tuple, list)):
+        if len(size) == 1:
+            size = [size[0], size[0]]
+        elif len(size) == 2:
+            size = list(size)
+        else:
+            raise ValueError("Crop size length of {} too large".format(len(size)))
+    else:
+        raise ValueError("Unsupported crop size value {}".format(size))
+    assert len(size) == 2
 
     if input.dim() == 4:
-        h, w = input.size(2), input.size(3)
-    if input.dim() == 3:
-        h, w = input.size(1), input.size(2)
+        h, w = input.shape[2:]
+    elif input.dim() == 3:
+        h, w = input.shape[1:]
+    else:
+        raise ValueError("Input has too many dimensions: {}".format(input.dim()))
 
     if pixels_from_edges:
-        h_crop = h - crop_vals[0]
-        w_crop = w - crop_vals[1]
+        h_crop = h - size[0]
+        w_crop = w - size[1]
         sw, sh = w // 2 - (w_crop // 2), h // 2 - (h_crop // 2)
         x = input[..., sh : sh + h_crop, sw : sw + w_crop]
     else:
-        h_crop = h - int(math.ceil((h - crop_vals[0]) / 2.0))
-        w_crop = w - int(math.ceil((w - crop_vals[1]) / 2.0))
-        if h % 2 == 0 and crop_vals[0] % 2 != 0 or h % 2 != 0 and crop_vals[0] % 2 == 0:
+        h_crop = h - int(math.ceil((h - size[0]) / 2.0)) if h > size[0] else size[0]
+        w_crop = w - int(math.ceil((w - size[1]) / 2.0)) if w > size[1] else size[1]
+
+        if h % 2 == 0 and size[0] % 2 != 0 or h % 2 != 0 and size[0] % 2 == 0:
             h_crop = h_crop + 1 if offset_left else h_crop
-        if w % 2 == 0 and crop_vals[1] % 2 != 0 or w % 2 != 0 and crop_vals[1] % 2 == 0:
+        if w % 2 == 0 and size[1] % 2 != 0 or w % 2 != 0 and size[1] % 2 == 0:
             w_crop = w_crop + 1 if offset_left else w_crop
-        x = input[..., h_crop - crop_vals[0] : h_crop, w_crop - crop_vals[1] : w_crop]
+
+        if size[0] > h or size[1] > w:
+            # Padding functionality like Torchvision's center crop
+            padding = [
+                math.ceil((size[1] - w) / 2) if size[1] > w else 0,
+                math.ceil((size[0] - h) / 2) if size[0] > h else 0,
+                (size[1] - w + 1) // 2 if size[1] > w else 0,
+                (size[0] - h + 1) // 2 if size[0] > h else 0,
+            ]
+            input = F.pad(input, padding, mode=padding_mode, value=padding_value)
+
+        x = input[..., h_crop - size[0] : h_crop, w_crop - size[1] : w_crop]
     return x
-
-
-def _rand_select(
-    transform_values: NumSeqOrTensorType,
-) -> Union[int, float, torch.Tensor]:
-    """
-    Randomly return a single value from the provided tuple, list, or tensor.
-
-    Args:
-
-        transform_values (sequence):  A sequence of values to randomly select from.
-
-    Returns:
-        **value**:  A single value from the specified sequence.
-    """
-    n = torch.randint(low=0, high=len(transform_values), size=[1]).item()
-    return transform_values[n]
 
 
 class RandomScale(nn.Module):
     """
-    Apply random rescaling on a NCHW tensor.
+    Apply random rescaling on a NCHW tensor using the F.interpolate function.
     """
 
-    def __init__(self, scale: NumSeqOrTensorType) -> None:
+    __constants__ = [
+        "scale",
+        "mode",
+        "align_corners",
+        "_has_align_corners",
+        "recompute_scale_factor",
+        "_has_recompute_scale_factor",
+        "_is_distribution",
+    ]
+
+    def __init__(
+        self,
+        scale: NumSeqOrTensorOrProbDistType,
+        mode: str = "bilinear",
+        align_corners: Optional[bool] = False,
+        recompute_scale_factor: bool = False,
+    ) -> None:
         """
         Args:
 
-            scale (float, sequence): Tuple of rescaling values to randomly select from.
+            scale (float, sequence, or torch.distribution): Sequence of rescaling
+                values to randomly select from, or a torch.distributions instance.
+            mode (str, optional): Interpolation mode to use. See documentation of
+                F.interpolate for more details. One of; "bilinear", "nearest", "area",
+                or "bicubic".
+                Default: "bilinear"
+            align_corners (bool, optional): Whether or not to align corners. See
+                documentation of F.interpolate for more details.
+                Default: False
+            recompute_scale_factor (bool, optional): Whether or not to recompute the
+                scale factor See documentation of F.interpolate for more details.
+                Default: False
         """
         super().__init__()
-        self.scale = scale
+        assert mode not in ["linear", "trilinear"]
+        if isinstance(scale, torch.distributions.distribution.Distribution):
+            # Distributions are not supported by TorchScript / JIT yet
+            assert scale.batch_shape == torch.Size([])
+            self.scale_distribution = scale
+            self._is_distribution = True
+            self.scale = []
+        else:
+            assert hasattr(scale, "__iter__")
+            if torch.is_tensor(scale):
+                assert cast(torch.Tensor, scale).dim() == 1
+                scale = scale.tolist()
+            assert len(scale) > 0
+            self.scale = [float(s) for s in scale]
+            self._is_distribution = False
+        self.mode = mode
+        self.align_corners = align_corners if mode not in ["nearest", "area"] else None
+        self.recompute_scale_factor = recompute_scale_factor
+        self._has_align_corners = torch.__version__ >= "1.3.0"
+        self._has_recompute_scale_factor = torch.__version__ >= "1.6.0"
 
-    def get_scale_mat(
-        self, m: IntSeqOrIntType, device: torch.device, dtype: torch.dtype
+    def _scale_tensor(self, x: torch.Tensor, scale: float) -> torch.Tensor:
+        """
+        Scale an NCHW image tensor based on a specified scale value.
+
+        Args:
+
+            x (torch.Tensor): The NCHW image tensor to scale.
+            scale (float): The amount to scale the NCHW image by.
+
+        Returns:
+            **x** (torch.Tensor): A scaled NCHW image tensor.
+        """
+        if self._has_align_corners:
+            if self._has_recompute_scale_factor:
+                x = F.interpolate(
+                    x,
+                    scale_factor=scale,
+                    mode=self.mode,
+                    align_corners=self.align_corners,
+                    recompute_scale_factor=self.recompute_scale_factor,
+                )
+            else:
+                x = F.interpolate(
+                    x,
+                    scale_factor=scale,
+                    mode=self.mode,
+                    align_corners=self.align_corners,
+                )
+        else:
+            x = F.interpolate(x, scale_factor=scale, mode=self.mode)
+        return x
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        """
+        Randomly scale an NCHW image tensor.
+
+        Args:
+
+            x (torch.Tensor): NCHW image tensor to randomly scale.
+
+        Returns:
+            **x** (torch.Tensor): A randomly scaled NCHW image *tensor*.
+        """
+        assert x.dim() == 4
+        if self._is_distribution:
+            scale = float(self.scale_distribution.sample().item())
+        else:
+            n = int(
+                torch.randint(
+                    low=0,
+                    high=len(self.scale),
+                    size=[1],
+                    dtype=torch.int64,
+                    layout=torch.strided,
+                    device=x.device,
+                ).item()
+            )
+            scale = self.scale[n]
+        return self._scale_tensor(x, scale=scale)
+
+
+class RandomScaleAffine(nn.Module):
+    """
+    Apply random rescaling on a NCHW tensor.
+
+    This random scaling transform utilizes F.affine_grid & F.grid_sample, and as a
+    result has two key differences to the default RandomScale transforms This
+    transform either shrinks an image while adding a background, or center crops image
+    and then resizes it to a larger size. This means that the output image shape is the
+    same shape as the input image.
+
+    In constrast to RandomScaleAffine, the default RandomScale transform simply resizes
+    the input image using F.interpolate.
+    """
+
+    __constants__ = [
+        "scale",
+        "mode",
+        "padding_mode",
+        "align_corners",
+        "_has_align_corners",
+        "_is_distribution",
+    ]
+
+    def __init__(
+        self,
+        scale: NumSeqOrTensorOrProbDistType,
+        mode: str = "bilinear",
+        padding_mode: str = "zeros",
+        align_corners: bool = False,
+    ) -> None:
+        """
+        Args:
+
+            scale (float, sequence, or torch.distribution): Sequence of rescaling
+                values to randomly select from, or a torch.distributions instance.
+            mode (str, optional): Interpolation mode to use. See documentation of
+                F.grid_sample for more details. One of; "bilinear", "nearest", or
+                "bicubic".
+                Default: "bilinear"
+            padding_mode (str, optional): Padding mode for values that fall outside of
+                the grid. See documentation of F.grid_sample for more details. One of;
+                "zeros", "border", or "reflection".
+                Default: "zeros"
+            align_corners (bool, optional): Whether or not to align corners. See
+                documentation of F.affine_grid & F.grid_sample for more details.
+                Default: False
+        """
+        super().__init__()
+        if isinstance(scale, torch.distributions.distribution.Distribution):
+            # Distributions are not supported by TorchScript / JIT yet
+            assert scale.batch_shape == torch.Size([])
+            self.scale_distribution = scale
+            self._is_distribution = True
+            self.scale = []
+        else:
+            assert hasattr(scale, "__iter__")
+            if torch.is_tensor(scale):
+                assert cast(torch.Tensor, scale).dim() == 1
+                scale = scale.tolist()
+            assert len(scale) > 0
+            self.scale = [float(s) for s in scale]
+            self._is_distribution = False
+        self.mode = mode
+        self.padding_mode = padding_mode
+        self.align_corners = align_corners
+        self._has_align_corners = torch.__version__ >= "1.3.0"
+
+    def _get_scale_mat(
+        self,
+        m: float,
+        device: torch.device,
+        dtype: torch.dtype,
     ) -> torch.Tensor:
+        """
+        Create a scale matrix tensor.
+
+        Args:
+
+            m (float): The scale value to use.
+
+        Returns:
+            **scale_mat** (torch.Tensor): A scale matrix.
+        """
         scale_mat = torch.tensor(
             [[m, 0.0, 0.0], [0.0, m, 0.0]], device=device, dtype=dtype
         )
         return scale_mat
 
-    def scale_tensor(
-        self, x: torch.Tensor, scale: Union[int, float, torch.Tensor]
-    ) -> torch.Tensor:
-        scale_matrix = self.get_scale_mat(scale, x.device, x.dtype)[None, ...].repeat(
-            x.shape[0], 1, 1
-        )
-        if torch.__version__ >= "1.3.0":
-            # Pass align_corners explicitly for torch >= 1.3.0
-            grid = F.affine_grid(scale_matrix, x.size(), align_corners=False)
-            x = F.grid_sample(x, grid, align_corners=False)
-        else:
-            grid = F.affine_grid(scale_matrix, x.size())
-            x = F.grid_sample(x, grid)
-        return x
-
-    def forward(self, input: torch.Tensor) -> torch.Tensor:
+    def _scale_tensor(self, x: torch.Tensor, scale: float) -> torch.Tensor:
         """
-        Randomly scale / zoom in or out of a tensor.
+        Scale an NCHW image tensor based on a specified scale value.
 
         Args:
 
-            input (torch.Tensor): Input to randomly scale.
+            x (torch.Tensor): The NCHW image tensor to scale.
+            scale (float): The amount to scale the NCHW image by.
 
         Returns:
-            **tensor** (torch.Tensor): Scaled *tensor*.
+            **x** (torch.Tensor): A scaled NCHW image tensor.
         """
-        scale = _rand_select(self.scale)
-        return self.scale_tensor(input, scale=scale)
+        scale_matrix = self._get_scale_mat(scale, x.device, x.dtype)[None, ...].repeat(
+            x.shape[0], 1, 1
+        )
+        if self._has_align_corners:
+            # Pass align_corners explicitly for torch >= 1.3.0
+            grid = F.affine_grid(
+                scale_matrix, x.size(), align_corners=self.align_corners
+            )
+            x = F.grid_sample(
+                x,
+                grid,
+                mode=self.mode,
+                padding_mode=self.padding_mode,
+                align_corners=self.align_corners,
+            )
+        else:
+            grid = F.affine_grid(scale_matrix, x.size())
+            x = F.grid_sample(x, grid, mode=self.mode, padding_mode=self.padding_mode)
+        return x
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        """
+        Randomly scale an NCHW image tensor.
+
+        Args:
+
+            x (torch.Tensor): NCHW image tensor to randomly scale.
+
+        Returns:
+            **x** (torch.Tensor): A randomly scaled NCHW image *tensor*.
+        """
+        assert x.dim() == 4
+        if self._is_distribution:
+            scale = float(self.scale_distribution.sample().item())
+        else:
+            n = int(
+                torch.randint(
+                    low=0,
+                    high=len(self.scale),
+                    size=[1],
+                    dtype=torch.int64,
+                    layout=torch.strided,
+                    device=x.device,
+                ).item()
+            )
+            scale = self.scale[n]
+        return self._scale_tensor(x, scale=scale)
 
 
 class RandomSpatialJitter(torch.nn.Module):
     """
     Apply random spatial translations on a NCHW tensor.
     """
+
+    __constants__ = ["pad_range"]
 
     def __init__(self, translate: int) -> None:
         """
@@ -380,7 +741,13 @@ class RandomSpatialJitter(torch.nn.Module):
         Returns:
             **tensor** (torch.Tensor): A randomly translated *tensor*.
         """
-        insets = torch.randint(high=self.pad_range, size=(2,))
+        insets = torch.randint(
+            high=self.pad_range,
+            size=(2,),
+            dtype=input.dtype,
+            layout=input.layout,
+            device=input.device,
+        )
         return self.translate_tensor(input, insets)
 
 
@@ -401,7 +768,7 @@ class RandomRotation(nn.Module):
 
     def __init__(
         self,
-        degrees: NumSeqOrTensorType,
+        degrees: NumSeqOrTensorOrProbDistType,
         mode: str = "bilinear",
         padding_mode: str = "zeros",
         align_corners: bool = False,
@@ -536,6 +903,8 @@ class ScaleInputRange(nn.Module):
     than [0,1].
     """
 
+    __constants__ = ["multiplier"]
+
     def __init__(self, multiplier: float = 1.0) -> None:
         """
         Args:
@@ -619,6 +988,8 @@ class GaussianSmoothing(nn.Module):
     1d, 2d or 3d tensor. Filtering is performed seperately for each channel
     in the input using a depthwise convolution.
     """
+
+    __constants__ = ["groups"]
 
     def __init__(
         self,
@@ -749,6 +1120,8 @@ class NChannelsToRGB(nn.Module):
     Convert an NCHW image with n channels into a 3 channel RGB image.
     """
 
+    __constants__ = ["warp"]
+
     def __init__(self, warp: bool = False) -> None:
         """
         Args:
@@ -779,6 +1152,8 @@ class RandomCrop(nn.Module):
     Randomly crop out a specific size from an NCHW image tensor.
     """
 
+    __constants__ = ["crop_size"]
+
     def __init__(
         self,
         crop_size: IntSeqOrIntType,
@@ -795,20 +1170,155 @@ class RandomCrop(nn.Module):
         assert len(crop_size) == 2
         self.crop_size = crop_size
 
+    def _center_crop(self, x: torch.Tensor) -> torch.Tensor:
+        """
+        Center crop an NCHW image tensor based on self.crop_size.
+
+        Args:
+
+            x (torch.Tensor): The NCHW image tensor to center crop.
+
+        Returns
+            x (torch.Tensor): The center cropped NCHW image tensor.
+        """
+        h, w = x.shape[2:]
+        h_crop = h - int(math.ceil((h - self.crop_size[0]) / 2.0))
+        w_crop = w - int(math.ceil((w - self.crop_size[1]) / 2.0))
+        return x[
+            ...,
+            h_crop - self.crop_size[0] : h_crop,
+            w_crop - self.crop_size[1] : w_crop,
+        ]
+
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         assert x.dim() == 4
-        hs = x.shape[2] - self.crop_size[0]
-        ws = x.shape[3] - self.crop_size[1]
+        hs = int(math.ceil((x.shape[2] - self.crop_size[0]) / 2.0))
+        ws = int(math.ceil((x.shape[3] - self.crop_size[1]) / 2.0))
         shifts = [
-            torch.randint(low=-hs, high=hs, size=[1]),
-            torch.randint(low=-ws, high=ws, size=[1]),
+            torch.randint(
+                low=-hs,
+                high=hs,
+                size=[1],
+                dtype=torch.int64,
+                layout=torch.strided,
+                device=x.device,
+            ),
+            torch.randint(
+                low=-ws,
+                high=ws,
+                size=[1],
+                dtype=torch.int64,
+                layout=torch.strided,
+                device=x.device,
+            ),
         ]
-        x = torch.roll(x, shifts, dims=(2, 3))
-        return center_crop(
-            x,
-            crop_vals=self.crop_size,
-            pixels_from_edges=False,
+        x = torch.roll(x, [int(s) for s in shifts], dims=(2, 3))
+        return self._center_crop(x)
+
+
+class TransformationRobustness(nn.Module):
+    """
+    This transform combines the standard transforms together for ease of use.
+
+    Multiple jitter transforms can be used to create roughly gaussian distribution
+    of jitter.
+
+    Outputs can be optionally cropped or padded so that they have the same shape as
+    inputs.
+    """
+
+    __constants__ = ["crop_or_pad_output"]
+
+    def __init__(
+        self,
+        padding_transform: Optional[nn.Module] = nn.ConstantPad2d(2, value=0.5),
+        translate: Optional[Union[int, List[int]]] = [4] * 10,
+        scale: Optional[NumSeqOrTensorOrProbDistType] = [
+            0.995 ** n for n in range(-5, 80)
+        ]
+        + [0.998 ** n for n in 2 * list(range(20, 40))],
+        degrees: Optional[NumSeqOrTensorOrProbDistType] = list(range(-20, 20))
+        + list(range(-10, 10))
+        + list(range(-5, 5))
+        + 5 * [0],
+        final_translate: Optional[int] = 2,
+        crop_or_pad_output: bool = False,
+    ) -> None:
+        """
+        Args:
+
+            padding_transform (nn.Module, optional): A padding module instance. No
+                padding will be applied before transforms if set to None.
+                Default: nn.ConstantPad2d(2, value=0.5)
+            translate (int or list of int, optional): The max horizontal and vertical
+                 translation to use for each jitter transform.
+                 Default: [4] * 10
+            scale (float, sequence, or torch.distribution, optional): Sequence of
+                rescaling values to randomly select from, or a torch.distributions
+                instance. If set to None, no rescaling transform will be used.
+                Default: A set of optimal values.
+            degrees (float, sequence, or torch.distribution, optional): Sequence of
+                degrees to randomly select from, or a torch.distributions
+                instance. If set to None, no rotation transform will be used.
+                Default: A set of optimal values.
+            final_translate (int, optional): The max horizontal and vertical
+                 translation to use for the final jitter transform on fractional
+                 pixels.
+                 Default: 2
+            crop_or_pad_output (bool, optional): Whether or not to crop or pad the
+                transformed output so that it is the same shape as the input.
+                Default: False
+        """
+        super().__init__()
+        self.padding_transform = padding_transform
+        if translate is not None:
+            jitter_transforms = []
+            if hasattr(translate, "__iter__"):
+                jitter_transforms = []
+                for t in translate:
+                    jitter_transforms.append(RandomSpatialJitter(t))
+                self.jitter_transforms = nn.Sequential(*jitter_transforms)
+            else:
+                self.jitter_transforms = RandomSpatialJitter(translate)
+        else:
+            self.jitter_transforms = translate
+        self.random_scale = None if scale is None else RandomScale(scale)
+        self.random_rotation = None if degrees is None else RandomRotation(degrees)
+        self.final_jitter = (
+            None if final_translate is None else RandomSpatialJitter(final_translate)
         )
+        self.crop_or_pad_output = crop_or_pad_output
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        assert x.dim() == 4
+        crop_size = x.shape[2:]
+
+        # Apply padding if enabled
+        if self.padding_transform is not None:
+            x = self.padding_transform(x)
+
+        # Jitter real pixels
+        if self.jitter_transforms is not None:
+            x = self.jitter_transforms(x)
+
+        # Apply Random Scaling, turning real pixels into
+        # fractional values of real pixels
+        if self.random_scale is not None:
+            x = self.random_scale(x)
+
+        # Apply Random Rotation
+        if self.random_rotation is not None:
+            x = self.random_rotation(x)
+
+        # Jitter fractional pixels if random_scale is not None
+        if self.final_jitter is not None:
+            x = self.final_jitter(x)
+
+        # Ensure the output is the same shape as the input
+        if self.crop_or_pad_output:
+            x = center_crop(x, size=crop_size)
+            assert x.shape[2:] == crop_size
+        return x
 
 
 __all__ = [
@@ -826,4 +1336,5 @@ __all__ = [
     "SymmetricPadding",
     "NChannelsToRGB",
     "RandomCrop",
+    "TransformationRobustness",
 ]
