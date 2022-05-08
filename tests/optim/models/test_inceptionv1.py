@@ -54,6 +54,19 @@ class TestInceptionV1(BaseTest):
         expected_output = x * 255 - 117
         assertTensorAlmostEqual(self, output, expected_output, 0)
 
+    def test_inceptionv1_transform_warning(self) -> None:
+        if torch.__version__ <= "1.2.0":
+            raise unittest.SkipTest(
+                "Skipping InceptionV1 internal transform warning test due to"
+                + " insufficient Torch version."
+            )
+        x = torch.stack(
+            [torch.ones(3, 112, 112) * -1, torch.ones(3, 112, 112) * 2], dim=0
+        )
+        model = googlenet(pretrained=True)
+        with self.assertWarns(UserWarning):
+            model._transform_input(x)
+
     def test_transform_bgr_inceptionv1(self) -> None:
         if torch.__version__ <= "1.2.0":
             raise unittest.SkipTest(
@@ -108,3 +121,44 @@ class TestInceptionV1(BaseTest):
         model = googlenet(pretrained=False, aux_logits=True)
         outputs = model(x)
         self.assertEqual(len(outputs), 3)
+
+    def test_inceptionv1_forward_cuda(self) -> None:
+        if torch.__version__ <= "1.2.0":
+            raise unittest.SkipTest(
+                "Skipping pretrained InceptionV1 forward CUDA test due to insufficient"
+                + " Torch version."
+            )
+        if not torch.cuda.is_available():
+            raise unittest.SkipTest(
+                "Skipping pretrained InceptionV1 forward CUDA test due to not"
+                + " supporting CUDA."
+            )
+        x = torch.zeros(1, 3, 224, 224).cuda()
+        model = googlenet(pretrained=True).cuda()
+        outputs = model(x)
+        self.assertTrue(outputs.is_cuda)
+        self.assertEqual(list(outputs.shape), [1, 1008])
+
+    def test_inceptionv1_load_and_jit_module(self) -> None:
+        if torch.__version__ <= "1.8.0":
+            raise unittest.SkipTest(
+                "Skipping pretrained InceptionV1 load & JIT test"
+                + " due to insufficient Torch version."
+            )
+        x = torch.zeros(1, 3, 224, 224)
+        model = googlenet(pretrained=True)
+        jit_model = torch.jit.script(model)
+        outputs = jit_model(x)
+        self.assertEqual(list(outputs.shape), [1, 1008])
+
+    def test_inceptionv1_load_and_jit_module_no_redirected_relu(self) -> None:
+        if torch.__version__ <= "1.8.0":
+            raise unittest.SkipTest(
+                "Skipping pretrained InceptionV1 load & JIT with no"
+                + " redirected relu test due to insufficient Torch version."
+            )
+        x = torch.zeros(1, 3, 224, 224)
+        model = googlenet(pretrained=True, replace_relus_with_redirectedrelu=False)
+        jit_model = torch.jit.script(model)
+        outputs = jit_model(x)
+        self.assertEqual(list(outputs.shape), [1, 1008])
