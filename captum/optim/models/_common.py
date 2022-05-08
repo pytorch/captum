@@ -20,15 +20,16 @@ def get_model_layers(model: nn.Module) -> List[str]:
     """
     layers = []
 
-    def get_layers(net: nn.Module, prefix: List = []) -> None:
-        if hasattr(net, "_modules"):
-            for name, layer in net._modules.items():
-                if layer is None:
-                    continue
-                separator = "" if str(name).isdigit() else "."
-                name = "[" + str(name) + "]" if str(name).isdigit() else name
-                layers.append(separator.join(prefix + [name]))
-                get_layers(layer, prefix=prefix + [name])
+    def get_layers(net: nn.Module, prefix: str = "") -> None:
+        for name, layer in net.named_children():
+            delimiter = "." if prefix else ""
+            name_str = (
+                f"{prefix}[{name}]"
+                if str(name).isdigit()
+                else f"{prefix}{delimiter}{name}"
+            )
+            layers.append(name_str)
+            get_layers(layer, prefix=name_str)
 
     get_layers(model)
     return layers
@@ -252,7 +253,7 @@ def collect_activations(
         activ_dict (ModuleOutputMapping): A dictionary of collected activations where
             the keys are the target layers.
     """
-    if not hasattr(targets, "__iter__"):
+    if not isinstance(targets, list):
         targets = [targets]
     catch_activ = ActivationFetcher(model, targets)
     activ_dict = catch_activ(model_input)

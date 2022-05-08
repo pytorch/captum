@@ -39,7 +39,7 @@ class InputOptimization(Objective, Parameterized):
 
     def __init__(
         self,
-        model: nn.Module,
+        model: Optional[nn.Module],
         loss_function: LossFunction,
         input_param: Optional[InputParameterization] = None,
         transform: Optional[nn.Module] = None,
@@ -47,24 +47,26 @@ class InputOptimization(Objective, Parameterized):
         r"""
         Args:
 
-            model (nn.Module):  The reference to PyTorch model instance.
+            model (nn.Module, optional):  The reference to PyTorch model instance.
             input_param (nn.Module, optional):  A module that generates an input,
                         consumed by the model.
             transform (nn.Module, optional):  A module that transforms or preprocesses
                         the input before being passed to the model.
             loss_function (callable): The loss function to minimize during optimization
                         optimization.
-            lr (float): The learning rate to use with the Adam optimizer.
         """
-        self.model = model
+        self.model = model or nn.Identity()
         # Grab targets from loss_function
-        if hasattr(loss_function.target, "__iter__"):
+        assert hasattr(loss_function, "target")
+        if isinstance(loss_function.target, list):
             self.hooks = ModuleOutputsHook(loss_function.target)
         else:
             self.hooks = ModuleOutputsHook([loss_function.target])
         self.input_param = input_param or NaturalImage((224, 224))
         if isinstance(self.model, Iterable):
-            self.input_param.to(next(self.model.parameters()).device)
+            param = next(self.model.parameters(), None)
+            if param:
+                self.input_param = self.input_param.to(param.device)
         self.transform = transform or torch.nn.Sequential(
             RandomScale(scale=(1, 0.975, 1.025, 0.95, 1.05)), RandomSpatialJitter(16)
         )
