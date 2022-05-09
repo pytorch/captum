@@ -133,10 +133,6 @@ class ImageParameterization(InputParameterization):
     pass
 
 
-class AugmentedImageParameterization(ImageParameterization):
-    pass
-
-
 class FFTImage(ImageParameterization):
     """
     Parameterize an image using inverse real 2D FFT
@@ -461,7 +457,7 @@ class SimpleTensorParameterization(ImageParameterization):
         return self.tensor
 
 
-class SharedImage(AugmentedImageParameterization):
+class SharedImage(ImageParameterization):
     """
     Share some image parameters across the batch to increase spatial alignment,
     by using interpolated lower resolution tensors.
@@ -704,7 +700,7 @@ class SharedImage(AugmentedImageParameterization):
         return output.refine_names("B", "C", "H", "W")
 
 
-class StackImage(AugmentedImageParameterization):
+class StackImage(ImageParameterization):
     """
     Stack multiple NCHW image parameterizations along their batch dimensions.
     """
@@ -794,9 +790,7 @@ class NaturalImage(ImageParameterization):
         channels: int = 3,
         batch: int = 1,
         init: Optional[torch.Tensor] = None,
-        parameterization: Union[
-            ImageParameterization, AugmentedImageParameterization
-        ] = FFTImage,
+        parameterization: ImageParameterization = FFTImage,
         squash_func: Optional[Callable[[torch.Tensor], torch.Tensor]] = None,
         decorrelation_module: Optional[nn.Module] = ToRGB(transform="klt"),
         decorrelate_init: bool = True,
@@ -884,7 +878,6 @@ __all__ = [
     "ImageTensor",
     "InputParameterization",
     "ImageParameterization",
-    "AugmentedImageParameterization",
     "FFTImage",
     "PixelImage",
     "LaplacianImage",

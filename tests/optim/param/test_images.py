@@ -100,15 +100,6 @@ class TestImageParameterization(BaseTest):
         )
 
 
-class TestAugmentedImageParameterization(BaseTest):
-    def test_subclass(self) -> None:
-        self.assertTrue(
-            issubclass(
-                images.AugmentedImageParameterization, images.ImageParameterization
-            )
-        )
-
-
 class TestFFTImage(BaseTest):
     def test_subclass(self) -> None:
         self.assertTrue(issubclass(images.FFTImage, images.ImageParameterization))
@@ -568,9 +559,7 @@ class TestSimpleTensorParameterization(BaseTest):
 
 class TestSharedImage(BaseTest):
     def test_subclass(self) -> None:
-        self.assertTrue(
-            issubclass(images.SharedImage, images.AugmentedImageParameterization)
-        )
+        self.assertTrue(issubclass(images.SharedImage, images.ImageParameterization))
 
     def test_sharedimage_init(self) -> None:
         shared_shapes = (
@@ -1006,9 +995,7 @@ class TestSharedImage(BaseTest):
 
 class TestStackImage(BaseTest):
     def test_subclass(self) -> None:
-        self.assertTrue(
-            issubclass(images.StackImage, images.AugmentedImageParameterization)
-        )
+        self.assertTrue(issubclass(images.StackImage, images.ImageParameterization))
 
     def test_stackimage_torch_version_check(self) -> None:
         img_param_1 = images.SimpleTensorParameterization(torch.ones(1, 3, 4, 4))
