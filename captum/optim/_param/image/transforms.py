@@ -718,7 +718,6 @@ class RandomScaleAffine(nn.Module):
         return self._scale_tensor(x, scale=scale)
 
 
-
 class RandomSpatialJitter(torch.nn.Module):
     """
     Apply random spatial translations on a NCHW tensor.
