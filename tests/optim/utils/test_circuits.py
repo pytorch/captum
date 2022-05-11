@@ -10,10 +10,6 @@ from tests.helpers.basic import BaseTest
 
 class TestGetExpandedWeights(BaseTest):
     def test_get_expanded_weights(self) -> None:
-        if torch.__version__ <= "1.2.0":
-            raise unittest.SkipTest(
-                "Skipping get_expanded_weights test due to insufficient Torch version."
-            )
         model = googlenet(pretrained=True, use_linear_modules_only=True)
         output_tensor = circuits.extract_expanded_weights(
             model, model.mixed3a, model.mixed3b
@@ -22,11 +18,6 @@ class TestGetExpandedWeights(BaseTest):
         self.assertEqual(list(output_tensor.shape), [480, 256, 28, 28])
 
     def test_get_expanded_weights_crop_int(self) -> None:
-        if torch.__version__ <= "1.2.0":
-            raise unittest.SkipTest(
-                "Skipping get_expanded_weights crop test due to insufficient Torch"
-                + " version."
-            )
         model = googlenet(pretrained=True, use_linear_modules_only=True)
         output_tensor = circuits.extract_expanded_weights(
             model, model.mixed3a, model.mixed3b, 5
@@ -34,11 +25,6 @@ class TestGetExpandedWeights(BaseTest):
         self.assertEqual(list(output_tensor.shape), [480, 256, 5, 5])
 
     def test_get_expanded_weights_crop_two_int(self) -> None:
-        if torch.__version__ <= "1.2.0":
-            raise unittest.SkipTest(
-                "Skipping get_expanded_weights two int crop test due to insufficient"
-                + " Torch version."
-            )
         model = googlenet(pretrained=True, use_linear_modules_only=True)
         output_tensor = circuits.extract_expanded_weights(
             model, model.mixed3a, model.mixed3b, (5, 5)
@@ -46,16 +32,6 @@ class TestGetExpandedWeights(BaseTest):
         self.assertEqual(list(output_tensor.shape), [480, 256, 5, 5])
 
     def test_get_expanded_nonlinear_top_connections(self) -> None:
-        if torch.__version__ <= "1.2.0":
-            raise unittest.SkipTest(
-                "Skipping get_expanded_weights nonlinear_top_connections test"
-                + " due to insufficient Torch version."
-            )
-
-        if torch.__version__ <= "1.3.0":
-            norm_func = torch.norm
-        else:
-            norm_func = torch.linalg.norm
         model = googlenet(pretrained=True, use_linear_modules_only=True)
         output_tensor = circuits.extract_expanded_weights(
             model, model.pool3, model.mixed4a, 5
@@ -65,7 +41,7 @@ class TestGetExpandedWeights(BaseTest):
         top_connected_neurons = torch.argsort(
             torch.stack(
                 [
-                    -norm_func(output_tensor[i, 379, :, :])
+                    -torch.linalg.norm(output_tensor[i, 379, :, :])
                     for i in range(output_tensor.shape[0])
                 ]
             )
@@ -75,10 +51,6 @@ class TestGetExpandedWeights(BaseTest):
         self.assertEqual(top_connected_neurons, expected_list)
 
     def test_get_expanded_weights_cuda(self) -> None:
-        if torch.__version__ <= "1.2.0":
-            raise unittest.SkipTest(
-                "Skipping get_expanded_weights test due to insufficient Torch version."
-            )
         if not torch.cuda.is_available():
             raise unittest.SkipTest(
                 "Skipping Circuits CUDA test due to not supporting CUDA."

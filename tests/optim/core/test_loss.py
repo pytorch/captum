@@ -6,7 +6,7 @@ import torch
 
 import captum.optim._core.loss as opt_loss
 from captum.optim.models import collect_activations
-from tests.helpers.basic import BaseTest, assertArraysAlmostEqual
+from tests.helpers.basic import BaseTest, assertTensorAlmostEqual
 from tests.helpers.basic_models import BasicModel_ConvNet_Optim
 
 CHANNEL_ACTIVATION_0_LOSS = 1.3
@@ -21,17 +21,17 @@ def get_loss_value(
     try:
         return loss_value.item()
     except ValueError:
-        return loss_value.detach().numpy()
+        return loss_value.detach()
 
 
 class TestDeepDream(BaseTest):
     def test_channel_deepdream(self) -> None:
         model = BasicModel_ConvNet_Optim()
         loss = opt_loss.DeepDream(model.layer)
-        assertArraysAlmostEqual(
-            get_loss_value(model, loss),
-            [[[CHANNEL_ACTIVATION_0_LOSS ** 2]], [[CHANNEL_ACTIVATION_1_LOSS ** 2]]],
-        )
+        expected = torch.as_tensor(
+            [[[CHANNEL_ACTIVATION_0_LOSS ** 2]], [[CHANNEL_ACTIVATION_1_LOSS ** 2]]]
+        )[None, :]
+        assertTensorAlmostEqual(self, get_loss_value(model, loss), expected, mode="max")
 
 
 class TestChannelActivation(BaseTest):
@@ -141,8 +141,10 @@ class TestAngledNeuronDirection(BaseTest):
         )
         a = 1
         b = [CHANNEL_ACTIVATION_0_LOSS, CHANNEL_ACTIVATION_1_LOSS]
-        dot = np.sum(np.inner(a, b))
-        self.assertAlmostEqual(np.sum(get_loss_value(model, loss)), dot, places=6)
+        dot = torch.sum(torch.as_tensor(np.inner(a, b))).item()
+        self.assertAlmostEqual(
+            torch.sum(get_loss_value(model, loss)).item(), dot, places=6
+        )
 
     def test_angled_neuron_direction_whitened(self) -> None:
         model = BasicModel_ConvNet_Optim()
@@ -154,8 +156,10 @@ class TestAngledNeuronDirection(BaseTest):
         )
         a = 1
         b = [CHANNEL_ACTIVATION_0_LOSS, CHANNEL_ACTIVATION_1_LOSS]
-        dot = np.sum(np.inner(a, b)) * 2
-        self.assertAlmostEqual(np.sum(get_loss_value(model, loss)), dot, places=6)
+        dot = torch.sum(torch.as_tensor(np.inner(a, b))).item() * 2
+        self.assertAlmostEqual(
+            torch.sum(get_loss_value(model, loss)).item(), dot, places=6
+        )
 
 
 class TestTensorDirection(BaseTest):
@@ -172,16 +176,20 @@ class TestActivationWeights(BaseTest):
     def test_activation_weights_0(self) -> None:
         model = BasicModel_ConvNet_Optim()
         loss = opt_loss.ActivationWeights(model.layer, weights=torch.zeros(1))
-        assertArraysAlmostEqual(get_loss_value(model, loss), np.zeros((1, 2, 1)))
+        assertTensorAlmostEqual(
+            self, get_loss_value(model, loss), torch.zeros(1, 2, 1, 1), mode="max"
+        )
 
     def test_activation_weights_1(self) -> None:
         model = BasicModel_ConvNet_Optim()
         loss = opt_loss.ActivationWeights(
             model.layer, weights=torch.ones(1), neuron=True
         )
-        assertArraysAlmostEqual(
+        assertTensorAlmostEqual(
+            self,
             get_loss_value(model, loss),
             [CHANNEL_ACTIVATION_0_LOSS, CHANNEL_ACTIVATION_1_LOSS],
+            mode="max",
         )
 
 

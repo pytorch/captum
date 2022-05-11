@@ -73,7 +73,7 @@ def replace_layers(
     layer1: Type[nn.Module],
     layer2: Type[nn.Module],
     transfer_vars: bool = False,
-    **kwargs
+    **kwargs,
 ) -> None:
     """
     Replace all target layers with new layers inside the specified model,

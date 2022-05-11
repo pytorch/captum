@@ -11,30 +11,15 @@ from tests.optim.helpers.models import check_layer_in_model
 
 class TestInceptionV1(BaseTest):
     def test_load_inceptionv1_with_redirected_relu(self) -> None:
-        if torch.__version__ <= "1.2.0":
-            raise unittest.SkipTest(
-                "Skipping load pretrained inception"
-                + " due to insufficient Torch version."
-            )
         model = googlenet(pretrained=True, replace_relus_with_redirectedrelu=True)
         self.assertTrue(check_layer_in_model(model, RedirectedReluLayer))
 
     def test_load_inceptionv1_no_redirected_relu(self) -> None:
-        if torch.__version__ <= "1.2.0":
-            raise unittest.SkipTest(
-                "Skipping load pretrained inception RedirectedRelu"
-                + " due to insufficient Torch version."
-            )
         model = googlenet(pretrained=True, replace_relus_with_redirectedrelu=False)
         self.assertFalse(check_layer_in_model(model, RedirectedReluLayer))
         self.assertTrue(check_layer_in_model(model, torch.nn.ReLU))
 
     def test_load_inceptionv1_linear(self) -> None:
-        if torch.__version__ <= "1.2.0":
-            raise unittest.SkipTest(
-                "Skipping load pretrained inception linear"
-                + " due to insufficient Torch version."
-            )
         model = googlenet(pretrained=True, use_linear_modules_only=True)
         self.assertFalse(check_layer_in_model(model, RedirectedReluLayer))
         self.assertFalse(check_layer_in_model(model, torch.nn.ReLU))
@@ -43,11 +28,6 @@ class TestInceptionV1(BaseTest):
         self.assertTrue(check_layer_in_model(model, torch.nn.AvgPool2d))
 
     def test_transform_inceptionv1(self) -> None:
-        if torch.__version__ <= "1.2.0":
-            raise unittest.SkipTest(
-                "Skipping inceptionV1 internal transform"
-                + " due to insufficient Torch version."
-            )
         x = torch.randn(1, 3, 224, 224).clamp(0, 1)
         model = googlenet(pretrained=True)
         output = model._transform_input(x)
@@ -55,11 +35,6 @@ class TestInceptionV1(BaseTest):
         assertTensorAlmostEqual(self, output, expected_output, 0)
 
     def test_inceptionv1_transform_warning(self) -> None:
-        if torch.__version__ <= "1.2.0":
-            raise unittest.SkipTest(
-                "Skipping InceptionV1 internal transform warning test due to"
-                + " insufficient Torch version."
-            )
         x = torch.stack(
             [torch.ones(3, 112, 112) * -1, torch.ones(3, 112, 112) * 2], dim=0
         )
@@ -68,11 +43,6 @@ class TestInceptionV1(BaseTest):
             model._transform_input(x)
 
     def test_transform_bgr_inceptionv1(self) -> None:
-        if torch.__version__ <= "1.2.0":
-            raise unittest.SkipTest(
-                "Skipping inceptionV1 internal transform"
-                + " BGR due to insufficient Torch version."
-            )
         x = torch.randn(1, 3, 224, 224).clamp(0, 1)
         model = googlenet(pretrained=True, bgr_transform=True)
         output = model._transform_input(x)
@@ -80,11 +50,6 @@ class TestInceptionV1(BaseTest):
         assertTensorAlmostEqual(self, output, expected_output, 0)
 
     def test_load_and_forward_basic_inceptionv1(self) -> None:
-        if torch.__version__ <= "1.2.0":
-            raise unittest.SkipTest(
-                "Skipping basic pretrained inceptionV1 forward"
-                + " due to insufficient Torch version."
-            )
         x = torch.randn(1, 3, 224, 224).clamp(0, 1)
         model = googlenet(pretrained=True)
         try:
@@ -95,11 +60,6 @@ class TestInceptionV1(BaseTest):
         self.assertTrue(test)
 
     def test_load_and_forward_diff_sizes_inceptionv1(self) -> None:
-        if torch.__version__ <= "1.2.0":
-            raise unittest.SkipTest(
-                "Skipping pretrained inceptionV1 forward with different sized inputs"
-                + " due to insufficient Torch version."
-            )
         x = torch.randn(1, 3, 512, 512).clamp(0, 1)
         x2 = torch.randn(1, 3, 383, 511).clamp(0, 1)
         model = googlenet(pretrained=True)
@@ -112,22 +72,12 @@ class TestInceptionV1(BaseTest):
         self.assertTrue(test)
 
     def test_forward_aux_inceptionv1(self) -> None:
-        if torch.__version__ <= "1.2.0":
-            raise unittest.SkipTest(
-                "Skipping pretrained inceptionV1 with aux logits forward"
-                + " due to insufficient Torch version."
-            )
         x = torch.randn(1, 3, 224, 224).clamp(0, 1)
         model = googlenet(pretrained=False, aux_logits=True)
         outputs = model(x)
         self.assertEqual(len(outputs), 3)
 
     def test_inceptionv1_forward_cuda(self) -> None:
-        if torch.__version__ <= "1.2.0":
-            raise unittest.SkipTest(
-                "Skipping pretrained InceptionV1 forward CUDA test due to insufficient"
-                + " Torch version."
-            )
         if not torch.cuda.is_available():
             raise unittest.SkipTest(
                 "Skipping pretrained InceptionV1 forward CUDA test due to not"
