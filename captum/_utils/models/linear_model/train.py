@@ -99,132 +99,129 @@ def sgd_train_linear_model(
         This will return the final training loss (averaged with
         `running_loss_window`)
     """
+    with torch.enable_grad():
+        loss_window: List[torch.Tensor] = []
+        min_avg_loss = None
+        convergence_counter = 0
+        converged = False
 
-    loss_window: List[torch.Tensor] = []
-    min_avg_loss = None
-    convergence_counter = 0
-    converged = False
-
-    def get_point(datapoint):
-        if len(datapoint) == 2:
-            x, y = datapoint
-            w = None
-        else:
-            x, y, w = datapoint
-
-        if device is not None:
-            x = x.to(device)
-            y = y.to(device)
-            if w is not None:
-                w = w.to(device)
-
-        return x, y, w
-
-    # get a point and construct the model
-    data_iter = iter(dataloader)
-    x, y, w = get_point(next(data_iter))
-
-    model._construct_model_params(
-        in_features=x.shape[1],
-        out_features=y.shape[1] if len(y.shape) == 2 else 1,
-        dtype=x.dtype,
-        **construct_kwargs,
-    )
-    model.train()
-
-    assert model.linear is not None
-
-    if init_scheme is not None:
-        assert init_scheme in ["xavier", "zeros"]
-
-        with torch.no_grad():
-            if init_scheme == "xavier":
-                torch.nn.init.xavier_uniform_(model.linear.weight)
+        def get_point(datapoint):
+            if len(datapoint) == 2:
+                x, y = datapoint
+                w = None
             else:
-                model.linear.weight.zero_()
+                x, y, w = datapoint
 
-            if model.linear.bias is not None:
-                model.linear.bias.zero_()
+            if device is not None:
+                x = x.to(device)
+                y = y.to(device)
+                if w is not None:
+                    w = w.to(device)
 
-    optim = torch.optim.SGD(model.parameters(), lr=initial_lr)
-    if reduce_lr:
-        scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
-            optim, factor=0.5, patience=patience, threshold=threshold
-        )
+            return x, y, w
 
-    t1 = time.time()
-    epoch = 0
-    i = 0
-    while epoch < max_epoch:
-        while True:  # for x, y, w in dataloader
-            if running_loss_window is None:
-                running_loss_window = x.shape[0] * len(dataloader)
-
-            y = y.view(x.shape[0], -1)
-            if w is not None:
-                w = w.view(x.shape[0], -1)
-
-            i += 1
-
-            out = model(x)
-
-            loss = loss_fn(y, out, w)
-            if reg_term is not None:
-                reg = torch.norm(model.linear.weight, p=reg_term)
-                loss += reg.sum() * alpha
-
-            if len(loss_window) >= running_loss_window:
-                loss_window = loss_window[1:]
-            loss_window.append(loss.clone().detach())
-            assert len(loss_window) <= running_loss_window
-
-            average_loss = torch.mean(torch.stack(loss_window))
-            if min_avg_loss is not None:
-                # if we haven't improved by at least `threshold`
-                if average_loss > min_avg_loss or torch.isclose(
-                    min_avg_loss, average_loss, atol=threshold
-                ):
-                    convergence_counter += 1
-                    if convergence_counter >= patience:
-                        converged = True
-                        break
-                else:
-                    convergence_counter = 0
-            if min_avg_loss is None or min_avg_loss >= average_loss:
-                min_avg_loss = average_loss.clone()
-
-            if debug:
-                print(
-                    f"lr={optim.param_groups[0]['lr']}, Loss={loss},"
-                    + "Aloss={average_loss}, min_avg_loss={min_avg_loss}"
-                )
-
-            loss.backward()
-
-            optim.step()
-            model.zero_grad()
-            if scheduler:
-                scheduler.step(average_loss)
-
-            temp = next(data_iter, None)
-            if temp is None:
-                break
-            x, y, w = get_point(temp)
-
-        if converged:
-            break
-
-        epoch += 1
+        # get a point and construct the model
         data_iter = iter(dataloader)
         x, y, w = get_point(next(data_iter))
 
-    t2 = time.time()
-    return {
-        "train_time": t2 - t1,
-        "train_loss": torch.mean(torch.stack(loss_window)).item(),
-        "train_iter": i,
-        "train_epoch": epoch,
-    }
+        model._construct_model_params(
+            in_features=x.shape[1],
+            out_features=y.shape[1] if len(y.shape) == 2 else 1,
+            dtype=x.dtype,
+            **construct_kwargs,
+        )
+        model.train()
+
+        assert model.linear is not None
+
+        if init_scheme is not None:
+            assert init_scheme in ["xavier", "zeros"]
+
+            with torch.no_grad():
+                if init_scheme == "xavier":
+                    torch.nn.init.xavier_uniform_(model.linear.weight)
+                else:
+                    model.linear.weight.zero_()
+
+                if model.linear.bias is not None:
+                    model.linear.bias.zero_()
+
+        optim = torch.optim.SGD(model.parameters(), lr=initial_lr)
+        if reduce_lr:
+            scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
+                optim, factor=0.5, patience=patience, threshold=threshold
+            )
+
+        t1 = time.time()
+        epoch = 0
+        i = 0
+        while epoch < max_epoch:
+            while True:  # for x, y, w in dataloader
+                if running_loss_window is None:
+                    running_loss_window = x.shape[0] * len(dataloader)
+
+                y = y.view(x.shape[0], -1)
+                if w is not None:
+                    w = w.view(x.shape[0], -1)
+
+                i += 1
+                out = model(x)
+                loss = loss_fn(y, out, w)
+                if reg_term is not None:
+                    reg = torch.norm(model.linear.weight, p=reg_term)
+                    loss += reg.sum() * alpha
+
+                if len(loss_window) >= running_loss_window:
+                    loss_window = loss_window[1:]
+                loss_window.append(loss.clone().detach())
+                assert len(loss_window) <= running_loss_window
+
+                average_loss = torch.mean(torch.stack(loss_window))
+                if min_avg_loss is not None:
+                    # if we haven't improved by at least `threshold`
+                    if average_loss > min_avg_loss or torch.isclose(
+                        min_avg_loss, average_loss, atol=threshold
+                    ):
+                        convergence_counter += 1
+                        if convergence_counter >= patience:
+                            converged = True
+                            break
+                    else:
+                        convergence_counter = 0
+                if min_avg_loss is None or min_avg_loss >= average_loss:
+                    min_avg_loss = average_loss.clone()
+
+                if debug:
+                    print(
+                        f"lr={optim.param_groups[0]['lr']}, Loss={loss},"
+                        + "Aloss={average_loss}, min_avg_loss={min_avg_loss}"
+                    )
+
+                loss.backward()
+                optim.step()
+                model.zero_grad()
+                if scheduler:
+                    scheduler.step(average_loss)
+
+                temp = next(data_iter, None)
+                if temp is None:
+                    break
+                x, y, w = get_point(temp)
+
+            if converged:
+                break
+
+            epoch += 1
+            data_iter = iter(dataloader)
+            x, y, w = get_point(next(data_iter))
+
+        t2 = time.time()
+        return {
+            "train_time": t2 - t1,
+            "train_loss": torch.mean(torch.stack(loss_window)).item(),
+            "train_iter": i,
+            "train_epoch": epoch,
+        }
 
 
 class NormLayer(nn.Module):
