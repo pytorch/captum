@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-from typing import Optional, Tuple, no_type_check
+from typing import no_type_check, Optional, Tuple
 
 import torch
 import torch.nn as nn
@@ -15,8 +15,32 @@ the relevant type hints.
 """
 
 
-class BasicModel(nn.Module):
+class BasicLinearReLULinear(nn.Module):
+    def __init__(self, in_features, out_features=5, bias=False):
+        super().__init__()
+        self.fc1 = nn.Linear(in_features, out_features, bias=bias)
+        self.relu1 = nn.ReLU()
+        self.fc2 = nn.Linear(out_features, 1, bias=bias)
+
+    def forward(self, x):
+        x = self.fc1(x)
+        x = self.relu1(x)
+        x = self.fc2(x)
+        return x
+
+
+class MixedKwargsAndArgsModule(nn.Module):
     def __init__(self):
+        super().__init__()
+
+    def forward(self, x, y=None):
+        if y is not None:
+            return x + y
+        return x
+
+
+class BasicModel(nn.Module):
+    def __init__(self) -> None:
         super().__init__()
 
     def forward(self, input):
@@ -32,7 +56,7 @@ class BasicModel2(nn.Module):
     f(x1, x2) = RELU(ReLU(x1) - 1 - ReLU(x2))
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
 
     def forward(self, input1, input2):
@@ -49,7 +73,7 @@ class BasicModel3(nn.Module):
     f(x1, x2) = RELU(ReLU(x1 - 1) - ReLU(x2))
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
 
     def forward(self, input1, input2):
@@ -65,7 +89,7 @@ class BasicModel4_MultiArgs(nn.Module):
     f(x1, x2) = RELU(ReLU(x1 - 1) - ReLU(x2) / x3)
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
 
     def forward(self, input1, input2, additional_input1, additional_input2=0):
@@ -82,7 +106,7 @@ class BasicModel5_MultiArgs(nn.Module):
     f(x1, x2) = RELU(ReLU(x1 - 1) * x3[0] - ReLU(x2) * x3[1])
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
 
     def forward(self, input1, input2, additional_input1, additional_input2=0):
@@ -93,7 +117,7 @@ class BasicModel5_MultiArgs(nn.Module):
 
 
 class BasicModel6_MultiTensor(nn.Module):
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
 
     def forward(self, input1, input2):
@@ -102,7 +126,7 @@ class BasicModel6_MultiTensor(nn.Module):
 
 
 class BasicLinearModel(nn.Module):
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
         self.linear = nn.Linear(7, 1)
 
@@ -110,12 +134,32 @@ class BasicLinearModel(nn.Module):
         return self.linear(torch.cat((x1, x2), dim=-1))
 
 
+class BasicLinearModel2(nn.Module):
+    def __init__(self, in_features, out_features):
+        super().__init__()
+        self.linear = nn.Linear(in_features, out_features, bias=False)
+
+    def forward(self, input):
+        return self.linear(input)
+
+
+class BasicLinearModel_Multilayer(nn.Module):
+    def __init__(self, in_features, hidden_nodes, out_features):
+        super().__init__()
+        self.linear1 = nn.Linear(in_features, hidden_nodes, bias=False)
+        self.linear2 = nn.Linear(hidden_nodes, out_features, bias=False)
+
+    def forward(self, input):
+        x = self.linear1(input)
+        return self.linear2(x)
+
+
 class ReLUDeepLiftModel(nn.Module):
     r"""
     https://www.youtube.com/watch?v=f_iAM0NPwnM
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
         self.relu1 = nn.ReLU()
         self.relu2 = nn.ReLU()
@@ -125,7 +169,7 @@ class ReLUDeepLiftModel(nn.Module):
 
 
 class LinearMaxPoolLinearModel(nn.Module):
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
         # kernel size -> 4
         self.lin1 = nn.Linear(4, 4, bias=False)
@@ -139,8 +183,8 @@ class LinearMaxPoolLinearModel(nn.Module):
         return self.lin2(self.pool1(self.lin1(x))[:, 0, :])
 
 
-class BasicModelWithReusableModules(nn.Module):
-    def __init__(self):
+class BasicModelWithReusedModules(nn.Module):
+    def __init__(self) -> None:
         super().__init__()
         self.lin1 = nn.Linear(3, 2)
         self.relu = nn.ReLU()
@@ -150,8 +194,18 @@ class BasicModelWithReusableModules(nn.Module):
         return self.relu(self.lin2(self.relu(self.lin1(inputs))))
 
 
+class BasicModelWithReusedLinear(nn.Module):
+    def __init__(self) -> None:
+        super().__init__()
+        self.lin1 = nn.Linear(3, 3)
+        self.relu = nn.ReLU()
+
+    def forward(self, inputs):
+        return self.relu(self.lin1(self.relu(self.lin1(inputs))))
+
+
 class BasicModelWithSparseInputs(nn.Module):
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
         self.lin1 = nn.Linear(3, 1)
         self.lin1.weight = nn.Parameter(torch.tensor([[3.0, 1.0, 2.0]]))
@@ -164,7 +218,7 @@ class BasicModelWithSparseInputs(nn.Module):
 
 
 class BasicModel_MaxPool_ReLU(nn.Module):
-    def __init__(self, inplace=False):
+    def __init__(self, inplace=False) -> None:
         super().__init__()
         self.maxpool = nn.MaxPool1d(3)
         self.relu = nn.ReLU(inplace=inplace)
@@ -179,7 +233,7 @@ class TanhDeepLiftModel(nn.Module):
     that can have negative outputs
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
         self.tanh1 = nn.Tanh()
         self.tanh2 = nn.Tanh()
@@ -194,7 +248,7 @@ class ReLULinearModel(nn.Module):
     https://github.com/marcoancona/DeepExplain/blob/master/deepexplain/tests/test_tensorflow.py#L65
     """
 
-    def __init__(self, inplace: bool = False):
+    def __init__(self, inplace: bool = False) -> None:
         super().__init__()
         self.l1 = nn.Linear(3, 1, bias=False)
         self.l2 = nn.Linear(3, 1, bias=False)
@@ -209,8 +263,22 @@ class ReLULinearModel(nn.Module):
         return self.l3(self.relu(torch.cat([self.l1(x1), x3 * self.l2(x2)], dim=1)))
 
 
+class SimpleLRPModel(nn.Module):
+    def __init__(self, inplace) -> None:
+        super().__init__()
+        self.linear = nn.Linear(3, 3, bias=False)
+        self.linear.weight.data.fill_(2.0)
+        self.relu = torch.nn.ReLU(inplace=inplace)
+        self.linear2 = nn.Linear(3, 1, bias=False)
+        self.linear2.weight.data.fill_(3.0)
+        self.dropout = torch.nn.Dropout(p=0.01)
+
+    def forward(self, x):
+        return self.dropout(self.linear2(self.relu(self.linear(x))))
+
+
 class Conv1dSeqModel(nn.Module):
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
         self.seq = nn.Sequential(nn.Conv1d(4, 2, 1), nn.ReLU(), nn.Linear(1000, 1))
 
@@ -224,7 +292,7 @@ class TextModule(nn.Module):
     nested embedding layers
     """
 
-    def __init__(self, num_embeddings, embedding_dim, second_embedding=False):
+    def __init__(self, num_embeddings, embedding_dim, second_embedding=False) -> None:
         super().__init__()
         self.inner_embedding = nn.Embedding(num_embeddings, embedding_dim)
         self.second_embedding = second_embedding
@@ -264,7 +332,7 @@ class BasicEmbeddingModel(nn.Module):
         hidden_dim=256,
         output_dim=1,
         nested_second_embedding=False,
-    ):
+    ) -> None:
         super().__init__()
         self.embedding1 = nn.Embedding(num_embeddings, embedding_dim)
         self.embedding2 = TextModule(
@@ -284,7 +352,7 @@ class BasicEmbeddingModel(nn.Module):
 
 
 class MultiRelu(nn.Module):
-    def __init__(self, inplace: bool = False):
+    def __init__(self, inplace: bool = False) -> None:
         super().__init__()
         self.relu1 = nn.ReLU(inplace=inplace)
         self.relu2 = nn.ReLU(inplace=inplace)
@@ -295,7 +363,7 @@ class MultiRelu(nn.Module):
 
 
 class BasicModel_MultiLayer(nn.Module):
-    def __init__(self, inplace=False, multi_input_module=False):
+    def __init__(self, inplace=False, multi_input_module=False) -> None:
         super().__init__()
         # Linear 0 is simply identity transform
         self.multi_input_module = multi_input_module
@@ -339,8 +407,23 @@ class BasicModel_MultiLayer(nn.Module):
             return lin2_out
 
 
+class BasicModelBoolInput(nn.Module):
+    def __init__(self) -> None:
+        super().__init__()
+        self.mod = BasicModel_MultiLayer()
+
+    def forward(
+        self,
+        x: Tensor,
+        add_input: Optional[Tensor] = None,
+        mult: float = 10.0,
+    ):
+        assert x.dtype is torch.bool, "Input must be boolean"
+        return self.mod(x.float() * mult, add_input)
+
+
 class BasicModel_MultiLayer_MultiInput(nn.Module):
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
         self.model = BasicModel_MultiLayer()
 
@@ -349,23 +432,26 @@ class BasicModel_MultiLayer_MultiInput(nn.Module):
         return self.model(scale * (x1 + x2 + x3))
 
 
-class BasicModel_ConvNet_Optim(nn.Module):
-    def __init__(self) -> None:
+class BasicModel_MultiLayer_TrueMultiInput(nn.Module):
+    def __init__(self):
         super().__init__()
-        self.layer = nn.Conv2d(3, 2, 1, bias=True)
-        # Initialize weights and biases for
-        # easy reproducibility
-        self.layer.weight.data.fill_(0.1)
-        if self.layer.bias is not None:
-            self.layer.bias.data.fill_(1)
+        self.m1 = BasicModel_MultiLayer()
+        self.m234 = BasicModel_MultiLayer_MultiInput()
 
     @no_type_check
-    def forward(self, x: Tensor):
-        return self.layer(x)
+    def forward(
+        self, x1: Tensor, x2: Tensor, x3: Tensor, x4: Optional[Tensor] = None
+    ) -> Tensor:
+        a = self.m1(x1)
+        if x4 is None:
+            b = self.m234(x2, x3, x1, scale=1)
+        else:
+            b = self.m234(x2, x3, x4, scale=1)
+        return a + b
 
 
 class BasicModel_ConvNet_One_Conv(nn.Module):
-    def __init__(self, inplace: bool = False):
+    def __init__(self, inplace: bool = False) -> None:
         super().__init__()
         self.conv1 = nn.Conv2d(1, 2, 3, 1)
         self.relu1 = nn.ReLU(inplace=inplace)
@@ -387,8 +473,23 @@ class BasicModel_ConvNet_One_Conv(nn.Module):
         return self.relu2(self.fc1(x))
 
 
+class BasicModel_ConvNetWithPaddingDilation(nn.Module):
+    def __init__(self, inplace: bool = False) -> None:
+        super().__init__()
+        self.conv1 = nn.Conv2d(1, 2, 3, padding=3, stride=2, dilation=2)
+        self.relu1 = nn.ReLU(inplace=inplace)
+        self.fc1 = nn.Linear(16, 4)
+
+    @no_type_check
+    def forward(self, x: Tensor):
+        bsz = x.shape[0]
+        x = self.relu1(self.conv1(x))
+        x = x.reshape(bsz, 2, -1)
+        return self.fc1(x).reshape(bsz, -1)
+
+
 class BasicModel_ConvNet(nn.Module):
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
         self.conv1 = nn.Conv2d(1, 2, 3, 1)
         self.relu1 = nn.ReLU()
@@ -423,7 +524,7 @@ class BasicModel_ConvNet_MaxPool1d(nn.Module):
     of the DeepLift Attributions
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
         self.conv1 = nn.Conv1d(1, 2, 3)
         self.relu1 = nn.ReLU()
@@ -458,7 +559,7 @@ class BasicModel_ConvNet_MaxPool3d(nn.Module):
     of the DeepLift Attributions
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
         self.conv1 = nn.Conv3d(1, 2, 3)
         self.relu1 = nn.ReLU()
@@ -483,3 +584,18 @@ class BasicModel_ConvNet_MaxPool3d(nn.Module):
         x = self.relu3(self.fc1(x))
         x = self.fc2(x)
         return self.softmax(x)
+
+
+class BasicModel_ConvNet_Optim(nn.Module):
+    def __init__(self) -> None:
+        super().__init__()
+        self.layer = nn.Conv2d(3, 2, 1, bias=True)
+        # Initialize weights and biases for
+        # easy reproducibility
+        self.layer.weight.data.fill_(0.1)
+        if self.layer.bias is not None:
+            self.layer.bias.data.fill_(1)
+
+    @no_type_check
+    def forward(self, x: Tensor):
+        return self.layer(x)

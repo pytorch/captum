@@ -1,23 +1,22 @@
 #!/usr/bin/env python3
 
-from typing import Any, Callable, Tuple, Union, cast
+from typing import Any, Callable, cast, Tuple, Union
 
 import torch
-from torch import Tensor
-
 from captum._utils.common import (
-    ExpansionTypes,
     _expand_additional_forward_args,
     _expand_target,
     _format_additional_forward_args,
     _format_baseline,
-    _format_input,
     _format_tensor_into_tuples,
     _run_forward,
+    ExpansionTypes,
     safe_div,
 )
 from captum._utils.typing import BaselineType, TargetType, TensorOrTupleOfTensorsGeneric
+from captum.log import log_usage
 from captum.metrics._utils.batching import _divide_and_aggregate_metrics
+from torch import Tensor
 
 
 def infidelity_perturb_func_decorator(multipy_by_inputs: bool = True) -> Callable:
@@ -74,15 +73,15 @@ def infidelity_perturb_func_decorator(multipy_by_inputs: bool = True) -> Callabl
                 if baselines is not None
                 else pertub_func(inputs)
             )
-            inputs_perturbed = _format_input(inputs_perturbed)
-            inputs = _format_input(inputs)
+            inputs_perturbed = _format_tensor_into_tuples(inputs_perturbed)
+            inputs = _format_tensor_into_tuples(inputs)
             baselines = _format_baseline(baselines, inputs)
             if baselines is None:
                 perturbations = tuple(
                     safe_div(
                         input - input_perturbed,
                         input,
-                        torch.tensor(1.0, device=input.device),
+                        default_denom=1.0,
                     )
                     if multipy_by_inputs
                     else input - input_perturbed
@@ -93,7 +92,7 @@ def infidelity_perturb_func_decorator(multipy_by_inputs: bool = True) -> Callabl
                     safe_div(
                         input - input_perturbed,
                         input - baseline,
-                        torch.tensor(1.0, device=input.device),
+                        default_denom=1.0,
                     )
                     if multipy_by_inputs
                     else input - input_perturbed
@@ -108,6 +107,7 @@ def infidelity_perturb_func_decorator(multipy_by_inputs: bool = True) -> Callabl
     return sub_infidelity_perturb_func_decorator
 
 
+@log_usage()
 def infidelity(
     forward_func: Callable,
     perturb_func: Callable,
@@ -118,6 +118,7 @@ def infidelity(
     target: TargetType = None,
     n_perturb_samples: int = 10,
     max_examples_per_batch: int = None,
+    normalize: bool = False,
 ) -> Tensor:
     r"""
     Explanation infidelity represents the expected mean-squared error
@@ -155,19 +156,20 @@ def infidelity(
                 either a tuple of perturbations and perturbed inputs or just
                 perturbed inputs. For example:
 
-                 def my_perturb_func(inputs):
-                    <MY-LOGIC-HERE>
-                    return perturbations, perturbed_inputs
+                >>> def my_perturb_func(inputs):
+                >>>   <MY-LOGIC-HERE>
+                >>>   return perturbations, perturbed_inputs
 
                 If we want to only return perturbed inputs and compute
                 perturbations internally then we can wrap perturb_func with
                 `infidelity_perturb_func_decorator` decorator such as:
 
-                from captum.metrics import infidelity_perturb_func_decorator
-                @infidelity_perturb_func_decorator(<multipy_by_inputs flag>)
-                def my_perturb_func(inputs):
-                    <MY-LOGIC-HERE>
-                    return perturbed_inputs
+                >>> from captum.metrics import infidelity_perturb_func_decorator
+
+                >>> @infidelity_perturb_func_decorator(<multipy_by_inputs flag>)
+                >>> def my_perturb_func(inputs):
+                >>>   <MY-LOGIC-HERE>
+                >>>   return perturbed_inputs
 
                 In case `multipy_by_inputs` is False we compute perturbations by
                 `input - perturbed_input` difference and in case `multipy_by_inputs`
@@ -190,20 +192,19 @@ def infidelity(
 
                 If inputs
                  - is a single tensor, the function needs to return a tuple
-                    of perturbations and perturbed input such as:
-                      perturb, perturbed_input
+                   of perturbations and perturbed input such as:
+                   perturb, perturbed_input and only perturbed_input in case
+                   `infidelity_perturb_func_decorator` is used.
+                 - is a tuple of tensors, corresponding perturbations and perturbed
+                   inputs must be computed and returned as tuples in the
+                   following format:
 
-                      and only perturbed_input in case
-                      `infidelity_perturb_func_decorator`
-                      is used.
-                 - is a tuple of tensors,
-                    corresponding perturbations and perturbed inputs must be computed
-                    and returned as tuples in the following format:
-                        (perturb1, perturb2, ... perturbN), (perturbed_input1,
-                         perturbed_input2, ... perturbed_inputN)
-                    Similar to previous case here as well we need to return only
-                    perturbed inputs in case `infidelity_perturb_func_decorator`
-                    decorates out perturb_func
+                   (perturb1, perturb2, ... perturbN), (perturbed_input1,
+                   perturbed_input2, ... perturbed_inputN)
+
+                   Similar to previous case here as well we need to return only
+                   perturbed inputs in case `infidelity_perturb_func_decorator`
+                   decorates out `perturb_func`.
                 It is important to note that for performance reasons `perturb_func`
                 isn't called for each example individually but on a batch of
                 input examples that are repeated `max_examples_per_batch / batch_size`
@@ -224,26 +225,27 @@ def infidelity(
                 values and are used to compare with the actual inputs to compute
                 importance scores in attribution algorithms. They can be represented
                 as:
-                    - a single tensor, if inputs is a single tensor, with
-                      exactly the same dimensions as inputs or the first
-                      dimension is one and the remaining dimensions match
-                      with inputs.
 
-                    - a single scalar, if inputs is a single tensor, which will
-                      be broadcasted for each input value in input tensor.
+                - a single tensor, if inputs is a single tensor, with
+                  exactly the same dimensions as inputs or the first
+                  dimension is one and the remaining dimensions match
+                  with inputs.
 
-                    - a tuple of tensors or scalars, the baseline corresponding
-                      to each tensor in the inputs' tuple can be:
+                - a single scalar, if inputs is a single tensor, which will
+                  be broadcasted for each input value in input tensor.
 
-                    - either a tensor with matching dimensions to
-                      corresponding tensor in the inputs' tuple
-                      or the first dimension is one and the remaining
-                      dimensions match with the corresponding
-                      input tensor.
+                - a tuple of tensors or scalars, the baseline corresponding
+                  to each tensor in the inputs' tuple can be:
 
-                    - or a scalar, corresponding to a tensor in the
-                      inputs' tuple. This scalar value is broadcasted
-                      for corresponding input tensor.
+                - either a tensor with matching dimensions to
+                  corresponding tensor in the inputs' tuple
+                  or the first dimension is one and the remaining
+                  dimensions match with the corresponding
+                  input tensor.
+
+                - or a scalar, corresponding to a tensor in the
+                  inputs' tuple. This scalar value is broadcasted
+                  for corresponding input tensor.
 
                 Default: None
 
@@ -344,6 +346,23 @@ def infidelity(
                 `input batch size * n_perturb_samples`.
 
                 Default: None
+        normalize (bool, optional): Normalize the dot product of the input
+                perturbation and the attribution so the infidelity value is invariant
+                to constant scaling of the attribution values. The normalization factor
+                beta is defined as the ratio of two mean values:
+
+                .. math::
+                    \beta = \frac{
+                        \mathbb{E}_{I \sim \mu_I} [ I^T \Phi(f, x) (f(x) - f(x - I)) ]
+                    }{
+                        \mathbb{E}_{I \sim \mu_I} [ (I^T \Phi(f, x))^2 ]
+                    }
+
+                Please refer the original paper for the meaning of the symbols. Same
+                normalization can be found in the paper's official implementation
+                https://github.com/chihkuanyeh/saliency_evaluation
+
+                Default: False
     Returns:
 
         infidelities (tensor): A tensor of scalar infidelity scores per
@@ -436,7 +455,9 @@ def infidelity(
                 is: {}"""
             ).format(perturb[0].shape, input_perturbed[0].shape)
 
-    def _next_infidelity(current_n_perturb_samples: int) -> Tensor:
+    def _next_infidelity_tensors(
+        current_n_perturb_samples: int,
+    ) -> Union[Tuple[Tensor], Tuple[Tensor, Tensor, Tensor]]:
         perturbations, inputs_perturbed = _generate_perturbations(
             current_n_perturb_samples
         )
@@ -471,11 +492,12 @@ def infidelity(
         inputs_fwd = torch.repeat_interleave(
             inputs_fwd, current_n_perturb_samples, dim=0
         )
-        inputs_minus_perturb = inputs_fwd - inputs_perturbed_fwd
+        perturbed_fwd_diffs = inputs_fwd - inputs_perturbed_fwd
         attributions_expanded = tuple(
             torch.repeat_interleave(attribution, current_n_perturb_samples, dim=0)
             for attribution in attributions
         )
+
         attributions_times_perturb = tuple(
             (attribution_expanded * perturbation).view(attribution_expanded.size(0), -1)
             for attribution_expanded, perturbation in zip(
@@ -483,22 +505,34 @@ def infidelity(
             )
         )
 
-        attribution_times_perturb_sums = sum(
-            [
-                torch.sum(attribution_times_perturb, dim=1)
-                for attribution_times_perturb in attributions_times_perturb
-            ]
+        attr_times_perturb_sums = sum(
+            torch.sum(attribution_times_perturb, dim=1)
+            for attribution_times_perturb in attributions_times_perturb
         )
+        attr_times_perturb_sums = cast(Tensor, attr_times_perturb_sums)
 
-        return torch.sum(
-            torch.pow(
-                attribution_times_perturb_sums - inputs_minus_perturb.view(-1), 2
-            ).view(bsz, -1),
-            dim=1,
-        )
+        # reshape as Tensor(bsz, current_n_perturb_samples)
+        attr_times_perturb_sums = attr_times_perturb_sums.view(bsz, -1)
+        perturbed_fwd_diffs = perturbed_fwd_diffs.view(bsz, -1)
+
+        if normalize:
+            # in order to normalize, we have to aggregate the following tensors
+            # to calculate MSE in its polynomial expansion:
+            # (a-b)^2 = a^2 - 2ab + b^2
+            return (
+                attr_times_perturb_sums.pow(2).sum(-1),
+                (attr_times_perturb_sums * perturbed_fwd_diffs).sum(-1),
+                perturbed_fwd_diffs.pow(2).sum(-1),
+            )
+        else:
+            # returns (a-b)^2 if no need to normalize
+            return ((attr_times_perturb_sums - perturbed_fwd_diffs).pow(2).sum(-1),)
+
+    def _sum_infidelity_tensors(agg_tensors, tensors):
+        return tuple(agg_t + t for agg_t, t in zip(agg_tensors, tensors))
 
     # perform argument formattings
-    inputs = _format_input(inputs)  # type: ignore
+    inputs = _format_tensor_into_tuples(inputs)  # type: ignore
     if baselines is not None:
         baselines = _format_baseline(baselines, cast(Tuple[Tensor, ...], inputs))
     additional_forward_args = _format_additional_forward_args(additional_forward_args)
@@ -519,10 +553,28 @@ def infidelity(
 
     bsz = inputs[0].size(0)
     with torch.no_grad():
-        metrics_sum = _divide_and_aggregate_metrics(
+        # if not normalize, directly return aggrgated MSE ((a-b)^2,)
+        # else return aggregated MSE's polynomial expansion tensors (a^2, ab, b^2)
+        agg_tensors = _divide_and_aggregate_metrics(
             cast(Tuple[Tensor, ...], inputs),
             n_perturb_samples,
-            _next_infidelity,
+            _next_infidelity_tensors,
+            agg_func=_sum_infidelity_tensors,
             max_examples_per_batch=max_examples_per_batch,
         )
-    return metrics_sum * 1 / n_perturb_samples
+
+    if normalize:
+        beta_num = agg_tensors[1]
+        beta_denorm = agg_tensors[0]
+
+        beta = safe_div(beta_num, beta_denorm)
+
+        infidelity_values = (
+            beta ** 2 * agg_tensors[0] - 2 * beta * agg_tensors[1] + agg_tensors[2]
+        )
+    else:
+        infidelity_values = agg_tensors[0]
+
+    infidelity_values /= n_perturb_samples
+
+    return infidelity_values

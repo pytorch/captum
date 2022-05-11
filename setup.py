@@ -51,22 +51,33 @@ def report(*args):
         pass
 
 
-INSIGHTS_REQUIRES = ["flask", "ipython", "ipywidgets", "jupyter"]
+INSIGHTS_REQUIRES = ["flask", "ipython", "ipywidgets", "jupyter", "flask-compress"]
 
 INSIGHTS_FILE_SUBDIRS = [
-    "insights/frontend/build",
-    "insights/models",
-    "insights/widget/static",
+    "insights/attr_vis/frontend/build",
+    "insights/attr_vis/models",
+    "insights/attr_vis/widget/static",
 ]
 
 TUTORIALS_REQUIRES = INSIGHTS_REQUIRES + ["torchtext", "torchvision"]
 
-TEST_REQUIRES = ["pytest", "pytest-cov"]
+TEST_REQUIRES = ["pytest", "pytest-cov", "parameterized"]
 
 DEV_REQUIRES = (
     INSIGHTS_REQUIRES
     + TEST_REQUIRES
-    + ["black", "flake8", "sphinx", "sphinx-autodoc-typehints", "mypy>=0.760", "isort"]
+    + [
+        "black==21.4b2",
+        "flake8",
+        "sphinx",
+        "sphinx-autodoc-typehints",
+        "sphinxcontrib-katex",
+        "mypy>=0.760",
+        "usort==0.6.4",
+        "ufmt",
+        "scikit-learn",
+        "annoy",
+    ]
 )
 
 # get version string from module
@@ -136,8 +147,8 @@ if __name__ == "__main__":
         long_description=long_description,
         long_description_content_type="text/markdown",
         python_requires=">=3.6",
-        install_requires=["matplotlib", "numpy", "torch>=1.2"],
-        packages=find_packages(),
+        install_requires=["matplotlib", "numpy", "torch>=1.6"],
+        packages=find_packages(exclude=("tests", "tests.*")),
         extras_require={
             "dev": DEV_REQUIRES,
             "insights": INSIGHTS_REQUIRES,
@@ -149,14 +160,13 @@ if __name__ == "__main__":
             (
                 "share/jupyter/nbextensions/jupyter-captum-insights",
                 [
-                    "captum/insights/widget/static/extension.js",
-                    "captum/insights/widget/static/index.js",
-                    "captum/insights/widget/static/index.js.map",
+                    "captum/insights/attr_vis/widget/static/extension.js",
+                    "captum/insights/attr_vis/widget/static/index.js",
                 ],
             ),
             (
                 "etc/jupyter/nbconfig/notebook.d",
-                ["captum/insights/widget/jupyter-captum-insights.json"],
+                ["captum/insights/attr_vis/widget/jupyter-captum-insights.json"],
             ),
         ],
     )

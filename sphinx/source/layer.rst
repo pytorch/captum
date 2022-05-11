@@ -61,3 +61,10 @@ Layer Feature Ablation
 
 .. autoclass:: captum.attr.LayerFeatureAblation
     :members:
+
+
+Layer LRP
+^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. autoclass:: captum.attr.LayerLRP
+    :members:

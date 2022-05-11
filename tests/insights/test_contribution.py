@@ -5,7 +5,6 @@ from typing import Callable, List, Union
 
 import torch
 import torch.nn as nn
-
 from captum.insights import AttributionVisualizer, Batch
 from captum.insights.attr_vis.app import FilterConfig
 from captum.insights.attr_vis.features import BaseFeature, FeatureOutput, ImageFeature
@@ -19,7 +18,7 @@ class RealFeature(BaseFeature):
         baseline_transforms: Union[Callable, List[Callable]],
         input_transforms: Union[Callable, List[Callable]],
         visualization_transforms: Union[None, Callable, List[Callable]] = None,
-    ):
+    ) -> None:
         super().__init__(
             name,
             baseline_transforms=baseline_transforms,
@@ -57,7 +56,7 @@ def _get_classes():
 
 
 class TinyCnn(nn.Module):
-    def __init__(self, feature_extraction=False):
+    def __init__(self, feature_extraction=False) -> None:
         super().__init__()
         self.feature_extraction = feature_extraction
 
@@ -81,7 +80,7 @@ class TinyCnn(nn.Module):
 
 
 class TinyMultiModal(nn.Module):
-    def __init__(self, input_size=256, pretrained=False):
+    def __init__(self, input_size=256, pretrained=False) -> None:
         super().__init__()
         if pretrained:
             self.img_model = _get_cnn(feature_extraction=True)
@@ -167,7 +166,7 @@ class Test(BaseTest):
         outputs = visualizer.visualize()
 
         for output in outputs:
-            total_contrib = sum(abs(f.contribution) for f in output.feature_outputs)
+            total_contrib = sum(abs(f.contribution) for f in output[0].feature_outputs)
             self.assertAlmostEqual(total_contrib, 1.0, places=6)
 
     def test_multi_features(self):
@@ -210,7 +209,7 @@ class Test(BaseTest):
         outputs = visualizer.visualize()
 
         for output in outputs:
-            total_contrib = sum(abs(f.contribution) for f in output.feature_outputs)
+            total_contrib = sum(abs(f.contribution) for f in output[0].feature_outputs)
             self.assertAlmostEqual(total_contrib, 1.0, places=6)
 
     # TODO: add test for multiple models (related to TODO in captum/insights/api.py)

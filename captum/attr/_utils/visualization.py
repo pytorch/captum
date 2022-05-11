@@ -12,7 +12,7 @@ from mpl_toolkits.axes_grid1 import make_axes_locatable
 from numpy import ndarray
 
 try:
-    from IPython.core.display import HTML, display
+    from IPython.core.display import display, HTML
 
     HAS_IPYTHON = True
 except ImportError:
@@ -155,8 +155,8 @@ def visualize_image_attr(
         outlier_perc (float or int, optional): Top attribution values which
                     correspond to a total of outlier_perc percentage of the
                     total attribution are set to 1 and scaling is performed
-                    using the minimum of these values. For sign=`all`, outliers a
-                    nd scale value are computed using absolute value of
+                    using the minimum of these values. For sign=`all`, outliers
+                    and scale value are computed using absolute value of
                     attributions.
                     Default: 2
         cmap (string, optional): String corresponding to desired colormap for
@@ -326,7 +326,7 @@ def visualize_image_attr_multiple(
     titles: Union[None, List[str]] = None,
     fig_size: Tuple[int, int] = (8, 6),
     use_pyplot: bool = True,
-    **kwargs: Any
+    **kwargs: Any,
 ):
     r"""
     Visualizes attribution using multiple visualization methods displayed
@@ -387,7 +387,7 @@ def visualize_image_attr_multiple(
         >>> attribution, delta = ig.attribute(orig_image, target=3)
         >>> # Displays original image and heat map visualization of
         >>> # computed attributions side by side.
-        >>> _ = visualize_mutliple_image_attr(attribution, orig_image,
+        >>> _ = visualize_image_attr_multiple(attribution, orig_image,
         >>>                     ["original_image", "heat_map"], ["all", "positive"])
     """
     assert len(methods) == len(signs), "Methods and signs array lengths must match."
@@ -414,7 +414,7 @@ def visualize_image_attr_multiple(
             plt_fig_axis=(plt_fig, plt_axis[i]),
             use_pyplot=False,
             title=titles[i] if titles else None,
-            **kwargs
+            **kwargs,
         )
     plt_fig.tight_layout()
     if use_pyplot:
@@ -437,7 +437,7 @@ class VisualizationDataRecord:
         "true_class",
         "attr_class",
         "attr_score",
-        "raw_input",
+        "raw_input_ids",
         "convergence_score",
     ]
 
@@ -449,16 +449,16 @@ class VisualizationDataRecord:
         true_class,
         attr_class,
         attr_score,
-        raw_input,
+        raw_input_ids,
         convergence_score,
-    ):
+    ) -> None:
         self.word_attributions = word_attributions
         self.pred_prob = pred_prob
         self.pred_class = pred_class
         self.true_class = true_class
         self.attr_class = attr_class
         self.attr_score = attr_score
-        self.raw_input = raw_input
+        self.raw_input_ids = raw_input_ids
         self.convergence_score = convergence_score
 
 
@@ -514,7 +514,7 @@ def format_word_importances(words, importances):
 
 def visualize_text(
     datarecords: Iterable[VisualizationDataRecord], legend: bool = True
-) -> None:
+) -> "HTML":  # In quotes because this type doesn't exist in standalone mode
     assert HAS_IPYTHON, (
         "IPython must be available to visualize text. "
         "Please run 'pip install ipython'."
@@ -541,7 +541,7 @@ def visualize_text(
                     format_classname(datarecord.attr_class),
                     format_classname("{0:.2f}".format(datarecord.attr_score)),
                     format_word_importances(
-                        datarecord.raw_input, datarecord.word_attributions
+                        datarecord.raw_input_ids, datarecord.word_attributions
                     ),
                     "<tr>",
                 ]
@@ -567,4 +567,7 @@ def visualize_text(
 
     dom.append("".join(rows))
     dom.append("</table>")
-    display(HTML("".join(dom)))
+    html = HTML("".join(dom))
+    display(html)
+
+    return html

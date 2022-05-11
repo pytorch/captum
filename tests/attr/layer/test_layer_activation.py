@@ -5,34 +5,32 @@ from typing import Any, List, Tuple, Union
 
 import torch
 import torch.nn as nn
-from torch import Tensor
-from torch.nn import Module
-
 from captum.attr._core.layer.layer_activation import LayerActivation
-
-from ...helpers.basic import (
-    BaseTest,
+from tests.helpers.basic import (
     assertTensorAlmostEqual,
     assertTensorTuplesAlmostEqual,
+    BaseTest,
 )
-from ...helpers.basic_models import (
+from tests.helpers.basic_models import (
     BasicModel_MultiLayer,
     BasicModel_MultiLayer_MultiInput,
     Conv1dSeqModel,
 )
+from torch import Tensor
+from torch.nn import Module
 
 
 class Test(BaseTest):
     def test_simple_input_activation(self) -> None:
         net = BasicModel_MultiLayer()
         inp = torch.tensor([[0.0, 100.0, 0.0]], requires_grad=True)
-        self._layer_activation_test_assert(net, net.linear0, inp, [0.0, 100.0, 0.0])
+        self._layer_activation_test_assert(net, net.linear0, inp, [[0.0, 100.0, 0.0]])
 
     def test_simple_linear_activation(self) -> None:
         net = BasicModel_MultiLayer()
         inp = torch.tensor([[0.0, 100.0, 0.0]])
         self._layer_activation_test_assert(
-            net, net.linear1, inp, [90.0, 101.0, 101.0, 101.0]
+            net, net.linear1, inp, [[90.0, 101.0, 101.0, 101.0]]
         )
 
     def test_simple_multi_linear_activation(self) -> None:
@@ -42,7 +40,7 @@ class Test(BaseTest):
             net,
             [net.linear1, net.linear0],
             inp,
-            ([90.0, 101.0, 101.0, 101.0], [0.0, 100.0, 0.0]),
+            ([[90.0, 101.0, 101.0, 101.0]], [[0.0, 100.0, 0.0]]),
         )
 
     def test_simple_relu_activation_input_inplace(self) -> None:
@@ -55,23 +53,25 @@ class Test(BaseTest):
     def test_simple_linear_activation_inplace(self) -> None:
         net = BasicModel_MultiLayer(inplace=True)
         inp = torch.tensor([[2.0, -5.0, 4.0]])
-        self._layer_activation_test_assert(net, net.linear1, inp, [-9.0, 2.0, 2.0, 2.0])
+        self._layer_activation_test_assert(
+            net, net.linear1, inp, [[-9.0, 2.0, 2.0, 2.0]]
+        )
 
     def test_simple_relu_activation(self) -> None:
         net = BasicModel_MultiLayer()
         inp = torch.tensor([[3.0, 4.0, 0.0]], requires_grad=True)
-        self._layer_activation_test_assert(net, net.relu, inp, [0.0, 8.0, 8.0, 8.0])
+        self._layer_activation_test_assert(net, net.relu, inp, [[0.0, 8.0, 8.0, 8.0]])
 
     def test_simple_output_activation(self) -> None:
         net = BasicModel_MultiLayer()
         inp = torch.tensor([[0.0, 100.0, 0.0]])
-        self._layer_activation_test_assert(net, net.linear2, inp, [392.0, 394.0])
+        self._layer_activation_test_assert(net, net.linear2, inp, [[392.0, 394.0]])
 
     def test_simple_multi_output_activation(self) -> None:
         net = BasicModel_MultiLayer(multi_input_module=True)
         inp = torch.tensor([[0.0, 6.0, 0.0]])
         self._layer_activation_test_assert(
-            net, net.multi_relu, inp, ([0.0, 7.0, 7.0, 7.0], [0.0, 7.0, 7.0, 7.0])
+            net, net.multi_relu, inp, ([[0.0, 7.0, 7.0, 7.0]], [[0.0, 7.0, 7.0, 7.0]])
         )
 
     def test_simple_multi_layer_multi_output_activation(self) -> None:
@@ -82,7 +82,7 @@ class Test(BaseTest):
             [net.multi_relu, net.linear0, net.linear1],
             inp,
             [
-                ([0.0, 7.0, 7.0, 7.0], [0.0, 7.0, 7.0, 7.0]),
+                ([[0.0, 7.0, 7.0, 7.0]], [[0.0, 7.0, 7.0, 7.0]]),
                 [[0.0, 6.0, 0.0]],
                 [[-4.0, 7.0, 7.0, 7.0]],
             ],
@@ -95,7 +95,7 @@ class Test(BaseTest):
             net,
             net.multi_relu,
             inp,
-            ([-4.0, 7.0, 7.0, 7.0], [-4.0, 7.0, 7.0, 7.0]),
+            ([[-4.0, 7.0, 7.0, 7.0]], [[-4.0, 7.0, 7.0, 7.0]]),
             attribute_to_layer_input=True,
         )
 
@@ -105,7 +105,7 @@ class Test(BaseTest):
         inp2 = torch.tensor([[0.0, 10.0, 0.0]])
         inp3 = torch.tensor([[0.0, 5.0, 0.0]])
         self._layer_activation_test_assert(
-            net, net.model.linear2, (inp1, inp2, inp3), [392.0, 394.0], (4,)
+            net, net.model.linear2, (inp1, inp2, inp3), [[392.0, 394.0]], (4,)
         )
 
     def test_simple_multi_input_relu_activation(self) -> None:
@@ -114,7 +114,7 @@ class Test(BaseTest):
         inp2 = torch.tensor([[0.0, 4.0, 5.0]])
         inp3 = torch.tensor([[0.0, 0.0, 0.0]])
         self._layer_activation_test_assert(
-            net, net.model.relu, (inp1, inp2), [90.0, 101.0, 101.0, 101.0], (inp3, 5)
+            net, net.model.relu, (inp1, inp2), [[90.0, 101.0, 101.0, 101.0]], (inp3, 5)
         )
 
     def test_sequential_in_place(self) -> None:
@@ -135,7 +135,9 @@ class Test(BaseTest):
         model: Module,
         target_layer: Module,
         test_input: Union[Tensor, Tuple[Tensor, ...]],
-        expected_activation: Union[List[float], Tuple[List[float], ...]],
+        expected_activation: Union[
+            List[List[float]], Tuple[List[float], ...], Tuple[List[List[float]], ...]
+        ],
         additional_input: Any = None,
         attribute_to_layer_input: bool = False,
     ):
@@ -155,7 +157,9 @@ class Test(BaseTest):
         model: Module,
         target_layers: List[Module],
         test_input: Union[Tensor, Tuple[Tensor, ...]],
-        expected_activation: Union[List, Tuple[List[float], ...]],
+        expected_activation: Union[
+            List, Tuple[List[float], ...], Tuple[List[List[float]], ...]
+        ],
         additional_input: Any = None,
         attribute_to_layer_input: bool = False,
     ):
