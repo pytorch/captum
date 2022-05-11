@@ -99,53 +99,53 @@ def sgd_train_linear_model(
         This will return the final training loss (averaged with
         `running_loss_window`)
     """
-    with torch.enable_grad():
-        loss_window: List[torch.Tensor] = []
-        min_avg_loss = None
-        convergence_counter = 0
-        converged = False
+    loss_window: List[torch.Tensor] = []
+    min_avg_loss = None
+    convergence_counter = 0
+    converged = False
 
-        def get_point(datapoint):
-            if len(datapoint) == 2:
-                x, y = datapoint
-                w = None
+    def get_point(datapoint):
+        if len(datapoint) == 2:
+            x, y = datapoint
+            w = None
+        else:
+            x, y, w = datapoint
+
+        if device is not None:
+            x = x.to(device)
+            y = y.to(device)
+            if w is not None:
+                w = w.to(device)
+
+        return x, y, w
+
+    # get a point and construct the model
+    data_iter = iter(dataloader)
+    x, y, w = get_point(next(data_iter))
+
+    model._construct_model_params(
+        in_features=x.shape[1],
+        out_features=y.shape[1] if len(y.shape) == 2 else 1,
+        dtype=x.dtype,
+        **construct_kwargs,
+    )
+    model.train()
+
+    assert model.linear is not None
+
+    if init_scheme is not None:
+        assert init_scheme in ["xavier", "zeros"]
+
+        with torch.no_grad():
+            if init_scheme == "xavier":
+                torch.nn.init.xavier_uniform_(model.linear.weight)
             else:
-                x, y, w = datapoint
+                model.linear.weight.zero_()
 
-            if device is not None:
-                x = x.to(device)
-                y = y.to(device)
-                if w is not None:
-                    w = w.to(device)
+            if model.linear.bias is not None:
+                model.linear.bias.zero_()
 
-            return x, y, w
-
-        # get a point and construct the model
-        data_iter = iter(dataloader)
-        x, y, w = get_point(next(data_iter))
-
-        model._construct_model_params(
-            in_features=x.shape[1],
-            out_features=y.shape[1] if len(y.shape) == 2 else 1,
-            dtype=x.dtype,
-            **construct_kwargs,
-        )
-        model.train()
-
-        assert model.linear is not None
-
-        if init_scheme is not None:
-            assert init_scheme in ["xavier", "zeros"]
-
-            with torch.no_grad():
-                if init_scheme == "xavier":
-                    torch.nn.init.xavier_uniform_(model.linear.weight)
-                else:
-                    model.linear.weight.zero_()
-
-                if model.linear.bias is not None:
-                    model.linear.bias.zero_()
-
+    with torch.enable_grad():
         optim = torch.optim.SGD(model.parameters(), lr=initial_lr)
         if reduce_lr:
             scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
@@ -215,13 +215,13 @@ def sgd_train_linear_model(
             data_iter = iter(dataloader)
             x, y, w = get_point(next(data_iter))
 
-        t2 = time.time()
-        return {
-            "train_time": t2 - t1,
-            "train_loss": torch.mean(torch.stack(loss_window)).item(),
-            "train_iter": i,
-            "train_epoch": epoch,
-        }
+    t2 = time.time()
+    return {
+        "train_time": t2 - t1,
+        "train_loss": torch.mean(torch.stack(loss_window)).item(),
+        "train_iter": i,
+        "train_epoch": epoch,
+    }
 
 
 class NormLayer(nn.Module):
