@@ -165,7 +165,9 @@ def sgd_train_linear_model(
                     w = w.view(x.shape[0], -1)
 
                 i += 1
+
                 out = model(x)
+
                 loss = loss_fn(y, out, w)
                 if reg_term is not None:
                     reg = torch.norm(model.linear.weight, p=reg_term)
