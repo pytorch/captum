@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-from typing import List, Union
+from typing import cast, List, Union
 
 import numpy as np
 import torch
@@ -142,9 +142,8 @@ class TestAngledNeuronDirection(BaseTest):
         a = 1
         b = [CHANNEL_ACTIVATION_0_LOSS, CHANNEL_ACTIVATION_1_LOSS]
         dot = torch.sum(torch.as_tensor(np.inner(a, b))).item()
-        self.assertAlmostEqual(
-            torch.sum(get_loss_value(model, loss)).item(), dot, places=6
-        )
+        output = torch.sum(cast(torch.Tensor, get_loss_value(model, loss)))
+        self.assertAlmostEqual(output.item(), dot, places=6)
 
     def test_angled_neuron_direction_whitened(self) -> None:
         model = BasicModel_ConvNet_Optim()
@@ -157,9 +156,8 @@ class TestAngledNeuronDirection(BaseTest):
         a = 1
         b = [CHANNEL_ACTIVATION_0_LOSS, CHANNEL_ACTIVATION_1_LOSS]
         dot = torch.sum(torch.as_tensor(np.inner(a, b))).item() * 2
-        self.assertAlmostEqual(
-            torch.sum(get_loss_value(model, loss)).item(), dot, places=6
-        )
+        output = torch.sum(cast(torch.Tensor, get_loss_value(model, loss)))
+        self.assertAlmostEqual(output.item(), dot, places=6)
 
 
 class TestTensorDirection(BaseTest):

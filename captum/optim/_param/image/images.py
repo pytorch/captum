@@ -236,8 +236,8 @@ class FFTImage(ImageParameterization):
                 to use for irfft, rfft, and fftfreq operations.
         """
 
-        if TORCH_VERSION >= "1.7.0":
-            if TORCH_VERSION < "1.8.0":
+        if TORCH_VERSION > "1.7.0":
+            if TORCH_VERSION =< "1.8.0":
                 global torch
                 import torch.fft
 

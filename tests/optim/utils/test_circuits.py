@@ -38,10 +38,15 @@ class TestGetExpandedWeights(BaseTest):
         )
         self.assertEqual(list(output_tensor.shape), [508, 480, 5, 5])
 
+        if torch.__version__ <= "1.6.0":
+            norm_func = torch.norm
+        else:
+            norm_func = torch.linalg.norm
+
         top_connected_neurons = torch.argsort(
             torch.stack(
                 [
-                    -torch.linalg.norm(output_tensor[i, 379, :, :])
+                    -norm_func(output_tensor[i, 379, :, :])
                     for i in range(output_tensor.shape[0])
                 ]
             )

@@ -234,7 +234,7 @@ class TestFFTImage(BaseTest):
         fftimage = images.FFTImage(size=size)
         fftimage_np = numpy_image.FFTImage(size=size)
 
-        fftimage_tensor = fftimage.forward()
+        fftimage_tensor = fftimage.forward().rename(None)
         fftimage_array = fftimage_np.forward()
         self.assertEqual(fftimage.size, (224, 224))
         self.assertEqual(fftimage_tensor.detach().numpy().shape, fftimage_array.shape)
@@ -261,7 +261,7 @@ class TestFFTImage(BaseTest):
         fftimage = images.FFTImage(size=size, batch=batch)
         fftimage_np = numpy_image.FFTImage(size=size, batch=batch)
 
-        fftimage_tensor = fftimage.forward()
+        fftimage_tensor = fftimage.forward().rename(None)
         fftimage_array = fftimage_np.forward()
 
         self.assertEqual(fftimage_tensor.detach().numpy().shape, fftimage_array.shape)
@@ -277,7 +277,7 @@ class TestFFTImage(BaseTest):
         fftimage = images.FFTImage(size=size, channels=channels)
         fftimage_np = numpy_image.FFTImage(size=size, channels=channels)
 
-        fftimage_tensor = fftimage.forward()
+        fftimage_tensor = fftimage.forward().rename(None)
         fftimage_array = fftimage_np.forward()
 
         self.assertEqual(fftimage_tensor.detach().numpy().shape, fftimage_array.shape)
@@ -289,7 +289,7 @@ class TestFFTImage(BaseTest):
             )
         fftimage = images.FFTImage(size=(512, 405))
         self.assertEqual(list(fftimage.spectrum_scale.shape), [1, 512, 203, 1])
-        fftimage_tensor = fftimage().detach()
+        fftimage_tensor = fftimage().detach().rename(None)
         self.assertEqual(list(fftimage_tensor.shape), [1, 3, 512, 405])
 
     def test_fftimage_forward_init_chw(self) -> None:
@@ -300,7 +300,7 @@ class TestFFTImage(BaseTest):
         fftimage = images.FFTImage(size=size, init=init_tensor)
         fftimage_np = numpy_image.FFTImage(size=size, init=init_array)
 
-        fftimage_tensor = fftimage.forward()
+        fftimage_tensor = fftimage.forward().rename(None)
         fftimage_array = fftimage_np.forward()
 
         self.assertEqual(fftimage.size, (224, 224))
@@ -317,7 +317,7 @@ class TestFFTImage(BaseTest):
         fftimage = images.FFTImage(size=size, init=init_tensor)
         fftimage_np = numpy_image.FFTImage(size=size, init=init_array)
 
-        fftimage_tensor = fftimage.forward()
+        fftimage_tensor = fftimage.forward().rename(None)
         fftimage_array = fftimage_np.forward()
 
         self.assertEqual(fftimage.size, (224, 224))
@@ -335,7 +335,7 @@ class TestFFTImage(BaseTest):
         fftimage = images.FFTImage(size=size, batch=batch, init=init_tensor)
         fftimage_np = numpy_image.FFTImage(size=size, batch=batch, init=init_array)
 
-        fftimage_tensor = fftimage.forward()
+        fftimage_tensor = fftimage.forward().rename(None)
         fftimage_array = fftimage_np.forward()
 
         self.assertEqual(fftimage.size, (224, 224))
@@ -422,7 +422,7 @@ class TestLaplacianImage(BaseTest):
         size = (224, 224)
         channels = 3
         image_param = images.LaplacianImage(size=size, channels=channels)
-        test_tensor = image_param.forward()
+        test_tensor = image_param.forward().rename(None)
 
         self.assertEqual(test_tensor.dim(), 4)
         self.assertEqual(test_tensor.size(0), 1)
@@ -433,7 +433,7 @@ class TestLaplacianImage(BaseTest):
     def test_laplacianimage_init(self) -> None:
         init_t = torch.zeros(1, 224, 224)
         image_param = images.LaplacianImage(size=(224, 224), channels=3, init=init_t)
-        output = image_param.forward().detach()
+        output = image_param.forward().detach().rename(None)
         assertTensorAlmostEqual(self, torch.ones_like(output) * 0.5, output, mode="max")
 
 
