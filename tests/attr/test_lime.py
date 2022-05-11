@@ -126,7 +126,7 @@ class Test(BaseTest):
         net = BasicModel_MultiLayer()
         inp = torch.tensor([[20.0, 50.0, 30.0]], requires_grad=True)
         interpretable_model = SGDLasso()
-        interpretable_model.fit = partial(
+        interpretable_model.fit = partial( # type: ignore
             interpretable_model.fit, initial_lr=0.1, max_epoch=500
         )
         self._lime_test_assert(
