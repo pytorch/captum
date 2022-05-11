@@ -2,7 +2,7 @@ from typing import Callable, cast, List, Optional
 
 import torch.nn as nn
 from captum._utils.models.model import Model
-from torch import Tensor
+from torch import Tensor, dtype
 from torch.utils.data import DataLoader
 
 
@@ -47,6 +47,7 @@ class LinearModel(nn.Module, Model):
         weight_values: Optional[Tensor] = None,
         bias_value: Optional[Tensor] = None,
         classes: Optional[Tensor] = None,
+        dtype: Optional[dtype] = None,
     ):
         r"""
         Lazily initializes a linear model. This will be called for you in a
@@ -102,7 +103,7 @@ class LinearModel(nn.Module, Model):
         else:
             self.norm = None
 
-        self.linear = nn.Linear(in_features, out_features, bias=bias)
+        self.linear = nn.Linear(in_features, out_features, bias=bias, dtype=dtype)
 
         if weight_values is not None:
             self.linear.weight.data = weight_values
