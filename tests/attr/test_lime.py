@@ -3,6 +3,7 @@
 import io
 import unittest
 import unittest.mock
+from functools import partial
 from typing import Any, Callable, Generator, List, Tuple, Optional, Union
 
 import torch
@@ -28,7 +29,7 @@ from tests.helpers.basic_models import (
     BasicModelBoolInput,
 )
 from torch import Tensor
-from functools import partial
+
 
 def alt_perturb_func(
     original_inp: TensorOrTupleOfTensorsGeneric, **kwargs
@@ -125,14 +126,16 @@ class Test(BaseTest):
         net = BasicModel_MultiLayer()
         inp = torch.tensor([[20.0, 50.0, 30.0]], requires_grad=True)
         interpretable_model = SGDLasso()
-        interpretable_model.fit = partial(interpretable_model.fit, initial_lr=0.1, max_epoch=500)
+        interpretable_model.fit = partial(
+            interpretable_model.fit, initial_lr=0.1, max_epoch=500
+        )
         self._lime_test_assert(
             net,
             inp,
             [[73.3716, 193.3349, 113.3349]],
             n_samples=1000,
             expected_coefs_only=[[73.3716, 193.3349, 113.3349]],
-            interpretable_model=interpretable_model
+            interpretable_model=interpretable_model,
         )
 
     def test_simple_lime_with_mask(self) -> None:
@@ -508,7 +511,9 @@ class Test(BaseTest):
             lime = Lime(
                 model,
                 similarity_func=get_exp_kernel_similarity_function("cosine", 10.0),
-                interpretable_model=interpretable_model if interpretable_model else SkLearnLasso(alpha=1.0),
+                interpretable_model=interpretable_model
+                if interpretable_model
+                else SkLearnLasso(alpha=1.0),
             )
             attributions = lime.attribute(
                 test_input,
@@ -542,7 +547,9 @@ class Test(BaseTest):
 
                 lime_alt = LimeBase(
                     model,
-                    interpretable_model if interpretable_model else SkLearnLasso(alpha=1.0),
+                    interpretable_model
+                    if interpretable_model
+                    else SkLearnLasso(alpha=1.0),
                     get_exp_kernel_similarity_function("euclidean", 1000.0),
                     alt_perturb_generator if test_generator else alt_perturb_func,
                     False,
