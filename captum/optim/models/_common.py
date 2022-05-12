@@ -5,7 +5,6 @@ from typing import Dict, List, Optional, Tuple, Type, Union, cast
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-
 from captum.optim._core.output_hook import ActivationFetcher
 from captum.optim._utils.typing import ModuleOutputMapping, TupleOfTensorsOrTensorType
 
@@ -73,7 +72,7 @@ def replace_layers(
     layer1: Type[nn.Module],
     layer2: Type[nn.Module],
     transfer_vars: bool = False,
-    **kwargs
+    **kwargs,
 ) -> None:
     """
     Replace all target layers with new layers inside the specified model,

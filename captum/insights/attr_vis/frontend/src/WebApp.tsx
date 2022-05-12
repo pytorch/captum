@@ -1,12 +1,11 @@
 import React from "react";
 import AppBase from "./App";
-import { FilterConfig } from './models/filter';
-import { VisualizationOutput } from "./models/visualizationOutput";
+import { FilterConfig } from "./models/filter";
+import { VisualizationGroup } from "./models/visualizationOutput";
 import { InsightsConfig } from "./models/insightsConfig";
 
-
 interface WebAppState {
-  data: VisualizationOutput[];
+  data: VisualizationGroup[];
   config: InsightsConfig;
   loading: boolean;
 }
@@ -20,17 +19,17 @@ class WebApp extends React.Component<{}, WebAppState> {
         classes: [],
         methods: [],
         method_arguments: {},
-        selected_method: ""
+        selected_method: "",
       },
-      loading: false
+      loading: false,
     };
     this._fetchInit();
   }
 
   _fetchInit = () => {
     fetch("init")
-      .then(r => r.json())
-      .then(r => this.setState({ config: r }));
+      .then((r) => r.json())
+      .then((r) => this.setState({ config: r }));
   };
 
   fetchData = (filter_config: FilterConfig) => {
@@ -38,26 +37,31 @@ class WebApp extends React.Component<{}, WebAppState> {
     fetch("fetch", {
       method: "POST",
       headers: {
-        "Content-Type": "application/json"
+        "Content-Type": "application/json",
       },
-      body: JSON.stringify(filter_config)
+      body: JSON.stringify(filter_config),
     })
-      .then(response => response.json())
-      .then(response => this.setState({ data: response, loading: false }));
+      .then((response) => response.json())
+      .then((response) => this.setState({ data: response, loading: false }));
   };
 
-  onTargetClick = (labelIndex: number, instance: number, callback: () => void) => {
+  onTargetClick = (
+    labelIndex: number,
+    inputIndex: number,
+    modelIndex: number,
+    callback: () => void
+  ) => {
     fetch("attribute", {
       method: "POST",
       headers: {
-        "Content-Type": "application/json"
+        "Content-Type": "application/json",
       },
-      body: JSON.stringify({ labelIndex, instance })
+      body: JSON.stringify({ labelIndex, inputIndex, modelIndex }),
     })
-      .then(response => response.json())
-      .then(response => {
+      .then((response) => response.json())
+      .then((response) => {
         const data = this.state.data ?? [];
-        data[instance] = response;
+        data[inputIndex][modelIndex] = response;
         this.setState({ data });
         callback();
       });

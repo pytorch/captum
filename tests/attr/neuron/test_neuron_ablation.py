@@ -1,21 +1,23 @@
 #!/usr/bin/env python3
 
 import unittest
-from typing import Any, List, Tuple, Union
+from typing import Any, Callable, Tuple, Union
 
 import torch
-from torch import Tensor
-from torch.nn import Module
-
-from captum._utils.typing import BaselineType, TensorOrTupleOfTensorsGeneric
+from captum._utils.typing import (
+    BaselineType,
+    TensorLikeList,
+    TensorOrTupleOfTensorsGeneric,
+)
 from captum.attr._core.neuron.neuron_feature_ablation import NeuronFeatureAblation
-
-from ...helpers.basic import BaseTest, assertTensorAlmostEqual
-from ...helpers.basic_models import (
+from tests.helpers.basic import assertTensorAlmostEqual, BaseTest
+from tests.helpers.basic_models import (
     BasicModel_ConvNet_One_Conv,
     BasicModel_MultiLayer,
     BasicModel_MultiLayer_MultiInput,
 )
+from torch import Tensor
+from torch.nn import Module
 
 
 class Test(BaseTest):
@@ -26,7 +28,7 @@ class Test(BaseTest):
             net,
             net.linear2,
             inp,
-            [280.0, 280.0, 120.0],
+            [[280.0, 280.0, 120.0]],
             feature_mask=torch.tensor([[0, 0, 1]]),
             perturbations_per_eval=(1, 2, 3),
         )
@@ -42,6 +44,34 @@ class Test(BaseTest):
             [[41.0, 41.0, 12.0], [280.0, 280.0, 120.0]],
             feature_mask=mask,
             perturbations_per_eval=(1, 2, 3),
+        )
+
+    def test_multi_sample_ablation_with_selector_fn(self) -> None:
+        net = BasicModel_MultiLayer()
+        inp = torch.tensor([[2.0, 10.0, 3.0], [20.0, 50.0, 30.0]], requires_grad=True)
+        mask = torch.tensor([[0, 0, 1], [1, 1, 0]])
+        self._ablation_test_assert(
+            net,
+            net.linear2,
+            inp,
+            [[82.0, 82.0, 24.0], [560.0, 560.0, 240.0]],
+            feature_mask=mask,
+            perturbations_per_eval=(1, 2, 3),
+            neuron_selector=lambda x: torch.sum(x, dim=1),
+        )
+
+    def test_multi_sample_ablation_with_slice(self) -> None:
+        net = BasicModel_MultiLayer()
+        inp = torch.tensor([[2.0, 10.0, 3.0], [20.0, 50.0, 30.0]], requires_grad=True)
+        mask = torch.tensor([[0, 0, 1], [1, 1, 0]])
+        self._ablation_test_assert(
+            net,
+            net.linear2,
+            inp,
+            [[82.0, 82.0, 24.0], [560.0, 560.0, 240.0]],
+            feature_mask=mask,
+            perturbations_per_eval=(1, 2, 3),
+            neuron_selector=(slice(0, 2, 1),),
         )
 
     def test_multi_input_ablation_with_mask(self) -> None:
@@ -146,16 +176,24 @@ class Test(BaseTest):
             (inp, inp2),
             (
                 [
-                    [0.0, 2.0, 4.0, 3.0],
-                    [4.0, 9.0, 10.0, 7.0],
-                    [4.0, 13.0, 14.0, 11.0],
-                    [0.0, 0.0, 0.0, 0.0],
+                    [
+                        [
+                            [0.0, 2.0, 4.0, 3.0],
+                            [4.0, 9.0, 10.0, 7.0],
+                            [4.0, 13.0, 14.0, 11.0],
+                            [0.0, 0.0, 0.0, 0.0],
+                        ]
+                    ]
                 ],
                 [
-                    [1.0, 2.0, 2.0, 1.0],
-                    [1.0, 2.0, 2.0, 1.0],
-                    [1.0, 2.0, 2.0, 1.0],
-                    [0.0, 0.0, 0.0, 0.0],
+                    [
+                        [
+                            [1.0, 2.0, 2.0, 1.0],
+                            [1.0, 2.0, 2.0, 1.0],
+                            [1.0, 2.0, 2.0, 1.0],
+                            [0.0, 0.0, 0.0, 0.0],
+                        ]
+                    ]
                 ],
             ),
             perturbations_per_eval=(1, 3, 7, 14),
@@ -172,7 +210,7 @@ class Test(BaseTest):
             (torch.zeros_like(inp), torch.zeros_like(inp2)),
             feature_mask=(torch.tensor(0), torch.tensor(1)),
             perturbations_per_eval=(1, 2, 4, 8, 12, 16),
-            neuron_index=(1, 0, 0),
+            neuron_selector=(1, 0, 0),
         )
         self._ablation_test_assert(
             net,
@@ -181,7 +219,7 @@ class Test(BaseTest):
             (45 * torch.ones_like(inp), 9 * torch.ones_like(inp2)),
             feature_mask=(torch.tensor(0), torch.tensor(1)),
             perturbations_per_eval=(1, 2, 4, 8, 12, 16),
-            neuron_index=(1, 0, 0),
+            neuron_selector=(1, 0, 0),
             attribute_to_neuron_input=True,
         )
         self._ablation_test_assert(
@@ -190,20 +228,28 @@ class Test(BaseTest):
             (inp, inp2),
             (
                 [
-                    [0.0, 1.0, 2.0, 0.0],
-                    [4.0, 5.0, 6.0, 0.0],
-                    [8.0, 9.0, 10.0, 0.0],
-                    [0.0, 0.0, 0.0, 0.0],
+                    [
+                        [
+                            [0.0, 1.0, 2.0, 0.0],
+                            [4.0, 5.0, 6.0, 0.0],
+                            [8.0, 9.0, 10.0, 0.0],
+                            [0.0, 0.0, 0.0, 0.0],
+                        ]
+                    ]
                 ],
                 [
-                    [1.0, 1.0, 1.0, 0.0],
-                    [1.0, 1.0, 1.0, 0.0],
-                    [1.0, 1.0, 1.0, 0.0],
-                    [0.0, 0.0, 0.0, 0.0],
+                    [
+                        [
+                            [1.0, 1.0, 1.0, 0.0],
+                            [1.0, 1.0, 1.0, 0.0],
+                            [1.0, 1.0, 1.0, 0.0],
+                            [0.0, 0.0, 0.0, 0.0],
+                        ]
+                    ]
                 ],
             ),
             perturbations_per_eval=(1, 3, 7, 14),
-            neuron_index=(1, 0, 0),
+            neuron_selector=(1, 0, 0),
             attribute_to_neuron_input=True,
         )
 
@@ -213,16 +259,15 @@ class Test(BaseTest):
         layer: Module,
         test_input: TensorOrTupleOfTensorsGeneric,
         expected_ablation: Union[
-            List[float],
-            List[List[float]],
+            TensorLikeList,
+            Tuple[TensorLikeList, ...],
             Tuple[Tensor, ...],
-            Tuple[List[List[float]], ...],
         ],
         feature_mask: Union[None, TensorOrTupleOfTensorsGeneric] = None,
         additional_input: Any = None,
         perturbations_per_eval: Tuple[int, ...] = (1,),
         baselines: BaselineType = None,
-        neuron_index: Union[int, Tuple[int, ...]] = 0,
+        neuron_selector: Union[int, Tuple[Union[int, slice], ...], Callable] = 0,
         attribute_to_neuron_input: bool = False,
     ) -> None:
         for batch_size in perturbations_per_eval:
@@ -230,7 +275,7 @@ class Test(BaseTest):
             self.assertTrue(ablation.multiplies_by_inputs)
             attributions = ablation.attribute(
                 test_input,
-                neuron_index=neuron_index,
+                neuron_selector=neuron_selector,
                 feature_mask=feature_mask,
                 additional_forward_args=additional_input,
                 baselines=baselines,

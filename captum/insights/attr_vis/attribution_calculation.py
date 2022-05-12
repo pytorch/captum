@@ -3,6 +3,7 @@ import inspect
 from collections import namedtuple
 from typing import (
     Callable,
+    cast,
     Dict,
     Iterable,
     List,
@@ -10,24 +11,22 @@ from typing import (
     Sequence,
     Tuple,
     Union,
-    cast,
 )
 
 import torch
-from torch import Tensor
-from torch.nn import Module
-
 from captum._utils.common import _run_forward, safe_div
 from captum.insights.attr_vis.config import (
     ATTRIBUTION_METHOD_CONFIG,
     ATTRIBUTION_NAMES_TO_METHODS,
 )
 from captum.insights.attr_vis.features import BaseFeature
+from torch import Tensor
+from torch.nn import Module
 
 OutputScore = namedtuple("OutputScore", "score index label")
 
 
-class AttributionCalculation(object):
+class AttributionCalculation:
     def __init__(
         self,
         models: Sequence[Module],
@@ -35,48 +34,55 @@ class AttributionCalculation(object):
         features: List[BaseFeature],
         score_func: Optional[Callable] = None,
         use_label_for_attr: bool = True,
-    ):
+    ) -> None:
         self.models = models
         self.classes = classes
         self.features = features
         self.score_func = score_func
         self.use_label_for_attr = use_label_for_attr
+        self.baseline_cache: dict = {}
+        self.transformed_input_cache: dict = {}
 
     def calculate_predicted_scores(
-        self, inputs, additional_forward_args
+        self, inputs, additional_forward_args, model
     ) -> Tuple[
         List[OutputScore], Optional[List[Tuple[Tensor, ...]]], Tuple[Tensor, ...]
     ]:
-        net = self.models[0]  # TODO process multiple models
+        # Check if inputs have cached baselines and transformed inputs
+        hashable_inputs = tuple(inputs)
+        if hashable_inputs in self.baseline_cache:
+            baselines_group = self.baseline_cache[hashable_inputs]
+            transformed_inputs = self.transformed_input_cache[hashable_inputs]
+        else:
+            # Initialize baselines
+            baseline_transforms_len = 1  # todo support multiple baselines
+            baselines: List[List[Optional[Tensor]]] = [
+                [None] * len(self.features) for _ in range(baseline_transforms_len)
+            ]
+            transformed_inputs = list(inputs)
+            for feature_i, feature in enumerate(self.features):
+                transformed_inputs[feature_i] = self._transform(
+                    feature.input_transforms, transformed_inputs[feature_i], True
+                )
+                for baseline_i in range(baseline_transforms_len):
+                    if baseline_i > len(feature.baseline_transforms) - 1:
+                        baselines[baseline_i][feature_i] = torch.zeros_like(
+                            transformed_inputs[feature_i]
+                        )
+                    else:
+                        baselines[baseline_i][feature_i] = self._transform(
+                            [feature.baseline_transforms[baseline_i]],
+                            transformed_inputs[feature_i],
+                            True,
+                        )
 
-        # initialize baselines
-        baseline_transforms_len = 1  # todo support multiple baselines
-        baselines: List[List[Optional[Tensor]]] = [
-            [None] * len(self.features) for _ in range(baseline_transforms_len)
-        ]
-        transformed_inputs = list(inputs)
-
-        for feature_i, feature in enumerate(self.features):
-            transformed_inputs[feature_i] = self._transform(
-                feature.input_transforms, transformed_inputs[feature_i], True
-            )
-            for baseline_i in range(baseline_transforms_len):
-                if baseline_i > len(feature.baseline_transforms) - 1:
-                    baselines[baseline_i][feature_i] = torch.zeros_like(
-                        transformed_inputs[feature_i]
-                    )
-                else:
-                    baselines[baseline_i][feature_i] = self._transform(
-                        [feature.baseline_transforms[baseline_i]],
-                        transformed_inputs[feature_i],
-                        True,
-                    )
-
-        baselines = cast(List[List[Tensor]], baselines)
-        baselines_group = [tuple(b) for b in baselines]
+            baselines = cast(List[List[Optional[Tensor]]], baselines)
+            baselines_group = [tuple(b) for b in baselines]
+            self.baseline_cache[hashable_inputs] = baselines_group
+            self.transformed_input_cache[hashable_inputs] = transformed_inputs
 
         outputs = _run_forward(
-            net,
+            model,
             tuple(transformed_inputs),
             additional_forward_args=additional_forward_args,
         )
@@ -105,15 +111,16 @@ class AttributionCalculation(object):
         label: Optional[Union[Tensor]],
         attribution_method_name: str,
         attribution_arguments: Dict,
+        model: Module,
     ) -> Tuple[Tensor, ...]:
-        net = self.models[0]
         attribution_cls = ATTRIBUTION_NAMES_TO_METHODS[attribution_method_name]
-        attribution_method = attribution_cls(net)
-        param_config = ATTRIBUTION_METHOD_CONFIG[attribution_method_name]
-        if param_config.post_process:
-            for k, v in attribution_arguments.items():
-                if k in param_config.post_process:
-                    attribution_arguments[k] = param_config.post_process[k](v)
+        attribution_method = attribution_cls(model)
+        if attribution_method_name in ATTRIBUTION_METHOD_CONFIG:
+            param_config = ATTRIBUTION_METHOD_CONFIG[attribution_method_name]
+            if param_config.post_process:
+                for k, v in attribution_arguments.items():
+                    if k in param_config.post_process:
+                        attribution_arguments[k] = param_config.post_process[k](v)
 
         # TODO support multiple baselines
         baseline = baselines[0] if baselines and len(baselines) > 0 else None
@@ -144,7 +151,8 @@ class AttributionCalculation(object):
 
         # normalise the contribution, s.t. sum(abs(x_i)) = 1
         norm = torch.norm(net_contrib, p=1)
-        net_contrib = safe_div(net_contrib, norm, default_value=net_contrib)
+        # if norm is 0, all net_contrib elements are 0
+        net_contrib = safe_div(net_contrib, norm)
 
         return net_contrib.tolist()
 

@@ -2,15 +2,13 @@
 import copy
 import os
 from enum import Enum
-from typing import Any, Callable, Dict, Optional, Tuple, Type, cast
+from typing import Any, Callable, cast, Dict, Optional, Tuple, Type
 
 import torch
 import torch.distributed as dist
-from torch import Tensor
-from torch.nn import Module
-
 from captum.attr._core.guided_grad_cam import GuidedGradCam
 from captum.attr._core.layer.layer_deep_lift import LayerDeepLift, LayerDeepLiftShap
+from captum.attr._core.layer.layer_lrp import LayerLRP
 from captum.attr._core.neuron.neuron_deep_lift import NeuronDeepLift, NeuronDeepLiftShap
 from captum.attr._core.neuron.neuron_guided_backprop_deconvnet import (
     NeuronDeconvolution,
@@ -18,10 +16,16 @@ from captum.attr._core.neuron.neuron_guided_backprop_deconvnet import (
 )
 from captum.attr._core.noise_tunnel import NoiseTunnel
 from captum.attr._utils.attribution import Attribution, InternalAttribution
-
-from ..helpers.basic import BaseTest, assertTensorTuplesAlmostEqual, deep_copy_args
-from .helpers.gen_test_utils import gen_test_name, get_target_layer, parse_test_config
-from .helpers.test_config import config
+from tests.attr.helpers.gen_test_utils import (
+    gen_test_name,
+    get_target_layer,
+    parse_test_config,
+    should_create_generated_test,
+)
+from tests.attr.helpers.test_config import config
+from tests.helpers.basic import assertTensorTuplesAlmostEqual, BaseTest, deep_copy_args
+from torch import Tensor
+from torch.nn import Module
 
 """
 Tests in this file are dynamically generated based on the config
@@ -66,6 +70,8 @@ class DataParallelMeta(type):
             dp_delta = test_config["dp_delta"] if "dp_delta" in test_config else 0.0001
 
             for algorithm in algorithms:
+                if not should_create_generated_test(algorithm):
+                    continue
                 for mode in DataParallelCompareMode:
                     # Creates test case corresponding to each algorithm and
                     # DataParallelCompareMode
@@ -189,6 +195,7 @@ class DataParallelMeta(type):
                         (
                             LayerDeepLift,
                             LayerDeepLiftShap,
+                            LayerLRP,
                             NeuronDeepLift,
                             NeuronDeepLiftShap,
                             NeuronDeconvolution,
@@ -197,7 +204,8 @@ class DataParallelMeta(type):
                         ),
                     ):
                         attr_method_2 = internal_algorithm(
-                            model_2, get_target_layer(cuda_model, target_layer)
+                            model_2,
+                            get_target_layer(cuda_model, target_layer),  # type: ignore
                         )
                     else:
                         attr_method_2 = internal_algorithm(

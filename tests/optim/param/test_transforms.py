@@ -2,16 +2,12 @@
 import unittest
 from typing import List
 
+import captum.optim._param.image.transforms as transforms
 import numpy as np
 import torch
 import torch.nn.functional as F
-
-import captum.optim._param.image.transforms as transforms
-from tests.helpers.basic import (
-    BaseTest,
-    assertArraysAlmostEqual,
-    assertTensorAlmostEqual,
-)
+from packaging import version
+from tests.helpers.basic import BaseTest, assertTensorAlmostEqual
 from tests.optim.helpers import numpy_transforms
 
 
@@ -23,6 +19,7 @@ class TestRandomScale(BaseTest):
         self.assertEqual(scale_module.mode, "bilinear")
         self.assertFalse(scale_module.align_corners)
         self.assertFalse(scale_module.recompute_scale_factor)
+        self.assertFalse(scale_module.antialias)
 
     def test_random_scale_tensor_scale(self) -> None:
         scale = torch.tensor([1, 0.975, 1.025, 0.95, 1.05])
@@ -48,13 +45,8 @@ class TestRandomScale(BaseTest):
     def test_random_scale_torch_version_check(self) -> None:
         scale_module = transforms.RandomScale([1.0])
 
-        has_align_corners = torch.__version__ >= "1.3.0"
-        self.assertEqual(scale_module._has_align_corners, has_align_corners)
-
-        has_recompute_scale_factor = torch.__version__ >= "1.6.0"
-        self.assertEqual(
-            scale_module._has_recompute_scale_factor, has_recompute_scale_factor
-        )
+        has_antialias = version.parse(torch.__version__) >= version.parse("1.11.0")
+        self.assertEqual(scale_module._has_antialias, has_antialias)
 
     def test_random_scale_downscaling(self) -> None:
         scale_module = transforms.RandomScale(scale=[0.5])
@@ -106,6 +98,38 @@ class TestRandomScale(BaseTest):
             scaled_tensor,
             expected_tensor,
             0,
+        )
+
+    def test_random_scale_antialias(self) -> None:
+        if version.parse(torch.__version__) < version.parse("1.11.0"):
+            raise unittest.SkipTest(
+                "Skipping RandomScale antialias test"
+                + " due to insufficient Torch version."
+            )
+        scale_module = transforms.RandomScale(scale=[0.5], antialias=True)
+        test_tensor = torch.arange(0, 1 * 1 * 10 * 10).view(1, 1, 10, 10).float()
+
+        scaled_tensor = scale_module._scale_tensor(test_tensor, 0.5)
+
+        expected_tensor = torch.tensor(
+            [
+                [
+                    [
+                        [7.8571, 9.6429, 11.6429, 13.6429, 15.4286],
+                        [25.7143, 27.5000, 29.5000, 31.5000, 33.2857],
+                        [45.7143, 47.5000, 49.5000, 51.5000, 53.2857],
+                        [65.7143, 67.5000, 69.5000, 71.5000, 73.2857],
+                        [83.5714, 85.3571, 87.3571, 89.3571, 91.1429],
+                    ]
+                ]
+            ]
+        )
+
+        assertTensorAlmostEqual(
+            self,
+            scaled_tensor,
+            expected_tensor,
+            0.0005,
         )
 
     def test_random_forward_exact(self) -> None:
@@ -166,11 +190,6 @@ class TestRandomScale(BaseTest):
         )
 
     def test_random_scale_forward_exact_align_corners(self) -> None:
-        if torch.__version__ <= "1.2.0":
-            raise unittest.SkipTest(
-                "Skipping RandomScale exact align corners forward due to"
-                + " insufficient Torch version."
-            )
         scale_module = transforms.RandomScale(scale=[0.5], align_corners=True)
         self.assertTrue(scale_module.align_corners)
 
@@ -212,7 +231,7 @@ class TestRandomScale(BaseTest):
         self.assertTrue(torch.is_tensor(output_tensor))
 
     def test_random_scale_jit_module(self) -> None:
-        if torch.__version__ <= "1.8.0":
+        if version.parse(torch.__version__) <= version.parse("1.8.0"):
             raise unittest.SkipTest(
                 "Skipping RandomScale JIT module test due to insufficient"
                 + " Torch version."
@@ -272,11 +291,6 @@ class TestRandomScaleAffine(BaseTest):
             torch.distributions.distribution.Distribution,
         )
         self.assertTrue(scale_module._is_distribution)
-
-    def test_random_scale_affine_torch_version_check(self) -> None:
-        scale_module = transforms.RandomScaleAffine([1.0])
-        _has_align_corners = torch.__version__ >= "1.3.0"
-        self.assertEqual(scale_module._has_align_corners, _has_align_corners)
 
     def test_random_scale_affine_matrix(self) -> None:
         scale_module = transforms.RandomScaleAffine(scale=[0.5])
@@ -392,7 +406,7 @@ class TestRandomScaleAffine(BaseTest):
         self.assertEqual(list(output_tensor.shape), list(test_tensor.shape))
 
     def test_random_scale_affine_jit_module(self) -> None:
-        if torch.__version__ <= "1.8.0":
+        if version.parse(torch.__version__) <= version.parse("1.8.0"):
             raise unittest.SkipTest(
                 "Skipping RandomScaleAffine JIT module test due to insufficient"
                 + " Torch version."
@@ -450,11 +464,6 @@ class TestRandomRotation(BaseTest):
         )
         self.assertTrue(rotation_module._is_distribution)
 
-    def test_random_rotation_torch_version_check(self) -> None:
-        rotation_module = transforms.RandomRotation([1.0])
-        _has_align_corners = torch.__version__ >= "1.3.0"
-        self.assertEqual(rotation_module._has_align_corners, _has_align_corners)
-
     def test_random_rotation_matrix(self) -> None:
         theta = 25.1
         rotation_module = transforms.RandomRotation([theta])
@@ -508,11 +517,6 @@ class TestRandomRotation(BaseTest):
         assertTensorAlmostEqual(self, test_output, expected_output, 0.005)
 
     def test_random_rotation_forward_exact_nearest_reflection(self) -> None:
-        if torch.__version__ <= "1.2.0":
-            raise unittest.SkipTest(
-                "Skipping RandomRotation forward due exact nearest relfection"
-                + " to insufficient Torch version."
-            )
         rotation_module = transforms.RandomRotation(
             [45.0], mode="nearest", padding_mode="reflection"
         )
@@ -602,7 +606,7 @@ class TestRandomRotation(BaseTest):
         assertTensorAlmostEqual(self, rot_matrix, expected_matrix, 0.0)
 
     def test_random_rotation_jit_module(self) -> None:
-        if torch.__version__ <= "1.8.0":
+        if version.parse(torch.__version__) <= version.parse("1.8.0"):
             raise unittest.SkipTest(
                 "Skipping RandomRotation JIT test due to insufficient Torch version."
             )
@@ -646,10 +650,11 @@ class TestRandomSpatialJitter(BaseTest):
 
         spatial_mod_np = numpy_transforms.RandomSpatialJitter(t_val)
         jittered_array = spatial_mod_np.translate_array(np.eye(4, 4), translate_vals)
+        jittered_array = torch.as_tensor(jittered_array)
 
-        assertArraysAlmostEqual(jittered_tensor[0].numpy(), jittered_array, 0)
-        assertArraysAlmostEqual(jittered_tensor[1].numpy(), jittered_array, 0)
-        assertArraysAlmostEqual(jittered_tensor[2].numpy(), jittered_array, 0)
+        assertTensorAlmostEqual(self, jittered_tensor[0], jittered_array, 0, mode="max")
+        assertTensorAlmostEqual(self, jittered_tensor[1], jittered_array, 0, mode="max")
+        assertTensorAlmostEqual(self, jittered_tensor[2], jittered_array, 0, mode="max")
 
     def test_random_spatial_jitter_w(self) -> None:
         translate_vals = [0, 3]
@@ -663,10 +668,11 @@ class TestRandomSpatialJitter(BaseTest):
 
         spatial_mod_np = numpy_transforms.RandomSpatialJitter(t_val)
         jittered_array = spatial_mod_np.translate_array(np.eye(4, 4), translate_vals)
+        jittered_array = torch.as_tensor(jittered_array)
 
-        assertArraysAlmostEqual(jittered_tensor[0].numpy(), jittered_array, 0)
-        assertArraysAlmostEqual(jittered_tensor[1].numpy(), jittered_array, 0)
-        assertArraysAlmostEqual(jittered_tensor[2].numpy(), jittered_array, 0)
+        assertTensorAlmostEqual(self, jittered_tensor[0], jittered_array, 0, mode="max")
+        assertTensorAlmostEqual(self, jittered_tensor[1], jittered_array, 0, mode="max")
+        assertTensorAlmostEqual(self, jittered_tensor[2], jittered_array, 0, mode="max")
 
     def test_random_spatial_jitter_h(self) -> None:
         translate_vals = [3, 0]
@@ -680,10 +686,11 @@ class TestRandomSpatialJitter(BaseTest):
 
         spatial_mod_np = numpy_transforms.RandomSpatialJitter(t_val)
         jittered_array = spatial_mod_np.translate_array(np.eye(4, 4), translate_vals)
+        jittered_array = torch.as_tensor(jittered_array)
 
-        assertArraysAlmostEqual(jittered_tensor[0].numpy(), jittered_array, 0)
-        assertArraysAlmostEqual(jittered_tensor[1].numpy(), jittered_array, 0)
-        assertArraysAlmostEqual(jittered_tensor[2].numpy(), jittered_array, 0)
+        assertTensorAlmostEqual(self, jittered_tensor[0], jittered_array, 0, mode="max")
+        assertTensorAlmostEqual(self, jittered_tensor[1], jittered_array, 0, mode="max")
+        assertTensorAlmostEqual(self, jittered_tensor[2], jittered_array, 0, mode="max")
 
     def test_random_spatial_jitter_forward(self) -> None:
         t_val = 3
@@ -694,7 +701,7 @@ class TestRandomSpatialJitter(BaseTest):
         self.assertEqual(list(jittered_tensor.shape), list(test_input.shape))
 
     def test_random_spatial_jitter_forward_jit_module(self) -> None:
-        if torch.__version__ <= "1.8.0":
+        if version.parse(torch.__version__) <= version.parse("1.8.0"):
             raise unittest.SkipTest(
                 "Skipping RandomSpatialJitter JIT module test due to insufficient"
                 + " Torch version."
@@ -731,8 +738,9 @@ class TestCenterCrop(BaseTest):
 
         crop_mod_np = numpy_transforms.CenterCrop(crop_vals, True)
         cropped_array = crop_mod_np.forward(test_tensor.numpy())
+        cropped_array = torch.as_tensor(cropped_array)
 
-        assertArraysAlmostEqual(cropped_tensor.numpy(), cropped_array, 0)
+        assertTensorAlmostEqual(self, cropped_tensor, cropped_array, 0, mode="max")
         expected_tensor = torch.stack(
             [torch.tensor([[1.0, 1.0, 0.0], [1.0, 1.0, 0.0], [0.0, 0.0, 0.0]])] * 3
         ).unsqueeze(0)
@@ -750,8 +758,9 @@ class TestCenterCrop(BaseTest):
 
         crop_mod_np = numpy_transforms.CenterCrop(crop_vals, True)
         cropped_array = crop_mod_np.forward(test_tensor.numpy())
+        cropped_array = torch.as_tensor(cropped_array)
 
-        assertArraysAlmostEqual(cropped_tensor.numpy(), cropped_array, 0)
+        assertTensorAlmostEqual(self, cropped_tensor, cropped_array, 0, mode="max")
         expected_tensor = torch.stack(
             [torch.tensor([[1.0, 1.0, 0.0], [1.0, 1.0, 0.0], [0.0, 0.0, 0.0]])] * 3
         )
@@ -772,8 +781,9 @@ class TestCenterCrop(BaseTest):
 
         crop_mod_np = numpy_transforms.CenterCrop(crop_vals, True)
         cropped_array = crop_mod_np.forward(test_tensor.numpy())
+        cropped_array = torch.as_tensor(cropped_array)
 
-        assertArraysAlmostEqual(cropped_tensor.numpy(), cropped_array, 0)
+        assertTensorAlmostEqual(self, cropped_tensor, cropped_array, 0, mode="max")
         expected_tensor = torch.stack(
             [torch.tensor([[1.0, 1.0, 0.0], [1.0, 1.0, 0.0], [0.0, 0.0, 0.0]])] * 3
         ).unsqueeze(0)
@@ -805,8 +815,9 @@ class TestCenterCrop(BaseTest):
 
         crop_mod_np = numpy_transforms.CenterCrop(crop_vals, True)
         cropped_array = crop_mod_np.forward(test_tensor.numpy())
+        cropped_array = torch.as_tensor(cropped_array)
 
-        assertArraysAlmostEqual(cropped_tensor.numpy(), cropped_array, 0)
+        assertTensorAlmostEqual(self, cropped_tensor, cropped_array, 0, mode="max")
         expected_tensor = torch.stack(
             [torch.stack([torch.tensor([1.0, 0.0, 1.0, 1.0, 0.0, 1.0])] * 2)] * 3
         ).unsqueeze(0)
@@ -827,8 +838,9 @@ class TestCenterCrop(BaseTest):
 
         crop_mod_np = numpy_transforms.CenterCrop(crop_vals, False)
         cropped_array = crop_mod_np.forward(test_tensor.numpy())
+        cropped_array = torch.as_tensor(cropped_array)
 
-        assertArraysAlmostEqual(cropped_tensor.numpy(), cropped_array, 0)
+        assertTensorAlmostEqual(self, cropped_tensor, cropped_array, 0, mode="max")
         expected_tensor = torch.stack(
             [
                 torch.tensor(
@@ -860,8 +872,9 @@ class TestCenterCrop(BaseTest):
 
         crop_mod_np = numpy_transforms.CenterCrop(crop_vals, False)
         cropped_array = crop_mod_np.forward(test_tensor.numpy())
+        cropped_array = torch.as_tensor(cropped_array)
 
-        assertArraysAlmostEqual(cropped_tensor.numpy(), cropped_array, 0)
+        assertTensorAlmostEqual(self, cropped_tensor, cropped_array, 0, mode="max")
 
         expected_tensor = torch.stack(
             [torch.tensor([[0.0, 0.0], [1.0, 1.0], [1.0, 1.0], [0.0, 0.0]])] * 3
@@ -903,7 +916,7 @@ class TestCenterCrop(BaseTest):
                 [0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
             ]
         )
-        assertTensorAlmostEqual(self, cropped_tensor, expected_tensor, 0)
+        assertTensorAlmostEqual(self, cropped_tensor, expected_tensor[None, None, :], 0)
 
     def test_center_crop_forward_padding_prime_num_pad(self) -> None:
         test_tensor = torch.arange(0, 1 * 1 * 3 * 3).view(1, 1, 3, 3).float()
@@ -928,7 +941,7 @@ class TestCenterCrop(BaseTest):
         assertTensorAlmostEqual(self, cropped_tensor, expected_tensor)
 
     def test_center_crop_forward_one_number_exact_jit_module(self) -> None:
-        if torch.__version__ <= "1.8.0":
+        if version.parse(torch.__version__) <= version.parse("1.9.0"):
             raise unittest.SkipTest(
                 "Skipping CenterCrop JIT module test due to insufficient"
                 + " Torch version."
@@ -962,7 +975,7 @@ class TestCenterCrop(BaseTest):
         assertTensorAlmostEqual(self, cropped_tensor, expected_tensor, 0)
 
     def test_center_crop_forward_padding_jit_module(self) -> None:
-        if torch.__version__ <= "1.8.0":
+        if version.parse(torch.__version__) <= version.parse("1.10.0"):
             raise unittest.SkipTest(
                 "Skipping CenterCrop padding JIT module test due to insufficient"
                 + " Torch version."
@@ -984,7 +997,7 @@ class TestCenterCrop(BaseTest):
                 [0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
             ]
         )
-        assertTensorAlmostEqual(self, cropped_tensor, expected_tensor, 0)
+        assertTensorAlmostEqual(self, cropped_tensor, expected_tensor[None, None, :], 0)
 
 
 class TestCenterCropFunction(BaseTest):
@@ -1001,8 +1014,9 @@ class TestCenterCropFunction(BaseTest):
         cropped_array = numpy_transforms.center_crop(
             test_tensor.numpy(), crop_vals, True
         )
+        cropped_array = torch.as_tensor(cropped_array)
 
-        assertArraysAlmostEqual(cropped_tensor.numpy(), cropped_array, 0)
+        assertTensorAlmostEqual(self, cropped_tensor, cropped_array, 0, mode="max")
         expected_tensor = torch.stack(
             [torch.tensor([[1.0, 1.0, 0.0], [1.0, 1.0, 0.0], [0.0, 0.0, 0.0]])] * 3
         ).unsqueeze(0)
@@ -1019,8 +1033,9 @@ class TestCenterCropFunction(BaseTest):
         cropped_array = numpy_transforms.center_crop(
             test_tensor.numpy(), crop_vals, True
         )
+        cropped_array = torch.as_tensor(cropped_array)
 
-        assertArraysAlmostEqual(cropped_tensor.numpy(), cropped_array, 0)
+        assertTensorAlmostEqual(self, cropped_tensor, cropped_array, 0, mode="max")
         expected_tensor = torch.stack(
             [torch.tensor([[1.0, 1.0, 0.0], [1.0, 1.0, 0.0], [0.0, 0.0, 0.0]])] * 3
         )
@@ -1040,8 +1055,9 @@ class TestCenterCropFunction(BaseTest):
         cropped_array = numpy_transforms.center_crop(
             test_tensor.numpy(), crop_vals, True
         )
+        cropped_array = torch.as_tensor(cropped_array)
 
-        assertArraysAlmostEqual(cropped_tensor.numpy(), cropped_array, 0)
+        assertTensorAlmostEqual(self, cropped_tensor, cropped_array, 0, mode="max")
         expected_tensor = torch.stack(
             [torch.tensor([[1.0, 1.0, 0.0], [1.0, 1.0, 0.0], [0.0, 0.0, 0.0]])] * 3
         ).unsqueeze(0)
@@ -1084,8 +1100,9 @@ class TestCenterCropFunction(BaseTest):
         cropped_array = numpy_transforms.center_crop(
             test_tensor.numpy(), crop_vals, True
         )
+        cropped_array = torch.as_tensor(cropped_array)
 
-        assertArraysAlmostEqual(cropped_tensor.numpy(), cropped_array, 0)
+        assertTensorAlmostEqual(self, cropped_tensor, cropped_array, 0, mode="max")
         expected_tensor = torch.stack(
             [torch.stack([torch.tensor([0.0, 1.0, 1.0, 0.0])] * 2)] * 3
         ).unsqueeze(0)
@@ -1105,8 +1122,9 @@ class TestCenterCropFunction(BaseTest):
         cropped_array = numpy_transforms.center_crop(
             test_tensor.numpy(), crop_vals, False
         )
+        cropped_array = torch.as_tensor(cropped_array)
 
-        assertArraysAlmostEqual(cropped_tensor.numpy(), cropped_array, 0)
+        assertTensorAlmostEqual(self, cropped_tensor, cropped_array, 0, mode="max")
         expected_tensor = torch.stack(
             [
                 torch.tensor(
@@ -1137,8 +1155,9 @@ class TestCenterCropFunction(BaseTest):
         cropped_array = numpy_transforms.center_crop(
             test_tensor.numpy(), crop_vals, False
         )
+        cropped_array = torch.as_tensor(cropped_array)
 
-        assertArraysAlmostEqual(cropped_tensor.numpy(), cropped_array, 0)
+        assertTensorAlmostEqual(self, cropped_tensor, cropped_array, 0, mode="max")
         expected_tensor = torch.stack(
             [torch.tensor([[0.0, 0.0], [1.0, 1.0], [1.0, 1.0], [0.0, 0.0]])] * 3
         ).unsqueeze(0)
@@ -1176,7 +1195,7 @@ class TestCenterCropFunction(BaseTest):
                 [0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
             ]
         )
-        assertTensorAlmostEqual(self, cropped_tensor, expected_tensor, 0)
+        assertTensorAlmostEqual(self, cropped_tensor, expected_tensor[None, None, :], 0)
 
     def test_center_crop_padding_prime_num_pad(self) -> None:
         test_tensor = torch.arange(0, 1 * 1 * 3 * 3).view(1, 1, 3, 3).float()
@@ -1199,7 +1218,7 @@ class TestCenterCropFunction(BaseTest):
         assertTensorAlmostEqual(self, cropped_tensor, expected_tensor)
 
     def test_center_crop_one_number_exact_jit_module(self) -> None:
-        if torch.__version__ <= "1.8.0":
+        if version.parse(torch.__version__) <= version.parse("1.9.0"):
             raise unittest.SkipTest(
                 "Skipping center_crop JIT module test due to insufficient"
                 + " Torch version."
@@ -1232,7 +1251,7 @@ class TestCenterCropFunction(BaseTest):
         assertTensorAlmostEqual(self, cropped_tensor, expected_tensor)
 
     def test_center_crop_padding_jit_module(self) -> None:
-        if torch.__version__ <= "1.8.0":
+        if version.parse(torch.__version__) <= version.parse("1.10.0"):
             raise unittest.SkipTest(
                 "Skipping center_crop padding JIT module test due to insufficient"
                 + " Torch version."
@@ -1253,7 +1272,7 @@ class TestCenterCropFunction(BaseTest):
                 [0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
             ]
         )
-        assertTensorAlmostEqual(self, cropped_tensor, expected_tensor, 0)
+        assertTensorAlmostEqual(self, cropped_tensor, expected_tensor[None, None, :], 0)
 
 
 class TestBlendAlpha(BaseTest):
@@ -1277,11 +1296,12 @@ class TestBlendAlpha(BaseTest):
         background_array = np.ones(rgb_array.shape) * 5
         blend_alpha_np = numpy_transforms.BlendAlpha(background=background_array)
         blended_array = blend_alpha_np.blend_alpha(test_array)
+        blended_array = torch.as_tensor(blended_array)
 
-        assertArraysAlmostEqual(blended_tensor.numpy(), blended_array, 0)
+        assertTensorAlmostEqual(self, blended_tensor, blended_array, 0, mode="max")
 
     def test_blend_alpha_jit_module(self) -> None:
-        if torch.__version__ <= "1.8.0":
+        if version.parse(torch.__version__) <= version.parse("1.8.0"):
             raise unittest.SkipTest(
                 "Skipping BlendAlpha JIT module test due to insufficient"
                 + " Torch version."
@@ -1302,8 +1322,9 @@ class TestBlendAlpha(BaseTest):
         background_array = np.ones(rgb_array.shape) * 5
         blend_alpha_np = numpy_transforms.BlendAlpha(background=background_array)
         blended_array = blend_alpha_np.blend_alpha(test_array)
+        blended_array = torch.as_tensor(blended_array)
 
-        assertArraysAlmostEqual(blended_tensor.numpy(), blended_array, 0)
+        assertTensorAlmostEqual(self, blended_tensor, blended_array, 0, mode="max")
 
 
 class TestIgnoreAlpha(BaseTest):
@@ -1342,7 +1363,9 @@ class TestToRGB(BaseTest):
     def test_to_rgb_i1i2i3(self) -> None:
         to_rgb = transforms.ToRGB(transform="i1i2i3")
         to_rgb_np = numpy_transforms.ToRGB(transform="i1i2i3")
-        assertArraysAlmostEqual(to_rgb.transform.numpy(), to_rgb_np.transform)
+        assertTensorAlmostEqual(
+            self, to_rgb.transform, torch.as_tensor(to_rgb_np.transform), mode="max"
+        )
         transform = torch.tensor(
             [
                 [0.3333, 0.3333, 0.3333],
@@ -1355,7 +1378,10 @@ class TestToRGB(BaseTest):
     def test_to_rgb_klt(self) -> None:
         to_rgb = transforms.ToRGB(transform="klt")
         to_rgb_np = numpy_transforms.ToRGB(transform="klt")
-        assertArraysAlmostEqual(to_rgb.transform.numpy(), to_rgb_np.transform)
+
+        assertTensorAlmostEqual(
+            self, to_rgb.transform, torch.as_tensor(to_rgb_np.transform), mode="max"
+        )
         transform = torch.tensor(
             [
                 [0.5628, 0.1948, 0.0433],
@@ -1369,7 +1395,9 @@ class TestToRGB(BaseTest):
         matrix = torch.eye(3, 3)
         to_rgb = transforms.ToRGB(transform=matrix)
         to_rgb_np = numpy_transforms.ToRGB(transform=matrix.numpy())
-        assertArraysAlmostEqual(to_rgb.transform.numpy(), to_rgb_np.transform)
+        assertTensorAlmostEqual(
+            self, to_rgb.transform, torch.as_tensor(to_rgb_np.transform), mode="max"
+        )
         assertTensorAlmostEqual(self, to_rgb.transform, matrix, 0.0)
 
     def test_to_rgb_init_value_error(self) -> None:
@@ -1377,10 +1405,6 @@ class TestToRGB(BaseTest):
             transforms.ToRGB(transform="error")
 
     def test_to_rgb_klt_forward(self) -> None:
-        if torch.__version__ <= "1.2.0":
-            raise unittest.SkipTest(
-                "Skipping ToRGB forward due to insufficient Torch version."
-            )
         to_rgb = transforms.ToRGB(transform="klt")
         test_tensor = torch.ones(1, 3, 4, 4).refine_names("B", "C", "H", "W")
         rgb_tensor = to_rgb(test_tensor)
@@ -1399,10 +1423,6 @@ class TestToRGB(BaseTest):
         )
 
     def test_to_rgb_alpha_klt_forward(self) -> None:
-        if torch.__version__ <= "1.2.0":
-            raise unittest.SkipTest(
-                "Skipping ToRGB with Alpha forward due to insufficient Torch version."
-            )
         to_rgb = transforms.ToRGB(transform="klt")
         test_tensor = torch.ones(1, 4, 4, 4).refine_names("B", "C", "H", "W")
         rgb_tensor = to_rgb(test_tensor)
@@ -1422,11 +1442,6 @@ class TestToRGB(BaseTest):
         )
 
     def test_to_rgb_alpha_klt_forward_dim_3(self) -> None:
-        if torch.__version__ <= "1.2.0":
-            raise unittest.SkipTest(
-                "Skipping ToRGB with Alpha forward dim 3 due to"
-                + " insufficient Torch version."
-            )
         to_rgb = transforms.ToRGB(transform="klt")
         test_tensor = torch.ones(4, 4, 4).refine_names("C", "H", "W")
         rgb_tensor = to_rgb(test_tensor)
@@ -1446,10 +1461,6 @@ class TestToRGB(BaseTest):
         )
 
     def test_to_rgb_klt_forward_no_named_dims(self) -> None:
-        if torch.__version__ <= "1.2.0":
-            raise unittest.SkipTest(
-                "Skipping ToRGB forward due to insufficient Torch version."
-            )
         to_rgb = transforms.ToRGB(transform="klt")
         test_tensor = torch.ones(1, 3, 4, 4)
         rgb_tensor = to_rgb(test_tensor)
@@ -1468,10 +1479,6 @@ class TestToRGB(BaseTest):
         )
 
     def test_to_rgb_alpha_klt_forward_no_named_dims(self) -> None:
-        if torch.__version__ <= "1.2.0":
-            raise unittest.SkipTest(
-                "Skipping ToRGB with Alpha forward due to insufficient Torch version."
-            )
         to_rgb = transforms.ToRGB(transform="klt")
         test_tensor = torch.ones(1, 4, 4, 4)
         rgb_tensor = to_rgb(test_tensor)
@@ -1491,10 +1498,6 @@ class TestToRGB(BaseTest):
         )
 
     def test_to_rgb_i1i2i3_forward(self) -> None:
-        if torch.__version__ <= "1.2.0":
-            raise unittest.SkipTest(
-                "Skipping ToRGB forward due to insufficient Torch version."
-            )
         to_rgb = transforms.ToRGB(transform="i1i2i3")
         test_tensor = torch.ones(1, 3, 4, 4).refine_names("B", "C", "H", "W")
         rgb_tensor = to_rgb(test_tensor)
@@ -1512,10 +1515,6 @@ class TestToRGB(BaseTest):
         )
 
     def test_to_rgb_alpha_i1i2i3_forward(self) -> None:
-        if torch.__version__ <= "1.2.0":
-            raise unittest.SkipTest(
-                "Skipping ToRGB with Alpha forward due to insufficient Torch version."
-            )
         to_rgb = transforms.ToRGB(transform="i1i2i3")
         test_tensor = torch.ones(1, 4, 4, 4).refine_names("B", "C", "H", "W")
         rgb_tensor = to_rgb(test_tensor)
@@ -1534,10 +1533,6 @@ class TestToRGB(BaseTest):
         )
 
     def test_to_rgb_custom_forward(self) -> None:
-        if torch.__version__ <= "1.2.0":
-            raise unittest.SkipTest(
-                "Skipping ToRGB forward due to insufficient Torch version."
-            )
         matrix = torch.eye(3, 3)
         to_rgb = transforms.ToRGB(transform=matrix)
         test_tensor = torch.ones(1, 3, 4, 4).refine_names("B", "C", "H", "W")
@@ -1547,7 +1542,9 @@ class TestToRGB(BaseTest):
         test_array = np.ones((1, 3, 4, 4))
         rgb_array = to_rgb_np.to_rgb(test_array)
 
-        assertArraysAlmostEqual(rgb_tensor.numpy(), rgb_array)
+        assertTensorAlmostEqual(
+            self, rgb_tensor, torch.as_tensor(rgb_array), mode="max"
+        )
 
         inverse_tensor = to_rgb(rgb_tensor.clone(), inverse=True)
         assertTensorAlmostEqual(
@@ -1555,7 +1552,7 @@ class TestToRGB(BaseTest):
         )
 
     def test_to_rgb_klt_forward_jit_module(self) -> None:
-        if torch.__version__ <= "1.8.0":
+        if version.parse(torch.__version__) <= version.parse("1.8.0"):
             raise unittest.SkipTest(
                 "Skipping ToRGB forward JIT module test due to insufficient"
                 + " Torch version."
@@ -1705,7 +1702,7 @@ class TestGaussianSmoothing(BaseTest):
         self.assertGreaterEqual(t_min, 3.3377e-06)
 
     def test_gaussian_smoothing_2d_jit_module(self) -> None:
-        if torch.__version__ <= "1.8.0":
+        if version.parse(torch.__version__) <= version.parse("1.8.0"):
             raise unittest.SkipTest(
                 "Skipping GaussianSmoothing 2D JIT module test due to insufficient"
                 + " Torch version."
@@ -1740,7 +1737,7 @@ class TestScaleInputRange(BaseTest):
         self.assertEqual(output_tensor.mean(), 255.0)
 
     def test_scale_input_range_jit_module(self) -> None:
-        if torch.__version__ <= "1.8.0":
+        if version.parse(torch.__version__) <= version.parse("1.8.0"):
             raise unittest.SkipTest(
                 "Skipping ScaleInputRange JIT module test due to insufficient"
                 + " Torch version."
@@ -1761,7 +1758,7 @@ class TestRGBToBGR(BaseTest):
         assertTensorAlmostEqual(self, output_tensor, expected_x)
 
     def test_rgb_to_bgr_jit_module(self) -> None:
-        if torch.__version__ <= "1.8.0":
+        if version.parse(torch.__version__) <= version.parse("1.8.0"):
             raise unittest.SkipTest(
                 "Skipping RGBToBGR JIT module test due to insufficient"
                 + " Torch version."
@@ -1839,7 +1836,7 @@ class TestNChannelsToRGB(BaseTest):
         self.assertEqual(list(test_output.size()), [1, 3, 224, 224])
 
     def test_nchannels_to_rgb_collapse_jit_module(self) -> None:
-        if torch.__version__ <= "1.8.0":
+        if version.parse(torch.__version__) <= version.parse("1.8.0"):
             raise unittest.SkipTest(
                 "Skipping NChannelsToRGB collapse JIT module test due to insufficient"
                 + " Torch version."
@@ -1871,7 +1868,7 @@ class TestRandomCrop(BaseTest):
         self.assertEqual(list(x_out.shape), [1, 4, 160, 160])
 
     def test_random_crop_jit_module(self) -> None:
-        if torch.__version__ <= "1.8.0":
+        if version.parse(torch.__version__) <= version.parse("1.8.0"):
             raise unittest.SkipTest(
                 "Skipping RandomCrop JIT module test due to insufficient"
                 + " Torch version."
@@ -1915,8 +1912,8 @@ class TestTransformationRobustness(BaseTest):
         for module in transform_robustness.jitter_transforms:
             self.assertEqual(module.pad_range, 2 * 4)
 
-        expected_scale = [0.995 ** n for n in range(-5, 80)] + [
-            0.998 ** n for n in 2 * list(range(20, 40))
+        expected_scale = [0.995**n for n in range(-5, 80)] + [
+            0.998**n for n in 2 * list(range(20, 40))
         ]
         self.assertEqual(transform_robustness.random_scale.scale, expected_scale)
         expected_degrees = (
@@ -1987,7 +1984,7 @@ class TestTransformationRobustness(BaseTest):
         assertTensorAlmostEqual(self, test_output, test_input, 0)
 
     def test_transform_robustness_forward_jit_module(self) -> None:
-        if torch.__version__ <= "1.8.0":
+        if version.parse(torch.__version__) <= version.parse("1.8.0"):
             raise unittest.SkipTest(
                 "Skipping TransformationRobustness JIT module test due"
                 + " to insufficient Torch version."
@@ -1999,7 +1996,7 @@ class TestTransformationRobustness(BaseTest):
         self.assertTrue(torch.is_tensor(test_output))
 
     def test_transform_robustness_forward_padding_crop_output_jit_module(self) -> None:
-        if torch.__version__ <= "1.8.0":
+        if version.parse(torch.__version__) <= version.parse("1.8.0"):
             raise unittest.SkipTest(
                 "Skipping TransformationRobustness with crop or pad output"
                 + " JIT module test due to insufficient Torch version."

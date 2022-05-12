@@ -2,7 +2,6 @@ import math
 from typing import List, Optional, Tuple, Union, cast, no_type_check
 
 import numpy as np
-
 from captum.optim._utils.typing import IntSeqOrIntType
 
 

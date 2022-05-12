@@ -109,8 +109,8 @@ website/pages/tutorials/*
 
 ## Generated for Sphinx
 website/pages/api/
-website/static/js/*
-!website/static/js/mathjax.js
-!website/static/js/code_block_buttons.js
-website/static/_sphinx-sources/
-node_modules
+website/static/_sphinx/
+
+# Insight
+captum/insights/attr_vis/frontend/node_modules/
+captum/insights/attr_vis/widget/static

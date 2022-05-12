@@ -1,13 +1,16 @@
 #!/usr/bin/env python3
-import typing
-from typing import Any, Callable, List, Tuple, Union
+import functools
+import warnings
+from typing import Any, Callable, List, overload, Tuple, Union
 
 import torch
-from torch import Tensor
-from torch.nn import Module
-from torch.nn.parallel.scatter_gather import scatter
-
+from captum._utils.common import (
+    _extract_device,
+    _format_additional_forward_args,
+    _format_outputs,
+)
 from captum._utils.gradient import _forward_layer_eval, _run_forward
+from captum._utils.typing import BaselineType, Literal, ModuleOrModuleList, TargetType
 from captum.attr._core.integrated_gradients import IntegratedGradients
 from captum.attr._utils.attribution import GradientAttribution, LayerAttribution
 from captum.attr._utils.common import (
@@ -16,13 +19,8 @@ from captum.attr._utils.common import (
     _validate_input,
 )
 from captum.log import log_usage
-
-from ...._utils.common import (
-    _extract_device,
-    _format_additional_forward_args,
-    _format_output,
-)
-from ...._utils.typing import BaselineType, Literal, TargetType
+from torch import Tensor
+from torch.nn.parallel.scatter_gather import scatter
 
 
 class LayerIntegratedGradients(LayerAttribution, GradientAttribution):
@@ -49,7 +47,7 @@ class LayerIntegratedGradients(LayerAttribution, GradientAttribution):
     def __init__(
         self,
         forward_func: Callable,
-        layer: Module,
+        layer: ModuleOrModuleList,
         device_ids: Union[None, List[int]] = None,
         multiply_by_inputs: bool = True,
     ) -> None:
@@ -57,12 +55,25 @@ class LayerIntegratedGradients(LayerAttribution, GradientAttribution):
         Args:
             forward_func (callable):  The forward function of the model or any
                         modification of it
-            layer (torch.nn.Module): Layer for which attributions are computed.
-                        Output size of attribute matches this layer's input or
-                        output dimensions, depending on whether we attribute to
-                        the inputs or outputs of the layer, corresponding to
-                        the attribution of each neuron in the input or output
-                        of this layer.
+            layer (ModuleOrModuleList):
+                        Layer or list of layers for which attributions are computed.
+                        For each layer the output size of the attribute matches
+                        this layer's input or output dimensions, depending on
+                        whether we attribute to the inputs or outputs of the
+                        layer, corresponding to the attribution of each neuron
+                        in the input or output of this layer.
+
+                        Please note that layers to attribute on cannot be
+                        dependent on each other. That is, a subset of layers in
+                        `layer` cannot produce the inputs for another layer.
+
+                        For example, if your model is of a simple linked-list
+                        based graph structure (think nn.Sequence), e.g. x -> l1
+                        -> l2 -> l3 -> output. If you pass in any one of those
+                        layers, you cannot pass in another due to the
+                        dependence, e.g.  if you pass in l2 you cannot pass in
+                        l1 or l3.
+
             device_ids (list(int)): Device ID list, necessary only if forward_func
                         applies a DataParallel model. This allows reconstruction of
                         intermediate outputs from batched results across devices.
@@ -87,22 +98,48 @@ class LayerIntegratedGradients(LayerAttribution, GradientAttribution):
         GradientAttribution.__init__(self, forward_func)
         self.ig = IntegratedGradients(forward_func, multiply_by_inputs)
 
-    @typing.overload
+        if isinstance(layer, list) and len(layer) > 1:
+            warnings.warn(
+                "Multiple layers provided. Please ensure that each layer is"
+                "**not** solely solely dependent on the outputs of"
+                "another layer. Please refer to the documentation for more"
+                "detail."
+            )
+
+    @overload
     def attribute(
         self,
         inputs: Union[Tensor, Tuple[Tensor, ...]],
-        baselines: BaselineType = None,
-        target: TargetType = None,
-        additional_forward_args: Any = None,
-        n_steps: int = 50,
-        method: str = "gausslegendre",
-        internal_batch_size: Union[None, int] = None,
-        return_convergence_delta: Literal[False] = False,
-        attribute_to_layer_input: bool = False,
-    ) -> Union[Tensor, Tuple[Tensor, ...]]:
+        baselines: BaselineType,
+        target: TargetType,
+        additional_forward_args: Any,
+        n_steps: int,
+        method: str,
+        internal_batch_size: Union[None, int],
+        return_convergence_delta: Literal[False],
+        attribute_to_layer_input: bool,
+    ) -> Union[Tensor, Tuple[Tensor, ...], List[Union[Tensor, Tuple[Tensor, ...]]]]:
         ...
 
-    @typing.overload
+    @overload
+    def attribute(
+        self,
+        inputs: Union[Tensor, Tuple[Tensor, ...]],
+        baselines: BaselineType,
+        target: TargetType,
+        additional_forward_args: Any,
+        n_steps: int,
+        method: str,
+        internal_batch_size: Union[None, int],
+        return_convergence_delta: Literal[True],
+        attribute_to_layer_input: bool,
+    ) -> Tuple[
+        Union[Tensor, Tuple[Tensor, ...], List[Union[Tensor, Tuple[Tensor, ...]]]],
+        Tensor,
+    ]:
+        ...
+
+    @overload
     def attribute(
         self,
         inputs: Union[Tensor, Tuple[Tensor, ...]],
@@ -112,10 +149,15 @@ class LayerIntegratedGradients(LayerAttribution, GradientAttribution):
         n_steps: int = 50,
         method: str = "gausslegendre",
         internal_batch_size: Union[None, int] = None,
-        *,
-        return_convergence_delta: Literal[True],
+        return_convergence_delta: bool = False,
         attribute_to_layer_input: bool = False,
-    ) -> Tuple[Union[Tensor, Tuple[Tensor, ...]], Tensor]:
+    ) -> Union[
+        Union[Tensor, Tuple[Tensor, ...], List[Union[Tensor, Tuple[Tensor, ...]]]],
+        Tuple[
+            Union[Tensor, Tuple[Tensor, ...], List[Union[Tensor, Tuple[Tensor, ...]]]],
+            Tensor,
+        ],
+    ]:
         ...
 
     @log_usage()
@@ -131,7 +173,11 @@ class LayerIntegratedGradients(LayerAttribution, GradientAttribution):
         return_convergence_delta: bool = False,
         attribute_to_layer_input: bool = False,
     ) -> Union[
-        Tensor, Tuple[Tensor, ...], Tuple[Union[Tensor, Tuple[Tensor, ...]], Tensor]
+        Union[Tensor, Tuple[Tensor, ...], List[Union[Tensor, Tuple[Tensor, ...]]]],
+        Tuple[
+            Union[Tensor, Tuple[Tensor, ...], List[Union[Tensor, Tuple[Tensor, ...]]]],
+            Tensor,
+        ],
     ]:
         r"""
         This method attributes the output of the model with given target index
@@ -258,16 +304,25 @@ class LayerIntegratedGradients(LayerAttribution, GradientAttribution):
                         Default: False
             Returns:
                 **attributions** or 2-element tuple of **attributions**, **delta**:
-                - **attributions** (*tensor* or tuple of *tensors*):
+                - **attributions** (*tensor*, tuple of *tensors* or tuple of *tensors*):
                         Integrated gradients with respect to `layer`'s inputs or
                         outputs. Attributions will always be the same size and
                         dimensionality as the input or output of the given layer,
                         depending on whether we attribute to the inputs or outputs
                         of the layer which is decided by the input flag
                         `attribute_to_layer_input`.
-                        Attributions are returned in a tuple if
+
+                        For a single layer, attributions are returned in a tuple if
                         the layer inputs / outputs contain multiple tensors,
                         otherwise a single tensor is returned.
+
+                        For multiple layers, attributions will always be
+                        returned as a list. Each element in this list will be
+                        equivalent to that of a single layer output, i.e. in the
+                        case that one layer, in the given layers, inputs / outputs
+                        multiple tensors: the corresponding output element will be
+                        a tuple of tensors. The ordering of the outputs will be
+                        the same order as the layers given in the constructor.
                 - **delta** (*tensor*, returned if return_convergence_delta=True):
                         The difference between the total approximated and true
                         integrated gradients. This is computed using the property
@@ -299,8 +354,14 @@ class LayerIntegratedGradients(LayerAttribution, GradientAttribution):
             additional_forward_args
         )
 
+        def flatten_tuple(tup):
+            return tuple(
+                sum((list(x) if isinstance(x, (tuple, list)) else [x] for x in tup), [])
+            )
+
         if self.device_ids is None:
             self.device_ids = getattr(self.forward_func, "device_ids", None)
+
         inputs_layer = _forward_layer_eval(
             self.forward_func,
             inps,
@@ -310,6 +371,16 @@ class LayerIntegratedGradients(LayerAttribution, GradientAttribution):
             attribute_to_layer_input=attribute_to_layer_input,
         )
 
+        # if we have one output
+        if not isinstance(self.layer, list):
+            inputs_layer = (inputs_layer,)
+
+        num_outputs = [1 if isinstance(x, Tensor) else len(x) for x in inputs_layer]
+        num_outputs_cumsum = torch.cumsum(
+            torch.IntTensor([0] + num_outputs), dim=0  # type: ignore
+        )
+        inputs_layer = flatten_tuple(inputs_layer)
+
         baselines_layer = _forward_layer_eval(
             self.forward_func,
             baselines,
@@ -318,6 +389,7 @@ class LayerIntegratedGradients(LayerAttribution, GradientAttribution):
             additional_forward_args=additional_forward_args,
             attribute_to_layer_input=attribute_to_layer_input,
         )
+        baselines_layer = flatten_tuple(baselines_layer)
 
         # inputs -> these inputs are scaled
         def gradient_func(
@@ -326,7 +398,7 @@ class LayerIntegratedGradients(LayerAttribution, GradientAttribution):
             target_ind: TargetType = None,
             additional_forward_args: Any = None,
         ) -> Tuple[Tensor, ...]:
-            if self.device_ids is None:
+            if self.device_ids is None or len(self.device_ids) == 0:
                 scattered_inputs = (inputs,)
             else:
                 # scatter method does not have a precise enough return type in its
@@ -342,30 +414,60 @@ class LayerIntegratedGradients(LayerAttribution, GradientAttribution):
 
             with torch.autograd.set_grad_enabled(True):
 
-                def layer_forward_hook(module, hook_inputs, hook_outputs=None):
+                def layer_forward_hook(
+                    module, hook_inputs, hook_outputs=None, layer_idx=0
+                ):
                     device = _extract_device(module, hook_inputs, hook_outputs)
                     is_layer_tuple = (
                         isinstance(hook_outputs, tuple)
+                        # hook_outputs is None if attribute_to_layer_input == True
                         if hook_outputs is not None
                         else isinstance(hook_inputs, tuple)
                     )
-                    if is_layer_tuple:
-                        return scattered_inputs_dict[device]
-                    return scattered_inputs_dict[device][0]
 
-                hook = None
+                    if is_layer_tuple:
+                        return scattered_inputs_dict[device][
+                            num_outputs_cumsum[layer_idx] : num_outputs_cumsum[
+                                layer_idx + 1
+                            ]
+                        ]
+
+                    return scattered_inputs_dict[device][num_outputs_cumsum[layer_idx]]
+
+                hooks = []
                 try:
-                    if attribute_to_layer_input:
-                        hook = self.layer.register_forward_pre_hook(layer_forward_hook)
-                    else:
-                        hook = self.layer.register_forward_hook(layer_forward_hook)
+
+                    layers = self.layer
+                    if not isinstance(layers, list):
+                        layers = [self.layer]
+
+                    for layer_idx, layer in enumerate(layers):
+                        hook = None
+                        # TODO:
+                        # Allow multiple attribute_to_layer_input flags for
+                        # each layer, i.e. attribute_to_layer_input[layer_idx]
+                        if attribute_to_layer_input:
+                            hook = layer.register_forward_pre_hook(
+                                functools.partial(
+                                    layer_forward_hook, layer_idx=layer_idx
+                                )
+                            )
+                        else:
+                            hook = layer.register_forward_hook(
+                                functools.partial(
+                                    layer_forward_hook, layer_idx=layer_idx
+                                )
+                            )
+
+                        hooks.append(hook)
 
                     output = _run_forward(
                         self.forward_func, tuple(), target_ind, additional_forward_args
                     )
                 finally:
-                    if hook is not None:
-                        hook.remove()
+                    for hook in hooks:
+                        if hook is not None:
+                            hook.remove()
 
                 assert output[0].numel() == 1, (
                     "Target not provided when necessary, cannot"
@@ -382,6 +484,7 @@ class LayerIntegratedGradients(LayerAttribution, GradientAttribution):
             if additional_forward_args is not None
             else inps
         )
+
         attributions = self.ig.attribute.__wrapped__(  # type: ignore
             self.ig,  # self
             inputs_layer,
@@ -394,6 +497,16 @@ class LayerIntegratedGradients(LayerAttribution, GradientAttribution):
             return_convergence_delta=False,
         )
 
+        # handle multiple outputs
+        output: List[Tuple[Tensor, ...]] = [
+            tuple(
+                attributions[
+                    int(num_outputs_cumsum[i]) : int(num_outputs_cumsum[i + 1])
+                ]
+            )
+            for i in range(len(num_outputs))
+        ]
+
         if return_convergence_delta:
             start_point, end_point = baselines, inps
             # computes approximation error based on the completeness axiom
@@ -404,8 +517,8 @@ class LayerIntegratedGradients(LayerAttribution, GradientAttribution):
                 additional_forward_args=additional_forward_args,
                 target=target,
             )
-            return _format_output(len(attributions) > 1, attributions), delta
-        return _format_output(len(attributions) > 1, attributions)
+            return _format_outputs(isinstance(self.layer, list), output), delta
+        return _format_outputs(isinstance(self.layer, list), output)
 
     def has_convergence_delta(self) -> bool:
         return True

@@ -3,22 +3,29 @@ import threading
 import typing
 import warnings
 from collections import defaultdict
-from typing import Any, Callable, Dict, List, Tuple, Union, cast
+from typing import Any, Callable, cast, Dict, List, Optional, Tuple, Union
 
 import torch
-from torch import Tensor, device
-from torch.nn import Module
-
-from .common import _reduce_list, _run_forward, _sort_key_list, _verify_select_column
-from .typing import (
+from captum._utils.common import (
+    _reduce_list,
+    _run_forward,
+    _sort_key_list,
+    _verify_select_neuron,
+)
+from captum._utils.sample_gradient import SampleGradientWrapper
+from captum._utils.typing import (
     Literal,
     ModuleOrModuleList,
     TargetType,
     TensorOrTupleOfTensorsGeneric,
 )
+from torch import device, Tensor
+from torch.nn import Module
 
 
-def apply_gradient_requirements(inputs: Tuple[Tensor, ...]) -> List[bool]:
+def apply_gradient_requirements(
+    inputs: Tuple[Tensor, ...], warn: bool = True
+) -> List[bool]:
     """
     Iterates through tuple on input tensors and sets requires_grad to be true on
     each Tensor, and ensures all grads are set to zero. To ensure that the input
@@ -32,19 +39,26 @@ def apply_gradient_requirements(inputs: Tuple[Tensor, ...]) -> List[bool]:
     for index, input in enumerate(inputs):
         assert isinstance(input, torch.Tensor), "Given input is not a torch.Tensor"
         grad_required.append(input.requires_grad)
-        if not input.requires_grad:
-            warnings.warn(
-                "Input Tensor %d did not already require gradients, "
-                "required_grads has been set automatically." % index
-            )
-            input.requires_grad_()
-        if input.grad is not None:
-            if torch.sum(torch.abs(input.grad)).item() > 1e-7:
+        inputs_dtype = input.dtype
+        # Note: torch 1.2 doesn't support is_complex for dtype that's why we check
+        # on the existance of is_complex method.
+        if not inputs_dtype.is_floating_point and not (
+            hasattr(inputs_dtype, "is_complex") and inputs_dtype.is_complex
+        ):
+            if warn:
                 warnings.warn(
-                    "Input Tensor %d had a non-zero gradient tensor, "
-                    "which is being reset to 0." % index
+                    """Input Tensor %d has a dtype of %s.
+                    Gradients cannot be activated
+                    for these data types."""
+                    % (index, str(inputs_dtype))
                 )
-            input.grad.zero_()
+        elif not input.requires_grad:
+            if warn:
+                warnings.warn(
+                    "Input Tensor %d did not already require gradients, "
+                    "required_grads has been set automatically." % index
+                )
+            input.requires_grad_()
     return grad_required
 
 
@@ -67,9 +81,6 @@ def undo_gradient_requirements(
     ), "Input tuple length should match gradient mask."
     for index, input in enumerate(inputs):
         assert isinstance(input, torch.Tensor), "Given input is not a torch.Tensor"
-        if input.grad is not None:
-            input.grad.detach_()
-            input.grad.zero_()
         if not grad_required[index]:
             input.requires_grad_(False)
 
@@ -113,22 +124,20 @@ def _neuron_gradients(
     inputs: Union[Tensor, Tuple[Tensor, ...]],
     saved_layer: Dict[device, Tuple[Tensor, ...]],
     key_list: List[device],
-    gradient_neuron_index: Union[int, Tuple[Union[int, slice], ...]],
+    gradient_neuron_selector: Union[int, Tuple[Union[int, slice], ...], Callable],
 ) -> Tuple[Tensor, ...]:
     with torch.autograd.set_grad_enabled(True):
         gradient_tensors = []
         for key in key_list:
-            assert (
-                len(saved_layer[key]) == 1
-            ), "Cannot compute neuron gradients for layer with multiple tensors."
-            current_out_tensor = _verify_select_column(
-                saved_layer[key][0], gradient_neuron_index
+            current_out_tensor = _verify_select_neuron(
+                saved_layer[key], gradient_neuron_selector
             )
             gradient_tensors.append(
                 torch.autograd.grad(
-                    torch.unbind(current_out_tensor),
+                    torch.unbind(current_out_tensor)
+                    if current_out_tensor.numel() > 1
+                    else current_out_tensor,
                     inputs,
-                    grad_outputs=torch.unbind(torch.ones_like(current_out_tensor)),
                 )
             )
         _total_gradients = _reduce_list(gradient_tensors, sum)
@@ -175,7 +184,7 @@ def _forward_layer_eval(
         inputs,
         layer,
         additional_forward_args=additional_forward_args,
-        gradient_neuron_index=None,
+        gradient_neuron_selector=None,
         grad_enabled=grad_enabled,
         device_ids=device_ids,
         attribute_to_layer_input=attribute_to_layer_input,
@@ -185,12 +194,13 @@ def _forward_layer_eval(
 @typing.overload
 def _forward_layer_distributed_eval(
     forward_fn: Callable,
-    inputs: Union[Tensor, Tuple[Tensor, ...]],
+    inputs: Any,
     layer: ModuleOrModuleList,
     target_ind: TargetType = None,
     additional_forward_args: Any = None,
     attribute_to_layer_input: bool = False,
     forward_hook_with_return: Literal[False] = False,
+    require_layer_grads: bool = False,
 ) -> Dict[Module, Dict[device, Tuple[Tensor, ...]]]:
     ...
 
@@ -198,25 +208,27 @@ def _forward_layer_distributed_eval(
 @typing.overload
 def _forward_layer_distributed_eval(
     forward_fn: Callable,
-    inputs: Union[Tensor, Tuple[Tensor, ...]],
+    inputs: Any,
     layer: ModuleOrModuleList,
     target_ind: TargetType = None,
     additional_forward_args: Any = None,
     attribute_to_layer_input: bool = False,
     *,
     forward_hook_with_return: Literal[True],
+    require_layer_grads: bool = False,
 ) -> Tuple[Dict[Module, Dict[device, Tuple[Tensor, ...]]], Tensor]:
     ...
 
 
 def _forward_layer_distributed_eval(
     forward_fn: Callable,
-    inputs: Union[Tensor, Tuple[Tensor, ...]],
+    inputs: Any,
     layer: ModuleOrModuleList,
     target_ind: TargetType = None,
     additional_forward_args: Any = None,
     attribute_to_layer_input: bool = False,
     forward_hook_with_return: bool = False,
+    require_layer_grads: bool = False,
 ) -> Union[
     Tuple[Dict[Module, Dict[device, Tuple[Tensor, ...]]], Tensor],
     Dict[Module, Dict[device, Tuple[Tensor, ...]]],
@@ -246,6 +258,8 @@ def _forward_layer_distributed_eval(
 
             if not is_eval_tuple:
                 eval_tsrs = (eval_tsrs,)
+            if require_layer_grads:
+                apply_gradient_requirements(eval_tsrs, warn=False)
             with lock:
                 nonlocal saved_layer
                 # Note that cloning behaviour of `eval_tsr` is different
@@ -357,7 +371,7 @@ def _forward_layer_eval_with_neuron_grads(
     layer: Module,
     additional_forward_args: Any = None,
     *,
-    gradient_neuron_index: Union[int, Tuple[Union[int, slice], ...]],
+    gradient_neuron_selector: Union[int, Tuple[Union[int, slice], ...], Callable],
     grad_enabled: bool = False,
     device_ids: Union[None, List[int]] = None,
     attribute_to_layer_input: bool = False,
@@ -371,7 +385,7 @@ def _forward_layer_eval_with_neuron_grads(
     inputs: Union[Tensor, Tuple[Tensor, ...]],
     layer: Module,
     additional_forward_args: Any = None,
-    gradient_neuron_index: None = None,
+    gradient_neuron_selector: None = None,
     grad_enabled: bool = False,
     device_ids: Union[None, List[int]] = None,
     attribute_to_layer_input: bool = False,
@@ -385,7 +399,7 @@ def _forward_layer_eval_with_neuron_grads(
     inputs: Union[Tensor, Tuple[Tensor, ...]],
     layer: List[Module],
     additional_forward_args: Any = None,
-    gradient_neuron_index: None = None,
+    gradient_neuron_selector: None = None,
     grad_enabled: bool = False,
     device_ids: Union[None, List[int]] = None,
     attribute_to_layer_input: bool = False,
@@ -398,7 +412,9 @@ def _forward_layer_eval_with_neuron_grads(
     inputs: Union[Tensor, Tuple[Tensor, ...]],
     layer: ModuleOrModuleList,
     additional_forward_args: Any = None,
-    gradient_neuron_index: Union[None, int, Tuple[Union[int, slice], ...]] = None,
+    gradient_neuron_selector: Union[
+        None, int, Tuple[Union[int, slice], ...], Callable
+    ] = None,
     grad_enabled: bool = False,
     device_ids: Union[None, List[int]] = None,
     attribute_to_layer_input: bool = False,
@@ -409,7 +425,7 @@ def _forward_layer_eval_with_neuron_grads(
 ]:
     """
     This method computes forward evaluation for a particular layer using a
-    forward hook. If a gradient_neuron_index is provided, then gradients with
+    forward hook. If a gradient_neuron_selector is provided, then gradients with
     respect to that neuron in the layer output are also returned.
 
     These functionalities are combined due to the behavior of DataParallel models
@@ -423,7 +439,7 @@ def _forward_layer_eval_with_neuron_grads(
     evals in a dictionary protected by a lock, analogous to the gather implementation
     for the core PyTorch DataParallel implementation.
     """
-    grad_enabled = True if gradient_neuron_index is not None or grad_enabled else False
+    grad_enabled = True if gradient_neuron_selector is not None else grad_enabled
 
     with torch.autograd.set_grad_enabled(grad_enabled):
         saved_layer = _forward_layer_distributed_eval(
@@ -438,12 +454,12 @@ def _forward_layer_eval_with_neuron_grads(
     # key_list is a list of devices in appropriate ordering for concatenation.
     # If only one key exists (standard model), key list simply has one element.
     key_list = _sort_key_list(list(next(iter(saved_layer.values())).keys()), device_ids)
-    if gradient_neuron_index is not None:
+    if gradient_neuron_selector is not None:
         assert isinstance(
             layer, Module
         ), "Cannot compute neuron gradients for multiple layers simultaneously!"
         inp_grads = _neuron_gradients(
-            inputs, saved_layer[layer], key_list, gradient_neuron_index
+            inputs, saved_layer[layer], key_list, gradient_neuron_selector
         )
         return (
             _gather_distributed_tensors(saved_layer[layer], key_list=key_list),
@@ -467,7 +483,7 @@ def compute_layer_gradients_and_eval(
     target_ind: TargetType = None,
     additional_forward_args: Any = None,
     *,
-    gradient_neuron_index: Union[int, Tuple[int, ...]],
+    gradient_neuron_selector: Union[int, Tuple[Union[int, slice], ...], Callable],
     device_ids: Union[None, List[int]] = None,
     attribute_to_layer_input: bool = False,
     output_fn: Union[None, Callable] = None,
@@ -482,7 +498,7 @@ def compute_layer_gradients_and_eval(
     inputs: Union[Tensor, Tuple[Tensor, ...]],
     target_ind: TargetType = None,
     additional_forward_args: Any = None,
-    gradient_neuron_index: None = None,
+    gradient_neuron_selector: None = None,
     device_ids: Union[None, List[int]] = None,
     attribute_to_layer_input: bool = False,
     output_fn: Union[None, Callable] = None,
@@ -497,7 +513,7 @@ def compute_layer_gradients_and_eval(
     inputs: Union[Tensor, Tuple[Tensor, ...]],
     target_ind: TargetType = None,
     additional_forward_args: Any = None,
-    gradient_neuron_index: None = None,
+    gradient_neuron_selector: None = None,
     device_ids: Union[None, List[int]] = None,
     attribute_to_layer_input: bool = False,
     output_fn: Union[None, Callable] = None,
@@ -511,7 +527,9 @@ def compute_layer_gradients_and_eval(
     inputs: Union[Tensor, Tuple[Tensor, ...]],
     target_ind: TargetType = None,
     additional_forward_args: Any = None,
-    gradient_neuron_index: Union[None, int, Tuple[int, ...]] = None,
+    gradient_neuron_selector: Union[
+        None, int, Tuple[Union[int, slice], ...], Callable
+    ] = None,
     device_ids: Union[None, List[int]] = None,
     attribute_to_layer_input: bool = False,
     output_fn: Union[None, Callable] = None,
@@ -579,6 +597,7 @@ def compute_layer_gradients_and_eval(
             additional_forward_args=additional_forward_args,
             attribute_to_layer_input=attribute_to_layer_input,
             forward_hook_with_return=True,
+            require_layer_grads=True,
         )
         assert output[0].numel() == 1, (
             "Target not provided when necessary, cannot"
@@ -647,12 +666,12 @@ def compute_layer_gradients_and_eval(
         if isinstance(layer, Module):
             layer_grads = all_grads[0]
 
-        if gradient_neuron_index is not None:
+        if gradient_neuron_selector is not None:
             assert isinstance(
                 layer, Module
             ), "Cannot compute neuron gradients for multiple layers simultaneously!"
             inp_grads = _neuron_gradients(
-                inputs, saved_layer[layer], key_list, gradient_neuron_index
+                inputs, saved_layer[layer], key_list, gradient_neuron_selector
             )
             return (
                 cast(Tuple[Tensor, ...], layer_grads),
@@ -664,7 +683,7 @@ def compute_layer_gradients_and_eval(
 
 def construct_neuron_grad_fn(
     layer: Module,
-    neuron_index: Union[int, Tuple[Union[int, slice], ...]],
+    neuron_selector: Union[int, Tuple[Union[int, slice], ...], Callable],
     device_ids: Union[None, List[int]] = None,
     attribute_to_neuron_input: bool = False,
 ) -> Callable:
@@ -679,10 +698,168 @@ def construct_neuron_grad_fn(
             inputs,
             layer,
             additional_forward_args,
-            gradient_neuron_index=neuron_index,
+            gradient_neuron_selector=neuron_selector,
             device_ids=device_ids,
             attribute_to_layer_input=attribute_to_neuron_input,
         )
         return grads
 
     return grad_fn
+
+
+def _compute_jacobian_wrt_params(
+    model: Module,
+    inputs: Tuple[Any, ...],
+    labels: Optional[Tensor] = None,
+    loss_fn: Optional[Union[Module, Callable]] = None,
+) -> Tuple[Tensor, ...]:
+    r"""
+    Computes the Jacobian of a batch of test examples given a model, and optional
+    loss function and target labels. This method is equivalent to calculating the
+    gradient for every individual example in the minibatch.
+
+    Args:
+        model (torch.nn.Module): The trainable model providing the forward pass
+        inputs (tuple of Any): The minibatch for which the forward pass is computed.
+                It is unpacked before passing to `model`, so it must be a tuple.  The
+                individual elements of `inputs` can be anything.
+        labels (Tensor or None): Labels for input if computing a loss function.
+        loss_fn (torch.nn.Module or Callable or None): The loss function. If a library
+                defined loss function is provided, it would be expected to be a
+                torch.nn.Module. If a custom loss is provided, it can be either type,
+                but must behave as a library loss function would if `reduction='none'`.
+
+    Returns:
+        grads (Tuple of Tensor): Returns the Jacobian for the minibatch as a
+                tuple of gradients corresponding to the tuple of trainable parameters
+                returned by `model.parameters()`. Each object grads[i] references to the
+                gradients for the parameters in the i-th trainable layer of the model.
+                Each grads[i] object is a tensor with the gradients for the `inputs`
+                batch. For example, grads[i][j] would reference the gradients for the
+                parameters of the i-th layer, for the j-th member of the minibatch.
+    """
+    with torch.autograd.set_grad_enabled(True):
+        out = model(*inputs)
+        assert out.dim() != 0, "Please ensure model output has at least one dimension."
+
+        if labels is not None and loss_fn is not None:
+            loss = loss_fn(out, labels)
+            if hasattr(loss_fn, "reduction"):
+                msg0 = "Please ensure loss_fn.reduction is set to `none`"
+                assert loss_fn.reduction == "none", msg0  # type: ignore
+            else:
+                msg1 = (
+                    "Loss function is applying a reduction. Please ensure "
+                    f"Output shape: {out.shape} and Loss shape: {loss.shape} "
+                    "are matching."
+                )
+                assert loss.dim() != 0, msg1
+                assert out.shape[0] == loss.shape[0], msg1
+            out = loss
+
+        grads_list = [
+            torch.autograd.grad(
+                outputs=out[i],
+                inputs=model.parameters(),  # type: ignore
+                grad_outputs=torch.ones_like(out[i]),
+                retain_graph=True,
+            )
+            for i in range(out.shape[0])
+        ]
+
+        grads = tuple([torch.stack(x) for x in zip(*grads_list)])
+
+        return tuple(grads)
+
+
+def _compute_jacobian_wrt_params_with_sample_wise_trick(
+    model: Module,
+    inputs: Tuple[Any, ...],
+    labels: Optional[Tensor] = None,
+    loss_fn: Optional[Union[Module, Callable]] = None,
+    reduction_type: Optional[str] = "sum",
+) -> Tuple[Any, ...]:
+    r"""
+    Computes the Jacobian of a batch of test examples given a model, and optional
+    loss function and target labels. This method uses sample-wise gradients per
+    batch trick to fully vectorize the Jacobian calculation. Currently, only
+    linear and conv2d layers are supported.
+
+    User must `add_hooks(model)` before calling this function.
+
+    Args:
+        model (torch.nn.Module): The trainable model providing the forward pass
+        inputs (tuple of Any): The minibatch for which the forward pass is computed.
+                It is unpacked before passing to `model`, so it must be a tuple.  The
+                individual elements of `inputs` can be anything.
+        labels (Tensor or None): Labels for input if computing a loss function.
+        loss_fn (torch.nn.Module or Callable or None): The loss function. If a library
+                defined loss function is provided, it would be expected to be a
+                torch.nn.Module. If a custom loss is provided, it can be either type,
+                but must behave as a library loss function would if `reduction='sum'` or
+                `reduction='mean'`.
+        reduction_type (str): The type of reduction applied. If a loss_fn is passed,
+                this should match `loss_fn.reduction`. Else if gradients are being
+                computed on direct model outputs (scores), then 'sum' should be used.
+                Defaults to 'sum'.
+
+    Returns:
+        grads (Tuple of Tensor): Returns the Jacobian for the minibatch as a
+                tuple of gradients corresponding to the tuple of trainable parameters
+                returned by `model.parameters()`. Each object grads[i] references to the
+                gradients for the parameters in the i-th trainable layer of the model.
+                Each grads[i] object is a tensor with the gradients for the `inputs`
+                batch. For example, grads[i][j] would reference the gradients for the
+                parameters of the i-th layer, for the j-th member of the minibatch.
+    """
+    with torch.autograd.set_grad_enabled(True):
+        sample_grad_wrapper = SampleGradientWrapper(model)
+        try:
+            sample_grad_wrapper.add_hooks()
+
+            out = model(*inputs)
+            assert (
+                out.dim() != 0
+            ), "Please ensure model output has at least one dimension."
+
+            if labels is not None and loss_fn is not None:
+                loss = loss_fn(out, labels)
+                # TODO: allow loss_fn to be Callable
+                if isinstance(loss_fn, Module) and hasattr(loss_fn, "reduction"):
+                    msg0 = (
+                        "Please ensure that loss_fn.reduction is set to `sum` or `mean`"
+                    )
+
+                    assert loss_fn.reduction != "none", msg0
+                    msg1 = (
+                        f"loss_fn.reduction ({loss_fn.reduction}) does not match"
+                        f"reduction type ({reduction_type}). Please ensure they are"
+                        " matching."
+                    )
+                    assert loss_fn.reduction == reduction_type, msg1
+                msg2 = (
+                    "Please ensure custom loss function is applying either a "
+                    "sum or mean reduction."
+                )
+                assert out.shape != loss.shape, msg2
+
+                if reduction_type != "sum" and reduction_type != "mean":
+                    raise ValueError(
+                        f"{reduction_type} is not a valid value for reduction_type. "
+                        "Must be either 'sum' or 'mean'."
+                    )
+                out = loss
+
+            sample_grad_wrapper.compute_param_sample_gradients(
+                out, loss_mode=reduction_type
+            )
+
+            grads = tuple(
+                param.sample_grad  # type: ignore
+                for param in model.parameters()
+                if hasattr(param, "sample_grad")
+            )
+        finally:
+            sample_grad_wrapper.remove_hooks()
+
+        return grads

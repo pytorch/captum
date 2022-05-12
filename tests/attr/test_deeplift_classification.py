@@ -3,20 +3,21 @@
 from typing import Union
 
 import torch
-from torch import Tensor
-from torch.nn import Module
-
 from captum._utils.typing import TargetType
 from captum.attr._core.deep_lift import DeepLift, DeepLiftShap
 from captum.attr._core.integrated_gradients import IntegratedGradients
-
-from ..helpers.basic import BaseTest, assertAttributionComparision
-from ..helpers.basic_models import (
+from tests.helpers.basic import assertAttributionComparision, BaseTest
+from tests.helpers.basic_models import (
     BasicModel_ConvNet,
     BasicModel_ConvNet_MaxPool1d,
     BasicModel_ConvNet_MaxPool3d,
 )
-from ..helpers.classification_models import SigmoidDeepLiftModel, SoftmaxDeepLiftModel
+from tests.helpers.classification_models import (
+    SigmoidDeepLiftModel,
+    SoftmaxDeepLiftModel,
+)
+from torch import Tensor
+from torch.nn import Module
 
 
 class Test(BaseTest):
@@ -178,7 +179,7 @@ class Test(BaseTest):
     ) -> None:
         self.assertEqual(inputs.shape, attributions.shape)
 
-        delta_condition = all(abs(delta.numpy().flatten()) < 0.003)
+        delta_condition = (delta.abs() < 0.003).all()
         self.assertTrue(
             delta_condition,
             "The sum of attribution values {} is not "

@@ -10,7 +10,7 @@ class SigmoidModel(nn.Module):
         -pytorch-and-make-your-life-simpler-ec5367895199
     """
 
-    def __init__(self, num_in, num_hidden, num_out):
+    def __init__(self, num_in, num_hidden, num_out) -> None:
         super().__init__()
         self.num_in = num_in
         self.num_hidden = num_hidden
@@ -32,7 +32,7 @@ class SoftmaxModel(nn.Module):
     https://adventuresinmachinelearning.com/pytorch-tutorial-deep-learning/
     """
 
-    def __init__(self, num_in, num_hidden, num_out, inplace=False):
+    def __init__(self, num_in, num_hidden, num_out, inplace=False) -> None:
         super().__init__()
         self.num_in = num_in
         self.num_hidden = num_hidden
@@ -58,7 +58,7 @@ class SigmoidDeepLiftModel(nn.Module):
         -pytorch-and-make-your-life-simpler-ec5367895199
     """
 
-    def __init__(self, num_in, num_hidden, num_out):
+    def __init__(self, num_in, num_hidden, num_out) -> None:
         super().__init__()
         self.num_in = num_in
         self.num_hidden = num_hidden
@@ -82,7 +82,7 @@ class SoftmaxDeepLiftModel(nn.Module):
     https://adventuresinmachinelearning.com/pytorch-tutorial-deep-learning/
     """
 
-    def __init__(self, num_in, num_hidden, num_out):
+    def __init__(self, num_in, num_hidden, num_out) -> None:
         super().__init__()
         self.num_in = num_in
         self.num_hidden = num_hidden

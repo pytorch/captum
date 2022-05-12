@@ -1,20 +1,21 @@
 #!/usr/bin/env python3
 import typing
 from enum import Enum
+from functools import reduce
 from inspect import signature
-from typing import Any, Callable, Dict, List, Tuple, Union, cast, overload
+from typing import Any, Callable, cast, Dict, List, overload, Tuple, Union
 
 import numpy as np
 import torch
-from torch import Tensor, device
-from torch.nn import Module
-
-from .._utils.typing import (
+from captum._utils.typing import (
     BaselineType,
     Literal,
     TargetType,
+    TensorOrTupleOfTensorsGeneric,
     TupleOrTensorOrBoolGeneric,
 )
+from torch import device, Tensor
+from torch.nn import Module
 
 
 class ExpansionTypes(Enum):
@@ -23,17 +24,24 @@ class ExpansionTypes(Enum):
 
 
 def safe_div(
-    numerator: Tensor, denom: Union[Tensor, float], default_value: Tensor
+    numerator: Tensor,
+    denom: Union[Tensor, int, float],
+    default_denom: Union[Tensor, int, float] = 1.0,
 ) -> Tensor:
     r"""
     A simple utility function to perform `numerator / denom`
-    if the statement is undefined => result will be `default_value`
+    if the statement is undefined => result will be `numerator / default_denorm`
     """
-    if isinstance(denom, float):
-        return numerator / denom if denom != 0.0 else default_value
+    if isinstance(denom, (int, float)):
+        return numerator / (denom if denom != 0 else default_denom)
 
-    # if denominator is a tensor
-    return numerator / torch.where(denom != 0.0, denom, default_value)
+    # convert default_denom to tensor if it is float
+    if not torch.is_tensor(default_denom):
+        default_denom = torch.tensor(
+            default_denom, dtype=denom.dtype, device=denom.device
+        )
+
+    return numerator / torch.where(denom != 0, denom, default_denom)
 
 
 @typing.overload
@@ -105,7 +113,7 @@ def _zeros(inputs: Tuple[Tensor, ...]) -> Tuple[int, ...]:
     Takes a tuple of tensors as input and returns a tuple that has the same
     length as `inputs` with each element as the integer 0.
     """
-    return tuple(0 for input in inputs)
+    return tuple(0 if input.dtype is not torch.bool else False for input in inputs)
 
 
 def _format_baseline(
@@ -153,8 +161,25 @@ def _format_tensor_into_tuples(
     return inputs
 
 
-def _format_input(inputs: Union[Tensor, Tuple[Tensor, ...]]) -> Tuple[Tensor, ...]:
-    return _format_tensor_into_tuples(inputs)
+def _format_inputs(inputs: Any, unpack_inputs: bool = True) -> Any:
+    return (
+        inputs
+        if (isinstance(inputs, tuple) or isinstance(inputs, list)) and unpack_inputs
+        else (inputs,)
+    )
+
+
+def _format_float_or_tensor_into_tuples(
+    inputs: Union[float, Tensor, Tuple[Union[float, Tensor], ...]]
+) -> Tuple[Union[float, Tensor], ...]:
+    if not isinstance(inputs, tuple):
+        assert isinstance(
+            inputs, (torch.Tensor, float)
+        ), "`inputs` must have type float or torch.Tensor but {} found: ".format(
+            type(inputs)
+        )
+        inputs = (inputs,)
+    return inputs
 
 
 @overload
@@ -248,6 +273,20 @@ def _expand_target(
     return target
 
 
+def _expand_feature_mask(
+    feature_mask: Union[Tensor, Tuple[Tensor, ...]], n_samples: int
+):
+    is_feature_mask_tuple = _is_tuple(feature_mask)
+    feature_mask = _format_tensor_into_tuples(feature_mask)
+    feature_mask_new = tuple(
+        feature_mask_elem.repeat_interleave(n_samples, dim=0)
+        if feature_mask_elem.size(0) > 1
+        else feature_mask_elem
+        for feature_mask_elem in feature_mask
+    )
+    return _format_output(is_feature_mask_tuple, feature_mask_new)
+
+
 def _expand_and_update_baselines(
     inputs: Tuple[Tensor, ...],
     n_samples: int,
@@ -316,6 +355,18 @@ def _expand_and_update_target(n_samples: int, kwargs: dict):
     kwargs["target"] = target
 
 
+def _expand_and_update_feature_mask(n_samples: int, kwargs: dict):
+    if "feature_mask" not in kwargs:
+        return
+
+    feature_mask = kwargs["feature_mask"]
+    if feature_mask is None:
+        return
+
+    feature_mask = _expand_feature_mask(feature_mask, n_samples)
+    kwargs["feature_mask"] = feature_mask
+
+
 @typing.overload
 def _format_output(
     is_inputs_tuple: Literal[True], output: Tuple[Tensor, ...]
@@ -353,9 +404,46 @@ def _format_output(
     return output if is_inputs_tuple else output[0]
 
 
+@typing.overload
+def _format_outputs(
+    is_multiple_inputs: Literal[False], outputs: List[Tuple[Tensor, ...]]
+) -> Union[Tensor, Tuple[Tensor, ...]]:
+    ...
+
+
+@typing.overload
+def _format_outputs(
+    is_multiple_inputs: Literal[True], outputs: List[Tuple[Tensor, ...]]
+) -> List[Union[Tensor, Tuple[Tensor, ...]]]:
+    ...
+
+
+@typing.overload
+def _format_outputs(
+    is_multiple_inputs: bool, outputs: List[Tuple[Tensor, ...]]
+) -> Union[Tensor, Tuple[Tensor, ...], List[Union[Tensor, Tuple[Tensor, ...]]]]:
+    ...
+
+
+def _format_outputs(
+    is_multiple_inputs: bool, outputs: List[Tuple[Tensor, ...]]
+) -> Union[Tensor, Tuple[Tensor, ...], List[Union[Tensor, Tuple[Tensor, ...]]]]:
+    assert isinstance(outputs, list), "Outputs must be a list"
+    assert is_multiple_inputs or len(outputs) == 1, (
+        "outputs should contain multiple inputs or have a single output"
+        f"however the number of outputs is: {len(outputs)}"
+    )
+
+    return (
+        [_format_output(len(output) > 1, output) for output in outputs]
+        if is_multiple_inputs
+        else _format_output(len(outputs[0]) > 1, outputs[0])
+    )
+
+
 def _run_forward(
     forward_func: Callable,
-    inputs: Union[Tensor, Tuple[Tensor, ...]],
+    inputs: Any,
     target: TargetType = None,
     additional_forward_args: Any = None,
 ) -> Tensor:
@@ -366,7 +454,7 @@ def _run_forward(
 
     # make everything a tuple so that it is easy to unpack without
     # using if-statements
-    inputs = _format_input(inputs)
+    inputs = _format_inputs(inputs)
     additional_forward_args = _format_additional_forward_args(additional_forward_args)
 
     output = forward_func(
@@ -417,6 +505,15 @@ def _select_targets(output: Tensor, target: TargetType) -> Tensor:
         raise AssertionError("Target type %r is not valid." % target)
 
 
+def _contains_slice(target: Union[int, Tuple[Union[int, slice], ...]]) -> bool:
+    if isinstance(target, tuple):
+        for index in target:
+            if isinstance(index, slice):
+                return True
+        return False
+    return isinstance(target, slice)
+
+
 def _verify_select_column(
     output: Tensor, target: Union[int, Tuple[Union[int, slice], ...]]
 ) -> Tensor:
@@ -425,6 +522,24 @@ def _verify_select_column(
         len(target) <= len(output.shape) - 1
     ), "Cannot choose target column with output shape %r." % (output.shape,)
     return output[(slice(None), *target)]
+
+
+def _verify_select_neuron(
+    layer_output: Tuple[Tensor, ...],
+    selector: Union[int, Tuple[Union[int, slice], ...], Callable],
+) -> Tensor:
+    if callable(selector):
+        return selector(layer_output if len(layer_output) > 1 else layer_output[0])
+
+    assert len(layer_output) == 1, (
+        "Cannot select neuron index from layer with multiple tensors,"
+        "consider providing a neuron selector function instead."
+    )
+
+    selected_neurons = _verify_select_column(layer_output[0], selector)
+    if _contains_slice(selector):
+        return selected_neurons.reshape(selected_neurons.shape[0], -1).sum(1)
+    return selected_neurons
 
 
 def _extract_device(
@@ -520,3 +635,45 @@ def _sort_key_list(
     "devices with computed tensors."
 
     return out_list
+
+
+def _flatten_tensor_or_tuple(inp: TensorOrTupleOfTensorsGeneric) -> Tensor:
+    if isinstance(inp, Tensor):
+        return inp.flatten()
+    return torch.cat([single_inp.flatten() for single_inp in inp])
+
+
+def _get_module_from_name(model: Module, layer_name: str) -> Any:
+    r"""
+    Returns the module (layer) object, given its (string) name
+    in the model.
+
+    Args:
+            name (str): Module or nested modules name string in self.model
+
+    Returns:
+            The module (layer) in self.model.
+    """
+
+    return reduce(getattr, layer_name.split("."), model)
+
+
+def _register_backward_hook(
+    module: Module, hook: Callable, attr_obj: Any
+) -> torch.utils.hooks.RemovableHandle:
+    # Special case for supporting output attributions for neuron methods
+    # This can be removed after deprecation of neuron output attributions
+    # for NeuronDeepLift, NeuronDeconvolution, and NeuronGuidedBackprop
+    # in v0.6.0
+    if (
+        hasattr(attr_obj, "skip_new_hook_layer")
+        and attr_obj.skip_new_hook_layer == module
+    ):
+        return module.register_backward_hook(hook)
+
+    if torch.__version__ >= "1.9":
+        # Only supported for torch >= 1.9
+        return module.register_full_backward_hook(hook)
+    else:
+        # Fallback for previous versions of PyTorch
+        return module.register_backward_hook(hook)

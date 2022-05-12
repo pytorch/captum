@@ -1,9 +1,8 @@
-from typing import Optional, Tuple, Type, Union
+from typing import Any, Optional, Tuple, Type, Union
 from warnings import warn
 
 import torch
 import torch.nn as nn
-
 from captum.optim.models._common import Conv2dSame, RedirectedReluLayer, SkipLayer
 
 GS_SAVED_WEIGHTS_URL = (
@@ -16,7 +15,7 @@ def googlenet(
     pretrained: bool = False,
     progress: bool = True,
     model_path: Optional[str] = None,
-    **kwargs
+    **kwargs: Any,
 ) -> "InceptionV1":
     r"""GoogLeNet (also known as Inception v1 & Inception 5h) model architecture from
     `"Going Deeper with Convolutions" <http://arxiv.org/abs/1409.4842>`_.

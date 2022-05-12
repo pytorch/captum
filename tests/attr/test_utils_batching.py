@@ -1,14 +1,12 @@
 #!/usr/bin/env python3
 
 import torch
-
 from captum.attr._utils.batching import (
     _batched_generator,
     _batched_operator,
     _tuple_splice_range,
 )
-
-from ..helpers.basic import BaseTest, assertTensorAlmostEqual
+from tests.helpers.basic import assertTensorAlmostEqual, BaseTest
 
 
 class Test(BaseTest):
@@ -51,9 +49,9 @@ class Test(BaseTest):
         for index, (inp, add, targ) in enumerate(
             _batched_generator((inp1, inp2), (inp3, 5), 7, 1)
         ):
-            assertTensorAlmostEqual(self, inp[0], array1[index])
-            assertTensorAlmostEqual(self, inp[1], array2[index])
-            assertTensorAlmostEqual(self, add[0], array3[index])
+            assertTensorAlmostEqual(self, inp[0], [array1[index]])
+            assertTensorAlmostEqual(self, inp[1], [array2[index]])
+            assertTensorAlmostEqual(self, add[0], [array3[index]])
             self.assertEqual(add[1], 5)
             self.assertEqual(targ, 7)
 
