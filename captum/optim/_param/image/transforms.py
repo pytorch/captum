@@ -1217,9 +1217,9 @@ class TransformationRobustness(nn.Module):
         padding_transform: Optional[nn.Module] = nn.ConstantPad2d(2, value=0.5),
         translate: Optional[Union[int, List[int]]] = [4] * 10,
         scale: Optional[NumSeqOrTensorOrProbDistType] = [
-            0.995 ** n for n in range(-5, 80)
+            0.995**n for n in range(-5, 80)
         ]
-        + [0.998 ** n for n in 2 * list(range(20, 40))],
+        + [0.998**n for n in 2 * list(range(20, 40))],
         degrees: Optional[NumSeqOrTensorOrProbDistType] = list(range(-20, 20))
         + list(range(-10, 10))
         + list(range(-5, 5))

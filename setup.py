@@ -67,7 +67,7 @@ DEV_REQUIRES = (
     INSIGHTS_REQUIRES
     + TEST_REQUIRES
     + [
-        "black==21.4b2",
+        "black==22.3.0",
         "flake8",
         "sphinx",
         "sphinx-autodoc-typehints",

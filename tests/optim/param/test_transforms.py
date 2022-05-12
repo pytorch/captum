@@ -1912,8 +1912,8 @@ class TestTransformationRobustness(BaseTest):
         for module in transform_robustness.jitter_transforms:
             self.assertEqual(module.pad_range, 2 * 4)
 
-        expected_scale = [0.995 ** n for n in range(-5, 80)] + [
-            0.998 ** n for n in 2 * list(range(20, 40))
+        expected_scale = [0.995**n for n in range(-5, 80)] + [
+            0.998**n for n in 2 * list(range(20, 40))
         ]
         self.assertEqual(transform_robustness.random_scale.scale, expected_scale)
         expected_degrees = (
