@@ -7,6 +7,7 @@ import requests
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from packaging import version
 
 try:
     from PIL import Image
@@ -138,7 +139,7 @@ class FFTImage(ImageParameterization):
     Parameterize an image using inverse real 2D FFT
     """
 
-    __constants__ = ["size", "_supports_is_scripting"]
+    __constants__ = ["size"]
 
     def __init__(
         self,
@@ -199,9 +200,6 @@ class FFTImage(ImageParameterization):
         self.register_buffer("spectrum_scale", spectrum_scale)
         self.fourier_coeffs = nn.Parameter(fourier_coeffs)
 
-        # Check & store whether or not we can use torch.jit.is_scripting()
-        self._supports_is_scripting = torch.__version__ >= "1.6.0"
-
     def rfft2d_freqs(self, height: int, width: int) -> torch.Tensor:
         """
         Computes 2D spectrum frequencies.
@@ -236,8 +234,8 @@ class FFTImage(ImageParameterization):
                 to use for irfft, rfft, and fftfreq operations.
         """
 
-        if TORCH_VERSION > "1.7.0":
-            if TORCH_VERSION <= "1.8.0":
+        if version.parse(TORCH_VERSION) > version.parse("1.7.0"):
+            if version.parse(TORCH_VERSION) <= version.parse("1.8.0"):
                 global torch
                 import torch.fft
 
@@ -277,9 +275,8 @@ class FFTImage(ImageParameterization):
 
         scaled_spectrum = self.fourier_coeffs * self.spectrum_scale
         output = self.torch_irfft(scaled_spectrum)
-        if self._supports_is_scripting:
-            if torch.jit.is_scripting():
-                return output
+        if torch.jit.is_scripting():
+            return output
         return output.refine_names("B", "C", "H", "W")
 
 
@@ -287,8 +284,6 @@ class PixelImage(ImageParameterization):
     """
     Parameterize a simple pixel image tensor that requires no additional transforms.
     """
-
-    __constants__ = ["_supports_is_scripting"]
 
     def __init__(
         self,
@@ -319,17 +314,11 @@ class PixelImage(ImageParameterization):
             assert init.dim() == 3 or init.dim() == 4
             if init.dim() == 3:
                 init = init.unsqueeze(0)
-            assert init.shape[1] == 3, "PixelImage init should have 3 channels, "
-            f"input has {init.shape[1]} channels."
         self.image = nn.Parameter(init)
 
-        # Check & store whether or not we can use torch.jit.is_scripting()
-        self._supports_is_scripting = torch.__version__ >= "1.6.0"
-
     def forward(self) -> torch.Tensor:
-        if self._supports_is_scripting:
-            if torch.jit.is_scripting():
-                return self.image
+        if torch.jit.is_scripting():
+            return self.image
         return self.image.refine_names("B", "C", "H", "W")
 
 

@@ -8,6 +8,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from captum.optim._utils.image.common import nchannels_to_rgb
 from captum.optim._utils.typing import IntSeqOrIntType, NumSeqOrTensorOrProbDistType
+from packaging import version
 
 
 class BlendAlpha(nn.Module):
@@ -79,8 +80,6 @@ class ToRGB(nn.Module):
     https://www.sciencedirect.com/science/article/pii/0146664X80900477
     """
 
-    __constants__ = ["_supports_is_scripting", "_supports_named_dims"]
-
     @staticmethod
     def klt_transform() -> torch.Tensor:
         """
@@ -131,9 +130,6 @@ class ToRGB(nn.Module):
             raise ValueError(
                 "transform has to be either 'klt', 'i1i2i3'," + " or a matrix tensor."
             )
-        # Check & store whether or not we can use torch.jit.is_scripting()
-        self._supports_is_scripting = torch.__version__ >= "1.6.0"
-        self._supports_named_dims = torch.__version__ >= "1.3.0"
 
     @torch.jit.ignore
     def _forward(self, x: torch.Tensor, inverse: bool = False) -> torch.Tensor:
@@ -249,12 +245,10 @@ class ToRGB(nn.Module):
             chw (torch.tensor):  A tensor with it's colors recorrelated or
                 decorrelated.
         """
-        if self._supports_is_scripting:
-            if torch.jit.is_scripting():
-                return self._forward_without_named_dims(x, inverse)
-        if self._supports_named_dims:
-            if list(x.names) in [[None] * 3, [None] * 4]:
-                return self._forward_without_named_dims(x, inverse)
+        if torch.jit.is_scripting():
+            return self._forward_without_named_dims(x, inverse)
+        if list(x.names) in [[None] * 3, [None] * 4]:
+            return self._forward_without_named_dims(x, inverse)
         return self._forward(x, inverse)
 
 
@@ -439,9 +433,9 @@ class RandomScale(nn.Module):
         "scale",
         "mode",
         "align_corners",
-        "_has_align_corners",
         "recompute_scale_factor",
-        "_has_recompute_scale_factor",
+        "antialias",
+        "_has_antialias",
         "_is_distribution",
     ]
 
@@ -451,6 +445,7 @@ class RandomScale(nn.Module):
         mode: str = "bilinear",
         align_corners: Optional[bool] = False,
         recompute_scale_factor: bool = False,
+        antialias: bool = False,
     ) -> None:
         """
         Args:
@@ -466,6 +461,10 @@ class RandomScale(nn.Module):
                 Default: False
             recompute_scale_factor (bool, optional): Whether or not to recompute the
                 scale factor See documentation of F.interpolate for more details.
+                Default: False
+            antialias (bool, optional): Whether or not use to anti-aliasing. This
+                feature is currently only available for "bilinear" and "bicubic"
+                modes. See documentation of F.interpolate for more details.
                 Default: False
         """
         super().__init__()
@@ -487,8 +486,10 @@ class RandomScale(nn.Module):
         self.mode = mode
         self.align_corners = align_corners if mode not in ["nearest", "area"] else None
         self.recompute_scale_factor = recompute_scale_factor
-        self._has_align_corners = torch.__version__ >= "1.3.0"
-        self._has_recompute_scale_factor = torch.__version__ >= "1.6.0"
+        self.antialias = antialias
+        self._has_antialias = version.parse(torch.__version__) >= version.parse(
+            "1.11.0"
+        )
 
     def _scale_tensor(self, x: torch.Tensor, scale: float) -> torch.Tensor:
         """
@@ -502,24 +503,23 @@ class RandomScale(nn.Module):
         Returns:
             **x** (torch.Tensor): A scaled NCHW image tensor.
         """
-        if self._has_align_corners:
-            if self._has_recompute_scale_factor:
-                x = F.interpolate(
-                    x,
-                    scale_factor=scale,
-                    mode=self.mode,
-                    align_corners=self.align_corners,
-                    recompute_scale_factor=self.recompute_scale_factor,
-                )
-            else:
-                x = F.interpolate(
-                    x,
-                    scale_factor=scale,
-                    mode=self.mode,
-                    align_corners=self.align_corners,
-                )
+        if self._has_antialias:
+            x = F.interpolate(
+                x,
+                scale_factor=scale,
+                mode=self.mode,
+                align_corners=self.align_corners,
+                recompute_scale_factor=self.recompute_scale_factor,
+                antialias=self.antialias,
+            )
         else:
-            x = F.interpolate(x, scale_factor=scale, mode=self.mode)
+            x = F.interpolate(
+                x,
+                scale_factor=scale,
+                mode=self.mode,
+                align_corners=self.align_corners,
+                recompute_scale_factor=self.recompute_scale_factor,
+            )
         return x
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
@@ -570,7 +570,6 @@ class RandomScaleAffine(nn.Module):
         "mode",
         "padding_mode",
         "align_corners",
-        "_has_align_corners",
         "_is_distribution",
     ]
 
@@ -616,7 +615,6 @@ class RandomScaleAffine(nn.Module):
         self.mode = mode
         self.padding_mode = padding_mode
         self.align_corners = align_corners
-        self._has_align_corners = torch.__version__ >= "1.3.0"
 
     def _get_scale_mat(
         self,
@@ -654,21 +652,14 @@ class RandomScaleAffine(nn.Module):
         scale_matrix = self._get_scale_mat(scale, x.device, x.dtype)[None, ...].repeat(
             x.shape[0], 1, 1
         )
-        if self._has_align_corners:
-            # Pass align_corners explicitly for torch >= 1.3.0
-            grid = F.affine_grid(
-                scale_matrix, x.size(), align_corners=self.align_corners
-            )
-            x = F.grid_sample(
-                x,
-                grid,
-                mode=self.mode,
-                padding_mode=self.padding_mode,
-                align_corners=self.align_corners,
-            )
-        else:
-            grid = F.affine_grid(scale_matrix, x.size())
-            x = F.grid_sample(x, grid, mode=self.mode, padding_mode=self.padding_mode)
+        grid = F.affine_grid(scale_matrix, x.size(), align_corners=self.align_corners)
+        x = F.grid_sample(
+            x,
+            grid,
+            mode=self.mode,
+            padding_mode=self.padding_mode,
+            align_corners=self.align_corners,
+        )
         return x
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
@@ -761,7 +752,6 @@ class RandomRotation(nn.Module):
         "mode",
         "padding_mode",
         "align_corners",
-        "_has_align_corners",
         "_is_distribution",
     ]
 
@@ -808,7 +798,6 @@ class RandomRotation(nn.Module):
         self.mode = mode
         self.padding_mode = padding_mode
         self.align_corners = align_corners
-        self._has_align_corners = torch.__version__ >= "1.3.0"
 
     def _get_rot_mat(
         self,
@@ -852,19 +841,14 @@ class RandomRotation(nn.Module):
         rot_matrix = self._get_rot_mat(theta, x.device, x.dtype)[None, ...].repeat(
             x.shape[0], 1, 1
         )
-        if self._has_align_corners:
-            # Pass align_corners explicitly for torch >= 1.3.0
-            grid = F.affine_grid(rot_matrix, x.size(), align_corners=self.align_corners)
-            x = F.grid_sample(
-                x,
-                grid,
-                mode=self.mode,
-                padding_mode=self.padding_mode,
-                align_corners=self.align_corners,
-            )
-        else:
-            grid = F.affine_grid(rot_matrix, x.size())
-            x = F.grid_sample(x, grid, mode=self.mode, padding_mode=self.padding_mode)
+        grid = F.affine_grid(rot_matrix, x.size(), align_corners=self.align_corners)
+        x = F.grid_sample(
+            x,
+            grid,
+            mode=self.mode,
+            padding_mode=self.padding_mode,
+            align_corners=self.align_corners,
+        )
         return x
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
@@ -1327,6 +1311,7 @@ __all__ = [
     "CenterCrop",
     "center_crop",
     "RandomScale",
+    "RandomScaleAffine",
     "RandomSpatialJitter",
     "RandomRotation",
     "ScaleInputRange",

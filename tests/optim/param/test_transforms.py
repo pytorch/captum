@@ -19,6 +19,7 @@ class TestRandomScale(BaseTest):
         self.assertEqual(scale_module.mode, "bilinear")
         self.assertFalse(scale_module.align_corners)
         self.assertFalse(scale_module.recompute_scale_factor)
+        self.assertFalse(scale_module.antialias)
 
     def test_random_scale_tensor_scale(self) -> None:
         scale = torch.tensor([1, 0.975, 1.025, 0.95, 1.05])
@@ -44,13 +45,8 @@ class TestRandomScale(BaseTest):
     def test_random_scale_torch_version_check(self) -> None:
         scale_module = transforms.RandomScale([1.0])
 
-        has_align_corners = torch.__version__ >= "1.3.0"
-        self.assertEqual(scale_module._has_align_corners, has_align_corners)
-
-        has_recompute_scale_factor = torch.__version__ >= "1.6.0"
-        self.assertEqual(
-            scale_module._has_recompute_scale_factor, has_recompute_scale_factor
-        )
+        has_antialias = version.parse(torch.__version__) >= version.parse("1.11.0")
+        self.assertEqual(scale_module._has_antialias, has_antialias)
 
     def test_random_scale_downscaling(self) -> None:
         scale_module = transforms.RandomScale(scale=[0.5])
@@ -102,6 +98,38 @@ class TestRandomScale(BaseTest):
             scaled_tensor,
             expected_tensor,
             0,
+        )
+
+    def test_random_scale_antialias(self) -> None:
+        if version.parse(torch.__version__) < version.parse("1.11.0"):
+            raise unittest.SkipTest(
+                "Skipping RandomScale antialias test"
+                + " due to insufficient Torch version."
+            )
+        scale_module = transforms.RandomScale(scale=[0.5], antialias=True)
+        test_tensor = torch.arange(0, 1 * 1 * 10 * 10).view(1, 1, 10, 10).float()
+
+        scaled_tensor = scale_module._scale_tensor(test_tensor, 0.5)
+
+        expected_tensor = torch.tensor(
+            [
+                [
+                    [
+                        [7.8571, 9.6429, 11.6429, 13.6429, 15.4286],
+                        [25.7143, 27.5000, 29.5000, 31.5000, 33.2857],
+                        [45.7143, 47.5000, 49.5000, 51.5000, 53.2857],
+                        [65.7143, 67.5000, 69.5000, 71.5000, 73.2857],
+                        [83.5714, 85.3571, 87.3571, 89.3571, 91.1429],
+                    ]
+                ]
+            ]
+        )
+
+        assertTensorAlmostEqual(
+            self,
+            scaled_tensor,
+            expected_tensor,
+            0.0005,
         )
 
     def test_random_forward_exact(self) -> None:
@@ -264,11 +292,6 @@ class TestRandomScaleAffine(BaseTest):
         )
         self.assertTrue(scale_module._is_distribution)
 
-    def test_random_scale_affine_torch_version_check(self) -> None:
-        scale_module = transforms.RandomScaleAffine([1.0])
-        _has_align_corners = torch.__version__ >= "1.3.0"
-        self.assertEqual(scale_module._has_align_corners, _has_align_corners)
-
     def test_random_scale_affine_matrix(self) -> None:
         scale_module = transforms.RandomScaleAffine(scale=[0.5])
         test_tensor = torch.ones(1, 3, 3, 3)
@@ -383,7 +406,7 @@ class TestRandomScaleAffine(BaseTest):
         self.assertEqual(list(output_tensor.shape), list(test_tensor.shape))
 
     def test_random_scale_affine_jit_module(self) -> None:
-        if torch.__version__ <= "1.8.0":
+        if version.parse(torch.__version__) <= version.parse("1.8.0"):
             raise unittest.SkipTest(
                 "Skipping RandomScaleAffine JIT module test due to insufficient"
                 + " Torch version."
@@ -440,11 +463,6 @@ class TestRandomRotation(BaseTest):
             torch.distributions.distribution.Distribution,
         )
         self.assertTrue(rotation_module._is_distribution)
-
-    def test_random_rotation_torch_version_check(self) -> None:
-        rotation_module = transforms.RandomRotation([1.0])
-        _has_align_corners = torch.__version__ >= "1.3.0"
-        self.assertEqual(rotation_module._has_align_corners, _has_align_corners)
 
     def test_random_rotation_matrix(self) -> None:
         theta = 25.1
@@ -588,7 +606,7 @@ class TestRandomRotation(BaseTest):
         assertTensorAlmostEqual(self, rot_matrix, expected_matrix, 0.0)
 
     def test_random_rotation_jit_module(self) -> None:
-        if torch.__version__ <= "1.8.0":
+        if version.parse(torch.__version__) <= version.parse("1.8.0"):
             raise unittest.SkipTest(
                 "Skipping RandomRotation JIT test due to insufficient Torch version."
             )
@@ -683,7 +701,7 @@ class TestRandomSpatialJitter(BaseTest):
         self.assertEqual(list(jittered_tensor.shape), list(test_input.shape))
 
     def test_random_spatial_jitter_forward_jit_module(self) -> None:
-        if torch.__version__ <= "1.8.0":
+        if version.parse(torch.__version__) <= version.parse("1.8.0"):
             raise unittest.SkipTest(
                 "Skipping RandomSpatialJitter JIT module test due to insufficient"
                 + " Torch version."
@@ -1200,7 +1218,7 @@ class TestCenterCropFunction(BaseTest):
         assertTensorAlmostEqual(self, cropped_tensor, expected_tensor)
 
     def test_center_crop_one_number_exact_jit_module(self) -> None:
-        if torch.__version__ <= "1.9.0":
+        if version.parse(torch.__version__) <= version.parse("1.9.0"):
             raise unittest.SkipTest(
                 "Skipping center_crop JIT module test due to insufficient"
                 + " Torch version."
@@ -1283,7 +1301,7 @@ class TestBlendAlpha(BaseTest):
         assertTensorAlmostEqual(self, blended_tensor, blended_array, 0, mode="max")
 
     def test_blend_alpha_jit_module(self) -> None:
-        if torch.__version__ <= "1.8.0":
+        if version.parse(torch.__version__) <= version.parse("1.8.0"):
             raise unittest.SkipTest(
                 "Skipping BlendAlpha JIT module test due to insufficient"
                 + " Torch version."
@@ -1534,7 +1552,7 @@ class TestToRGB(BaseTest):
         )
 
     def test_to_rgb_klt_forward_jit_module(self) -> None:
-        if torch.__version__ <= "1.8.0":
+        if version.parse(torch.__version__) <= version.parse("1.8.0"):
             raise unittest.SkipTest(
                 "Skipping ToRGB forward JIT module test due to insufficient"
                 + " Torch version."
@@ -1684,7 +1702,7 @@ class TestGaussianSmoothing(BaseTest):
         self.assertGreaterEqual(t_min, 3.3377e-06)
 
     def test_gaussian_smoothing_2d_jit_module(self) -> None:
-        if torch.__version__ <= "1.8.0":
+        if version.parse(torch.__version__) <= version.parse("1.8.0"):
             raise unittest.SkipTest(
                 "Skipping GaussianSmoothing 2D JIT module test due to insufficient"
                 + " Torch version."
@@ -1719,7 +1737,7 @@ class TestScaleInputRange(BaseTest):
         self.assertEqual(output_tensor.mean(), 255.0)
 
     def test_scale_input_range_jit_module(self) -> None:
-        if torch.__version__ <= "1.8.0":
+        if version.parse(torch.__version__) <= version.parse("1.8.0"):
             raise unittest.SkipTest(
                 "Skipping ScaleInputRange JIT module test due to insufficient"
                 + " Torch version."
@@ -1740,7 +1758,7 @@ class TestRGBToBGR(BaseTest):
         assertTensorAlmostEqual(self, output_tensor, expected_x)
 
     def test_rgb_to_bgr_jit_module(self) -> None:
-        if torch.__version__ <= "1.8.0":
+        if version.parse(torch.__version__) <= version.parse("1.8.0"):
             raise unittest.SkipTest(
                 "Skipping RGBToBGR JIT module test due to insufficient"
                 + " Torch version."
@@ -1818,7 +1836,7 @@ class TestNChannelsToRGB(BaseTest):
         self.assertEqual(list(test_output.size()), [1, 3, 224, 224])
 
     def test_nchannels_to_rgb_collapse_jit_module(self) -> None:
-        if torch.__version__ <= "1.8.0":
+        if version.parse(torch.__version__) <= version.parse("1.8.0"):
             raise unittest.SkipTest(
                 "Skipping NChannelsToRGB collapse JIT module test due to insufficient"
                 + " Torch version."
@@ -1850,7 +1868,7 @@ class TestRandomCrop(BaseTest):
         self.assertEqual(list(x_out.shape), [1, 4, 160, 160])
 
     def test_random_crop_jit_module(self) -> None:
-        if torch.__version__ <= "1.8.0":
+        if version.parse(torch.__version__) <= version.parse("1.8.0"):
             raise unittest.SkipTest(
                 "Skipping RandomCrop JIT module test due to insufficient"
                 + " Torch version."

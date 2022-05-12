@@ -4,6 +4,7 @@ import unittest
 import captum.optim._utils.circuits as circuits
 import torch
 from captum.optim.models import googlenet
+from packaging import version
 from tests.helpers.basic import BaseTest
 
 
@@ -37,7 +38,7 @@ class TestGetExpandedWeights(BaseTest):
         )
         self.assertEqual(list(output_tensor.shape), [508, 480, 5, 5])
 
-        if torch.__version__ <= "1.6.0":
+        if version.parse(torch.__version__) <= version.parse("1.6.0"):
             norm_func = torch.norm
         else:
             norm_func = torch.linalg.norm

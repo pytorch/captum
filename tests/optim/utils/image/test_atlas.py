@@ -3,12 +3,13 @@ import unittest
 
 import captum.optim._utils.image.atlas as atlas
 import torch
+from packaging import version
 from tests.helpers.basic import BaseTest, assertTensorAlmostEqual
 
 
 class TestNormalizeGrid(BaseTest):
     def test_normalize_grid(self) -> None:
-        if torch.__version__ < "1.7.0":
+        if version.parse(torch.__version__) < version.parse("1.7.0"):
             raise unittest.SkipTest(
                 "Skipping normalize grid test due to insufficient Torch version."
             )
@@ -33,7 +34,7 @@ class TestNormalizeGrid(BaseTest):
         assertTensorAlmostEqual(self, xy_grid, xy_grid_expected)
 
     def test_normalize_grid_max_percentile(self) -> None:
-        if torch.__version__ < "1.7.0":
+        if version.parse(torch.__version__) < version.parse("1.7.0"):
             raise unittest.SkipTest(
                 "Skipping normalize grid test due to insufficient Torch version."
             )
@@ -58,7 +59,7 @@ class TestNormalizeGrid(BaseTest):
         assertTensorAlmostEqual(self, xy_grid, xy_grid_expected, 0.001)
 
     def test_normalize_grid_min_percentile(self) -> None:
-        if torch.__version__ < "1.7.0":
+        if version.parse(torch.__version__) < version.parse("1.7.0"):
             raise unittest.SkipTest(
                 "Skipping normalize grid test due to insufficient Torch version."
             )
@@ -87,7 +88,7 @@ class TestNormalizeGrid(BaseTest):
             raise unittest.SkipTest(
                 "Skipping normalize grid CUDA test due to not supporting CUDA."
             )
-        if torch.__version__ < "1.7.0":
+        if version.parse(torch.__version__) < version.parse("1.7.0"):
             raise unittest.SkipTest(
                 "Skipping normalize grid CUDA test due to insufficient Torch version."
             )
@@ -115,7 +116,7 @@ class TestNormalizeGrid(BaseTest):
 
 class TestCalcGridIndices(BaseTest):
     def test_calc_grid_indices(self) -> None:
-        if torch.__version__ < "1.7.0":
+        if version.parse(torch.__version__) < version.parse("1.7.0"):
             raise unittest.SkipTest(
                 "Skipping calc grid indices test due to insufficient Torch version."
             )
@@ -133,7 +134,7 @@ class TestCalcGridIndices(BaseTest):
                 assertTensorAlmostEqual(self, t1, t2)
 
     def test_calc_grid_indices_extent(self) -> None:
-        if torch.__version__ < "1.7.0":
+        if version.parse(torch.__version__) < version.parse("1.7.0"):
             raise unittest.SkipTest(
                 "Skipping calc grid indices extent test due to insufficient Torch"
                 + " version."
@@ -150,7 +151,7 @@ class TestCalcGridIndices(BaseTest):
             raise unittest.SkipTest(
                 "Skipping calc grid indices CUDA test due to not supporting CUDA."
             )
-        if torch.__version__ < "1.7.0":
+        if version.parse(torch.__version__) < version.parse("1.7.0"):
             raise unittest.SkipTest(
                 "Skipping calc grid indices CUDA test due to insufficient Torch"
                 + " version."
@@ -172,7 +173,7 @@ class TestCalcGridIndices(BaseTest):
 
 class TestComputeAvgCellSamples(BaseTest):
     def test_compute_avg_cell_samples(self) -> None:
-        if torch.__version__ < "1.7.0":
+        if version.parse(torch.__version__) < version.parse("1.7.0"):
             raise unittest.SkipTest(
                 "Skipping compute_avg_cell_samples test due to insufficient Torch"
                 + " version."
@@ -194,7 +195,7 @@ class TestComputeAvgCellSamples(BaseTest):
         self.assertEqual(vec_coords, expected_coords)
 
     def test_compute_avg_cell_samples_assertion_error(self) -> None:
-        if torch.__version__ < "1.7.0":
+        if version.parse(torch.__version__) < version.parse("1.7.0"):
             raise unittest.SkipTest(
                 "Skipping compute_avg_cell_samples assertion test due to insufficient"
                 + " Torch version."
@@ -217,7 +218,7 @@ class TestComputeAvgCellSamples(BaseTest):
                 "Skipping compute_avg_cell_samples CUDA test due to not supporting"
                 + " CUDA."
             )
-        if torch.__version__ < "1.7.0":
+        if version.parse(torch.__version__) < version.parse("1.7.0"):
             raise unittest.SkipTest(
                 "Skipping compute_avg_cell_samples CUDA test due to insufficient"
                 + " Torch version."
@@ -242,7 +243,7 @@ class TestComputeAvgCellSamples(BaseTest):
 
 class TestCreateAtlasVectors(BaseTest):
     def test_create_atlas_vectors(self) -> None:
-        if torch.__version__ < "1.7.0":
+        if version.parse(torch.__version__) < version.parse("1.7.0"):
             raise unittest.SkipTest(
                 "Skipping create atlas vectors test due to insufficient Torch version."
             )
@@ -259,7 +260,7 @@ class TestCreateAtlasVectors(BaseTest):
         self.assertEqual(vec_coords, expected_coords)
 
     def test_create_atlas_vectors_diff_grid_sizes(self) -> None:
-        if torch.__version__ < "1.7.0":
+        if version.parse(torch.__version__) < version.parse("1.7.0"):
             raise unittest.SkipTest(
                 "Skipping create atlas vectors test due to insufficient Torch version."
             )
@@ -284,7 +285,7 @@ class TestCreateAtlasVectors(BaseTest):
             raise unittest.SkipTest(
                 "Skipping create atlas vectors CUDA test due to not supporting CUDA."
             )
-        if torch.__version__ < "1.7.0":
+        if version.parse(torch.__version__) < version.parse("1.7.0"):
             raise unittest.SkipTest(
                 "Skipping create atlas vectors CUDA test due to insufficient Torch"
                 + " version."
@@ -305,7 +306,7 @@ class TestCreateAtlasVectors(BaseTest):
 
 class TestCreateAtlas(BaseTest):
     def test_create_atlas_square_grid_size(self) -> None:
-        if torch.__version__ < "1.7.0":
+        if version.parse(torch.__version__) < version.parse("1.7.0"):
             raise unittest.SkipTest(
                 "Skipping create atlas canvas test due to insufficient Torch version."
             )
@@ -322,7 +323,7 @@ class TestCreateAtlas(BaseTest):
         assertTensorAlmostEqual(self, atlas_canvas, expected_canvas, 0)
 
     def test_create_atlas_tensor_stack(self) -> None:
-        if torch.__version__ < "1.7.0":
+        if version.parse(torch.__version__) < version.parse("1.7.0"):
             raise unittest.SkipTest(
                 "Skipping create atlas canvas tensor stack test due to insufficient"
                 + " Torch version."
@@ -340,7 +341,7 @@ class TestCreateAtlas(BaseTest):
         assertTensorAlmostEqual(self, atlas_canvas, expected_canvas, 0)
 
     def test_create_atlas_test_diff_grid_sizes(self) -> None:
-        if torch.__version__ < "1.7.0":
+        if version.parse(torch.__version__) < version.parse("1.7.0"):
             raise unittest.SkipTest(
                 "Skipping create atlas canvas test due to insufficient Torch version."
             )
@@ -359,7 +360,7 @@ class TestCreateAtlas(BaseTest):
         assertTensorAlmostEqual(self, atlas_canvas, expected_canvas, 0)
 
     def test_create_atlas_zeros(self) -> None:
-        if torch.__version__ < "1.7.0":
+        if version.parse(torch.__version__) < version.parse("1.7.0"):
             raise unittest.SkipTest(
                 "Skipping create atlas canvas test due to insufficient Torch version."
             )
@@ -382,7 +383,7 @@ class TestCreateAtlas(BaseTest):
             raise unittest.SkipTest(
                 "Skipping create atlas CUDA test due to not supporting CUDA."
             )
-        if torch.__version__ < "1.7.0":
+        if version.parse(torch.__version__) < version.parse("1.7.0"):
             raise unittest.SkipTest(
                 "Skipping create_atlas canvas CUDA due to insufficient Torch version."
             )
