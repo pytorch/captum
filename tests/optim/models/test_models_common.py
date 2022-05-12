@@ -2,10 +2,9 @@
 import unittest
 from typing import cast
 
+import captum.optim.models._common as model_utils
 import torch
 import torch.nn.functional as F
-
-import captum.optim.models._common as model_utils
 from captum.optim.models import googlenet
 from tests.helpers.basic import BaseTest, assertTensorAlmostEqual
 

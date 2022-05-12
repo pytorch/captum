@@ -2,9 +2,9 @@
 import unittest
 
 import torch
-
 from captum.optim.models import googlenet
 from captum.optim.models._common import RedirectedReluLayer, SkipLayer
+from packaging import version
 from tests.helpers.basic import BaseTest, assertTensorAlmostEqual
 from tests.optim.helpers.models import check_layer_in_model
 
@@ -90,7 +90,7 @@ class TestInceptionV1(BaseTest):
         self.assertEqual(list(outputs.shape), [1, 1008])
 
     def test_inceptionv1_load_and_jit_module(self) -> None:
-        if torch.__version__ <= "1.8.0":
+        if version.parse(torch.__version__) <= version.parse("1.10.0"):
             raise unittest.SkipTest(
                 "Skipping pretrained InceptionV1 load & JIT test"
                 + " due to insufficient Torch version."
@@ -102,7 +102,7 @@ class TestInceptionV1(BaseTest):
         self.assertEqual(list(outputs.shape), [1, 1008])
 
     def test_inceptionv1_load_and_jit_module_no_redirected_relu(self) -> None:
-        if torch.__version__ <= "1.8.0":
+        if version.parse(torch.__version__) <= version.parse("1.10.0"):
             raise unittest.SkipTest(
                 "Skipping pretrained InceptionV1 load & JIT with no"
                 + " redirected relu test due to insufficient Torch version."

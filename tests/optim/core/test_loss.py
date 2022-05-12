@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
+import unittest
 from typing import cast, List, Union
 
+import captum.optim._core.loss as opt_loss
 import numpy as np
 import torch
-
-import captum.optim._core.loss as opt_loss
 from captum.optim.models import collect_activations
+from packaging import version
 from tests.helpers.basic import BaseTest, assertTensorAlmostEqual
 from tests.helpers.basic_models import BasicModel_ConvNet_Optim
 
@@ -100,6 +101,11 @@ class TestDiversity(BaseTest):
 
 class TestActivationInterpolation(BaseTest):
     def test_activation_interpolation_0_1(self) -> None:
+        if version.parse(torch.__version__) <= version.parse("1.6.0"):
+            raise unittest.SkipTest(
+                "Skipping Activation Interpolation test due to insufficient Torch"
+                + " version."
+            )
         model = BasicModel_ConvNet_Optim()
         loss = opt_loss.ActivationInterpolation(
             target1=model.layer,

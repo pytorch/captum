@@ -5,7 +5,6 @@ from typing import Any, Callable, List, Optional, Tuple, Union
 
 import torch
 import torch.nn as nn
-
 from captum.optim._utils.image.common import _dot_cossim, get_neuron_pos
 from captum.optim._utils.typing import ModuleOutputMapping
 

@@ -3,7 +3,6 @@ from warnings import warn
 
 import torch
 import torch.nn as nn
-
 from captum.optim.models._common import Conv2dSame, RedirectedReluLayer, SkipLayer
 
 GS_SAVED_WEIGHTS_URL = (

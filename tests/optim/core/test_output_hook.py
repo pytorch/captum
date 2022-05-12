@@ -1,9 +1,8 @@
 #!/usr/bin/env python3
 from typing import cast
 
-import torch
-
 import captum.optim._core.output_hook as output_hook
+import torch
 from captum.optim.models import googlenet
 from tests.helpers.basic import BaseTest
 

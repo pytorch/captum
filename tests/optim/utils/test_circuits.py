@@ -1,9 +1,8 @@
 #!/usr/bin/env python3
 import unittest
 
-import torch
-
 import captum.optim._utils.circuits as circuits
+import torch
 from captum.optim.models import googlenet
 from tests.helpers.basic import BaseTest
 

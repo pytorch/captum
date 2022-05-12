@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
-import torch
-
 import captum.optim._utils.image.dataset as dataset_utils
+import torch
 from tests.helpers.basic import BaseTest, assertTensorAlmostEqual
 from tests.optim.helpers import image_dataset as dataset_helpers
 

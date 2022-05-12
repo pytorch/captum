@@ -5,7 +5,6 @@ from typing import Dict, List, Optional, Tuple, Type, Union, cast
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-
 from captum.optim._core.output_hook import ActivationFetcher
 from captum.optim._utils.typing import ModuleOutputMapping, TupleOfTensorsOrTensorType
 
