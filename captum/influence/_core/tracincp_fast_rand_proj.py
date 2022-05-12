@@ -494,8 +494,8 @@ class TracInCPFast(TracInCPBase):
             )
 
             return (
-                torch.sum(batch_jacobian ** 2, dim=1)
-                * torch.sum(batch_layer_input ** 2, dim=1)
+                torch.sum(batch_jacobian**2, dim=1)
+                * torch.sum(batch_layer_input**2, dim=1)
                 * learning_rate
             )
 
@@ -1063,17 +1063,17 @@ class TracInCPFastRandProj(TracInCPFast):
             # `projection_dim` corresponds to the variable d in the top of page 15 of
             # the TracIn paper: https://arxiv.org/pdf/2002.08484.pdf.
             if jacobian_dim * layer_input_dim > projection_dim:
-                jacobian_projection_dim = min(int(projection_dim ** 0.5), jacobian_dim)
+                jacobian_projection_dim = min(int(projection_dim**0.5), jacobian_dim)
                 layer_input_projection_dim = min(
-                    int(projection_dim ** 0.5), layer_input_dim
+                    int(projection_dim**0.5), layer_input_dim
                 )
                 jacobian_projection = torch.normal(
                     torch.zeros(jacobian_dim, jacobian_projection_dim),
-                    1.0 / jacobian_projection_dim ** 0.5,
+                    1.0 / jacobian_projection_dim**0.5,
                 )
                 layer_input_projection = torch.normal(
                     torch.zeros(layer_input_dim, layer_input_projection_dim),
-                    1.0 / layer_input_projection_dim ** 0.5,
+                    1.0 / layer_input_projection_dim**0.5,
                 )
 
                 projection_quantities = jacobian_projection, layer_input_projection
@@ -1157,7 +1157,7 @@ class TracInCPFastRandProj(TracInCPFast):
             ), "None returned from `checkpoints`, cannot load."
 
             learning_rate = self.checkpoints_load_func(self.model, checkpoint)
-            learning_rate_root = learning_rate ** 0.5
+            learning_rate_root = learning_rate**0.5
 
             for batch in dataloader:
 
