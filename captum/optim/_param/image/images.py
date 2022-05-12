@@ -385,7 +385,7 @@ class LaplacianImage(ImageParameterization):
                 x = F.interpolate(init.clone(), size=(h, w), mode="bilinear")
                 x = x / 6  # Prevents output from being all white
             upsample = torch.nn.Upsample(scale_factor=scale, mode="nearest")
-            x = x * (scale ** power) / (32 ** power)
+            x = x * (scale**power) / (32**power)
             x = torch.nn.Parameter(x)
             tensor_params.append(x)
             scaler.append(upsample)
