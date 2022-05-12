@@ -64,7 +64,7 @@ class FGSM(Perturbation):
         self.forward_func = forward_func
         self.loss_func = loss_func
         self.bound = lambda x: torch.clamp(x, min=lower_bound, max=upper_bound)
-        self.zero_thresh = 10 ** -6
+        self.zero_thresh = 10**-6
 
     def perturb(
         self,

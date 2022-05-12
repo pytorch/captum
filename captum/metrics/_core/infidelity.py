@@ -570,7 +570,7 @@ def infidelity(
         beta = safe_div(beta_num, beta_denorm)
 
         infidelity_values = (
-            beta ** 2 * agg_tensors[0] - 2 * beta * agg_tensors[1] + agg_tensors[2]
+            beta**2 * agg_tensors[0] - 2 * beta * agg_tensors[1] + agg_tensors[2]
         )
     else:
         infidelity_values = agg_tensors[0]

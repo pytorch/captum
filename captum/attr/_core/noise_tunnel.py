@@ -229,7 +229,7 @@ class NoiseTunnel(Attribution):
 
             attribution = attribution.view(attribution_shape)
             current_attribution_sum = attribution.sum(dim=1, keepdim=False)
-            current_attribution_sq = torch.sum(attribution ** 2, dim=1, keepdim=False)
+            current_attribution_sq = torch.sum(attribution**2, dim=1, keepdim=False)
 
             sum_attribution[i] = (
                 current_attribution_sum
