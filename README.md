@@ -2,12 +2,26 @@
 
 <hr/>
 
-[![Conda](https://img.shields.io/conda/v/pytorch/captum.svg)](https://anaconda.org/pytorch/captum)
-[![PyPI](https://img.shields.io/pypi/v/captum.svg)](https://pypi.org/project/captum)
+<!--- BADGES: START --->
+[![GitHub - License](https://img.shields.io/github/license/pytorch/captum?logo=github&style=flat&color=green)][#github-license]
+[![Conda](https://img.shields.io/conda/vn/pytorch/captum?logo=anaconda&style=flat&color=orange)](https://anaconda.org/pytorch/captum)
+[![PyPI](https://img.shields.io/pypi/v/captum.svg)][#pypi-package]
 [![CircleCI](https://circleci.com/gh/pytorch/captum.svg?style=shield)](https://circleci.com/gh/pytorch/captum)
+[![Conda - Platform](https://img.shields.io/conda/pn/conda-forge/captum?logo=anaconda&style=flat)][#conda-forge-package]
+[![Conda (channel only)](https://img.shields.io/conda/vn/conda-forge/captum?logo=anaconda&style=flat&color=orange)][#conda-forge-package]
+[![Conda Recipe](https://img.shields.io/static/v1?logo=conda-forge&style=flat&color=green&label=recipe&message=captum)][#conda-forge-feedstock]
+[![Docs - GitHub.io](https://img.shields.io/static/v1?logo=captum&style=flat&color=pink&label=docs&message=captum)][#docs-package]
+
+[#github-license]: https://github.com/pytorch/captum/blob/master/LICENSE
+[#pypi-package]: https://pypi.org/project/captum/
+[#conda-forge-package]: https://anaconda.org/conda-forge/captum
+[#conda-forge-feedstock]: https://github.com/conda-forge/captum-feedstock
+[#docs-package]: https://captum.ai/
+<!--- BADGES: END --->
+
 
 Captum is a model interpretability and understanding library for PyTorch.
-Captum means comprehension in latin and contains general purpose implementations
+Captum means comprehension in Latin and contains general purpose implementations
 of integrated gradients, saliency maps, smoothgrad, vargrad and others for
 PyTorch models. It has quick integration for models built with domain-specific
 libraries such as torchvision, torchtext, and others.
@@ -22,6 +36,8 @@ With the increase in model complexity and the resulting lack of transparency, mo
 For model developers, Captum can be used to improve and troubleshoot models by facilitating the identification of different features that contribute to a model’s output in order to design better models and troubleshoot unexpected model outputs.
 
 Captum helps ML researchers more easily implement interpretability algorithms that can interact with PyTorch models. Captum also allows researchers to quickly benchmark their work against other existing algorithms available in the library.
+
+![Overview of Attribution Algorithms](./docs/Captum_Attribution_Algos.png)
 
 #### Target Audience
 
@@ -39,11 +55,26 @@ Captum can also be used by application engineers who are using trained models in
 ##### Installing the latest release
 
 The latest release of Captum is easily installed either via
-[Anaconda](https://www.anaconda.com/distribution/#download-section) (recommended):
-```bash
-conda install captum -c pytorch
-```
-or via `pip`:
+[Anaconda](https://www.anaconda.com/distribution/#download-section) (recommended) or via `pip`.
+
+**with `conda`**
+
+You can install captum from any of the following supported conda channels:
+
+- channel: `pytorch`
+
+  ```sh
+  conda install captum -c pytorch
+  ```
+
+- channel: `conda-forge`
+
+  ```sh
+  conda install captum -c conda-forge
+  ```
+
+**With `pip`**
+
 ```bash
 pip install captum
 ```
@@ -79,10 +110,6 @@ Captum helps you interpret and understand predictions of PyTorch models by
 exploring features that contribute to a prediction the model makes.
 It also helps understand which neurons and layers are important for
 model predictions.
-
-Currently, the library uses gradient-based interpretability algorithms
-and attributes contributions to each input of the model with respect to
-different neurons and layers, both intermediate and final.
 
 Let's apply some of those algorithms to a toy model we have created for
 demonstration purposes.
@@ -175,12 +202,12 @@ Convergence Delta: tensor([2.3842e-07, -4.7684e-07])
 The algorithm outputs an attribution score for each input element and a
 convergence delta. The lower the absolute value of the convergence delta the better
 is the approximation. If we choose not to return delta,
-we can simply not provide `return_convergence_delta` input
+we can simply not provide the `return_convergence_delta` input
 argument. The absolute value of the returned deltas can be interpreted as an
 approximation error for each input sample.
 It can also serve as a proxy of how accurate the integral approximation for given
 inputs and baselines is.
-If the approximation error is large, we can try larger number of integral
+If the approximation error is large, we can try a larger number of integral
 approximation steps by setting `n_steps` to a larger value. Not all algorithms
 return approximation error. Those which do, though, compute it based on the
 completeness property of the algorithms.
@@ -224,7 +251,7 @@ in order to get per example average delta.
 
 
 Below is an example of how we can apply `DeepLift` and `DeepLiftShap` on the
-`ToyModel` described above. Current implementation of DeepLift supports only
+`ToyModel` described above. The current implementation of DeepLift supports only the
 `Rescale` rule.
 For more details on alternative implementations, please see the [DeepLift paper](https://arxiv.org/abs/1704.02685).
 
@@ -286,12 +313,12 @@ In order to smooth and improve the quality of the attributions we can run
 to smoothen the attributions by aggregating them for multiple noisy
 samples that were generated by adding gaussian noise.
 
-Here is an example how we can use `NoiseTunnel` with `IntegratedGradients`.
+Here is an example of how we can use `NoiseTunnel` with `IntegratedGradients`.
 
 ```python
 ig = IntegratedGradients(model)
 nt = NoiseTunnel(ig)
-attributions, delta = nt.attribute(input, nt_type='smoothgrad', stdevs=0.02, n_samples=4,
+attributions, delta = nt.attribute(input, nt_type='smoothgrad', stdevs=0.02, nt_samples=4,
       baselines=baseline, target=0, return_convergence_delta=True)
 print('IG + SmoothGrad Attributions:', attributions)
 print('Convergence Delta:', delta)
@@ -304,8 +331,8 @@ Convergence Delta: tensor([ 0.0000e+00,  2.3842e-07,  0.0000e+00, -2.3842e-07,  
         -4.7684e-07,  0.0000e+00, -4.7684e-07])
 
 ```
-The number of elements in the `delta` tensor is equal to: `n_samples * input.shape[0]`
-In order to get a example-based delta, we can, for example, average them:
+The number of elements in the `delta` tensor is equal to: `nt_samples * input.shape[0]`
+In order to get an example-wise delta, we can, for example, average them:
 ```python
 deltas_per_example = torch.mean(delta.reshape(input.shape[0], -1), dim=1)
 ```
@@ -324,7 +351,7 @@ In this case, we choose to analyze the first neuron in the linear layer.
 
 ```python
 nc = NeuronConductance(model, model.lin1)
-attributions = nc.attribute(input, neuron_index=1, target=0)
+attributions = nc.attribute(input, neuron_selector=1, target=0)
 print('Neuron Attributions:', attributions)
 ```
 Output
@@ -338,7 +365,7 @@ It is an extension of path integrated gradients for hidden layers and holds the
 completeness property as well.
 
 It doesn't attribute the contribution scores to the input features
-but shows the importance of each neuron in selected layer.
+but shows the importance of each neuron in the selected layer.
 ```python
 lc = LayerConductance(model, model.lin1)
 attributions, delta = lc.attribute(input, baselines=baseline, target=0, return_convergence_delta=True)
@@ -392,8 +419,8 @@ Captum Insights also has a Jupyter widget providing the same user interface as t
 To install and enable the widget, run
 
 ```
-jupyter nbextension install --py --symlink --sys-prefix captum.insights.widget
-jupyter nbextension enable captum.insights.widget --py --sys-prefix
+jupyter nbextension install --py --symlink --sys-prefix captum.insights.attr_vis.widget
+jupyter nbextension enable captum.insights.attr_vis.widget --py --sys-prefix
 ```
 
 To build the widget from a checkout in a conda environment run
@@ -410,7 +437,33 @@ If you have questions about using Captum methods, please check this [FAQ](docs/f
 See the [CONTRIBUTING](CONTRIBUTING.md) file for how to help out.
 
 ## Talks and Papers
-The slides of our presentation from NeurIPS 2019 can be found [here](docs/presentations/Captum_NeurIPS_2019_final.key)
+**NeurIPS 2019:**
+The slides of our presentation  can be found [here](docs/presentations/Captum_NeurIPS_2019_final.key)
+
+**KDD 2020:**
+The slides of our presentation from KDD 2020 tutorial can be found [here](https://pytorch-tutorial-assets.s3.amazonaws.com/Captum_KDD_2020.pdf).
+You can watch the recorded talk [here](https://www.youtube.com/watch?v=hY_XzglTkak)
+
+**GTC 2020:**
+Opening Up the Black Box: Model Understanding with Captum and PyTorch.
+You can watch the recorded talk [here](https://www.youtube.com/watch?v=0QLrRyLndFI)
+
+**XAI Summit 2020:**
+Using Captum and Fiddler to Improve Model Understanding with Explainable AI.
+You can watch the recorded talk [here](https://www.youtube.com/watch?v=dvuVld5Hyc8)
+
+**PyTorch Developer Day 2020**
+Model Interpretability.
+You can watch the recorded talk [here](https://www.youtube.com/watch?v=Lj5hHBGue58)
+
+**NAACL 2021**
+Tutorial on Fine-grained Interpretation and Causation Analysis in Deep NLP Models.
+You can watch the recorded talk [here](https://www.youtube.com/watch?v=ayhBHZYjeqs
+)
+
+**ICLR 2021 workshop on Responsible AI**:
+- [Paper](https://arxiv.org/abs/2009.07896) on the Captum Library
+- [Paper](https://arxiv.org/abs/2106.07475) on Invesitgating Sanity Checks for Saliency Maps
 
 ## References of Algorithms
 
@@ -431,8 +484,9 @@ Image Classification Models and Saliency Maps, K. Simonyan, et. al. 2014](https:
 * `Guided Backpropagation`, `Neuron Guided Backpropagation`: [Striving for Simplicity: The All Convolutional Net, Jost Tobias Springenberg et al. 2015](https://arxiv.org/pdf/1412.6806.pdf)
 * `Feature Permutation`: [Permutation Feature Importance](https://christophm.github.io/interpretable-ml-book/feature-importance.html)
 * `Occlusion`: [Visualizing and Understanding Convolutional Networks](https://arxiv.org/abs/1311.2901)
-* `Shapely Value`: [A value for n-person games. Contributions to the Theory of Games 2.28 (1953): 307-317](https://apps.dtic.mil/dtic/tr/fulltext/u2/604084.pdf)
-* `Shapely Value Sampling`: [Polynomial calculation of the Shapley value based on sampling](https://www.sciencedirect.com/science/article/pii/S0305054808000804)
+* `Shapley Value`: [A value for n-person games. Contributions to the Theory of Games 2.28 (1953): 307-317](https://apps.dtic.mil/dtic/tr/fulltext/u2/604084.pdf)
+* `Shapley Value Sampling`: [Polynomial calculation of the Shapley value based on sampling](https://www.sciencedirect.com/science/article/pii/S0305054808000804)
+* `Infidelity and Sensitivity`: [On the (In)fidelity and Sensitivity for Explanations](https://arxiv.org/abs/1901.09392)
 
 More details about the above mentioned [algorithms](https://captum.ai/docs/algorithms) and their pros and cons can be found on our [web-site](https://captum.ai/docs/algorithms_comparison_matrix).
 

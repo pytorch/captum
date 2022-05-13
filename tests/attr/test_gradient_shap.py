@@ -1,18 +1,16 @@
 #!/usr/bin/env python3
 
-from typing import Tuple, Union, cast
+from typing import cast, Tuple, Union
 
 import numpy as np
 import torch
-from numpy import ndarray
-
 from captum._utils.typing import Tensor
 from captum.attr._core.gradient_shap import GradientShap
 from captum.attr._core.integrated_gradients import IntegratedGradients
-
-from ..helpers.basic import BaseTest, assertArraysAlmostEqual, assertTensorAlmostEqual
-from ..helpers.basic_models import BasicLinearModel, BasicModel2
-from ..helpers.classification_models import SoftmaxModel
+from numpy import ndarray
+from tests.helpers.basic import assertTensorAlmostEqual, BaseTest
+from tests.helpers.basic_models import BasicLinearModel, BasicModel2
+from tests.helpers.classification_models import SoftmaxModel
 
 
 class Test(BaseTest):
@@ -242,10 +240,8 @@ class Test(BaseTest):
         self, attributions1: Tuple[Tensor, ...], attributions2: Tuple[Tensor, ...]
     ) -> None:
         for attribution1, attribution2 in zip(attributions1, attributions2):
-            for attr_row1, attr_row2 in zip(
-                attribution1.detach().numpy(), attribution2.detach().numpy()
-            ):
-                assertArraysAlmostEqual(attr_row1, attr_row2, delta=0.005)
+            for attr_row1, attr_row2 in zip(attribution1, attribution2):
+                assertTensorAlmostEqual(self, attr_row1, attr_row2, 0.005, "max")
 
 
 def _assert_attribution_delta(
@@ -270,7 +266,7 @@ def _assert_attribution_delta(
 
 
 def _assert_delta(test: BaseTest, delta: Tensor) -> None:
-    delta_condition = all(abs(delta.numpy().flatten()) < 0.0006)
+    delta_condition = (delta.abs() < 0.0006).all()
     test.assertTrue(
         delta_condition,
         "Sum of SHAP values {} does"

@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
 import torch
-
 from captum.attr._core.deep_lift import DeepLift, DeepLiftShap
 from captum.attr._core.feature_ablation import FeatureAblation
 from captum.attr._core.feature_permutation import FeaturePermutation
@@ -10,6 +9,7 @@ from captum.attr._core.guided_backprop_deconvnet import Deconvolution, GuidedBac
 from captum.attr._core.guided_grad_cam import GuidedGradCam
 from captum.attr._core.input_x_gradient import InputXGradient
 from captum.attr._core.integrated_gradients import IntegratedGradients
+from captum.attr._core.kernel_shap import KernelShap
 from captum.attr._core.layer.grad_cam import LayerGradCam
 from captum.attr._core.layer.internal_influence import InternalInfluence
 from captum.attr._core.layer.layer_activation import LayerActivation
@@ -19,6 +19,9 @@ from captum.attr._core.layer.layer_feature_ablation import LayerFeatureAblation
 from captum.attr._core.layer.layer_gradient_shap import LayerGradientShap
 from captum.attr._core.layer.layer_gradient_x_activation import LayerGradientXActivation
 from captum.attr._core.layer.layer_integrated_gradients import LayerIntegratedGradients
+from captum.attr._core.layer.layer_lrp import LayerLRP
+from captum.attr._core.lime import Lime
+from captum.attr._core.lrp import LRP
 from captum.attr._core.neuron.neuron_conductance import NeuronConductance
 from captum.attr._core.neuron.neuron_deep_lift import NeuronDeepLift, NeuronDeepLiftShap
 from captum.attr._core.neuron.neuron_feature_ablation import NeuronFeatureAblation
@@ -34,12 +37,13 @@ from captum.attr._core.neuron.neuron_integrated_gradients import (
 from captum.attr._core.occlusion import Occlusion
 from captum.attr._core.saliency import Saliency
 from captum.attr._core.shapley_value import ShapleyValueSampling
-
-from ...helpers.basic import set_all_random_seeds
-from ...helpers.basic_models import (
+from captum.attr._utils.input_layer_wrapper import ModelInputWrapper
+from tests.helpers.basic import set_all_random_seeds
+from tests.helpers.basic_models import (
     BasicModel_ConvNet,
     BasicModel_MultiLayer,
     BasicModel_MultiLayer_MultiInput,
+    BasicModel_MultiLayer_TrueMultiInput,
     ReLULinearModel,
 )
 
@@ -98,6 +102,9 @@ config = [
             Deconvolution,
             ShapleyValueSampling,
             FeaturePermutation,
+            Lime,
+            KernelShap,
+            LRP,
         ],
         "model": BasicModel_MultiLayer(),
         "attribute_args": {"inputs": torch.randn(4, 3), "target": 1},
@@ -114,6 +121,9 @@ config = [
             Deconvolution,
             ShapleyValueSampling,
             FeaturePermutation,
+            Lime,
+            KernelShap,
+            LRP,
         ],
         "model": BasicModel_MultiLayer_MultiInput(),
         "attribute_args": {
@@ -121,7 +131,7 @@ config = [
             "additional_forward_args": (2 * torch.randn(12, 3), 5),
             "target": 0,
         },
-        "dp_delta": 0.0003,
+        "dp_delta": 0.001,
     },
     {
         "name": "basic_multi_target",
@@ -135,6 +145,9 @@ config = [
             Deconvolution,
             ShapleyValueSampling,
             FeaturePermutation,
+            Lime,
+            KernelShap,
+            LRP,
         ],
         "model": BasicModel_MultiLayer(),
         "attribute_args": {"inputs": torch.randn(4, 3), "target": [0, 1, 1, 0]},
@@ -151,6 +164,9 @@ config = [
             Deconvolution,
             ShapleyValueSampling,
             FeaturePermutation,
+            Lime,
+            KernelShap,
+            LRP,
         ],
         "model": BasicModel_MultiLayer_MultiInput(),
         "attribute_args": {
@@ -158,6 +174,7 @@ config = [
             "additional_forward_args": (2 * torch.randn(6, 3), 5),
             "target": [0, 1, 1, 0, 0, 1],
         },
+        "dp_delta": 0.0005,
     },
     {
         "name": "basic_multiple_tuple_target",
@@ -171,6 +188,9 @@ config = [
             Deconvolution,
             ShapleyValueSampling,
             FeaturePermutation,
+            Lime,
+            KernelShap,
+            LRP,
         ],
         "model": BasicModel_MultiLayer(),
         "attribute_args": {
@@ -191,6 +211,9 @@ config = [
             Deconvolution,
             ShapleyValueSampling,
             FeaturePermutation,
+            Lime,
+            KernelShap,
+            LRP,
         ],
         "model": BasicModel_MultiLayer(),
         "attribute_args": {"inputs": torch.randn(4, 3), "target": torch.tensor([0])},
@@ -207,6 +230,9 @@ config = [
             Deconvolution,
             ShapleyValueSampling,
             FeaturePermutation,
+            Lime,
+            KernelShap,
+            LRP,
         ],
         "model": BasicModel_MultiLayer(),
         "attribute_args": {
@@ -222,6 +248,8 @@ config = [
             FeatureAblation,
             DeepLift,
             ShapleyValueSampling,
+            Lime,
+            KernelShap,
         ],
         "model": BasicModel_MultiLayer(),
         "attribute_args": {
@@ -238,6 +266,8 @@ config = [
             FeatureAblation,
             DeepLift,
             ShapleyValueSampling,
+            Lime,
+            KernelShap,
         ],
         "model": BasicModel_MultiLayer(),
         "attribute_args": {
@@ -269,16 +299,18 @@ config = [
             Saliency,
             GuidedBackprop,
             Deconvolution,
+            LRP,
         ],
         "model": BasicModel_MultiLayer_MultiInput(),
         "attribute_args": {
             "inputs": (10 * torch.randn(6, 3), 5 * torch.randn(6, 3)),
             "additional_forward_args": (2 * torch.randn(6, 3), 5),
             "target": [0, 1, 1, 0, 0, 1],
-            "n_samples": 20,
+            "nt_samples": 20,
             "stdevs": 0.0,
         },
         "noise_tunnel": True,
+        "dp_delta": 0.01,
     },
     {
         "name": "basic_multiple_target_with_baseline_nt",
@@ -290,12 +322,13 @@ config = [
             DeepLift,
             GuidedBackprop,
             Deconvolution,
+            LRP,
         ],
         "model": BasicModel_MultiLayer(),
         "attribute_args": {
             "inputs": torch.randn(4, 3),
             "target": [0, 1, 1, 0],
-            "n_samples": 20,
+            "nt_samples": 20,
             "stdevs": 0.0,
         },
         "noise_tunnel": True,
@@ -310,13 +343,14 @@ config = [
             DeepLift,
             GuidedBackprop,
             Deconvolution,
+            LRP,
         ],
         "model": BasicModel_MultiLayer(),
         "attribute_args": {
             "inputs": torch.randn(4, 3),
             "target": [(1, 0, 0), (0, 1, 1), (1, 1, 1), (0, 0, 0)],
             "additional_forward_args": (None, True),
-            "n_samples": 20,
+            "nt_samples": 20,
             "stdevs": 0.0,
         },
         "noise_tunnel": True,
@@ -331,12 +365,13 @@ config = [
             DeepLift,
             GuidedBackprop,
             Deconvolution,
+            LRP,
         ],
         "model": BasicModel_MultiLayer(),
         "attribute_args": {
             "inputs": torch.randn(4, 3),
             "target": torch.tensor([0]),
-            "n_samples": 20,
+            "nt_samples": 20,
             "stdevs": 0.0,
         },
         "noise_tunnel": True,
@@ -351,12 +386,35 @@ config = [
             DeepLift,
             GuidedBackprop,
             Deconvolution,
+            LRP,
         ],
         "model": BasicModel_MultiLayer(),
         "attribute_args": {
             "inputs": torch.randn(4, 3),
             "target": torch.tensor([0, 1, 1, 0]),
-            "n_samples": 20,
+            "nt_samples": 20,
+            "stdevs": 0.0,
+        },
+        "noise_tunnel": True,
+    },
+    {
+        "name": "basic_multi_tensor_target_batched_nt",
+        "algorithms": [
+            IntegratedGradients,
+            Saliency,
+            InputXGradient,
+            FeatureAblation,
+            DeepLift,
+            GuidedBackprop,
+            Deconvolution,
+            LRP,
+        ],
+        "model": BasicModel_MultiLayer(),
+        "attribute_args": {
+            "inputs": torch.randn(4, 3),
+            "target": torch.tensor([0, 1, 1, 0]),
+            "nt_samples": 20,
+            "nt_samples_batch_size": 2,
             "stdevs": 0.0,
         },
         "noise_tunnel": True,
@@ -508,17 +566,30 @@ config = [
     # Perturbation-Specific Configs
     {
         "name": "conv_with_perturbations_per_eval",
-        "algorithms": [FeatureAblation, ShapleyValueSampling, FeaturePermutation],
+        "algorithms": [
+            FeatureAblation,
+            ShapleyValueSampling,
+            FeaturePermutation,
+            Lime,
+            KernelShap,
+        ],
         "model": BasicModel_ConvNet(),
         "attribute_args": {
             "inputs": torch.arange(400).view(4, 1, 10, 10).float(),
             "target": 0,
             "perturbations_per_eval": 20,
         },
+        "dp_delta": 0.008,
     },
     {
         "name": "basic_multiple_tuple_target_with_perturbations_per_eval",
-        "algorithms": [FeatureAblation, ShapleyValueSampling, FeaturePermutation],
+        "algorithms": [
+            FeatureAblation,
+            ShapleyValueSampling,
+            FeaturePermutation,
+            Lime,
+            KernelShap,
+        ],
         "model": BasicModel_MultiLayer(),
         "attribute_args": {
             "inputs": torch.randn(4, 3),
@@ -848,7 +919,7 @@ config = [
         ],
         "model": BasicModel_MultiLayer(),
         "layer": "relu",
-        "attribute_args": {"inputs": torch.randn(4, 3), "neuron_index": 3},
+        "attribute_args": {"inputs": torch.randn(4, 3), "neuron_selector": 3},
     },
     {
         "name": "conv_neuron",
@@ -864,7 +935,7 @@ config = [
         "layer": "conv2",
         "attribute_args": {
             "inputs": 100 * torch.randn(4, 1, 10, 10),
-            "neuron_index": (0, 1, 0),
+            "neuron_selector": (0, 1, 0),
         },
     },
     {
@@ -882,7 +953,7 @@ config = [
         "attribute_args": {
             "inputs": (10 * torch.randn(12, 3), 5 * torch.randn(12, 3)),
             "additional_forward_args": (2 * torch.randn(12, 3), 5),
-            "neuron_index": (3,),
+            "neuron_selector": (3,),
         },
     },
     # Neuron Conductance (with target)
@@ -891,7 +962,11 @@ config = [
         "algorithms": [NeuronConductance],
         "model": BasicModel_MultiLayer(),
         "layer": "relu",
-        "attribute_args": {"inputs": torch.randn(4, 3), "target": 1, "neuron_index": 3},
+        "attribute_args": {
+            "inputs": torch.randn(4, 3),
+            "target": 1,
+            "neuron_selector": 3,
+        },
     },
     {
         "name": "basic_neuron_multiple_target",
@@ -901,7 +976,7 @@ config = [
         "attribute_args": {
             "inputs": torch.randn(4, 3),
             "target": [0, 1, 1, 0],
-            "neuron_index": 3,
+            "neuron_selector": 3,
         },
     },
     {
@@ -912,7 +987,7 @@ config = [
         "attribute_args": {
             "inputs": 100 * torch.randn(4, 1, 10, 10),
             "target": 1,
-            "neuron_index": (0, 1, 0),
+            "neuron_selector": (0, 1, 0),
         },
     },
     {
@@ -924,7 +999,7 @@ config = [
             "inputs": (10 * torch.randn(6, 3), 5 * torch.randn(6, 3)),
             "additional_forward_args": (2 * torch.randn(6, 3), 5),
             "target": [0, 1, 1, 0, 0, 1],
-            "neuron_index": 3,
+            "neuron_selector": 3,
         },
     },
     {
@@ -935,7 +1010,7 @@ config = [
         "attribute_args": {
             "inputs": torch.randn(4, 3),
             "target": torch.tensor([0, 1, 1, 0]),
-            "neuron_index": 3,
+            "neuron_selector": 3,
         },
     },
     {
@@ -947,7 +1022,7 @@ config = [
             "inputs": torch.randn(4, 3),
             "target": [(1, 0, 0), (0, 1, 1), (1, 1, 1), (0, 0, 0)],
             "additional_forward_args": (None, True),
-            "neuron_index": 3,
+            "neuron_selector": 3,
         },
     },
     # Neuron Conductance with Internal Batching
@@ -961,7 +1036,7 @@ config = [
             "target": [(1, 0, 0), (0, 1, 1), (1, 1, 1), (0, 0, 0)],
             "additional_forward_args": (None, True),
             "internal_batch_size": 2,
-            "neuron_index": 3,
+            "neuron_selector": 3,
         },
     },
     {
@@ -974,7 +1049,7 @@ config = [
             "additional_forward_args": (2 * torch.randn(6, 3), 5),
             "target": [0, 1, 1, 0, 0, 1],
             "internal_batch_size": 2,
-            "neuron_index": 3,
+            "neuron_selector": 3,
         },
     },
     # Neuron Gradient SHAP
@@ -986,7 +1061,7 @@ config = [
         "attribute_args": {
             "inputs": torch.randn(4, 3),
             "baselines": torch.randn(1, 3),
-            "neuron_index": 3,
+            "neuron_selector": 3,
         },
         "target_delta": 0.6,
         "baseline_distr": True,
@@ -1000,7 +1075,7 @@ config = [
             "inputs": (10 * torch.randn(6, 3), 5 * torch.randn(6, 3)),
             "baselines": (10 * torch.randn(1, 3), 5 * torch.randn(1, 3)),
             "additional_forward_args": (2 * torch.randn(6, 3), 5),
-            "neuron_index": 3,
+            "neuron_selector": 3,
         },
         "target_delta": 0.6,
         "baseline_distr": True,
@@ -1014,7 +1089,7 @@ config = [
         "attribute_args": {
             "inputs": torch.randn(4, 3),
             "baselines": 0.5 * torch.randn(6, 3),
-            "neuron_index": (3,),
+            "neuron_selector": (3,),
         },
         "baseline_distr": True,
     },
@@ -1027,7 +1102,7 @@ config = [
             "inputs": (10 * torch.randn(12, 3), 5 * torch.randn(12, 3)),
             "baselines": (torch.randn(4, 3), torch.randn(4, 3)),
             "additional_forward_args": (2 * torch.randn(12, 3), 5),
-            "neuron_index": 3,
+            "neuron_selector": 3,
         },
         "baseline_distr": True,
     },
@@ -1040,7 +1115,7 @@ config = [
         "attribute_args": {
             "inputs": torch.arange(400).view(4, 1, 10, 10).float(),
             "perturbations_per_eval": 20,
-            "neuron_index": (0, 1, 0),
+            "neuron_selector": (0, 1, 0),
         },
     },
     {
@@ -1052,8 +1127,45 @@ config = [
             "inputs": (10 * torch.randn(12, 3), 5 * torch.randn(12, 3)),
             "baselines": (10 * torch.randn(12, 3), 5 * torch.randn(12, 3)),
             "additional_forward_args": (2 * torch.randn(12, 3), 5),
-            "neuron_index": (3,),
+            "neuron_selector": (3,),
             "perturbations_per_eval": 2,
+        },
+    },
+    # Neuron Attribution with Functional Selector
+    {
+        "name": "basic_neuron_multi_input_function_selector",
+        "algorithms": [
+            NeuronGradient,
+            NeuronIntegratedGradients,
+            NeuronGuidedBackprop,
+            NeuronDeconvolution,
+            NeuronDeepLift,
+            NeuronFeatureAblation,
+        ],
+        "model": BasicModel_MultiLayer_MultiInput(),
+        "layer": "model.relu",
+        "attribute_args": {
+            "inputs": (10 * torch.randn(12, 3), 5 * torch.randn(12, 3)),
+            "additional_forward_args": (2 * torch.randn(12, 3), 5),
+            "neuron_selector": lambda x: torch.sum(x, 1),
+        },
+    },
+    # Neuron Attribution with slice Selector
+    {
+        "name": "conv_neuron_slice_selector",
+        "algorithms": [
+            NeuronGradient,
+            NeuronIntegratedGradients,
+            NeuronGuidedBackprop,
+            NeuronDeconvolution,
+            NeuronDeepLift,
+            NeuronFeatureAblation,
+        ],
+        "model": BasicModel_ConvNet(),
+        "layer": "conv2",
+        "attribute_args": {
+            "inputs": 100 * torch.randn(4, 1, 10, 10),
+            "neuron_selector": (slice(0, 2, 1), 1, slice(0, 2, 1)),
         },
     },
     # Layer Attribution with Multiple Layers
@@ -1070,5 +1182,59 @@ config = [
         "model": BasicModel_MultiLayer(multi_input_module=True),
         "layer": ["multi_relu", "linear1", "linear0"],
         "attribute_args": {"inputs": torch.randn(4, 3), "target": 0},
+    },
+    {
+        "name": "basic_layer_ig_multi_layer_multi_output",
+        "algorithms": [LayerIntegratedGradients],
+        "model": BasicModel_MultiLayer_TrueMultiInput(),
+        "layer": ["m1", "m234"],
+        "attribute_args": {
+            "inputs": (
+                torch.randn(5, 3),
+                torch.randn(5, 3),
+                torch.randn(5, 3),
+                torch.randn(5, 3),
+            ),
+            "target": 0,
+        },
+    },
+    {
+        "name": "basic_layer_ig_multi_layer_multi_output_with_input_wrapper",
+        "algorithms": [LayerIntegratedGradients],
+        "model": ModelInputWrapper(BasicModel_MultiLayer_TrueMultiInput()),
+        "layer": ["module.m1", "module.m234"],
+        "attribute_args": {
+            "inputs": (
+                torch.randn(5, 3),
+                torch.randn(5, 3),
+                torch.randn(5, 3),
+                torch.randn(5, 3),
+            ),
+            "target": 0,
+        },
+    },
+    # Layer LRP
+    {
+        "name": "basic_layer_lrp",
+        "algorithms": [
+            LayerLRP,
+        ],
+        "model": BasicModel_MultiLayer(),
+        "layer": "linear2",
+        "attribute_args": {"inputs": torch.randn(4, 3), "target": 0},
+    },
+    {
+        "name": "basic_layer_lrp_multi_input",
+        "algorithms": [
+            LayerLRP,
+        ],
+        "model": BasicModel_MultiLayer_MultiInput(),
+        "layer": "model.linear1",
+        "attribute_args": {
+            "inputs": (10 * torch.randn(12, 3), 5 * torch.randn(12, 3)),
+            "additional_forward_args": (2 * torch.randn(12, 3), 5),
+            "target": 0,
+        },
+        "dp_delta": 0.0002,
     },
 ]

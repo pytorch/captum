@@ -2,10 +2,9 @@
 import unittest
 from typing import cast
 
+import captum.optim.models._common as model_utils
 import torch
 import torch.nn.functional as F
-
-import captum.optim.models._common as model_utils
 from captum.optim.models import googlenet
 from tests.helpers.basic import BaseTest, assertTensorAlmostEqual
 
@@ -85,10 +84,6 @@ class TestReplaceLayers(BaseTest):
 
 class TestGetLayers(BaseTest):
     def test_get_layers_pretrained_inceptionv1(self) -> None:
-        if torch.__version__ <= "1.2.0":
-            raise unittest.SkipTest(
-                "Skipping get_layers test due to insufficient Torch version."
-            )
         expected_list = [
             "conv1",
             "conv1_relu",
@@ -248,10 +243,6 @@ class TestGetLayers(BaseTest):
 
 class TestCollectActivations(BaseTest):
     def test_collect_activations(self) -> None:
-        if torch.__version__ <= "1.2.0":
-            raise unittest.SkipTest(
-                "Skipping collect_activations test due to insufficient Torch version."
-            )
         model = googlenet(pretrained=True)
 
         activ_out = model_utils.collect_activations(

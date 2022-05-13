@@ -16,8 +16,8 @@ requirements:
     - python>=3.6
   run:
     - numpy
-    - pytorch>=1.2
-    - matplotlib
+    - pytorch>=1.6
+    - matplotlib-base
 
 test:
   imports:

@@ -1,8 +1,8 @@
-from typing import Optional, Tuple, Type, Union, cast
+from typing import Any, Optional, Tuple, Type, Union
+from warnings import warn
 
 import torch
 import torch.nn as nn
-
 from captum.optim.models._common import Conv2dSame, RedirectedReluLayer, SkipLayer
 
 GS_SAVED_WEIGHTS_URL = (
@@ -15,28 +15,41 @@ def googlenet(
     pretrained: bool = False,
     progress: bool = True,
     model_path: Optional[str] = None,
-    **kwargs
+    **kwargs: Any,
 ) -> "InceptionV1":
     r"""GoogLeNet (also known as Inception v1 & Inception 5h) model architecture from
     `"Going Deeper with Convolutions" <http://arxiv.org/abs/1409.4842>`_.
+
     Args:
+
         pretrained (bool, optional): If True, returns a model pre-trained on ImageNet.
+            Default: False
         progress (bool, optional): If True, displays a progress bar of the download to
             stderr
+            Default: True
         model_path (str, optional): Optional path for InceptionV1 model file.
+            Default: None
         replace_relus_with_redirectedrelu (bool, optional): If True, return pretrained
             model with Redirected ReLU in place of ReLU layers.
+            Default: *True* when pretrained is True otherwise *False*
         use_linear_modules_only (bool, optional): If True, return pretrained
             model with all nonlinear layers replaced with linear equivalents.
+            Default: False
         aux_logits (bool, optional): If True, adds two auxiliary branches that can
-            improve training. Default: *False* when pretrained is True otherwise *True*
+            improve training.
+            Default: False
         out_features (int, optional): Number of output features in the model used for
-            training. Default: 1008 when pretrained is True.
+            training.
+            Default: 1008
         transform_input (bool, optional): If True, preprocesses the input according to
-            the method with which it was trained on ImageNet. Default: *False*
+            the method with which it was trained on ImageNet.
+            Default: False
         bgr_transform (bool, optional): If True and transform_input is True, perform an
             RGB to BGR transform in the internal preprocessing.
-            Default: *False*
+            Default: False
+
+    Returns:
+        **InceptionV1** (InceptionV1): An Inception5h model.
     """
 
     if pretrained:
@@ -69,6 +82,8 @@ def googlenet(
 
 # Better version of Inception V1 / GoogleNet for Inception5h
 class InceptionV1(nn.Module):
+    __constants__ = ["aux_logits", "transform_input", "bgr_transform"]
+
     def __init__(
         self,
         out_features: int = 1008,
@@ -78,7 +93,29 @@ class InceptionV1(nn.Module):
         replace_relus_with_redirectedrelu: bool = False,
         use_linear_modules_only: bool = False,
     ) -> None:
-        super(InceptionV1, self).__init__()
+        """
+        Args:
+
+            replace_relus_with_redirectedrelu (bool, optional): If True, return
+                pretrained model with Redirected ReLU in place of ReLU layers.
+                Default: False
+            use_linear_modules_only (bool, optional): If True, return pretrained
+                model with all nonlinear layers replaced with linear equivalents.
+                Default: False
+            aux_logits (bool, optional): If True, adds two auxiliary branches that can
+                improve training.
+                Default: False
+            out_features (int, optional): Number of output features in the model used
+                for training.
+                Default: 1008
+            transform_input (bool, optional): If True, preprocesses the input according
+                to the method with which it was trained on ImageNet.
+                Default: False
+            bgr_transform (bool, optional): If True and transform_input is True,
+                perform an RGB to BGR transform in the internal preprocessing.
+                Default: False
+        """
+        super().__init__()
         self.aux_logits = aux_logits
         self.transform_input = transform_input
         self.bgr_transform = bgr_transform
@@ -99,7 +136,6 @@ class InceptionV1(nn.Module):
             out_channels=64,
             kernel_size=(7, 7),
             stride=(2, 2),
-            padding=3,
             groups=1,
             bias=True,
         )
@@ -121,7 +157,6 @@ class InceptionV1(nn.Module):
             out_channels=192,
             kernel_size=(3, 3),
             stride=(1, 1),
-            padding=1,
             groups=1,
             bias=True,
         )
@@ -163,9 +198,18 @@ class InceptionV1(nn.Module):
         self.fc = nn.Linear(1024, out_features)
 
     def _transform_input(self, x: torch.Tensor) -> torch.Tensor:
+        """
+        Args:
+
+            x (torch.Tensor): An input tensor to normalize and scale the values of.
+
+        Returns:
+            x (torch.Tensor): A transformed tensor.
+        """
         if self.transform_input:
             assert x.dim() == 3 or x.dim() == 4
-            assert x.min() >= 0.0 and x.max() <= 1.0
+            if x.min() < 0.0 or x.max() > 1.0:
+                warn("Model input has values outside of the range [0, 1].")
             x = x.unsqueeze(0) if x.dim() == 3 else x
             x = x * 255 - 117
             x = x[:, [2, 1, 0]] if self.bgr_transform else x
@@ -174,6 +218,15 @@ class InceptionV1(nn.Module):
     def forward(
         self, x: torch.Tensor
     ) -> Union[torch.Tensor, Tuple[torch.Tensor, torch.Tensor, torch.Tensor]]:
+        """
+        Args:
+
+            x (torch.Tensor): An input tensor to normalize and scale the values of.
+
+        Returns:
+            x (torch.Tensor or tuple of torch.Tensor): A single or multiple output
+                tensors from the model.
+        """
         x = self._transform_input(x)
         x = self.conv1(x)
         x = self.conv1_relu(x)
@@ -212,7 +265,7 @@ class InceptionV1(nn.Module):
         x = self.drop(x)
         x = self.fc(x)
         if not self.aux_logits:
-            return cast(torch.Tensor, x)
+            return x
         else:
             return x, aux1_output, aux2_output
 
@@ -230,7 +283,25 @@ class InceptionModule(nn.Module):
         activ: Type[nn.Module] = nn.ReLU,
         p_layer: Type[nn.Module] = nn.MaxPool2d,
     ) -> None:
-        super(InceptionModule, self).__init__()
+        """
+        Args:
+
+            in_channels (int, optional): The number of input channels to use for the
+                inception module.
+            c1x1 (int, optional):
+            c3x3reduce (int, optional):
+            c3x3 (int, optional):
+            c5x5reduce (int, optional):
+            c5x5 (int, optional):
+            pool_proj (int, optional):
+            activ (type of nn.Module, optional): The nn.Module class type to use for
+                activation layers.
+                Default: nn.ReLU
+            p_layer (type of nn.Module, optional): The nn.Module class type to use for
+                pooling layers.
+                Default: nn.MaxPool2d
+        """
+        super().__init__()
         self.conv_1x1 = nn.Conv2d(
             in_channels=in_channels,
             out_channels=c1x1,
@@ -254,7 +325,6 @@ class InceptionModule(nn.Module):
             out_channels=c3x3,
             kernel_size=(3, 3),
             stride=(1, 1),
-            padding=1,
             groups=1,
             bias=True,
         )
@@ -273,7 +343,6 @@ class InceptionModule(nn.Module):
             out_channels=c5x5,
             kernel_size=(5, 5),
             stride=(1, 1),
-            padding=1,
             groups=1,
             bias=True,
         )
@@ -289,6 +358,14 @@ class InceptionModule(nn.Module):
         )
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
+        """
+        Args:
+
+            x (torch.Tensor): An input tensor to pass through the Inception Module.
+
+        Returns:
+            x (torch.Tensor): The output tensor of the Inception Module.
+        """
         c1x1 = self.conv_1x1(x)
 
         c3x3 = self.conv_3x3_reduce(x)
@@ -311,9 +388,22 @@ class AuxBranch(nn.Module):
         out_features: int = 1008,
         activ: Type[nn.Module] = nn.ReLU,
     ) -> None:
-        super(AuxBranch, self).__init__()
+        """
+        Args:
+
+            in_channels (int, optional): The number of input channels to use for the
+                auxiliary branch.
+                Default: 508
+            out_features (int, optional): The number of output features to use for the
+                auxiliary branch.
+                Default: 1008
+            activ (type of nn.Module, optional): The nn.Module class type to use for
+                activation layers.
+                Default: nn.ReLU
+        """
+        super().__init__()
         self.avg_pool = nn.AdaptiveAvgPool2d((4, 4))
-        self.loss_conv = nn.Conv2d(
+        self.conv = nn.Conv2d(
             in_channels=in_channels,
             out_channels=128,
             kernel_size=(1, 1),
@@ -321,21 +411,28 @@ class AuxBranch(nn.Module):
             groups=1,
             bias=True,
         )
-        self.loss_conv_relu = activ()
-        self.loss_fc = nn.Linear(in_features=2048, out_features=1024, bias=True)
-        self.loss_fc_relu = activ()
-        self.loss_dropout = nn.Dropout(0.699999988079071)
-        self.loss_classifier = nn.Linear(
-            in_features=1024, out_features=out_features, bias=True
-        )
+        self.conv_relu = activ()
+        self.fc1 = nn.Linear(in_features=2048, out_features=1024, bias=True)
+        self.fc1_relu = activ()
+        self.dropout = nn.Dropout(0.699999988079071)
+        self.fc2 = nn.Linear(in_features=1024, out_features=out_features, bias=True)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
+        """
+        Args:
+
+            x (torch.Tensor): An input tensor to pass through the auxiliary branch
+                module.
+
+        Returns:
+            x (torch.Tensor): The output tensor of the auxiliary branch module.
+        """
         x = self.avg_pool(x)
-        x = self.loss_conv(x)
-        x = self.loss_conv_relu(x)
+        x = self.conv(x)
+        x = self.conv_relu(x)
         x = torch.flatten(x, 1)
-        x = self.loss_fc(x)
-        x = self.loss_fc_relu(x)
-        x = self.loss_dropout(x)
-        x = self.loss_classifier(x)
+        x = self.fc1(x)
+        x = self.fc1_relu(x)
+        x = self.dropout(x)
+        x = self.fc2(x)
         return x

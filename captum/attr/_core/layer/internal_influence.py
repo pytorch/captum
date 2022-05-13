@@ -2,23 +2,25 @@
 from typing import Any, Callable, List, Tuple, Union
 
 import torch
-from torch import Tensor
-from torch.nn import Module
-
-from captum.log import log_usage
-
-from ...._utils.common import (
+from captum._utils.common import (
     _expand_additional_forward_args,
     _expand_target,
     _format_additional_forward_args,
     _format_output,
 )
-from ...._utils.gradient import compute_layer_gradients_and_eval
-from ...._utils.typing import BaselineType, TargetType
-from ..._utils.approximation_methods import approximation_parameters
-from ..._utils.attribution import GradientAttribution, LayerAttribution
-from ..._utils.batching import _batch_attribution
-from ..._utils.common import _format_input_baseline, _reshape_and_sum, _validate_input
+from captum._utils.gradient import compute_layer_gradients_and_eval
+from captum._utils.typing import BaselineType, TargetType
+from captum.attr._utils.approximation_methods import approximation_parameters
+from captum.attr._utils.attribution import GradientAttribution, LayerAttribution
+from captum.attr._utils.batching import _batch_attribution
+from captum.attr._utils.common import (
+    _format_input_baseline,
+    _reshape_and_sum,
+    _validate_input,
+)
+from captum.log import log_usage
+from torch import Tensor
+from torch.nn import Module
 
 
 class InternalInfluence(LayerAttribution, GradientAttribution):

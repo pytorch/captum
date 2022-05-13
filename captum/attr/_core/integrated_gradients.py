@@ -3,27 +3,29 @@ import typing
 from typing import Any, Callable, List, Tuple, Union
 
 import torch
-from torch import Tensor
-
-from captum.log import log_usage
-
-from ..._utils.common import (
+from captum._utils.common import (
     _expand_additional_forward_args,
     _expand_target,
     _format_additional_forward_args,
     _format_output,
     _is_tuple,
 )
-from ..._utils.typing import (
+from captum._utils.typing import (
     BaselineType,
     Literal,
     TargetType,
     TensorOrTupleOfTensorsGeneric,
 )
-from .._utils.approximation_methods import approximation_parameters
-from .._utils.attribution import GradientAttribution
-from .._utils.batching import _batch_attribution
-from .._utils.common import _format_input_baseline, _reshape_and_sum, _validate_input
+from captum.attr._utils.approximation_methods import approximation_parameters
+from captum.attr._utils.attribution import GradientAttribution
+from captum.attr._utils.batching import _batch_attribution
+from captum.attr._utils.common import (
+    _format_input_baseline,
+    _reshape_and_sum,
+    _validate_input,
+)
+from captum.log import log_usage
+from torch import Tensor
 
 
 class IntegratedGradients(GradientAttribution):
