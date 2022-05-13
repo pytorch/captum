@@ -1,7 +1,7 @@
 # for legacy purposes
 import warnings
 
-from .attr_vis.example import *  # noqa
+from captum.insights.attr_vis.example import *  # noqa
 
 warnings.warn(
     "Deprecated. Please import from captum.insights.attr_vis.example instead."

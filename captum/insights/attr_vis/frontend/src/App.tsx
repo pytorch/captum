@@ -4,15 +4,20 @@ import Header from "./components/Header";
 import cx from "./utils/cx";
 import Spinner from "./components/Spinner";
 import FilterContainer from "./components/FilterContainer";
-import Visualization from "./components/Visualization";
+import VisualizationGroupDisplay from "./components/VisualizationGroup";
 import "./App.css";
-import { VisualizationOutput } from "./models/visualizationOutput";
+import { VisualizationGroup } from "./models/visualizationOutput";
 import { FilterConfig } from "./models/filter";
 
 interface VisualizationsProps {
   loading: boolean;
-  data: VisualizationOutput[];
-  onTargetClick: (labelIndex: number, instance: number, callback: () => void) => void;
+  data: VisualizationGroup[];
+  onTargetClick: (
+    labelIndex: number,
+    inputIndex: number,
+    modelIndex: number,
+    callback: () => void
+  ) => void;
 }
 
 function Visualizations(props: VisualizationsProps) {
@@ -41,11 +46,11 @@ function Visualizations(props: VisualizationsProps) {
   }
   return (
     <div className={styles.viz}>
-      {props.data.map((v, i) => (
-        <Visualization
-          data={v}
-          instance={i}
+      {props.data.map((vg, i) => (
+        <VisualizationGroupDisplay
+          data={vg}
           key={i}
+          inputIndex={i}
           onTargetClick={props.onTargetClick}
         />
       ))}
@@ -57,9 +62,14 @@ interface AppBaseProps {
   fetchInit: () => void;
   fetchData: (filter_config: FilterConfig) => void;
   config: any;
-  data: VisualizationOutput[];
+  data: VisualizationGroup[];
   loading: boolean;
-  onTargetClick: (labelIndex: number, instance: number, callback: () => void) => void;
+  onTargetClick: (
+    labelIndex: number,
+    inputIndex: number,
+    modelIndex: number,
+    callback: () => void
+  ) => void;
 }
 
 class AppBase extends React.Component<AppBaseProps> {

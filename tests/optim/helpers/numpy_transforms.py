@@ -1,8 +1,7 @@
 import math
-from typing import List, Optional, Tuple, Union, cast
+from typing import List, Optional, Tuple, Union, cast, no_type_check
 
 import numpy as np
-
 from captum.optim._utils.typing import IntSeqOrIntType
 
 
@@ -112,6 +111,7 @@ class CenterCrop:
         )
 
 
+@no_type_check
 def center_crop(
     input: np.ndarray,
     crop_vals: IntSeqOrIntType,

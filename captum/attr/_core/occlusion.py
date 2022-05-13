@@ -3,17 +3,15 @@ from typing import Any, Callable, Tuple, Union
 
 import numpy as np
 import torch
-from torch import Tensor
-
-from captum.log import log_usage
-
-from ..._utils.common import _format_input
-from ..._utils.typing import BaselineType, TargetType, TensorOrTupleOfTensorsGeneric
-from .._utils.common import (
+from captum._utils.common import _format_tensor_into_tuples
+from captum._utils.typing import BaselineType, TargetType, TensorOrTupleOfTensorsGeneric
+from captum.attr._core.feature_ablation import FeatureAblation
+from captum.attr._utils.common import (
     _format_and_verify_sliding_window_shapes,
     _format_and_verify_strides,
 )
-from .feature_ablation import FeatureAblation
+from captum.log import log_usage
+from torch import Tensor
 
 
 class Occlusion(FeatureAblation):
@@ -59,6 +57,7 @@ class Occlusion(FeatureAblation):
         target: TargetType = None,
         additional_forward_args: Any = None,
         perturbations_per_eval: int = 1,
+        show_progress: bool = False,
     ) -> TensorOrTupleOfTensorsGeneric:
         r"""
         Args:
@@ -180,6 +179,11 @@ class Occlusion(FeatureAblation):
                             (perturbations_per_eval * #examples) / num_devices
                             samples.
                             Default: 1
+                show_progress (bool, optional): Displays the progress of computation.
+                            It will try to use tqdm if available for advanced features
+                            (e.g. time estimation). Otherwise, it will fallback to
+                            a simple output of progress.
+                            Default: False
 
         Returns:
                 *tensor* or tuple of *tensors* of **attributions**:
@@ -206,7 +210,7 @@ class Occlusion(FeatureAblation):
             >>> # shifting in each direction by the default of 1.
             >>> attr = ablator.attribute(input, target=1, sliding_window_shapes=(3,3))
         """
-        formatted_inputs = _format_input(inputs)
+        formatted_inputs = _format_tensor_into_tuples(inputs)
 
         # Formatting strides
         strides = _format_and_verify_strides(strides, formatted_inputs)
@@ -259,6 +263,7 @@ class Occlusion(FeatureAblation):
             sliding_window_tensors=sliding_window_tensors,
             shift_counts=tuple(shift_counts),
             strides=strides,
+            show_progress=show_progress,
         )
 
     def _construct_ablated_input(
@@ -367,3 +372,7 @@ class Occlusion(FeatureAblation):
     ) -> Tuple[int, int, None]:
         feature_max = np.prod(kwargs["shift_counts"])
         return 0, feature_max, None
+
+    def _get_feature_counts(self, inputs, feature_mask, **kwargs):
+        """return the numbers of possible input features"""
+        return tuple(np.prod(counts).astype(int) for counts in kwargs["shift_counts"])

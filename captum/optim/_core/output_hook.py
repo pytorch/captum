@@ -4,7 +4,6 @@ from warnings import warn
 
 import torch
 import torch.nn as nn
-
 from captum.optim._utils.typing import ModuleOutputMapping, TupleOfTensorsOrTensorType
 
 

@@ -1,11 +1,9 @@
 #!/usr/bin/env python3
-import unittest
 from collections import OrderedDict
 from typing import List, Optional, cast
 
-import torch
-
 import captum.optim._core.output_hook as output_hook
+import torch
 from captum.optim.models import googlenet
 from tests.helpers.basic import BaseTest, assertTensorAlmostEqual
 
@@ -193,10 +191,6 @@ class TestActivationFetcher(BaseTest):
         assertTensorAlmostEqual(self, activ, test_input)
 
     def test_activation_fetcher_single_target(self) -> None:
-        if torch.__version__ <= "1.2.0":
-            raise unittest.SkipTest(
-                "Skipping ActivationFetcher test due to insufficient Torch version."
-            )
         model = googlenet(pretrained=True)
 
         catch_activ = output_hook.ActivationFetcher(model, targets=[model.mixed4d])
@@ -208,10 +202,6 @@ class TestActivationFetcher(BaseTest):
         self.assertEqual(list(cast(torch.Tensor, m4d_activ).shape), [1, 528, 14, 14])
 
     def test_activation_fetcher_multiple_targets(self) -> None:
-        if torch.__version__ <= "1.2.0":
-            raise unittest.SkipTest(
-                "Skipping ActivationFetcher test due to insufficient Torch version."
-            )
         model = googlenet(pretrained=True)
 
         catch_activ = output_hook.ActivationFetcher(
