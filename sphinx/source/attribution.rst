@@ -15,3 +15,6 @@ Attribution
     occlusion
     feature_permutation
     shapley_value_sampling
+    lime
+    kernel_shap
+    lrp

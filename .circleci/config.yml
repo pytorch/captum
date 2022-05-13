@@ -31,19 +31,12 @@ commands:
           name: "Lint with flake8"
           command: flake8
 
-  lint_black:
-    description: "Lint with black"
+  ufmt_check:
+    description: "Check formatting with ufmt"
     steps:
       - run:
-          name: "Lint with black"
-          command: black --check --diff .
-
-  isort:
-    description: "Check import order with isort"
-    steps:
-      - run:
-          name: "Check import order with isort"
-          command: isort --check-only -v .
+          name: "Check formatting with ufmt"
+          command: ufmt check .
 
   mypy_check:
     description: "Static type checking with mypy"
@@ -86,7 +79,7 @@ commands:
           name: "Deploy website to GitHub Pages"
             # TODO: make the installation above conditional on there being relevant changes (no need to install if there are none)
           command: |
-            if ! git diff --name-only HEAD^ | grep -E "(^\.circleci\/.*)|(^docs\/.*)|(^website\/.*)|(^scripts\/.*)|(^sphinx\/.*)|(^tutorials\/.*)"; then
+            if ! git diff --name-only HEAD^ | grep -E "(^captum\/.*)|(^\.circleci\/.*)|(^docs\/.*)|(^website\/.*)|(^scripts\/.*)|(^sphinx\/.*)|(^tutorials\/.*)"; then
               echo "Skipping deploy. No relevant website files have changed"
             elif [[ $CIRCLE_PROJECT_USERNAME == "pytorch" && -z $CI_PULL_REQUEST && -z $CIRCLE_PR_USERNAME ]]; then
               mkdir -p website/static/.circleci && cp -a .circleci/. website/static/.circleci/.
@@ -113,6 +106,7 @@ commands:
           name: "Switch to Python v3.7"
           command: |
             pyenv versions
+            pyenv install 3.7.0
             pyenv global 3.7.0
 
   install_cuda:
@@ -121,76 +115,96 @@ commands:
       - run:
           name: "Install CUDA"
           command: |
-            wget https://developer.download.nvidia.com/compute/cuda/repos/ubuntu1604/x86_64/cuda-ubuntu1604.pin
-            sudo mv cuda-ubuntu1604.pin /etc/apt/preferences.d/cuda-repository-pin-600
-            wget http://developer.download.nvidia.com/compute/cuda/10.2/Prod/local_installers/cuda-repo-ubuntu1604-10-2-local-10.2.89-440.33.01_1.0-1_amd64.deb
-            sudo dpkg -i cuda-repo-ubuntu1604-10-2-local-10.2.89-440.33.01_1.0-1_amd64.deb
-            sudo apt-key add /var/cuda-repo-10-2-local-10.2.89-440.33.01/7fa2af80.pub
+            wget https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004/x86_64/cuda-ubuntu2004.pin
+            sudo mv cuda-ubuntu2004.pin /etc/apt/preferences.d/cuda-repository-pin-600
+            wget https://developer.download.nvidia.com/compute/cuda/11.4.2/local_installers/cuda-repo-ubuntu2004-11-4-local_11.4.2-470.57.02-1_amd64.deb
+            sudo dpkg -i cuda-repo-ubuntu2004-11-4-local_11.4.2-470.57.02-1_amd64.deb
+            sudo apt-key add /var/cuda-repo-ubuntu2004-11-4-local/7fa2af80.pub
             sudo apt-get update
             sudo apt-get --yes --force-yes install cuda
 
 jobs:
 
-  lint_test_py36_pip:
-    docker:
-      - image: circleci/python:3.6.8
-    steps:
-      - checkout
-      - pip_install:
-          args: "-n"
-      - lint_flake8
-      - lint_black
-      - isort
-      - unit_tests
-      - sphinx
-
-  lint_test_py36_pip_release:
+  lint_py36:
     docker:
       - image: circleci/python:3.6.8
     steps:
       - checkout
       - pip_install
       - lint_flake8
-      - lint_black
-      - isort
-      - mypy_check
-      - unit_tests
+      - ufmt_check
       - sphinx
 
-  test_py36_pip_torch_1_3:
+  test_py36_pip:
     docker:
       - image: circleci/python:3.6.8
     steps:
       - checkout
       - pip_install:
-          args: "-v 1.3"
+          args: "-n"
+      - mypy_check
       - unit_tests
 
-  test_py36_pip_torch_1_2:
+  test_py36_pip_release:
+    docker:
+      - image: circleci/python:3.6.8
+    steps:
+      - checkout
+      - pip_install
+      - mypy_check
+      - unit_tests
+
+  test_py36_pip_torch_1_6:
     docker:
       - image: circleci/python:3.6.8
     steps:
       - checkout
       - pip_install:
-          args: "-v 1.2"
+          args: "-v 1.6"
       - unit_tests
 
-  lint_test_py37_conda:
+  test_py36_pip_torch_1_7:
+    docker:
+      - image: circleci/python:3.6.8
+    steps:
+      - checkout
+      - pip_install:
+          args: "-v 1.7"
+      - unit_tests
+
+  test_py36_pip_torch_1_8:
+    docker:
+      - image: circleci/python:3.6.8
+    steps:
+      - checkout
+      - pip_install:
+          args: "-v 1.8"
+      - unit_tests
+
+  test_py36_pip_torch_1_9:
+    docker:
+      - image: circleci/python:3.6.8
+    steps:
+      - checkout
+      - pip_install:
+          args: "-v 1.9"
+      - unit_tests
+
+
+  test_py37_conda:
     docker:
       - image: continuumio/miniconda3
     steps:
       - checkout
       - conda_install:
           args: "-n"
-      - lint_flake8
-      - isort
       - unit_tests
-      - sphinx
+
 
   test_cuda_multi_gpu:
     machine:
-      image: ubuntu-1604:201903-01
-    resource_class: gpu.large
+      image: ubuntu-2004:202201-02
+    resource_class: gpu.nvidia.medium.multi
     steps:
       - checkout
       - install_cuda
@@ -205,11 +219,6 @@ jobs:
       - checkout
       - pip_install:
           args: "-n -d"
-      - lint_flake8
-      - lint_black
-      - isort
-      - unit_tests
-      - sphinx
       - configure_github_bot
       - deploy_site
 
@@ -225,24 +234,38 @@ aliases:
 
 workflows:
 
-  lint_and_test:
+  lint_test_and_deploy_site:
     jobs:
-      - lint_test_py36_pip:
+      - lint_py36:
           filters: *exclude_ghpages_fbconfig
-      - lint_test_py36_pip_release:
+      - test_py36_pip:
           filters: *exclude_ghpages_fbconfig
-      - lint_test_py37_conda:
+      - test_py36_pip_release:
           filters: *exclude_ghpages_fbconfig
-      - test_py36_pip_torch_1_2:
+      - test_py37_conda:
           filters: *exclude_ghpages_fbconfig
-      - test_py36_pip_torch_1_3:
+      - test_py36_pip_torch_1_6:
+          filters: *exclude_ghpages_fbconfig
+      - test_py36_pip_torch_1_7:
+          filters: *exclude_ghpages_fbconfig
+      - test_py36_pip_torch_1_8:
+          filters: *exclude_ghpages_fbconfig
+      - test_py36_pip_torch_1_9:
           filters: *exclude_ghpages_fbconfig
       - test_cuda_multi_gpu:
           filters: *exclude_ghpages_fbconfig
 
-  auto_deploy_site:
-    jobs:
       - auto_deploy_site:
+          requires:
+            - lint_py36
+            - test_py36_pip
+            - test_py36_pip_release
+            - test_py37_conda
+            - test_py36_pip_torch_1_6
+            - test_py36_pip_torch_1_7
+            - test_py36_pip_torch_1_8
+            - test_py36_pip_torch_1_9
+            - test_cuda_multi_gpu
           filters:
             branches:
               only:

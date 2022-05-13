@@ -6,7 +6,6 @@ from typing import Callable
 
 import numpy as np
 import torch
-
 from captum.log import patch_methods
 
 
@@ -14,41 +13,46 @@ def deep_copy_args(func: Callable):
     def copy_args(*args, **kwargs):
         return func(
             *(copy.deepcopy(x) for x in args),
-            **{k: copy.deepcopy(v) for k, v in kwargs.items()}
+            **{k: copy.deepcopy(v) for k, v in kwargs.items()},
         )
 
     return copy_args
-
-
-def assertArraysAlmostEqual(inputArr, refArr, delta=0.05):
-    for index, (input, ref) in enumerate(zip(inputArr, refArr)):
-        almost_equal = abs(input - ref) <= delta
-        if hasattr(almost_equal, "__iter__"):
-            almost_equal = almost_equal.all()
-        assert (
-            almost_equal
-        ), "Values at index {}, {} and {}, \
-            differ more than by {}".format(
-            index, input, ref, delta
-        )
 
 
 def assertTensorAlmostEqual(test, actual, expected, delta=0.0001, mode="sum"):
     assert isinstance(actual, torch.Tensor), (
         "Actual parameter given for " "comparison must be a tensor."
     )
-    actual = actual.squeeze().cpu()
     if not isinstance(expected, torch.Tensor):
         expected = torch.tensor(expected, dtype=actual.dtype)
-    expected = expected.squeeze().cpu()
+    assert (
+        actual.shape == expected.shape
+    ), f"Expected tensor with shape: {expected.shape}. Actual shape {actual.shape}."
+    actual = actual.cpu()
+    expected = expected.cpu()
     if mode == "sum":
         test.assertAlmostEqual(
             torch.sum(torch.abs(actual - expected)).item(), 0.0, delta=delta
         )
     elif mode == "max":
-        test.assertAlmostEqual(
-            torch.max(torch.abs(actual - expected)).item(), 0.0, delta=delta
-        )
+        # if both tensors are empty, they are equal but there is no max
+        if actual.numel() == expected.numel() == 0:
+            return
+
+        if actual.size() == torch.Size([]):
+            test.assertAlmostEqual(
+                torch.max(torch.abs(actual - expected)).item(), 0.0, delta=delta
+            )
+        else:
+            for index, (input, ref) in enumerate(zip(actual, expected)):
+                almost_equal = abs(input - ref) <= delta
+                if hasattr(almost_equal, "__iter__"):
+                    almost_equal = almost_equal.all()
+                assert (
+                    almost_equal
+                ), "Values at index {}, {} and {}, differ more than by {}".format(
+                    index, input, ref, delta
+                )
     else:
         raise ValueError("Mode for assertion comparison must be one of `max` or `sum`.")
 
@@ -63,17 +67,12 @@ def assertTensorTuplesAlmostEqual(test, actual, expected, delta=0.0001, mode="su
 
 def assertAttributionComparision(test, attributions1, attributions2):
     for attribution1, attribution2 in zip(attributions1, attributions2):
-        for attr_row1, attr_row2 in zip(
-            attribution1.detach().numpy(), attribution2.detach().numpy()
-        ):
-            if isinstance(attr_row1, np.ndarray):
-                assertArraysAlmostEqual(attr_row1, attr_row2, delta=0.05)
-            else:
-                test.assertAlmostEqual(attr_row1, attr_row2, delta=0.05)
+        for attr_row1, attr_row2 in zip(attribution1, attribution2):
+            assertTensorAlmostEqual(test, attr_row1, attr_row2, 0.05, "max")
 
 
 def assert_delta(test, delta):
-    delta_condition = all(abs(delta.numpy().flatten()) < 0.00001)
+    delta_condition = (delta.abs() < 0.00001).all()
     test.assertTrue(
         delta_condition,
         "The sum of attribution values {} for relu layer is not "

@@ -5,7 +5,6 @@ from typing import Dict, List, Optional, Tuple, Type, Union, cast
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-
 from captum.optim._core.output_hook import ActivationFetcher
 from captum.optim._utils.typing import ModuleOutputMapping, TupleOfTensorsOrTensorType
 
@@ -16,15 +15,16 @@ def get_model_layers(model: nn.Module) -> List[str]:
     """
     layers = []
 
-    def get_layers(net: nn.Module, prefix: List = []) -> None:
-        if hasattr(net, "_modules"):
-            for name, layer in net._modules.items():
-                if layer is None:
-                    continue
-                separator = "" if str(name).isdigit() else "."
-                name = "[" + str(name) + "]" if str(name).isdigit() else name
-                layers.append(separator.join(prefix + [name]))
-                get_layers(layer, prefix=prefix + [name])
+    def get_layers(net: nn.Module, prefix: str = "") -> None:
+        for name, layer in net.named_children():
+            delimiter = "." if prefix else ""
+            name_str = (
+                f"{prefix}[{name}]"
+                if str(name).isdigit()
+                else f"{prefix}{delimiter}{name}"
+            )
+            layers.append(name_str)
+            get_layers(layer, prefix=name_str)
 
     get_layers(model)
     return layers
@@ -62,6 +62,7 @@ class RedirectedReluLayer(nn.Module):
     Class for applying RedirectedReLU
     """
 
+    @torch.jit.ignore
     def forward(self, input: torch.Tensor) -> torch.Tensor:
         return RedirectedReLU.apply(input)
 
@@ -71,7 +72,7 @@ def replace_layers(
     layer1: Type[nn.Module],
     layer2: Type[nn.Module],
     transfer_vars: bool = False,
-    **kwargs
+    **kwargs,
 ) -> None:
     """
     Replace all target layers with new layers inside the specified model,
@@ -190,7 +191,7 @@ def collect_activations(
     """
     Collect target activations for a model.
     """
-    if not hasattr(targets, "__iter__"):
+    if not isinstance(targets, list):
         targets = [targets]
     catch_activ = ActivationFetcher(model, targets)
     activ_out = catch_activ(model_input)

@@ -4,26 +4,23 @@ from inspect import signature
 from typing import Callable, List, Tuple, Union
 
 import torch
-from torch import Tensor
-from torch.nn import Module
-
 from captum.attr._core.deep_lift import DeepLift, DeepLiftShap
 from captum.attr._core.integrated_gradients import IntegratedGradients
-
-from ..helpers.basic import (
-    BaseTest,
-    assertArraysAlmostEqual,
+from tests.helpers.basic import (
     assertAttributionComparision,
     assertTensorAlmostEqual,
+    BaseTest,
 )
-from ..helpers.basic_models import (
-    BasicModelWithReusableModules,
+from tests.helpers.basic_models import (
+    BasicModelWithReusedModules,
     Conv1dSeqModel,
     LinearMaxPoolLinearModel,
     ReLUDeepLiftModel,
     ReLULinearModel,
     TanhDeepLiftModel,
 )
+from torch import Tensor
+from torch.nn import Module
 
 
 class Test(BaseTest):
@@ -96,7 +93,7 @@ class Test(BaseTest):
         self._deeplift_assert(model, DeepLift(model), inputs, baselines)
 
     def test_relu_linear_deeplift(self) -> None:
-        model = ReLULinearModel(inplace=True)
+        model = ReLULinearModel(inplace=False)
         x1 = torch.tensor([[-10.0, 1.0, -5.0]], requires_grad=True)
         x2 = torch.tensor([[3.0, 3.0, 1.0]], requires_grad=True)
 
@@ -106,36 +103,8 @@ class Test(BaseTest):
         # expected = [[[0.0, 0.0]], [[6.0, 2.0]]]
         self._deeplift_assert(model, DeepLift(model), inputs, baselines)
 
-    def test_relu_linear_deeplift_compare_inplace(self) -> None:
-        model1 = ReLULinearModel(inplace=True)
-        x1 = torch.tensor([[-10.0, 1.0, -5.0], [2.0, 3.0, 4.0]], requires_grad=True)
-        x2 = torch.tensor([[3.0, 3.0, 1.0], [2.3, 5.0, 4.0]], requires_grad=True)
-        inputs = (x1, x2)
-        attributions1 = DeepLift(model1).attribute(inputs)
-
-        model2 = ReLULinearModel()
-        attributions2 = DeepLift(model2).attribute(inputs)
-        assertTensorAlmostEqual(self, attributions1[0], attributions2[0])
-        assertTensorAlmostEqual(self, attributions1[1], attributions2[1])
-
-    def test_relu_linear_deepliftshap_compare_inplace(self) -> None:
-        model1 = ReLULinearModel(inplace=True)
-        x1 = torch.tensor([[-10.0, 1.0, -5.0], [2.0, 3.0, 4.0]], requires_grad=True)
-        x2 = torch.tensor([[3.0, 3.0, 1.0], [2.3, 5.0, 4.0]], requires_grad=True)
-        inputs = (x1, x2)
-        b1 = torch.tensor([[0.0, 0.0, 0.0], [1.0, 1.0, 1.0]])
-        b2 = torch.tensor([[0.0, 0.0, 0.0], [1.0, 1.0, 1.0]])
-        baselines = (b1, b2)
-
-        attributions1 = DeepLiftShap(model1).attribute(inputs, baselines)
-
-        model2 = ReLULinearModel()
-        attributions2 = DeepLiftShap(model2).attribute(inputs, baselines)
-        assertTensorAlmostEqual(self, attributions1[0], attributions2[0])
-        assertTensorAlmostEqual(self, attributions1[1], attributions2[1])
-
     def test_relu_linear_deeplift_batch(self) -> None:
-        model = ReLULinearModel(inplace=True)
+        model = ReLULinearModel(inplace=False)
         x1 = torch.tensor([[-10.0, 1.0, -5.0], [2.0, 3.0, 4.0]], requires_grad=True)
         x2 = torch.tensor([[3.0, 3.0, 1.0], [2.3, 5.0, 4.0]], requires_grad=True)
 
@@ -184,8 +153,8 @@ class Test(BaseTest):
         attr = DeepLiftShap(model, multiply_by_inputs=False).attribute(
             inputs, baselines
         )
-        assertTensorAlmostEqual(self, attr[0], 2 * torch.ones(4, 1))
-        assertTensorAlmostEqual(self, attr[1], 0.5 * torch.ones(4, 1))
+        assertTensorAlmostEqual(self, attr[0], 2 * torch.ones(4, 1, 1, 1))
+        assertTensorAlmostEqual(self, attr[1], 0.5 * torch.ones(4, 1, 1, 1))
 
     def test_relu_deepliftshap_multi_ref(self) -> None:
         x1 = torch.tensor([[1.0]], requires_grad=True)
@@ -201,7 +170,7 @@ class Test(BaseTest):
         self._deeplift_assert(model, DeepLiftShap(model), inputs, baselines)
 
     def test_relu_deepliftshap_baselines_as_func(self) -> None:
-        model = ReLULinearModel(inplace=True)
+        model = ReLULinearModel(inplace=False)
         x1 = torch.tensor([[-10.0, 1.0, -5.0]])
         x2 = torch.tensor([[3.0, 3.0, 1.0]])
 
@@ -249,7 +218,7 @@ class Test(BaseTest):
         ) -> Tuple[Tensor, ...]:
             return tuple(multiplier * 0.0 for multiplier in multipliers)
 
-        model = ReLULinearModel(inplace=True)
+        model = ReLULinearModel(inplace=False)
         x1 = torch.tensor([[-10.0, 1.0, -5.0]])
         x2 = torch.tensor([[3.0, 3.0, 1.0]])
         b1 = torch.tensor([[0.0, 0.0, 0.0], [1.0, 1.0, 1.0]])
@@ -278,7 +247,7 @@ class Test(BaseTest):
         self.assertEqual(attr.shape, rand_seq_data.shape)
 
     def test_reusable_modules(self) -> None:
-        model = BasicModelWithReusableModules()
+        model = BasicModelWithReusedModules()
         input = torch.rand(1, 3)
         dl = DeepLift(model)
         with self.assertRaises(RuntimeError):
@@ -293,10 +262,10 @@ class Test(BaseTest):
         attrs, delta = dl.attribute(
             inputs, baselines, target=0, return_convergence_delta=True
         )
-        expected = [[0.0, 0.0, 0.0, -8.0], [0.0, -7.0, 0.0, 0.0]]
-        expected_delta = [0.0, 0.0]
-        assertArraysAlmostEqual(attrs.detach().numpy(), expected)
-        assertArraysAlmostEqual(delta.detach().numpy(), expected_delta)
+        expected = torch.Tensor([[0.0, 0.0, 0.0, -8.0], [0.0, -7.0, 0.0, 0.0]])
+        expected_delta = torch.Tensor([0.0, 0.0])
+        assertTensorAlmostEqual(self, attrs, expected, 0.0001)
+        assertTensorAlmostEqual(self, delta, expected_delta, 0.0001)
 
     def _deeplift_assert(
         self,
@@ -345,9 +314,11 @@ class Test(BaseTest):
                 delta_external = attr_method.compute_convergence_delta(
                     attributions, baselines, inputs
                 )
-                assertArraysAlmostEqual(delta, delta_external, 0.0)
+                assertTensorAlmostEqual(
+                    self, delta, delta_external, delta=0.0, mode="max"
+                )
 
-            delta_condition = all(abs(delta.numpy().flatten()) < 0.00001)
+            delta_condition = (delta.abs() < 0.00001).all()
             self.assertTrue(
                 delta_condition,
                 "The sum of attribution values {} is not "

@@ -1,12 +1,14 @@
 import { calcHSLFromScore } from "../utils/color";
+import { DataPoint } from "../utils/dataPoint";
 import React from "react";
 import styles from "../App.module.css";
 import Tooltip from "./Tooltip";
-import Plot from "./Plot";
+import { Bar } from "react-chartjs-2";
 import { FeatureOutput } from "../models/visualizationOutput";
 
 interface FeatureProps<T> {
   data: T;
+  hideHeaders?: boolean;
 }
 
 type ImageFeatureProps = FeatureProps<{
@@ -18,10 +20,13 @@ type ImageFeatureProps = FeatureProps<{
 function ImageFeature(props: ImageFeatureProps) {
   return (
     <>
-      <div className={styles["panel__column__title"]}>
-        {props.data.name} (Image)
-      </div>
+      {props.hideHeaders && (
+        <div className={styles["panel__column__title"]}>
+          {props.data.name} (Image)
+        </div>
+      )}
       <div className={styles["panel__column__body"]}>
+        <div className={styles["model-number-spacer"]} />
         <div className={styles.gallery}>
           <div className={styles["gallery__item"]}>
             <div className={styles["gallery__item__image"]}>
@@ -73,10 +78,15 @@ function TextFeature(props: TextFeatureProps) {
   });
   return (
     <>
-      <div className={styles["panel__column__title"]}>
-        {props.data.name} (Text)
+      {props.hideHeaders && (
+        <div className={styles["panel__column__title"]}>
+          {props.data.name} (Text)
+        </div>
+      )}
+      <div className={styles["panel__column__body"]}>
+        <div className={styles["model-number-spacer"]} />
+        {color_words}
       </div>
-      <div className={styles["panel__column__body"]}>{color_words}</div>
     </>
   );
 }
@@ -88,48 +98,60 @@ type GeneralFeatureProps = FeatureProps<{
 }>;
 
 function GeneralFeature(props: GeneralFeatureProps) {
+  const data = {
+    labels: props.data.base,
+    datasets: [
+      {
+        barPercentage: 0.5,
+        data: props.data.modified,
+        backgroundColor: (dataPoint: DataPoint) => {
+          if (!dataPoint.dataset || !dataPoint.dataset.data || dataPoint.datasetIndex === undefined) {
+            return "#d45c43"; // Default to red
+          }
+          const yValue = dataPoint.dataset.data[dataPoint.dataIndex as number] || 0;
+          return yValue < 0 ? "#d45c43" : "#80aaff"; // Red if negative, else blue
+        },
+      },
+    ],
+  };
+
   return (
-    <Plot
-      data={[
-        {
-          x: props.data.base,
-          y: props.data.modified,
-          type: "bar",
-          marker: {
-            color: props.data.modified.map(
-              (v) => (v < 0 ? "#d45c43" : "#80aaff") // red if negative, else blue
-            ),
-          },
-        },
-      ]}
-      config={{
-        displayModeBar: false,
-      }}
-      layout={{
-        height: 300,
-        margin: {
-          t: 20,
-          pad: 0,
-        },
-        yaxis: {
-          fixedrange: true,
-          showgrid: false,
-        },
-        xaxis: {
-          fixedrange: false,
+    <Bar
+      data={data}
+      width={300}
+      height={50}
+      legend={{ display: false }}
+      options={{
+        maintainAspectRatio: false,
+        scales: {
+          xAxes: [
+            {
+              gridLines: {
+                display: false,
+              },
+            },
+          ],
+          yAxes: [
+            {
+              gridLines: {
+                lineWidth: 0,
+                zeroLineWidth: 1,
+              },
+            },
+          ],
         },
       }}
     />
   );
 }
 
-function Feature(props: {data: FeatureOutput}) {
+function Feature(props: { data: FeatureOutput; hideHeaders: boolean }) {
   const data = props.data;
   switch (data.type) {
     case "image":
-      return <ImageFeature data={data} />;
+      return <ImageFeature data={data} hideHeaders={props.hideHeaders} />;
     case "text":
-      return <TextFeature data={data} />;
+      return <TextFeature data={data} hideHeaders={props.hideHeaders} />;
     case "general":
       return <GeneralFeature data={data} />;
     case "empty":

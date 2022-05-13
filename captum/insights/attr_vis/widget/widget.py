@@ -1,9 +1,8 @@
 #!/usr/bin/env python3
 import ipywidgets as widgets
-from traitlets import Dict, Instance, List, Unicode, observe
-
 from captum.insights import AttributionVisualizer
 from captum.insights.attr_vis.server import namedtuple_to_dict
+from traitlets import Dict, Instance, List, observe, Unicode
 
 
 @widgets.register
@@ -25,7 +24,7 @@ class CaptumInsights(widgets.DOMWidget):
     config = Dict().tag(sync=True)
     output = List().tag(sync=True)
 
-    def __init__(self, **kwargs):
+    def __init__(self, **kwargs) -> None:
         super(CaptumInsights, self).__init__(**kwargs)
         self.insights_config = self.visualizer.get_insights_config()
         self.out = widgets.Output()
@@ -48,7 +47,9 @@ class CaptumInsights(widgets.DOMWidget):
         with self.out:
             self.attribution = namedtuple_to_dict(
                 self.visualizer._calculate_attribution_from_cache(
-                    self.label_details["instance"], self.label_details["labelIndex"]
+                    self.label_details["inputIndex"],
+                    self.label_details["modelIndex"],
+                    self.label_details["labelIndex"],
                 )
             )
             self.label_details = dict()

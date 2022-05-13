@@ -5,12 +5,9 @@ from collections import namedtuple
 from io import BytesIO
 from typing import Callable, List, Optional, Union
 
-import numpy as np
-
 from captum._utils.common import safe_div
 from captum.attr._utils import visualization as viz
-
-from ._utils.transforms import format_transforms
+from captum.insights.attr_vis._utils.transforms import format_transforms
 
 FeatureOutput = namedtuple("FeatureOutput", "name base modified type contribution")
 
@@ -40,7 +37,7 @@ class BaseFeature:
         baseline_transforms: Optional[Union[Callable, List[Callable]]],
         input_transforms: Optional[Union[Callable, List[Callable]]],
         visualization_transform: Optional[Callable],
-    ):
+    ) -> None:
         r"""
         Args:
 
@@ -66,7 +63,8 @@ class BaseFeature:
         self.input_transforms = format_transforms(input_transforms)
         self.visualization_transform = visualization_transform
 
-    def visualization_type(self) -> str:
+    @staticmethod
+    def visualization_type() -> str:
         raise NotImplementedError
 
     def visualize(self, attribution, data, contribution_frac) -> FeatureOutput:
@@ -86,7 +84,7 @@ class ImageFeature(BaseFeature):
         baseline_transforms: Union[Callable, List[Callable]],
         input_transforms: Union[Callable, List[Callable]],
         visualization_transform: Optional[Callable] = None,
-    ):
+    ) -> None:
         r"""
         Args:
             name (str): The label of the specific feature. For example, an
@@ -112,16 +110,18 @@ class ImageFeature(BaseFeature):
             visualization_transform=visualization_transform,
         )
 
-    def visualization_type(self) -> str:
+    @staticmethod
+    def visualization_type() -> str:
         return "image"
 
     def visualize(self, attribution, data, contribution_frac) -> FeatureOutput:
-        attribution = attribution.squeeze()
-        data = data.squeeze()
-        data_t = np.transpose(data.cpu().detach().numpy(), (1, 2, 0))
-        attribution_t = np.transpose(
-            attribution.squeeze().cpu().detach().numpy(), (1, 2, 0)
-        )
+        if self.visualization_transform:
+            data = self.visualization_transform(data)
+
+        data_t, attribution_t = [
+            t.detach().squeeze().permute((1, 2, 0)).cpu().numpy()
+            for t in (data, attribution)
+        ]
 
         orig_fig, _ = viz.visualize_image_attr(
             attribution_t, data_t, method="original_image", use_pyplot=False
@@ -159,7 +159,7 @@ class TextFeature(BaseFeature):
         baseline_transforms: Union[Callable, List[Callable]],
         input_transforms: Union[Callable, List[Callable]],
         visualization_transform: Callable,
-    ):
+    ) -> None:
         r"""
         Args:
             name (str): The label of the specific feature. For example, an
@@ -196,7 +196,8 @@ class TextFeature(BaseFeature):
             visualization_transform=visualization_transform,
         )
 
-    def visualization_type(self) -> str:
+    @staticmethod
+    def visualization_type() -> str:
         return "text"
 
     def visualize(self, attribution, data, contribution_frac) -> FeatureOutput:
@@ -210,11 +211,9 @@ class TextFeature(BaseFeature):
         if len(attribution.shape) > 1:
             attribution = attribution.sum(dim=1)
 
-        # L-Infinity norm
-        attr_max = abs(attribution).max()
-        normalized_attribution = safe_div(
-            attribution, attr_max, default_value=attribution
-        )
+        # L-Infinity norm, if norm is 0, all attr elements are 0
+        attr_max = attribution.abs().max()
+        normalized_attribution = safe_div(attribution, attr_max)
 
         modified = [x * 100 for x in normalized_attribution.tolist()]
         return FeatureOutput(
@@ -235,7 +234,7 @@ class GeneralFeature(BaseFeature):
     where N is the number of samples and C is the number of categories.
     """
 
-    def __init__(self, name: str, categories: List[str]):
+    def __init__(self, name: str, categories: List[str]) -> None:
         r"""
         Args:
             name (str): The label of the specific feature. For example, an
@@ -252,18 +251,17 @@ class GeneralFeature(BaseFeature):
         )
         self.categories = categories
 
-    def visualization_type(self) -> str:
+    @staticmethod
+    def visualization_type() -> str:
         return "general"
 
     def visualize(self, attribution, data, contribution_frac) -> FeatureOutput:
         attribution = attribution.squeeze(0)
         data = data.squeeze(0)
 
-        # L-2 norm
+        # L-2 norm, if norm is 0, all attr elements are 0
         l2_norm = attribution.norm()
-        normalized_attribution = safe_div(
-            attribution, l2_norm, default_value=attribution
-        )
+        normalized_attribution = safe_div(attribution, l2_norm)
 
         modified = [x * 100 for x in normalized_attribution.tolist()]
 
@@ -284,7 +282,7 @@ class EmptyFeature(BaseFeature):
         baseline_transforms: Optional[Union[Callable, List[Callable]]] = None,
         input_transforms: Optional[Union[Callable, List[Callable]]] = None,
         visualization_transform: Optional[Callable] = None,
-    ):
+    ) -> None:
         super().__init__(
             name,
             baseline_transforms=baseline_transforms,
@@ -292,7 +290,8 @@ class EmptyFeature(BaseFeature):
             visualization_transform=visualization_transform,
         )
 
-    def visualization_type(self) -> str:
+    @staticmethod
+    def visualization_type() -> str:
         return "empty"
 
     def visualize(self, _attribution, _data, contribution_frac) -> FeatureOutput:

@@ -10,17 +10,13 @@
 # -- Path setup --------------------------------------------------------------
 
 import os
-import re
 import sys
 
-# base_path = os.path.abspath("../captum"))
-base_path = os.path.abspath(os.path.join(__file__, "..", "..", "..", "captum"))
+base_path = os.path.abspath(os.path.join(__file__, "..", "..", ".."))
+# read module from src instead of installation
+sys.path.insert(0, base_path)
 
-sys.path.append(base_path)
-
-sys.path.insert(0, os.path.abspath("../..captum/attr"))
-
-print(base_path)
+print("base path for Captum module:", base_path)
 
 # -- Project information -----------------------------------------------------
 
@@ -28,16 +24,12 @@ project = "Captum"
 copyright = "2019, Facebook, Inc."
 author = "The PyTorch Team"
 
+# import captum from base_path to get the version
+# but the version is no longer used
+# since version is trimmed in sphinx pages to embed into docusaurus
+import captum  # noqa: E402
 
-# get version string from setup.py
-with open(os.path.join(base_path, "__init__.py"), "r") as f:
-    match = re.search(r"__version__ = ['\"]([^'\"]*)['\"]", f.read(), re.M)
-
-# The full version (of the form X.Y.ZaW or X.Y.Z.pW)
-release = match.group(1)
-# The short X.Y.Z version
-splits = release.split(".")
-version = ".".join(splits[:2] + [splits[2][:1]])  # TODO: be smarter here
+version = captum.__version__
 
 
 # -- General configuration ---------------------------------------------------
@@ -50,10 +42,10 @@ extensions = [
     "sphinx.ext.doctest",
     "sphinx.ext.todo",
     "sphinx.ext.coverage",
-    "sphinx.ext.mathjax",
     "sphinx.ext.ifconfig",
     "sphinx.ext.viewcode",
     "sphinx.ext.intersphinx",
+    "sphinxcontrib.katex",
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -123,6 +115,11 @@ html_show_sphinx = False
 # If true, "(C) Copyright ..." is shown in the HTML footer. Default is True.
 html_show_copyright = False
 
+# If true, the reST sources are included in the HTML build as _sources/name.
+# The default is True.
+# Uncomment the following line after sphinx 4.5.0 release
+# https://github.com/sphinx-doc/sphinx/issues/9456
+# html_copy_source = False
 
 # -- Options for HTMLHelp output ---------------------------------------------
 

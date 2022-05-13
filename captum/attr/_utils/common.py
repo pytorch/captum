@@ -1,23 +1,30 @@
 #!/usr/bin/env python3
 import typing
 from inspect import signature
-from typing import TYPE_CHECKING, Any, Callable, List, Tuple, Union
+from typing import Any, Callable, List, Tuple, TYPE_CHECKING, Union
 
 import torch
-from torch import Tensor
-
-from ..._utils.common import _format_baseline, _format_input, _format_output
-from ..._utils.common import _validate_input as _validate_input_basic
-from ..._utils.typing import (
+from captum._utils.common import (
+    _format_baseline,
+    _format_output,
+    _format_tensor_into_tuples,
+    _validate_input as _validate_input_basic,
+)
+from captum._utils.typing import (
     BaselineType,
     Literal,
     TargetType,
     TensorOrTupleOfTensorsGeneric,
 )
-from .approximation_methods import SUPPORTED_METHODS
+from captum.attr._utils.approximation_methods import SUPPORTED_METHODS
+from torch import Tensor
 
 if TYPE_CHECKING:
-    from .attribution import GradientAttribution
+    from captum.attr._utils.attribution import GradientAttribution
+
+
+def _sum_rows(input: Tensor) -> Tensor:
+    return input.reshape(input.shape[0], -1).sum(1)
 
 
 def _validate_target(num_samples: int, target: TargetType) -> None:
@@ -78,7 +85,7 @@ def _format_input_baseline(
 def _format_input_baseline(
     inputs: Union[Tensor, Tuple[Tensor, ...]], baselines: BaselineType
 ) -> Tuple[Tuple[Tensor, ...], Tuple[Union[Tensor, int, float], ...]]:
-    inputs = _format_input(inputs)
+    inputs = _format_tensor_into_tuples(inputs)
     baselines = _format_baseline(baselines, inputs)
     return inputs, baselines
 
@@ -134,7 +141,7 @@ def _format_callable_baseline(
             baselines = baselines()
         else:
             baselines = baselines(inputs)
-    return _format_baseline(baselines, _format_input(inputs))
+    return _format_baseline(baselines, _format_tensor_into_tuples(inputs))
 
 
 def _format_and_verify_strides(
@@ -343,3 +350,23 @@ def _find_output_mode_and_verify(
             isinstance(initial_eval, torch.Tensor) and initial_eval[0].numel() == 1
         ), "Target should identify a single element in the model output."
     return agg_output_mode
+
+
+def _construct_default_feature_mask(
+    inputs: Tuple[Tensor, ...]
+) -> Tuple[Tuple[Tensor, ...], int]:
+    feature_mask = []
+    current_num_features = 0
+    for i in range(len(inputs)):
+        num_features = torch.numel(inputs[i][0])
+        feature_mask.append(
+            current_num_features
+            + torch.reshape(
+                torch.arange(num_features, device=inputs[i].device),
+                inputs[i][0:1].shape,
+            )
+        )
+        current_num_features += num_features
+    total_features = current_num_features
+    feature_mask = tuple(feature_mask)
+    return feature_mask, total_features
