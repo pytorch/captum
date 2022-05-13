@@ -5,16 +5,14 @@ from __future__ import print_function
 import unittest
 
 import torch
-from torch.nn import Embedding
-
 from captum.attr._models.base import (
-    InterpretableEmbeddingBase,
     configure_interpretable_embedding_layer,
+    InterpretableEmbeddingBase,
     remove_interpretable_embedding_layer,
 )
-
-from ...helpers.basic import assertArraysAlmostEqual
-from ...helpers.basic_models import BasicEmbeddingModel, TextModule
+from tests.helpers.basic import assertTensorAlmostEqual
+from tests.helpers.basic_models import BasicEmbeddingModel, TextModule
+from torch.nn import Embedding
 
 
 class Test(unittest.TestCase):
@@ -73,12 +71,11 @@ class Test(unittest.TestCase):
         )
         actual = interpretable_embedding.indices_to_embeddings(input=input2)
         output_interpretable_models = model(input1, actual)
-        assertArraysAlmostEqual(output, output_interpretable_models)
+        assertTensorAlmostEqual(
+            self, output, output_interpretable_models, delta=0.05, mode="max"
+        )
 
-        # using assertArraysAlmostEqual instead of assertTensorAlmostEqual because
-        # it is important and necessary that each element in comparing tensors
-        # match exactly.
-        assertArraysAlmostEqual(expected, actual, 0.0)
+        assertTensorAlmostEqual(self, expected, actual, delta=0.0, mode="max")
         self.assertTrue(model.embedding2.__class__ is InterpretableEmbeddingBase)
         remove_interpretable_embedding_layer(model, interpretable_embedding)
         self.assertTrue(model.embedding2.__class__ is TextModule)
@@ -99,12 +96,11 @@ class Test(unittest.TestCase):
             input=input2, another_input=input3
         )
         output_interpretable_models = model(input1, actual)
-        assertArraysAlmostEqual(output, output_interpretable_models)
+        assertTensorAlmostEqual(
+            self, output, output_interpretable_models, delta=0.05, mode="max"
+        )
 
-        # using assertArraysAlmostEqual instead of assertTensorAlmostEqual because
-        # it is important and necessary that each element in comparing tensors
-        # match exactly.
-        assertArraysAlmostEqual(expected, actual, 0.0)
+        assertTensorAlmostEqual(self, expected, actual, delta=0.0, mode="max")
         self.assertTrue(model.embedding2.__class__ is InterpretableEmbeddingBase)
         remove_interpretable_embedding_layer(model, interpretable_embedding2)
         self.assertTrue(model.embedding2.__class__ is TextModule)

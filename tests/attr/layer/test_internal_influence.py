@@ -3,17 +3,15 @@ import unittest
 from typing import Any, List, Tuple, Union
 
 import torch
-from torch import Tensor
-from torch.nn import Module
-
 from captum._utils.typing import BaselineType
 from captum.attr._core.layer.internal_influence import InternalInfluence
-
-from ...helpers.basic import BaseTest, assertTensorTuplesAlmostEqual
-from ...helpers.basic_models import (
+from tests.helpers.basic import assertTensorTuplesAlmostEqual, BaseTest
+from tests.helpers.basic_models import (
     BasicModel_MultiLayer,
     BasicModel_MultiLayer_MultiInput,
 )
+from torch import Tensor
+from torch.nn import Module
 
 
 class Test(BaseTest):
@@ -44,7 +42,7 @@ class Test(BaseTest):
         net = BasicModel_MultiLayer(inplace=True)
         inp = torch.tensor([[0.0, 100.0, 0.0]])
         self._internal_influence_test_assert(
-            net, net.relu, inp, ([[0.9, 1.0, 1.0, 1.0]],), attribute_to_layer_input=True
+            net, net.relu, inp, ([0.9, 1.0, 1.0, 1.0],), attribute_to_layer_input=True
         )
 
     def test_simple_linear_internal_inf_inplace(self) -> None:
@@ -150,7 +148,10 @@ class Test(BaseTest):
         target_layer: Module,
         test_input: Union[Tensor, Tuple[Tensor, ...]],
         expected_activation: Union[
-            float, List[List[float]], Tuple[List[List[float]], ...]
+            float,
+            List[List[float]],
+            Tuple[List[float], ...],
+            Tuple[List[List[float]], ...],
         ],
         baseline: BaselineType = None,
         additional_args: Any = None,

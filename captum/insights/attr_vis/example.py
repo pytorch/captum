@@ -5,7 +5,6 @@ import torch
 import torch.nn as nn
 import torchvision
 import torchvision.transforms as transforms
-
 from captum.insights import AttributionVisualizer, Batch
 from captum.insights.attr_vis.features import ImageFeature
 
@@ -28,7 +27,7 @@ def get_classes():
 
 def get_pretrained_model():
     class Net(nn.Module):
-        def __init__(self):
+        def __init__(self) -> None:
             super(Net, self).__init__()
             self.conv1 = nn.Conv2d(3, 6, 5)
             self.pool1 = nn.MaxPool2d(2, 2)

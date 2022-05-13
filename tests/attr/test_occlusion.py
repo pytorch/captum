@@ -1,20 +1,25 @@
 #!/usr/bin/env python3
+import io
 import unittest
-from typing import Any, Callable, List, Tuple, Union
+import unittest.mock
+from typing import Any, Callable, Tuple, Union
 
 import torch
-from torch import Tensor
-
-from captum._utils.typing import BaselineType, TargetType, TensorOrTupleOfTensorsGeneric
+from captum._utils.typing import (
+    BaselineType,
+    TargetType,
+    TensorLikeList,
+    TensorOrTupleOfTensorsGeneric,
+)
 from captum.attr._core.occlusion import Occlusion
-
-from ..helpers.basic import BaseTest, assertTensorAlmostEqual
-from ..helpers.basic_models import (
+from tests.helpers.basic import assertTensorAlmostEqual, BaseTest
+from tests.helpers.basic_models import (
     BasicModel3,
     BasicModel_ConvNet_One_Conv,
     BasicModel_MultiLayer,
     BasicModel_MultiLayer_MultiInput,
 )
+from torch import Tensor
 
 
 class Test(BaseTest):
@@ -94,7 +99,7 @@ class Test(BaseTest):
         self._occlusion_test_assert(
             net,
             inp,
-            [80.0, 200.0, 120.0],
+            [[80.0, 200.0, 120.0]],
             perturbations_per_eval=(1, 2, 3),
             sliding_window_shapes=((1,)),
         )
@@ -106,7 +111,7 @@ class Test(BaseTest):
         self._occlusion_test_assert(
             net,
             (inp1, inp2),
-            ([0.0, 1.0], [0.0, -1.0]),
+            ([[0.0], [1.0]], [[0.0], [-1.0]]),
             sliding_window_shapes=((1,), (1,)),
         )
 
@@ -121,7 +126,7 @@ class Test(BaseTest):
         self._occlusion_test_assert(
             wrapper_func,
             (inp1, inp2),
-            ([0.0, 1.0], [0.0, -1.0]),
+            ([[0.0], [1.0]], [[0.0], [-1.0]]),
             sliding_window_shapes=((1,), (1,)),
         )
 
@@ -132,7 +137,7 @@ class Test(BaseTest):
         self._occlusion_test_assert(
             net,
             (inp1, inp2),
-            ([0.0, 1.0], [0.0, -1.0]),
+            ([[0.0], [1.0]], [[0.0], [-1.0]]),
             sliding_window_shapes=((1,), (1,)),
         )
 
@@ -154,7 +159,7 @@ class Test(BaseTest):
         self._occlusion_test_assert(
             net,
             inp,
-            [200.0, 220.0, 240.0],
+            [[200.0, 220.0, 240.0]],
             perturbations_per_eval=(1, 2, 3),
             sliding_window_shapes=((2,)),
             baselines=torch.tensor([10.0, 10.0, 10.0]),
@@ -166,7 +171,7 @@ class Test(BaseTest):
         self._occlusion_test_assert(
             net,
             inp,
-            [280.0, 280.0, 120.0],
+            [[280.0, 280.0, 120.0]],
             perturbations_per_eval=(1, 2, 3),
             sliding_window_shapes=((2,)),
             strides=2,
@@ -249,16 +254,24 @@ class Test(BaseTest):
             (inp, inp2),
             (
                 [
-                    [17.0, 17.0, 17.0, 17.0],
-                    [17.0, 17.0, 17.0, 17.0],
-                    [64.0, 65.5, 65.5, 67.0],
-                    [64.0, 65.5, 65.5, 67.0],
+                    [
+                        [
+                            [17.0, 17.0, 17.0, 17.0],
+                            [17.0, 17.0, 17.0, 17.0],
+                            [64.0, 65.5, 65.5, 67.0],
+                            [64.0, 65.5, 65.5, 67.0],
+                        ]
+                    ]
                 ],
                 [
-                    [3.0, 3.0, 3.0, 3.0],
-                    [3.0, 3.0, 3.0, 3.0],
-                    [3.0, 3.0, 3.0, 3.0],
-                    [0.0, 0.0, 0.0, 0.0],
+                    [
+                        [
+                            [3.0, 3.0, 3.0, 3.0],
+                            [3.0, 3.0, 3.0, 3.0],
+                            [3.0, 3.0, 3.0, 3.0],
+                            [0.0, 0.0, 0.0, 0.0],
+                        ]
+                    ]
                 ],
             ),
             perturbations_per_eval=(1, 3, 7, 14),
@@ -266,15 +279,42 @@ class Test(BaseTest):
             strides=((1, 2, 1), (1, 1, 2)),
         )
 
+    @unittest.mock.patch("sys.stderr", new_callable=io.StringIO)
+    def test_simple_input_with_show_progress(self, mock_stderr) -> None:
+        net = BasicModel_MultiLayer()
+        inp = torch.tensor([[20.0, 50.0, 30.0]], requires_grad=True)
+
+        # test progress output for each batch size
+        for bsz in (1, 2, 3):
+            self._occlusion_test_assert(
+                net,
+                inp,
+                [[80.0, 200.0, 120.0]],
+                perturbations_per_eval=(bsz,),
+                sliding_window_shapes=((1,)),
+                show_progress=True,
+            )
+
+            output = mock_stderr.getvalue()
+
+            # to test if progress calculation aligns with the actual iteration
+            # all perturbations_per_eval should reach progress of 100%
+            assert (
+                "Occlusion attribution: 100%" in output
+            ), f"Error progress output: {repr(output)}"
+
+            mock_stderr.seek(0)
+            mock_stderr.truncate(0)
+
     def _occlusion_test_assert(
         self,
         model: Callable,
         test_input: TensorOrTupleOfTensorsGeneric,
         expected_ablation: Union[
             float,
-            List[float],
-            List[List[float]],
-            Tuple[Union[Tensor, List[float], List[List[float]]], ...],
+            TensorLikeList,
+            Tuple[TensorLikeList, ...],
+            Tuple[Tensor, ...],
         ],
         sliding_window_shapes: Union[Tuple[int, ...], Tuple[Tuple[int, ...], ...]],
         target: TargetType = 0,
@@ -282,6 +322,7 @@ class Test(BaseTest):
         perturbations_per_eval: Tuple[int, ...] = (1,),
         baselines: BaselineType = None,
         strides: Union[None, int, Tuple[Union[int, Tuple[int, ...]], ...]] = None,
+        show_progress: bool = False,
     ) -> None:
         for batch_size in perturbations_per_eval:
             ablation = Occlusion(model)
@@ -293,12 +334,21 @@ class Test(BaseTest):
                 baselines=baselines,
                 perturbations_per_eval=batch_size,
                 strides=strides,
+                show_progress=show_progress,
             )
             if isinstance(expected_ablation, tuple):
                 for i in range(len(expected_ablation)):
-                    assertTensorAlmostEqual(self, attributions[i], expected_ablation[i])
+                    assertTensorAlmostEqual(
+                        self,
+                        attributions[i],
+                        expected_ablation[i],
+                    )
             else:
-                assertTensorAlmostEqual(self, attributions, expected_ablation)
+                assertTensorAlmostEqual(
+                    self,
+                    attributions,
+                    expected_ablation,
+                )
 
 
 if __name__ == "__main__":

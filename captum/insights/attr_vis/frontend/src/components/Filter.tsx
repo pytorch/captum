@@ -3,10 +3,13 @@ import { StringArgument, EnumArgument, NumberArgument } from "./Arguments";
 import cx from "../utils/cx";
 import styles from "../App.module.css";
 import ClassFilter from "./ClassFilter";
-import { MethodsArguments, ArgumentConfig, ArgumentType } from "../models/insightsConfig";
+import {
+  MethodsArguments,
+  ArgumentConfig,
+  ArgumentType,
+} from "../models/insightsConfig";
 import { TagClass } from "../models/filter";
 import { UserInputField } from "../models/typeHelpers";
-
 
 interface FilterProps {
   prediction: string;

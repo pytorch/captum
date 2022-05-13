@@ -2,12 +2,10 @@
 from typing import List, Tuple
 
 import torch
+from captum.attr._core.feature_permutation import _permute_feature, FeaturePermutation
+from tests.helpers.basic import assertTensorAlmostEqual, BaseTest
+from tests.helpers.basic_models import BasicModelWithSparseInputs
 from torch import Tensor
-
-from captum.attr._core.feature_permutation import FeaturePermutation, _permute_feature
-
-from ..helpers.basic import BaseTest, assertArraysAlmostEqual, assertTensorAlmostEqual
-from ..helpers.basic_models import BasicModelWithSparseInputs
 
 
 class Test(BaseTest):
@@ -95,7 +93,7 @@ class Test(BaseTest):
         attribs = feature_importance.attribute(inp)
 
         self.assertTrue(attribs.squeeze(0).size() == (batch_size,) + input_size)
-        assertArraysAlmostEqual(attribs[:, 0], zeros)
+        assertTensorAlmostEqual(self, attribs[:, 0], zeros, delta=0.05, mode="max")
         self.assertTrue((attribs[:, 1 : input_size[0]].abs() > 0).all())
 
     def test_multi_input(self) -> None:
@@ -161,7 +159,9 @@ class Test(BaseTest):
         for i in range(inp.size(1)):
             if i == target:
                 continue
-            assertTensorAlmostEqual(self, attribs[:, i], 0)
+            assertTensorAlmostEqual(
+                self, attribs[:, i], torch.zeros_like(attribs[:, i])
+            )
 
         y = forward_func(inp)
         actual_diff = torch.stack([(y[0] - y[1])[target], (y[1] - y[0])[target]])
@@ -196,7 +196,13 @@ class Test(BaseTest):
             for feature in features:
                 m = (fm == feature).bool()
                 attribs_for_feature = attribs[:, m]
-                assertArraysAlmostEqual(attribs_for_feature[0], -attribs_for_feature[1])
+                assertTensorAlmostEqual(
+                    self,
+                    attribs_for_feature[0],
+                    -attribs_for_feature[1],
+                    delta=0.05,
+                    mode="max",
+                )
 
     def test_empty_sparse_features(self) -> None:
         model = BasicModelWithSparseInputs()
@@ -225,5 +231,5 @@ class Test(BaseTest):
         total_attr1 /= 50
         total_attr2 /= 50
         self.assertEqual(total_attr2.shape, (1,))
-        assertTensorAlmostEqual(self, total_attr1, [0.0, 0.0, 0.0])
+        assertTensorAlmostEqual(self, total_attr1, torch.zeros_like(total_attr1))
         assertTensorAlmostEqual(self, total_attr2, [-6.0], delta=0.2)

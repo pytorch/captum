@@ -4,7 +4,6 @@ from typing import List, Optional, Tuple
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
-
 from captum.optim._utils.reducer import posneg
 
 try:
