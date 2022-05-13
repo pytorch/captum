@@ -1,16 +1,16 @@
 #!/usr/bin/env python3
 import unittest
 
-import torch
-
 import captum.optim as opt
+import torch
+from packaging import version
 from tests.helpers.basic import BaseTest
 from tests.helpers.basic_models import BasicModel_ConvNet_Optim
 
 
 class TestInputOptimization(BaseTest):
     def test_input_optimization(self) -> None:
-        if torch.__version__ <= "1.2.0":
+        if version.parse(torch.__version__) <= version.parse("1.6.0"):
             raise unittest.SkipTest(
                 "Skipping InputOptimization test due to insufficient Torch version."
             )
@@ -24,7 +24,7 @@ class TestInputOptimization(BaseTest):
 
     def test_input_optimization_param(self) -> None:
         """Test for optimizing param without model"""
-        if torch.__version__ <= "1.2.0":
+        if version.parse(torch.__version__) <= version.parse("1.6.0"):
             raise unittest.SkipTest(
                 "Skipping InputOptimization test due to insufficient Torch version."
             )

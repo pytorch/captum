@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 import torch
-
 from captum.attr import ClassSummarizer, CommonStats
 from tests.helpers.basic import BaseTest
 

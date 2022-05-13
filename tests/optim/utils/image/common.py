@@ -1,9 +1,8 @@
 #!/usr/bin/env python3
 import unittest
 
-import torch
-
 import captum.optim._utils.image.common as common
+import torch
 from tests.helpers.basic import BaseTest, assertTensorAlmostEqual
 
 

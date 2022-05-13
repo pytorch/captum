@@ -8,8 +8,9 @@ This file describes the sphinx setup for auto-generating the API reference.
 **Requirements**:
 - sphinx >= 2.0
 - sphinx_autodoc_typehints
+- sphinxcontrib-katex
 
-You can install these via `pip install sphinx sphinx_autodoc_typehints`.
+You can install these via `pip install sphinx sphinx_autodoc_typehints sphinxcontrib-katex`.
 
 
 ## Building

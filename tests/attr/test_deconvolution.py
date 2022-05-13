@@ -2,20 +2,19 @@
 
 from __future__ import print_function
 
+import copy
 import unittest
-from typing import Any, List, Tuple, Union
+from typing import Any, Tuple, Union
 
 import torch
-from torch.nn import Module
-
 from captum._utils.typing import TensorOrTupleOfTensorsGeneric
 from captum.attr._core.guided_backprop_deconvnet import Deconvolution
 from captum.attr._core.neuron.neuron_guided_backprop_deconvnet import (
     NeuronDeconvolution,
 )
-
-from ..helpers.basic import BaseTest, assertTensorAlmostEqual
-from ..helpers.basic_models import BasicModel_ConvNet_One_Conv
+from tests.helpers.basic import assertTensorAlmostEqual, BaseTest
+from tests.helpers.basic_models import BasicModel_ConvNet_One_Conv
+from torch.nn import Module
 
 
 class Test(BaseTest):
@@ -28,6 +27,7 @@ class Test(BaseTest):
             [3.0, 5.0, 5.0, 2.0],
             [1.0, 2.0, 2.0, 1.0],
         ]
+        exp = torch.tensor(exp).view(1, 1, 4, 4)
         self._deconv_test_assert(net, (inp,), (exp,))
 
     def test_simple_input_conv_neuron_deconv(self) -> None:
@@ -39,6 +39,7 @@ class Test(BaseTest):
             [3.0, 5.0, 5.0, 2.0],
             [1.0, 2.0, 2.0, 1.0],
         ]
+        exp = torch.tensor(exp).view(1, 1, 4, 4)
         self._neuron_deconv_test_assert(net, net.fc1, (0,), (inp,), (exp,))
 
     def test_simple_input_conv_neuron_deconv_agg_neurons(self) -> None:
@@ -50,6 +51,7 @@ class Test(BaseTest):
             [3.0, 5.0, 5.0, 2.0],
             [1.0, 2.0, 2.0, 1.0],
         ]
+        exp = torch.tensor(exp).view(1, 1, 4, 4)
         self._neuron_deconv_test_assert(net, net.fc1, (slice(0, 1, 1),), (inp,), (exp,))
 
     def test_simple_multi_input_conv_deconv(self) -> None:
@@ -62,6 +64,7 @@ class Test(BaseTest):
             [3.0, 5.0, 5.0, 2.0],
             [1.0, 2.0, 2.0, 1.0],
         ]
+        ex_attr = torch.tensor(ex_attr).view(1, 1, 4, 4)
         self._deconv_test_assert(net, (inp, inp2), (ex_attr, ex_attr))
 
     def test_simple_multi_input_conv_neuron_deconv(self) -> None:
@@ -74,6 +77,7 @@ class Test(BaseTest):
             [3.0, 5.0, 5.0, 2.0],
             [1.0, 2.0, 2.0, 1.0],
         ]
+        ex_attr = torch.tensor(ex_attr).view(1, 1, 4, 4)
         self._neuron_deconv_test_assert(
             net, net.fc1, (3,), (inp, inp2), (ex_attr, ex_attr)
         )
@@ -87,7 +91,7 @@ class Test(BaseTest):
         self,
         model: Module,
         test_input: TensorOrTupleOfTensorsGeneric,
-        expected: Tuple[List[List[float]], ...],
+        expected: Tuple[torch.Tensor, ...],
         additional_input: Any = None,
     ) -> None:
         deconv = Deconvolution(model)
@@ -101,15 +105,15 @@ class Test(BaseTest):
         self,
         model: Module,
         layer: Module,
-        neuron_index: Union[int, Tuple[Union[int, slice], ...]],
+        neuron_selector: Union[int, Tuple[Union[int, slice], ...]],
         test_input: TensorOrTupleOfTensorsGeneric,
-        expected: Tuple[List[List[float]], ...],
+        expected: Tuple[torch.Tensor, ...],
         additional_input: Any = None,
     ) -> None:
         deconv = NeuronDeconvolution(model, layer)
         attributions = deconv.attribute(
             test_input,
-            neuron_index=neuron_index,
+            neuron_selector=neuron_selector,
             additional_forward_args=additional_input,
         )
         for i in range(len(test_input)):
@@ -122,7 +126,8 @@ class Test(BaseTest):
         test_input: TensorOrTupleOfTensorsGeneric,
     ) -> None:
         out = model(test_input)
-        attrib = Deconvolution(model)
+        model_copy = copy.deepcopy(model)
+        attrib = Deconvolution(model_copy)
         self.assertFalse(attrib.multiplies_by_inputs)
         neuron_attrib = NeuronDeconvolution(model, output_layer)
         for i in range(out.shape[1]):

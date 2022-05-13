@@ -5,11 +5,16 @@ from __future__ import print_function
 import os
 import tempfile
 import unittest
+from typing import Dict, List
 
 import torch
 
 HAS_PYTEXT = True
 try:
+    from captum.attr._models.pytext import (
+        BaselineGenerator,
+        configure_model_integ_grads_embeddings,
+    )
     from pytext.common.constants import DatasetFieldName
     from pytext.config.component import create_featurizer, create_model
     from pytext.config.doc_classification import ModelInputConfig, TargetConfig
@@ -22,19 +27,14 @@ try:
     from pytext.models.doc_model import DocModel_Deprecated
     from pytext.models.embeddings.word_embedding import WordEmbedding
     from pytext.models.representations.bilstm_doc_attention import BiLSTMDocAttention
-
-    from captum.attr._models.pytext import (
-        BaselineGenerator,
-        configure_model_integ_grads_embeddings,
-    )
 except ImportError:
     HAS_PYTEXT = False
 
 
 class VocabStub:
-    def __init__(self):
-        self.itos = []
-        self.stoi = {}
+    def __init__(self) -> None:
+        self.itos: List = []
+        self.stoi: Dict = {}
 
 
 # TODO add more test cases for dict features

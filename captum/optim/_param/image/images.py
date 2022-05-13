@@ -7,6 +7,7 @@ import requests
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from packaging import version
 
 try:
     from PIL import Image
@@ -188,6 +189,8 @@ class FFTImage(ImageParameterization):
     Parameterize an image using inverse real 2D FFT
     """
 
+    __constants__ = ["size"]
+
     def __init__(
         self,
         size: Tuple[int, int] = None,
@@ -264,6 +267,12 @@ class FFTImage(ImageParameterization):
         fx = self.torch_fftfreq(width)[: width // 2 + 1]
         return torch.sqrt((fx * fx) + (fy * fy))
 
+    @torch.jit.export
+    def torch_irfftn(self, x: torch.Tensor) -> torch.Tensor:
+        if x.dtype != torch.complex64:
+            x = torch.view_as_complex(x)
+        return torch.fft.irfftn(x, s=self.size)  # type: ignore
+
     def get_fft_funcs(self) -> Tuple[Callable, Callable, Callable]:
         """
         Support older versions of PyTorch. This function ensures that the same FFT
@@ -275,27 +284,25 @@ class FFTImage(ImageParameterization):
                 to use for irfft, rfft, and fftfreq operations.
         """
 
-        if TORCH_VERSION >= "1.7.0":
-            import torch.fft
+        if version.parse(TORCH_VERSION) > version.parse("1.7.0"):
+            if version.parse(TORCH_VERSION) <= version.parse("1.8.0"):
+                global torch
+                import torch.fft
 
             def torch_rfft(x: torch.Tensor) -> torch.Tensor:
                 return torch.view_as_real(torch.fft.rfftn(x, s=self.size))
 
-            def torch_irfft(x: torch.Tensor) -> torch.Tensor:
-                if type(x) is not torch.complex64:
-                    x = torch.view_as_complex(x)
-                return torch.fft.irfftn(x, s=self.size)  # type: ignore
+            torch_irfftn = self.torch_irfftn
 
             def torch_fftfreq(v: int, d: float = 1.0) -> torch.Tensor:
                 return torch.fft.fftfreq(v, d)
 
         else:
-            import torch
 
             def torch_rfft(x: torch.Tensor) -> torch.Tensor:
                 return torch.rfft(x, signal_ndim=2)
 
-            def torch_irfft(x: torch.Tensor) -> torch.Tensor:
+            def torch_irfftn(x: torch.Tensor) -> torch.Tensor:
                 return torch.irfft(x, signal_ndim=2)[
                     :, :, : self.size[0], : self.size[1]
                 ]
@@ -308,7 +315,7 @@ class FFTImage(ImageParameterization):
                 results[s:] = torch.arange(-(v // 2), 0)
                 return results * (1.0 / (v * d))
 
-        return torch_rfft, torch_irfft, torch_fftfreq
+        return torch_rfft, torch_irfftn, torch_fftfreq
 
     def forward(self) -> torch.Tensor:
         """
@@ -318,6 +325,8 @@ class FFTImage(ImageParameterization):
 
         scaled_spectrum = self.fourier_coeffs * self.spectrum_scale
         output = self.torch_irfft(scaled_spectrum)
+        if torch.jit.is_scripting():
+            return output
         return output.refine_names("B", "C", "H", "W")
 
 
@@ -355,11 +364,11 @@ class PixelImage(ImageParameterization):
             assert init.dim() == 3 or init.dim() == 4
             if init.dim() == 3:
                 init = init.unsqueeze(0)
-            assert init.shape[1] == 3, "PixelImage init should have 3 channels, "
-            f"input has {init.shape[1]} channels."
         self.image = nn.Parameter(init)
 
     def forward(self) -> torch.Tensor:
+        if torch.jit.is_scripting():
+            return self.image
         return self.image.refine_names("B", "C", "H", "W")
 
 
@@ -426,7 +435,7 @@ class LaplacianImage(ImageParameterization):
                 x = F.interpolate(init.clone(), size=(h, w), mode="bilinear")
                 x = x / 6  # Prevents output from being all white
             upsample = torch.nn.Upsample(scale_factor=scale, mode="nearest")
-            x = x * (scale ** power) / (32 ** power)
+            x = x * (scale**power) / (32**power)
             x = torch.nn.Parameter(x)
             tensor_params.append(x)
             scaler.append(upsample)
@@ -650,7 +659,7 @@ class NaturalImage(ImageParameterization):
                 nn.Parameter tensor, or stacking init images.
                 Default: 1
             parameterization (ImageParameterization, optional): An image
-                parameterization class.
+                parameterization class, or instance of an image parameterization class.
                 Default: FFTImage
             squash_func (Callable[[torch.Tensor], torch.Tensor]], optional): The squash
                 function to use after color recorrelation. A funtion or lambda function.
@@ -662,8 +671,14 @@ class NaturalImage(ImageParameterization):
                 Default: True
         """
         super().__init__()
+        if not isinstance(parameterization, ImageParameterization):
+            # Verify uninitialized class is correct type
+            assert issubclass(parameterization, ImageParameterization)
+        else:
+            assert isinstance(parameterization, ImageParameterization)
+
         self.decorrelate = decorrelation_module
-        if init is not None:
+        if init is not None and not isinstance(parameterization, ImageParameterization):
             assert init.dim() == 3 or init.dim() == 4
             if decorrelate_init and self.decorrelate is not None:
                 init = (
@@ -672,27 +687,42 @@ class NaturalImage(ImageParameterization):
                     else init.refine_names("C", "H", "W")
                 )
                 init = self.decorrelate(init, inverse=True).rename(None)
+
             if squash_func is None:
+                squash_func = self._clamp_image
 
-                def squash_func(x: torch.Tensor) -> torch.Tensor:
-                    return x.clamp(0, 1)
+        self.squash_func = torch.sigmoid if squash_func is None else squash_func
+        if not isinstance(parameterization, ImageParameterization):
+            parameterization = parameterization(
+                size=size, channels=channels, batch=batch, init=init
+            )
+        self.parameterization = parameterization
 
-        else:
-            if squash_func is None:
+    @torch.jit.export
+    def _clamp_image(self, x: torch.Tensor) -> torch.Tensor:
+        """JIT supported squash function."""
+        return x.clamp(0, 1)
 
-                squash_func = torch.sigmoid
+    @torch.jit.ignore
+    def _to_image_tensor(self, x: torch.Tensor) -> torch.Tensor:
+        """
+        Wrap ImageTensor in torch.jit.ignore for JIT support.
 
-        self.squash_func = squash_func
-        self.parameterization = parameterization(
-            size=size, channels=channels, batch=batch, init=init
-        )
+        Args:
+
+            x (torch.tensor): An input tensor.
+
+        Returns:
+            x (ImageTensor): An instance of ImageTensor with the input tensor.
+        """
+        return ImageTensor(x)
 
     def forward(self) -> torch.Tensor:
         image = self.parameterization()
         if self.decorrelate is not None:
             image = self.decorrelate(image)
         image = image.rename(None)  # TODO: the world is not yet ready
-        return ImageTensor(self.squash_func(image))
+        return self._to_image_tensor(self.squash_func(image))
 
 
 __all__ = [

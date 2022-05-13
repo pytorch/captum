@@ -2,24 +2,22 @@
 from typing import Any, Callable, List, Tuple, Union
 
 import torch
-from torch import Tensor
-from torch.nn import Module
-
 from captum._utils.typing import TargetType, TensorOrTupleOfTensorsGeneric
 from captum.attr._core.gradient_shap import GradientShap
 from captum.attr._core.layer.layer_gradient_shap import LayerGradientShap
-
-from ...helpers.basic import (
-    BaseTest,
+from tests.attr.test_gradient_shap import _assert_attribution_delta
+from tests.helpers.basic import (
     assertTensorAlmostEqual,
     assertTensorTuplesAlmostEqual,
+    BaseTest,
 )
-from ...helpers.basic_models import (
+from tests.helpers.basic_models import (
     BasicModel_MultiLayer,
     BasicModel_MultiLayer_MultiInput,
 )
-from ...helpers.classification_models import SoftmaxModel
-from ..test_gradient_shap import _assert_attribution_delta
+from tests.helpers.classification_models import SoftmaxModel
+from torch import Tensor
+from torch.nn import Module
 
 
 class Test(BaseTest):
@@ -53,7 +51,7 @@ class Test(BaseTest):
         model.eval()
 
         inputs = torch.tensor([[0.0, 100.0, 0.0]])
-        expected = ([90.0, 100.0, 100.0, 100.0], [90.0, 100.0, 100.0, 100.0])
+        expected = ([[90.0, 100.0, 100.0, 100.0]], [[90.0, 100.0, 100.0, 100.0]])
         self._assert_attributions(
             model,
             model.multi_relu,
@@ -95,7 +93,7 @@ class Test(BaseTest):
             inputs,
             baselines,
             0,
-            (expected,),
+            expected,
             expected_delta=delta,
             attribute_to_layer_input=True,
         )
