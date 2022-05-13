@@ -27,7 +27,7 @@ class TestImageCov(BaseTest):
             ]
         )
         self.assertEqual(list(test_output.shape), [3, 3])
-        assertTensorAlmostEqual(self, test_output, expected_output, delta=0.001)
+        assertTensorAlmostEqual(self, test_output, expected_output[0], delta=0.001)
 
     def test_image_cov_3_channels_batch_5(self) -> None:
         test_input = torch.cat(
