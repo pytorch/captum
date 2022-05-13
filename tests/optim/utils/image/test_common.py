@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 import unittest
 
-import torch
-
 import captum.optim._utils.image.common as common
+import torch
+from packaging import version
 from tests.helpers.basic import BaseTest, assertTensorAlmostEqual
 
 
@@ -249,7 +249,7 @@ class TestNChannelsToRGB(BaseTest):
         self.assertEqual(list(test_output.size()), [1, 3, 224, 224])
 
     def test_nchannels_to_rgb_jit_module(self) -> None:
-        if torch.__version__ <= "1.8.0":
+        if version.parse(torch.__version__) <= version.parse("1.8.0"):
             raise unittest.SkipTest(
                 "Skipping nchannels_to_rgb JIT module test due to insufficient Torch"
                 + " version."

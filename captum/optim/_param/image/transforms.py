@@ -90,7 +90,11 @@ class ToRGB(nn.Module):
                 the ImageNet dataset.
         """
         # Handle older versions of PyTorch
-        torch_norm = torch.linalg.norm if torch.__version__ >= "1.9.0" else torch.norm
+        torch_norm = (
+            torch.linalg.norm
+            if version.parse(torch.__version__) >= version.parse("1.7.0")
+            else torch.norm
+        )
 
         KLT = [[0.26, 0.09, 0.02], [0.27, 0.00, -0.05], [0.27, -0.09, 0.03]]
         transform = torch.Tensor(KLT).float()

@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import torch
 from captum.optim._utils.reducer import posneg
+from packaging import version
 
 try:
     from PIL import Image
@@ -126,7 +127,11 @@ def _dot_cossim(
 
 # Handle older versions of PyTorch
 # Defined outside of function in order to support JIT
-_torch_norm = torch.linalg.norm if torch.__version__ >= "1.9.0" else torch.norm
+_torch_norm = (
+    torch.linalg.norm
+    if version.parse(torch.__version__) >= version.parse("1.7.0")
+    else torch.norm
+)
 
 
 def hue_to_rgb(
