@@ -1,23 +1,17 @@
 #!/usr/bin/env python3
 from typing import Any, Callable, List, Tuple, Union
 
+from captum._utils.common import (
+    _format_additional_forward_args,
+    _format_output,
+    _format_tensor_into_tuples,
+)
+from captum._utils.gradient import compute_layer_gradients_and_eval
+from captum._utils.typing import ModuleOrModuleList, TargetType
+from captum.attr._utils.attribution import GradientAttribution, LayerAttribution
+from captum.log import log_usage
 from torch import Tensor
 from torch.nn import Module
-
-from captum.log import log_usage
-
-from ...._utils.common import (
-    _format_additional_forward_args,
-    _format_input,
-    _format_output,
-)
-from ...._utils.gradient import (
-    apply_gradient_requirements,
-    compute_layer_gradients_and_eval,
-    undo_gradient_requirements,
-)
-from ...._utils.typing import ModuleOrModuleList, TargetType
-from ..._utils.attribution import GradientAttribution, LayerAttribution
 
 
 class LayerGradientXActivation(LayerAttribution, GradientAttribution):
@@ -167,11 +161,10 @@ class LayerGradientXActivation(LayerAttribution, GradientAttribution):
             >>> # attribution size matches layer output, Nx12x32x32
             >>> attribution = layer_ga.attribute(input, 3)
         """
-        inputs = _format_input(inputs)
+        inputs = _format_tensor_into_tuples(inputs)
         additional_forward_args = _format_additional_forward_args(
             additional_forward_args
         )
-        gradient_mask = apply_gradient_requirements(inputs)
         # Returns gradient of output with respect to
         # hidden layer and hidden layer evaluated at each input.
         layer_gradients, layer_evals = compute_layer_gradients_and_eval(
@@ -183,7 +176,6 @@ class LayerGradientXActivation(LayerAttribution, GradientAttribution):
             device_ids=self.device_ids,
             attribute_to_layer_input=attribute_to_layer_input,
         )
-        undo_gradient_requirements(inputs, gradient_mask)
         if isinstance(self.layer, Module):
             return _format_output(
                 len(layer_evals) > 1,

@@ -1,27 +1,34 @@
 #!/usr/bin/env python3
 import unittest
 from enum import Enum
-from typing import Any, Callable, Dict, Tuple, Type, cast
+from typing import Any, Callable, cast, Dict, Tuple, Type
 
 import torch
-from torch import Tensor
-from torch.nn import Module
-
-from captum._utils.common import _format_additional_forward_args, _format_input
+from captum._utils.common import (
+    _format_additional_forward_args,
+    _format_tensor_into_tuples,
+)
 from captum.attr._core.feature_ablation import FeatureAblation
 from captum.attr._core.feature_permutation import FeaturePermutation
 from captum.attr._core.gradient_shap import GradientShap
 from captum.attr._core.input_x_gradient import InputXGradient
 from captum.attr._core.integrated_gradients import IntegratedGradients
+from captum.attr._core.kernel_shap import KernelShap
+from captum.attr._core.lime import Lime
 from captum.attr._core.noise_tunnel import NoiseTunnel
 from captum.attr._core.occlusion import Occlusion
 from captum.attr._core.saliency import Saliency
 from captum.attr._core.shapley_value import ShapleyValueSampling
 from captum.attr._utils.attribution import Attribution
-
-from ..helpers.basic import BaseTest, assertTensorTuplesAlmostEqual, deep_copy_args
-from .helpers.gen_test_utils import gen_test_name, parse_test_config
-from .helpers.test_config import config
+from tests.attr.helpers.gen_test_utils import (
+    gen_test_name,
+    parse_test_config,
+    should_create_generated_test,
+)
+from tests.attr.helpers.test_config import config
+from tests.helpers.basic import assertTensorTuplesAlmostEqual, BaseTest, deep_copy_args
+from torch import Tensor
+from torch.nn import Module
 
 JIT_SUPPORTED = [
     IntegratedGradients,
@@ -32,6 +39,8 @@ JIT_SUPPORTED = [
     Occlusion,
     Saliency,
     ShapleyValueSampling,
+    Lime,
+    KernelShap,
 ]
 
 """
@@ -75,6 +84,8 @@ class JITMeta(type):
                 baseline_distr,
             ) = parse_test_config(test_config)
             for algorithm in algorithms:
+                if not should_create_generated_test(algorithm):
+                    continue
                 if algorithm in JIT_SUPPORTED:
                     for mode in JITCompareMode:
                         # Creates test case corresponding to each algorithm and
@@ -150,11 +161,11 @@ class JITMeta(type):
                 mode is JITCompareMode.cpu_jit_trace
                 or JITCompareMode.data_parallel_jit_trace
             ):
-                all_inps = _format_input(args["inputs"]) + (
+                all_inps = _format_tensor_into_tuples(args["inputs"]) + (
                     _format_additional_forward_args(args["additional_forward_args"])
                     if "additional_forward_args" in args
                     and args["additional_forward_args"] is not None
-                    else tuple()
+                    else ()
                 )
                 model_2 = torch.jit.trace(model_1, all_inps)  # type: ignore
             else:

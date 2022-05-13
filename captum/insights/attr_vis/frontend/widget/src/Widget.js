@@ -39,7 +39,7 @@ class Widget extends React.Component {
     const data = Object.assign([], this.state.data);
     const callback = this.state.callback;
     const labelDetails = model.attributes.label_details;
-    data[labelDetails.instance] = attribution;
+    data[labelDetails.inputIndex][labelDetails.modelIndex] = attribution;
     this.setState({ data: data, callback: null }, () => {
       callback();
     });
@@ -57,10 +57,10 @@ class Widget extends React.Component {
     });
   };
 
-  onTargetClick = (labelIndex, instance, callback) => {
+  onTargetClick = (labelIndex, inputIndex, modelIndex, callback) => {
     this.setState({ callback: callback }, () => {
       this.backbone.model.save({
-        label_details: { labelIndex, instance },
+        label_details: { labelIndex, inputIndex, modelIndex },
         attribution: {},
       });
     });

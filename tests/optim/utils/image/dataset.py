@@ -1,12 +1,7 @@
 #!/usr/bin/env python3
-import torch
-
 import captum.optim._utils.image.dataset as dataset_utils
-from tests.helpers.basic import (
-    BaseTest,
-    assertArraysAlmostEqual,
-    assertTensorAlmostEqual,
-)
+import torch
+from tests.helpers.basic import BaseTest, assertTensorAlmostEqual
 from tests.optim.helpers import image_dataset as dataset_helpers
 
 
@@ -23,7 +18,8 @@ class TestImageCov(BaseTest):
 
         output_tensor = dataset_utils.image_cov(test_tensor)
         expected_output = dataset_helpers.image_cov_np(test_tensor.numpy())
-        assertArraysAlmostEqual(output_tensor.numpy(), expected_output, 0.01)
+        expected_output = torch.as_tensor(expected_output)
+        assertTensorAlmostEqual(self, output_tensor, expected_output, 0.01, mode="max")
 
 
 class TestDatasetCovMatrix(BaseTest):
@@ -67,7 +63,8 @@ class TestCovMatrixToKLT(BaseTest):
         )
         output_mtx = dataset_utils.cov_matrix_to_klt(test_input)
         expected_mtx = dataset_helpers.cov_matrix_to_klt_np(test_input.numpy())
-        assertArraysAlmostEqual(output_mtx.numpy(), expected_mtx, 0.0005)
+        expected_mtx = torch.as_tensor(expected_mtx)
+        assertTensorAlmostEqual(self, output_mtx, expected_mtx, 0.0005, mode="max")
 
 
 class TestDatasetKLTMatrix(BaseTest):

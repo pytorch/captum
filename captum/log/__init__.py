@@ -2,11 +2,11 @@
 
 try:
     from captum.log.fb.internal_log import (
-        TimedLog,
         log,
         log_usage,
         patch_methods,
         set_environment,
+        TimedLog,
     )
 
     __all__ = ["log", "log_usage", "TimedLog", "set_environment"]

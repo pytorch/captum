@@ -1,10 +1,9 @@
 #!/usr/bin/env python3
 import unittest
 
+import captum.optim._utils.reducer as reducer
 import numpy as np
 import torch
-
-import captum.optim._utils.reducer as reducer
 from tests.helpers.basic import BaseTest
 
 

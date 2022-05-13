@@ -1,26 +1,24 @@
 #!/usr/bin/env python3
 
 import unittest
-from typing import Any, List, Tuple, Union, cast
+from typing import Any, cast, List, Tuple, Union
 
 import torch
-from torch import Tensor
-from torch.nn import Module
-
 from captum._utils.typing import BaselineType
 from captum.attr._core.layer.layer_conductance import LayerConductance
-
-from ...helpers.basic import (
-    BaseTest,
-    assertArraysAlmostEqual,
+from tests.attr.helpers.conductance_reference import ConductanceReference
+from tests.helpers.basic import (
+    assertTensorAlmostEqual,
     assertTensorTuplesAlmostEqual,
+    BaseTest,
 )
-from ...helpers.basic_models import (
+from tests.helpers.basic_models import (
     BasicModel_ConvNet,
     BasicModel_MultiLayer,
     BasicModel_MultiLayer_MultiInput,
 )
-from ..helpers.conductance_reference import ConductanceReference
+from torch import Tensor
+from torch.nn import Module
 
 
 class Test(BaseTest):
@@ -155,7 +153,7 @@ class Test(BaseTest):
                 internal_batch_size=internal_batch_size,
                 return_convergence_delta=True,
             )
-            delta_condition = all(abs(delta.numpy().flatten()) < 0.01)
+            delta_condition = (delta.abs() < 0.01).all()
             self.assertTrue(
                 delta_condition,
                 "Sum of attributions does {}"
@@ -197,7 +195,7 @@ class Test(BaseTest):
                 return_convergence_delta=True,
             ),
         )
-        delta_condition = all(abs(delta.numpy().flatten()) < 0.005)
+        delta_condition = (delta.abs() < 0.005).all()
         self.assertTrue(
             delta_condition,
             "Sum of attribution values does {} "
@@ -215,10 +213,12 @@ class Test(BaseTest):
         # Check that layer output size matches conductance size.
         self.assertEqual(layer_output.shape, attributions.shape)
         # Check that reference implementation output matches standard implementation.
-        assertArraysAlmostEqual(
-            attributions.reshape(-1).tolist(),
-            attributions_reference.reshape(-1).tolist(),
+        assertTensorAlmostEqual(
+            self,
+            attributions,
+            attributions_reference,
             delta=0.07,
+            mode="max",
         )
 
         # Test if batching is working correctly for inputs with multiple examples
@@ -238,10 +238,12 @@ class Test(BaseTest):
                 )
                 # Verify that attributions when passing example independently
                 # matches corresponding attribution of batched input.
-                assertArraysAlmostEqual(
-                    attributions[i : i + 1].reshape(-1).tolist(),
-                    single_attributions.reshape(-1).tolist(),
+                assertTensorAlmostEqual(
+                    self,
+                    attributions[i : i + 1],
+                    single_attributions,
                     delta=0.01,
+                    mode="max",
                 )
 
 

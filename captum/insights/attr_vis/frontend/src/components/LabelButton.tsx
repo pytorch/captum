@@ -4,15 +4,20 @@ import styles from "../App.module.css";
 
 interface LabelButtonProps {
   labelIndex: number;
-  instance: number;
+  inputIndex: number;
+  modelIndex: number;
   active: boolean;
-  onTargetClick: (labelIndex: number, instance: number) => void;
+  onTargetClick: (
+    labelIndex: number,
+    inputIndex: number,
+    modelIndex: number
+  ) => void;
 }
 
 function LabelButton(props: React.PropsWithChildren<LabelButtonProps>) {
   const onClick = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
-    props.onTargetClick(props.labelIndex, props.instance);
+    props.onTargetClick(props.labelIndex, props.inputIndex, props.modelIndex);
   };
 
   return (

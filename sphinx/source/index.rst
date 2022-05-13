@@ -15,6 +15,10 @@ Captum API Reference
    noise_tunnel
    layer
    neuron
+   metrics
+   robust
+   concept
+   influence
    utilities
    base_classes
 

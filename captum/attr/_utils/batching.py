@@ -4,19 +4,19 @@ import warnings
 from typing import Any, Callable, Iterator, Tuple, Union
 
 import torch
-from torch import Tensor
-
-from ..._utils.common import (
+from captum._utils.common import (
     _format_additional_forward_args,
-    _format_input,
+    _format_output,
+    _format_tensor_into_tuples,
     _reduce_list,
 )
-from ..._utils.typing import (
+from captum._utils.typing import (
     TargetType,
     TensorOrTupleOfTensorsGeneric,
     TupleOrTensorOrBoolGeneric,
 )
-from .approximation_methods import approximation_parameters
+from captum.attr._utils.approximation_methods import approximation_parameters
+from torch import Tensor
 
 
 def _batch_attribution(
@@ -25,7 +25,7 @@ def _batch_attribution(
     internal_batch_size,
     n_steps,
     include_endpoint=False,
-    **kwargs
+    **kwargs,
 ):
     """
     This method applies internal batching to given attribution method, dividing
@@ -83,10 +83,10 @@ def _batch_attribution(
             total_attr = current_attr
         else:
             if isinstance(total_attr, Tensor):
-                total_attr = total_attr + current_attr
+                total_attr = total_attr + current_attr.detach()
             else:
                 total_attr = tuple(
-                    current + prev_total
+                    current.detach() + prev_total
                     for current, prev_total in zip(current_attr, total_attr)
                 )
         if include_endpoint and end_step < n_steps:
@@ -139,7 +139,7 @@ def _batched_generator(
     assert internal_batch_size is None or (
         isinstance(internal_batch_size, int) and internal_batch_size > 0
     ), "Batch size must be greater than 0."
-    inputs = _format_input(inputs)
+    inputs = _format_tensor_into_tuples(inputs)
     additional_forward_args = _format_additional_forward_args(additional_forward_args)
     num_examples = inputs[0].shape[0]
     # TODO Reconsider this check if _batched_generator is used for non gradient-based
@@ -177,7 +177,7 @@ def _batched_operator(
     additional_forward_args: Any = None,
     target_ind: TargetType = None,
     internal_batch_size: Union[None, int] = None,
-    **kwargs: Any
+    **kwargs: Any,
 ) -> TupleOrTensorOrBoolGeneric:
     """
     Batches the operation of the given operator, applying the given batch size
@@ -189,10 +189,34 @@ def _batched_operator(
             inputs=input,
             additional_forward_args=additional,
             target_ind=target,
-            **kwargs
+            **kwargs,
         )
         for input, additional, target in _batched_generator(
             inputs, additional_forward_args, target_ind, internal_batch_size
         )
     ]
     return _reduce_list(all_outputs)
+
+
+def _select_example(curr_arg: Any, index: int, bsz: int) -> Any:
+    if curr_arg is None:
+        return None
+    is_tuple = isinstance(curr_arg, tuple)
+    if not is_tuple:
+        curr_arg = (curr_arg,)
+    selected_arg = []
+    for i in range(len(curr_arg)):
+        if isinstance(curr_arg[i], (Tensor, list)) and len(curr_arg[i]) == bsz:
+            selected_arg.append(curr_arg[i][index : index + 1])
+        else:
+            selected_arg.append(curr_arg[i])
+    return _format_output(is_tuple, tuple(selected_arg))
+
+
+def _batch_example_iterator(bsz: int, *args) -> Iterator:
+    """
+    Batches the provided argument.
+    """
+    for i in range(bsz):
+        curr_args = [_select_example(args[j], i, bsz) for j in range(len(args))]
+        yield tuple(curr_args)
