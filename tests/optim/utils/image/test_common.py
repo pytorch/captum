@@ -70,7 +70,7 @@ class TestDotCossim(BaseTest):
                 ]
             ]
         )
-        assertTensorAlmostEqual(self, test_output, expected_output, delta=0.0005)
+        assertTensorAlmostEqual(self, test_output, expected_output, delta=0.001)
 
 
 class TestHueToRGB(BaseTest):
