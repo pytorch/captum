@@ -1,15 +1,40 @@
 #!/usr/bin/env python3
 
-from typing import List, Tuple, cast
+from typing import cast, List, Tuple
 
 import torch
-
-from captum._utils.common import _reduce_list, _select_targets, _sort_key_list
-
-from ..helpers.basic import BaseTest, assertTensorAlmostEqual
+from captum._utils.common import _reduce_list, _select_targets, _sort_key_list, safe_div
+from tests.helpers.basic import assertTensorAlmostEqual, BaseTest
 
 
 class Test(BaseTest):
+    def test_safe_div_number_denom(self):
+        num = torch.tensor(4.0)
+        assert safe_div(num, 2) == 2.0
+        assert safe_div(num, 0, 2) == 2.0
+        assert safe_div(num, 2.0) == 2.0
+        assert safe_div(num, 0.0, 2.0) == 2.0
+
+    def test_safe_div_tensor_denom(self):
+        num = torch.tensor([4.0, 6.0])
+
+        exp = torch.tensor([2.0, 3.0])
+        assert (safe_div(num, torch.tensor([2.0, 2.0])) == exp).all()
+
+        # tensor default denom
+        assert (safe_div(num, torch.tensor([0.0, 0.0]), torch.tensor(2.0)) == exp).all()
+        assert (
+            safe_div(
+                num,
+                torch.tensor([0.0, 0.0]),
+                torch.tensor([2.0, 2.0]),
+            )
+            == exp
+        ).all()
+
+        # float default denom
+        assert (safe_div(num, torch.tensor([0.0, 0.0]), 2.0) == exp).all()
+
     def test_reduce_list_tensors(self):
         tensors = [torch.tensor([[3, 4, 5]]), torch.tensor([[0, 1, 2]])]
         reduced = _reduce_list(tensors)
@@ -50,10 +75,12 @@ class Test(BaseTest):
             self, _select_targets(output_tensor, torch.tensor(0)), [1, 4, 7]
         )
         assertTensorAlmostEqual(
-            self, _select_targets(output_tensor, torch.tensor([1, 2, 0])), [2, 6, 7]
+            self,
+            _select_targets(output_tensor, torch.tensor([1, 2, 0])),
+            [[2], [6], [7]],
         )
         assertTensorAlmostEqual(
-            self, _select_targets(output_tensor, [1, 2, 0]), [2, 6, 7]
+            self, _select_targets(output_tensor, [1, 2, 0]), [[2], [6], [7]]
         )
 
         # Verify error is raised if too many dimensions are provided.

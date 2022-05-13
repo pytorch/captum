@@ -36,7 +36,7 @@ class TutorialSidebar extends React.Component {
     const toc = [
       {
         type: 'CATEGORY',
-        title: 'Tutorials',
+        title: 'Captum Tutorials',
         children: [
           {
             type: 'LINK',
@@ -56,16 +56,32 @@ class TutorialSidebar extends React.Component {
 
     Object.keys(json).forEach(category => {
       const categoryItems = json[category];
-      const items = [];
-      categoryItems.map(item => {
-        items.push({
-          type: 'LINK',
-          item: {
-            permalink: `tutorials/${item.id}`,
-            id: item.id,
-            title: item.title,
-          },
-        });
+      const items = categoryItems.map(item => {
+        if (item.id !== undefined) {
+          return {
+            type: 'LINK',
+            item: {
+              permalink: `tutorials/${item.id}`,
+              id: item.id,
+              title: item.title,
+            },
+          }
+        }
+
+        return {
+          type: 'SUBCATEGORY',
+          title: item.title,
+          children: item.children.map(iitem => {
+            return {
+              type: 'Link',
+              item: {
+                permalink: `tutorials/${iitem.id}`,
+                id: iitem.id,
+                title: iitem.title,
+              }
+            };
+          }),
+        }
       });
 
       toc.push({

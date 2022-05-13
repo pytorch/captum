@@ -44,7 +44,7 @@ View the tutorials page [here](../tutorials/).
 ## API Reference
 
 For an in-depth reference of the various Captum internals, see our
-[API Reference](../api).
+[API Reference](../api/).
 
 
 ## Contributing

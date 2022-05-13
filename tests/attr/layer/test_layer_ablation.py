@@ -4,18 +4,16 @@ import unittest
 from typing import Any, List, Tuple, Union
 
 import torch
-from torch import Tensor
-from torch.nn import Module
-
 from captum._utils.typing import BaselineType
 from captum.attr._core.layer.layer_feature_ablation import LayerFeatureAblation
-
-from ...helpers.basic import BaseTest, assertTensorTuplesAlmostEqual
-from ...helpers.basic_models import (
+from tests.helpers.basic import assertTensorTuplesAlmostEqual, BaseTest
+from tests.helpers.basic_models import (
     BasicModel_ConvNet_One_Conv,
     BasicModel_MultiLayer,
     BasicModel_MultiLayer_MultiInput,
 )
+from torch import Tensor
+from torch.nn import Module
 
 
 class Test(BaseTest):
@@ -96,7 +94,7 @@ class Test(BaseTest):
             net,
             net.relu1,
             (inp, inp2),
-            [[[4.0, 13.0], [40.0, 49.0]], [[0, 0], [-15.0, -24.0]]],
+            [[[[4.0, 13.0], [40.0, 49.0]], [[0, 0], [-15.0, -24.0]]]],
             perturbations_per_eval=(1, 2, 4, 8, 12, 16),
         )
         self._ablation_test_assert(
@@ -114,7 +112,7 @@ class Test(BaseTest):
             net,
             net.relu1,
             (inp, inp2),
-            [[[17.0, 17.0], [67.0, 67.0]], [[0, 0], [-39.0, -39.0]]],
+            [[[[17.0, 17.0], [67.0, 67.0]], [[0, 0], [-39.0, -39.0]]]],
             perturbations_per_eval=(1, 2, 4),
             layer_mask=torch.tensor([[[[0, 0], [1, 1]], [[2, 2], [3, 3]]]]),
         )
@@ -123,7 +121,7 @@ class Test(BaseTest):
         net = BasicModel_MultiLayer(multi_input_module=True)
         inp = torch.tensor([[0.0, 6.0, 0.0]])
         self._ablation_test_assert(
-            net, net.multi_relu, inp, ([0.0, 7.0, 7.0, 7.0], [0.0, 7.0, 7.0, 7.0])
+            net, net.multi_relu, inp, ([[0.0, 7.0, 7.0, 7.0]], [[0.0, 7.0, 7.0, 7.0]])
         )
 
     def test_simple_multi_output_input_ablation(self) -> None:
@@ -133,7 +131,7 @@ class Test(BaseTest):
             net,
             net.multi_relu,
             inp,
-            ([0.0, 7.0, 7.0, 7.0], [0.0, 7.0, 7.0, 7.0]),
+            ([[0.0, 7.0, 7.0, 7.0]], [[0.0, 7.0, 7.0, 7.0]]),
             attribute_to_layer_input=True,
         )
 

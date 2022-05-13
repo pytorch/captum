@@ -1,25 +1,23 @@
 #!/usr/bin/env python3
 
 import typing
-from typing import Any, Callable, List, Tuple, Union, cast
+from typing import Any, Callable, cast, List, Tuple, Union
 
 import numpy as np
 import torch
-from torch import Tensor
-from torch.nn import Module
-
-from captum.log import log_usage
-
-from ...._utils.gradient import _forward_layer_eval, compute_layer_gradients_and_eval
-from ...._utils.typing import Literal, TargetType, TensorOrTupleOfTensorsGeneric
-from ..._utils.attribution import GradientAttribution, LayerAttribution
-from ..._utils.common import (
+from captum._utils.gradient import _forward_layer_eval, compute_layer_gradients_and_eval
+from captum._utils.typing import Literal, TargetType, TensorOrTupleOfTensorsGeneric
+from captum.attr._core.gradient_shap import _scale_input
+from captum.attr._core.noise_tunnel import NoiseTunnel
+from captum.attr._utils.attribution import GradientAttribution, LayerAttribution
+from captum.attr._utils.common import (
     _compute_conv_delta_and_format_attrs,
     _format_callable_baseline,
     _format_input_baseline,
 )
-from ..gradient_shap import _scale_input
-from ..noise_tunnel import NoiseTunnel
+from captum.log import log_usage
+from torch import Tensor
+from torch.nn import Module
 
 
 class LayerGradientShap(LayerAttribution, GradientAttribution):
@@ -306,7 +304,7 @@ class LayerGradientShap(LayerAttribution, GradientAttribution):
             nt,  # self
             inputs,
             nt_type="smoothgrad",
-            n_samples=n_samples,
+            nt_samples=n_samples,
             stdevs=stdevs,
             draw_baseline_from_distrib=True,
             baselines=baselines,
@@ -333,7 +331,7 @@ class LayerInputBaselineXGradient(LayerAttribution, GradientAttribution):
         layer: Module,
         device_ids: Union[None, List[int]] = None,
         multiply_by_inputs: bool = True,
-    ):
+    ) -> None:
         r"""
         Args:
 

@@ -3,16 +3,14 @@ import warnings
 from typing import Any, List, Union
 
 import torch
+from captum._utils.common import _format_output, _format_tensor_into_tuples, _is_tuple
+from captum._utils.typing import TargetType, TensorOrTupleOfTensorsGeneric
+from captum.attr._core.guided_backprop_deconvnet import GuidedBackprop
+from captum.attr._core.layer.grad_cam import LayerGradCam
+from captum.attr._utils.attribution import GradientAttribution, LayerAttribution
+from captum.log import log_usage
 from torch import Tensor
 from torch.nn import Module
-
-from captum.log import log_usage
-
-from ..._utils.common import _format_input, _format_output, _is_tuple
-from ..._utils.typing import TargetType, TensorOrTupleOfTensorsGeneric
-from .._utils.attribution import GradientAttribution, LayerAttribution
-from .guided_backprop_deconvnet import GuidedBackprop
-from .layer.grad_cam import LayerGradCam
 
 
 class GuidedGradCam(GradientAttribution):
@@ -53,7 +51,10 @@ class GuidedGradCam(GradientAttribution):
         r"""
         Args:
 
-            model (nn.Module):  The reference to PyTorch model instance.
+            model (nn.Module):  The reference to PyTorch model instance. Model cannot
+                        contain any in-place ReLU submodules; these are not
+                        supported by the register_full_backward_hook PyTorch API
+                        starting from PyTorch v1.9.
             layer (torch.nn.Module): Layer for which GradCAM attributions are computed.
                           Currently, only layers with a single tensor output are
                           supported.
@@ -181,7 +182,7 @@ class GuidedGradCam(GradientAttribution):
             >>> attribution = guided_gc.attribute(input, 3)
         """
         is_inputs_tuple = _is_tuple(inputs)
-        inputs = _format_input(inputs)
+        inputs = _format_tensor_into_tuples(inputs)
         grad_cam_attr = self.grad_cam.attribute.__wrapped__(
             self.grad_cam,  # self
             inputs=inputs,
@@ -196,6 +197,7 @@ class GuidedGradCam(GradientAttribution):
                 "outputs is not supported."
             )
             grad_cam_attr = grad_cam_attr[0]
+
         guided_backprop_attr = self.guided_backprop.attribute.__wrapped__(
             self.guided_backprop,  # self
             inputs=inputs,

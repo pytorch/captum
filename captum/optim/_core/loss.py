@@ -5,7 +5,6 @@ from typing import Any, Callable, List, Optional, Tuple, Union
 
 import torch
 import torch.nn as nn
-
 from captum.optim._utils.image.common import _dot_cossim, get_neuron_pos
 from captum.optim._utils.typing import ModuleOutputMapping
 
@@ -271,7 +270,7 @@ class DeepDream(BaseLoss):
     def __call__(self, targets_to_values: ModuleOutputMapping) -> torch.Tensor:
         activations = targets_to_values[self.target]
         activations = activations[self.batch_index[0] : self.batch_index[1]]
-        return activations ** 2
+        return activations**2
 
 
 @loss_wrapper
@@ -591,7 +590,7 @@ class AngledNeuronDirection(BaseLoss):
             return activations * vec
 
         dot = torch.mean(activations * vec)
-        cossims = dot / (self.eps + torch.sqrt(torch.sum(activations ** 2)))
+        cossims = dot / (self.eps + torch.sqrt(torch.sum(activations**2)))
         return dot * torch.clamp(cossims, min=0.1) ** self.cossim_pow
 
 

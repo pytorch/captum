@@ -2,15 +2,13 @@
 from typing import Any, Callable, List, Tuple, Union
 
 import torch
+from captum._utils.common import _format_output
+from captum._utils.gradient import _forward_layer_eval
+from captum._utils.typing import ModuleOrModuleList
+from captum.attr._utils.attribution import LayerAttribution
+from captum.log import log_usage
 from torch import Tensor
 from torch.nn import Module
-
-from captum.log import log_usage
-
-from ...._utils.common import _format_output
-from ...._utils.gradient import _forward_layer_eval
-from ...._utils.typing import ModuleOrModuleList
-from ..._utils.attribution import LayerAttribution
 
 
 class LayerActivation(LayerAttribution):

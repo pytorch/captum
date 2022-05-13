@@ -71,6 +71,23 @@ class Footer extends React.Component {
             <a href={`${this.props.config.baseUrl}tutorials/`}>Tutorials</a>
             <a href={`${this.props.config.baseUrl}api/`}>API Reference</a>
           </div>
+          <div className="footerSection">
+            <h5>Legal</h5>
+            <a
+              href="https://opensource.facebook.com/legal/privacy/"
+              target="_blank"
+              rel="noreferrer noopener"
+            >
+              Privacy
+            </a>
+            <a
+              href="https://opensource.facebook.com/legal/terms/"
+              target="_blank"
+              rel="noreferrer noopener"
+            >
+              Terms
+            </a>
+          </div>
           <SocialFooter config={this.props.config} />
         </section>
         <a
@@ -93,7 +110,8 @@ class Footer extends React.Component {
           Copyright &copy; {currentYear} Facebook Inc.
         </section>
         {process.env.NODE_ENV !== 'development' &&
-          <script dangerouslySetInnerHTML={{__html:`
+          <script dangerouslySetInnerHTML={{
+            __html: `
             (function() {
               var BAD_BASE = '/captum/';
               if (window.location.origin !== '${this.props.config.url}') {

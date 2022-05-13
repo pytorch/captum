@@ -16,7 +16,7 @@ def _divide_and_aggregate_metrics(
 ) -> Tensor:
     r"""
     This function is used to slice large number of samples `n_perturb_samples` per
-    input example into smaller pieces, computing the metics for each small piece and
+    input example into smaller pieces, computing the metrics for each small piece and
     aggregating the results across all `n_perturb_samples` per example. The function
     returns overall aggregated metric per sample. The size of each slice is determined
     by the `max_examples_per_batch` input parameter.

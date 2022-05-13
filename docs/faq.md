@@ -11,7 +11,8 @@ title: FAQ
 * [My model inputs or outputs token indices, and when using Captum I see errors relating to gradients, how do I resolve this?](#my-model-inputs-or-outputs-token-indices-and-when-using-captum-i-see-errors-relating-to-gradients-how-do-i-resolve-this)
 * [Can my model using functional non-linearities (E.g. nn.functional.ReLU) or reused modules be used with Captum?](#can-my-model-using-functional-non-linearities-eg-nnfunctionalrelu-or-reused-modules-be-used-with-captum)
 * [Do JIT models, DataParallel models, or DistributedDataParallel models work with Captum?](#do-jit-models-dataparallel-models-or-distributeddataparallel-models-work-with-captum)
-* [I am working on a new interpretability / attribution method and would like to add it to Captum. How do I proceed?](#i-am-working-on-a-new-interpretability-attribution-method-and-would-like-to-add-it-to-captum-how-do-i-proceed)
+* [I am working on a new interpretability or attribution method and would like to add it to Captum. How do I proceed?](#i-am-working-on-a-new-interpretability-or-attribution-method-and-would-like-to-add-it-to-captum-how-do-i-proceed)
+* [I am using a gradient-based attribution algorithm such as integrated gradients for a RNN or LSTM network and I see 'cudnn RNN backward can only be called in training mode'. How can I resolve this issue ?](#how-can-I-resolve-cudnn-RNN-backward-error-for-RNN-or-LSTM-network)
 
 ### **How do I set the target parameter to an attribution method?**
 
@@ -60,8 +61,7 @@ Most methods will work fine with functional non-linearities and arbitrary operat
 
 Yes, we have support for all these model types. Note that JIT models do not yet support hooks, so any methods using hooks including layer and neuron attribution methods, DeepLift, Guided Backprop, and Deconvolution are not supported. DataParallel and DistributedDataParallel are supported with all model types.
 
-
-### **I am working on a new interpretability / attribution method and would like to add it to Captum. How do I proceed?**
+### **I am working on a new interpretability or attribution method and would like to add it to Captum. How do I proceed?**
 
 For interpretability methods created by the community, we have two methods of involvement:
 
@@ -69,3 +69,8 @@ For interpretability methods created by the community, we have two methods of in
 2. Inclusion in Captum - New attribution algorithms that fit the structure of Captum can be considered for contribution to the contrib package of algorithms in Captum.  We review proposals for new additions to the contrib package on a case-by-case basis and consider factors such as publication history, quantitative and qualitative evaluation, citations, etc.
 
 We are still working out the logistics of setting these up and will update this with more information once it’s available.
+
+### **How can I resolve cudnn RNN backward error for RNN or LSTM network?**
+If your model is set in eval mode you might run into errors, such as `cudnn RNN backward can only be called in training mode`, when you try to perform backward pass on a RNN / LSTM model in a GPU environment.
+CuDNN with RNN / LSTM doesn't support gradient computation in eval mode that's why we need to disable cudnn for RNN in eval mode.
+To resolve the issue you can set`torch.backends.cudnn.enabled` flag to False - `torch.backends.cudnn.enabled=False`
