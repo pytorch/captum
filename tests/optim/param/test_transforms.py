@@ -2286,8 +2286,6 @@ class TestCLIPTokenizer(BaseTest):
                 "torchtext >=0.12.0 not found, skipping ClipTokenizer unicode test"
             )
 
-        from torchtext import __version__ as torchtext_version
-
         clip_tokenizer = transforms.CLIPTokenizer(
             pretrained_merges=True, context_length=376
         )
