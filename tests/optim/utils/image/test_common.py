@@ -489,7 +489,7 @@ class TestMakeGridImage(BaseTest):
         assertTensorAlmostEqual(self, test_output, expected_output, 0)
 
     def test_make_grid_image_single_tensor_pad_value_jit_module(self) -> None:
-        if torch.__version__ <= "1.8.0":
+        if version.parse(torch.__version__) <= version.parse("1.10.0"):
             raise unittest.SkipTest(
                 "Skipping make_image_grid JIT module test due to"
                 + "  insufficient Torch version."
