@@ -33,26 +33,26 @@ src="/_sphinx/documentation_options.js"></script>
 <span></span><span class="ch">#!/usr/bin/env python3</span>
 
 <span class="kn">import</span> <span class="nn">warnings</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Iterator</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Union</span><span class="p">,</span> <span class="n">Tuple</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Iterator</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Union</span>
 
 <span class="kn">import</span> <span class="nn">torch</span>
-<span class="kn">from</span> <span class="nn">captum._utils.common</span> <span class="kn">import</span> <span class="n">_get_module_from_name</span><span class="p">,</span> <span class="n">_format_inputs</span>
+<span class="kn">from</span> <span class="nn">captum._utils.common</span> <span class="kn">import</span> <span class="n">_format_inputs</span><span class="p">,</span> <span class="n">_get_module_from_name</span>
 <span class="kn">from</span> <span class="nn">captum._utils.progress</span> <span class="kn">import</span> <span class="n">progress</span>
 <span class="kn">from</span> <span class="nn">captum.influence._core.tracincp</span> <span class="kn">import</span> <span class="p">(</span>
-    <span class="n">TracInCPBase</span><span class="p">,</span>
-    <span class="n">KMostInfluentialResults</span><span class="p">,</span>
     <span class="n">_influence_route_to_helpers</span><span class="p">,</span>
+    <span class="n">KMostInfluentialResults</span><span class="p">,</span>
+    <span class="n">TracInCPBase</span><span class="p">,</span>
 <span class="p">)</span>
 <span class="kn">from</span> <span class="nn">captum.influence._utils.common</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">_DatasetFromList</span><span class="p">,</span>
+    <span class="n">_get_k_most_influential_helper</span><span class="p">,</span>
     <span class="n">_jacobian_loss_wrt_inputs</span><span class="p">,</span>
     <span class="n">_load_flexible_state_dict</span><span class="p">,</span>
     <span class="n">_tensor_batch_dot</span><span class="p">,</span>
-    <span class="n">_get_k_most_influential_helper</span><span class="p">,</span>
-    <span class="n">_DatasetFromList</span><span class="p">,</span>
 <span class="p">)</span>
 <span class="kn">from</span> <span class="nn">captum.influence._utils.nearest_neighbors</span> <span class="kn">import</span> <span class="p">(</span>
-    <span class="n">NearestNeighbors</span><span class="p">,</span>
     <span class="n">AnnoyNearestNeighbors</span><span class="p">,</span>
+    <span class="n">NearestNeighbors</span><span class="p">,</span>
 <span class="p">)</span>
 <span class="kn">from</span> <span class="nn">captum.log</span> <span class="kn">import</span> <span class="n">log_usage</span>
 <span class="kn">from</span> <span class="nn">torch</span> <span class="kn">import</span> <span class="n">Tensor</span>
@@ -526,8 +526,8 @@ src="/_sphinx/documentation_options.js"></script>
             <span class="p">)</span>
 
             <span class="k">return</span> <span class="p">(</span>
-                <span class="n">torch</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">batch_jacobian</span> <span class="o">**</span> <span class="mi">2</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
-                <span class="o">*</span> <span class="n">torch</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">batch_layer_input</span> <span class="o">**</span> <span class="mi">2</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+                <span class="n">torch</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">batch_jacobian</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+                <span class="o">*</span> <span class="n">torch</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">batch_layer_input</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
                 <span class="o">*</span> <span class="n">learning_rate</span>
             <span class="p">)</span>
 
@@ -1095,17 +1095,17 @@ src="/_sphinx/documentation_options.js"></script>
             <span class="c1"># `projection_dim` corresponds to the variable d in the top of page 15 of</span>
             <span class="c1"># the TracIn paper: https://arxiv.org/pdf/2002.08484.pdf.</span>
             <span class="k">if</span> <span class="n">jacobian_dim</span> <span class="o">*</span> <span class="n">layer_input_dim</span> <span class="o">&gt;</span> <span class="n">projection_dim</span><span class="p">:</span>
-                <span class="n">jacobian_projection_dim</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">projection_dim</span> <span class="o">**</span> <span class="mf">0.5</span><span class="p">),</span> <span class="n">jacobian_dim</span><span class="p">)</span>
+                <span class="n">jacobian_projection_dim</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">projection_dim</span><span class="o">**</span><span class="mf">0.5</span><span class="p">),</span> <span class="n">jacobian_dim</span><span class="p">)</span>
                 <span class="n">layer_input_projection_dim</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span>
-                    <span class="nb">int</span><span class="p">(</span><span class="n">projection_dim</span> <span class="o">**</span> <span class="mf">0.5</span><span class="p">),</span> <span class="n">layer_input_dim</span>
+                    <span class="nb">int</span><span class="p">(</span><span class="n">projection_dim</span><span class="o">**</span><span class="mf">0.5</span><span class="p">),</span> <span class="n">layer_input_dim</span>
                 <span class="p">)</span>
                 <span class="n">jacobian_projection</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span>
                     <span class="n">torch</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">jacobian_dim</span><span class="p">,</span> <span class="n">jacobian_projection_dim</span><span class="p">),</span>
-                    <span class="mf">1.0</span> <span class="o">/</span> <span class="n">jacobian_projection_dim</span> <span class="o">**</span> <span class="mf">0.5</span><span class="p">,</span>
+                    <span class="mf">1.0</span> <span class="o">/</span> <span class="n">jacobian_projection_dim</span><span class="o">**</span><span class="mf">0.5</span><span class="p">,</span>
                 <span class="p">)</span>
                 <span class="n">layer_input_projection</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span>
                     <span class="n">torch</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">layer_input_dim</span><span class="p">,</span> <span class="n">layer_input_projection_dim</span><span class="p">),</span>
-                    <span class="mf">1.0</span> <span class="o">/</span> <span class="n">layer_input_projection_dim</span> <span class="o">**</span> <span class="mf">0.5</span><span class="p">,</span>
+                    <span class="mf">1.0</span> <span class="o">/</span> <span class="n">layer_input_projection_dim</span><span class="o">**</span><span class="mf">0.5</span><span class="p">,</span>
                 <span class="p">)</span>
 
                 <span class="n">projection_quantities</span> <span class="o">=</span> <span class="n">jacobian_projection</span><span class="p">,</span> <span class="n">layer_input_projection</span>
@@ -1189,7 +1189,7 @@ src="/_sphinx/documentation_options.js"></script>
             <span class="p">),</span> <span class="s2">"None returned from `checkpoints`, cannot load."</span>
 
             <span class="n">learning_rate</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">checkpoints_load_func</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">,</span> <span class="n">checkpoint</span><span class="p">)</span>
-            <span class="n">learning_rate_root</span> <span class="o">=</span> <span class="n">learning_rate</span> <span class="o">**</span> <span class="mf">0.5</span>
+            <span class="n">learning_rate_root</span> <span class="o">=</span> <span class="n">learning_rate</span><span class="o">**</span><span class="mf">0.5</span>
 
             <span class="k">for</span> <span class="n">batch</span> <span class="ow">in</span> <span class="n">dataloader</span><span class="p">:</span>
 

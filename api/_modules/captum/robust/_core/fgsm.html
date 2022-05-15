@@ -96,7 +96,7 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="bp">self</span><span class="o">.</span><span class="n">forward_func</span> <span class="o">=</span> <span class="n">forward_func</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">loss_func</span> <span class="o">=</span> <span class="n">loss_func</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">bound</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">clamp</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="nb">min</span><span class="o">=</span><span class="n">lower_bound</span><span class="p">,</span> <span class="nb">max</span><span class="o">=</span><span class="n">upper_bound</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">zero_thresh</span> <span class="o">=</span> <span class="mi">10</span> <span class="o">**</span> <span class="o">-</span><span class="mi">6</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">zero_thresh</span> <span class="o">=</span> <span class="mi">10</span><span class="o">**-</span><span class="mi">6</span>
 
 <div class="viewcode-block" id="FGSM.perturb"><a class="viewcode-back" href="../../../../robust.html#captum.robust.FGSM.perturb">[docs]</a>    <span class="k">def</span> <span class="nf">perturb</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
