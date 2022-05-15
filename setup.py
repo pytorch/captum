@@ -73,7 +73,7 @@ DEV_REQUIRES = (
         "sphinx-autodoc-typehints",
         "sphinxcontrib-katex",
         "mypy>=0.760",
-        "usort==0.6.4",
+        "usort==1.0.2",
         "ufmt",
         "scikit-learn",
         "annoy",
