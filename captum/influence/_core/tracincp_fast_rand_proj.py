@@ -1,26 +1,26 @@
 #!/usr/bin/env python3
 
 import warnings
-from typing import Any, Callable, Iterator, List, Optional, Union, Tuple
+from typing import Any, Callable, Iterator, List, Optional, Tuple, Union
 
 import torch
-from captum._utils.common import _get_module_from_name, _format_inputs
+from captum._utils.common import _format_inputs, _get_module_from_name
 from captum._utils.progress import progress
 from captum.influence._core.tracincp import (
-    TracInCPBase,
-    KMostInfluentialResults,
     _influence_route_to_helpers,
+    KMostInfluentialResults,
+    TracInCPBase,
 )
 from captum.influence._utils.common import (
+    _DatasetFromList,
+    _get_k_most_influential_helper,
     _jacobian_loss_wrt_inputs,
     _load_flexible_state_dict,
     _tensor_batch_dot,
-    _get_k_most_influential_helper,
-    _DatasetFromList,
 )
 from captum.influence._utils.nearest_neighbors import (
-    NearestNeighbors,
     AnnoyNearestNeighbors,
+    NearestNeighbors,
 )
 from captum.log import log_usage
 from torch import Tensor
