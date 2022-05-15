@@ -1,6 +1,5 @@
 from typing import List, Tuple
 
-import numpy as np
 import torch
 
 
@@ -27,39 +26,3 @@ class ImageTestDataset(torch.utils.data.Dataset):
 
     def __len__(self) -> int:
         return len(self.tensors)
-
-
-def image_cov_np(array: np.ndarray) -> np.ndarray:
-    """
-    Calculate an array's RGB covariance matrix.
-
-    Args:
-        array (array):  An NCHW image array.
-    Returns:
-        *array*:  An RGB covariance matrix for the specified array.
-    """
-
-    array = array.reshape(-1, 3)
-    array = array - array.mean(0, keepdims=True)
-    return 1 / (array.shape[0] - 1) * array.T @ array
-
-
-def cov_matrix_to_klt_np(
-    cov_mtx: np.ndarray, normalize: bool = False, epsilon: float = 1e-10
-) -> np.ndarray:
-    """
-    Convert a cov matrix to a klt matrix.
-
-    Args:
-        cov_mtx (array):  A 3 by 3 covariance matrix generated from a dataset.
-        normalize (bool):  Whether or not to normalize the resulting KLT matrix.
-        epsilon (float):
-    Returns:
-        *array*:  A KLT matrix for the specified covariance matrix.
-    """
-
-    U, S, V = np.linalg.svd(cov_mtx)
-    svd_sqrt = U @ np.diag(np.sqrt(S + epsilon))
-    if normalize:
-        svd_sqrt / np.linalg.norm(svd_sqrt, axis=0).max()
-    return svd_sqrt
