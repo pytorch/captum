@@ -419,7 +419,7 @@ class TestSimpleTensorParameterization(BaseTest):
         self.assertFalse(image_param.tensor.requires_grad)
 
     def test_simple_tensor_parameterization_jit_module_no_grad(self) -> None:
-        if torch.__version__ <= "1.8.0":
+        if version.parse(torch.__version__) <= version.parse("1.8.0"):
             raise unittest.SkipTest(
                 "Skipping SimpleTensorParameterization JIT module test due to"
                 + "  insufficient Torch version."
@@ -549,24 +549,6 @@ class TestSharedImage(BaseTest):
             test_input.clone().unsqueeze(0), size=size, mode="trilinear"
         ).squeeze(0)
         assertTensorAlmostEqual(self, test_output, expected_output, 0.0)
-
-    def test_torch_version_check(self) -> None:
-        shared_shapes = (128 // 2, 128 // 2)
-        test_param = lambda: torch.ones(3, 3, 224, 224)  # noqa: E731
-        image_param = images.SharedImage(
-            shapes=shared_shapes, parameterization=test_param
-        )
-
-        has_align_corners = torch.__version__ >= "1.3.0"
-        self.assertEqual(image_param._has_align_corners, has_align_corners)
-
-        has_recompute_scale_factor = torch.__version__ >= "1.6.0"
-        self.assertEqual(
-            image_param._has_recompute_scale_factor, has_recompute_scale_factor
-        )
-
-        supports_is_scripting = torch.__version__ >= "1.6.0"
-        self.assertEqual(image_param._supports_is_scripting, supports_is_scripting)
 
     def test_sharedimage_get_offset_single_number(self) -> None:
         shared_shapes = (128 // 2, 128 // 2)
@@ -825,7 +807,7 @@ class TestSharedImage(BaseTest):
         self.assertEqual(test_tensor.size(3), size[1])
 
     def test_sharedimage_multiple_shapes_diff_len_forward_jit_module(self) -> None:
-        if torch.__version__ <= "1.8.0":
+        if version.parse(torch.__version__) <= version.parse("1.8.0"):
             raise unittest.SkipTest(
                 "Skipping SharedImage JIT module test due to insufficient Torch"
                 + " version."
@@ -861,20 +843,7 @@ class TestStackImage(BaseTest):
     def test_subclass(self) -> None:
         self.assertTrue(issubclass(images.StackImage, images.ImageParameterization))
 
-    def test_stackimage_torch_version_check(self) -> None:
-        img_param_1 = images.SimpleTensorParameterization(torch.ones(1, 3, 4, 4))
-        img_param_2 = images.SimpleTensorParameterization(torch.ones(1, 3, 4, 4))
-        param_list = [img_param_1, img_param_2]
-        stack_param = images.StackImage(parameterizations=param_list)
-
-        supports_is_scripting = torch.__version__ >= "1.6.0"
-        self.assertEqual(stack_param._supports_is_scripting, supports_is_scripting)
-
     def test_stackimage_init(self) -> None:
-        if torch.__version__ <= "1.2.0":
-            raise unittest.SkipTest(
-                "Skipping StackImage init test due to insufficient Torch version."
-            )
         size = (4, 4)
         fft_param_1 = images.FFTImage(size=size)
         fft_param_2 = images.FFTImage(size=size)
@@ -891,10 +860,6 @@ class TestStackImage(BaseTest):
             self.assertTrue(image_param().requires_grad)
 
     def test_stackimage_dim(self) -> None:
-        if torch.__version__ <= "1.2.0":
-            raise unittest.SkipTest(
-                "Skipping StackImage dim test due to insufficient Torch version."
-            )
         img_param_r = images.SimpleTensorParameterization(torch.ones(1, 1, 4, 4))
         img_param_g = images.SimpleTensorParameterization(torch.ones(1, 1, 4, 4))
         img_param_b = images.SimpleTensorParameterization(torch.ones(1, 1, 4, 4))
@@ -907,10 +872,6 @@ class TestStackImage(BaseTest):
         self.assertEqual(list(test_output.shape), [1, 3, 4, 4])
 
     def test_stackimage_forward(self) -> None:
-        if torch.__version__ <= "1.2.0":
-            raise unittest.SkipTest(
-                "Skipping StackImage forward test due to insufficient Torch version."
-            )
         size = (4, 4)
         fft_param_1 = images.FFTImage(size=size)
         fft_param_2 = images.FFTImage(size=size)
@@ -927,11 +888,6 @@ class TestStackImage(BaseTest):
         self.assertIsNone(stack_param.output_device)
 
     def test_stackimage_forward_diff_image_params(self) -> None:
-        if torch.__version__ <= "1.2.0":
-            raise unittest.SkipTest(
-                "Skipping StackImage forward with diff image params test due to"
-                + " insufficient Torch version."
-            )
         size = (4, 4)
         fft_param = images.FFTImage(size=size)
         pixel_param = images.PixelImage(size=size)
@@ -951,11 +907,6 @@ class TestStackImage(BaseTest):
         self.assertIsNone(stack_param.output_device)
 
     def test_stackimage_forward_diff_image_params_and_tensor_with_grad(self) -> None:
-        if torch.__version__ <= "1.2.0":
-            raise unittest.SkipTest(
-                "Skipping StackImage forward with diff image params and tensor with"
-                + " grad test due to insufficient Torch version."
-            )
         size = (4, 4)
         fft_param = images.FFTImage(size=size)
         pixel_param = images.PixelImage(size=size)
@@ -980,11 +931,6 @@ class TestStackImage(BaseTest):
         self.assertIsNone(stack_param.output_device)
 
     def test_stackimage_forward_diff_image_params_and_tensor_no_grad(self) -> None:
-        if torch.__version__ <= "1.2.0":
-            raise unittest.SkipTest(
-                "Skipping StackImage forward with diff image params and tensor with"
-                + " no grad test due to insufficient Torch version."
-            )
         size = (4, 4)
         fft_param = images.FFTImage(size=size)
         pixel_param = images.PixelImage(size=size)
@@ -1012,11 +958,6 @@ class TestStackImage(BaseTest):
         self.assertIsNone(stack_param.output_device)
 
     def test_stackimage_forward_multi_gpu(self) -> None:
-        if torch.__version__ <= "1.2.0":
-            raise unittest.SkipTest(
-                "Skipping StackImage forward multi GPU test due to insufficient"
-                + " Torch version."
-            )
         if not torch.cuda.is_available():
             raise unittest.SkipTest(
                 "Skipping StackImage multi GPU test due to not supporting CUDA."
@@ -1062,11 +1003,6 @@ class TestStackImage(BaseTest):
         self.assertEqual(stack_param().device, output_device)
 
     def test_stackimage_forward_multi_device_cpu_gpu(self) -> None:
-        if torch.__version__ <= "1.2.0":
-            raise unittest.SkipTest(
-                "Skipping StackImage forward multi device test due to insufficient"
-                + " Torch version."
-            )
         if not torch.cuda.is_available():
             raise unittest.SkipTest(
                 "Skipping StackImage multi device test due to not supporting CUDA."

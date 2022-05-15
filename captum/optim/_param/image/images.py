@@ -461,12 +461,7 @@ class SharedImage(ImageParameterization):
     https://distill.pub/2018/differentiable-parameterizations/
     """
 
-    __constants__ = [
-        "offset",
-        "_supports_is_scripting",
-        "_has_align_corners",
-        "_has_recompute_scale_factor",
-    ]
+    __constants__ = ["offset"]
 
     def __init__(
         self,
@@ -500,11 +495,6 @@ class SharedImage(ImageParameterization):
         self.shared_init = torch.nn.ModuleList(A)
         self.parameterization = parameterization
         self.offset = self._get_offset(offset, len(A)) if offset is not None else None
-
-        # Check & store whether or not we can use torch.jit.is_scripting()
-        self._supports_is_scripting = torch.__version__ >= "1.6.0"
-        self._has_align_corners = torch.__version__ >= "1.3.0"
-        self._has_recompute_scale_factor = torch.__version__ >= "1.6.0"
 
     def _get_offset(self, offset: Union[int, Tuple[int]], n: int) -> List[List[int]]:
         """
@@ -585,19 +575,13 @@ class SharedImage(ImageParameterization):
         assert x.dim() == 4
         assert len(size) == 2
 
-        if self._has_align_corners:
-            if self._has_recompute_scale_factor:
-                x = F.interpolate(
-                    x,
-                    size=size,
-                    mode="bilinear",
-                    align_corners=False,
-                    recompute_scale_factor=False,
-                )
-            else:
-                x = F.interpolate(x, size=size, mode="bilinear", align_corners=False)
-        else:
-            x = F.interpolate(x, size=size, mode="bilinear")
+        x = F.interpolate(
+            x,
+            size=size,
+            mode="bilinear",
+            align_corners=False,
+            recompute_scale_factor=False,
+        )
         return x
 
     def _interpolate_trilinear(
@@ -619,19 +603,13 @@ class SharedImage(ImageParameterization):
         """
         x = x.unsqueeze(0)
         assert x.dim() == 5
-        if self._has_align_corners:
-            if self._has_recompute_scale_factor:
-                x = F.interpolate(
-                    x,
-                    size=size,
-                    mode="trilinear",
-                    align_corners=False,
-                    recompute_scale_factor=False,
-                )
-            else:
-                x = F.interpolate(x, size=size, mode="trilinear", align_corners=False)
-        else:
-            x = F.interpolate(x, size=size, mode="trilinear")
+        x = F.interpolate(
+            x,
+            size=size,
+            mode="trilinear",
+            align_corners=False,
+            recompute_scale_factor=False,
+        )
         return x.squeeze(0)
 
     def _interpolate_tensor(
@@ -685,9 +663,8 @@ class SharedImage(ImageParameterization):
             x = self._apply_offset(x)
         output = image + torch.cat(x, 0).sum(0, keepdim=True)
 
-        if self._supports_is_scripting:
-            if torch.jit.is_scripting():
-                return output
+        if torch.jit.is_scripting():
+            return output
         return output.refine_names("B", "C", "H", "W")
 
 
@@ -696,7 +673,7 @@ class StackImage(ImageParameterization):
     Stack multiple NCHW image parameterizations along their batch dimensions.
     """
 
-    __constants__ = ["_supports_is_scripting", "dim", "output_device"]
+    __constants__ = ["dim", "output_device"]
 
     def __init__(
         self,
@@ -735,9 +712,6 @@ class StackImage(ImageParameterization):
         self.dim = dim
         self.output_device = output_device
 
-        # Check & store whether or not we can use torch.jit.is_scripting()
-        self._supports_is_scripting = torch.__version__ >= "1.6.0"
-
     def forward(self) -> torch.Tensor:
         """
         Returns:
@@ -756,9 +730,8 @@ class StackImage(ImageParameterization):
         assert all([im.device == P[0].device for im in P])
 
         image = torch.cat(P, dim=self.dim)
-        if self._supports_is_scripting:
-            if torch.jit.is_scripting():
-                return image
+        if torch.jit.is_scripting():
+            return image
         return image.refine_names("B", "C", "H", "W")
 
 
