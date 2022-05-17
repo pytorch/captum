@@ -263,8 +263,8 @@ class TestFacetLoss(BaseTest):
 
     def test_facetloss_single_channel(self) -> None:
         layer = torch.nn.Conv2d(2, 3, 1, bias=True)
-        layer.weight.fill_(0.1)
-        layer.bias.fill_(1)
+        layer.weight.data.fill_(0.1)  # type: ignore
+        layer.bias.data.fill_(1)  # type: ignore
         model = torch.nn.Sequential(BasicModel_ConvNet_Optim(), layer)
 
         vec = torch.tensor([0, 1, 0]).float()
@@ -281,8 +281,8 @@ class TestFacetLoss(BaseTest):
 
     def test_facetloss_multi_channel(self) -> None:
         layer = torch.nn.Conv2d(2, 3, 1, bias=True)
-        layer.weight.fill_(0.1)
-        layer.bias.fill_(1)
+        layer.weight.data.fill_(0.1)  # type: ignore
+        layer.bias.data.fill_(1)  # type: ignore
 
         model = torch.nn.Sequential(BasicModel_ConvNet_Optim(), layer)
 
@@ -299,8 +299,8 @@ class TestFacetLoss(BaseTest):
 
     def test_facetloss_strength(self) -> None:
         layer = torch.nn.Conv2d(2, 3, 1, bias=True)
-        layer.weight.fill_(0.1)
-        layer.bias.fill_(1)
+        layer.weight.data.fill_(0.1)  # type: ignore
+        layer.bias.data.fill_(1)  # type: ignore
         model = torch.nn.Sequential(BasicModel_ConvNet_Optim(), layer)
 
         vec = torch.tensor([0, 1, 0]).float()
@@ -319,8 +319,8 @@ class TestFacetLoss(BaseTest):
 
     def test_facetloss_strength_batch(self) -> None:
         layer = torch.nn.Conv2d(2, 3, 1, bias=True)
-        layer.weight.fill_(0.1)
-        layer.bias.fill_(1)
+        layer.weight.data.fill_(0.1)  # type: ignore
+        layer.bias.data.fill_(1)  # type: ignore
         model = torch.nn.Sequential(BasicModel_ConvNet_Optim(), layer)
 
         vec = torch.tensor([0, 1, 0]).float()
@@ -339,8 +339,8 @@ class TestFacetLoss(BaseTest):
 
     def test_facetloss_2d_weights(self) -> None:
         layer = torch.nn.Conv2d(2, 3, 1, bias=True)
-        layer.weight.fill_(0.1)
-        layer.bias.fill_(1)
+        layer.weight.data.fill_(0.1)  # type: ignore
+        layer.bias.data.fill_(1)  # type: ignore
         model = torch.nn.Sequential(BasicModel_ConvNet_Optim(), layer)
 
         vec = torch.tensor([0, 1, 0]).float()
