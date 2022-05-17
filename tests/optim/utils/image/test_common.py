@@ -516,3 +516,37 @@ class TestMakeGridImage(BaseTest):
         )
         self.assertEqual(list(expected_output.shape), [1, 1, 7, 7])
         assertTensorAlmostEqual(self, test_output, expected_output, 0)
+
+
+class TestCreateNewVector(BaseTest):
+    def test_create_new_vector_one_hot(self) -> None:
+        x = torch.arange(0, 1 * 3 * 5 * 5).view(1, 3, 5, 5).float()
+        vec = torch.tensor([0, 1, 0]).float()
+        out = common._create_new_vector(x, vec)
+        self.assertEqual(out.item(), 37.0)
+
+    def test_create_new_vector_one_hot_batch(self) -> None:
+        x = torch.arange(0, 4 * 3 * 5 * 5).view(4, 3, 5, 5).float()
+        vec = torch.tensor([0, 1, 0]).float()
+        out = common._create_new_vector(x, vec)
+        self.assertEqual(out.tolist(), [37.0, 112.0, 187.0, 262.0])
+
+    def test_create_new_vector(self) -> None:
+        x = torch.arange(0, 1 * 3 * 5 * 5).view(1, 3, 5, 5).float()
+        vec = torch.tensor([1, 1, 1]).float()
+        out = common._create_new_vector(x, vec)
+        self.assertEqual(out.item(), 111.0)
+
+    def test_create_new_vector_activation_fn(self) -> None:
+        x = torch.arange(0, 1 * 3 * 5 * 5).view(1, 3, 5, 5).float()
+        x = x - x.mean()
+        vec = torch.tensor([1, 0, 1]).float()
+        out = common._create_new_vector(x, vec, activation_fn=torch.nn.functional.relu)
+        self.assertEqual(out.item(), 25.0)
+
+    def test_create_new_vector_no_activation_fn(self) -> None:
+        x = torch.arange(0, 1 * 3 * 5 * 5).view(1, 3, 5, 5).float()
+        x = x - x.mean()
+        vec = torch.tensor([1, 1, 1]).float()
+        out = common._create_new_vector(x, vec, activation_fn=None)
+        self.assertEqual(out.item(), 0.0)

@@ -1,5 +1,5 @@
 import math
-from typing import List, Optional, Tuple, Union
+from typing import Callable, List, Optional, Tuple, Union
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -363,3 +363,54 @@ def weights_to_heatmap_2d(
         * ((1 - (-x - 0.5) * 2) * color_list[1] + (-x - 0.5) * 2 * color_list[0])
     ).permute(2, 0, 1)
     return color_tensor
+
+
+def _create_new_vector(
+    x: torch.Tensor,
+    vec: torch.Tensor,
+    activation_fn: Optional[
+        Callable[[torch.Tensor], torch.Tensor]
+    ] = torch.nn.functional.relu,
+    move_channel_dim_to_final_dim: bool = True,
+) -> torch.Tensor:
+    """
+    Create a vector using a given set of activations and another vector.
+    This function is intended for use in CLIP related loss objectives.
+
+    https://distill.pub/2021/multimodal-neurons/
+    https://github.com/openai/CLIP-featurevis/blob/master/example_facets.py
+    The einsum equation: "ijkl,j->ikl", used by the paper's associated code is the
+    same thing as: "[..., C] @ vec", where vec has a shape of 'C'.
+
+    Args:
+
+        x (torch.Tensor): A set of 2d or 4d activations.
+        vec (torch.Tensor): A direction vector to use, with a compatible shape for
+            computing the matrix product of the activations. See torch.matmul for
+            See torch.matmul for more details on compatible shapes:
+            https://pytorch.org/docs/stable/generated/torch.matmul.html
+            By default, vec is expected to share the same size as the channel or
+            feature dimension of the activations.
+        activation_fn (Callable, optional): An optional activation function to
+            apply to the activations before computing the matrix product. If set
+            to None, then no activation function will be used.
+            Default: torch.nn.functional.relu
+        move_channel_dim_to_final_dim (bool, optional): Whether or not to move the
+            channel dimension to the last dimension before computing the matrix
+            product.
+            Default: True
+
+    Returns
+        x (torch.Tensor): A  vector created from the input activations and the
+            stored vector.
+    """
+    assert x.device == vec.device
+    assert x.dim() > 1
+    if activation_fn:
+        x = activation_fn(x)
+    if x.dim() > 2 and move_channel_dim_to_final_dim:
+        permute_vals = [0] + list(range(x.dim()))[2:] + [1]
+        x = x.permute(*permute_vals)
+        return torch.mean(x @ vec, [1, 2])
+    else:
+        return (x @ vec)[:, None]

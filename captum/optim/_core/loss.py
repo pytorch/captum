@@ -5,7 +5,11 @@ from typing import Any, Callable, List, Optional, Tuple, Union
 
 import torch
 import torch.nn as nn
-from captum.optim._utils.image.common import _dot_cossim, get_neuron_pos
+from captum.optim._utils.image.common import (
+    _create_new_vector,
+    _dot_cossim,
+    get_neuron_pos,
+)
 from captum.optim._utils.typing import ModuleOutputMapping
 
 
@@ -835,6 +839,216 @@ class ActivationWeights(BaseLoss):
         else:
             activations = activations * self.weights.view(1, -1, 1, 1)
         return activations
+
+
+@loss_wrapper
+class L2Mean(BaseLoss):
+    """
+    Simple L2Loss penalty where the mean is used instead of the square root of the
+    sum.
+
+    Used for CLIP models in https://distill.pub/2021/multimodal-neurons/ as per the
+    supplementary code:
+    https://github.com/openai/CLIP-featurevis/blob/master/example_facets.py
+    """
+
+    def __init__(
+        self,
+        target: torch.nn.Module,
+        channel_index: Optional[int] = None,
+        constant: float = 0.5,
+        batch_index: Optional[int] = None,
+    ) -> None:
+        """
+        Args:
+
+            target (nn.Module): A target layer, transform, or image parameterization
+                instance.
+            channel_index (int, optional): Optionally only target a specific channel.
+                If set to None, all channels with be used.
+                Default: None
+            constant (float, optional): Constant value to deduct from the activations.
+                Default: 0.5
+            batch_index (int, optional): The index of activations to optimize if
+                optimizing a batch of activations. If set to None, defaults to all
+                activations in the batch.
+                Default: None
+        """
+        BaseLoss.__init__(self, target, batch_index)
+        self.constant = constant
+        self.channel_index = channel_index
+
+    def __call__(self, targets_to_values: ModuleOutputMapping) -> torch.Tensor:
+        activations = targets_to_values[self.target][
+            self.batch_index[0] : self.batch_index[1]
+        ]
+        if self.channel_index is not None:
+            activations = activations[:, self.channel_index : self.channel_index + 1]
+        return ((activations - self.constant) ** 2).mean()
+
+
+@loss_wrapper
+class VectorLoss(BaseLoss):
+    """
+    This objective is useful for optimizing towards channel directions. This can
+    helpful for visualizing models like OpenAI's CLIP.
+
+    This loss objective is similar to the Direction objective, except it computes the
+    matrix product of the activations and vector, rather than the cosine similarity.
+    In addition to optimizing towards channel directions, this objective can also
+    perform a similar role to the ChannelActivation objective by using one-hot 1D
+    vectors.
+
+    See here for more details:
+    https://distill.pub/2021/multimodal-neurons/
+    https://github.com/openai/CLIP-featurevis/blob/master/example_facets.py
+    """
+
+    def __init__(
+        self,
+        target: torch.nn.Module,
+        vec: torch.Tensor,
+        activation_fn: Optional[Callable] = torch.nn.functional.relu,
+        move_channel_dim_to_final_dim: bool = True,
+        batch_index: Optional[int] = None,
+    ) -> None:
+        """
+        Args:
+
+            target (nn.Module): A target layer instance.
+            vec (torch.Tensor): A direction vector to use, with a compatible shape for
+                computing the matrix product of the activations. See torch.matmul for
+                See torch.matmul for more details on compatible shapes:
+                https://pytorch.org/docs/stable/generated/torch.matmul.html
+                By default, vec is expected to share the same size as the channel
+                dimension of the activations.
+            activation_fn (Callable, optional): An optional activation function to
+                apply to the activations before computing the matrix product. If set
+                to None, then no activation function will be used.
+                Default: torch.nn.functional.relu
+            move_channel_dim_to_final_dim (bool, optional): Whether or not to move the
+                channel dimension to the last dimension before computing the matrix
+                product.
+                Default: True
+            batch_index (int, optional): The index of activations to optimize if
+                optimizing a batch of activations. If set to None, defaults to all
+                activations in the batch.
+                Default: None
+        """
+        BaseLoss.__init__(self, target, batch_index)
+        self.vec = vec
+        self.activation_fn = activation_fn
+        self.move_channel_dim_to_final_dim = move_channel_dim_to_final_dim
+
+    def __call__(self, targets_to_values: ModuleOutputMapping) -> torch.Tensor:
+        activations = targets_to_values[self.target]
+        activations = activations[self.batch_index[0] : self.batch_index[1]]
+        return _create_new_vector(
+            activations,
+            vec=self.vec,
+            activation_fn=self.activation_fn,
+            move_channel_dim_to_final_dim=self.move_channel_dim_to_final_dim,
+        ).mean()
+
+
+@loss_wrapper
+class FacetLoss(BaseLoss):
+    """
+    The Facet loss objective used for Faceted Feature Visualization as described in:
+    https://distill.pub/2021/multimodal-neurons/#faceted-feature-visualization
+    https://github.com/openai/CLIP-featurevis/blob/master/example_facets.py
+
+    The FacetLoss objective allows us to steer feature visualization towards a
+    particular theme / concept. This is done by using the weights from linear probes
+    trained on the lower layers of a model to discriminate between a certain theme or
+    concept and generic natural images.
+    """
+
+    def __init__(
+        self,
+        vec: torch.Tensor,
+        ultimate_target: torch.nn.Module,
+        layer_target: Union[torch.nn.Module, List[torch.nn.Module]],
+        facet_weights: torch.Tensor,
+        strength: Optional[Union[float, List[float]]] = None,
+        batch_index: Optional[Union[int, List[int]]] = None,
+    ) -> None:
+        """
+        Args:
+
+            vec (torch.Tensor): A 1D channel vector.
+            ultimate_target (nn.Module): The main target layer that we are
+                visualizing targets from. This is normally the penultimate layer of
+                the model.
+            layer_target (nn.Module): A layer that we have facet_weights for. This
+            target layer should be below the ultimate_target layer in the model.
+            strength (float, list of float, optional): A list of floats to use for batch
+                dimension weighting. Default is set to None for no weighting.
+                Default: None
+            facet_weights (torch.Tensor): Weighting that steers the objective
+                towards a particular theme or concept. These weight values should
+                come from linear probes trained on layers in target_layers.
+            batch_index (int, optional): The index of the activations to optimize if
+                optimizing a batch of activations. If set to None, defaults to all
+                activations in the batch.
+                Default: None
+        """
+        BaseLoss.__init__(self, [ultimate_target, layer_target], batch_index)
+        self.ultimate_target = ultimate_target
+        self.layer_target = layer_target
+        self.vec = vec
+        self.strength = strength
+        assert facet_weights.dim() == 4 or facet_weights.dim() == 2
+        self.facet_weights = facet_weights
+
+    def _get_strength(self, batch: int, device: torch.device) -> torch.Tensor:
+        """
+        Calculate batch weighting.
+
+        Args:
+
+            batch (int): The size of the batch dimension to use.
+            device (torch.device): The device to use.
+
+        Returns:
+            strength_t (torch.Tensor): A tensor containing the weights to multiply the
+                different batch dimensions by.
+        """
+        if isinstance(self.strength, (tuple, list)):
+            strength_t = torch.linspace(
+                self.strength[0],
+                self.strength[1],
+                steps=batch,
+                device=device,
+            )
+        else:
+            strength_t = torch.ones([1], device=device) * self.strength
+        return strength_t[:, None, None, None]
+
+    def __call__(self, targets_to_values: ModuleOutputMapping) -> torch.Tensor:
+        activations_ultimate = targets_to_values[self.ultimate_target]
+        activations_ultimate = activations_ultimate
+        new_vec = _create_new_vector(activations_ultimate, self.vec)[
+            self.batch_index[0] : self.batch_index[1]
+        ]
+        target_activations = targets_to_values[self.layer_target]
+
+        layer_grad = torch.autograd.grad(
+            outputs=new_vec,
+            inputs=target_activations,
+            grad_outputs=torch.ones_like(new_vec),
+            retain_graph=True,
+        )[0]
+        layer = target_activations[self.batch_index[0] : self.batch_index[1]]
+
+        flat_attr = layer * torch.nn.functional.relu(layer_grad.detach())
+        if self.facet_weights.dim() == 2 and flat_attr.dim() == 4:
+            flat_attr = torch.sum(flat_attr, dim=(2, 3))
+
+        if self.strength:
+            strength_t = self._get_strength(new_vec.shape[0], flat_attr.device)
+            flat_attr = strength_t * flat_attr
+        return torch.sum(flat_attr * self.facet_weights)
 
 
 def sum_loss_list(
