@@ -916,12 +916,8 @@ class VectorLoss(BaseLoss):
         Args:
 
             target (nn.Module): A target layer instance.
-            vec (torch.Tensor): A direction vector to use, with a compatible shape for
-                computing the matrix product of the activations. See torch.matmul for
-                See torch.matmul for more details on compatible shapes:
-                https://pytorch.org/docs/stable/generated/torch.matmul.html
-                By default, vec is expected to share the same size as the channel
-                dimension of the activations.
+            vec (torch.Tensor): A 1D channel vector with the same size as the
+                channel / feature dimension of the target layer instance.
             activation_fn (Callable, optional): An optional activation function to
                 apply to the activations before computing the matrix product. If set
                 to None, then no activation function will be used.
@@ -936,6 +932,7 @@ class VectorLoss(BaseLoss):
                 Default: None
         """
         BaseLoss.__init__(self, target, batch_index)
+        assert vec.dim() == 1
         self.vec = vec
         self.activation_fn = activation_fn
         self.move_channel_dim_to_final_dim = move_channel_dim_to_final_dim
@@ -976,7 +973,8 @@ class FacetLoss(BaseLoss):
         """
         Args:
 
-            vec (torch.Tensor): A 1D channel vector.
+            vec (torch.Tensor): A 1D channel vector with the same size as the
+                channel / feature dimension of ultimate_target.
             ultimate_target (nn.Module): The main target layer that we are
                 visualizing targets from. This is normally the penultimate layer of
                 the model.
@@ -999,6 +997,7 @@ class FacetLoss(BaseLoss):
         BaseLoss.__init__(self, [ultimate_target, layer_target], batch_index)
         self.ultimate_target = ultimate_target
         self.layer_target = layer_target
+        assert vec.dim() == 1
         self.vec = vec
         if isinstance(strength, (tuple, list)):
             assert len(strength) == 2
