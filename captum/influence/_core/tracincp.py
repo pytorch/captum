@@ -9,11 +9,11 @@ from typing import (
     Callable,
     Iterator,
     List,
-    Optional,
-    Union,
-    Tuple,
     NamedTuple,
+    Optional,
+    Tuple,
     Type,
+    Union,
 )
 
 import torch

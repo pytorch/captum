@@ -632,7 +632,7 @@ def get_exp_kernel_similarity_function(
             distance = torch.norm(flattened_original_inp - flattened_perturbed_inp)
         else:
             raise ValueError("distance_mode must be either cosine or euclidean.")
-        return math.exp(-1 * (distance ** 2) / (2 * (kernel_width ** 2)))
+        return math.exp(-1 * (distance**2) / (2 * (kernel_width**2)))
 
     return default_exp_kernel
 

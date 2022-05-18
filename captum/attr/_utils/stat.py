@@ -223,7 +223,7 @@ class StdDev(Stat):
 
     def get(self) -> Optional[Tensor]:
         var = self.var.get()
-        return var ** 0.5 if var is not None else None
+        return var**0.5 if var is not None else None
 
 
 class GeneralAccumFn(Stat):

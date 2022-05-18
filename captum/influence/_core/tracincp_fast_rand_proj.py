@@ -1,26 +1,26 @@
 #!/usr/bin/env python3
 
 import warnings
-from typing import Any, Callable, Iterator, List, Optional, Union, Tuple
+from typing import Any, Callable, Iterator, List, Optional, Tuple, Union
 
 import torch
-from captum._utils.common import _get_module_from_name, _format_inputs
+from captum._utils.common import _format_inputs, _get_module_from_name
 from captum._utils.progress import progress
 from captum.influence._core.tracincp import (
-    TracInCPBase,
-    KMostInfluentialResults,
     _influence_route_to_helpers,
+    KMostInfluentialResults,
+    TracInCPBase,
 )
 from captum.influence._utils.common import (
+    _DatasetFromList,
+    _get_k_most_influential_helper,
     _jacobian_loss_wrt_inputs,
     _load_flexible_state_dict,
     _tensor_batch_dot,
-    _get_k_most_influential_helper,
-    _DatasetFromList,
 )
 from captum.influence._utils.nearest_neighbors import (
-    NearestNeighbors,
     AnnoyNearestNeighbors,
+    NearestNeighbors,
 )
 from captum.log import log_usage
 from torch import Tensor
@@ -494,8 +494,8 @@ class TracInCPFast(TracInCPBase):
             )
 
             return (
-                torch.sum(batch_jacobian ** 2, dim=1)
-                * torch.sum(batch_layer_input ** 2, dim=1)
+                torch.sum(batch_jacobian**2, dim=1)
+                * torch.sum(batch_layer_input**2, dim=1)
                 * learning_rate
             )
 
@@ -1063,17 +1063,17 @@ class TracInCPFastRandProj(TracInCPFast):
             # `projection_dim` corresponds to the variable d in the top of page 15 of
             # the TracIn paper: https://arxiv.org/pdf/2002.08484.pdf.
             if jacobian_dim * layer_input_dim > projection_dim:
-                jacobian_projection_dim = min(int(projection_dim ** 0.5), jacobian_dim)
+                jacobian_projection_dim = min(int(projection_dim**0.5), jacobian_dim)
                 layer_input_projection_dim = min(
-                    int(projection_dim ** 0.5), layer_input_dim
+                    int(projection_dim**0.5), layer_input_dim
                 )
                 jacobian_projection = torch.normal(
                     torch.zeros(jacobian_dim, jacobian_projection_dim),
-                    1.0 / jacobian_projection_dim ** 0.5,
+                    1.0 / jacobian_projection_dim**0.5,
                 )
                 layer_input_projection = torch.normal(
                     torch.zeros(layer_input_dim, layer_input_projection_dim),
-                    1.0 / layer_input_projection_dim ** 0.5,
+                    1.0 / layer_input_projection_dim**0.5,
                 )
 
                 projection_quantities = jacobian_projection, layer_input_projection
@@ -1157,7 +1157,7 @@ class TracInCPFastRandProj(TracInCPFast):
             ), "None returned from `checkpoints`, cannot load."
 
             learning_rate = self.checkpoints_load_func(self.model, checkpoint)
-            learning_rate_root = learning_rate ** 0.5
+            learning_rate_root = learning_rate**0.5
 
             for batch in dataloader:
 

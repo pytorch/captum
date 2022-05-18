@@ -67,13 +67,13 @@ DEV_REQUIRES = (
     INSIGHTS_REQUIRES
     + TEST_REQUIRES
     + [
-        "black==21.4b2",
+        "black==22.3.0",
         "flake8",
         "sphinx",
         "sphinx-autodoc-typehints",
         "sphinxcontrib-katex",
         "mypy>=0.760",
-        "usort==0.6.4",
+        "usort==1.0.2",
         "ufmt",
         "scikit-learn",
         "annoy",
