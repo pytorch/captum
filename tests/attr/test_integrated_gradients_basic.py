@@ -1,21 +1,15 @@
 #!/usr/bin/env python3
 
 import unittest
-from typing import Any, Tuple, Union, cast
+from typing import Any, cast, Tuple, Union
 
 import torch
-from torch.nn import Module
-
 from captum._utils.common import _zeros
 from captum._utils.typing import BaselineType, Tensor, TensorOrTupleOfTensorsGeneric
 from captum.attr._core.integrated_gradients import IntegratedGradients
 from captum.attr._core.noise_tunnel import NoiseTunnel
 from captum.attr._utils.common import _tensorize_baseline
-from tests.helpers.basic import (
-    BaseTest,
-    assertArraysAlmostEqual,
-    assertTensorAlmostEqual,
-)
+from tests.helpers.basic import assertTensorAlmostEqual, BaseTest
 from tests.helpers.basic_models import (
     BasicModel,
     BasicModel2,
@@ -25,6 +19,7 @@ from tests.helpers.basic_models import (
     BasicModel6_MultiTensor,
     BasicModel_MultiLayer,
 )
+from torch.nn import Module
 
 
 class Test(BaseTest):
@@ -125,15 +120,14 @@ class Test(BaseTest):
             target=target,
             n_steps=500,
         )
-        with self.assertWarns(DeprecationWarning):
-            attributions = nt.attribute(
-                inputs,
-                nt_type=type,
-                n_samples=n_samples,
-                stdevs=0.0,
-                target=target,
-                n_steps=500,
-            )
+        attributions = nt.attribute(
+            inputs,
+            nt_type=type,
+            nt_samples=n_samples,
+            stdevs=0.0,
+            target=target,
+            n_steps=500,
+        )
         assertTensorAlmostEqual(
             self, attributions_wo_mutliplying_by_inputs * inputs, attributions
         )
@@ -182,15 +176,19 @@ class Test(BaseTest):
             multiply_by_inputs=multiply_by_inputs,
         )
         if type == "vanilla":
-            assertArraysAlmostEqual(
-                attributions1[0].tolist(),
+            assertTensorAlmostEqual(
+                self,
+                attributions1[0],
                 [1.5] if multiply_by_inputs else [0.5],
                 delta=0.05,
+                mode="max",
             )
-            assertArraysAlmostEqual(
-                attributions1[1].tolist(),
+            assertTensorAlmostEqual(
+                self,
+                attributions1[1],
                 [-0.5] if multiply_by_inputs else [-0.5],
                 delta=0.05,
+                mode="max",
             )
         model = BasicModel3()
         attributions2 = self._compute_attribution_and_evaluate(
@@ -202,15 +200,19 @@ class Test(BaseTest):
             multiply_by_inputs=multiply_by_inputs,
         )
         if type == "vanilla":
-            assertArraysAlmostEqual(
-                attributions2[0].tolist(),
+            assertTensorAlmostEqual(
+                self,
+                attributions2[0],
                 [1.5] if multiply_by_inputs else [0.5],
                 delta=0.05,
+                mode="max",
             )
-            assertArraysAlmostEqual(
-                attributions2[1].tolist(),
+            assertTensorAlmostEqual(
+                self,
+                attributions2[1],
                 [-0.5] if multiply_by_inputs else [-0.5],
                 delta=0.05,
+                mode="max",
             )
             # Verifies implementation invariance
             self.assertEqual(
@@ -431,7 +433,7 @@ class Test(BaseTest):
                 target=target,
                 additional_forward_args=additional_forward_args,
             )
-            assertArraysAlmostEqual(delta, delta_external, 0.0)
+            assertTensorAlmostEqual(self, delta, delta_external, delta=0.0, mode="max")
         else:
             nt = NoiseTunnel(ig)
             n_samples = 5
@@ -448,26 +450,25 @@ class Test(BaseTest):
                 return_convergence_delta=True,
                 nt_samples_batch_size=nt_samples_batch_size,
             )
-            with self.assertWarns(DeprecationWarning):
-                attributions_without_delta = nt.attribute(
-                    inputs,
-                    nt_type=type,
-                    n_samples=n_samples,
-                    stdevs=0.00000002,
-                    baselines=baselines,
-                    target=target,
-                    additional_forward_args=additional_forward_args,
-                    method=approximation_method,
-                    n_steps=500,
-                    nt_samples_batch_size=3,
-                )
+            attributions_without_delta = nt.attribute(
+                inputs,
+                nt_type=type,
+                nt_samples=n_samples,
+                stdevs=0.00000002,
+                baselines=baselines,
+                target=target,
+                additional_forward_args=additional_forward_args,
+                method=approximation_method,
+                n_steps=500,
+                nt_samples_batch_size=3,
+            )
             self.assertEqual(nt.multiplies_by_inputs, multiply_by_inputs)
             self.assertEqual([inputs[0].shape[0] * n_samples], list(delta.shape))
 
         for input, attribution in zip(inputs, attributions):
             self.assertEqual(attribution.shape, input.shape)
         if multiply_by_inputs:
-            self.assertTrue(all(abs(delta.numpy().flatten()) < 0.07))
+            assertTensorAlmostEqual(self, delta, torch.zeros(delta.shape), 0.07, "max")
 
         # compare attributions retrieved with and without
         # `return_convergence_delta` flag
@@ -526,9 +527,12 @@ class Test(BaseTest):
                 )
                 total_delta += abs(delta_indiv).sum().item()
                 for j in range(len(attributions)):
-                    assertArraysAlmostEqual(
-                        attributions[j][i : i + 1].squeeze(0).tolist(),
-                        attributions_indiv[j].squeeze(0).tolist(),
+                    assertTensorAlmostEqual(
+                        self,
+                        attributions[j][i : i + 1].squeeze(0),
+                        attributions_indiv[j].squeeze(0),
+                        delta=0.05,
+                        mode="max",
                     )
             self.assertAlmostEqual(abs(delta).sum().item(), total_delta, delta=0.005)
 

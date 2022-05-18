@@ -1,13 +1,12 @@
 #!/usr/bin/env python3
 
 import torch
-
 from captum._utils.models.linear_model.model import (
     SGDLasso,
     SGDLinearRegression,
     SGDRidge,
 )
-from tests.helpers.basic import BaseTest, assertTensorAlmostEqual
+from tests.helpers.basic import assertTensorAlmostEqual, BaseTest
 
 
 def _evaluate(test_data, classifier):
@@ -100,12 +99,18 @@ class TestLinearModel(BaseTest):
         l2_loss = _evaluate(train_loader, model)["l2"]
 
         if objective == "lasso":
-            reg = model.representation().norm(p=1)
+            reg = model.representation().norm(p=1).view_as(l2_loss)
         elif objective == "ridge":
-            reg = model.representation().norm(p=2)
+            reg = model.representation().norm(p=2).view_as(l2_loss)
         else:
             assert objective == "ols"
             reg = torch.zeros_like(l2_loss)
+
+        if not isinstance(expected_loss, torch.Tensor):
+            expected_loss = torch.tensor([expected_loss], dtype=l2_loss.dtype).view(1)
+
+        if not isinstance(expected_reg, torch.Tensor):
+            expected_reg = torch.tensor([expected_reg], dtype=reg.dtype)
 
         assertTensorAlmostEqual(self, l2_loss, expected_loss, delta=delta)
         assertTensorAlmostEqual(self, reg, expected_reg, delta=delta)
@@ -163,14 +168,7 @@ class TestLinearModel(BaseTest):
         )
 
     def test_simple_linear_classification(self):
-        xs = torch.tensor(
-            [
-                [0.5, 0.5],
-                [-0.5, -0.5],
-                [0.5, -0.5],
-                [-0.5, 0.5],
-            ]
-        )
+        xs = torch.tensor([[0.5, 0.5], [-0.5, -0.5], [0.5, -0.5], [-0.5, 0.5]])
         ys = torch.tensor([1.0, -1.0, 1.0, -1.0])
         self.train_and_compare(
             SGDLinearRegression,
@@ -181,10 +179,10 @@ class TestLinearModel(BaseTest):
             objective="ols",
         )
         self.train_and_compare(
-            SGDLasso, xs, ys, expected_loss=1, expected_reg=0, objective="lasso"
+            SGDLasso, xs, ys, expected_loss=1, expected_reg=0.0, objective="lasso"
         )
         self.train_and_compare(
-            SGDRidge, xs, ys, expected_loss=1, expected_reg=0, objective="ridge"
+            SGDRidge, xs, ys, expected_loss=1, expected_reg=0.0, objective="ridge"
         )
 
         ys = torch.tensor([1.0, 0.0, 1.0, 0.0])
@@ -210,17 +208,10 @@ class TestLinearModel(BaseTest):
         ---|--->
          x | o
         """
-        xs = torch.tensor(
-            [
-                [0.5, 0.5],
-                [-0.5, -0.5],
-                [0.5, -0.5],
-                [-0.5, 0.5],
-            ]
-        )
+        xs = torch.tensor([[0.5, 0.5], [-0.5, -0.5], [0.5, -0.5], [-0.5, 0.5]])
         ys = torch.tensor([1.0, 1.0, -1.0, -1.0])
 
-        expected_hyperplane = torch.Tensor([0, 0])
+        expected_hyperplane = torch.Tensor([[0, 0]])
         self.train_and_compare(
             SGDLinearRegression,
             xs,
@@ -262,14 +253,7 @@ class TestLinearModel(BaseTest):
         ---|--->
          0 | o
         """
-        xs = torch.tensor(
-            [
-                [0.5, 0.5],
-                [-0.5, -0.5],
-                [0.5, -0.5],
-                [-0.5, 0.5],
-            ]
-        )
+        xs = torch.tensor([[0.5, 0.5], [-0.5, -0.5], [0.5, -0.5], [-0.5, 0.5]])
         ys = torch.tensor([1.0, 1.0, -1.0, -1.0])
         weights = torch.tensor([1.0, 0.0, 1.0, 0.0])
 
@@ -279,7 +263,7 @@ class TestLinearModel(BaseTest):
             ys,
             expected_loss=0,
             expected_reg=0,
-            expected_hyperplane=torch.Tensor([0.0, 1.0]),
+            expected_hyperplane=torch.Tensor([[0.0, 1.0]]),
             weights=weights,
             norm_hyperplane=True,
             init_scheme="zeros",
@@ -292,7 +276,7 @@ class TestLinearModel(BaseTest):
             ys,
             expected_loss=0.5,
             expected_reg=0,
-            expected_hyperplane=torch.Tensor([0.0, 0.0]),
+            expected_hyperplane=torch.Tensor([[0.0, 0.0]]),
             weights=weights,
             norm_hyperplane=False,
             init_scheme="zeros",
@@ -305,7 +289,7 @@ class TestLinearModel(BaseTest):
             ys,
             expected_loss=0.5,
             expected_reg=0,
-            expected_hyperplane=torch.Tensor([0.0, 0.0]),
+            expected_hyperplane=torch.Tensor([[0.0, 0.0]]),
             weights=weights,
             norm_hyperplane=False,
             init_scheme="zeros",

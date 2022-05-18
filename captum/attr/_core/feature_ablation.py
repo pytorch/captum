@@ -1,17 +1,15 @@
 #!/usr/bin/env python3
 
 import math
-from typing import Any, Callable, Tuple, Union, cast
+from typing import Any, Callable, cast, Tuple, Union
 
 import torch
-from torch import Tensor, dtype
-
 from captum._utils.common import (
     _expand_additional_forward_args,
     _expand_target,
     _format_additional_forward_args,
-    _format_input,
     _format_output,
+    _format_tensor_into_tuples,
     _is_tuple,
     _run_forward,
 )
@@ -20,6 +18,7 @@ from captum._utils.typing import BaselineType, TargetType, TensorOrTupleOfTensor
 from captum.attr._utils.attribution import PerturbationAttribution
 from captum.attr._utils.common import _format_input_baseline
 from captum.log import log_usage
+from torch import dtype, Tensor
 
 
 class FeatureAblation(PerturbationAttribution):
@@ -252,7 +251,11 @@ class FeatureAblation(PerturbationAttribution):
             additional_forward_args
         )
         num_examples = inputs[0].shape[0]
-        feature_mask = _format_input(feature_mask) if feature_mask is not None else None
+        feature_mask = (
+            _format_tensor_into_tuples(feature_mask)
+            if feature_mask is not None
+            else None
+        )
         assert (
             isinstance(perturbations_per_eval, int) and perturbations_per_eval >= 1
         ), "Perturbations per evaluation must be an integer and at least 1."

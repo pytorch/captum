@@ -4,12 +4,10 @@ import warnings
 from typing import Any, Callable, Iterator, Tuple, Union
 
 import torch
-from torch import Tensor
-
 from captum._utils.common import (
     _format_additional_forward_args,
-    _format_input,
     _format_output,
+    _format_tensor_into_tuples,
     _reduce_list,
 )
 from captum._utils.typing import (
@@ -18,6 +16,7 @@ from captum._utils.typing import (
     TupleOrTensorOrBoolGeneric,
 )
 from captum.attr._utils.approximation_methods import approximation_parameters
+from torch import Tensor
 
 
 def _batch_attribution(
@@ -26,7 +25,7 @@ def _batch_attribution(
     internal_batch_size,
     n_steps,
     include_endpoint=False,
-    **kwargs
+    **kwargs,
 ):
     """
     This method applies internal batching to given attribution method, dividing
@@ -140,7 +139,7 @@ def _batched_generator(
     assert internal_batch_size is None or (
         isinstance(internal_batch_size, int) and internal_batch_size > 0
     ), "Batch size must be greater than 0."
-    inputs = _format_input(inputs)
+    inputs = _format_tensor_into_tuples(inputs)
     additional_forward_args = _format_additional_forward_args(additional_forward_args)
     num_examples = inputs[0].shape[0]
     # TODO Reconsider this check if _batched_generator is used for non gradient-based
@@ -178,7 +177,7 @@ def _batched_operator(
     additional_forward_args: Any = None,
     target_ind: TargetType = None,
     internal_batch_size: Union[None, int] = None,
-    **kwargs: Any
+    **kwargs: Any,
 ) -> TupleOrTensorOrBoolGeneric:
     """
     Batches the operation of the given operator, applying the given batch size
@@ -190,7 +189,7 @@ def _batched_operator(
             inputs=input,
             additional_forward_args=additional,
             target_ind=target,
-            **kwargs
+            **kwargs,
         )
         for input, additional, target in _batched_generator(
             inputs, additional_forward_args, target_ind, internal_batch_size

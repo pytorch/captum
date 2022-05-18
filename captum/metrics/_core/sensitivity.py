@@ -2,22 +2,20 @@
 
 from copy import deepcopy
 from inspect import signature
-from typing import Any, Callable, Tuple, Union, cast
+from typing import Any, Callable, cast, Tuple, Union
 
 import torch
-from torch import Tensor
-
 from captum._utils.common import (
     _expand_and_update_additional_forward_args,
     _expand_and_update_baselines,
     _expand_and_update_target,
     _format_baseline,
-    _format_input,
     _format_tensor_into_tuples,
 )
 from captum._utils.typing import TensorOrTupleOfTensorsGeneric
 from captum.log import log_usage
 from captum.metrics._utils.batching import _divide_and_aggregate_metrics
+from torch import Tensor
 
 
 def default_perturb_func(
@@ -47,7 +45,7 @@ def default_perturb_func(
                 original inputs.
 
     """
-    inputs = _format_input(inputs)
+    inputs = _format_tensor_into_tuples(inputs)
     perturbed_input = tuple(
         input
         + torch.FloatTensor(input.size())  # type: ignore
@@ -302,7 +300,7 @@ def sensitivity_max(
         )
         return max_values(sensitivities_norm.view(bsz, -1))
 
-    inputs = _format_input(inputs)  # type: ignore
+    inputs = _format_tensor_into_tuples(inputs)  # type: ignore
 
     bsz = inputs[0].size(0)
 

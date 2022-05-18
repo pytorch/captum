@@ -2,9 +2,23 @@
 
 <hr/>
 
-[![Conda](https://img.shields.io/conda/v/pytorch/captum.svg)](https://anaconda.org/pytorch/captum)
-[![PyPI](https://img.shields.io/pypi/v/captum.svg)](https://pypi.org/project/captum)
+<!--- BADGES: START --->
+[![GitHub - License](https://img.shields.io/github/license/pytorch/captum?logo=github&style=flat&color=green)][#github-license]
+[![Conda](https://img.shields.io/conda/vn/pytorch/captum?logo=anaconda&style=flat&color=orange)](https://anaconda.org/pytorch/captum)
+[![PyPI](https://img.shields.io/pypi/v/captum.svg)][#pypi-package]
 [![CircleCI](https://circleci.com/gh/pytorch/captum.svg?style=shield)](https://circleci.com/gh/pytorch/captum)
+[![Conda - Platform](https://img.shields.io/conda/pn/conda-forge/captum?logo=anaconda&style=flat)][#conda-forge-package]
+[![Conda (channel only)](https://img.shields.io/conda/vn/conda-forge/captum?logo=anaconda&style=flat&color=orange)][#conda-forge-package]
+[![Conda Recipe](https://img.shields.io/static/v1?logo=conda-forge&style=flat&color=green&label=recipe&message=captum)][#conda-forge-feedstock]
+[![Docs - GitHub.io](https://img.shields.io/static/v1?logo=captum&style=flat&color=pink&label=docs&message=captum)][#docs-package]
+
+[#github-license]: https://github.com/pytorch/captum/blob/master/LICENSE
+[#pypi-package]: https://pypi.org/project/captum/
+[#conda-forge-package]: https://anaconda.org/conda-forge/captum
+[#conda-forge-feedstock]: https://github.com/conda-forge/captum-feedstock
+[#docs-package]: https://captum.ai/
+<!--- BADGES: END --->
+
 
 Captum is a model interpretability and understanding library for PyTorch.
 Captum means comprehension in Latin and contains general purpose implementations
@@ -23,6 +37,8 @@ For model developers, Captum can be used to improve and troubleshoot models by f
 
 Captum helps ML researchers more easily implement interpretability algorithms that can interact with PyTorch models. Captum also allows researchers to quickly benchmark their work against other existing algorithms available in the library.
 
+![Overview of Attribution Algorithms](./docs/Captum_Attribution_Algos.png)
+
 #### Target Audience
 
 The primary audiences for Captum are model developers who are looking to improve their models and understand which features are important and interpretability researchers focused on identifying algorithms that can better interpret many types of models.
@@ -39,11 +55,26 @@ Captum can also be used by application engineers who are using trained models in
 ##### Installing the latest release
 
 The latest release of Captum is easily installed either via
-[Anaconda](https://www.anaconda.com/distribution/#download-section) (recommended):
-```bash
-conda install captum -c pytorch
-```
-or via `pip`:
+[Anaconda](https://www.anaconda.com/distribution/#download-section) (recommended) or via `pip`.
+
+**with `conda`**
+
+You can install captum from any of the following supported conda channels:
+
+- channel: `pytorch`
+
+  ```sh
+  conda install captum -c pytorch
+  ```
+
+- channel: `conda-forge`
+
+  ```sh
+  conda install captum -c conda-forge
+  ```
+
+**With `pip`**
+
 ```bash
 pip install captum
 ```
@@ -79,10 +110,6 @@ Captum helps you interpret and understand predictions of PyTorch models by
 exploring features that contribute to a prediction the model makes.
 It also helps understand which neurons and layers are important for
 model predictions.
-
-Currently, the library uses gradient-based interpretability algorithms
-and attributes contributions to each input of the model with respect to
-different neurons and layers, both intermediate and final.
 
 Let's apply some of those algorithms to a toy model we have created for
 demonstration purposes.
@@ -291,7 +318,7 @@ Here is an example of how we can use `NoiseTunnel` with `IntegratedGradients`.
 ```python
 ig = IntegratedGradients(model)
 nt = NoiseTunnel(ig)
-attributions, delta = nt.attribute(input, nt_type='smoothgrad', stdevs=0.02, n_samples=4,
+attributions, delta = nt.attribute(input, nt_type='smoothgrad', stdevs=0.02, nt_samples=4,
       baselines=baseline, target=0, return_convergence_delta=True)
 print('IG + SmoothGrad Attributions:', attributions)
 print('Convergence Delta:', delta)
@@ -304,8 +331,8 @@ Convergence Delta: tensor([ 0.0000e+00,  2.3842e-07,  0.0000e+00, -2.3842e-07,  
         -4.7684e-07,  0.0000e+00, -4.7684e-07])
 
 ```
-The number of elements in the `delta` tensor is equal to: `n_samples * input.shape[0]`
-In order to get a example-based delta, we can, for example, average them:
+The number of elements in the `delta` tensor is equal to: `nt_samples * input.shape[0]`
+In order to get an example-wise delta, we can, for example, average them:
 ```python
 deltas_per_example = torch.mean(delta.reshape(input.shape[0], -1), dim=1)
 ```
@@ -392,8 +419,8 @@ Captum Insights also has a Jupyter widget providing the same user interface as t
 To install and enable the widget, run
 
 ```
-jupyter nbextension install --py --symlink --sys-prefix captum.insights.widget
-jupyter nbextension enable captum.insights.widget --py --sys-prefix
+jupyter nbextension install --py --symlink --sys-prefix captum.insights.attr_vis.widget
+jupyter nbextension enable captum.insights.attr_vis.widget --py --sys-prefix
 ```
 
 To build the widget from a checkout in a conda environment run
@@ -410,9 +437,33 @@ If you have questions about using Captum methods, please check this [FAQ](docs/f
 See the [CONTRIBUTING](CONTRIBUTING.md) file for how to help out.
 
 ## Talks and Papers
-The slides of our presentation from NeurIPS 2019 can be found [here](docs/presentations/Captum_NeurIPS_2019_final.key)
+**NeurIPS 2019:**
+The slides of our presentation  can be found [here](docs/presentations/Captum_NeurIPS_2019_final.key)
 
-The slides of our presentation from KDD 2020 tutorial can be found [here](https://pytorch-tutorial-assets.s3.amazonaws.com/Captum_KDD_2020.pdf)
+**KDD 2020:**
+The slides of our presentation from KDD 2020 tutorial can be found [here](https://pytorch-tutorial-assets.s3.amazonaws.com/Captum_KDD_2020.pdf).
+You can watch the recorded talk [here](https://www.youtube.com/watch?v=hY_XzglTkak)
+
+**GTC 2020:**
+Opening Up the Black Box: Model Understanding with Captum and PyTorch.
+You can watch the recorded talk [here](https://www.youtube.com/watch?v=0QLrRyLndFI)
+
+**XAI Summit 2020:**
+Using Captum and Fiddler to Improve Model Understanding with Explainable AI.
+You can watch the recorded talk [here](https://www.youtube.com/watch?v=dvuVld5Hyc8)
+
+**PyTorch Developer Day 2020**
+Model Interpretability.
+You can watch the recorded talk [here](https://www.youtube.com/watch?v=Lj5hHBGue58)
+
+**NAACL 2021**
+Tutorial on Fine-grained Interpretation and Causation Analysis in Deep NLP Models.
+You can watch the recorded talk [here](https://www.youtube.com/watch?v=ayhBHZYjeqs
+)
+
+**ICLR 2021 workshop on Responsible AI**:
+- [Paper](https://arxiv.org/abs/2009.07896) on the Captum Library
+- [Paper](https://arxiv.org/abs/2106.07475) on Invesitgating Sanity Checks for Saliency Maps
 
 ## References of Algorithms
 

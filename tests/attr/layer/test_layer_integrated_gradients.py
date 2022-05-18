@@ -1,11 +1,8 @@
 #!/usr/bin/env python3
 
-from typing import Any, List, Tuple, Union, cast
+from typing import Any, cast, List, Tuple, Union
 
 import torch
-from torch import Tensor
-from torch.nn import Module
-
 from captum.attr._core.integrated_gradients import IntegratedGradients
 from captum.attr._core.layer.layer_activation import LayerActivation
 from captum.attr._core.layer.layer_conductance import LayerConductance
@@ -15,15 +12,17 @@ from captum.attr._models.base import (
     remove_interpretable_embedding_layer,
 )
 from tests.helpers.basic import (
-    BaseTest,
-    assertArraysAlmostEqual,
+    assertTensorAlmostEqual,
     assertTensorTuplesAlmostEqual,
+    BaseTest,
 )
 from tests.helpers.basic_models import (
     BasicEmbeddingModel,
     BasicModel_MultiLayer,
     BasicModel_MultiLayer_TrueMultiInput,
 )
+from torch import Tensor
+from torch.nn import Module
 
 
 class Test(BaseTest):
@@ -245,8 +244,10 @@ class Test(BaseTest):
             return_convergence_delta=True,
             attribute_to_layer_input=attribute_to_layer_input,
         )
-        assertArraysAlmostEqual(attribution, attributions2, 0.01)
-        assertArraysAlmostEqual(delta, delta2, 0.5)
+        assertTensorAlmostEqual(
+            self, attribution, attributions2, delta=0.01, mode="max"
+        )
+        assertTensorAlmostEqual(self, delta, delta2, delta=0.5, mode="max")
 
     def _assert_compare_with_emb_patching(
         self,
@@ -327,11 +328,11 @@ class Test(BaseTest):
             attributions = tuple(attributions)
 
         for attr_lig, attr_ig in zip(attributions, attributions_with_ig):
-            self.assertEqual(attr_lig.shape, attr_ig.shape)
-            assertArraysAlmostEqual(attributions, attributions_with_ig)
+            self.assertEqual(cast(Tensor, attr_lig).shape, cast(Tensor, attr_ig).shape)
+            assertTensorAlmostEqual(self, attr_lig, attr_ig, delta=0.05, mode="max")
 
         if multiply_by_inputs:
-            assertArraysAlmostEqual(delta, delta_with_ig)
+            assertTensorAlmostEqual(self, delta, delta_with_ig, delta=0.05, mode="max")
 
     def _assert_compare_with_expected(
         self,

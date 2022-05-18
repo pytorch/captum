@@ -4,9 +4,8 @@ from typing import Any, Callable, Dict, List, Optional
 
 import torch
 import torch.nn as nn
-from torch.utils.data import DataLoader
-
 from captum._utils.models.linear_model.model import LinearModel
+from torch.utils.data import DataLoader
 
 
 def l2_loss(x1, x2, weights=None):
@@ -338,13 +337,25 @@ def sklearn_train_linear_model(
     t2 = time.time()
 
     # Convert weights to pytorch
-    num_outputs = 1 if len(y.shape) == 1 else y.shape[1]
-    weight_values = torch.FloatTensor(sklearn_model.coef_)  # type: ignore
-    bias_values = torch.FloatTensor([sklearn_model.intercept_])  # type: ignore
+    classes = (
+        torch.IntTensor(sklearn_model.classes_)
+        if hasattr(sklearn_model, "classes_")
+        else None
+    )
+
+    # extract model device
+    device = model.device if hasattr(model, "device") else "cpu"
+
+    num_outputs = sklearn_model.coef_.shape[0] if sklearn_model.coef_.ndim > 1 else 1
+    weight_values = torch.FloatTensor(sklearn_model.coef_).to(device)  # type: ignore
+    bias_values = torch.FloatTensor([sklearn_model.intercept_]).to(  # type: ignore
+        device  # type: ignore
+    )  # type: ignore
     model._construct_model_params(
         norm_type=None,
         weight_values=weight_values.view(num_outputs, -1),
         bias_value=bias_values.squeeze().unsqueeze(0),
+        classes=classes,
     )
 
     if norm_input:

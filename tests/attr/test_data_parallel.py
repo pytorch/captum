@@ -2,15 +2,13 @@
 import copy
 import os
 from enum import Enum
-from typing import Any, Callable, Dict, Optional, Tuple, Type, cast
+from typing import Any, Callable, cast, Dict, Optional, Tuple, Type
 
 import torch
 import torch.distributed as dist
-from torch import Tensor
-from torch.nn import Module
-
 from captum.attr._core.guided_grad_cam import GuidedGradCam
 from captum.attr._core.layer.layer_deep_lift import LayerDeepLift, LayerDeepLiftShap
+from captum.attr._core.layer.layer_lrp import LayerLRP
 from captum.attr._core.neuron.neuron_deep_lift import NeuronDeepLift, NeuronDeepLiftShap
 from captum.attr._core.neuron.neuron_guided_backprop_deconvnet import (
     NeuronDeconvolution,
@@ -25,7 +23,9 @@ from tests.attr.helpers.gen_test_utils import (
     should_create_generated_test,
 )
 from tests.attr.helpers.test_config import config
-from tests.helpers.basic import BaseTest, assertTensorTuplesAlmostEqual, deep_copy_args
+from tests.helpers.basic import assertTensorTuplesAlmostEqual, BaseTest, deep_copy_args
+from torch import Tensor
+from torch.nn import Module
 
 """
 Tests in this file are dynamically generated based on the config
@@ -195,6 +195,7 @@ class DataParallelMeta(type):
                         (
                             LayerDeepLift,
                             LayerDeepLiftShap,
+                            LayerLRP,
                             NeuronDeepLift,
                             NeuronDeepLiftShap,
                             NeuronDeconvolution,
@@ -203,7 +204,8 @@ class DataParallelMeta(type):
                         ),
                     ):
                         attr_method_2 = internal_algorithm(
-                            model_2, get_target_layer(cuda_model, target_layer)
+                            model_2,
+                            get_target_layer(cuda_model, target_layer),  # type: ignore
                         )
                     else:
                         attr_method_2 = internal_algorithm(

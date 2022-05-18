@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-from typing import Optional, Tuple, no_type_check
+from typing import no_type_check, Optional, Tuple
 
 import torch
 import torch.nn as nn
@@ -13,6 +13,20 @@ related to mismatch with parent (nn.Module) signature. # type_ignore is not
 possible here, since it causes errors in JIT scripting code which parses
 the relevant type hints.
 """
+
+
+class BasicLinearReLULinear(nn.Module):
+    def __init__(self, in_features, out_features=5, bias=False):
+        super().__init__()
+        self.fc1 = nn.Linear(in_features, out_features, bias=bias)
+        self.relu1 = nn.ReLU()
+        self.fc2 = nn.Linear(out_features, 1, bias=bias)
+
+    def forward(self, x):
+        x = self.fc1(x)
+        x = self.relu1(x)
+        x = self.fc2(x)
+        return x
 
 
 class MixedKwargsAndArgsModule(nn.Module):
@@ -120,6 +134,26 @@ class BasicLinearModel(nn.Module):
         return self.linear(torch.cat((x1, x2), dim=-1))
 
 
+class BasicLinearModel2(nn.Module):
+    def __init__(self, in_features, out_features):
+        super().__init__()
+        self.linear = nn.Linear(in_features, out_features, bias=False)
+
+    def forward(self, input):
+        return self.linear(input)
+
+
+class BasicLinearModel_Multilayer(nn.Module):
+    def __init__(self, in_features, hidden_nodes, out_features):
+        super().__init__()
+        self.linear1 = nn.Linear(in_features, hidden_nodes, bias=False)
+        self.linear2 = nn.Linear(hidden_nodes, out_features, bias=False)
+
+    def forward(self, input):
+        x = self.linear1(input)
+        return self.linear2(x)
+
+
 class ReLUDeepLiftModel(nn.Module):
     r"""
     https://www.youtube.com/watch?v=f_iAM0NPwnM
@@ -149,7 +183,7 @@ class LinearMaxPoolLinearModel(nn.Module):
         return self.lin2(self.pool1(self.lin1(x))[:, 0, :])
 
 
-class BasicModelWithReusableModules(nn.Module):
+class BasicModelWithReusedModules(nn.Module):
     def __init__(self) -> None:
         super().__init__()
         self.lin1 = nn.Linear(3, 2)
@@ -158,6 +192,16 @@ class BasicModelWithReusableModules(nn.Module):
 
     def forward(self, inputs):
         return self.relu(self.lin2(self.relu(self.lin1(inputs))))
+
+
+class BasicModelWithReusedLinear(nn.Module):
+    def __init__(self) -> None:
+        super().__init__()
+        self.lin1 = nn.Linear(3, 3)
+        self.relu = nn.ReLU()
+
+    def forward(self, inputs):
+        return self.relu(self.lin1(self.relu(self.lin1(inputs))))
 
 
 class BasicModelWithSparseInputs(nn.Module):
@@ -227,9 +271,10 @@ class SimpleLRPModel(nn.Module):
         self.relu = torch.nn.ReLU(inplace=inplace)
         self.linear2 = nn.Linear(3, 1, bias=False)
         self.linear2.weight.data.fill_(3.0)
+        self.dropout = torch.nn.Dropout(p=0.01)
 
     def forward(self, x):
-        return self.linear2(self.relu(self.linear(x)))
+        return self.dropout(self.linear2(self.relu(self.linear(x))))
 
 
 class Conv1dSeqModel(nn.Module):
@@ -362,6 +407,21 @@ class BasicModel_MultiLayer(nn.Module):
             return lin2_out
 
 
+class BasicModelBoolInput(nn.Module):
+    def __init__(self) -> None:
+        super().__init__()
+        self.mod = BasicModel_MultiLayer()
+
+    def forward(
+        self,
+        x: Tensor,
+        add_input: Optional[Tensor] = None,
+        mult: float = 10.0,
+    ):
+        assert x.dtype is torch.bool, "Input must be boolean"
+        return self.mod(x.float() * mult, add_input)
+
+
 class BasicModel_MultiLayer_MultiInput(nn.Module):
     def __init__(self) -> None:
         super().__init__()
@@ -411,6 +471,21 @@ class BasicModel_ConvNet_One_Conv(nn.Module):
         x = self.relu1(self.conv1(x))
         x = x.view(-1, 8)
         return self.relu2(self.fc1(x))
+
+
+class BasicModel_ConvNetWithPaddingDilation(nn.Module):
+    def __init__(self, inplace: bool = False) -> None:
+        super().__init__()
+        self.conv1 = nn.Conv2d(1, 2, 3, padding=3, stride=2, dilation=2)
+        self.relu1 = nn.ReLU(inplace=inplace)
+        self.fc1 = nn.Linear(16, 4)
+
+    @no_type_check
+    def forward(self, x: Tensor):
+        bsz = x.shape[0]
+        x = self.relu1(self.conv1(x))
+        x = x.reshape(bsz, 2, -1)
+        return self.fc1(x).reshape(bsz, -1)
 
 
 class BasicModel_ConvNet(nn.Module):

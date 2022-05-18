@@ -69,14 +69,11 @@ const siteConfig = {
     "https://buttons.github.io/buttons.js",
     // Copy-to-clipboard button for code blocks
     `${baseUrl}js/code_block_buttons.js`,
-    "https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.0/clipboard.min.js",
-    // Mathjax for rendering math content
-    `${baseUrl}js/mathjax.js`,
-    "https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS_HTML"
+    "https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.0/clipboard.min.js"
   ],
 
   // CSS sources to load
-  stylesheets: [`${baseUrl}css/code_block_buttons.css`],
+  stylesheets: [],
 
   // enable on-page navigation for the current documentation page
   onPageNav: "separate",

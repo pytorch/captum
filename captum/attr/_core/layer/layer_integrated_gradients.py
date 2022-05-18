@@ -1,12 +1,9 @@
 #!/usr/bin/env python3
 import functools
 import warnings
-from typing import Any, Callable, List, Tuple, Union, overload
+from typing import Any, Callable, List, overload, Tuple, Union
 
 import torch
-from torch import Tensor
-from torch.nn.parallel.scatter_gather import scatter
-
 from captum._utils.common import (
     _extract_device,
     _format_additional_forward_args,
@@ -22,6 +19,8 @@ from captum.attr._utils.common import (
     _validate_input,
 )
 from captum.log import log_usage
+from torch import Tensor
+from torch.nn.parallel.scatter_gather import scatter
 
 
 class LayerIntegratedGradients(LayerAttribution, GradientAttribution):

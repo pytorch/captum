@@ -3,23 +3,23 @@
 import io
 import unittest
 import unittest.mock
-from typing import Any, List, Tuple, Union, cast
+from typing import Any, cast, List, Tuple, Union
 
 import torch
-from torch import Tensor
-
 from captum._utils.typing import BaselineType, TargetType, TensorOrTupleOfTensorsGeneric
 from captum.attr._core.feature_ablation import FeatureAblation
 from captum.attr._core.noise_tunnel import NoiseTunnel
 from captum.attr._utils.attribution import Attribution
-from tests.helpers.basic import BaseTest, assertTensorAlmostEqual
+from tests.helpers.basic import assertTensorAlmostEqual, BaseTest
 from tests.helpers.basic_models import (
     BasicModel,
     BasicModel_ConvNet_One_Conv,
     BasicModel_MultiLayer,
     BasicModel_MultiLayer_MultiInput,
+    BasicModelBoolInput,
     BasicModelWithSparseInputs,
 )
+from torch import Tensor
 
 
 class Test(BaseTest):
@@ -110,6 +110,29 @@ class Test(BaseTest):
             [[248.0, 248.0, 104.0]],
             feature_mask=torch.tensor([[0, 0, 1]]),
             baselines=4,
+            perturbations_per_eval=(1, 2, 3),
+        )
+
+    def test_simple_ablation_boolean(self) -> None:
+        ablation_algo = FeatureAblation(BasicModelBoolInput())
+        inp = torch.tensor([[True, False, True]])
+        self._ablation_test_assert(
+            ablation_algo,
+            inp,
+            [[40.0, 40.0, 40.0]],
+            feature_mask=torch.tensor([[0, 0, 1]]),
+            perturbations_per_eval=(1, 2, 3),
+        )
+
+    def test_simple_ablation_boolean_with_baselines(self) -> None:
+        ablation_algo = FeatureAblation(BasicModelBoolInput())
+        inp = torch.tensor([[True, False, True]])
+        self._ablation_test_assert(
+            ablation_algo,
+            inp,
+            [[-40.0, -40.0, 0.0]],
+            feature_mask=torch.tensor([[0, 0, 1]]),
+            baselines=True,
             perturbations_per_eval=(1, 2, 3),
         )
 
@@ -434,7 +457,7 @@ class Test(BaseTest):
             target=None,
             feature_mask=mask,
             perturbations_per_eval=(1,),
-            expected_ablation=torch.zeros((5 * 3 * 2,) + inp[0].shape).numpy().tolist(),
+            expected_ablation=torch.zeros((5 * 3 * 2,) + inp[0].shape),
         )
 
     def test_single_inp_ablation_multi_output_aggr(self) -> None:

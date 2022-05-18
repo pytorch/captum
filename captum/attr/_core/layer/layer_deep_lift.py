@@ -1,17 +1,14 @@
 #!/usr/bin/env python3
 import typing
-from typing import Any, Callable, Sequence, Tuple, Union, cast
+from typing import Any, Callable, cast, Sequence, Tuple, Union
 
 import torch
-from torch import Tensor
-from torch.nn import Module
-
 from captum._utils.common import (
-    ExpansionTypes,
     _expand_target,
     _format_additional_forward_args,
     _format_baseline,
-    _format_input,
+    _format_tensor_into_tuples,
+    ExpansionTypes,
 )
 from captum._utils.gradient import compute_layer_gradients_and_eval
 from captum._utils.typing import (
@@ -30,6 +27,8 @@ from captum.attr._utils.common import (
     _validate_input,
 )
 from captum.log import log_usage
+from torch import Tensor
+from torch.nn import Module
 
 
 class LayerDeepLift(LayerAttribution, DeepLift):
@@ -70,7 +69,10 @@ class LayerDeepLift(LayerAttribution, DeepLift):
         r"""
         Args:
 
-            model (torch.nn.Module):  The reference to PyTorch model instance.
+            model (nn.Module):  The reference to PyTorch model instance. Model cannot
+                        contain any in-place nonlinear submodules; these are not
+                        supported by the register_full_backward_hook PyTorch API
+                        starting from PyTorch v1.9.
             layer (torch.nn.Module): Layer for which attributions are computed.
                         The size and dimensionality of the attributions
                         corresponds to the size and dimensionality of the layer's
@@ -288,7 +290,7 @@ class LayerDeepLift(LayerAttribution, DeepLift):
             >>> # Computes deeplift attribution scores for conv4 layer and class 3.
             >>> attribution = dl.attribute(input, target=1)
         """
-        inputs = _format_input(inputs)
+        inputs = _format_tensor_into_tuples(inputs)
         baselines = _format_baseline(baselines, inputs)
         _validate_input(inputs, baselines)
 
@@ -398,7 +400,10 @@ class LayerDeepLiftShap(LayerDeepLift, DeepLiftShap):
         r"""
         Args:
 
-            model (torch.nn.Module):  The reference to PyTorch model instance.
+            model (nn.Module):  The reference to PyTorch model instance. Model cannot
+                        contain any in-place nonlinear submodules; these are not
+                        supported by the register_full_backward_hook PyTorch API
+                        starting from PyTorch v1.9.
             layer (torch.nn.Module): Layer for which attributions are computed.
                         The size and dimensionality of the attributions
                         corresponds to the size and dimensionality of the layer's
@@ -619,7 +624,7 @@ class LayerDeepLiftShap(LayerDeepLift, DeepLiftShap):
             >>> # Computes shap values using deeplift for class 3.
             >>> attribution = dl.attribute(input, target=3)
         """
-        inputs = _format_input(inputs)
+        inputs = _format_tensor_into_tuples(inputs)
         baselines = _format_callable_baseline(baselines, inputs)
 
         assert isinstance(baselines[0], torch.Tensor) and baselines[0].shape[0] > 1, (

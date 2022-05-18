@@ -61,19 +61,22 @@ INSIGHTS_FILE_SUBDIRS = [
 
 TUTORIALS_REQUIRES = INSIGHTS_REQUIRES + ["torchtext", "torchvision"]
 
-TEST_REQUIRES = ["pytest", "pytest-cov"]
+TEST_REQUIRES = ["pytest", "pytest-cov", "parameterized"]
 
 DEV_REQUIRES = (
     INSIGHTS_REQUIRES
     + TEST_REQUIRES
     + [
-        "black",
+        "black==22.3.0",
         "flake8",
         "sphinx",
         "sphinx-autodoc-typehints",
+        "sphinxcontrib-katex",
         "mypy>=0.760",
-        "isort",
+        "usort==1.0.2",
+        "ufmt",
         "scikit-learn",
+        "annoy",
     ]
 )
 
@@ -144,7 +147,7 @@ if __name__ == "__main__":
         long_description=long_description,
         long_description_content_type="text/markdown",
         python_requires=">=3.6",
-        install_requires=["matplotlib", "numpy", "torch>=1.2"],
+        install_requires=["matplotlib", "numpy", "torch>=1.6"],
         packages=find_packages(exclude=("tests", "tests.*")),
         extras_require={
             "dev": DEV_REQUIRES,

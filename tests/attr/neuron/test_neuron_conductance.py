@@ -1,21 +1,20 @@
 #!/usr/bin/env python3
 
 import unittest
-from typing import Any, Callable, List, Tuple, Union, cast
+from typing import Any, Callable, cast, List, Tuple, Union
 
 import torch
-from torch import Tensor
-from torch.nn import Module
-
 from captum._utils.typing import BaselineType, TensorOrTupleOfTensorsGeneric
 from captum.attr._core.layer.layer_conductance import LayerConductance
 from captum.attr._core.neuron.neuron_conductance import NeuronConductance
-from tests.helpers.basic import BaseTest, assertArraysAlmostEqual
+from tests.helpers.basic import assertTensorAlmostEqual, BaseTest
 from tests.helpers.basic_models import (
     BasicModel_ConvNet,
     BasicModel_MultiLayer,
     BasicModel_MultiLayer_MultiInput,
 )
+from torch import Tensor
+from torch.nn import Module
 
 
 class Test(BaseTest):
@@ -183,17 +182,21 @@ class Test(BaseTest):
             if isinstance(expected_input_conductance, tuple):
                 for i in range(len(expected_input_conductance)):
                     for j in range(len(expected_input_conductance[i])):
-                        assertArraysAlmostEqual(
-                            attributions[i][j : j + 1].squeeze(0).tolist(),
+                        assertTensorAlmostEqual(
+                            self,
+                            attributions[i][j : j + 1].squeeze(0),
                             expected_input_conductance[i][j],
                             delta=0.1,
+                            mode="max",
                         )
             else:
                 if isinstance(attributions, Tensor):
-                    assertArraysAlmostEqual(
-                        attributions.squeeze(0).tolist(),
+                    assertTensorAlmostEqual(
+                        self,
+                        attributions.squeeze(0),
                         expected_input_conductance,
                         delta=0.1,
+                        mode="max",
                     )
                 else:
                     raise AssertionError(

@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 import unittest
 from enum import Enum
-from typing import Any, Callable, Dict, Tuple, Type, cast
+from typing import Any, Callable, cast, Dict, Tuple, Type
 
 import torch
-from torch import Tensor
-from torch.nn import Module
-
-from captum._utils.common import _format_additional_forward_args, _format_input
+from captum._utils.common import (
+    _format_additional_forward_args,
+    _format_tensor_into_tuples,
+)
 from captum.attr._core.feature_ablation import FeatureAblation
 from captum.attr._core.feature_permutation import FeaturePermutation
 from captum.attr._core.gradient_shap import GradientShap
@@ -26,7 +26,9 @@ from tests.attr.helpers.gen_test_utils import (
     should_create_generated_test,
 )
 from tests.attr.helpers.test_config import config
-from tests.helpers.basic import BaseTest, assertTensorTuplesAlmostEqual, deep_copy_args
+from tests.helpers.basic import assertTensorTuplesAlmostEqual, BaseTest, deep_copy_args
+from torch import Tensor
+from torch.nn import Module
 
 JIT_SUPPORTED = [
     IntegratedGradients,
@@ -159,11 +161,11 @@ class JITMeta(type):
                 mode is JITCompareMode.cpu_jit_trace
                 or JITCompareMode.data_parallel_jit_trace
             ):
-                all_inps = _format_input(args["inputs"]) + (
+                all_inps = _format_tensor_into_tuples(args["inputs"]) + (
                     _format_additional_forward_args(args["additional_forward_args"])
                     if "additional_forward_args" in args
                     and args["additional_forward_args"] is not None
-                    else tuple()
+                    else ()
                 )
                 model_2 = torch.jit.trace(model_1, all_inps)  # type: ignore
             else:

@@ -1,10 +1,9 @@
-from typing import Callable, List, Optional
+from typing import Callable, cast, List, Optional
 
 import torch.nn as nn
+from captum._utils.models.model import Model
 from torch import Tensor
 from torch.utils.data import DataLoader
-
-from captum._utils.models.model import Model
 
 
 class LinearModel(nn.Module, Model):
@@ -47,6 +46,7 @@ class LinearModel(nn.Module, Model):
         bias: bool = True,
         weight_values: Optional[Tensor] = None,
         bias_value: Optional[Tensor] = None,
+        classes: Optional[Tensor] = None,
     ):
         r"""
         Lazily initializes a linear model. This will be called for you in a
@@ -72,8 +72,11 @@ class LinearModel(nn.Module, Model):
                 to provide `in_features` or `out_features`.
             bias_value (tensor, optional):
                 The bias value to initialize the model with.
+            classes (tensor, optional):
+                The list of prediction classes supported by the model in case it
+                performs classificaton. In case of regression it is set to None.
+                Default: None
         """
-
         if norm_type not in LinearModel.SUPPORTED_NORMS:
             raise ValueError(
                 f"{norm_type} not supported. Please use {LinearModel.SUPPORTED_NORMS}"
@@ -110,6 +113,9 @@ class LinearModel(nn.Module, Model):
 
             self.linear.bias.data = bias_value
 
+        if classes is not None:
+            self.linear.classes = classes
+
     def fit(self, train_data: DataLoader, **kwargs):
         r"""
         Calls `self.train_fn`
@@ -123,7 +129,6 @@ class LinearModel(nn.Module, Model):
 
     def forward(self, x: Tensor) -> Tensor:
         assert self.linear is not None
-
         if self.norm is not None:
             x = self.norm(x)
         return self.linear(x)
@@ -143,6 +148,11 @@ class LinearModel(nn.Module, Model):
         if self.linear is None or self.linear.bias is None:
             return None
         return self.linear.bias.detach()
+
+    def classes(self) -> Optional[Tensor]:
+        if self.linear is None or self.linear.classes is None:
+            return None
+        return cast(Tensor, self.linear.classes).detach()
 
 
 class SGDLinearModel(LinearModel):
@@ -298,6 +308,34 @@ class SkLearnLinearRegression(SkLearnLinearModel):
         as kwargs here.
         """
         super().__init__(sklearn_module="linear_model.LinearRegression", **kwargs)
+
+    def fit(self, train_data: DataLoader, **kwargs):
+        return super().fit(train_data=train_data, **kwargs)
+
+
+class SkLearnLogisticRegression(SkLearnLinearModel):
+    def __init__(self, **kwargs) -> None:
+        r"""
+        Factory class. Trains a model with `sklearn.linear_model.LogisticRegression`.
+
+        Any arguments provided to the sklearn constructor can be provided
+        as kwargs here.
+        """
+        super().__init__(sklearn_module="linear_model.LogisticRegression", **kwargs)
+
+    def fit(self, train_data: DataLoader, **kwargs):
+        return super().fit(train_data=train_data, **kwargs)
+
+
+class SkLearnSGDClassifier(SkLearnLinearModel):
+    def __init__(self, **kwargs) -> None:
+        r"""
+        Factory class. Trains a model with `sklearn.linear_model.SGDClassifier(`.
+
+        Any arguments provided to the sklearn constructor can be provided
+        as kwargs here.
+        """
+        super().__init__(sklearn_module="linear_model.SGDClassifier", **kwargs)
 
     def fit(self, train_data: DataLoader, **kwargs):
         return super().fit(train_data=train_data, **kwargs)

@@ -5,7 +5,6 @@ import inspect
 from typing import Callable, Dict, Tuple
 
 import torch
-
 from captum._utils.gradient import _forward_layer_eval
 from captum.attr import (
     DeepLift,
@@ -22,7 +21,7 @@ from captum.attr import (
     LayerIntegratedGradients,
 )
 from captum.attr._utils.input_layer_wrapper import ModelInputWrapper
-from tests.helpers.basic import BaseTest, assertTensorTuplesAlmostEqual
+from tests.helpers.basic import assertTensorTuplesAlmostEqual, BaseTest
 from tests.helpers.basic_models import (
     BasicModel,
     BasicModel_MultiLayer_TrueMultiInput,

@@ -1,11 +1,8 @@
 #!/usr/bin/env python3
-from typing import Any, Callable, Generic, List, Tuple, Type, Union, cast
+from typing import Any, Callable, cast, Generic, List, Tuple, Type, Union
 
 import torch
 import torch.nn.functional as F
-from torch import Tensor
-from torch.nn import Module
-
 from captum._utils.common import (
     _format_additional_forward_args,
     _format_tensor_into_tuples,
@@ -16,10 +13,13 @@ from captum._utils.gradient import compute_gradients
 from captum._utils.typing import ModuleOrModuleList, TargetType
 from captum.attr._utils.common import (
     _format_input_baseline,
+    _sum_rows,
     _tensorize_baseline,
     _validate_input,
 )
 from captum.log import log_usage
+from torch import Tensor
+from torch.nn import Module
 
 
 class Attribution:
@@ -274,9 +274,6 @@ class GradientAttribution(Attribution):
         num_samples = end_point[0].shape[0]
         _validate_input(end_point, start_point)
         _validate_target(num_samples, target)
-
-        def _sum_rows(input: Tensor) -> Tensor:
-            return input.reshape(input.shape[0], -1).sum(1)
 
         with torch.no_grad():
             start_out_sum = _sum_rows(

@@ -3,19 +3,15 @@ import inspect
 import math
 import typing
 import warnings
-from typing import Any, Callable, List, Optional, Tuple, Union, cast
+from typing import Any, Callable, cast, List, Optional, Tuple, Union
 
 import torch
-from torch import Tensor
-from torch.nn import CosineSimilarity
-from torch.utils.data import DataLoader, TensorDataset
-
 from captum._utils.common import (
     _expand_additional_forward_args,
     _expand_target,
     _flatten_tensor_or_tuple,
-    _format_input,
     _format_output,
+    _format_tensor_into_tuples,
     _is_tuple,
     _reduce_list,
     _run_forward,
@@ -34,9 +30,11 @@ from captum.attr._utils.batching import _batch_example_iterator
 from captum.attr._utils.common import (
     _construct_default_feature_mask,
     _format_input_baseline,
-    lime_n_perturb_samples_deprecation_decorator,
 )
 from captum.log import log_usage
+from torch import Tensor
+from torch.nn import CosineSimilarity
+from torch.utils.data import DataLoader, TensorDataset
 
 
 class LimeBase(PerturbationAttribution):
@@ -237,7 +235,6 @@ class LimeBase(PerturbationAttribution):
             ), "Must provide transform from original input space to interpretable space"
 
     @log_usage()
-    @lime_n_perturb_samples_deprecation_decorator
     def attribute(
         self,
         inputs: TensorOrTupleOfTensorsGeneric,
@@ -397,8 +394,12 @@ class LimeBase(PerturbationAttribution):
             >>> # input will be different and may have a smaller feature set, so
             >>> # an appropriate transformation function should be provided.
             >>>
-            >>> # Generating random input with size 2 x 5
-            >>> input = torch.randn(2, 5)
+            >>> def to_interp_transform(curr_sample, original_inp,
+            >>>                                      **kwargs):
+            >>>     return curr_sample
+            >>>
+            >>> # Generating random input with size 1 x 5
+            >>> input = torch.randn(1, 5)
             >>> # Defining LimeBase interpreter
             >>> lime_attr = LimeBase(net,
                                      SkLearnLinearModel("linear_model.Ridge"),
@@ -406,7 +407,7 @@ class LimeBase(PerturbationAttribution):
                                      perturb_func=perturb_func,
                                      perturb_interpretable_space=False,
                                      from_interp_rep_transform=None,
-                                     to_interp_rep_transform=lambda x: x)
+                                     to_interp_rep_transform=to_interp_transform)
             >>> # Computes interpretable model, returning coefficients of linear
             >>> # model.
             >>> attr_coefs = lime_attr.attribute(input, target=1, kernel_width=1.1)
@@ -571,15 +572,18 @@ def default_from_interp_rep_transform(curr_sample, original_inputs, **kwargs):
     ), "Must provide baselines to use default interpretable representation transfrom"
     feature_mask = kwargs["feature_mask"]
     if isinstance(feature_mask, Tensor):
-        binary_mask = curr_sample[0][feature_mask].to(original_inputs.dtype)
-        return binary_mask * original_inputs + (1 - binary_mask) * kwargs["baselines"]
+        binary_mask = curr_sample[0][feature_mask].bool()
+        return (
+            binary_mask.to(original_inputs.dtype) * original_inputs
+            + (~binary_mask).to(original_inputs.dtype) * kwargs["baselines"]
+        )
     else:
         binary_mask = tuple(
-            curr_sample[0][feature_mask[j]] for j in range(len(feature_mask))
+            curr_sample[0][feature_mask[j]].bool() for j in range(len(feature_mask))
         )
         return tuple(
             binary_mask[j].to(original_inputs[j].dtype) * original_inputs[j]
-            + (1 - binary_mask[j].to(original_inputs[j].dtype)) * kwargs["baselines"][j]
+            + (~binary_mask[j]).to(original_inputs[j].dtype) * kwargs["baselines"][j]
             for j in range(len(feature_mask))
         )
 
@@ -628,7 +632,7 @@ def get_exp_kernel_similarity_function(
             distance = torch.norm(flattened_original_inp - flattened_perturbed_inp)
         else:
             raise ValueError("distance_mode must be either cosine or euclidean.")
-        return math.exp(-1 * (distance ** 2) / (2 * (kernel_width ** 2)))
+        return math.exp(-1 * (distance**2) / (2 * (kernel_width**2)))
 
     return default_exp_kernel
 
@@ -652,9 +656,13 @@ def construct_feature_mask(feature_mask, formatted_inputs):
             formatted_inputs
         )
     else:
-        feature_mask = _format_input(feature_mask)
+        feature_mask = _format_tensor_into_tuples(feature_mask)
         min_interp_features = int(
-            min(torch.min(single_inp).item() for single_inp in feature_mask)
+            min(
+                torch.min(single_mask).item()
+                for single_mask in feature_mask
+                if single_mask.numel()
+            )
         )
         if min_interp_features != 0:
             warnings.warn(
@@ -662,11 +670,16 @@ def construct_feature_mask(feature_mask, formatted_inputs):
                 " start at 0."
             )
             feature_mask = tuple(
-                single_inp - min_interp_features for single_inp in feature_mask
+                single_mask - min_interp_features for single_mask in feature_mask
             )
 
         num_interp_features = int(
-            max(torch.max(single_inp).item() for single_inp in feature_mask) + 1
+            max(
+                torch.max(single_mask).item()
+                for single_mask in feature_mask
+                if single_mask.numel()
+            )
+            + 1
         )
     return feature_mask, num_interp_features
 
@@ -724,7 +737,7 @@ class Lime(LimeBase):
             interpretable_model (optional, Model): Model object to train
                     interpretable model.
 
-                    This argument is optional and defaults to SkLearnLasso(alpha=1.0),
+                    This argument is optional and defaults to SkLearnLasso(alpha=0.01),
                     which is a wrapper around the Lasso linear model in SkLearn.
                     This requires having sklearn version >= 0.23 available.
 
@@ -802,7 +815,7 @@ class Lime(LimeBase):
 
         """
         if interpretable_model is None:
-            interpretable_model = SkLearnLasso(alpha=1.0)
+            interpretable_model = SkLearnLasso(alpha=0.01)
 
         if similarity_func is None:
             similarity_func = get_exp_kernel_similarity_function()
@@ -822,7 +835,6 @@ class Lime(LimeBase):
         )
 
     @log_usage()
-    @lime_n_perturb_samples_deprecation_decorator
     def attribute(  # type: ignore
         self,
         inputs: TensorOrTupleOfTensorsGeneric,

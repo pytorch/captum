@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-from typing import TYPE_CHECKING, Any, Callable, List, Optional
+from typing import Any, Callable, List, Optional, TYPE_CHECKING
 
 import torch
 from torch import Tensor
@@ -117,10 +117,7 @@ class Mean(Stat):
 
         if self.rolling_mean is None:
             # Ensures rolling_mean is a float tensor
-            if x.is_floating_point():
-                self.rolling_mean = x
-            else:
-                self.rolling_mean = x.to(torch.float64)
+            self.rolling_mean = x.clone() if x.is_floating_point() else x.double()
         else:
             delta = x - self.rolling_mean
             self.rolling_mean += delta / n
@@ -226,7 +223,7 @@ class StdDev(Stat):
 
     def get(self) -> Optional[Tensor]:
         var = self.var.get()
-        return var ** 0.5 if var is not None else None
+        return var**0.5 if var is not None else None
 
 
 class GeneralAccumFn(Stat):

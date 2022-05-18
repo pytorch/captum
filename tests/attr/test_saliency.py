@@ -1,25 +1,24 @@
 #!/usr/bin/env python3
-from typing import Any, Tuple, Union, cast
+from typing import Any, cast, Tuple, Union
 
 import torch
-from torch import Tensor
-from torch.nn import Module
-
 from captum._utils.gradient import compute_gradients
 from captum._utils.typing import TensorOrTupleOfTensorsGeneric
 from captum.attr._core.noise_tunnel import NoiseTunnel
 from captum.attr._core.saliency import Saliency
 from tests.helpers.basic import (
-    BaseTest,
-    assertArraysAlmostEqual,
+    assertTensorAlmostEqual,
     assertTensorTuplesAlmostEqual,
+    BaseTest,
 )
 from tests.helpers.basic_models import BasicModel, BasicModel5_MultiArgs
 from tests.helpers.classification_models import SoftmaxModel
+from torch import Tensor
+from torch.nn import Module
 
 
 def _get_basic_config() -> Tuple[Module, Tensor, Tensor, Any]:
-    input = torch.tensor([1.0, 2.0, 3.0, 0.0, -1.0, 7.0], requires_grad=True)
+    input = torch.tensor([1.0, 2.0, 3.0, 0.0, -1.0, 7.0], requires_grad=True).T
     # manually percomputed gradients
     grads = torch.tensor([-0.0, -0.0, -0.0, 1.0, 1.0, -0.0])
     return BasicModel(), input, grads, None
@@ -162,15 +161,14 @@ class Test(BaseTest):
             )
         else:
             nt = NoiseTunnel(saliency)
-            with self.assertWarns(DeprecationWarning):
-                attributions = nt.attribute(
-                    inputs,
-                    nt_type=nt_type,
-                    n_samples=10,
-                    nt_samples_batch_size=n_samples_batch_size,
-                    stdevs=0.0000002,
-                    additional_forward_args=additional_forward_args,
-                )
+            attributions = nt.attribute(
+                inputs,
+                nt_type=nt_type,
+                nt_samples=10,
+                nt_samples_batch_size=n_samples_batch_size,
+                stdevs=0.0000002,
+                additional_forward_args=additional_forward_args,
+            )
 
         for input, attribution, expected_attr in zip(inputs, attributions, expected):
             if nt_type == "vanilla":
@@ -181,11 +179,10 @@ class Test(BaseTest):
 
     def _assert_attribution(self, attribution: Tensor, expected: Tensor) -> None:
         expected = torch.abs(expected)
-        assertArraysAlmostEqual(
-            expected.detach().numpy().flatten().tolist(),
-            attribution.detach().numpy().flatten().tolist(),
-            delta=0.5,
-        )
+        if len(attribution.shape) == 0:
+            assert (attribution - expected).abs() < 0.001
+        else:
+            assertTensorAlmostEqual(self, expected, attribution, delta=0.5, mode="max")
 
     def _saliency_classification_assert(self, nt_type: str = "vanilla") -> None:
         num_in = 5
@@ -201,10 +198,7 @@ class Test(BaseTest):
             output = model(input)[:, target]
             output.backward()
             expected = torch.abs(cast(Tensor, input.grad))
-            self.assertEqual(
-                expected.detach().numpy().tolist(),
-                attributions.detach().numpy().tolist(),
-            )
+            assertTensorAlmostEqual(self, attributions, expected)
         else:
             nt = NoiseTunnel(saliency)
             attributions = nt.attribute(

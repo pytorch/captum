@@ -2,24 +2,24 @@
 
 from __future__ import print_function
 
+import copy
 from typing import Tuple, Union
 
 import torch
-from torch import Tensor
-
 from captum._utils.typing import TensorOrTupleOfTensorsGeneric
 from captum.attr._core.neuron.neuron_deep_lift import NeuronDeepLift, NeuronDeepLiftShap
 from tests.attr.layer.test_layer_deeplift import (
     _create_inps_and_base_for_deeplift_neuron_layer_testing,
     _create_inps_and_base_for_deepliftshap_neuron_layer_testing,
 )
-from tests.helpers.basic import BaseTest, assertTensorAlmostEqual
+from tests.helpers.basic import assertTensorAlmostEqual, BaseTest
 from tests.helpers.basic_models import (
     BasicModel_ConvNet,
     BasicModel_ConvNet_MaxPool3d,
     LinearMaxPoolLinearModel,
     ReLULinearModel,
 )
+from torch import Tensor
 
 
 class Test(BaseTest):
@@ -84,7 +84,7 @@ class Test(BaseTest):
         model = ReLULinearModel()
         inputs, baselines = _create_inps_and_base_for_deeplift_neuron_layer_testing()
         neuron_dl = NeuronDeepLift(model, model.l3)
-        expected = ([0.0, 0.0, 0.0], [0.0, 0.0, 0.0])
+        expected = ([[0.0, 0.0, 0.0]], [[0.0, 0.0, 0.0]])
         self._relu_custom_attr_func_assert(neuron_dl, inputs, baselines, expected)
 
     def test_relu_neuron_deeplift_shap(self) -> None:
@@ -153,7 +153,7 @@ class Test(BaseTest):
             baselines,
         ) = _create_inps_and_base_for_deepliftshap_neuron_layer_testing()
         neuron_dl = NeuronDeepLiftShap(model, model.l3)
-        expected = (torch.zeros(3, 3), torch.zeros(3, 3))
+        expected = (torch.zeros(1, 3), torch.zeros(1, 3))
         self._relu_custom_attr_func_assert(neuron_dl, inputs, baselines, expected)
 
     def _relu_custom_attr_func_assert(
@@ -181,10 +181,11 @@ class Test(BaseTest):
         baselines = torch.tensor([[1, 2, 3, 9], [4, 8, 6, 7]]).float()
 
         model = LinearMaxPoolLinearModel()
+        model_copy = copy.deepcopy(model)
         ndl = NeuronDeepLift(model, model.pool1)
         attr = ndl.attribute(inputs, neuron_selector=(0), baselines=baselines)
 
-        ndl2 = NeuronDeepLift(model, model.lin2)
+        ndl2 = NeuronDeepLift(model_copy, model_copy.lin2)
         attr2 = ndl2.attribute(
             inputs,
             neuron_selector=(0),
@@ -196,11 +197,12 @@ class Test(BaseTest):
     def test_convnet_maxpool2d_classification(self) -> None:
         inputs = 100 * torch.randn(2, 1, 10, 10)
         model = BasicModel_ConvNet()
+        model_copy = copy.deepcopy(model)
 
         ndl = NeuronDeepLift(model, model.pool1)
         attr = ndl.attribute(inputs, neuron_selector=(0, 0, 0))
 
-        ndl2 = NeuronDeepLift(model, model.conv2)
+        ndl2 = NeuronDeepLift(model_copy, model_copy.conv2)
         attr2 = ndl2.attribute(
             inputs, neuron_selector=(0, 0, 0), attribute_to_neuron_input=True
         )
@@ -210,11 +212,12 @@ class Test(BaseTest):
     def test_convnet_maxpool3d_classification(self) -> None:
         inputs = 100 * torch.randn(2, 1, 10, 10, 10)
         model = BasicModel_ConvNet_MaxPool3d()
+        model_copy = copy.deepcopy(model)
 
         ndl = NeuronDeepLift(model, model.pool1)
         attr = ndl.attribute(inputs, neuron_selector=(0, 0, 0, 0))
 
-        ndl2 = NeuronDeepLift(model, model.conv2)
+        ndl2 = NeuronDeepLift(model_copy, model_copy.conv2)
         attr2 = ndl2.attribute(
             inputs, neuron_selector=(0, 0, 0, 0), attribute_to_neuron_input=True
         )

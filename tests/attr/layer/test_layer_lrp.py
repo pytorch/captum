@@ -2,11 +2,10 @@
 
 import torch
 import torch.nn as nn
-
 from captum.attr import LayerLRP
 from captum.attr._utils.lrp_rules import Alpha1_Beta0_Rule, EpsilonRule, GammaRule
 
-from ...helpers.basic import BaseTest, assertTensorAlmostEqual
+from ...helpers.basic import assertTensorAlmostEqual, BaseTest
 from ...helpers.basic_models import BasicModel_ConvNet_One_Conv, SimpleLRPModel
 
 
@@ -62,9 +61,7 @@ class Test(BaseTest):
         assertTensorAlmostEqual(
             self, relevance[0], torch.Tensor([[[0, 4], [31, 40]], [[0, 0], [-6, -15]]])
         )
-        assertTensorAlmostEqual(
-            self, delta, torch.Tensor([-21, 75])
-        )  # Due to bias in conv1 layer
+        assertTensorAlmostEqual(self, delta, torch.Tensor([0]))
 
     def test_lrp_simple_attributions(self):
         model, inputs = _get_simple_model(inplace=False)
@@ -91,19 +88,6 @@ class Test(BaseTest):
         output_after = model(inputs)
         assertTensorAlmostEqual(self, output, output_after)
 
-    def test_lrp_simple_inplaceReLU(self):
-        model_default, inputs = _get_simple_model()
-        model_inplace, _ = _get_simple_model(inplace=True)
-        for model in [model_default, model_inplace]:
-            model.eval()
-            model.linear.rule = EpsilonRule()
-            model.linear2.rule = EpsilonRule()
-        lrp_default = LayerLRP(model_default, model_default.linear2)
-        lrp_inplace = LayerLRP(model_inplace, model_inplace.linear2)
-        relevance_default = lrp_default.attribute(inputs, attribute_to_layer_input=True)
-        relevance_inplace = lrp_inplace.attribute(inputs, attribute_to_layer_input=True)
-        assertTensorAlmostEqual(self, relevance_default[0], relevance_inplace[0])
-
     def test_lrp_simple_tanh(self):
         class Model(nn.Module):
             def __init__(self) -> None:
@@ -122,7 +106,7 @@ class Test(BaseTest):
         lrp = LayerLRP(model, model.linear)
         relevance = lrp.attribute(inputs)
         assertTensorAlmostEqual(
-            self, relevance[0], torch.Tensor([[0.0537, 0.0537, 0.0537]])
+            self, relevance[0], torch.Tensor([0.0537, 0.0537, 0.0537])
         )  # Result if tanh is skipped for propagation
 
     def test_lrp_simple_attributions_GammaRule(self):
@@ -156,9 +140,7 @@ class Test(BaseTest):
         lrp = LayerLRP(model, layers)
         relevance = lrp.attribute(inputs, attribute_to_layer_input=True)
         self.assertEqual(len(relevance), 2)
-        assertTensorAlmostEqual(
-            self, relevance[0][0], torch.tensor([[[18.0, 36.0, 54.0]]])
-        )
+        assertTensorAlmostEqual(self, relevance[0][0], torch.tensor([18.0, 36.0, 54.0]))
 
     def test_lrp_simple_attributions_all_layers_delta(self):
         model, inputs = _get_simple_model(inplace=False)
@@ -174,6 +156,6 @@ class Test(BaseTest):
         self.assertEqual(len(relevance), len(delta))
         assertTensorAlmostEqual(
             self,
-            relevance[0][0],
-            torch.tensor([[[18.0, 36.0, 54.0]], [[36.0, 72.0, 108.0]]]),
+            relevance[0],
+            torch.tensor([[18.0, 36.0, 54.0], [36.0, 72.0, 108.0]]),
         )

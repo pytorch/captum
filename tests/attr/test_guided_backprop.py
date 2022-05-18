@@ -1,18 +1,18 @@
 #!/usr/bin/env python3
 
+import copy
 import unittest
 from typing import Any, List, Tuple, Union
 
 import torch
-from torch.nn import Module
-
-from captum._utils.typing import TensorOrTupleOfTensorsGeneric
+from captum._utils.typing import TensorLikeList, TensorOrTupleOfTensorsGeneric
 from captum.attr._core.guided_backprop_deconvnet import GuidedBackprop
 from captum.attr._core.neuron.neuron_guided_backprop_deconvnet import (
     NeuronGuidedBackprop,
 )
-from tests.helpers.basic import BaseTest, assertTensorAlmostEqual
+from tests.helpers.basic import assertTensorAlmostEqual, BaseTest
 from tests.helpers.basic_models import BasicModel_ConvNet_One_Conv
+from torch.nn import Module
 
 
 class Test(BaseTest):
@@ -20,10 +20,14 @@ class Test(BaseTest):
         net = BasicModel_ConvNet_One_Conv()
         inp = 1.0 * torch.arange(16, dtype=torch.float).view(1, 1, 4, 4)
         exp = [
-            [0.0, 1.0, 1.0, 1.0],
-            [1.0, 3.0, 3.0, 2.0],
-            [1.0, 3.0, 3.0, 2.0],
-            [1.0, 2.0, 2.0, 1.0],
+            [
+                [
+                    [0.0, 1.0, 1.0, 1.0],
+                    [1.0, 3.0, 3.0, 2.0],
+                    [1.0, 3.0, 3.0, 2.0],
+                    [1.0, 2.0, 2.0, 1.0],
+                ]
+            ]
         ]
         self._guided_backprop_test_assert(net, (inp,), (exp,))
 
@@ -31,10 +35,14 @@ class Test(BaseTest):
         net = BasicModel_ConvNet_One_Conv()
         inp = 1.0 * torch.arange(16, dtype=torch.float).view(1, 1, 4, 4)
         exp = [
-            [0.0, 1.0, 1.0, 1.0],
-            [1.0, 3.0, 3.0, 2.0],
-            [1.0, 3.0, 3.0, 2.0],
-            [1.0, 2.0, 2.0, 1.0],
+            [
+                [
+                    [0.0, 1.0, 1.0, 1.0],
+                    [1.0, 3.0, 3.0, 2.0],
+                    [1.0, 3.0, 3.0, 2.0],
+                    [1.0, 2.0, 2.0, 1.0],
+                ]
+            ]
         ]
         self._neuron_guided_backprop_test_assert(net, net.fc1, (0,), (inp,), (exp,))
 
@@ -42,10 +50,14 @@ class Test(BaseTest):
         net = BasicModel_ConvNet_One_Conv()
         inp = 1.0 * torch.arange(16, dtype=torch.float).view(1, 1, 4, 4)
         exp = [
-            [0.0, 1.0, 1.0, 1.0],
-            [1.0, 3.0, 3.0, 2.0],
-            [1.0, 3.0, 3.0, 2.0],
-            [1.0, 2.0, 2.0, 1.0],
+            [
+                [
+                    [0.0, 1.0, 1.0, 1.0],
+                    [1.0, 3.0, 3.0, 2.0],
+                    [1.0, 3.0, 3.0, 2.0],
+                    [1.0, 2.0, 2.0, 1.0],
+                ]
+            ]
         ]
         self._neuron_guided_backprop_test_assert(
             net, net.fc1, (slice(0, 1, 1),), (inp,), (exp,)
@@ -56,10 +68,14 @@ class Test(BaseTest):
         inp = torch.arange(16, dtype=torch.float).view(1, 1, 4, 4)
         inp2 = torch.ones((1, 1, 4, 4))
         ex_attr = [
-            [1.0, 2.0, 2.0, 1.0],
-            [2.0, 4.0, 4.0, 2.0],
-            [2.0, 4.0, 4.0, 2.0],
-            [1.0, 2.0, 2.0, 1.0],
+            [
+                [
+                    [1.0, 2.0, 2.0, 1.0],
+                    [2.0, 4.0, 4.0, 2.0],
+                    [2.0, 4.0, 4.0, 2.0],
+                    [1.0, 2.0, 2.0, 1.0],
+                ]
+            ]
         ]
         self._guided_backprop_test_assert(net, (inp, inp2), (ex_attr, ex_attr))
 
@@ -68,10 +84,14 @@ class Test(BaseTest):
         inp = torch.arange(16, dtype=torch.float).view(1, 1, 4, 4)
         inp2 = torch.ones((1, 1, 4, 4))
         ex_attr = [
-            [1.0, 2.0, 2.0, 1.0],
-            [2.0, 4.0, 4.0, 2.0],
-            [2.0, 4.0, 4.0, 2.0],
-            [1.0, 2.0, 2.0, 1.0],
+            [
+                [
+                    [1.0, 2.0, 2.0, 1.0],
+                    [2.0, 4.0, 4.0, 2.0],
+                    [2.0, 4.0, 4.0, 2.0],
+                    [1.0, 2.0, 2.0, 1.0],
+                ]
+            ]
         ]
         self._neuron_guided_backprop_test_assert(
             net, net.fc1, (3,), (inp, inp2), (ex_attr, ex_attr)
@@ -86,7 +106,7 @@ class Test(BaseTest):
         self,
         model: Module,
         test_input: TensorOrTupleOfTensorsGeneric,
-        expected: Tuple[List[List[float]], ...],
+        expected: Tuple[TensorLikeList, ...],
         additional_input: Any = None,
     ) -> None:
         guided_backprop = GuidedBackprop(model)
@@ -94,7 +114,12 @@ class Test(BaseTest):
             test_input, target=0, additional_forward_args=additional_input
         )
         for i in range(len(test_input)):
-            assertTensorAlmostEqual(self, attributions[i], expected[i], delta=0.01)
+            assertTensorAlmostEqual(
+                self,
+                attributions[i],
+                expected[i],
+                delta=0.01,
+            )
 
     def _neuron_guided_backprop_test_assert(
         self,
@@ -102,7 +127,7 @@ class Test(BaseTest):
         layer: Module,
         neuron_selector: Union[int, Tuple[Union[int, slice], ...]],
         test_input: TensorOrTupleOfTensorsGeneric,
-        expected: Tuple[List[List[float]], ...],
+        expected: Tuple[List[List[List[List[float]]]], ...],
         additional_input: Any = None,
     ) -> None:
         guided_backprop = NeuronGuidedBackprop(model, layer)
@@ -112,7 +137,12 @@ class Test(BaseTest):
             additional_forward_args=additional_input,
         )
         for i in range(len(test_input)):
-            assertTensorAlmostEqual(self, attributions[i], expected[i], delta=0.01)
+            assertTensorAlmostEqual(
+                self,
+                attributions[i],
+                expected[i],
+                delta=0.01,
+            )
 
     def _guided_backprop_matching_assert(
         self,
@@ -121,7 +151,8 @@ class Test(BaseTest):
         test_input: TensorOrTupleOfTensorsGeneric,
     ):
         out = model(test_input)
-        attrib = GuidedBackprop(model)
+        model_copy = copy.deepcopy(model)
+        attrib = GuidedBackprop(model_copy)
         self.assertFalse(attrib.multiplies_by_inputs)
         neuron_attrib = NeuronGuidedBackprop(model, output_layer)
         for i in range(out.shape[1]):

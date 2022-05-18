@@ -1,27 +1,22 @@
 #!/usr/bin/env python3
 from enum import Enum
-from typing import Any, List, Tuple, Union, cast
+from typing import Any, cast, List, Tuple, Union
 
 import torch
-from torch import Tensor
-
 from captum._utils.common import (
     _expand_and_update_additional_forward_args,
     _expand_and_update_baselines,
     _expand_and_update_feature_mask,
     _expand_and_update_target,
-    _format_input,
     _format_output,
     _format_tensor_into_tuples,
     _is_tuple,
 )
 from captum._utils.typing import TensorOrTupleOfTensorsGeneric
 from captum.attr._utils.attribution import Attribution, GradientAttribution
-from captum.attr._utils.common import (
-    _validate_noise_tunnel_type,
-    noise_tunnel_n_samples_deprecation_decorator,
-)
+from captum.attr._utils.common import _validate_noise_tunnel_type
 from captum.log import log_usage
+from torch import Tensor
 
 
 class NoiseTunnelType(Enum):
@@ -78,7 +73,6 @@ class NoiseTunnel(Attribution):
         return self._multiply_by_inputs
 
     @log_usage()
-    @noise_tunnel_n_samples_deprecation_decorator
     def attribute(
         self,
         inputs: Union[Tensor, Tuple[Tensor, ...]],
@@ -235,7 +229,7 @@ class NoiseTunnel(Attribution):
 
             attribution = attribution.view(attribution_shape)
             current_attribution_sum = attribution.sum(dim=1, keepdim=False)
-            current_attribution_sq = torch.sum(attribution ** 2, dim=1, keepdim=False)
+            current_attribution_sq = torch.sum(attribution**2, dim=1, keepdim=False)
 
             sum_attribution[i] = (
                 current_attribution_sum
@@ -347,7 +341,7 @@ class NoiseTunnel(Attribution):
             # converting it into a tuple.
             is_inputs_tuple = isinstance(inputs, tuple)
 
-            inputs = _format_input(inputs)  # type: ignore
+            inputs = _format_tensor_into_tuples(inputs)  # type: ignore
 
             _validate_noise_tunnel_type(nt_type, SUPPORTED_NOISE_TUNNEL_TYPES)
 

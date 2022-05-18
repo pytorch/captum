@@ -3,7 +3,7 @@
 import sys
 import warnings
 from time import time
-from typing import Iterable, Sized, TextIO, cast
+from typing import cast, Iterable, Sized, TextIO
 
 try:
     from tqdm import tqdm

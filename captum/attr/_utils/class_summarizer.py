@@ -2,13 +2,12 @@
 from collections import defaultdict
 from typing import Any, Dict, List, Optional, Union
 
-from torch import Tensor
-
 from captum._utils.common import _format_tensor_into_tuples
 from captum._utils.typing import TargetType, TensorOrTupleOfTensorsGeneric
 from captum.attr._utils.stat import Stat
 from captum.attr._utils.summarizer import Summarizer
 from captum.log import log_usage
+from torch import Tensor
 
 
 class ClassSummarizer(Summarizer):

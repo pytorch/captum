@@ -16,6 +16,9 @@ Captum API Reference
    layer
    neuron
    metrics
+   robust
+   concept
+   influence
    utilities
    base_classes
 

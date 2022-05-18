@@ -1,10 +1,9 @@
 #!/usr/bin/env python3
 
 from enum import Enum
-from typing import Any, Callable, Dict, Optional, Tuple, Type, cast
+from typing import Any, Callable, cast, Dict, Optional, Tuple, Type
 
-from torch.nn import Module
-
+import torch
 from captum.attr._core.noise_tunnel import NoiseTunnel
 from captum.attr._models.base import _set_deep_layer_value
 from captum.attr._utils.attribution import Attribution, InternalAttribution
@@ -16,6 +15,7 @@ from tests.attr.helpers.gen_test_utils import (
 )
 from tests.attr.helpers.test_config import config
 from tests.helpers.basic import BaseTest, deep_copy_args
+from torch.nn import Module
 
 """
 Tests in this file are dynamically generated based on the config
@@ -43,6 +43,12 @@ class HookRemovalMode(Enum):
 
 
 class ErrorModule(Module):
+    def __init__(
+        self,
+    ):
+        super().__init__()
+        self.relu = torch.nn.ReLU()
+
     def forward(*args, **kwargs):
         raise AssertionError("Raising error on execution")
 

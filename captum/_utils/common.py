@@ -1,14 +1,12 @@
 #!/usr/bin/env python3
 import typing
 from enum import Enum
+from functools import reduce
 from inspect import signature
-from typing import Any, Callable, Dict, List, Tuple, Union, cast, overload
+from typing import Any, Callable, cast, Dict, List, overload, Tuple, Union
 
 import numpy as np
 import torch
-from torch import Tensor, device
-from torch.nn import Module
-
 from captum._utils.typing import (
     BaselineType,
     Literal,
@@ -16,6 +14,8 @@ from captum._utils.typing import (
     TensorOrTupleOfTensorsGeneric,
     TupleOrTensorOrBoolGeneric,
 )
+from torch import device, Tensor
+from torch.nn import Module
 
 
 class ExpansionTypes(Enum):
@@ -24,17 +24,24 @@ class ExpansionTypes(Enum):
 
 
 def safe_div(
-    numerator: Tensor, denom: Union[Tensor, float], default_value: Tensor
+    numerator: Tensor,
+    denom: Union[Tensor, int, float],
+    default_denom: Union[Tensor, int, float] = 1.0,
 ) -> Tensor:
     r"""
     A simple utility function to perform `numerator / denom`
-    if the statement is undefined => result will be `default_value`
+    if the statement is undefined => result will be `numerator / default_denorm`
     """
-    if isinstance(denom, float):
-        return numerator / denom if denom != 0.0 else default_value
+    if isinstance(denom, (int, float)):
+        return numerator / (denom if denom != 0 else default_denom)
 
-    # if denominator is a tensor
-    return numerator / torch.where(denom != 0.0, denom, default_value)
+    # convert default_denom to tensor if it is float
+    if not torch.is_tensor(default_denom):
+        default_denom = torch.tensor(
+            default_denom, dtype=denom.dtype, device=denom.device
+        )
+
+    return numerator / torch.where(denom != 0, denom, default_denom)
 
 
 @typing.overload
@@ -106,7 +113,7 @@ def _zeros(inputs: Tuple[Tensor, ...]) -> Tuple[int, ...]:
     Takes a tuple of tensors as input and returns a tuple that has the same
     length as `inputs` with each element as the integer 0.
     """
-    return tuple(0 for input in inputs)
+    return tuple(0 if input.dtype is not torch.bool else False for input in inputs)
 
 
 def _format_baseline(
@@ -154,8 +161,25 @@ def _format_tensor_into_tuples(
     return inputs
 
 
-def _format_input(inputs: Union[Tensor, Tuple[Tensor, ...]]) -> Tuple[Tensor, ...]:
-    return _format_tensor_into_tuples(inputs)
+def _format_inputs(inputs: Any, unpack_inputs: bool = True) -> Any:
+    return (
+        inputs
+        if (isinstance(inputs, tuple) or isinstance(inputs, list)) and unpack_inputs
+        else (inputs,)
+    )
+
+
+def _format_float_or_tensor_into_tuples(
+    inputs: Union[float, Tensor, Tuple[Union[float, Tensor], ...]]
+) -> Tuple[Union[float, Tensor], ...]:
+    if not isinstance(inputs, tuple):
+        assert isinstance(
+            inputs, (torch.Tensor, float)
+        ), "`inputs` must have type float or torch.Tensor but {} found: ".format(
+            type(inputs)
+        )
+        inputs = (inputs,)
+    return inputs
 
 
 @overload
@@ -419,7 +443,7 @@ def _format_outputs(
 
 def _run_forward(
     forward_func: Callable,
-    inputs: Union[Tensor, Tuple[Tensor, ...]],
+    inputs: Any,
     target: TargetType = None,
     additional_forward_args: Any = None,
 ) -> Tensor:
@@ -430,7 +454,7 @@ def _run_forward(
 
     # make everything a tuple so that it is easy to unpack without
     # using if-statements
-    inputs = _format_input(inputs)
+    inputs = _format_inputs(inputs)
     additional_forward_args = _format_additional_forward_args(additional_forward_args)
 
     output = forward_func(
@@ -617,3 +641,39 @@ def _flatten_tensor_or_tuple(inp: TensorOrTupleOfTensorsGeneric) -> Tensor:
     if isinstance(inp, Tensor):
         return inp.flatten()
     return torch.cat([single_inp.flatten() for single_inp in inp])
+
+
+def _get_module_from_name(model: Module, layer_name: str) -> Any:
+    r"""
+    Returns the module (layer) object, given its (string) name
+    in the model.
+
+    Args:
+            name (str): Module or nested modules name string in self.model
+
+    Returns:
+            The module (layer) in self.model.
+    """
+
+    return reduce(getattr, layer_name.split("."), model)
+
+
+def _register_backward_hook(
+    module: Module, hook: Callable, attr_obj: Any
+) -> torch.utils.hooks.RemovableHandle:
+    # Special case for supporting output attributions for neuron methods
+    # This can be removed after deprecation of neuron output attributions
+    # for NeuronDeepLift, NeuronDeconvolution, and NeuronGuidedBackprop
+    # in v0.6.0
+    if (
+        hasattr(attr_obj, "skip_new_hook_layer")
+        and attr_obj.skip_new_hook_layer == module
+    ):
+        return module.register_backward_hook(hook)
+
+    if torch.__version__ >= "1.9":
+        # Only supported for torch >= 1.9
+        return module.register_full_backward_hook(hook)
+    else:
+        # Fallback for previous versions of PyTorch
+        return module.register_backward_hook(hook)

@@ -1,12 +1,10 @@
 #!/usr/bin/env python3
 from typing import Any, Callable, List, Tuple, Union
 
-from torch.nn import Module
-
 from captum._utils.common import (
     _format_additional_forward_args,
-    _format_input,
     _format_output,
+    _format_tensor_into_tuples,
     _is_tuple,
 )
 from captum._utils.gradient import (
@@ -16,8 +14,8 @@ from captum._utils.gradient import (
 )
 from captum._utils.typing import TensorOrTupleOfTensorsGeneric
 from captum.attr._utils.attribution import GradientAttribution, NeuronAttribution
-from captum.attr._utils.common import neuron_index_deprecation_decorator
 from captum.log import log_usage
+from torch.nn import Module
 
 
 class NeuronGradient(NeuronAttribution, GradientAttribution):
@@ -56,7 +54,6 @@ class NeuronGradient(NeuronAttribution, GradientAttribution):
         GradientAttribution.__init__(self, forward_func)
 
     @log_usage()
-    @neuron_index_deprecation_decorator
     def attribute(
         self,
         inputs: TensorOrTupleOfTensorsGeneric,
@@ -162,7 +159,7 @@ class NeuronGradient(NeuronAttribution, GradientAttribution):
             >>> attribution = neuron_ig.attribute(input, (4,1,2))
         """
         is_inputs_tuple = _is_tuple(inputs)
-        inputs = _format_input(inputs)
+        inputs = _format_tensor_into_tuples(inputs)
         additional_forward_args = _format_additional_forward_args(
             additional_forward_args
         )

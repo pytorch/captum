@@ -1,11 +1,8 @@
 #!/usr/bin/env python3
 import typing
-from typing import Any, Callable, List, Tuple, Union, cast
+from typing import Any, Callable, cast, List, Tuple, Union
 
 import torch
-from torch import Tensor
-from torch.nn import Module
-
 from captum._utils.typing import BaselineType, TargetType, TensorOrTupleOfTensorsGeneric
 from captum.attr import (
     Attribution,
@@ -15,17 +12,15 @@ from captum.attr import (
     Saliency,
 )
 from captum.metrics import infidelity, infidelity_perturb_func_decorator
-from tests.helpers.basic import (
-    BaseTest,
-    assertArraysAlmostEqual,
-    assertTensorAlmostEqual,
-)
+from tests.helpers.basic import assertTensorAlmostEqual, BaseTest
 from tests.helpers.basic_models import (
     BasicModel2,
     BasicModel4_MultiArgs,
     BasicModel_ConvNet_One_Conv,
     BasicModel_MultiLayer,
 )
+from torch import Tensor
+from torch.nn import Module
 
 
 @infidelity_perturb_func_decorator(False)
@@ -146,7 +141,7 @@ class Test(BaseTest):
             n_perturb_samples=5,
             max_batch_size=60,
         )
-        assertArraysAlmostEqual(infid1, infid2, 0.01)
+        assertTensorAlmostEqual(self, infid1, infid2, delta=0.01, mode="max")
 
     def test_basic_infidelity_additional_forward_args1(self) -> None:
         model = BasicModel4_MultiArgs()
@@ -240,7 +235,7 @@ class Test(BaseTest):
             max_batch_size=2,
             multi_input=False,
         )
-        assertArraysAlmostEqual(infid1, infid2, 1e-05)
+        assertTensorAlmostEqual(self, infid1, infid2, delta=1e-05, mode="max")
 
     def test_classification_infidelity_tpl_target_w_baseline(self) -> None:
         model = BasicModel_MultiLayer()
@@ -475,7 +470,7 @@ class Test(BaseTest):
         multi_input: bool = True,
         perturb_func: Callable = _local_perturb_func,
         normalize: bool = False,
-        **kwargs: Any
+        **kwargs: Any,
     ) -> Tensor:
         infid = infidelity(
             model,
