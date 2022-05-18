@@ -4,10 +4,10 @@ import io
 import unittest
 import unittest.mock
 from functools import partial
-from typing import Any, Callable, Generator, List, Tuple, Optional, Union
+from typing import Any, Callable, Generator, List, Optional, Tuple, Union
 
 import torch
-from captum._utils.models.linear_model import SkLearnLasso, SGDLasso
+from captum._utils.models.linear_model import SGDLasso, SkLearnLasso
 from captum._utils.models.model import Model
 from captum._utils.typing import BaselineType, TensorOrTupleOfTensorsGeneric
 from captum.attr._core.lime import get_exp_kernel_similarity_function, Lime, LimeBase
