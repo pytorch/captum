@@ -16,7 +16,7 @@ CHANNEL_ACTIVATION_1_LOSS = 1.3
 
 def get_loss_value(
     model: torch.nn.Module, loss: opt_loss.Loss, input_shape: List[int] = [1, 3, 1, 1]
-) -> Union[int, float]:
+) -> Union[int, float, torch.Tensor]:
     module_outputs = collect_activations(model, loss.target, torch.ones(*input_shape))
     loss_value = loss(module_outputs)
     try:
@@ -351,7 +351,7 @@ class _OverrideAbstractFunctions:
 class TestLoss(BaseTest):
     def test_loss_init(self) -> None:
         with _OverrideAbstractFunctions(opt_loss.Loss):
-            loss = opt_loss.Loss()
+            loss = opt_loss.Loss()  # type: ignore
             self.assertIsNone(loss.target)
             self.assertEqual(opt_loss.Loss.__name__, "Loss")
 
@@ -363,7 +363,7 @@ class TestBaseLoss(BaseTest):
     def test_base_loss_init(self) -> None:
         model = torch.nn.Identity()
         with _OverrideAbstractFunctions(opt_loss.BaseLoss):
-            loss = opt_loss.BaseLoss(model)
+            loss = opt_loss.BaseLoss(model)  # type: ignore
             self.assertEqual(loss._batch_index, (None, None))
             self.assertEqual(loss.batch_index, (None, None))
             self.assertEqual(loss._target, model)
@@ -373,7 +373,7 @@ class TestBaseLoss(BaseTest):
         model = torch.nn.Identity()
         batch_index = 5
         with _OverrideAbstractFunctions(opt_loss.BaseLoss):
-            loss = opt_loss.BaseLoss(model, batch_index=batch_index)
+            loss = opt_loss.BaseLoss(model, batch_index=batch_index)  # type: ignore
             self.assertEqual(loss._batch_index, (batch_index, batch_index + 1))
             self.assertEqual(loss.batch_index, (batch_index, batch_index + 1))
 
@@ -381,7 +381,7 @@ class TestBaseLoss(BaseTest):
         model = torch.nn.Sequential(torch.nn.Identity(), torch.nn.Identity())
         targets = [model[0], model[1]]
         with _OverrideAbstractFunctions(opt_loss.BaseLoss):
-            loss = opt_loss.BaseLoss(targets)
+            loss = opt_loss.BaseLoss(targets)  # type: ignore
             self.assertEqual(loss._target, targets)
             self.assertEqual(loss.target, targets)
 
@@ -460,7 +460,7 @@ class TestCompositeLoss(BaseTest):
     def test_multiplication_error(self) -> None:
         model = BasicModel_ConvNet_Optim()
         with self.assertRaises(TypeError):
-            opt_loss.ChannelActivation(model.layer, 0) * "string"
+            opt_loss.ChannelActivation(model.layer, 0) * "string"  # type: ignore
 
     def test_rmul(self) -> None:
         model = BasicModel_ConvNet_Optim()
@@ -472,7 +472,7 @@ class TestCompositeLoss(BaseTest):
     def test_rmul_error(self) -> None:
         model = BasicModel_ConvNet_Optim()
         with self.assertRaises(TypeError):
-            "string" * opt_loss.ChannelActivation(model.layer, 0)
+            "string" * opt_loss.ChannelActivation(model.layer, 0)  # type: ignore
 
     def test_division_loss_type(self) -> None:
         model = BasicModel_ConvNet_Optim()
@@ -494,7 +494,7 @@ class TestCompositeLoss(BaseTest):
     def test_division_error(self) -> None:
         model = BasicModel_ConvNet_Optim()
         with self.assertRaises(TypeError):
-            opt_loss.ChannelActivation(model.layer, 0) / "string"
+            opt_loss.ChannelActivation(model.layer, 0) / "string"  # type: ignore
 
     def test_rdiv(self) -> None:
         model = BasicModel_ConvNet_Optim()
@@ -508,7 +508,7 @@ class TestCompositeLoss(BaseTest):
     def test_rdiv_error(self) -> None:
         model = BasicModel_ConvNet_Optim()
         with self.assertRaises(TypeError):
-            "string" / opt_loss.ChannelActivation(model.layer, 0)
+            "string" / opt_loss.ChannelActivation(model.layer, 0)  # type: ignore
 
     def test_pow_loss_type(self) -> None:
         model = BasicModel_ConvNet_Optim()
@@ -533,7 +533,7 @@ class TestCompositeLoss(BaseTest):
     def test_pow_error(self) -> None:
         model = BasicModel_ConvNet_Optim()
         with self.assertRaises(TypeError):
-            opt_loss.ChannelActivation(model.layer, 0) ** "string"
+            opt_loss.ChannelActivation(model.layer, 0) ** "string"  # type: ignore
 
     def test_rpow(self) -> None:
         model = BasicModel_ConvNet_Optim()
@@ -547,7 +547,7 @@ class TestCompositeLoss(BaseTest):
     def test_rpow_error(self) -> None:
         model = BasicModel_ConvNet_Optim()
         with self.assertRaises(TypeError):
-            "string" ** opt_loss.ChannelActivation(model.layer, 0)
+            "string" ** opt_loss.ChannelActivation(model.layer, 0)  # type: ignore
 
     def test_sum_loss_list(self) -> None:
         n_batch = 400
@@ -611,9 +611,8 @@ class TestModuleOP(BaseTest):
     def test_module_op_loss_pow_error(self) -> None:
         model = BasicModel_ConvNet_Optim()
         with self.assertRaises(TypeError):
-            opt_loss.module_op(
-                opt_loss.ChannelActivation(model.layer, 0), "string", operator.pow
-            )
+            loss = opt_loss.ChannelActivation(model.layer, 0)
+            opt_loss.module_op(loss, "string", operator.pow)  # type: ignore
 
 
 class TestRModuleOP(BaseTest):
@@ -628,9 +627,8 @@ class TestRModuleOP(BaseTest):
     def test_rmodule_op_loss_pow_error(self) -> None:
         model = BasicModel_ConvNet_Optim()
         with self.assertRaises(TypeError):
-            opt_loss.rmodule_op(
-                opt_loss.ChannelActivation(model.layer, 0), "string", operator.pow
-            )
+            loss = pt_loss.ChannelActivation(model.layer, 0)
+            opt_loss.rmodule_op(loss, "string", operator.pow)  # type: ignore
 
 
 class TestDefaultLossSummarize(BaseTest):
@@ -668,10 +666,13 @@ class TestLossWrapper(BaseTest):
                 return self.test_var
 
         test_module = TestClass(torch.nn.Identity(), test_var=5, batch_index=0)
-        self.assertEqual(test_module.__name__, "TestClass [Identity()]")
+        expected = "TestClass [Identity()]"
+        self.assertEqual(test_module.__name__, expected)  # type: ignore
 
         test_module = TestClass(torch.nn.Identity(), 5, 0)
-        self.assertEqual(test_module.__name__, "TestClass [Identity(), 5, 0]")
+        expected = "TestClass [Identity(), 5, 0]"
+        self.assertEqual(test_module.__name__, expected)  # type: ignore
 
         test_module = TestClass(torch.nn.Identity(), 5)
-        self.assertEqual(test_module.__name__, "TestClass [Identity(), 5]")
+        expected = "TestClass [Identity(), 5]"
+        self.assertEqual(test_module.__name__, expected)  # type: ignore
