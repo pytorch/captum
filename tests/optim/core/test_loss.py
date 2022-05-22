@@ -57,8 +57,13 @@ class TestLayerActivation(BaseTest):
         expected = torch.as_tensor(
             [CHANNEL_ACTIVATION_0_LOSS, CHANNEL_ACTIVATION_1_LOSS]
         )
+        expected = expected[None, :, None, None]
 
-        assertTensorAlmostEqual(self, output, expected[None, :, None, None], delta=0.0)
+        if version.parse(torch.__version__) <= version.parse("1.6.0"):
+            delta = 1.0e-5
+        else:
+            delta = 0.0
+        assertTensorAlmostEqual(self, output, expected, delta=delta)
 
     def test_layer_activation_batch_index(self) -> None:
         model = torch.nn.Identity()
