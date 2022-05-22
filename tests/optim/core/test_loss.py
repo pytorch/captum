@@ -501,7 +501,7 @@ class TestCompositeLoss(BaseTest):
         model = BasicModel_ConvNet_Optim()
         loss = 10.0 / opt_loss.ChannelActivation(model.layer, 0)
         self.assertAlmostEqual(
-            get_loss_value(model, loss),
+            get_loss_value(model, loss).item(),
             10.0 / CHANNEL_ACTIVATION_0_LOSS,
             places=6,
         )
@@ -517,7 +517,7 @@ class TestCompositeLoss(BaseTest):
             model.layer, 1
         )
         self.assertAlmostEqual(
-            get_loss_value(model, loss),
+            get_loss_value(model, loss).item(),
             CHANNEL_ACTIVATION_0_LOSS**CHANNEL_ACTIVATION_0_LOSS,
             places=6,
         )
@@ -526,7 +526,7 @@ class TestCompositeLoss(BaseTest):
         model = BasicModel_ConvNet_Optim()
         loss = opt_loss.ChannelActivation(model.layer, 0) ** 2
         self.assertAlmostEqual(
-            get_loss_value(model, loss),
+            get_loss_value(model, loss).item(),
             CHANNEL_ACTIVATION_0_LOSS**2,
             places=6,
         )
@@ -540,7 +540,7 @@ class TestCompositeLoss(BaseTest):
         model = BasicModel_ConvNet_Optim()
         loss = 2.0 ** opt_loss.ChannelActivation(model.layer, 0)
         self.assertAlmostEqual(
-            get_loss_value(model, loss),
+            get_loss_value(model, loss).item(),
             2.0**CHANNEL_ACTIVATION_0_LOSS,
             places=6,
         )
