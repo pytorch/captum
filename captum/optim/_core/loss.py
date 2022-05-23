@@ -126,6 +126,8 @@ def module_op(
             return math_op(torch.mean(self(module)), torch.mean(other(module)))
 
         name = f"Compose({', '.join([self.__name__, other.__name__])})"
+
+        # ToDo: Refine logic for self.target handling
         target = (self.target if isinstance(self.target, list) else [self.target]) + (
             other.target if isinstance(other.target, list) else [other.target]
         )
