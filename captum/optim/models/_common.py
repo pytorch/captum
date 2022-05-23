@@ -255,6 +255,7 @@ def collect_activations(
     """
     if not isinstance(targets, list):
         targets = [targets]
+    targets = list(dict.fromkeys(targets))
     catch_activ = ActivationFetcher(model, targets)
     activ_dict = catch_activ(model_input)
     return activ_dict
