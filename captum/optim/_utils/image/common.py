@@ -90,10 +90,10 @@ def show(
             grid image. Default is set to None for no grid image creation.
             Default: None
         padding (int, optional): The amount of padding between images in the grid
-            images. This parameter only has an effect if nrow is not None.
+            images. This parameter only has an effect if `images_per_row` is not None.
             Default: 2
         pad_value (float, optional): The value to use for the padding. This parameter
-            only has an effect if nrow is not None.
+            only has an effect if `images_per_row` is not None.
             Default: 0.0
     """
 
@@ -140,10 +140,10 @@ def save_tensor_as_image(
             grid image. Default is set to None for no grid image creation.
             Default: None
         padding (int, optional): The amount of padding between images in the grid
-            images. This parameter only has an effect if `nrow` is not None.
+            images. This parameter only has an effect if `images_per_row` is not None.
             Default: 2
         pad_value (float, optional): The value to use for the padding. This parameter
-            only has an effect if `nrow` is not None.
+            only has an effect if `images_per_row` is not None.
             Default: 0.0
     """
 

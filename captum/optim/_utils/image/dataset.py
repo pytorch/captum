@@ -1,6 +1,7 @@
 from typing import cast
 
 import torch
+from packaging import version
 
 try:
     from tqdm.auto import tqdm
@@ -73,6 +74,15 @@ def dataset_cov_matrix(
     return cov_mtx
 
 
+# Handle older versions of PyTorch
+# Defined outside of function in order to support JIT
+_torch_norm = (
+    torch.linalg.norm
+    if version.parse(torch.__version__) >= version.parse("1.7.0")
+    else torch.norm
+)
+
+
 def cov_matrix_to_klt(
     cov_mtx: torch.Tensor, normalize: bool = False, epsilon: float = 1e-10
 ) -> torch.Tensor:
@@ -90,13 +100,10 @@ def cov_matrix_to_klt(
         *tensor*:  A KLT matrix for the specified covariance matrix.
     """
 
-    # Handle older versions of PyTorch
-    torch_norm = torch.linalg.norm if torch.__version__ >= "1.9.0" else torch.norm
-
     U, S, V = torch.svd(cov_mtx)
     svd_sqrt = U @ torch.diag(torch.sqrt(S + epsilon))
     if normalize:
-        svd_sqrt / torch.max(torch_norm(svd_sqrt, dim=0))
+        svd_sqrt / torch.max(_torch_norm(svd_sqrt, dim=0))
     return svd_sqrt
 
 
