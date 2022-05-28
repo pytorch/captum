@@ -718,6 +718,8 @@ class TestCompositeLoss(BaseTest):
         with self.assertRaises(TypeError):
             "string" ** opt_loss.ChannelActivation(model.layer, 0)  # type: ignore
 
+
+class TestSumLossList(BaseTest):
     def test_sum_loss_list(self) -> None:
         n_batch = 400
         model = torch.nn.Identity()
