@@ -1005,36 +1005,12 @@ class FacetLoss(BaseLoss):
         assert facet_weights.dim() == 4 or facet_weights.dim() == 2
         self.facet_weights = facet_weights
 
-    def _get_strength(self, batch: int, device: torch.device) -> torch.Tensor:
-        """
-        Calculate batch weighting.
-
-        Args:
-
-            batch (int): The size of the batch dimension to use.
-            device (torch.device): The device to use.
-
-        Returns:
-            strength_t (torch.Tensor): A tensor containing the weights to multiply the
-                different batch dimensions by.
-        """
-        if isinstance(self.strength, (tuple, list)):
-            strength_t = torch.linspace(
-                self.strength[0],
-                self.strength[1],
-                steps=batch,
-                device=device,
-            )
-        else:
-            strength_t = torch.ones([1], device=device) * self.strength
-        return strength_t[:, None, None, None]
-
     def __call__(self, targets_to_values: ModuleOutputMapping) -> torch.Tensor:
         activations_ultimate = targets_to_values[self.ultimate_target]
-        activations_ultimate = activations_ultimate
-        new_vec = _create_new_vector(activations_ultimate, self.vec)[
+        activations_ultimate = activations_ultimate[
             self.batch_index[0] : self.batch_index[1]
         ]
+        new_vec = _create_new_vector(activations_ultimate, self.vec)
         target_activations = targets_to_values[self.layer_target]
 
         layer_grad = torch.autograd.grad(
@@ -1042,15 +1018,23 @@ class FacetLoss(BaseLoss):
             inputs=target_activations,
             grad_outputs=torch.ones_like(new_vec),
             retain_graph=True,
-        )[0]
+        )[0].detach()[self.batch_index[0] : self.batch_index[1]]
         layer = target_activations[self.batch_index[0] : self.batch_index[1]]
 
-        flat_attr = layer * torch.nn.functional.relu(layer_grad.detach())
+        flat_attr = layer * torch.nn.functional.relu(layer_grad)
         if self.facet_weights.dim() == 2 and flat_attr.dim() == 4:
             flat_attr = torch.sum(flat_attr, dim=(2, 3))
 
         if self.strength:
-            strength_t = self._get_strength(new_vec.shape[0], flat_attr.device)
+            if isinstance(self.strength, (tuple, list)):
+                strength_t = torch.linspace(
+                    self.strength[0],
+                    self.strength[1],
+                    steps=flat_attr.shape[0],
+                    device=flat_attr.device,
+                ).reshape(flat_attr.shape[0], *[1] * (flat_attr.dim() - 1))
+            else:
+                strength_t = self.strength
             flat_attr = strength_t * flat_attr
         return torch.sum(flat_attr * self.facet_weights)
 
