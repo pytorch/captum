@@ -980,15 +980,16 @@ class FacetLoss(BaseLoss):
                 the model.
             layer_target (nn.Module): A layer that we have facet_weights for. This
                 target layer should be below the ultimate_target layer in the model.
+            facet_weights (torch.Tensor): Weighting that steers the objective
+                towards a particular theme or concept. These weight values should
+                come from linear probes trained on layer_target.
             strength (float, list of float, optional): A single float or list of floats
                 to use for batch dimension weighting. If using a single value, then it
                 will be applied to all batch dimensions equally. Otherwise a list of
                 floats with a shape of: [start, end] should be used for torch.linspace
                 to calculate the step values in between. Default is set to None for no
                 weighting.
-            facet_weights (torch.Tensor): Weighting that steers the objective
-                towards a particular theme or concept. These weight values should
-                come from linear probes trained on layer_target.
+                Default: None
             batch_index (int, optional): The index of the activations to optimize if
                 optimizing a batch of activations. If set to None, defaults to all
                 activations in the batch.
