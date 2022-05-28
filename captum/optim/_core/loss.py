@@ -1110,6 +1110,9 @@ __all__ = [
     "AngledNeuronDirection",
     "TensorDirection",
     "ActivationWeights",
+    "L2Mean",
+    "VectorLoss",
+    "FacetLoss",
     "sum_loss_list",
     "default_loss_summarize",
 ]
