@@ -1037,7 +1037,19 @@ class FacetLoss(BaseLoss):
             else:
                 strength_t = self.strength
             flat_attr = strength_t * flat_attr
-        return torch.sum(flat_attr * self.facet_weights)
+
+        if (
+            self.facet_weights.dim() == 4
+            and layer.dim() == 4
+            and self.facet_weights.shape[2:] != layer.shape[2:]
+        ):
+            facet_weights = torch.nn.functional.interpolate(
+                self.facet_weights, size=layer.shape[2:]
+            )
+        else:
+            facet_weights = self.facet_weights
+
+        return torch.sum(flat_attr * facet_weights)
 
 
 def sum_loss_list(
