@@ -10,6 +10,14 @@ from captum.optim._utils.typing import ModuleOutputMapping
 
 
 def _make_arg_str(arg: Any) -> str:
+    """
+    Args:
+
+        args (Any): A set of arguments to covert to a string.
+
+    Returns:
+        args (str): The args in str form.
+    """
     arg = str(arg)
     too_big = len(arg) > 15 or "\n" in arg
     return arg[:15] + "..." if too_big else arg
@@ -23,7 +31,7 @@ class Loss(ABC):
     """
 
     def __init__(self) -> None:
-        super(Loss, self).__init__()
+        super().__init__()
 
     @abstractproperty
     def target(self) -> Union[nn.Module, List[nn.Module]]:
@@ -105,10 +113,35 @@ def module_op(
 ) -> "CompositeLoss":
     """
     This is a general function for applying math operations to Losses
+
+    Args:
+
+        self (Loss): A Loss objective instance.
+        other (int, float, Loss, or None): The Loss objective instance or number to
+            use on the self Loss objective as part of a math operation. If math_op
+            is a unary operation, then other should be set to None.
+        math_op (Callable): A math operator to use on the Loss instance.
+
+    Returns:
+        loss (CompositeLoss): A CompositeLoss instance with the math operations
+            created by the specified arguments.
     """
     if other is None and math_op == operator.neg:
 
         def loss_fn(module: ModuleOutputMapping) -> torch.Tensor:
+            """
+            Pass collected activations through loss objective, and then apply a unary
+            math op.
+
+            Args:
+
+                module (ModuleOutputMapping): A dict of captured activations with
+                    nn.Modules as keys.
+
+                Returns:
+                    loss (torch.Tensor): The target activations after being run
+                        through the loss objective, and the unary math_op.
+            """
             return math_op(self(module))
 
         name = self.__name__
@@ -116,6 +149,19 @@ def module_op(
     elif isinstance(other, (int, float)):
 
         def loss_fn(module: ModuleOutputMapping) -> torch.Tensor:
+            """
+            Pass collected activations through the loss objective and then apply the
+            math operations with numbers.
+
+            Args:
+
+                module (ModuleOutputMapping): A dict of captured activations with
+                    nn.Modules as keys.
+
+                Returns:
+                    loss (torch.Tensor): The target activations after being run
+                        through the loss objective, and then the math_op with a number.
+            """
             return math_op(self(module), other)
 
         name = self.__name__
@@ -123,6 +169,19 @@ def module_op(
     elif isinstance(other, Loss):
         # We take the mean of the output tensor to resolve shape mismatches
         def loss_fn(module: ModuleOutputMapping) -> torch.Tensor:
+            """
+            Pass collected activations through the loss objectives and then combine the
+            outputs with a math operation.
+
+            Args:
+
+                module (ModuleOutputMapping): A dict of captured activations with
+                    nn.Modules as keys.
+
+                Returns:
+                    loss (torch.Tensor): The target activations after being run
+                        through the loss objectives, and then merged with the math_op.
+            """
             return math_op(torch.mean(self(module)), torch.mean(other(module)))
 
         name = f"Compose({', '.join([self.__name__, other.__name__])})"
@@ -143,7 +202,18 @@ class BaseLoss(Loss):
         target: Union[nn.Module, List[nn.Module]] = [],
         batch_index: Optional[Union[int, List[int]]] = None,
     ) -> None:
-        super(BaseLoss, self).__init__()
+        """
+        Args:
+
+            target (nn.Module or list of nn.module): A target nn.Module or list of
+                nn.Module.
+            batch_index (int or list of int, optional): The index or index range of
+                activations to optimize if optimizing a batch of activations. If set to
+                None, defaults to all activations in the batch. Index ranges should be
+                in the format of: [start, end].
+                Default: None
+        """
+        super().__init__()
         self._target = target
         if batch_index is None:
             self._batch_index = (None, None)
@@ -156,10 +226,20 @@ class BaseLoss(Loss):
 
     @property
     def target(self) -> Union[nn.Module, List[nn.Module]]:
+        """
+        Returns:
+            target (nn.Module or list of nn.Module): A target nn.Module or list of
+                nn.Module.
+        """
         return self._target
 
     @property
     def batch_index(self) -> Tuple:
+        """
+        Returns:
+            batch_index (tuple of int): A tuple of batch indices with a format
+                of: (start, end).
+        """
         return self._batch_index
 
 
@@ -170,11 +250,35 @@ class CompositeLoss(BaseLoss):
         name: str = "",
         target: Union[nn.Module, List[nn.Module]] = [],
     ) -> None:
-        super(CompositeLoss, self).__init__(target)
+        """
+        Args:
+
+            loss_fn (Callable): A function that takes a dict of captured activations
+                with nn.Modules as keys, and then passes those activations through loss
+                objective(s) & math operations.
+            name (str, optional): The name of all composable operations in the
+                instance.
+                Default: ""
+            target (nn.Module or list of nn.module): A target nn.Module or list of
+                nn.Module.
+        """
+        super().__init__(target)
         self.__name__ = name
         self.loss_fn = loss_fn
 
     def __call__(self, targets_to_values: ModuleOutputMapping) -> torch.Tensor:
+        """
+        Pass collected activations through the loss function.
+
+        Args:
+
+            module (ModuleOutputMapping): A dict of captured activations with
+                nn.Modules as keys.
+
+        Returns:
+            loss (torch.Tensor): The target activations after being run through the
+                loss function.
+        """
         return self.loss_fn(targets_to_values)
 
 
@@ -206,7 +310,7 @@ class LayerActivation(BaseLoss):
             instance to optimize the output of.
         batch_index (int or list of int, optional): The index or index range of
             activations to optimize if optimizing a batch of activations. If set to
-            None, defaults to all activations in the batch. index ranges should be
+            None, defaults to all activations in the batch. Index ranges should be
             in the format of: [start, end].
             Default: None
     """
@@ -239,7 +343,7 @@ class ChannelActivation(BaseLoss):
             channel_index (int): The index of the channel to optimize for.
             batch_index (int or list of int, optional): The index or index range of
                 activations to optimize if optimizing a batch of activations. If set to
-                None, defaults to all activations in the batch. index ranges should be
+                None, defaults to all activations in the batch. Index ranges should be
                 in the format of: [start, end].
                 Default: None
         """
@@ -292,7 +396,7 @@ class NeuronActivation(BaseLoss):
                 Default: None
             batch_index (int or list of int, optional): The index or index range of
                 activations to optimize if optimizing a batch of activations. If set to
-                None, defaults to all activations in the batch. index ranges should be
+                None, defaults to all activations in the batch. Index ranges should be
                 in the format of: [start, end].
                 Default: None
         """
@@ -333,7 +437,7 @@ class DeepDream(BaseLoss):
             instance to optimize the output of.
         batch_index (int or list of int, optional): The index or index range of
             activations to optimize if optimizing a batch of activations. If set to
-            None, defaults to all activations in the batch. index ranges should be
+            None, defaults to all activations in the batch. Index ranges should be
             in the format of: [start, end].
             Default: None
     """
@@ -360,7 +464,7 @@ class TotalVariation(BaseLoss):
             instance to optimize the output of.
         batch_index (int or list of int, optional): The index or index range of
             activations to optimize if optimizing a batch of activations. If set to
-            None, defaults to all activations in the batch. index ranges should be
+            None, defaults to all activations in the batch. Index ranges should be
             in the format of: [start, end].
             Default: None
     """
@@ -393,7 +497,7 @@ class L1(BaseLoss):
             constant (float): Constant threshold to deduct from the activations.
             batch_index (int or list of int, optional): The index or index range of
                 activations to optimize if optimizing a batch of activations. If set to
-                None, defaults to all activations in the batch. index ranges should be
+                None, defaults to all activations in the batch. Index ranges should be
                 in the format of: [start, end].
                 Default: None
         """
@@ -430,7 +534,7 @@ class L2(BaseLoss):
                 Default: 1e-6
             batch_index (int or list of int, optional): The index or index range of
                 activations to optimize if optimizing a batch of activations. If set to
-                None, defaults to all activations in the batch. index ranges should be
+                None, defaults to all activations in the batch. Index ranges should be
                 in the format of: [start, end].
                 Default: None
         """
@@ -461,7 +565,7 @@ class Diversity(BaseLoss):
         target (nn.Module): A target layer, transform, or image parameterization
             instance to optimize the output of.
         batch_index (list of int, optional): The index range of activations to
-            optimize. If set to None, defaults to all activations in the batch. index
+            optimize. If set to None, defaults to all activations in the batch. Index
             ranges should be in the format of: [start, end].
             Default: None
     """
@@ -579,7 +683,7 @@ class Alignment(BaseLoss):
                 Default: 2.0
             batch_index (list of int, optional): The index range of activations to
                 optimize. If set to None, defaults to all activations in the batch.
-                index ranges should be in the format of: [start, end].
+                Index ranges should be in the format of: [start, end].
                 Default: None
         """
         if batch_index:
@@ -730,7 +834,7 @@ class AngledNeuronDirection(BaseLoss):
     More information on the algorithm this objective uses can be found here:
     https://github.com/tensorflow/lucid/issues/116
 
-    This Lucid equivalents of this loss function can be found here:
+    This Lucid equivalents of this loss objective can be found here:
     https://github.com/tensorflow/lucid/blob/master/notebooks/
     activation-atlas/activation-atlas-simple.ipynb
     https://github.com/tensorflow/lucid/blob/master/notebooks/
@@ -775,6 +879,10 @@ class AngledNeuronDirection(BaseLoss):
             eps (float, optional): If cossim_pow is greater than zero, the desired
                 epsilon value to use for cosine similarity calculations.
                 Default: 1.0e-4
+            batch_index (int, optional): The index of activations to optimize if
+                optimizing a batch of activations. If set to None, defaults to all
+                activations in the batch.
+                Default: None
         """
         BaseLoss.__init__(self, target, batch_index)
         self.vec = vec.unsqueeze(0) if vec.dim() == 1 else vec
@@ -948,22 +1056,22 @@ def sum_loss_list(
 ) -> CompositeLoss:
     """
     Summarize a large number of losses without recursion errors. By default using 300+
-    loss functions for a single optimization task will result in exceeding Python's
+    loss objectives for a single optimization task will result in exceeding Python's
     default maximum recursion depth limit. This function can be used to avoid the
-    recursion depth limit for tasks such as summarizing a large list of loss functions
+    recursion depth limit for tasks such as summarizing a large list of loss objectives
     with the built-in sum() function.
 
     This function works similar to Lucid's optvis.objectives.Objective.sum() function.
 
     Args:
 
-        loss_list (list): A list of loss function objectives.
-        to_scalar_fn (Callable): A function for converting loss function outputs to
+        loss_list (list): A list of loss objectives.
+        to_scalar_fn (Callable): A function for converting loss objective outputs to
             scalar values, in order to prevent size mismatches.
             Default: torch.mean
 
     Returns:
-        loss_fn (CompositeLoss): A composite loss function containing all the loss
+        loss_fn (CompositeLoss): A CompositeLoss instance containing all the loss
             functions from `loss_list`.
     """
 
@@ -985,11 +1093,18 @@ def sum_loss_list(
 
 def default_loss_summarize(loss_value: torch.Tensor) -> torch.Tensor:
     """
-    Helper function to summarize tensor outputs from loss functions.
+    Helper function to summarize tensor outputs from loss objectives.
 
     default_loss_summarize applies `mean` to the loss tensor
     and negates it so that optimizing it maximizes the activations we
     are interested in.
+
+    Args:
+
+        loss_value (torch.Tensor): A tensor containing the loss values.
+
+    Returns:
+        loss_value (torch.Tensor): The loss_value's mean multiplied by -1.
     """
     return -1 * loss_value.mean()
 
