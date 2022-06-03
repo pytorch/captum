@@ -2050,6 +2050,7 @@ class TestCLIPTokenizer(BaseTest):
         self.assertIsNone(clip_tokenizer._num_merges)
         self.assertEqual(clip_tokenizer.padding_value, 0)
         self.assertFalse(clip_tokenizer.truncate)
+        self.assertIsNone(clip_tokenizer.preprocessing_module)
 
         file_path = path.join(
             torch.hub.get_dir(), "vocab", "clip_bpe_simple_vocab_48895.txt"
