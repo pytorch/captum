@@ -1346,7 +1346,7 @@ class CLIPTokenizer(torch.nn.Module):
         num_merges: Optional[int] = None,
         padding_value: int = 0,
         truncate: bool = False,
-        preprocessing_module: Optional[Callable] = None,
+        preprocessing_module: Optional[Callable[[List[str]], List[str]]] = None,
     ) -> None:
         """
         Args:
