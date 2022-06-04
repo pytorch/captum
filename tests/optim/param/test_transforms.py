@@ -1582,11 +1582,16 @@ class TestGaussianSmoothing(BaseTest):
         sigma = 2.0
         dim = 1
         smoothening_module = transforms.GaussianSmoothing(
-            channels, kernel_size, sigma, dim
+            channels,
+            kernel_size,
+            sigma,
+            dim,
+            use_same_padding=False,
         )
         self.assertEqual(smoothening_module.groups, channels)
         weight = torch.tensor([[0.3192, 0.3617, 0.3192]]).repeat(6, 1, 1)
         assertTensorAlmostEqual(self, smoothening_module.weight, weight, 0.001)
+        self.assertFalse(smoothening_module.padding)
 
     def test_gaussian_smoothing_init_2d(self) -> None:
         channels = 3
@@ -1594,7 +1599,11 @@ class TestGaussianSmoothing(BaseTest):
         sigma = 2.0
         dim = 2
         smoothening_module = transforms.GaussianSmoothing(
-            channels, kernel_size, sigma, dim
+            channels,
+            kernel_size,
+            sigma,
+            dim,
+            use_same_padding=False,
         )
         self.assertEqual(smoothening_module.groups, channels)
         weight = torch.tensor(
@@ -1614,7 +1623,11 @@ class TestGaussianSmoothing(BaseTest):
         sigma = 1.021
         dim = 3
         smoothening_module = transforms.GaussianSmoothing(
-            channels, kernel_size, sigma, dim
+            channels,
+            kernel_size,
+            sigma,
+            dim,
+            use_same_padding=False,
         )
         self.assertEqual(smoothening_module.groups, channels)
         weight = torch.tensor(
@@ -1654,7 +1667,11 @@ class TestGaussianSmoothing(BaseTest):
         sigma = 2.0
         dim = 1
         smoothening_module = transforms.GaussianSmoothing(
-            channels, kernel_size, sigma, dim
+            channels,
+            kernel_size,
+            sigma,
+            dim,
+            use_same_padding=False,
         )
 
         test_tensor = torch.tensor([1.0, 5.0]).repeat(6, 2).unsqueeze(0)
@@ -1671,7 +1688,11 @@ class TestGaussianSmoothing(BaseTest):
         sigma = 2.0
         dim = 2
         smoothening_module = transforms.GaussianSmoothing(
-            channels, kernel_size, sigma, dim
+            channels,
+            kernel_size,
+            sigma,
+            dim,
+            use_same_padding=False,
         )
 
         test_tensor = torch.tensor([1.0, 5.0]).repeat(3, 6, 3).unsqueeze(0)
@@ -1688,7 +1709,11 @@ class TestGaussianSmoothing(BaseTest):
         sigma = 1.021
         dim = 3
         smoothening_module = transforms.GaussianSmoothing(
-            channels, kernel_size, sigma, dim
+            channels,
+            kernel_size,
+            sigma,
+            dim,
+            use_same_padding=False,
         )
 
         test_tensor = torch.tensor([1.0, 5.0, 1.0]).repeat(4, 6, 6, 2).unsqueeze(0)
@@ -1712,7 +1737,11 @@ class TestGaussianSmoothing(BaseTest):
         sigma = 2.0
         dim = 2
         smoothening_module = transforms.GaussianSmoothing(
-            channels, kernel_size, sigma, dim
+            channels,
+            kernel_size,
+            sigma,
+            dim,
+            use_same_padding=False,
         )
         jit_smoothening_module = torch.jit.script(smoothening_module)
 

@@ -979,7 +979,7 @@ class GaussianSmoothing(nn.Module):
     in the input using a depthwise convolution.
     """
 
-    __constants__ = ["groups"]
+    __constants__ = ["groups", "padding"]
 
     def __init__(
         self,
@@ -987,6 +987,7 @@ class GaussianSmoothing(nn.Module):
         kernel_size: Union[int, Sequence[int]],
         sigma: Union[float, Sequence[float]],
         dim: int = 2,
+        use_same_padding: bool = True,
     ) -> None:
         """
         Args:
@@ -997,6 +998,9 @@ class GaussianSmoothing(nn.Module):
             sigma (float, sequence): Standard deviation of the gaussian kernel.
             dim (int, optional): The number of dimensions of the data.
                 Default value is 2 (spatial).
+            use_same_padding (bool, optional): Whether or not to use "same" padding so
+                that the output shape is the same as the input shape.
+                Default: True
         """
         super().__init__()
         if isinstance(kernel_size, numbers.Number):
@@ -1027,6 +1031,7 @@ class GaussianSmoothing(nn.Module):
 
         self.register_buffer("weight", kernel)
         self.groups = channels
+        self.padding = "same" if use_same_padding else 0
 
         if dim == 1:
             self.conv = F.conv1d
@@ -1050,7 +1055,9 @@ class GaussianSmoothing(nn.Module):
         Returns:
             **filtered** (torch.Tensor): Filtered output.
         """
-        return self.conv(input, weight=self.weight, groups=self.groups)
+        return self.conv(
+            input, weight=self.weight, groups=self.groups, padding=self.padding
+        )
 
 
 class SymmetricPadding(torch.autograd.Function):

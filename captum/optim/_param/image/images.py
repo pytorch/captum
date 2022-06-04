@@ -1,4 +1,3 @@
-from copy import deepcopy
 from types import MethodType
 from typing import Callable, List, Optional, Tuple, Type, Union
 
@@ -374,22 +373,24 @@ class PixelImage(ImageParameterization):
 
 class LaplacianImage(ImageParameterization):
     """
-    TODO: Fix divison by 6 in setup_input when init is not None.
     Parameterize an image tensor with a laplacian pyramid.
     """
 
     def __init__(
         self,
-        size: Tuple[int, int] = None,
+        size: Tuple[int, int] = (224, 225),
         channels: int = 3,
         batch: int = 1,
         init: Optional[torch.Tensor] = None,
+        power: float = 0.1,
+        scale_list: List[float] = [1.0, 2.0, 4.0, 8.0, 16.0, 32.0],
     ) -> None:
         """
         Args:
 
             size (Tuple[int, int]): The height & width dimensions to use for the
                 parameterized output image tensor.
+                Default: (224, 224)
             channels (int, optional): The number of channels to use for each image.
                 Default: 3
             batch (int, optional): The number of images to stack along the batch
@@ -398,72 +399,56 @@ class LaplacianImage(ImageParameterization):
             init (torch.tensor, optional): Optionally specify a tensor to
                 use instead of creating one.
                 Default: None
+            power (float, optional): The desired power value to use.
+                Default: 0.1
+            scale_list (list of float, optional): The desired list of scale values to
+                use in the laplacian pyramid. The height & width dimensions specified
+                in size or used in the init tensor should be divisable by every scale
+                value in the scale list with no remainder left over. The default
+                scale_list values are set to work with a size of (224, 224).
+                Default: [1.0, 2.0, 4.0, 8.0, 16.0, 32.0]
         """
         super().__init__()
-        power = 0.1
-
-        if init is None:
-            tensor_params, self.scaler = self._setup_input(size, channels, power, init)
-
-            self.tensor_params = torch.nn.ModuleList(
-                [deepcopy(tensor_params) for b in range(batch)]
-            )
-        else:
+        if init is not None:
+            assert init.dim() in [3, 4]
             init = init.unsqueeze(0) if init.dim() == 3 else init
-            P = []
-            for b in range(init.size(0)):
-                tensor_params, self.scaler = self._setup_input(
-                    size, channels, power, init[b].unsqueeze(0)
-                )
-                P.append(tensor_params)
-            self.tensor_params = torch.nn.ModuleList(P)
+            size = list(init.shape[2:])
 
-    def _setup_input(
-        self,
-        size: Tuple[int, int],
-        channels: int,
-        power: float = 0.1,
-        init: Optional[torch.Tensor] = None,
-    ) -> Tuple[List[torch.Tensor], List[torch.nn.Upsample]]:
         tensor_params, scaler = [], []
-        scale_list = [1, 2, 4, 8, 16, 32]
         for scale in scale_list:
+            assert size[0] % scale == 0 and size[1] % scale == 0, (
+                "The chosen image height & width dimensions"
+                + " must be divisable by all scale values "
+                + " with no remainder left over."
+            )
+
             h, w = int(size[0] // scale), int(size[1] // scale)
             if init is None:
-                x = torch.randn([1, channels, h, w]) / 10
+                x = torch.randn([batch, channels, h, w]) / 10
             else:
                 x = F.interpolate(init.clone(), size=(h, w), mode="bilinear")
-                x = x / 6  # Prevents output from being all white
+                x = x / 10
             upsample = torch.nn.Upsample(scale_factor=scale, mode="nearest")
-            x = x * (scale**power) / (32**power)
+            x = x * (scale**power) / (max(scale_list) ** power)
             x = torch.nn.Parameter(x)
             tensor_params.append(x)
             scaler.append(upsample)
-        tensor_params = torch.nn.ParameterList(tensor_params)
-        return tensor_params, scaler
-
-    def _create_tensor(self, params_list: torch.nn.ParameterList) -> torch.Tensor:
-        """
-        Resize tensor parameters to the target size.
-
-        Args:
-
-            params_list (torch.nn.ParameterList): List of tensors to resize.
-
-        Returns:
-            **tensor** (torch.Tensor): The sum of all tensor parameters.
-        """
-        A: List[torch.Tensor] = []
-        for xi, upsamplei in zip(params_list, self.scaler):
-            A.append(upsamplei(xi))
-        return torch.sum(torch.cat(A), 0) + 0.5
+        self.tensor_params = torch.nn.ParameterList(tensor_params)
+        self.scaler = scaler
 
     def forward(self) -> torch.Tensor:
-        A: List[torch.Tensor] = []
-        for params_list in self.tensor_params:
-            tensor = self._create_tensor(params_list)
-            A.append(tensor)
-        return torch.stack(A).refine_names("B", "C", "H", "W")
+        """
+        Returns:
+            **output** (torch.tensor): A tensor created from a laplacian pyramid.
+        """
+        A = []
+        for xi, upsamplei in zip(self.tensor_params, self.scaler):
+            A.append(upsamplei(xi))
+        output = sum(A) + 0.5
+
+        if torch.jit.is_scripting():
+            return output
+        return output.refine_names("B", "C", "H", "W")
 
 
 class SimpleTensorParameterization(ImageParameterization):

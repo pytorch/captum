@@ -384,20 +384,54 @@ class TestLaplacianImage(BaseTest):
     def test_laplacianimage_random_forward(self) -> None:
         size = (224, 224)
         channels = 3
-        image_param = images.LaplacianImage(size=size, channels=channels)
+        batch = 1
+        image_param = images.LaplacianImage(size=size, channels=channels, batch=batch)
         test_tensor = image_param.forward().rename(None)
+        self.assertEqual(list(test_tensor.shape), [batch, channels, size[0], size[1]])
+        self.assertTrue(test_tensor.requires_grad)
 
-        self.assertEqual(test_tensor.dim(), 4)
-        self.assertEqual(test_tensor.size(0), 1)
-        self.assertEqual(test_tensor.size(1), channels)
-        self.assertEqual(test_tensor.size(2), size[0])
-        self.assertEqual(test_tensor.size(3), size[1])
+    def test_laplacianimage_random_forward_batch_5(self) -> None:
+        size = (224, 224)
+        channels = 3
+        batch = 5
+        image_param = images.LaplacianImage(size=size, channels=channels, batch=batch)
+        test_tensor = image_param.forward().rename(None)
+        self.assertEqual(list(test_tensor.shape), [batch, channels, size[0], size[1]])
 
-    def test_laplacianimage_init(self) -> None:
-        init_t = torch.zeros(1, 224, 224)
-        image_param = images.LaplacianImage(size=(224, 224), channels=3, init=init_t)
+    def test_laplacianimage_random_forward_scale_list(self) -> None:
+        size = (224, 224)
+        channels = 3
+        batch = 1
+        scale_list = [1.0, 2.0, 4.0, 8.0, 16.0, 32.0, 56.0, 112.0]
+        image_param = images.LaplacianImage(
+            size=size, channels=channels, batch=batch, scale_list=scale_list
+        )
+        test_tensor = image_param.forward().rename(None)
+        self.assertEqual(list(test_tensor.shape), [batch, channels, size[0], size[1]])
+
+    def test_laplacianimage_random_forward_scale_list_error(self) -> None:
+        scale_list = [1.0, 2.0, 4.0, 8.0, 16.0, 64.0, 144.0]
+        with self.assertRaises(AssertionError):
+            images.LaplacianImage(
+                size=(224, 224), channels=3, batch=1, scale_list=scale_list
+            )
+
+    def test_laplacianimage_init_tensor(self) -> None:
+        init_tensor = torch.zeros(1, 3, 224, 224)
+        image_param = images.LaplacianImage(init=init_tensor)
         output = image_param.forward().detach().rename(None)
         assertTensorAlmostEqual(self, torch.ones_like(output) * 0.5, output, mode="max")
+
+    def test_laplacianimage_random_forward_cuda(self) -> None:
+        if not torch.cuda.is_available():
+            raise unittest.SkipTest(
+                "Skipping LaplacianImage CUDA test due to not supporting CUDA."
+            )
+        image_param = images.LaplacianImage(size=(224, 224), channels=3, batch=1).cuda()
+        test_tensor = image_param.forward().rename(None)
+        self.assertTrue(test_tensor.is_cuda)
+        self.assertEqual(list(test_tensor.shape), [1, 3, 224, 224])
+        self.assertTrue(test_tensor.requires_grad)
 
 
 class TestSimpleTensorParameterization(BaseTest):
