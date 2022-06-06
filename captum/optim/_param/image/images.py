@@ -798,24 +798,37 @@ class NaturalImage(ImageParameterization):
         Args:
 
             size (Tuple[int, int], optional): The height and width to use for the
-                nn.Parameter image tensor.
+                nn.Parameter image tensor. This parameter is not used if
+                parameterization is an instance.
                 Default: (224, 224)
             channels (int, optional): The number of channels to use when creating the
-                nn.Parameter tensor.
+                nn.Parameter tensor. This parameter is not used if parameterization is
+                an instance.
                 Default: 3
             batch (int, optional): The number of channels to use when creating the
-                nn.Parameter tensor, or stacking init images.
+                nn.Parameter tensor, or stacking init images. This parameter is not
+                used if parameterization is an instance.
                 Default: 1
+            init (torch.tensor, optional): Optionally specify a tensor to use instead
+                of creating one from random noise. This parameter is not used if
+                parameterization is an instance. Set to None for random init.
+                Default: None
             parameterization (ImageParameterization, optional): An image
                 parameterization class, or instance of an image parameterization class.
                 Default: FFTImage
             squash_func (Callable[[torch.Tensor], torch.Tensor]], optional): The squash
-                function to use after color recorrelation. A funtion or lambda function.
+                function to use after color recorrelation. A function, lambda function,
+                or callable class instance.
                 Default: None
-            decorrelation_module (nn.Module, optional): A ToRGB instance.
+            decorrelation_module (nn.Module, optional): A module instance that
+                recorrelates the colors of an input image. Custom modules can make use
+                of the decorrelate_init parameter by having a second inverse parameter
+                in their forward functions that performs the inverse operation when it
+                is set to True. Set to None for no recorrelation.
                 Default: ToRGB
             decorrelate_init (bool, optional): Whether or not to apply color
-                decorrelation to the init tensor input.
+                decorrelation to the init tensor input. This parameter is not used if
+                parameterization is an instance or if init is None.
                 Default: True
         """
         super().__init__()
@@ -836,20 +849,12 @@ class NaturalImage(ImageParameterization):
                 )
                 init = self.decorrelate(init, inverse=True).rename(None)
 
-            if squash_func is None:
-                squash_func = self._clamp_image
-
         self.squash_func = torch.sigmoid if squash_func is None else squash_func
         if not isinstance(parameterization, ImageParameterization):
             parameterization = parameterization(
                 size=size, channels=channels, batch=batch, init=init
             )
         self.parameterization = parameterization
-
-    @torch.jit.export
-    def _clamp_image(self, x: torch.Tensor) -> torch.Tensor:
-        """JIT supported squash function."""
-        return x.clamp(0, 1)
 
     @torch.jit.ignore
     def _to_image_tensor(self, x: torch.Tensor) -> torch.Tensor:

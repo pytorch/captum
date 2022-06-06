@@ -1105,11 +1105,19 @@ class TestNaturalImage(BaseTest):
         self.assertIsInstance(image_param.decorrelate, ToRGB)
         self.assertEqual(image_param.squash_func, torch.sigmoid)
 
-    def test_natural_image_init_func_default_init_tensor(self) -> None:
-        image_param = images.NaturalImage(init=torch.ones(1, 3, 1, 1))
+    def test_natural_image_custom_squash_func(self) -> None:
+        init_tensor = torch.randn(1, 3, 1, 1)
+
+        def clamp_image(x: torch.Tensor) -> torch.Tensor:
+            return x.clamp(0, 1)
+
+        image_param = images.NaturalImage(init=init_tensor, squash_func=clamp_image)
+        image = image_param.forward().detach()
+
         self.assertIsInstance(image_param.parameterization, images.FFTImage)
         self.assertIsInstance(image_param.decorrelate, ToRGB)
-        self.assertEqual(image_param.squash_func, image_param._clamp_image)
+        self.assertEqual(image_param.squash_func, clamp_image)
+        assertTensorAlmostEqual(self, image, init_tensor.clamp(0, 1))
 
     def test_natural_image_init_tensor_pixelimage_sf_sigmoid(self) -> None:
         if version.parse(torch.__version__) <= version.parse("1.8.0"):
@@ -1137,9 +1145,10 @@ class TestNaturalImage(BaseTest):
         )
 
     def test_natural_image_1(self) -> None:
-        image_param = images.NaturalImage(init=torch.ones(3, 1, 1))
+        init_tensor = torch.ones(3, 1, 1)
+        image_param = images.NaturalImage(init=init_tensor)
         image = image_param.forward().detach()
-        assertTensorAlmostEqual(self, image, torch.ones_like(image), mode="max")
+        assertTensorAlmostEqual(self, image, torch.sigmoid(init_tensor).unsqueeze(0))
 
     def test_natural_image_cuda(self) -> None:
         if not torch.cuda.is_available():
@@ -1166,10 +1175,11 @@ class TestNaturalImage(BaseTest):
                 "Skipping NaturalImage init tensor JIT module test due to"
                 + " insufficient Torch version."
             )
-        image_param = images.NaturalImage(init=torch.ones(1, 3, 1, 1))
+        init_tensor = torch.ones(1, 3, 1, 1)
+        image_param = images.NaturalImage(init=init_tensor)
         jit_image_param = torch.jit.script(image_param)
         output_tensor = jit_image_param()
-        assertTensorAlmostEqual(self, output_tensor, torch.ones_like(output_tensor))
+        assertTensorAlmostEqual(self, output_tensor, torch.sigmoid(init_tensor))
 
     def test_natural_image_jit_module_init_tensor_pixelimage(self) -> None:
         if version.parse(torch.__version__) <= version.parse("1.8.0"):
@@ -1177,12 +1187,13 @@ class TestNaturalImage(BaseTest):
                 "Skipping NaturalImage PixelImage init tensor JIT module"
                 + " test due to insufficient Torch version."
             )
+        init_tensor = torch.ones(1, 3, 1, 1)
         image_param = images.NaturalImage(
-            init=torch.ones(1, 3, 1, 1), parameterization=images.PixelImage
+            init=init_tensor, parameterization=images.PixelImage
         )
         jit_image_param = torch.jit.script(image_param)
         output_tensor = jit_image_param()
-        assertTensorAlmostEqual(self, output_tensor, torch.ones_like(output_tensor))
+        assertTensorAlmostEqual(self, output_tensor, torch.sigmoid(init_tensor))
 
     def test_natural_image_decorrelation_module_none(self) -> None:
         if version.parse(torch.__version__) <= version.parse("1.8.0"):
@@ -1190,9 +1201,8 @@ class TestNaturalImage(BaseTest):
                 "Skipping NaturalImage no decorrelation module"
                 + " test due to insufficient Torch version."
             )
-        image_param = images.NaturalImage(
-            init=torch.ones(1, 3, 4, 4), decorrelation_module=None
-        )
+        init_tensor = torch.ones(1, 3, 1, 1)
+        image_param = images.NaturalImage(init=init_tensor, decorrelation_module=None)
         image = image_param.forward().detach()
         self.assertIsNone(image_param.decorrelate)
-        assertTensorAlmostEqual(self, image, torch.ones_like(image))
+        assertTensorAlmostEqual(self, image, torch.sigmoid(init_tensor))
