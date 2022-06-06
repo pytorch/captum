@@ -17,9 +17,6 @@ from captum._utils.typing import (
     TensorOrTupleOfTensorsGeneric,
     TupleOrTensorOrBoolGeneric,
 )
-from torch import device, Tensor
-from torch.nn import Module
-
 
 class ExpansionTypes(Enum):
     repeat = 1

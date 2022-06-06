@@ -128,7 +128,6 @@ class SampleGradientWrapper:
         module_output: Union[Tensor, Tuple[Tensor, ...]],
     ) -> None:
         inp_tuple = _format_tensor_into_tuples(module_input)
-
         self.activation_dict[module].append(inp_tuple[0].clone().detach())
 
     def _backward_hook_fn(
@@ -167,7 +166,6 @@ class SampleGradientWrapper:
 
         for module in self.gradient_dict:
             sample_grad_fn = SUPPORTED_MODULES[type(module)]
-
             activations = self.activation_dict[module]
             gradients = self.gradient_dict[module]
             assert len(activations) == len(gradients), (
