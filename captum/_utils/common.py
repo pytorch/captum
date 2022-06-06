@@ -17,6 +17,7 @@ from captum._utils.typing import (
 from torch import device, Tensor
 from torch.nn import Module
 
+
 class ExpansionTypes(Enum):
     repeat = 1
     repeat_interleave = 2
