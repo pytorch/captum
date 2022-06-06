@@ -718,7 +718,7 @@ def _basic_computation_tracincp_fast(
 
     def hook_wrapper(original_module):
         def _capture_inputs(layer, input, output) -> None:
-            r"""Save activations into layer.activations in forward pass"""
+            r"""Save activations into layer_inputs in forward pass"""
             with lock:
                 is_eval_tuple = isinstance(input, tuple)
                 if is_eval_tuple:
