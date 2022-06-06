@@ -3,7 +3,7 @@
 import threading
 import warnings
 from collections import defaultdict
-from typing import Any, Callable, Iterator, List, Optional, Tuple, Union
+from typing import Any, Callable, Dict, Iterator, List, Optional, Tuple, Union
 
 import torch
 from captum._utils.common import (
@@ -34,7 +34,7 @@ from captum.influence._utils.nearest_neighbors import (
     NearestNeighbors,
 )
 from captum.log import log_usage
-from torch import Tensor
+from torch import device, Tensor
 from torch.nn import Module
 from torch.utils.data import DataLoader, Dataset
 
@@ -713,7 +713,7 @@ def _basic_computation_tracincp_fast(
         targets (tensor): If computing influence scores on a loss function,
                 these are the labels corresponding to the batch `inputs`.
     """
-    layer_inputs = defaultdict(dict)
+    layer_inputs: Dict[Module, Dict[device, Tuple[Tensor, ...]]] = defaultdict(dict)
     lock = threading.Lock()
 
     def hook_wrapper(original_module):
