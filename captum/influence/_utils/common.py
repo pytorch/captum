@@ -6,8 +6,6 @@ from typing import Any, Callable, List, Optional, Tuple, Union
 import torch
 import torch.nn as nn
 from captum._utils.progress import progress
-from torch import Tensor
-from torch.nn import Module
 from torch.utils.data import DataLoader, Dataset
 
 
@@ -155,8 +153,6 @@ def _load_flexible_state_dict(model: Module, path: str) -> int:
 
     The module state_dict is modified in-place, and the learning rate is returned.
     """
-
-    # device_ids = model.device_ids if (hasattr(model, "device_ids") and model.device_ids is not None) else torch.device("cpu")
 
     checkpoint = torch.load(path)  # , map_location=device_ids)
 

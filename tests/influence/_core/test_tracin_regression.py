@@ -31,21 +31,18 @@ class TestTracInRegression(BaseTest):
         dataset = RangeDataset(low, high, features, use_gpu)
         net = CoefficientNet(in_features=features)
 
-        net = wrap_model_in_dataparallel(net) if use_gpu else net
         checkpoint_name = "-".join(["checkpoint-reg", "0" + ".pt"])
         torch.save(net.state_dict(), os.path.join(tmpdir, checkpoint_name))
 
         weights = [0.4379, 0.1653, 0.5132, 0.3651, 0.9992]
 
         for i, weight in enumerate(weights):
-            if use_gpu:
-                net.module.fc1.weight.data.fill_(weight)
-            else:
-                net.fc1.weight.data.fill_(weight)
+            net.fc1.weight.data.fill_(weight)
+            net_adjusted = wrap_model_in_dataparallel(net) if use_gpu else net
             checkpoint_name = "-".join(["checkpoint-reg", str(i + 1) + ".pt"])
-            torch.save(net.state_dict(), os.path.join(tmpdir, checkpoint_name))
+            torch.save(net_adjusted.state_dict(), os.path.join(tmpdir, checkpoint_name))
 
-        return dataset, net
+        return dataset, net_adjusted
 
     @parameterized.expand(
         [

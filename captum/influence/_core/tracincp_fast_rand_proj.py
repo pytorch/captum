@@ -14,7 +14,7 @@ from captum._utils.common import (
 )
 from captum._utils.progress import progress
 from captum._utils.gradient import _extract_device_ids, _gather_distributed_tensors
->>>>>>> Stashed changes
+
 from captum.influence._core.tracincp import (
     _influence_route_to_helpers,
     KMostInfluentialResults,
