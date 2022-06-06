@@ -8,6 +8,8 @@ import torch.nn as nn
 from captum._utils.progress import progress
 from torch.utils.data import DataLoader, Dataset
 
+from torch import Tensor
+from torch.nn import Module
 
 def _tensor_batch_dot(t1: Tensor, t2: Tensor) -> Tensor:
     r"""
@@ -48,6 +50,7 @@ def _gradient_dot_product(
     """
 
     assert len(input_grads) == len(src_grads), "Mismatching gradient parameters."
+
     iterator = zip(input_grads, src_grads)
     total = _tensor_batch_dot(*next(iterator))
     for input_grad, src_grad in iterator:
@@ -154,7 +157,7 @@ def _load_flexible_state_dict(model: Module, path: str) -> int:
     The module state_dict is modified in-place, and the learning rate is returned.
     """
 
-    checkpoint = torch.load(path)  # , map_location=device_ids)
+    checkpoint = torch.load(path)
 
     learning_rate = checkpoint.get("learning_rate", 1)
     # can get learning rate from optimizer state_dict?
