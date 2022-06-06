@@ -797,7 +797,6 @@ class TracInCP(TracInCPBase):
                 inputs,
                 targets,
             )
-
             return (
                 _gradient_dot_product(
                     input_jacobians,

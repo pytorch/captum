@@ -27,7 +27,7 @@ class TestTracInGetKMostInfluential(BaseTest):
 
     @parameterized.expand(
         [
-            (reduction, constr, unpack_inputs, proponents, batch_size, k)
+            (reduction, constr, unpack_inputs, proponents, batch_size, k, use_gpu)
             # calls test helper method `test_tracin_get_k_most_influential` for several
             # combinations of `batch_size` and `k`.  This is important because the
             # behavior of `_get_k_most_influential` depends on whether `k` is larger
@@ -35,6 +35,7 @@ class TestTracInGetKMostInfluential(BaseTest):
             for (batch_size, k) in [(4, 7), (7, 4), (40, 5), (5, 40), (40, 45)]
             for unpack_inputs in [True, False]
             for proponents in [True, False]
+            for use_gpu in [True, False]
             for reduction, constr in [
                 ("none", DataInfluenceConstructor(TracInCP)),
                 (
@@ -61,6 +62,7 @@ class TestTracInGetKMostInfluential(BaseTest):
         proponents: bool,
         batch_size: int,
         k: int,
+        use_gpu: bool,
     ) -> None:
 
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -70,7 +72,16 @@ class TestTracInGetKMostInfluential(BaseTest):
                 train_dataset,
                 test_samples,
                 test_labels,
-            ) = get_random_model_and_data(tmpdir, unpack_inputs, return_test_data=True)
+            ) = get_random_model_and_data(
+                tmpdir,
+                unpack_inputs,
+                True,
+                use_gpu
+                and not (
+                    "sample_wise_grads_per_batch" in tracin_constructor.kwargs
+                    and tracin_constructor.kwargs["sample_wise_grads_per_batch"]
+                ),
+            )
 
             self.assertTrue(isinstance(reduction, str))
             self.assertTrue(callable(tracin_constructor))

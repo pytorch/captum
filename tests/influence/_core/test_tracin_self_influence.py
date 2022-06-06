@@ -18,8 +18,9 @@ from torch.utils.data import DataLoader
 class TestTracInSelfInfluence(BaseTest):
     @parameterized.expand(
         [
-            (reduction, constructor, unpack_inputs)
+            (reduction, constructor, unpack_inputs, use_gpu)
             for unpack_inputs in [True, False]
+            for use_gpu in [True, False]
             for (reduction, constructor) in [
                 ("none", DataInfluenceConstructor(TracInCP)),
                 (
@@ -37,13 +38,24 @@ class TestTracInSelfInfluence(BaseTest):
         name_func=build_test_name_func(),
     )
     def test_tracin_self_influence(
-        self, reduction: str, tracin_constructor: Callable, unpack_inputs: bool
+        self,
+        reduction: str,
+        tracin_constructor: Callable,
+        unpack_inputs: bool,
+        use_gpu: bool,
     ) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
-            (
-                net,
-                train_dataset,
-            ) = get_random_model_and_data(tmpdir, unpack_inputs, return_test_data=False)
+            print(tracin_constructor)
+            (net, train_dataset,) = get_random_model_and_data(
+                tmpdir,
+                unpack_inputs,
+                False,
+                use_gpu
+                and not (
+                    "sample_wise_grads_per_batch" in tracin_constructor.kwargs
+                    and tracin_constructor.kwargs["sample_wise_grads_per_batch"]
+                ),
+            )
 
             # compute tracin_scores of training data on training data
             criterion = nn.MSELoss(reduction=reduction)

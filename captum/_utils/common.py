@@ -7,6 +7,9 @@ from typing import Any, Callable, cast, Dict, List, overload, Tuple, Union
 
 import numpy as np
 import torch
+from torch import device, Tensor
+from torch.nn import Module
+
 from captum._utils.typing import (
     BaselineType,
     Literal,

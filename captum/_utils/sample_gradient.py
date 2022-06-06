@@ -4,6 +4,7 @@ from typing import cast, DefaultDict, Iterable, List, Tuple, Union
 
 import torch
 from captum._utils.common import _format_tensor_into_tuples, _register_backward_hook
+from captum._utils.gradient import _extract_device_ids, _gather_distributed_tensors
 from torch import Tensor
 from torch.nn import Module
 
@@ -103,10 +104,10 @@ class SampleGradientWrapper:
     def __init__(self, model) -> None:
         self.model = model
         self.hooks_added = False
-        self.activation_dict: DefaultDict[Module, List[Tensor]] = defaultdict(list)
-        self.gradient_dict: DefaultDict[Module, List[Tensor]] = defaultdict(list)
-        self.forward_hooks: List[torch.utils.hooks.RemovableHandle] = []
-        self.backward_hooks: List[torch.utils.hooks.RemovableHandle] = []
+        self.activation_dict = defaultdict(lambda: defaultdict(list))
+        self.gradient_dict = defaultdict(lambda: defaultdict(list))
+        self.forward_hooks = []
+        self.backward_hooks = []
 
     def add_hooks(self) -> None:
         self.hooks_added = True
@@ -128,7 +129,16 @@ class SampleGradientWrapper:
         module_output: Union[Tensor, Tuple[Tensor, ...]],
     ) -> None:
         inp_tuple = _format_tensor_into_tuples(module_input)
-        self.activation_dict[module].append(inp_tuple[0].clone().detach())
+
+        print(
+            "self.activation_dict[module]: ",
+            self.activation_dict[module],
+            module,
+            inp_tuple[0].device,
+        )
+        self.activation_dict[module][inp_tuple[0].device].append(
+            inp_tuple[0].clone().detach()
+        )
 
     def _backward_hook_fn(
         self,
@@ -137,7 +147,10 @@ class SampleGradientWrapper:
         grad_output: Union[Tensor, Tuple[Tensor, ...]],
     ) -> None:
         grad_output_tuple = _format_tensor_into_tuples(grad_output)
-        self.gradient_dict[module].append(grad_output_tuple[0].clone().detach())
+        # print('self.gradient_dict[module]: ', self.gradient_dict[module], module, grad_output_tuple[0].device)
+        self.gradient_dict[module][grad_output_tuple[0].device].append(
+            grad_output_tuple[0].clone().detach()
+        )
 
     def remove_hooks(self) -> None:
         self.hooks_added = False
@@ -151,9 +164,9 @@ class SampleGradientWrapper:
         self.forward_hooks = []
         self.backward_hooks = []
 
-    def _reset(self) -> None:
-        self.activation_dict = defaultdict(list)
-        self.gradient_dict = defaultdict(list)
+    def _reset(self):
+        self.activation_dict = defaultdict(lambda: defaultdict(list))
+        self.gradient_dict = defaultdict(lambda: defaultdict(list))
 
     def compute_param_sample_gradients(self, loss_blob, loss_mode="mean") -> None:
         assert (
@@ -164,15 +177,20 @@ class SampleGradientWrapper:
         self.model.zero_grad()
         loss_blob.backward(gradient=torch.ones_like(loss_blob))
 
+        device_ids = _extract_device_ids(self.model, gradient_dict, None)
+        print("device_ids: ", device_ids)
         for module in self.gradient_dict:
             sample_grad_fn = SUPPORTED_MODULES[type(module)]
+
             activations = self.activation_dict[module]
             gradients = self.gradient_dict[module]
-            assert len(activations) == len(gradients), (
-                "Number of saved activations do not match number of saved gradients."
-                " This may occur if multiple forward passes are run without calling"
-                " reset or computing param gradients."
-            )
+            for device in activations:
+                assert len(activations[device]) == len(gradients[device]), (
+                    "Number of saved activations do not match number of saved gradients."
+                    " This may occur if multiple forward passes are run without calling"
+                    " reset or computing param gradients."
+                )
+
             # Reversing grads since when a module is used multiple times,
             # the activations will be aligned with the reverse order of the gradients,
             # since the order is reversed in backprop.

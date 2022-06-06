@@ -1,11 +1,20 @@
 #!/usr/bin/env python3
 
+import threading
 import warnings
+from collections import defaultdict
 from typing import Any, Callable, Iterator, List, Optional, Tuple, Union
 
 import torch
-from captum._utils.common import _format_inputs, _get_module_from_name
+from captum._utils.common import (
+    _format_inputs,
+    _get_module_from_name,
+    _reduce_list,
+    _sort_key_list,
+)
 from captum._utils.progress import progress
+from captum._utils.gradient import _extract_device_ids, _gather_distributed_tensors
+>>>>>>> Stashed changes
 from captum.influence._core.tracincp import (
     _influence_route_to_helpers,
     KMostInfluentialResults,
@@ -28,15 +37,6 @@ from captum.log import log_usage
 from torch import Tensor
 from torch.nn import Module
 from torch.utils.data import DataLoader, Dataset
-
-layer_inputs = []
-
-
-def _capture_inputs(layer: Module, input: Tensor, output: Tensor) -> None:
-    r"""Save activations into layer.activations in forward pass"""
-
-    layer_inputs.append(input[0].detach())
-
 
 r"""
 Implements abstract DataInfluence class and also provides implementation details for
@@ -713,10 +713,28 @@ def _basic_computation_tracincp_fast(
         targets (tensor): If computing influence scores on a loss function,
                 these are the labels corresponding to the batch `inputs`.
     """
-    global layer_inputs
-    layer_inputs = []
+    layer_inputs = defaultdict(dict)
+    lock = threading.Lock()
+
+    def hook_wrapper(original_module):
+        def _capture_inputs(layer, input, output) -> None:
+            r"""Save activations into layer.activations in forward pass"""
+            with lock:
+                is_eval_tuple = isinstance(input, tuple)
+                if is_eval_tuple:
+                    layer_inputs_val = tuple(inp.detach() for inp in input)
+                else:
+                    layer_inputs_val = input.detach()
+                layer_inputs[original_module][
+                    layer_inputs_val[0].device
+                ] = layer_inputs_val
+
+        return _capture_inputs
+
     assert isinstance(influence_instance.final_fc_layer, Module)
-    handle = influence_instance.final_fc_layer.register_forward_hook(_capture_inputs)
+    handle = influence_instance.final_fc_layer.register_forward_hook(
+        hook_wrapper(influence_instance.final_fc_layer)
+    )
     out = influence_instance.model(*inputs)
 
     assert influence_instance.loss_fn is not None, "loss function is required"
@@ -732,7 +750,16 @@ def _basic_computation_tracincp_fast(
         influence_instance.reduction_type,
     )
     handle.remove()
-    _layer_inputs = layer_inputs[0]
+
+    device_ids = _extract_device_ids(influence_instance.model, layer_inputs, None)
+
+    key_list = _sort_key_list(
+        list(next(iter(layer_inputs.values())).keys()), device_ids
+    )
+
+    _layer_inputs = _gather_distributed_tensors(
+        layer_inputs[influence_instance.final_fc_layer], key_list=key_list
+    )[0]
 
     assert len(input_jacobians.shape) == 2
 

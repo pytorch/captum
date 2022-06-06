@@ -50,12 +50,10 @@ def _gradient_dot_product(
     """
 
     assert len(input_grads) == len(src_grads), "Mismatching gradient parameters."
-
     iterator = zip(input_grads, src_grads)
     total = _tensor_batch_dot(*next(iterator))
     for input_grad, src_grad in iterator:
         total += _tensor_batch_dot(input_grad, src_grad)
-    total = torch.Tensor(total)
 
     return total
 
@@ -141,9 +139,7 @@ def _jacobian_loss_wrt_inputs(
     return input_jacobians
 
 
-def _load_flexible_state_dict(
-    model: Module, path: str, device_ids: str = "cpu", keyname: Optional[str] = None
-) -> int:
+def _load_flexible_state_dict(model: Module, path: str) -> int:
     r"""
     Helper to load pytorch models. This function attempts to find compatibility for
     loading models that were trained on different devices / with DataParallel but are
@@ -156,20 +152,16 @@ def _load_flexible_state_dict(
     Args:
         model: The model for which to load a checkpoint
         path: The filepath to the checkpoint
-        keyname: The key under which the model state_dict is stored, if any.
 
     The module state_dict is modified in-place, and the learning rate is returned.
     """
 
-    device = device_ids
+    # device_ids = model.device_ids if (hasattr(model, "device_ids") and model.device_ids is not None) else torch.device("cpu")
 
-    checkpoint = torch.load(path, map_location=device)
+    checkpoint = torch.load(path)  # , map_location=device_ids)
 
     learning_rate = checkpoint.get("learning_rate", 1)
     # can get learning rate from optimizer state_dict?
-
-    if keyname is not None:
-        checkpoint = checkpoint[keyname]
 
     if "module." in next(iter(checkpoint)):
         if isinstance(model, nn.DataParallel):
@@ -288,9 +280,15 @@ def _get_k_most_influential_helper(
         num_instances_processed += batch_size
 
         # combine the top-k for the batch with those for previously seen batches
-        topk_indices = torch.cat([topk_indices, batch_topk_indices], dim=1)
+        topk_indices = torch.cat(
+            [topk_indices.to(batch_topk_indices.device), batch_topk_indices], dim=1
+        )
         topk_tracin_scores = torch.cat(
-            [topk_tracin_scores, batch_topk_tracin_scores], dim=1
+            [
+                topk_tracin_scores.to(batch_topk_tracin_scores.device),
+                batch_topk_tracin_scores,
+            ],
+            dim=1,
         )
 
         # retain only the top-k in terms of tracin_scores

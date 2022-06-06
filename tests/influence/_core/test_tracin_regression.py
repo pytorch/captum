@@ -18,23 +18,30 @@ from tests.influence._utils.common import (
     IdentityDataset,
     isSorted,
     RangeDataset,
+    wrap_model_in_dataparallel,
 )
 
 
 class TestTracInRegression(BaseTest):
-    def _test_tracin_regression_setup(self, tmpdir: str, features: int):
+    def _test_tracin_regression_setup(
+        self, tmpdir: str, features: int, use_gpu: bool = False
+    ):
         low = 1
         high = 17
-        dataset = RangeDataset(low, high, features)
+        dataset = RangeDataset(low, high, features, use_gpu)
         net = CoefficientNet(in_features=features)
 
+        net = wrap_model_in_dataparallel(net) if use_gpu else net
         checkpoint_name = "-".join(["checkpoint-reg", "0" + ".pt"])
         torch.save(net.state_dict(), os.path.join(tmpdir, checkpoint_name))
 
         weights = [0.4379, 0.1653, 0.5132, 0.3651, 0.9992]
 
         for i, weight in enumerate(weights):
-            net.fc1.weight.data.fill_(weight)
+            if use_gpu:
+                net.module.fc1.weight.data.fill_(weight)
+            else:
+                net.fc1.weight.data.fill_(weight)
             checkpoint_name = "-".join(["checkpoint-reg", str(i + 1) + ".pt"])
             torch.save(net.state_dict(), os.path.join(tmpdir, checkpoint_name))
 
@@ -42,7 +49,8 @@ class TestTracInRegression(BaseTest):
 
     @parameterized.expand(
         [
-            (reduction, constructor, mode, dim)
+            (reduction, constructor, mode, dim, use_gpu)
+            for use_gpu in [True, False]
             for dim in [1, 20]
             for (mode, reduction, constructor) in [
                 ("check_idx", "none", DataInfluenceConstructor(TracInCP)),
@@ -70,12 +78,15 @@ class TestTracInRegression(BaseTest):
         tracin_constructor: Callable,
         mode: str,
         features: int,
+        use_gpu: bool,
     ) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
 
             batch_size = 4
 
-            dataset, net = self._test_tracin_regression_setup(tmpdir, features)
+            dataset, net = self._test_tracin_regression_setup(
+                tmpdir, features, use_gpu
+            )  # and not mode == 'sample_wise_trick'
 
             # check influence scores of training data
 
@@ -85,6 +96,10 @@ class TestTracInRegression(BaseTest):
             test_inputs = (
                 torch.arange(17, 33, dtype=torch.float).unsqueeze(1).repeat(1, features)
             )
+
+            if use_gpu and not mode == "sample_wise_trick":
+                test_inputs = test_inputs.cuda()
+
             test_labels = test_inputs
 
             self.assertTrue(callable(tracin_constructor))
