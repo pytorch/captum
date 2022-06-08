@@ -43,9 +43,9 @@ class Saliency(GradientAttribution):
         r"""
         Args:
 
-            inputs (tensor or tuple of tensors):  Input for which integrated
-                        gradients are computed. If forward_func takes a single
-                        tensor as input, a single input tensor should be provided.
+            inputs (tensor or tuple of tensors):  Input for which saliency
+                        is computed. If forward_func takes a single tensor
+                        as input, a single input tensor should be provided.
                         If forward_func takes multiple tensors as input, a tuple
                         of the input tensors should be provided. It is assumed
                         that for all given input tensors, dimension 0 corresponds
