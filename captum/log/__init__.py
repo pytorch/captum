@@ -2,6 +2,7 @@
 
 try:
     from captum.log.fb.internal_log import (
+        disable_detailed_logging,
         log,
         log_usage,
         patch_methods,
@@ -9,7 +10,13 @@ try:
         TimedLog,
     )
 
-    __all__ = ["log", "log_usage", "TimedLog", "set_environment"]
+    __all__ = [
+        "log",
+        "log_usage",
+        "TimedLog",
+        "set_environment",
+        "disable_detailed_logging",
+    ]
 
 except ImportError:
     from functools import wraps
@@ -39,6 +46,9 @@ except ImportError:
         return _log_usage
 
     def set_environment(env):
+        pass
+
+    def disable_detailed_logging():
         pass
 
     def patch_methods(tester, patch_log=True):
