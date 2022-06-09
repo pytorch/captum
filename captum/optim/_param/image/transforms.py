@@ -939,24 +939,6 @@ class RGBToBGR(nn.Module):
         return x[:, [2, 1, 0]]
 
 
-# class TransformationRobustness(nn.Module):
-#     def __init__(self, jitter=False, scale=False):
-#         super().__init__()
-#         if jitter:
-#             self.jitter = RandomSpatialJitter(4)
-#         if scale:
-#             self.scale = RandomScale()
-
-#     def forward(self, x):
-#         original_shape = x.shape
-#         if hasattr(self, "jitter"):
-#             x = self.jitter(x)
-#         if hasattr(self, "scale"):
-#             x = self.scale(x)
-#         cropped = center_crop(x, original_shape)
-#         return cropped
-
-
 # class RandomHomography(nn.Module):
 #     def __init__(self):
 #         super().__init__()
