@@ -96,6 +96,6 @@ class BaseTest(unittest.TestCase):
     initializations are random, this ensures that tests run deterministically.
     """
 
-    def setUp(self):
+    def setUp(self) -> None:
         set_all_random_seeds(1234)
         patch_methods(self)
