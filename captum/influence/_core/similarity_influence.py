@@ -77,7 +77,7 @@ class SimilarityInfluence(DataInfluence):
         similarity_direction: str = "max",
         batch_size: int = 1,
         **kwargs: Any,
-    ):
+    ) -> None:
         r"""
         Args:
             module (torch.nn.Module): An instance of pytorch model. This model should

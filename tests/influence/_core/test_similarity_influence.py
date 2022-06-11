@@ -13,7 +13,7 @@ from torch.utils.data import Dataset
 
 
 class BasicLinearNet(nn.Module):
-    def __init__(self, num_features):
+    def __init__(self, num_features) -> None:
         super().__init__()
         self.fc1 = nn.Linear(num_features, 5, bias=False)
         self.fc1.weight.data.fill_(0.02)
@@ -29,7 +29,7 @@ class BasicLinearNet(nn.Module):
 
 
 class RangeDataset(Dataset):
-    def __init__(self, low, high, num_features):
+    def __init__(self, low, high, num_features) -> None:
         self.samples = (
             torch.arange(start=low, end=high, dtype=torch.float)
             .repeat(num_features, 1)

@@ -51,7 +51,7 @@ def string_batch_perturb(inp: List[List[str]]) -> List[List[str]]:
 
 
 class SamplePerturb:
-    def __init__(self):
+    def __init__(self) -> None:
         self.count = 0
 
     def perturb(self, inp: Tensor) -> Tensor:

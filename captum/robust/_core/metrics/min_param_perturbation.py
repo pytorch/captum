@@ -51,7 +51,7 @@ class MinParamPerturbation:
         preproc_fn: Optional[Callable] = None,
         apply_before_preproc: bool = False,
         correct_fn: Optional[Callable] = None,
-    ):
+    ) -> None:
         r"""
         Identifies minimal perturbation based on target variable which causes
         misclassification (or other incorrect prediction) of target input.

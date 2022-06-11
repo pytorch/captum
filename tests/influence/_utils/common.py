@@ -26,7 +26,7 @@ def isSorted(x, key=lambda x: x, descending=True):
 
 
 class ExplicitDataset(Dataset):
-    def __init__(self, samples, labels):
+    def __init__(self, samples, labels) -> None:
         self.samples, self.labels = samples, labels
 
     def __len__(self):
@@ -37,7 +37,7 @@ class ExplicitDataset(Dataset):
 
 
 class UnpackDataset(Dataset):
-    def __init__(self, samples, labels):
+    def __init__(self, samples, labels) -> None:
         self.samples, self.labels = samples, labels
 
     def __len__(self):
@@ -52,13 +52,13 @@ class UnpackDataset(Dataset):
 
 
 class IdentityDataset(ExplicitDataset):
-    def __init__(self, num_features):
+    def __init__(self, num_features) -> None:
         self.samples = torch.diag(torch.ones(num_features))
         self.labels = torch.zeros(num_features).unsqueeze(1)
 
 
 class RangeDataset(ExplicitDataset):
-    def __init__(self, low, high, num_features):
+    def __init__(self, low, high, num_features) -> None:
         self.samples = (
             torch.arange(start=low, end=high, dtype=torch.float)
             .repeat(num_features, 1)
@@ -68,7 +68,7 @@ class RangeDataset(ExplicitDataset):
 
 
 class BinaryDataset(ExplicitDataset):
-    def __init__(self):
+    def __init__(self) -> None:
         self.samples = F.normalize(
             torch.stack(
                 (
@@ -108,7 +108,7 @@ class BinaryDataset(ExplicitDataset):
 
 
 class CoefficientNet(nn.Module):
-    def __init__(self, in_features=1):
+    def __init__(self, in_features=1) -> None:
         super().__init__()
         self.fc1 = nn.Linear(in_features, 1, bias=False)
         self.fc1.weight.data.fill_(0.01)
@@ -119,7 +119,7 @@ class CoefficientNet(nn.Module):
 
 
 class BasicLinearNet(nn.Module):
-    def __init__(self, in_features, hidden_nodes, out_features):
+    def __init__(self, in_features, hidden_nodes, out_features) -> None:
         super().__init__()
         self.linear1 = nn.Linear(in_features, hidden_nodes)
         self.linear2 = nn.Linear(hidden_nodes, out_features)
@@ -130,7 +130,7 @@ class BasicLinearNet(nn.Module):
 
 
 class MultLinearNet(nn.Module):
-    def __init__(self, in_features, hidden_nodes, out_features, num_inputs):
+    def __init__(self, in_features, hidden_nodes, out_features, num_inputs) -> None:
         super().__init__()
         self.pre = nn.Linear(in_features * num_inputs, in_features)
         self.linear1 = nn.Linear(in_features, hidden_nodes)
@@ -206,7 +206,7 @@ class DataInfluenceConstructor:
 
     def __init__(
         self, data_influence_class: type, name: Optional[str] = None, **kwargs
-    ):
+    ) -> None:
         self.data_influence_class = data_influence_class
         self.name = name if name else data_influence_class.__name__
         self.kwargs = kwargs

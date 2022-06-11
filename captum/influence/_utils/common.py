@@ -305,7 +305,7 @@ def _get_k_most_influential_helper(
 
 
 class _DatasetFromList(Dataset):
-    def __init__(self, _l: List[Any]):
+    def __init__(self, _l: List[Any]) -> None:
         self._l = _l
 
     def __getitem__(self, i: int) -> Any:

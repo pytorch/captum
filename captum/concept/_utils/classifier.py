@@ -126,7 +126,7 @@ class DefaultClassifier(Classifier):
     class and handles large concept datasets accordingly.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         warnings.warn(
             "Using default classifier for TCAV which keeps input"
             " both train and test datasets in the memory. Consider defining"
@@ -178,7 +178,7 @@ class DefaultClassifier(Classifier):
 
         predict = self.lm(x_test)
 
-        predict = self.lm.classes()[torch.argmax(predict, dim=1)]
+        predict = self.lm.classes()[torch.argmax(predict, dim=1)]  # type: ignore
         score = predict.long() == y_test.long().cpu()
 
         accs = score.float().mean()
@@ -217,7 +217,7 @@ class DefaultClassifier(Classifier):
             classes (list): The list of classes used by the classifier to train
             the model in the `train_and_eval` method.
         """
-        return self.lm.classes().detach().numpy()
+        return self.lm.classes().detach().numpy()  # type: ignore
 
 
 def _train_test_split(

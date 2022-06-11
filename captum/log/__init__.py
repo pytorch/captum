@@ -19,7 +19,7 @@ except ImportError:
 
     # bug with mypy: https://github.com/python/mypy/issues/1153
     class TimedLog:  # type: ignore
-        def __init__(self, *args, **kwargs):
+        def __init__(self, *args, **kwargs) -> None:
             pass
 
         def __enter__(self):
