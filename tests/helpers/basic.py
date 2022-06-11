@@ -81,11 +81,11 @@ def assert_delta(test, delta):
     )
 
 
-def set_all_random_seeds(seed):
-    random.seed(1234)
-    np.random.seed(1234)
-    torch.manual_seed(1234)
-    torch.cuda.manual_seed_all(1234)
+def set_all_random_seeds(seed: int = 1234) -> None:
+    random.seed(seed)
+    np.random.seed(seed)
+    torch.manual_seed(seed)
+    torch.cuda.manual_seed_all(seed)
     torch.backends.cudnn.deterministic = True
 
 
