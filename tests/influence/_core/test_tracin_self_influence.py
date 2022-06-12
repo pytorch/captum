@@ -1,5 +1,5 @@
 import tempfile
-from typing import Callable
+from typing import Callable, cast
 
 import torch
 import torch.nn as nn
@@ -45,15 +45,16 @@ class TestTracInSelfInfluence(BaseTest):
         use_gpu: bool,
     ) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
-            print(tracin_constructor)
             (net, train_dataset,) = get_random_model_and_data(
                 tmpdir,
                 unpack_inputs,
                 False,
                 use_gpu
                 and not (
-                    "sample_wise_grads_per_batch" in tracin_constructor.kwargs
-                    and tracin_constructor.kwargs["sample_wise_grads_per_batch"]
+                    "sample_wise_grads_per_batch" in cast(DataInfluenceConstructor, \
+                    tracin_constructor).kwargs
+                    and cast(DataInfluenceConstructor, \
+                    tracin_constructor).kwargs["sample_wise_grads_per_batch"]
                 ),
             )
 

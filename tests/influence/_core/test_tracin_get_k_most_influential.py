@@ -1,5 +1,5 @@
 import tempfile
-from typing import Callable
+from typing import Callable, cast
 
 import torch
 import torch.nn as nn
@@ -78,8 +78,10 @@ class TestTracInGetKMostInfluential(BaseTest):
                 True,
                 use_gpu
                 and not (
-                    "sample_wise_grads_per_batch" in tracin_constructor.kwargs
-                    and tracin_constructor.kwargs["sample_wise_grads_per_batch"]
+                    "sample_wise_grads_per_batch" in  cast(DataInfluenceConstructor, \
+                    tracin_constructor.kwargs)
+                    and  cast(DataInfluenceConstructor, \
+                    tracin_constructor).kwargs["sample_wise_grads_per_batch"]
                 ),
             )
 

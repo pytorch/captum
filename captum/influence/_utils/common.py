@@ -11,6 +11,7 @@ from torch.utils.data import DataLoader, Dataset
 from torch import Tensor
 from torch.nn import Module
 
+
 def _tensor_batch_dot(t1: Tensor, t2: Tensor) -> Tensor:
     r"""
     Computes pairwise dot product between two tensors

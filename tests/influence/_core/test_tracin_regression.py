@@ -82,7 +82,7 @@ class TestTracInRegression(BaseTest):
             batch_size = 4
 
             dataset, net = self._test_tracin_regression_setup(
-                tmpdir, features, use_gpu
+                tmpdir, features, use_gpu and not mode == "sample_wise_trick"
             )  # and not mode == 'sample_wise_trick'
 
             # check influence scores of training data

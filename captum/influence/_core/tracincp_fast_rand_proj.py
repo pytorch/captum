@@ -9,7 +9,6 @@ import torch
 from captum._utils.common import (
     _format_inputs,
     _get_module_from_name,
-    _reduce_list,
     _sort_key_list,
 )
 from captum._utils.progress import progress
