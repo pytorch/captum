@@ -78,9 +78,9 @@ class TestTracInGetKMostInfluential(BaseTest):
                 True,
                 use_gpu
                 and not (
-                    "sample_wise_grads_per_batch" in  cast(DataInfluenceConstructor, \
-                    tracin_constructor.kwargs)
-                    and  cast(DataInfluenceConstructor, \
+                    "sample_wise_grads_per_batch" in  cast(DataInfluenceConstructor,
+                    tracin_constructor).kwargs
+                    and  cast(DataInfluenceConstructor,
                     tracin_constructor).kwargs["sample_wise_grads_per_batch"]
                 ),
             )
