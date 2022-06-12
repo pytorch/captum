@@ -6,13 +6,9 @@ from collections import defaultdict
 from typing import Any, Callable, Dict, Iterator, List, Optional, Tuple, Union
 
 import torch
-from captum._utils.common import (
-    _format_inputs,
-    _get_module_from_name,
-    _sort_key_list,
-)
-from captum._utils.progress import progress
+from captum._utils.common import _format_inputs, _get_module_from_name, _sort_key_list
 from captum._utils.gradient import _extract_device_ids, _gather_distributed_tensors
+from captum._utils.progress import progress
 
 from captum.influence._core.tracincp import (
     _influence_route_to_helpers,
@@ -1268,6 +1264,7 @@ class TracInCPFastRandProj(TracInCPFast):
             layer_input_dim = batch_layer_inputs.shape[
                 1
             ]  # this is the dimension of the input of the last fully-connected layer
+            device = batch.device
 
             # choose projection if needed
             # without projection, the dimension of the intermediate quantities returned
@@ -1296,7 +1293,9 @@ class TracInCPFastRandProj(TracInCPFast):
                     1.0 / layer_input_projection_dim**0.5,
                 )
 
-                projection_quantities = jacobian_projection, layer_input_projection
+                projection_quantities = jacobian_projection.to(
+                    device
+                ), layer_input_projection.to(device)
 
         return projection_quantities
 
@@ -1367,9 +1366,8 @@ class TracInCPFastRandProj(TracInCPFast):
         # each element in this list will be of shape (batch_size, projection_dim)
         checkpoint_projections: List[Any] = [[] for _ in self.checkpoints]
 
-        if projection_quantities is None:
-            project = False
-        else:
+        project = False
+        if projection_quantities is not None:
             project = True
             jacobian_projection, layer_input_projection = projection_quantities
 
