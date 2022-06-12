@@ -1264,7 +1264,7 @@ class TracInCPFastRandProj(TracInCPFast):
             layer_input_dim = batch_layer_inputs.shape[
                 1
             ]  # this is the dimension of the input of the last fully-connected layer
-            device = batch.device
+            device = batch_jacobians.device
 
             # choose projection if needed
             # without projection, the dimension of the intermediate quantities returned

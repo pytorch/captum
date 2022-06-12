@@ -21,16 +21,16 @@ class TestTracInGetKMostInfluential(BaseTest):
     """
     This test constructs a random BasicLinearNet, and checks that the proponents
     obtained by calling `influence` and sorting are equal to the proponents
-    obtained by calling `_get_k_most_influential`.  Those calls are made through
+    obtained by calling `_k_most_influential`.  Those calls are made through
     the calls to wrapper method `influence`.
     """
 
     @parameterized.expand(
         [
             (reduction, constr, unpack_inputs, proponents, batch_size, k, use_gpu)
-            # calls test helper method `test_tracin_get_k_most_influential` for several
+            # calls test helper method `test_tracin_k_most_influential` for several
             # combinations of `batch_size` and `k`.  This is important because the
-            # behavior of `_get_k_most_influential` depends on whether `k` is larger
+            # behavior of `_k_most_influential` depends on whether `k` is larger
             # than `batch_size`.
             for (batch_size, k) in [(4, 7), (7, 4), (40, 5), (5, 40), (40, 45)]
             for unpack_inputs in [True, False]
@@ -54,7 +54,7 @@ class TestTracInGetKMostInfluential(BaseTest):
         ],
         name_func=build_test_name_func(),
     )
-    def test_tracin_get_k_most_influential(
+    def test_tracin_k_most_influential(
         self,
         reduction: str,
         tracin_constructor: Callable,
