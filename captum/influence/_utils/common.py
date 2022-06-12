@@ -6,10 +6,10 @@ from typing import Any, Callable, List, Optional, Tuple, Union
 import torch
 import torch.nn as nn
 from captum._utils.progress import progress
-from torch.utils.data import DataLoader, Dataset
 
 from torch import Tensor
 from torch.nn import Module
+from torch.utils.data import DataLoader, Dataset
 
 
 def _tensor_batch_dot(t1: Tensor, t2: Tensor) -> Tensor:
