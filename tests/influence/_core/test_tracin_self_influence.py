@@ -1,5 +1,5 @@
 import tempfile
-from typing import Callable, cast
+from typing import Callable
 
 import torch
 import torch.nn as nn
@@ -11,6 +11,7 @@ from tests.influence._utils.common import (
     build_test_name_func,
     DataInfluenceConstructor,
     get_random_model_and_data,
+    is_gpu_test_ready,
 )
 from torch.utils.data import DataLoader
 
@@ -49,14 +50,7 @@ class TestTracInSelfInfluence(BaseTest):
                 tmpdir,
                 unpack_inputs,
                 False,
-                use_gpu
-                and not (
-                    "sample_wise_grads_per_batch"
-                    in cast(DataInfluenceConstructor, tracin_constructor).kwargs
-                    and cast(DataInfluenceConstructor, tracin_constructor).kwargs[
-                        "sample_wise_grads_per_batch"
-                    ]
-                ),
+                is_gpu_test_ready(use_gpu, tracin_constructor=tracin_constructor)
             )
 
             # compute tracin_scores of training data on training data

@@ -16,6 +16,7 @@ from tests.influence._utils.common import (
     CoefficientNet,
     DataInfluenceConstructor,
     IdentityDataset,
+    is_gpu_test_ready,
     isSorted,
     RangeDataset,
     wrap_model_in_dataparallel,
@@ -28,7 +29,7 @@ class TestTracInRegression(BaseTest):
     ):
         low = 1
         high = 17
-        dataset = RangeDataset(low, high, features, use_gpu)
+        dataset = RangeDataset(low, high, features, is_gpu_test_ready(use_gpu))
         net = CoefficientNet(in_features=features)
 
         checkpoint_name = "-".join(["checkpoint-reg", "0" + ".pt"])
@@ -38,7 +39,9 @@ class TestTracInRegression(BaseTest):
 
         for i, weight in enumerate(weights):
             net.fc1.weight.data.fill_(weight)
-            net_adjusted = wrap_model_in_dataparallel(net) if use_gpu else net
+            net_adjusted = (
+                wrap_model_in_dataparallel(net) if is_gpu_test_ready(use_gpu) else net
+            )
             checkpoint_name = "-".join(["checkpoint-reg", str(i + 1) + ".pt"])
             torch.save(net_adjusted.state_dict(), os.path.join(tmpdir, checkpoint_name))
 
@@ -82,7 +85,9 @@ class TestTracInRegression(BaseTest):
             batch_size = 4
 
             dataset, net = self._test_tracin_regression_setup(
-                tmpdir, features, use_gpu and not mode == "sample_wise_trick"
+                tmpdir,
+                features,
+                is_gpu_test_ready(use_gpu, mode == "sample_wise_trick"),
             )  # and not mode == 'sample_wise_trick'
 
             # check influence scores of training data
@@ -94,7 +99,7 @@ class TestTracInRegression(BaseTest):
                 torch.arange(17, 33, dtype=torch.float).unsqueeze(1).repeat(1, features)
             )
 
-            if use_gpu and not mode == "sample_wise_trick":
+            if is_gpu_test_ready(use_gpu, mode == "sample_wise_trick"):
                 test_inputs = test_inputs.cuda()
 
             test_labels = test_inputs

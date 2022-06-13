@@ -14,6 +14,7 @@ from tests.influence._utils.common import (
     BinaryDataset,
     build_test_name_func,
     DataInfluenceConstructor,
+    is_gpu_test_ready,
     wrap_model_in_dataparallel,
 )
 
@@ -35,7 +36,9 @@ class TestTracInXOR(BaseTest):
             ]
         )
         net.load_state_dict(state)
-        net_adjusted = wrap_model_in_dataparallel(net) if use_gpu else net
+        net_adjusted = (
+            wrap_model_in_dataparallel(net) if is_gpu_test_ready(use_gpu) else net
+        )
 
         checkpoint_name = "-".join(["checkpoint", "class", "0" + ".pt"])
         torch.save(net_adjusted.state_dict(), os.path.join(tmpdir, checkpoint_name))
@@ -52,7 +55,9 @@ class TestTracInXOR(BaseTest):
             ]
         )
         net.load_state_dict(state)
-        net_adjusted = wrap_model_in_dataparallel(net) if use_gpu else net
+        net_adjusted = (
+            wrap_model_in_dataparallel(net) if is_gpu_test_ready(use_gpu) else net
+        )
 
         checkpoint_name = "-".join(["checkpoint", "class", "1" + ".pt"])
         torch.save(net_adjusted.state_dict(), os.path.join(tmpdir, checkpoint_name))
@@ -69,7 +74,9 @@ class TestTracInXOR(BaseTest):
             ]
         )
         net.load_state_dict(state)
-        net_adjusted = wrap_model_in_dataparallel(net) if use_gpu else net
+        net_adjusted = (
+            wrap_model_in_dataparallel(net) if is_gpu_test_ready(use_gpu) else net
+        )
 
         checkpoint_name = "-".join(["checkpoint", "class", "2" + ".pt"])
         torch.save(net_adjusted.state_dict(), os.path.join(tmpdir, checkpoint_name))
@@ -86,7 +93,9 @@ class TestTracInXOR(BaseTest):
             ]
         )
         net.load_state_dict(state)
-        net_adjusted = wrap_model_in_dataparallel(net) if use_gpu else net
+        net_adjusted = (
+            wrap_model_in_dataparallel(net) if is_gpu_test_ready(use_gpu) else net
+        )
 
         checkpoint_name = "-".join(["checkpoint", "class", "3" + ".pt"])
         torch.save(net_adjusted.state_dict(), os.path.join(tmpdir, checkpoint_name))
@@ -103,7 +112,9 @@ class TestTracInXOR(BaseTest):
             ]
         )
         net.load_state_dict(state)
-        net_adjusted = wrap_model_in_dataparallel(net) if use_gpu else net
+        net_adjusted = (
+            wrap_model_in_dataparallel(net) if is_gpu_test_ready(use_gpu) else net
+        )
 
         checkpoint_name = "-".join(["checkpoint", "class", "4" + ".pt"])
         torch.save(net_adjusted.state_dict(), os.path.join(tmpdir, checkpoint_name))
@@ -120,7 +131,9 @@ class TestTracInXOR(BaseTest):
             ]
         )
         net.load_state_dict(state)
-        net_adjusted = wrap_model_in_dataparallel(net) if use_gpu else net
+        net_adjusted = (
+            wrap_model_in_dataparallel(net) if is_gpu_test_ready(use_gpu) else net
+        )
 
         checkpoint_name = "-".join(["checkpoint", "class", "5" + ".pt"])
         torch.save(net_adjusted.state_dict(), os.path.join(tmpdir, checkpoint_name))
@@ -137,7 +150,9 @@ class TestTracInXOR(BaseTest):
             ]
         )
         net.load_state_dict(state)
-        net_adjusted = wrap_model_in_dataparallel(net) if use_gpu else net
+        net_adjusted = (
+            wrap_model_in_dataparallel(net) if is_gpu_test_ready(use_gpu) else net
+        )
 
         checkpoint_name = "-".join(["checkpoint", "class", "6" + ".pt"])
         torch.save(net_adjusted.state_dict(), os.path.join(tmpdir, checkpoint_name))
@@ -154,12 +169,14 @@ class TestTracInXOR(BaseTest):
             ]
         )
         net.load_state_dict(state)
-        net_adjusted = wrap_model_in_dataparallel(net) if use_gpu else net
+        net_adjusted = (
+            wrap_model_in_dataparallel(net) if is_gpu_test_ready(use_gpu) else net
+        )
 
         checkpoint_name = "-".join(["checkpoint", "class", "7" + ".pt"])
         torch.save(net_adjusted.state_dict(), os.path.join(tmpdir, checkpoint_name))
 
-        dataset = BinaryDataset(use_gpu)
+        dataset = BinaryDataset(is_gpu_test_ready(use_gpu))
 
         return net_adjusted, dataset
 
@@ -198,7 +215,9 @@ class TestTracInXOR(BaseTest):
             # net = wrap_model_in_dataparallel(net) if use_gpu else net
             batch_size = 4
 
-            net, dataset = self._test_tracin_xor_setup(tmpdir, use_gpu)
+            net, dataset = self._test_tracin_xor_setup(
+                tmpdir, is_gpu_test_ready(use_gpu)
+            )
 
             testset = F.normalize(torch.empty(100, 2).normal_(mean=0, std=0.5), dim=1)
             mask = ~torch.logical_xor(testset[:, 0] > 0, testset[:, 1] > 0)
@@ -207,7 +226,7 @@ class TestTracInXOR(BaseTest):
                 .unsqueeze(1)
                 .float()
             )
-            if use_gpu:
+            if is_gpu_test_ready(use_gpu):
                 testset = testset.cuda()
                 testlabels = testlabels.cuda()
 

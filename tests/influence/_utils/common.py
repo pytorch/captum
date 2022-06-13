@@ -2,7 +2,7 @@ import inspect
 import os
 import unittest
 from functools import partial
-from typing import Callable, Iterator, List, Optional, Union
+from typing import Callable, cast, Iterator, List, Optional, Union
 
 import torch
 import torch.nn as nn
@@ -340,3 +340,23 @@ def build_test_name_func(args_to_skip: Optional[List[str]] = None):
     """
 
     return partial(generate_test_name, args_to_skip=args_to_skip)
+
+
+def is_gpu_test_ready(
+    use_gpu: bool,
+    is_sample_wise_grads_mode: bool = False,
+    tracin_constructor: DataInfluenceConstructor = None,
+):
+    if not torch.cuda.is_available() and torch.cuda.device_count() != 0:
+        return False
+    return use_gpu and (
+        not is_sample_wise_grads_mode
+        or tracin_constructor is not None
+        and not (
+            "sample_wise_grads_per_batch"
+            in cast(DataInfluenceConstructor, tracin_constructor).kwargs
+            and cast(DataInfluenceConstructor, tracin_constructor).kwargs[
+                "sample_wise_grads_per_batch"
+            ]
+        )
+    )
