@@ -2,7 +2,7 @@ import inspect
 import os
 import unittest
 from functools import partial
-from typing import Callable, cast, Iterator, List, Optional, Union
+from typing import Callable, Iterator, List, Optional, Union
 
 import torch
 import torch.nn as nn
