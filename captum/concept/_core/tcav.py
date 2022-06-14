@@ -27,7 +27,7 @@ class LabelledDataset(Dataset):
     It is used to train a classifier in train_tcav
     """
 
-    def __init__(self, datasets: List[AV.AVDataset], labels: List[int]):
+    def __init__(self, datasets: List[AV.AVDataset], labels: List[int]) -> None:
         """
         Creates the LabelledDataset given a list of K Datasets, and a length K
         list of integer labels representing K different concepts.

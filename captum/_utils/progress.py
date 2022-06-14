@@ -12,7 +12,7 @@ except ImportError:
 
 
 class DisableErrorIOWrapper(object):
-    def __init__(self, wrapped: TextIO):
+    def __init__(self, wrapped: TextIO) -> None:
         """
         The wrapper around a TextIO object to ignore write errors like tqdm
         https://github.com/tqdm/tqdm/blob/bcce20f771a16cb8e4ac5cc5b2307374a2c0e535/tqdm/utils.py#L131
@@ -48,7 +48,7 @@ class SimpleProgress:
         total: int = None,
         file: TextIO = None,
         mininterval: float = 0.5,
-    ):
+    ) -> None:
         """
         Simple progress output used when tqdm is unavailable.
         Same as tqdm, output to stderr channel

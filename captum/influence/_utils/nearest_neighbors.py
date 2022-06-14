@@ -92,7 +92,7 @@ class AnnoyNearestNeighbors(NearestNeighbors):
     but arbitrary shape *, and flatten them before storing in the Annoy data structure.
     """
 
-    def __init__(self, num_trees: int = 10):
+    def __init__(self, num_trees: int = 10) -> None:
         """
         Args:
             num_trees (int): The number of trees to use. Increasing this number gives

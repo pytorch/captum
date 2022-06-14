@@ -47,7 +47,7 @@ class AV:
             identifier: Optional[str] = None,
             layer: Optional[str] = None,
             num_id: Optional[str] = None,
-        ):
+        ) -> None:
             r"""
             Loads into memory the list of all activation file paths associated
             with the input `model_id`.

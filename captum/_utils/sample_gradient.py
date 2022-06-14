@@ -1,6 +1,6 @@
 from collections import defaultdict
 from enum import Enum
-from typing import cast, Iterable, Tuple, Union
+from typing import cast, DefaultDict, Iterable, List, Tuple, Union
 
 import torch
 from captum._utils.common import _format_tensor_into_tuples, _register_backward_hook
@@ -8,7 +8,7 @@ from torch import Tensor
 from torch.nn import Module
 
 
-def _reset_sample_grads(module: Module):
+def _reset_sample_grads(module: Module) -> None:
     module.weight.sample_grad = 0  # type: ignore
     if module.bias is not None:
         module.bias.sample_grad = 0  # type: ignore
@@ -100,19 +100,19 @@ class SampleGradientWrapper:
     - https://github.com/pytorch/opacus/tree/main/opacus/grad_sample
     """
 
-    def __init__(self, model):
+    def __init__(self, model) -> None:
         self.model = model
         self.hooks_added = False
-        self.activation_dict = defaultdict(list)
-        self.gradient_dict = defaultdict(list)
-        self.forward_hooks = []
-        self.backward_hooks = []
+        self.activation_dict: DefaultDict[Module, List[Tensor]] = defaultdict(list)
+        self.gradient_dict: DefaultDict[Module, List[Tensor]] = defaultdict(list)
+        self.forward_hooks: List[torch.utils.hooks.RemovableHandle] = []
+        self.backward_hooks: List[torch.utils.hooks.RemovableHandle] = []
 
-    def add_hooks(self):
+    def add_hooks(self) -> None:
         self.hooks_added = True
         self.model.apply(self._register_module_hooks)
 
-    def _register_module_hooks(self, module: torch.nn.Module):
+    def _register_module_hooks(self, module: torch.nn.Module) -> None:
         if isinstance(module, tuple(SUPPORTED_MODULES.keys())):
             self.forward_hooks.append(
                 module.register_forward_hook(self._forward_hook_fn)
@@ -126,7 +126,7 @@ class SampleGradientWrapper:
         module: Module,
         module_input: Union[Tensor, Tuple[Tensor, ...]],
         module_output: Union[Tensor, Tuple[Tensor, ...]],
-    ):
+    ) -> None:
         inp_tuple = _format_tensor_into_tuples(module_input)
         self.activation_dict[module].append(inp_tuple[0].clone().detach())
 
@@ -135,11 +135,11 @@ class SampleGradientWrapper:
         module: Module,
         grad_input: Union[Tensor, Tuple[Tensor, ...]],
         grad_output: Union[Tensor, Tuple[Tensor, ...]],
-    ):
+    ) -> None:
         grad_output_tuple = _format_tensor_into_tuples(grad_output)
         self.gradient_dict[module].append(grad_output_tuple[0].clone().detach())
 
-    def remove_hooks(self):
+    def remove_hooks(self) -> None:
         self.hooks_added = False
 
         for hook in self.forward_hooks:
@@ -151,11 +151,11 @@ class SampleGradientWrapper:
         self.forward_hooks = []
         self.backward_hooks = []
 
-    def _reset(self):
+    def _reset(self) -> None:
         self.activation_dict = defaultdict(list)
         self.gradient_dict = defaultdict(list)
 
-    def compute_param_sample_gradients(self, loss_blob, loss_mode="mean"):
+    def compute_param_sample_gradients(self, loss_blob, loss_mode="mean") -> None:
         assert (
             loss_mode.upper() in LossMode.__members__
         ), f"Provided loss mode {loss_mode} is not valid"
