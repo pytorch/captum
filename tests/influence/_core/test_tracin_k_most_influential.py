@@ -1,5 +1,5 @@
 import tempfile
-from typing import Callable
+from typing import Callable, cast
 
 import torch
 import torch.nn as nn
@@ -77,7 +77,12 @@ class TestTracInGetKMostInfluential(BaseTest):
                 tmpdir,
                 unpack_inputs,
                 True,
-                is_gpu_test_ready(use_gpu, tracin_constructor),
+                is_gpu_test_ready(
+                    use_gpu,
+                    tracin_constructor=cast(
+                        DataInfluenceConstructor, tracin_constructor
+                    ),
+                ),
             )
 
             self.assertTrue(isinstance(reduction, str))

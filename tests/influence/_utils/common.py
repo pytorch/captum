@@ -349,14 +349,15 @@ def is_gpu_test_ready(
 ):
     if not torch.cuda.is_available() and torch.cuda.device_count() != 0:
         return False
+    # The checks on `sample_wise_grads_per_batch` will be removed after we enable
+    # gpu support for `sample_wise_grads_per_batch` mode as well.
     return use_gpu and (
         not is_sample_wise_grads_mode
-        or tracin_constructor is not None
-        and not (
-            "sample_wise_grads_per_batch"
-            in cast(DataInfluenceConstructor, tracin_constructor).kwargs
-            and cast(DataInfluenceConstructor, tracin_constructor).kwargs[
-                "sample_wise_grads_per_batch"
-            ]
+        and (
+            tracin_constructor is None
+            or not (
+                "sample_wise_grads_per_batch" in tracin_constructor.kwargs
+                and tracin_constructor.kwargs["sample_wise_grads_per_batch"]
+            )
         )
     )

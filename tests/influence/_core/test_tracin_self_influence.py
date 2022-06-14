@@ -1,5 +1,5 @@
 import tempfile
-from typing import Callable
+from typing import Callable, cast
 
 import torch
 import torch.nn as nn
@@ -28,7 +28,7 @@ class TestTracInSelfInfluence(BaseTest):
                     "sum",
                     DataInfluenceConstructor(
                         TracInCP,
-                        name="TracInCPFastRandProjTests",
+                        name="TracInCP_sample_wise_grads_per_batch",
                         sample_wise_grads_per_batch=True,
                     ),
                 ),
@@ -50,7 +50,12 @@ class TestTracInSelfInfluence(BaseTest):
                 tmpdir,
                 unpack_inputs,
                 False,
-                is_gpu_test_ready(use_gpu, tracin_constructor=tracin_constructor)
+                is_gpu_test_ready(
+                    use_gpu,
+                    tracin_constructor=cast(
+                        DataInfluenceConstructor, tracin_constructor
+                    ),
+                ),
             )
 
             # compute tracin_scores of training data on training data
@@ -64,8 +69,6 @@ class TestTracInSelfInfluence(BaseTest):
                 batch_size,
                 criterion,
             )
-
-            # calculate influence scores, using the training data as the test batch
             train_scores = tracin.influence(
                 train_dataset.samples,
                 train_dataset.labels,
