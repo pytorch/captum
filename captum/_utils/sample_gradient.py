@@ -103,10 +103,10 @@ class SampleGradientWrapper:
     def __init__(self, model) -> None:
         self.model = model
         self.hooks_added = False
-        self.activation_dict = defaultdict(list)
-        self.gradient_dict = defaultdict(list)
-        self.forward_hooks = []
-        self.backward_hooks = []
+        self.activation_dict: DefaultDict[Module, List[Tensor]] = defaultdict(list)
+        self.gradient_dict: DefaultDict[Module, List[Tensor]] = defaultdict(list)
+        self.forward_hooks: List[torch.utils.hooks.RemovableHandle] = []
+        self.backward_hooks: List[torch.utils.hooks.RemovableHandle] = []
 
     def add_hooks(self) -> None:
         self.hooks_added = True
@@ -151,7 +151,7 @@ class SampleGradientWrapper:
         self.forward_hooks = []
         self.backward_hooks = []
 
-    def _reset(self):
+    def _reset(self) -> None:
         self.activation_dict = defaultdict(list)
         self.gradient_dict = defaultdict(list)
 
