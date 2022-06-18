@@ -993,9 +993,18 @@ class GaussianSmoothing(nn.Module):
         # The gaussian kernel is the product of the
         # gaussian function of each dimension.
         kernel = 1
-        meshgrids = torch.meshgrid(
-            [torch.arange(size, dtype=torch.float32) for size in kernel_size]
-        )
+
+        # PyTorch v1.10.0 adds a new indexing argument
+        if version.parse(torch.__version__) >= version.parse("1.10.0"):
+            meshgrids = torch.meshgrid(
+                [torch.arange(size, dtype=torch.float32) for size in kernel_size],
+                indexing="ij",
+            )
+        else:
+            meshgrids = torch.meshgrid(
+                [torch.arange(size, dtype=torch.float32) for size in kernel_size]
+            )
+
         for size, std, mgrid in zip(kernel_size, sigma, meshgrids):
             mean = (size - 1) / 2
             kernel *= (
