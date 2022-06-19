@@ -121,9 +121,7 @@ class GuidedBackprop(ModifiedReluGradientAttribution):
         r"""
         Args:
 
-            model (nn.Module):  The reference to PyTorch model instance. Model cannot
-                        contain any in-place ReLU submodules; these are not
-                        supported by the register_full_backward_hook PyTorch API.
+            model (nn.Module):  The reference to PyTorch model instance.
         """
         ModifiedReluGradientAttribution.__init__(
             self, model, use_relu_grad_output=False
@@ -234,9 +232,7 @@ class Deconvolution(ModifiedReluGradientAttribution):
         r"""
         Args:
 
-            model (nn.Module):  The reference to PyTorch model instance. Model cannot
-                        contain any in-place ReLU submodules; these are not
-                        supported by the register_full_backward_hook PyTorch API.
+            model (nn.Module):  The reference to PyTorch model instance.
         """
         ModifiedReluGradientAttribution.__init__(self, model, use_relu_grad_output=True)
 

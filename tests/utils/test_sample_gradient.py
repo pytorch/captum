@@ -15,6 +15,7 @@ from tests.helpers.basic_models import (
 from torch import Tensor
 from torch.nn import Module
 
+from captum._utils.gradient import apply_gradient_requirements
 
 class Test(BaseTest):
     def test_sample_grads_linear_sum(self) -> None:
@@ -70,6 +71,7 @@ class Test(BaseTest):
     ):
         wrapper = SampleGradientWrapper(model)
         wrapper.add_hooks()
+        apply_gradient_requirements(inputs)
         out = model(*inputs)
         wrapper.compute_param_sample_gradients(loss_fn(out), loss_type)
 

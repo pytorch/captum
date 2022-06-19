@@ -43,34 +43,6 @@ from torch.nn import Module
 from torch.utils.hooks import RemovableHandle
 
 
-# Check if module backward hook can safely be used for the module that produced
-# this inputs / outputs mapping
-def _check_valid_module(inputs_grad_fn, outputs) -> bool:
-    def is_output_cloned(output_fn, input_grad_fn) -> bool:
-        """
-        Checks if the output has been cloned. This happens especially in case of
-        layer deeplift.
-        """
-        return (
-            output_fn[0].next_functions is not None
-            and output_fn[0].next_functions[0][0] == input_grad_fn
-        )
-
-    curr_fn = outputs.grad_fn
-    first_next = curr_fn.next_functions[0]
-    try:
-        # if `inputs` in the input to the network then the grad_fn is None and
-        # for that input backward_hook isn't computed. That's the reason why we
-        # need to check on `inputs_grad_fns[first_next[1]]` being None.
-        return (
-            inputs_grad_fn is None
-            or first_next[0] == inputs_grad_fn
-            or is_output_cloned(first_next, inputs_grad_fn)
-        )
-    except IndexError:
-        return False
-
-
 class DeepLift(GradientAttribution):
     r"""
     Implements DeepLIFT algorithm based on the following paper:
@@ -112,10 +84,7 @@ class DeepLift(GradientAttribution):
         r"""
         Args:
 
-            model (nn.Module):  The reference to PyTorch model instance. Model cannot
-                        contain any in-place nonlinear submodules; these are not
-                        supported by the register_full_backward_hook PyTorch API
-                        starting from PyTorch v1.9.
+            model (nn.Module):  The reference to PyTorch model instance.
             multiply_by_inputs (bool, optional): Indicates whether to factor
                         model inputs' multiplier in the final attribution scores.
                         In the literature this is also known as local vs global
@@ -430,25 +399,6 @@ class DeepLift(GradientAttribution):
         """
         inputs = _format_tensor_into_tuples(inputs)
         module.input = inputs[0].clone().detach()
-        module.input_grad_fns = inputs[0].grad_fn  # type: ignore
-
-        def tensor_backward_hook(grad):
-            if module.saved_grad is None:
-                raise RuntimeError(
-                    """Module {} was detected as not supporting correctly module
-                        backward hook. You should modify your hook to ignore the given
-                        grad_inputs (recompute them by hand if needed) and save the
-                        newly computed grad_inputs in module.saved_grad. See MaxPool1d
-                        as an example.""".format(
-                        module
-                    )
-                )
-            return module.saved_grad
-
-        # the hook is set by default but it will be used only for
-        # failure cases and will be removed otherwise
-        handle = inputs[0].register_hook(tensor_backward_hook)
-        module.input_hook = handle
 
     def _forward_hook(
         self,
@@ -462,30 +412,13 @@ class DeepLift(GradientAttribution):
         """
         outputs = _format_tensor_into_tuples(outputs)
         module.output = outputs[0].clone().detach()
-        if not _check_valid_module(module.input_grad_fns, outputs[0]):
-            warnings.warn(
-                """An invalid module {} is detected. Saved gradients will
-                be used as the gradients of the module's input tensor.
-                See MaxPool1d as an example.""".format(
-                    module
-                )
-            )
-            module.is_invalid = True  # type: ignore
-            module.saved_grad = None  # type: ignore
-            self.forward_handles.append(cast(RemovableHandle, module.input_hook))
-        else:
-            module.is_invalid = False  # type: ignore
-            # removing the hook if there is no failure case
-            cast(RemovableHandle, module.input_hook).remove()
-        del module.input_hook
-        del module.input_grad_fns
 
     def _backward_hook(
         self,
         module: Module,
-        grad_input: Union[Tensor, Tuple[Tensor, ...]],
-        grad_output: Union[Tensor, Tuple[Tensor, ...]],
-    ):
+        grad_input: Tensor,
+        grad_output: Tensor,
+    ) -> Tensor:
         r"""
         `grad_input` is the gradient of the neuron with respect to its input
         `grad_output` is the gradient of the neuron with respect to its output
@@ -506,8 +439,8 @@ class DeepLift(GradientAttribution):
                 "Please, ensure that module is being used only once in the "
                 "network.".format(module)
             )
-        multipliers = tuple(
-            SUPPORTED_NON_LINEAR[type(module)](
+
+        multipliers = SUPPORTED_NON_LINEAR[type(module)](
                 module,
                 module.input,
                 module.output,
@@ -515,7 +448,6 @@ class DeepLift(GradientAttribution):
                 grad_output,
                 eps=self.eps,
             )
-        )
         # remove all the properies that we set for the inputs and output
         del module.input
         del module.output
@@ -625,9 +557,7 @@ class DeepLiftShap(DeepLift):
         r"""
         Args:
 
-            model (nn.Module):  The reference to PyTorch model instance. Model cannot
-                        contain any in-place nonlinear submodules; these are not
-                        supported by the register_full_backward_hook PyTorch API.
+            model (nn.Module):  The reference to PyTorch model instance.
             multiply_by_inputs (bool, optional): Indicates whether to factor
                         model inputs' multiplier in the final attribution scores.
                         In the literature this is also known as local vs global
@@ -939,7 +869,7 @@ def nonlinear(
     grad_input: Tensor,
     grad_output: Tensor,
     eps: float = 1e-10,
-):
+) -> Tensor:
     r"""
     grad_input: (dLoss / dprev_layer_out, dLoss / wij, dLoss / bij)
     grad_output: (dLoss / dlayer_out)
@@ -947,18 +877,10 @@ def nonlinear(
     """
     delta_in, delta_out = _compute_diffs(inputs, outputs)
 
-    new_grad_inp = list(grad_input)
-
-    # supported non-linear modules take only single tensor as input hence accessing
-    # only the first element in `grad_input` and `grad_output`
-    new_grad_inp[0] = torch.where(
-        abs(delta_in) < eps, new_grad_inp[0], grad_output[0] * delta_out / delta_in
+    new_grad_inp = torch.where(
+        abs(delta_in) < eps, grad_input, grad_output * delta_out / delta_in
     )
 
-    # If the module is invalid, save the newly computed gradients
-    # The original_grad_input will be overridden later in the Tensor hook
-    if module.is_invalid:
-        module.saved_grad = new_grad_inp[0]
     return new_grad_inp
 
 
@@ -972,15 +894,14 @@ def softmax(
 ):
     delta_in, delta_out = _compute_diffs(inputs, outputs)
 
-    new_grad_inp = list(grad_input)
     grad_input_unnorm = torch.where(
-        abs(delta_in) < eps, new_grad_inp[0], grad_output[0] * delta_out / delta_in
+        abs(delta_in) < eps, grad_input, grad_output * delta_out / delta_in
     )
     # normalizing
-    n = grad_input[0].numel()
+    n = grad_input.numel()
 
     # updating only the first half
-    new_grad_inp[0] = grad_input_unnorm - grad_input_unnorm.sum() * 1 / n
+    new_grad_inp = grad_input_unnorm - grad_input_unnorm.sum() * 1 / n
     return new_grad_inp
 
 
@@ -1071,7 +992,7 @@ def maxpool(
             module.ceil_mode,
             True,
         )
-        grad_output_updated = grad_output[0]
+        grad_output_updated = grad_output
         unpool_grad_out_delta, unpool_grad_out_ref_delta = torch.chunk(
             unpool_func(
                 grad_output_updated * delta_out,
@@ -1087,20 +1008,7 @@ def maxpool(
     unpool_grad_out_delta = unpool_grad_out_delta + unpool_grad_out_ref_delta
     unpool_grad_out_delta = torch.cat(2 * [unpool_grad_out_delta])
 
-    # If the module is invalid, we need to recompute the grad_input
-    if module.is_invalid:
-        original_grad_input = grad_input
-        grad_input = (
-            unpool_func(
-                grad_output_updated,
-                indices,
-                module.kernel_size,
-                module.stride,
-                module.padding,
-                list(cast(torch.Size, module.input.shape)),
-            ),
-        )
-    if grad_input[0].shape != inputs.shape:
+    if grad_input.shape != inputs.shape:
         raise AssertionError(
             "A problem occurred during maxpool modul's backward pass. "
             "The gradients with respect to inputs include only a "
@@ -1116,13 +1024,7 @@ def maxpool(
     new_grad_inp = torch.where(
         abs(delta_in) < eps, grad_input[0], unpool_grad_out_delta / delta_in
     )
-    # If the module is invalid, save the newly computed gradients
-    # The original_grad_input will be overridden later in the Tensor hook
-    if module.is_invalid:
-        module.saved_grad = new_grad_inp
-        return original_grad_input
-    else:
-        return (new_grad_inp,)
+    return new_grad_inp
 
 
 def _compute_diffs(inputs: Tensor, outputs: Tensor) -> Tuple[Tensor, Tensor]:
