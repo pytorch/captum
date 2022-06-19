@@ -441,13 +441,13 @@ class DeepLift(GradientAttribution):
             )
 
         multipliers = SUPPORTED_NON_LINEAR[type(module)](
-                module,
-                module.input,
-                module.output,
-                grad_input,
-                grad_output,
-                eps=self.eps,
-            )
+            module,
+            module.input,
+            module.output,
+            grad_input,
+            grad_output,
+            eps=self.eps,
+        )
         # remove all the properies that we set for the inputs and output
         del module.input
         del module.output

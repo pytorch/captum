@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-import warnings
 from typing import Any, Callable, List, Tuple, Union
 
 from captum._utils.gradient import construct_neuron_grad_fn

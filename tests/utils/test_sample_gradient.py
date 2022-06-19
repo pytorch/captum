@@ -4,6 +4,7 @@ import unittest
 from typing import Callable, Tuple
 
 import torch
+from captum._utils.gradient import apply_gradient_requirements
 from captum._utils.sample_gradient import SampleGradientWrapper, SUPPORTED_MODULES
 from packaging import version
 from tests.helpers.basic import assertTensorAlmostEqual, BaseTest
@@ -15,7 +16,6 @@ from tests.helpers.basic_models import (
 from torch import Tensor
 from torch.nn import Module
 
-from captum._utils.gradient import apply_gradient_requirements
 
 class Test(BaseTest):
     def test_sample_grads_linear_sum(self) -> None:

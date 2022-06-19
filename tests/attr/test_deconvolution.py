@@ -2,7 +2,6 @@
 
 from __future__ import print_function
 
-import copy
 import unittest
 from typing import Any, Tuple, Union
 

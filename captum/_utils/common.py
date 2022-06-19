@@ -667,8 +667,11 @@ def _register_backward_hook(
     # in v0.6.0
     grad_out = {}
 
-
-    def forward_hook(module, inp: Union[Tensor, Tuple[Tensor, ...]], out: Union[Tensor, Tuple[Tensor, ...]]) -> None:
+    def forward_hook(
+        module,
+        inp: Union[Tensor, Tuple[Tensor, ...]],
+        out: Union[Tensor, Tuple[Tensor, ...]],
+    ) -> None:
         grad_out = None
 
         def output_tensor_hook(output_grad: Tensor) -> None:
@@ -684,13 +687,17 @@ def _register_backward_hook(
                 return hook_out[0] if isinstance(hook_out, tuple) else hook_out
 
         if isinstance(inp, tuple):
-            assert len(inp) == 1, "Backward hooks not supported for module with >1 input"
+            assert (
+                len(inp) == 1
+            ), "Backward hooks not supported for module with >1 input"
             inp[0].register_hook(input_tensor_hook)
         else:
             inp.register_hook(input_tensor_hook)
 
         if isinstance(out, tuple):
-            assert len(out) == 1, "Backward hooks not supported for module with >1 output"
+            assert (
+                len(out) == 1
+            ), "Backward hooks not supported for module with >1 output"
             out[0].register_hook(output_tensor_hook)
         else:
             out.register_hook(output_tensor_hook)
