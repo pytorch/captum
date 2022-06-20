@@ -1113,6 +1113,7 @@ __all__ = [
     "Loss",
     "loss_wrapper",
     "BaseLoss",
+    "CompositeLoss",
     "LayerActivation",
     "ChannelActivation",
     "NeuronActivation",
