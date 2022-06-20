@@ -49,7 +49,7 @@ Captum can also be used by application engineers who are using trained models in
 
 **Installation Requirements**
 - Python >= 3.6
-- PyTorch >= 1.2
+- PyTorch >= 1.6
 
 
 ##### Installing the latest release
