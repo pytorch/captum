@@ -112,13 +112,16 @@ def _transfer_layer_vars(
     """
     Given a layer instance, create a new layer instance of another class
     with the same initialization variables as the original layer.
+
     Args:
+
         layer1: (nn.Module): A layer instance that you want to transfer
             initialization variables from.
         layer2: (nn.Module): The layer class to create with the variables
             from of layer1.
         kwargs: (Any, optional): Any additional variables to use when creating
             the new layer.
+
     Returns:
         layer2 instance (nn.Module): An instance of layer2 with the initialization
             variables that it shares with layer1, and any specified additional
@@ -273,13 +276,15 @@ class SkipLayer(torch.nn.Module):
 
     See nn.Identity for more details:
     https://pytorch.org/docs/stable/generated/torch.nn.Identity.html
-
-    Args:
-        args (Any): Any argument. Arguments will be safely ignored.
-        kwargs (Any) Any keyword argument. Arguments will be safely ignored.
     """
 
     def __init__(self, *args, **kwargs) -> None:
+        """
+        Args:
+
+            args (Any): Any argument. Arguments will be safely ignored.
+            kwargs (Any) Any keyword argument. Arguments will be safely ignored.
+        """
         super().__init__()
 
     def forward(
@@ -287,9 +292,11 @@ class SkipLayer(torch.nn.Module):
     ) -> Union[torch.Tensor, Tuple[torch.Tensor]]:
         """
         Args:
+
             x (torch.Tensor or tuple of torch.Tensor): The input tensor or tensors.
             args (Any): Any argument. Arguments will be safely ignored.
             kwargs (Any) Any keyword argument. Arguments will be safely ignored.
+
         Returns:
             x (torch.Tensor or tuple of torch.Tensor): The unmodified input tensor or
                 tensors.
@@ -306,7 +313,9 @@ def skip_layers(
     with layers that do nothing.
     This is useful for removing the nonlinear ReLU
     layers when creating expanded weights.
+
     Args:
+
         model (nn.Module): A PyTorch model instance.
         layers (nn.Module or list of nn.Module): The layer
             class type to replace in the model.
