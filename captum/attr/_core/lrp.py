@@ -311,10 +311,10 @@ class LRP(GradientAttribution):
     def _register_forward_hooks(self) -> None:
         for layer in self.layers:
             if type(layer) in SUPPORTED_NON_LINEAR_LAYERS:
-                backward_handle = _register_backward_hook(
+                backward_handles = _register_backward_hook(
                     layer, PropagationRule.backward_hook_activation, self
                 )
-                self.backward_handles.append(backward_handle)
+                self.backward_handles.extend(backward_handles)
             else:
                 forward_handle = layer.register_forward_hook(
                     layer.rule.forward_hook  # type: ignore

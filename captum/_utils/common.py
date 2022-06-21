@@ -660,7 +660,7 @@ def _get_module_from_name(model: Module, layer_name: str) -> Any:
 
 def _register_backward_hook(
     module: Module, hook: Callable, attr_obj: Any
-) -> torch.utils.hooks.RemovableHandle:
+) -> List[torch.utils.hooks.RemovableHandle]:
     # Special case for supporting output attributions for neuron methods
     # This can be removed after deprecation of neuron output attributions
     # for NeuronDeepLift, NeuronDeconvolution, and NeuronGuidedBackprop
@@ -668,31 +668,15 @@ def _register_backward_hook(
     grad_out = {}
 
     def forward_hook(
-        module,
+        module: Module,
         inp: Union[Tensor, Tuple[Tensor, ...]],
         out: Union[Tensor, Tuple[Tensor, ...]],
     ) -> None:
-        grad_out = None
+        nonlocal grad_out
+        grad_out = {}
 
         def output_tensor_hook(output_grad: Tensor) -> None:
-            nonlocal grad_out
-            grad_out = output_grad
-
-        def input_tensor_hook(input_grad: Tensor) -> Tensor:
-            if grad_out is None:
-                return
-            hook_out = hook(module, input_grad, grad_out)
-
-            if hook_out is not None:
-                return hook_out[0] if isinstance(hook_out, tuple) else hook_out
-
-        if isinstance(inp, tuple):
-            assert (
-                len(inp) == 1
-            ), "Backward hooks not supported for module with >1 input"
-            inp[0].register_hook(input_tensor_hook)
-        else:
-            inp.register_hook(input_tensor_hook)
+            grad_out[output_grad.device] = output_grad
 
         if isinstance(out, tuple):
             assert (
@@ -702,4 +686,26 @@ def _register_backward_hook(
         else:
             out.register_hook(output_tensor_hook)
 
-    return module.register_forward_hook(forward_hook)
+    def pre_hook(module, inp):
+        def input_tensor_hook(input_grad: Tensor) -> Tensor:
+            if len(grad_out) == 0:
+                return
+            hook_out = hook(module, input_grad, grad_out[input_grad.device])
+
+            if hook_out is not None:
+                return hook_out[0] if isinstance(hook_out, tuple) else hook_out
+
+        if isinstance(inp, tuple):
+            assert (
+                len(inp) == 1
+            ), "Backward hooks not supported for module with >1 input"
+            inp[0].register_hook(input_tensor_hook)
+            return inp[0].clone()
+        else:
+            inp.register_hook(input_tensor_hook)
+            return inp.clone()
+
+    return [
+        module.register_forward_pre_hook(pre_hook),
+        module.register_forward_hook(forward_hook),
+    ]

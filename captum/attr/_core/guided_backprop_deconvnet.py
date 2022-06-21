@@ -79,8 +79,8 @@ class ModifiedReluGradientAttribution(GradientAttribution):
 
     def _register_hooks(self, module: Module):
         if isinstance(module, torch.nn.ReLU):
-            hook = _register_backward_hook(module, self._backward_hook, self)
-            self.backward_hooks.append(hook)
+            hooks = _register_backward_hook(module, self._backward_hook, self)
+            self.backward_hooks.extend(hooks)
 
     def _backward_hook(
         self,

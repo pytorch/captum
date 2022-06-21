@@ -117,7 +117,7 @@ class SampleGradientWrapper:
             self.forward_hooks.append(
                 module.register_forward_hook(self._forward_hook_fn)
             )
-            self.backward_hooks.append(
+            self.backward_hooks.extend(
                 _register_backward_hook(module, self._backward_hook_fn, None)
             )
 
