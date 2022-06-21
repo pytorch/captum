@@ -528,25 +528,21 @@ def visualize_timeseries_attr(
         alpha_overlay (float, optional): Alpha to set for heatmap when using
                     `blended_heat_map` visualization mode, which overlays the
                     heat map over the greyscaled original image.
-                    Default: 0.5
-        show_colorbar (boolean, optional): Displays colorbar for heatmap below
-                    the visualization. If given method does not use a heatmap,
-                    then a colormap axis is created and hidden. This is
-                    necessary for appropriate alignment when visualizing
-                    multiple plots, some with colorbars and some without.
-                    Default: False
+                    Default: 0.7
+        show_colorbar (boolean): Displays colorbar for heat map below
+                    the visualization.
         title (string, optional): Title string for plot. If None, no title is
                     set.
                     Default: None
         fig_size (tuple, optional): Size of figure created.
                     Default: (6,6)
-        use_pyplot (boolean, optional): If true, uses pyplot to create and show
+        use_pyplot (boolean): If true, uses pyplot to create and show
                     figure and displays the figure after creating. If False,
                     uses Matplotlib object oriented API and simply returns a
                     figure object without showing.
                     Default: True.
         pyplot_kwargs: Keyword arguments forwarded to plt.plot, for example
-                    linewidth=3, color='black', etc
+                    `linewidth=3`, `color='black'`, etc
 
     Returns:
         2-element tuple of **figure**, **axis**:
@@ -571,14 +567,14 @@ def visualize_timeseries_attr(
     """
 
     # Check input dimensions
-    assert len(attr.shape) == 2, "Expected attr of shape (C, N), got {}".format(
+    assert len(attr.shape) == 2, "Expected attr of shape (N, C), got {}".format(
         attr.shape
     )
-    assert len(data.shape) == 2, "Expected data of shape (C, N), got {}".format(
+    assert len(data.shape) == 2, "Expected data of shape (N, C), got {}".format(
         attr.shape
     )
 
-    # Convert to channels-first, if needed
+    # Convert to channels-first
     if channels_last:
         attr = np.transpose(attr)
         data = np.transpose(data)
@@ -592,21 +588,13 @@ def visualize_timeseries_attr(
             "please verify input format".format(num_channels, timeseries_length)
         )
 
+    num_subplots = num_channels
     if (
-        TimeseriesVisualizationMethod[method]
-        == TimeseriesVisualizationMethod.overlay_individual
-        or TimeseriesVisualizationMethod[method]
-        == TimeseriesVisualizationMethod.colored_graph
-    ):
-        num_subplots = num_channels
-    elif (
         TimeseriesVisualizationMethod[method]
         == TimeseriesVisualizationMethod.overlay_combined
     ):
         num_subplots = 1
         attr = np.sum(attr, axis=0)  # Merge attributions across channels
-    else:
-        raise AssertionError("Invalid visualization method: {}".format(method))
 
     if x_values is not None:
         assert (
@@ -722,6 +710,9 @@ def visualize_timeseries_attr(
                 plt_axis[chan].set_ylabel(channel_labels[chan])
 
         plt.subplots_adjust(hspace=0)
+
+    else:
+        raise AssertionError("Invalid visualization method: {}".format(method))
 
     plt.xlim([x_values[0], x_values[-1]])
 
