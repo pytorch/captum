@@ -35,6 +35,18 @@ class InputOptimization(Objective, Parameterized):
     For more details, see the following:
         https://github.com/tensorflow/lucid
         https://distill.pub/2017/feature-visualization/
+
+    Instance variables that be used in the optimize function and StopCriteria:
+
+    :ivar model: initial value (nn.Module): The given model instance given when
+        initializing InputOptimization.
+    :ivar input_param: initial value (ImageParameterization): The given image
+        parameterization instance given when initializing InputOptimization.
+    :ivar loss_fn: initial value (Loss): The given composable loss instance given
+        when initializing InputOptimization.
+    :ivar transform: initial value (nn.Module): The given transform instance given
+        when initializing InputOptimization. If it was set to None during
+        initialization, then an instance of torch.nn.Identity will be returned.
     """
 
     def __init__(
@@ -95,7 +107,9 @@ class InputOptimization(Objective, Parameterized):
         return loss_value
 
     def cleanup(self) -> None:
-        r"""Garbage collection, mainly removing hooks."""
+        r"""Garbage collection, mainly removing hooks.
+        This should only be run after optimize is finished running.
+        """
         self.hooks.remove_hooks()
 
     # Targets are managed by ModuleOutputHooks; we mainly just want a convenient setter
@@ -109,6 +123,11 @@ class InputOptimization(Objective, Parameterized):
         self.hooks = ModuleOutputsHook(value)
 
     def parameters(self) -> Iterable[nn.Parameter]:
+        """
+        Returns:
+            parameters (iterable of nn.Parameter): An iterable of parameters in the
+                image parameterization.
+        """
         return self.input_param.parameters()
 
     def optimize(

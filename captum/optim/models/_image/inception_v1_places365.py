@@ -24,6 +24,7 @@ def googlenet_places365(
     dataset. See here for more information: https://arxiv.org/abs/1610.02055
 
     Args:
+
         pretrained (bool, optional): If True, returns a model pre-trained on the MIT
             Places365 Standard dataset.
             Default: False
@@ -47,6 +48,9 @@ def googlenet_places365(
         transform_input (bool, optional): If True, preprocesses the input according to
             the method with which it was trained on Places365.
             Default: True
+
+    Returns:
+        **model** (InceptionV1Places365): An InceptionV1 Places365 model instance.
     """
 
     if pretrained:
