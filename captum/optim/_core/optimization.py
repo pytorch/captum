@@ -42,8 +42,8 @@ class InputOptimization(Objective, Parameterized):
         initializing InputOptimization.
     :ivar input_param: initial value (ImageParameterization): The given image
         parameterization instance given when initializing InputOptimization.
-    :ivar loss_fn: initial value (Loss): The given composable loss instance given
-        when initializing InputOptimization.
+    :ivar loss_function: initial value (Loss): The given composable loss instance
+        given when initializing InputOptimization.
     :ivar transform: initial value (nn.Module): The given transform instance given
         when initializing InputOptimization. If it was set to None during
         initialization, then an instance of torch.nn.Identity will be returned.
