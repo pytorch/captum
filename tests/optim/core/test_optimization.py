@@ -29,7 +29,7 @@ class TestInputOptimization(BaseTest):
         self.assertEqual(loss_fn, obj.loss_function)
         self.assertEqual(list(image_param.parameters()), list(obj.parameters()))
 
-    def test_input_optimization_custom_optimize(self) -> torch.Tensor:
+    def test_input_optimization_custom_optimize(self) -> None:
         if version.parse(torch.__version__) <= version.parse("1.6.0"):
             raise unittest.SkipTest(
                 "Skipping InputOptimization custom optimze test due to insufficient"
@@ -39,7 +39,7 @@ class TestInputOptimization(BaseTest):
         loss_fn = opt.loss.ChannelActivation(model.layer, 0)
         obj = opt.InputOptimization(model, loss_function=loss_fn)
 
-        stop_criteria = opt.optimization.n_steps(512)
+        stop_criteria = opt.optimization.n_steps(512, show_progress=False)
         optimizer = torch.optim.Adam(obj.parameters(), lr=0.02)
 
         history, step = [], 0
@@ -53,7 +53,8 @@ class TestInputOptimization(BaseTest):
                 step += 1
         finally:
             obj.cleanup()
-        self.assertIsInstance(torch.stack(history), torch.Tensor)
+        history = torch.stack(history)
+        self.assertIsInstance(history, torch.Tensor)
 
     def test_input_optimization(self) -> None:
         if version.parse(torch.__version__) <= version.parse("1.6.0"):
