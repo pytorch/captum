@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import unittest
+from typing import List
 
 import captum.optim as opt
 import torch
@@ -42,7 +43,8 @@ class TestInputOptimization(BaseTest):
         stop_criteria = opt.optimization.n_steps(512, show_progress=False)
         optimizer = torch.optim.Adam(obj.parameters(), lr=0.02)
 
-        history, step = [], 0
+        history: List[torch.Tensor] = []
+        step = 0
         try:
             while stop_criteria(step, obj, history, optimizer):
                 optimizer.zero_grad()
