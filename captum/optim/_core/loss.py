@@ -1076,6 +1076,20 @@ def sum_loss_list(
     """
 
     def loss_fn(module: ModuleOutputMapping) -> torch.Tensor:
+        """
+        Pass collected activations through the list of loss objectives based on
+        specified targets, and then apply a reduction op to reduce them to scalar
+        before adding them together.
+
+        Args:
+
+            module (ModuleOutputMapping): A dict of captured activations with
+                nn.Modules as keys.
+
+        Returns:
+            loss (torch.Tensor): The target activations after being run through the
+                loss objectives, and then added together.
+        """
         return sum([to_scalar_fn(loss(module)) for loss in loss_list])
 
     name = "Sum(" + ", ".join([loss.__name__ for loss in loss_list]) + ")"
