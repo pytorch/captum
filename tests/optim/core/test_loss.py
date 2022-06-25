@@ -19,6 +19,21 @@ def get_loss_value(
     loss: opt_loss.Loss,
     model_input: Union[List[int], torch.Tensor] = [1, 3, 1, 1],
 ) -> torch.Tensor:
+    """
+    Collect target activations and pass them through a composable loss instance.
+
+    Args:
+
+        model (nn.Module): A PyTorch model instance.
+        loss (Loss): A composable loss instance that uses targets from the provided
+            model instance.
+        model_input (list of int or torch.Tensor): A list of integers to use for the
+            shape of the model input, or a tensor to use as the model input.
+            Default: [1, 3, 1, 1]
+
+    Returns:
+        loss (torch.Tensor): The target activations run through the loss objectives.
+    """
     if isinstance(model_input, (list, tuple)):
         model_input = torch.ones(*model_input)
     else:
