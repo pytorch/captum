@@ -532,6 +532,7 @@ class TestLoss(BaseTest):
         with _OverrideAbstractFunctions(opt_loss.Loss):
             loss = opt_loss.Loss()  # type: ignore
             self.assertIsNone(loss.target)
+            self.assertEqual(loss.__name__, "Loss")
             self.assertEqual(opt_loss.Loss.__name__, "Loss")
 
 
@@ -547,6 +548,8 @@ class TestBaseLoss(BaseTest):
             self.assertEqual(loss.batch_index, (None, None))
             self.assertEqual(loss._target, model)
             self.assertEqual(loss.target, model)
+            self.assertEqual(loss.__name__, "BaseLoss")
+            self.assertEqual(opt_loss.BaseLoss.__name__, "BaseLoss")
 
     def test_base_loss_batch_index(self) -> None:
         model = torch.nn.Identity()

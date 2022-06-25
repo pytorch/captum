@@ -24,6 +24,7 @@ class Loss(ABC):
 
     def __init__(self) -> None:
         super(Loss, self).__init__()
+        self.__name__ = self.__class__.__name__
 
     @abstractproperty
     def target(self) -> Union[nn.Module, List[nn.Module]]:
