@@ -19,11 +19,11 @@ def image_cov(x: torch.Tensor) -> torch.Tensor:
 
     Args:
 
-        x (torch.Tensor):  One or more NCHW image tensors stacked across the batch
+        x (torch.Tensor): One or more NCHW image tensors stacked across the batch
             dimension.
 
     Returns:
-        *tensor* (torch.Tensor):  The average color channel covariance matrix for the
+        *tensor* (torch.Tensor): The average color channel covariance matrix for the
             for the input tensor, with a shape of: [n_channels, n_channels].
     """
 
@@ -47,10 +47,10 @@ def dataset_cov_matrix(
         loader (torch.utils.data.DataLoader):  The reference to a PyTorch
             dataloader instance.
         show_progress (bool, optional): Whether or not to display a tqdm progress bar.
-            Default: False
+            Default: ``False``
         device (torch.device, optional): The PyTorch device to use for for calculating
             the cov matrix.
-            Default: torch.device("cpu")
+            Default: ``torch.device("cpu")``
 
     Returns:
         *tensor*:  A covariance matrix for the specified dataset.
@@ -91,10 +91,12 @@ def cov_matrix_to_klt(
 
     Args:
 
-        cov_mtx (tensor):  A 3 by 3 covariance matrix generated from a dataset.
-        normalize (bool):  Whether or not to normalize the resulting KLT matrix.
-            Default: False
-        epsilon (float):
+        cov_mtx (tensor): A 3 by 3 covariance matrix generated from a dataset.
+        normalize (bool): Whether or not to normalize the resulting KLT matrix.
+            Default: ``False``
+        epsilon (float, optional): A small epsilon value to use for numerical
+            stability.
+            Default: ``1e-10``
 
     Returns:
         *tensor*:  A KLT matrix for the specified covariance matrix.
@@ -121,15 +123,15 @@ def dataset_klt_matrix(
 
     Args:
 
-        loader (torch.utils.data.DataLoader):  The reference to a PyTorch
+        loader (torch.utils.data.DataLoader): The reference to a PyTorch
             dataloader instance.
-        normalize (bool):  Whether or not to normalize the resulting KLT matrix.
-            Default: False
+        normalize (bool): Whether or not to normalize the resulting KLT matrix.
+            Default: ``False``
         show_progress (bool, optional): Whether or not to display a tqdm progress bar.
-            Default: False
+            Default: ``False``
         device (torch.device, optional): The PyTorch device to use for for calculating
             the cov matrix.
-            Default: torch.device("cpu")
+            Default: ``torch.device("cpu")``
 
     Returns:
         *tensor*:  A KLT matrix for the specified dataset.
