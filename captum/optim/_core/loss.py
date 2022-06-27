@@ -865,14 +865,14 @@ class L2Mean(BaseLoss):
             target (nn.Module): A target layer, transform, or image parameterization
                 instance.
             channel_index (int, optional): Optionally only target a specific channel.
-                If set to None, all channels with be used.
-                Default: None
+                If set to ``None``, all channels with be used.
+                Default: ``None``
             constant (float, optional): Constant value to deduct from the activations.
-                Default: 0.5
+                Default: ``0.5``
             batch_index (int, optional): The index of activations to optimize if
-                optimizing a batch of activations. If set to None, defaults to all
+                optimizing a batch of activations. If set to ``None``, defaults to all
                 activations in the batch.
-                Default: None
+                Default: ``None``
         """
         BaseLoss.__init__(self, target, batch_index)
         self.constant = constant
@@ -920,16 +920,16 @@ class VectorLoss(BaseLoss):
                 channel / feature dimension of the target layer instance.
             activation_fn (Callable, optional): An optional activation function to
                 apply to the activations before computing the matrix product. If set
-                to None, then no activation function will be used.
-                Default: torch.nn.functional.relu
+                to ``None``, then no activation function will be used.
+                Default: ``torch.nn.functional.relu``
             move_channel_dim_to_final_dim (bool, optional): Whether or not to move the
                 channel dimension to the last dimension before computing the matrix
                 product.
-                Default: True
+                Default: ``True``
             batch_index (int, optional): The index of activations to optimize if
-                optimizing a batch of activations. If set to None, defaults to all
+                optimizing a batch of activations. If set to ``None``, defaults to all
                 activations in the batch.
-                Default: None
+                Default: ``None``
         """
         BaseLoss.__init__(self, target, batch_index)
         assert vec.dim() == 1
@@ -979,21 +979,22 @@ class FacetLoss(BaseLoss):
                 visualizing targets from. This is normally the penultimate layer of
                 the model.
             layer_target (nn.Module): A layer that we have facet_weights for. This
-                target layer should be below the ultimate_target layer in the model.
+                target layer should be below the ``ultimate_target`` layer in the
+                model.
             facet_weights (torch.Tensor): Weighting that steers the objective
                 towards a particular theme or concept. These weight values should
-                come from linear probes trained on layer_target.
+                come from linear probes trained on ``layer_target``.
             strength (float, list of float, optional): A single float or list of floats
                 to use for batch dimension weighting. If using a single value, then it
                 will be applied to all batch dimensions equally. Otherwise a list of
-                floats with a shape of: [start, end] should be used for torch.linspace
-                to calculate the step values in between. Default is set to None for no
-                weighting.
-                Default: None
+                floats with a shape of: [start, end] should be used for
+                ``torch.linspace`` to calculate the step values in between. Default is
+                set to ``None`` for no weighting.
+                Default: ``None``
             batch_index (int, optional): The index of the activations to optimize if
-                optimizing a batch of activations. If set to None, defaults to all
+                optimizing a batch of activations. If set to ``None``, defaults to all
                 activations in the batch.
-                Default: None
+                Default: ``None``
         """
         BaseLoss.__init__(self, [ultimate_target, layer_target], batch_index)
         self.ultimate_target = ultimate_target
