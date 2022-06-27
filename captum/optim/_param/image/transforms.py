@@ -22,7 +22,7 @@ class BlendAlpha(nn.Module):
 
             background (tensor, optional):  An NCHW image tensor to be used as the
                 Alpha channel's background.
-                Default: None
+                Default: ``None``
         """
         super().__init__()
         self.background = background
@@ -143,12 +143,12 @@ class ToRGB(nn.Module):
         """
         Args:
 
-            x (torch.tensor):  A CHW or NCHW RGB or RGBA image tensor.
-            inverse (bool, optional):  Whether to recorrelate or decorrelate colors.
-                Default: False.
+            x (torch.tensor): A CHW or NCHW RGB or RGBA image tensor.
+            inverse (bool, optional): Whether to recorrelate or decorrelate colors.
+                Default: ``False``
 
         Returns:
-            chw (torch.tensor):  A tensor with it's colors recorrelated or
+            chw (torch.tensor): A tensor with it's colors recorrelated or
                 decorrelated.
         """
 
@@ -197,12 +197,12 @@ class ToRGB(nn.Module):
 
         Args:
 
-            x (torch.tensor):  A CHW pr NCHW RGB or RGBA image tensor.
-            inverse (bool, optional):  Whether to recorrelate or decorrelate colors.
-                Default: False.
+            x (torch.tensor): A CHW pr NCHW RGB or RGBA image tensor.
+            inverse (bool, optional): Whether to recorrelate or decorrelate colors.
+                Default: ``False``
 
         Returns:
-            chw (torch.tensor):  A tensor with it's colors recorrelated or
+            chw (torch.tensor): A tensor with it's colors recorrelated or
                 decorrelated.
         """
 
@@ -244,12 +244,12 @@ class ToRGB(nn.Module):
 
         Args:
 
-            x (torch.tensor):  A CHW or NCHW RGB or RGBA image tensor.
-            inverse (bool, optional):  Whether to recorrelate or decorrelate colors.
-                Default: False.
+            x (torch.tensor): A CHW or NCHW RGB or RGBA image tensor.
+            inverse (bool, optional): Whether to recorrelate or decorrelate colors.
+                Default: ``False``
 
         Returns:
-            chw (torch.tensor):  A tensor with it's colors recorrelated or
+            chw (torch.tensor): A tensor with it's colors recorrelated or
                 decorrelated.
         """
         if torch.jit.is_scripting():
@@ -291,18 +291,20 @@ class CenterCrop(torch.nn.Module):
             pixels_from_edges (bool, optional): Whether to treat crop size
                 values as the number of pixels from the tensor's edge, or an
                 exact shape in the center.
-                Default: False
+                Default: ``False``
             offset_left (bool, optional): If the cropped away sides are not
                 equal in size, offset center by +1 to the left and/or top.
-                This parameter is only valid when `pixels_from_edges` is False.
-                Default: False
-            padding_mode (optional, str): One of "constant", "reflect", "replicate"
-                or "circular". This parameter is only used if the crop size is larger
-                than the image size.
-                Default: "constant"
-            padding_value (float, optional): fill value for "constant" padding. This
-                parameter is only used if the crop size is larger than the image size.
-                Default: 0.0
+                This parameter is only valid when ``pixels_from_edges`` is
+                ``False``.
+                Default: ``False``
+            padding_mode (optional, str): One of ``"constant"``, ``"reflect"``,
+                ``"replicate"``, or ``"circular"``. This parameter is only used if the
+                crop size is larger than the image size.
+                Default: ``"constant"``
+            padding_value (float, optional): fill value for ``"constant"`` padding.
+                This parameter is only used if the crop size is larger than the image
+                size.
+                Default: ``0.0``
         """
         super().__init__()
         if not hasattr(size, "__iter__"):
@@ -360,23 +362,25 @@ def center_crop(
 
     Args:
 
-        input (tensor):  A CHW or NCHW image tensor to center crop.
+        input (tensor): A CHW or NCHW image tensor to center crop.
         size (int, sequence, int): Number of pixels to center crop away.
         pixels_from_edges (bool, optional): Whether to treat crop size
             values as the number of pixels from the tensor's edge, or an
             exact shape in the center.
-            Default: False
+            Default: ``False``
         offset_left (bool, optional): If the cropped away sides are not
             equal in size, offset center by +1 to the left and/or top.
-            This parameter is only valid when `pixels_from_edges` is False.
-            Default: False
-        padding_mode (optional, str): One of "constant", "reflect", "replicate" or
-            "circular". This parameter is only used if the crop size is larger than
-            the image size.
-            Default: "constant"
-        padding_value (float, optional): fill value for "constant" padding. This
-            parameter is only used if the crop size is larger than the image size.
-            Default: 0.0
+            This parameter is only valid when ``pixels_from_edges`` is
+            ``False``.
+            Default: ``False``
+        padding_mode (optional, str): One of ``"constant"``, ``"reflect"``,
+            ``"replicate"``, or ``"circular"``. This parameter is only used if the crop
+            size is larger than the image size.
+            Default: ``"constant"``
+        padding_value (float, optional): fill value for ``"constant"`` padding.
+            This parameter is only used if the crop size is larger than the image
+            size.
+            Default: ``0.0``
 
     Returns:
         **tensor**:  A center cropped *tensor*.
@@ -460,19 +464,20 @@ class RandomScale(nn.Module):
             scale (float, sequence, or torch.distribution): Sequence of rescaling
                 values to randomly select from, or a torch.distributions instance.
             mode (str, optional): Interpolation mode to use. See documentation of
-                F.interpolate for more details. One of; "bilinear", "nearest", "area",
-                or "bicubic".
-                Default: "bilinear"
+                ``F.interpolate`` for more details. One of; ``"bilinear"``,
+                ``"nearest"``, ``"area"``, or ``"bicubic"``.
+                Default: ``"bilinear"``
             align_corners (bool, optional): Whether or not to align corners. See
-                documentation of F.interpolate for more details.
-                Default: False
+                documentation of ``F.interpolate`` for more details.
+                Default: ``False``
             recompute_scale_factor (bool, optional): Whether or not to recompute the
-                scale factor See documentation of F.interpolate for more details.
-                Default: False
+                scale factor See documentation of ``F.interpolate`` for more details.
+                Default: ``False``
             antialias (bool, optional): Whether or not use to anti-aliasing. This
-                feature is currently only available for "bilinear" and "bicubic"
-                modes. See documentation of F.interpolate for more details.
-                Default: False
+                feature is currently only available for ``"bilinear"`` and
+                ``"bicubic"`` modes. See documentation of ``F.interpolate`` for more
+                details.
+                Default: ``False``
         """
         super().__init__()
         assert mode not in ["linear", "trilinear"]
@@ -593,16 +598,17 @@ class RandomScaleAffine(nn.Module):
             scale (float, sequence, or torch.distribution): Sequence of rescaling
                 values to randomly select from, or a torch.distributions instance.
             mode (str, optional): Interpolation mode to use. See documentation of
-                F.grid_sample for more details. One of; "bilinear", "nearest", or
-                "bicubic".
-                Default: "bilinear"
+                ``F.grid_sample`` for more details. One of; ``"bilinear"``,
+                ``"nearest"``, or ``"bicubic"``.
+                Default: ``"bilinear"``
             padding_mode (str, optional): Padding mode for values that fall outside of
-                the grid. See documentation of F.grid_sample for more details. One of;
-                "zeros", "border", or "reflection".
-                Default: "zeros"
+                the grid. See documentation of ``F.grid_sample`` for more details. One
+                of; ``"zeros"``, ``"border"``, or ``"reflection"``.
+                Default: ``"zeros"``
             align_corners (bool, optional): Whether or not to align corners. See
-                documentation of F.affine_grid & F.grid_sample for more details.
-                Default: False
+                documentation of ``F.affine_grid`` & ``F.grid_sample`` for more
+                details.
+                Default: ``False``
         """
         super().__init__()
         if isinstance(scale, torch.distributions.distribution.Distribution):
@@ -772,19 +778,20 @@ class RandomRotation(nn.Module):
         """
         Args:
 
-            degrees (float, sequence, or torch.distribution): Tuple of degrees values
-                to randomly select from, or a torch.distributions instance.
+            degrees (float, sequence, or torch.distribution): Tuple or list of degrees
+                values to randomly select from, or a ``torch.distributions`` instance.
             mode (str, optional): Interpolation mode to use. See documentation of
-                F.grid_sample for more details. One of; "bilinear", "nearest", or
-                "bicubic".
-                Default: "bilinear"
+                F.grid_sample for more details. One of; ``"bilinear"``, ``"nearest"``,
+                or ``"bicubic"``.
+                Default: ``"bilinear"``
             padding_mode (str, optional): Padding mode for values that fall outside of
                 the grid. See documentation of F.grid_sample for more details. One of;
-                "zeros", "border", or "reflection".
-                Default: "zeros"
+                ``"zeros"``, ``"border"``, or ``"reflection"``.
+                Default: ``"zeros"``
             align_corners (bool, optional): Whether or not to align corners. See
-                documentation of F.affine_grid & F.grid_sample for more details.
-                Default: False
+                documentation of ``F.affine_grid`` & ``F.grid_sample`` for more
+                details.
+                Default: ``False``
         """
         super().__init__()
         if isinstance(degrees, torch.distributions.distribution.Distribution):
@@ -1117,7 +1124,8 @@ class NChannelsToRGB(nn.Module):
         Args:
 
             warp (bool, optional): Whether or not to make the resulting RGB colors more
-                distict from each other. Default is set to False.
+                distict from each other.
+                Default: ``False``
         """
         super().__init__()
         self.warp = warp
@@ -1238,26 +1246,28 @@ class TransformationRobustness(nn.Module):
         Args:
 
             padding_transform (nn.Module, optional): A padding module instance. No
-                padding will be applied before transforms if set to None.
-                Default: nn.ConstantPad2d(2, value=0.5)
+                padding will be applied before transforms if set to ``None``.
+                Default: ``nn.ConstantPad2d(2, value=0.5)``
             translate (int or list of int, optional): The max horizontal and vertical
                  translation to use for each jitter transform.
-                 Default: [4] * 10
+                 Default: ``[4] * 10``
             scale (float, sequence, or torch.distribution, optional): Sequence of
                 rescaling values to randomly select from, or a torch.distributions
-                instance. If set to None, no rescaling transform will be used.
-                Default: A set of optimal values.
+                instance. If set to ``None``, no rescaling transform will be used.
+                Default: ``[0.995**n for n in range(-5, 80)] + [0.998**n for n in 2 *
+                list(range(20, 40))]``
             degrees (float, sequence, or torch.distribution, optional): Sequence of
                 degrees to randomly select from, or a torch.distributions
-                instance. If set to None, no rotation transform will be used.
-                Default: A set of optimal values.
+                instance. If set to ``None``, no rotation transform will be used.
+                Default: ``list(range(-20, 20)) + list(range(-10, 10)) +
+                list(range(-5, 5)) + 5 * [0]``
             final_translate (int, optional): The max horizontal and vertical
                  translation to use for the final jitter transform on fractional
                  pixels.
-                 Default: 2
+                 Default: ``2``
             crop_or_pad_output (bool, optional): Whether or not to crop or pad the
                 transformed output so that it is the same shape as the input.
-                Default: False
+                Default: ``False``
         """
         super().__init__()
         self.padding_transform = padding_transform

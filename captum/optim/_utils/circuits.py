@@ -24,20 +24,25 @@ def extract_expanded_weights(
     See: https://distill.pub/2020/circuits/visualizing-weights/
 
     Args:
-        model (nn.Module):  The reference to PyTorch model instance.
-        target1 (nn.module):  The starting target layer. Must be below the layer
-            specified for target2.
-        target2 (nn.Module):  The end target layer. Must be above the layer
-            specified for target1.
-        crop_shape (int or tuple of ints, optional):  Specify the exact output size
-            to crop out.
-        model_input (tensor or tuple of tensors, optional):  The input to use
+
+        model (nn.Module): The reference to PyTorch model instance.
+        target1 (nn.module): The starting target layer. Must be below the layer
+            specified for ``target2``.
+        target2 (nn.Module): The end target layer. Must be above the layer
+            specified for ``target1``.
+        crop_shape (int or tuple of ints, optional): Specify the exact output size
+            to crop out. Set to ``None`` for no cropping.
+            Default: ``None``
+        model_input (tensor or tuple of tensors, optional): The input to use
             with the specified model.
-        crop_func (Callable, optional):  Specify a function to crop away the padding
+            Default: ``torch.zeros(1, 3, 224, 224)``
+        crop_func (Callable, optional): Specify a function to crop away the padding
             from the output weights.
+            Default: ``center_crop``
+
     Returns:
-        *tensor*:  A tensor containing the expanded weights in the form of:
-            (target2 output channels, target1 output channels, height, width)
+        *tensor* (torch.Tensor): A tensor containing the expanded weights in the form
+            of: (target2 output channels, target1 output channels, height, width)
     """
     if isinstance(model_input, torch.Tensor):
         model_input = model_input.to(next(model.parameters()).device)

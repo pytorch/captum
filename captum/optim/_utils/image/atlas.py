@@ -18,13 +18,13 @@ def normalize_grid(
             with a shape of: [n_points, n_axes].
         min_percentile (float, optional): The minimum percentile to use when
             normalizing the tensor. Value must be in the range [0, 1].
-            Default: 0.01
+            Default: ``0.01``
         max_percentile (float, optional): The maximum percentile to use when
             normalizing the tensor. Value must be in the range [0, 1].
-            Default: 0.99
+            Default: ``0.99``
         relative_margin (float, optional): The relative margin to use when
             normalizing the tensor.
-            Default: 0.1
+            Default: ``0.1``
 
     Returns:
         normalized_grid (torch.tensor): A normalized xy coordinate grid tensor.
@@ -71,21 +71,26 @@ def calc_grid_indices(
 
     Each cell in the above example would contain a list of indices inside a tensor for
     that particular cell, like this:
-    indices = [
-        [tensor([0, 5]), tensor([1]), tensor([2, 3])],
-        [tensor([]), tensor([4]), tensor([])],
-        [tensor([6, 7, 8]), tensor([]), tensor([])],
-    ]
+
+    ::
+
+        indices = [
+            [tensor([0, 5]), tensor([1]), tensor([2, 3])],
+            [tensor([]), tensor([4]), tensor([])],
+            [tensor([6, 7, 8]), tensor([]), tensor([])],
+        ]
 
     Args:
+
         xy_grid (torch.tensor): The xy coordinate grid activation samples, with a shape
             of: [n_points, 2].
         grid_size (Tuple[int, int]): The grid_size of grid cells to use. The grid_size
             variable should be in the format of: [width, height].
         x_extent (Tuple[float, float], optional): The x axis range to use.
-            Default: (0.0, 1.0)
+            Default: ``(0.0, 1.0)``
         y_extent (Tuple[float, float], optional): The y axis range to use.
-            Default: (0.0, 1.0)
+            Default: ``(0.0, 1.0)``
+
     Returns:
         indices (list of list of torch.Tensors): List of lists of grid indices
             stored inside tensors to use. Each 1D tensor of indices has a size of:
@@ -134,11 +139,11 @@ def compute_avg_cell_samples(
             0 to n_indices.
         raw_samples (torch.tensor): Raw unmodified activation or attribution samples,
              with a shape of: [n_samples, n_channels].
-        grid_size (Tuple[int, int]): The grid_size of grid cells to use. The grid_size
-            variable should be in the format of: [width, height].
+        grid_size (Tuple[int, int]): The grid_size of grid cells to use. The
+            ``grid_size`` variable should be in the format of: [width, height].
         min_density (int, optional): The minimum number of points for a cell to be
             counted.
-            Default: 8
+            Default: ``8``
 
     Returns:
         cell_vecs (torch.tensor): A tensor containing all the direction vectors that
@@ -186,18 +191,18 @@ def create_atlas_vectors(
             of: [n_points, 2].
         raw_activations (torch.tensor): Raw unmodified activation samples, with a shape
             of: [n_samples, n_channels].
-        grid_size (Tuple[int, int]): The size of grid cells to use. The grid_size
+        grid_size (Tuple[int, int]): The size of grid cells to use. The ``grid_size``
             variable should be in the format of: [width, height].
         min_density (int, optional): The minimum number of points for a cell to be
             counted.
-            Default: 8
+            Default: ``8``
         normalize (bool, optional): Whether or not to remove outliers from an xy
             coordinate grid tensor, and rescale it to [0, 1].
-            Default: True
+            Default: ``True``
         x_extent (Tuple[float, float], optional): The x axis range to use.
-            Default: (0.0, 1.0)
+            Default: ``(0.0, 1.0)``
         y_extent (Tuple[float, float], optional): The y axis range to use.
-            Default: (0.0, 1.0)
+            Default: ``(0.0, 1.0)``
 
     Returns:
         grid_vecs (torch.tensor): A tensor containing all the direction vectors that
@@ -243,8 +248,8 @@ def create_atlas(
         grid_size (Tuple[int, int]): The size of grid cells to use. The grid_size
             variable should be in the format of: [width, height].
         base_tensor (Callable, optional): What to use for the atlas base tensor. Basic
-            choices are: torch.ones or torch.zeros.
-            Default: torch.ones
+            choices are: ``torch.ones`` or ``torch.zeros``.
+            Default: ``torch.ones``
 
     Returns:
         atlas_canvas (torch.tensor): The full activation atlas visualization, with a

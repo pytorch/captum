@@ -17,36 +17,43 @@ def googlenet(
     r"""GoogLeNet (also known as Inception v1 & Inception 5h) model architecture from
     `"Going Deeper with Convolutions" <http://arxiv.org/abs/1409.4842>`_.
 
+    Example::
+
+        >>> model = opt.models.googlenet(pretrained=True)
+        >>> output = model(torch.zeros(1, 3, 224, 224))
+
     Args:
 
-        pretrained (bool, optional): If True, returns a model pre-trained on ImageNet.
-            Default: False
-        progress (bool, optional): If True, displays a progress bar of the download to
-            stderr
-            Default: True
+        pretrained (bool, optional): If ``True``, returns a model pre-trained on
+            ImageNet.
+            Default: ``False``
+        progress (bool, optional): If ``True``, displays a progress bar of the download
+            to stderr.
+            Default: ``True``
         model_path (str, optional): Optional path for InceptionV1 model file.
-            Default: None
-        replace_relus_with_redirectedrelu (bool, optional): If True, return pretrained
-            model with Redirected ReLU in place of ReLU layers.
-            Default: *True* when pretrained is True otherwise *False*
-        use_linear_modules_only (bool, optional): If True, return pretrained
+            Default: ``None``
+        replace_relus_with_redirectedrelu (bool, optional): If ``True``, return
+            pretrained model with Redirected ReLU in place of ReLU layers.
+            Default: *``True``* when pretrained is True otherwise *``False``*
+        use_linear_modules_only (bool, optional): If ``True``, return pretrained
             model with all nonlinear layers replaced with linear equivalents.
-            Default: False
-        aux_logits (bool, optional): If True, adds two auxiliary branches that can
+            Default: ``False``
+        aux_logits (bool, optional): If ``True``, adds two auxiliary branches that can
             improve training.
-            Default: False
+            Default: ``False``
         out_features (int, optional): Number of output features in the model used for
             training.
-            Default: 1008
-        transform_input (bool, optional): If True, preprocesses the input according to
-            the method with which it was trained on ImageNet.
-            Default: False
-        bgr_transform (bool, optional): If True and transform_input is True, perform an
-            RGB to BGR transform in the internal preprocessing.
-            Default: False
+            Default: ``1008``
+        transform_input (bool, optional): If ``True``, preprocesses the input according
+            to the method with which it was trained on ImageNet.
+            Default: ``False``
+        bgr_transform (bool, optional): If ``True`` and ``transform_input`` is
+            ``True``, perform an RGB to BGR transform in the internal
+            preprocessing.
+            Default: ``False``
 
     Returns:
-        **InceptionV1** (InceptionV1): An Inception5h model.
+        **model** (InceptionV1): An Inception5h model instance.
     """
 
     if pretrained:
@@ -93,24 +100,25 @@ class InceptionV1(nn.Module):
         """
         Args:
 
-            replace_relus_with_redirectedrelu (bool, optional): If True, return
+            replace_relus_with_redirectedrelu (bool, optional): If ``True``, return
                 pretrained model with Redirected ReLU in place of ReLU layers.
-                Default: False
-            use_linear_modules_only (bool, optional): If True, return pretrained
+                Default: ``False``
+            use_linear_modules_only (bool, optional): If ``True``, return pretrained
                 model with all nonlinear layers replaced with linear equivalents.
-                Default: False
+                Default: ``False``
             aux_logits (bool, optional): If True, adds two auxiliary branches that can
                 improve training.
-                Default: False
+                Default: ``False``
             out_features (int, optional): Number of output features in the model used
                 for training.
-                Default: 1008
-            transform_input (bool, optional): If True, preprocesses the input according
-                to the method with which it was trained on ImageNet.
-                Default: False
-            bgr_transform (bool, optional): If True and transform_input is True,
-                perform an RGB to BGR transform in the internal preprocessing.
-                Default: False
+                Default: ``1008``
+            transform_input (bool, optional): If ``True``, preprocesses the input
+                according to the method with which it was trained on ImageNet.
+                Default: ``False``
+            bgr_transform (bool, optional): If ``True`` and ``transform_input`` is
+                ``True``, perform an RGB to BGR transform in the internal
+                preprocessing.
+                Default: ``False``
         """
         super().__init__()
         self.aux_logits = aux_logits
@@ -293,10 +301,10 @@ class InceptionModule(nn.Module):
             pool_proj (int, optional):
             activ (type of nn.Module, optional): The nn.Module class type to use for
                 activation layers.
-                Default: nn.ReLU
+                Default: ``nn.ReLU``
             p_layer (type of nn.Module, optional): The nn.Module class type to use for
                 pooling layers.
-                Default: nn.MaxPool2d
+                Default: ``nn.MaxPool2d``
         """
         super().__init__()
         self.conv_1x1 = nn.Conv2d(
@@ -390,13 +398,13 @@ class AuxBranch(nn.Module):
 
             in_channels (int, optional): The number of input channels to use for the
                 auxiliary branch.
-                Default: 508
+                Default: ``508``
             out_features (int, optional): The number of output features to use for the
                 auxiliary branch.
-                Default: 1008
+                Default: ``1008``
             activ (type of nn.Module, optional): The nn.Module class type to use for
                 activation layers.
-                Default: nn.ReLU
+                Default: ``nn.ReLU``
         """
         super().__init__()
         self.avg_pool = nn.AdaptiveAvgPool2d((4, 4))
