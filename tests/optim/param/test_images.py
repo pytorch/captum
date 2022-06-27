@@ -33,6 +33,13 @@ class TestImageTensor(BaseTest):
         self.assertTrue(torch.is_tensor(test_tensor))
         self.assertEqual(x.shape, test_tensor.shape)
 
+    def test_new_with_grad(self) -> None:
+        x = torch.ones(5, requires_grad=True)
+        test_tensor = images.ImageTensor(x)
+        self.assertTrue(test_tensor.requires_grad)
+        self.assertTrue(torch.is_tensor(test_tensor))
+        self.assertEqual(x.shape, test_tensor.shape)
+
     def test_torch_function(self) -> None:
         x = torch.ones(5)
         image_tensor = images.ImageTensor(x)
