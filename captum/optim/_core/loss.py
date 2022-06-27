@@ -197,6 +197,10 @@ def module_op(
 
 
 class BaseLoss(Loss):
+    """
+    The base class used for all Loss objectives.
+    """
+
     def __init__(
         self,
         target: Union[nn.Module, List[nn.Module]] = [],
@@ -209,9 +213,9 @@ class BaseLoss(Loss):
                 nn.Module.
             batch_index (int or list of int, optional): The index or index range of
                 activations to optimize if optimizing a batch of activations. If set to
-                None, defaults to all activations in the batch. Index ranges should be
-                in the format of: [start, end].
-                Default: None
+                ``None``, defaults to all activations in the batch. Index ranges should
+                be in the format of: [start, end].
+                Default: ``None``
         """
         super().__init__()
         self._target = target
@@ -244,6 +248,82 @@ class BaseLoss(Loss):
 
 
 class CompositeLoss(BaseLoss):
+    """
+    When math operations are performed using one or more loss objectives, this class
+    is used to store and run those operations. Below we show examples of common
+    CompositeLoss use cases.
+
+
+    Using CompositeLoss with a unary op or with a binary op involving a Loss instance
+    and a float or integer:
+
+    .. code-block:: python
+
+        def compose_single_loss(loss: opt.loss.Loss) -> opt.loss.CompositeLoss:
+            def loss_fn(
+                module: Dict[nn.Module, Optional[torch.Tensor]]
+            ) -> torch.Tensor:
+                return loss(module)
+
+            # Name of new composable loss instance
+            name = loss.__name__
+            # All targets being used in the composable loss instance
+            target = loss.target
+            return opt.loss.CompositeLoss(loss_fn, name=name, target=target)
+
+    Using CompositeLoss with a binary op using two Loss instances:
+
+    .. code-block:: python
+
+        def compose_binary_loss(
+            loss1: opt.loss.Loss, loss2: opt.loss.Loss
+        ) -> opt.loss.CompositeLoss:
+            def loss_fn(
+                module: Dict[nn.Module, Optional[torch.Tensor]]
+            ) -> torch.Tensor:
+                # Operation using 2 loss instances
+                return loss1(module) + loss2(module)
+
+            # Name of new composable loss instance
+            name = "Compose(" + ", ".join([loss1.__name__, loss2.__name__]) + ")"
+
+            # All targets being used in the composable loss instance
+            target1 = loss1.target if type(loss1.target) is list else [loss1.target]
+            target2 = loss2.target if type(loss2.target) is list else [loss2.target]
+            target = target1 + target2
+
+            # Remove duplicate targets
+            target = list(dict.fromkeys(target))
+            return opt.loss.CompositeLoss(loss_fn, name=name, target=target)
+
+    Using CompositeLoss with a list of Loss instances:
+
+    .. code-block:: python
+
+        def compose_multiple_loss(loss: List[opt.loss.Loss]) -> opt.loss.CompositeLoss:
+            def loss_fn(
+                module: Dict[nn.Module, Optional[torch.Tensor]]
+            ) -> torch.Tensor:
+                loss_tensors = [loss_obj(module) for loss_obj in loss]
+                # We can use any operation that combines the list of tensors into a
+                # single tensor
+                return sum(loss_tensors)
+
+            # Name of new composable loss instance
+            name = "Compose(" + ", ".join([obj.__name__ for obj in loss]) + ")"
+
+            # All targets being used in the composable loss instance
+            # targets will either be List[nn.Module] or nn.Module
+            targets = [loss_obj.target for loss_obj in loss]
+            # Flatten list of targets
+            target = [
+                o for l in [t if type(t) is list else [t] for t in targets] for o in l
+            ]
+            # Remove duplicate targets
+            target = list(dict.fromkeys(target))
+            return opt.loss.CompositeLoss(loss_fn, name=name, target=target)
+    """
+
     def __init__(
         self,
         loss_fn: Callable,
@@ -258,7 +338,7 @@ class CompositeLoss(BaseLoss):
                 objective(s) & math operations.
             name (str, optional): The name of all composable operations in the
                 instance.
-                Default: ""
+                Default: ``""``
             target (nn.Module or list of nn.module): A target nn.Module or list of
                 nn.Module.
         """
@@ -317,9 +397,9 @@ class LayerActivation(BaseLoss):
                 instance to optimize the output of.
             batch_index (int or list of int, optional): The index or index range of
                 activations to optimize if optimizing a batch of activations. If set
-                to None, defaults to all activations in the batch. Index ranges should
-                be in the format of: [start, end].
-                Default: None
+                to ``None``, defaults to all activations in the batch. Index ranges
+                should be in the format of: [start, end].
+                Default: ``None``
         """
         BaseLoss.__init__(self, target, batch_index)
 
@@ -351,9 +431,9 @@ class ChannelActivation(BaseLoss):
             channel_index (int): The index of the channel to optimize for.
             batch_index (int or list of int, optional): The index or index range of
                 activations to optimize if optimizing a batch of activations. If set to
-                None, defaults to all activations in the batch. Index ranges should be
-                in the format of: [start, end].
-                Default: None
+                ``None``, defaults to all activations in the batch. Index ranges should
+                be in the format of: [start, end].
+                Default: ``None``
         """
         BaseLoss.__init__(self, target, batch_index)
         self.channel_index = channel_index
@@ -397,16 +477,16 @@ class NeuronActivation(BaseLoss):
             x (int, optional): The x coordinate of the neuron to optimize for. If
                 unspecified, defaults to center, or one unit left of center for even
                 lengths.
-                Default: None
+                Default: ``None``
             y (int, optional): The y coordinate of the neuron to optimize for. If
                 unspecified, defaults to center, or one unit up of center for even
                 heights.
-                Default: None
+                Default: ``None``
             batch_index (int or list of int, optional): The index or index range of
                 activations to optimize if optimizing a batch of activations. If set to
-                None, defaults to all activations in the batch. Index ranges should be
-                in the format of: [start, end].
-                Default: None
+                ``None``, defaults to all activations in the batch. Index ranges should
+                be in the format of: [start, end].
+                Default: ``None``
         """
         BaseLoss.__init__(self, target, batch_index)
         self.channel_index = channel_index
@@ -452,9 +532,9 @@ class DeepDream(BaseLoss):
                 instance to optimize the output of.
             batch_index (int or list of int, optional): The index or index range of
                 activations to optimize if optimizing a batch of activations. If set
-                to None, defaults to all activations in the batch. Index ranges should
-                be in the format of: [start, end].
-                Default: None
+                to ``None``, defaults to all activations in the batch. Index ranges
+                should be in the format of: [start, end].
+                Default: ``None``
         """
         BaseLoss.__init__(self, target, batch_index)
 
@@ -487,9 +567,9 @@ class TotalVariation(BaseLoss):
                 instance to optimize the output of.
             batch_index (int or list of int, optional): The index or index range of
                 activations to optimize if optimizing a batch of activations. If set
-                to None, defaults to all activations in the batch. Index ranges should
-                be in the format of: [start, end].
-                Default: None
+                to ``None``, defaults to all activations in the batch. Index ranges
+                should be in the format of: [start, end].
+                Default: ``None``
         """
         BaseLoss.__init__(self, target, batch_index)
 
@@ -521,9 +601,9 @@ class L1(BaseLoss):
             constant (float): Constant threshold to deduct from the activations.
             batch_index (int or list of int, optional): The index or index range of
                 activations to optimize if optimizing a batch of activations. If set to
-                None, defaults to all activations in the batch. Index ranges should be
-                in the format of: [start, end].
-                Default: None
+                ``None``, defaults to all activations in the batch. Index ranges should
+                be in the format of: [start, end].
+                Default: ``None``
         """
         BaseLoss.__init__(self, target, batch_index)
         self.constant = constant
@@ -553,14 +633,14 @@ class L2(BaseLoss):
             target (nn.Module): A target layer, transform, or image parameterization
                 instance to optimize the output of.
             constant (float): Constant threshold to deduct from the activations.
-                Default: 0.0
+                Default: ``0.0``
             eps (float): Small value to add to L2 prior to sqrt.
-                Default: 1e-6
+                Default: ``1e-6``
             batch_index (int or list of int, optional): The index or index range of
                 activations to optimize if optimizing a batch of activations. If set to
-                None, defaults to all activations in the batch. Index ranges should be
-                in the format of: [start, end].
-                Default: None
+                ``None``, defaults to all activations in the batch. Index ranges should
+                be in the format of: [start, end].
+                Default: ``None``
         """
         BaseLoss.__init__(self, target, batch_index)
         self.constant = constant
@@ -596,9 +676,9 @@ class Diversity(BaseLoss):
             target (nn.Module): A target layer, transform, or image parameterization
                 instance to optimize the output of.
             batch_index (list of int, optional): The index range of activations to
-                optimize. If set to None, defaults to all activations in the batch.
+                optimize. If set to ``None``, defaults to all activations in the batch.
                 Index ranges should be in the format of: [start, end].
-                Default: None
+                Default: ``None``
         """
         BaseLoss.__init__(self, target, batch_index)
 
@@ -643,13 +723,13 @@ class ActivationInterpolation(BaseLoss):
             target1 (nn.Module): The first layer, transform, or image parameterization
                 instance to optimize the output for.
             channel_index1 (int, optional): Index of channel in first target to
-                optimize. Default is set to None for all channels.
-                Default: None
+                optimize. Default is set to ``None`` for all channels.
+                Default: ``None``
             target2 (nn.Module): The second layer, transform, or image parameterization
                 instance to optimize the output for.
             channel_index2 (int, optional): Index of channel in second target to
-                optimize. Default is set to None for all channels.
-                Default: None
+                optimize. Default is set to ``None`` for all channels.
+                Default: ``None``
         """
         self.target_one = target1
         self.channel_index_one = channel_index1
@@ -712,11 +792,11 @@ class Alignment(BaseLoss):
                 instance to optimize the output of.
             decay_ratio (float): How much to decay penalty as images move apart in
                 the batch.
-                Default: 2.0
+                Default: ``2.0``
             batch_index (list of int, optional): The index range of activations to
-                optimize. If set to None, defaults to all activations in the batch.
+                optimize. If set to ``None``, defaults to all activations in the batch.
                 Index ranges should be in the format of: [start, end].
-                Default: None
+                Default: ``None``
         """
         if batch_index:
             assert len(batch_index) == 2
@@ -766,11 +846,11 @@ class Direction(BaseLoss):
                 instance to optimize the output of.
             vec (torch.Tensor): Vector representing direction to align to.
             cossim_pow (float, optional): The desired cosine similarity power to use.
-                Default: 0.0
+                Default: ``0.0``
             batch_index (int, optional): The index of activations to optimize if
-                optimizing a batch of activations. If set to None, defaults to all
-                activations in the batch.
-                Default: None
+                optimizing a batch of activations. If set to ``None``, defaults to
+                all activations in the batch.
+                Default: ``None``
         """
         BaseLoss.__init__(self, target, batch_index)
         self.vec = vec.reshape((1, -1, 1, 1))
@@ -810,22 +890,22 @@ class NeuronDirection(BaseLoss):
                 instance to optimize the output of.
             vec (torch.Tensor): Vector representing direction to align to.
             x (int, optional): The x coordinate of the neuron to optimize for. If
-                set to None, defaults to center, or one unit left of center for even
-                lengths.
-                Default: None
+                set to ``None``, defaults to center, or one unit left of center for
+                even lengths.
+                Default: ``None``
             y (int, optional): The y coordinate of the neuron to optimize for. If
-                set to None, defaults to center, or one unit up of center for even
-                heights.
-                Default: None
+                set to ``None``, defaults to center, or one unit up of center for
+                even heights.
+                Default: ``None``
             channel_index (int): The index of the channel to optimize for. If set to
-                None, then all channels will be used.
-                Default: None
+                ``None``, then all channels will be used.
+                Default: ``None``
             cossim_pow (float, optional): The desired cosine similarity power to use.
-                Default: 0.0
+                Default: ``0.0``
             batch_index (int, optional): The index of activations to optimize if
-                optimizing a batch of activations. If set to None, defaults to all
+                optimizing a batch of activations. If set to ``None``, defaults to all
                 activations in the batch.
-                Default: None
+                Default: ``None``
         """
         BaseLoss.__init__(self, target, batch_index)
         self.vec = vec.reshape((1, -1, 1, 1))
@@ -897,24 +977,24 @@ class AngledNeuronDirection(BaseLoss):
                 instance to optimize the output of.
             vec (torch.Tensor): A neuron direction vector to use.
             vec_whitened (torch.Tensor, optional): A whitened neuron direction vector.
-                If set to None, then no whitened vec will be used.
-                Default: None
+                If set to ``None``, then no whitened vec will be used.
+                Default: ``None``
             cossim_pow (float, optional): The desired cosine similarity power to use.
             x (int, optional): The x coordinate of the neuron to optimize for. If
-                set to None, defaults to center, or one unit left of center for even
-                lengths.
-                Default: None
+                set to ``None``, defaults to center, or one unit left of center for
+                even lengths.
+                Default: ``None``
             y (int, optional): The y coordinate of the neuron to optimize for. If
-                set to None, defaults to center, or one unit up of center for even
-                heights.
-                Default: None
+                set to ``None``, defaults to center, or one unit up of center for
+                even heights.
+                Default: ``None``
             eps (float, optional): If cossim_pow is greater than zero, the desired
                 epsilon value to use for cosine similarity calculations.
-                Default: 1.0e-4
+                Default: ``1.0e-4``
             batch_index (int, optional): The index of activations to optimize if
-                optimizing a batch of activations. If set to None, defaults to all
+                optimizing a batch of activations. If set to ``None``, defaults to all
                 activations in the batch.
-                Default: None
+                Default: ``None``
         """
         BaseLoss.__init__(self, target, batch_index)
         self.vec = vec.unsqueeze(0) if vec.dim() == 1 else vec
@@ -974,11 +1054,11 @@ class TensorDirection(BaseLoss):
                 instance to optimize the output of.
             vec (torch.Tensor): Vector representing direction to align to.
             cossim_pow (float, optional): The desired cosine similarity power to use.
-                Default: 0.0
+                Default: ``0.0``
             batch_index (int, optional): The index of activations to optimize if
-                optimizing a batch of activations. If set to None, defaults to all
+                optimizing a batch of activations. If set to ``None``, defaults to all
                 activations in the batch.
-                Default: None
+                Default: ``None``
         """
         BaseLoss.__init__(self, target, batch_index)
         assert vec.dim() == 4
@@ -1030,21 +1110,21 @@ class ActivationWeights(BaseLoss):
                 instance to optimize the output of.
             weights (torch.Tensor): Weights to apply to targets.
             neuron (bool): Whether target is a neuron.
-                Default: False
+                Default: ``False``
             x (int, optional): The x coordinate of the neuron to optimize for. If
-                set to None, defaults to center, or one unit left of center for even
-                lengths.
-                Default: None
+                set to ``None``, defaults to center, or one unit left of center for
+                even lengths.
+                Default: ``None``
             y (int, optional): The y coordinate of the neuron to optimize for. If
-                set to None, defaults to center, or one unit up of center for even
-                heights.
-                Default: None
+                set to ``None``, defaults to center, or one unit up of center for
+                even heights.
+                Default: ``None``
             wx (int, optional): Length of neurons to apply the weights to, along the
-                x-axis. Set to None for the full length.
-                Default: None
+                x-axis. Set to ``None`` for the full length.
+                Default: ``None``
             wy (int, optional): Length of neurons to apply the weights to, along the
-                y-axis. Set to None for the full length.
-                Default: None
+                y-axis. Set to ``None`` for the full length.
+                Default: ``None``
         """
         BaseLoss.__init__(self, target)
         self.x = x
@@ -1100,11 +1180,11 @@ def sum_loss_list(
         loss_list (list): A list of loss objectives.
         to_scalar_fn (Callable): A function for converting loss objective outputs to
             scalar values, in order to prevent size mismatches.
-            Default: torch.mean
+            Default: ``torch.mean``
 
     Returns:
         loss_fn (CompositeLoss): A CompositeLoss instance containing all the loss
-            functions from `loss_list`.
+            functions from ``loss_list``.
     """
 
     def loss_fn(module: ModuleOutputMapping) -> torch.Tensor:
