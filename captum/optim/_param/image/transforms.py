@@ -1318,6 +1318,16 @@ class CLIPTokenizer(torch.nn.Module):
     Note that this module does not implement preprocessing like whitespace cleaning,
     HTML to unicode conversions, or heuristic unicode correction.
 
+    Example::
+
+        >>> clip_tokenizer = opt.transforms.CLIPTokenizer(pretrained_merges=True)
+        >>> tokens = clip_tokenizer("An example sentence.")
+        >>> print(tokens[0][:6])
+        tensor([49406,   550,  6228, 12737,   269, 49407], dtype=torch.int32)
+        >>> decoded_str = clip_tokenizer.decode(tokens)
+        >>> print(decoded_str)
+        ['an example sentence .']
+
     See here for more details:
     https://pytorch.org/text/main/transforms.html#torchtext.transforms.CLIPTokenizer
 
@@ -1352,37 +1362,37 @@ class CLIPTokenizer(torch.nn.Module):
         Args:
 
             merges_path (str, optional): Path to file containing the merges, or where
-                to save the merges file if pretrained_merges is set to True. The
-                torch.hub.get_dir() function will be used to get the directory if set
-                to None, resulting in a path of: <PATH_TO_HUB_DIR>/vocab.
-                Default: None
+                to save the merges file if pretrained_merges is set to ``True``. The
+                ``torch.hub.get_dir()`` function will be used to get the directory if
+                set to ``None``, resulting in a path of: <PATH_TO_HUB_DIR>/vocab.
+                Default: ``None``
             context_length (int, optional): The required context length for the model.
-                Inputs with lengths less than context_length will be padded with
+                Inputs with lengths less than ``context_length`` will be padded with
                 zeros.
-                Default: 77
+                Default: ``77``
             start_token (str, optional): The starting token to place in front of each
-                text input. Set to None for no start token.
-                Default: "<|startoftext|>"
+                text input. Set to ``None`` for no start token.
+                Default: ``"<|startoftext|>"``
             end_token (str, optional): The ending token to place at the end of each
-                text input. Set to None for no end token.
-                Default: "<|endoftext|>"
+                text input. Set to ``None`` for no end token.
+                Default: ``"<|endoftext|>"``
             pretrained_merges (bool, optional): Whether or not to download merges for
                 the pretrained CLIP model.
-                Default: True
+                Default: ``True``
             num_merges (int, optional): The number of lines to use from the merges
                 file. Set to None for all lines.
-                Default: None
+                Default: ``None``
             padding_value (int, optional): An integer value to use for padding token
-                sets to the desired context_length.
-                Default: 0
+                sets to the desired ``context_length``.
+                Default: ``0``
             truncate (bool, optional): Whether or not to truncate outputs larger than
-                context_length.
-                Default: False
+                ``context_length``.
+                Default: ``False``
             preprocessing_module (Callable, optional): An optional function that takes
                 a list of str and returns a list of str. This can be used to implement
                 whitespace cleaning, HTML to unicode conversions, or heuristic unicode
-                correction. Set to None for no text str preprocessing.
-                Default: None
+                correction. Set to ``None`` for no text str preprocessing.
+                Default: ``None``
         """
         super().__init__()
         self.context_length = context_length
@@ -1416,10 +1426,10 @@ class CLIPTokenizer(torch.nn.Module):
         Args:
 
             file_dir (str, optional): Optionally provide a location to save the
-                file to. The torch.hub.get_dir() function will be used to get the
-                directory if set to None, resulting in a path
+                file to. The ``torch.hub.get_dir()`` function will be used to get
+                the directory if set to None, resulting in a path
                 of: <PATH_TO_HUB_DIR>/vocab.
-                Default: None
+                Default: ``None``
 
             Returns:
                 filename (str): The path to the downloaded file with the filename.
@@ -1470,7 +1480,7 @@ class CLIPTokenizer(torch.nn.Module):
                 lists of tokens.
             include_special_tokens (bool, optional): Whether or not to included added
                 special tokens in the output.
-                Default: False
+                Default: ``False``
 
         Returns:
             token_str (list of list of str): A set of strings that correspond to the
