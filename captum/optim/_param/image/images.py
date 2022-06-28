@@ -240,9 +240,9 @@ class FFTImage(ImageParameterization):
             if init.dim() == 3:
                 init = init.unsqueeze(0)
             self.size = (init.size(2), init.size(3))
-        self.torch_rfft, self.torch_irfft, self.torch_fftfreq = self.get_fft_funcs()
+        self.torch_rfft, self.torch_irfft, self.torch_fftfreq = self._get_fft_funcs()
 
-        frequencies = self.rfft2d_freqs(*self.size)
+        frequencies = self._rfft2d_freqs(*self.size)
         scale = 1.0 / torch.max(
             frequencies,
             torch.full_like(frequencies, 1.0 / (max(self.size[0], self.size[1]))),
@@ -269,7 +269,7 @@ class FFTImage(ImageParameterization):
         self.register_buffer("spectrum_scale", spectrum_scale)
         self.fourier_coeffs = nn.Parameter(fourier_coeffs)
 
-    def rfft2d_freqs(self, height: int, width: int) -> torch.Tensor:
+    def _rfft2d_freqs(self, height: int, width: int) -> torch.Tensor:
         """
         Computes 2D spectrum frequencies.
 
@@ -287,12 +287,12 @@ class FFTImage(ImageParameterization):
         return torch.sqrt((fx * fx) + (fy * fy))
 
     @torch.jit.export
-    def torch_irfftn(self, x: torch.Tensor) -> torch.Tensor:
+    def _torch_irfftn(self, x: torch.Tensor) -> torch.Tensor:
         if x.dtype != torch.complex64:
             x = torch.view_as_complex(x)
         return torch.fft.irfftn(x, s=self.size)  # type: ignore
 
-    def get_fft_funcs(self) -> Tuple[Callable, Callable, Callable]:
+    def _get_fft_funcs(self) -> Tuple[Callable, Callable, Callable]:
         """
         Support older versions of PyTorch. This function ensures that the same FFT
         operations are carried regardless of whether your PyTorch version has the
@@ -311,7 +311,7 @@ class FFTImage(ImageParameterization):
             def torch_rfft(x: torch.Tensor) -> torch.Tensor:
                 return torch.view_as_real(torch.fft.rfftn(x, s=self.size))
 
-            torch_irfftn = self.torch_irfftn
+            torch_irfftn = self._torch_irfftn
 
             def torch_fftfreq(v: int, d: float = 1.0) -> torch.Tensor:
                 return torch.fft.fftfreq(v, d)
