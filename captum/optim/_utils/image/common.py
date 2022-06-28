@@ -394,11 +394,11 @@ def _create_new_vector(
         activation_fn (Callable, optional): An optional activation function to
             apply to the activations before computing the matrix product. If set
             to None, then no activation function will be used.
-            Default: torch.nn.functional.relu
+            Default: ``torch.nn.functional.relu``
         move_channel_dim_to_final_dim (bool, optional): Whether or not to move the
             channel dimension to the last dimension before computing the matrix
             product.
-            Default: True
+            Default: ``True``
 
     Returns
         x (torch.Tensor): A  vector created from the input activations and the
