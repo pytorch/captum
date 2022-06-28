@@ -53,7 +53,7 @@ def dataset_cov_matrix(
             Default: ``torch.device("cpu")``
 
     Returns:
-        *tensor*:  A covariance matrix for the specified dataset.
+        *tensor*: A covariance matrix for the specified dataset.
     """
 
     if show_progress:
@@ -99,7 +99,7 @@ def cov_matrix_to_klt(
             Default: ``1e-10``
 
     Returns:
-        *tensor*:  A KLT matrix for the specified covariance matrix.
+        *tensor*: A KLT matrix for the specified covariance matrix.
     """
 
     U, S, V = torch.svd(cov_mtx)
@@ -134,7 +134,7 @@ def dataset_klt_matrix(
             Default: ``torch.device("cpu")``
 
     Returns:
-        *tensor*:  A KLT matrix for the specified dataset.
+        *tensor*: A KLT matrix for the specified dataset.
     """
 
     cov_mtx = dataset_cov_matrix(loader, show_progress=show_progress, device=device)
