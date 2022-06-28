@@ -1586,9 +1586,10 @@ class TestGaussianSmoothing(BaseTest):
             kernel_size,
             sigma,
             dim,
-            use_same_padding=False,
+            padding=0,
         )
         self.assertEqual(smoothening_module.groups, channels)
+        self.assertEqual(smoothening_module.padding, 0)
         weight = torch.tensor([[0.3192, 0.3617, 0.3192]]).repeat(6, 1, 1)
         assertTensorAlmostEqual(self, smoothening_module.weight, weight, 0.001)
         self.assertFalse(smoothening_module.padding)
@@ -1603,7 +1604,7 @@ class TestGaussianSmoothing(BaseTest):
             kernel_size,
             sigma,
             dim,
-            use_same_padding=False,
+            padding=0,
         )
         self.assertEqual(smoothening_module.groups, channels)
         weight = torch.tensor(
@@ -1627,7 +1628,7 @@ class TestGaussianSmoothing(BaseTest):
             kernel_size,
             sigma,
             dim,
-            use_same_padding=False,
+            padding=0,
         )
         self.assertEqual(smoothening_module.groups, channels)
         weight = torch.tensor(
@@ -1671,7 +1672,7 @@ class TestGaussianSmoothing(BaseTest):
             kernel_size,
             sigma,
             dim,
-            use_same_padding=False,
+            padding=0,
         )
 
         test_tensor = torch.tensor([1.0, 5.0]).repeat(6, 2).unsqueeze(0)
@@ -1692,7 +1693,7 @@ class TestGaussianSmoothing(BaseTest):
             kernel_size,
             sigma,
             dim,
-            use_same_padding=False,
+            padding=0,
         )
 
         test_tensor = torch.tensor([1.0, 5.0]).repeat(3, 6, 3).unsqueeze(0)
@@ -1713,7 +1714,7 @@ class TestGaussianSmoothing(BaseTest):
             kernel_size,
             sigma,
             dim,
-            use_same_padding=False,
+            padding=0,
         )
 
         test_tensor = torch.tensor([1.0, 5.0, 1.0]).repeat(4, 6, 6, 2).unsqueeze(0)
@@ -1741,7 +1742,7 @@ class TestGaussianSmoothing(BaseTest):
             kernel_size,
             sigma,
             dim,
-            use_same_padding=False,
+            padding=0,
         )
         jit_smoothening_module = torch.jit.script(smoothening_module)
 
