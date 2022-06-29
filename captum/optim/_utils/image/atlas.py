@@ -56,8 +56,8 @@ def calc_grid_indices(
     This function draws a 2D grid across the irregular grid of points, and then groups
     point indices based on the grid cell they fall within. The grid cells are then
     filled with 1D tensors that have anywhere from 0 to n_indices values in them. The
-    sets of grid indices can then be used with the compute_avg_cell_samples function
-    to create atlas grid cell direction vectors.
+    sets of grid indices can then be used with the :func:`compute_avg_cell_samples`
+    function to create atlas grid cell direction vectors.
 
     Indices are stored for grid cells in an xy matrix, where the outer lists represent
     x positions and the inner lists represent y positions. Each grid cell is filled
@@ -84,8 +84,8 @@ def calc_grid_indices(
 
         xy_grid (torch.tensor): The xy coordinate grid activation samples, with a shape
             of: [n_points, 2].
-        grid_size (Tuple[int, int]): The grid_size of grid cells to use. The grid_size
-            variable should be in the format of: [width, height].
+        grid_size (Tuple[int, int]): The grid_size of grid cells to use. The
+            ``grid_size`` variable should be in the format of: [width, height].
         x_extent (Tuple[float, float], optional): The x axis range to use.
             Default: ``(0.0, 1.0)``
         y_extent (Tuple[float, float], optional): The y axis range to use.
@@ -126,8 +126,8 @@ def compute_avg_cell_samples(
     """
     Create direction vectors for sets of activation samples, attribution samples, and
     grid indices. Grid cells without the minimum number of points as specified by
-    min_density will be ignored. The calc_grid_indices function can be used to produce
-    the values required for the grid_indices variable.
+    ``min_density`` will be ignored. The :func:`calc_grid_indices` function can be used
+    to produce the values required for the ``grid_indices`` variable.
 
     Carter, et al., "Activation Atlas", Distill, 2019.
     https://distill.pub/2019/activation-atlas/
@@ -139,8 +139,8 @@ def compute_avg_cell_samples(
             0 to n_indices.
         raw_samples (torch.tensor): Raw unmodified activation or attribution samples,
              with a shape of: [n_samples, n_channels].
-        grid_size (Tuple[int, int]): The grid_size of grid cells to use. The
-            ``grid_size`` variable should be in the format of: [width, height].
+        grid_size (Tuple[int, int]): The size of grid cells to use. The ``grid_size``
+            variable should be in the format of: [width, height].
         min_density (int, optional): The minimum number of points for a cell to be
             counted.
             Default: ``8``
@@ -179,8 +179,8 @@ def create_atlas_vectors(
 ) -> Tuple[torch.Tensor, List[Tuple[int, int, int]]]:
     """
     Create direction vectors by splitting an irregular grid of activation samples into
-    cells. Grid cells without the minimum number of points as specified by min_density
-    will be ignored.
+    cells. Grid cells without the minimum number of points as specified by
+    ``min_density`` will be ignored.
 
     Carter, et al., "Activation Atlas", Distill, 2019.
     https://distill.pub/2019/activation-atlas/
@@ -245,7 +245,7 @@ def create_atlas(
         coords (list of Tuple[int, int] or list of Tuple[int, int, int]): A list of
             coordinates to use for the atlas image tensors. The first 2 values in each
             coordinate list should be: [x, y, ...].
-        grid_size (Tuple[int, int]): The size of grid cells to use. The grid_size
+        grid_size (Tuple[int, int]): The size of grid cells to use. The ``grid_size``
             variable should be in the format of: [width, height].
         base_tensor (Callable, optional): What to use for the atlas base tensor. Basic
             choices are: ``torch.ones`` or ``torch.zeros``.
