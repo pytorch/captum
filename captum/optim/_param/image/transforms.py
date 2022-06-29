@@ -71,13 +71,26 @@ class IgnoreAlpha(nn.Module):
 class ToRGB(nn.Module):
     """Transforms arbitrary channels to RGB. We use this to ensure our
     image parametrization itself can be decorrelated. So this goes between
-    the image parametrization and the normalization/sigmoid step.
+    the image parametrization and the normalization / sigmoid step, like in
+    :class:`captum.optim.images.NaturalImage`.
+
     We offer two precalculated transforms: Karhunen-Loève (KLT) and I1I2I3.
     KLT corresponds to the empirically measured channel correlations on imagenet.
     I1I2I3 corresponds to an approximation for natural images from Ohta et al.[0]
+    If you wish to calculate your own KLT transform matrix on a custom dataset,
+    then please see :func:`captum.optim.dataset.dataset_klt_matrix` for an example
+    of how to do so.
+
     [0] Y. Ohta, T. Kanade, and T. Sakai, "Color information for region segmentation,"
     Computer Graphics and Image Processing, vol. 13, no. 3, pp. 222–241, 1980
     https://www.sciencedirect.com/science/article/pii/0146664X80900477
+
+    Example::
+
+        >>> to_rgb = opt.transforms.ToRGB()
+        >>> x = torch.randn(1, 3, 224, 224)
+        >>> decorrelated_colors = to_rgb(x, inverse=True)
+        >>> recorrelated_colors = to_rgb(decorrelated_colors)
     """
 
     @staticmethod
