@@ -131,7 +131,8 @@ class ImageTensor(torch.Tensor):
         pad_value: float = 0.0,
     ) -> None:
         """
-        Display an ``ImageTensor`` instance.
+        Display image(s) in the ``ImageTensor`` instance using
+        :func:`captum.optim.show`.
 
         Args:
 
@@ -170,7 +171,8 @@ class ImageTensor(torch.Tensor):
         pad_value: float = 0.0,
     ) -> None:
         """
-        Save an `ImageTensor` as an image file.
+        Save image(s) in the `ImageTensor` instance as an image file, using
+        :func:`captum.optim.save_tensor_as_image`.
 
         Args:
 
