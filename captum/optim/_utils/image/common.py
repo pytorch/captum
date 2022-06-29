@@ -389,7 +389,7 @@ def _create_new_vector(
             computing the matrix product of the activations. See torch.matmul for
             See torch.matmul for more details on compatible shapes:
             https://pytorch.org/docs/stable/generated/torch.matmul.html
-            By default, vec is expected to share the same size as the channel or
+            By default, ``vec`` is expected to share the same size as the channel or
             feature dimension of the activations.
         activation_fn (Callable, optional): An optional activation function to
             apply to the activations before computing the matrix product. If set
@@ -401,7 +401,7 @@ def _create_new_vector(
             Default: ``True``
 
     Returns
-        x (torch.Tensor): A  vector created from the input activations and the
+        x (torch.Tensor): A vector created from the input activations and the
             stored vector.
     """
     assert x.device == vec.device
