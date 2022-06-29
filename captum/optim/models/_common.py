@@ -82,7 +82,14 @@ def replace_layers(
     Replace all target layers with new layers inside the specified model,
     possibly with the same initialization variables.
 
+    Example::
+
+        >>> model = opt.models.googlenet(pretrained=True)
+        >>> # Replace MaxPool2d layers with their AvgPool2d equivalents
+        >>> opt.models.replace_layers(model, nn.MaxPool2d, nn.AvgPool2d, True)
+
     Args:
+
         model: (nn.Module): A PyTorch model instance.
         layer1: (Type[nn.Module]): The layer class that you want to transfer
             initialization variables from.
