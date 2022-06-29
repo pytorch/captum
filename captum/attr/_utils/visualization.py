@@ -437,7 +437,7 @@ def visualize_image_attr_multiple(
 
 def visualize_timeseries_attr(
     attr: ndarray,
-    data,
+    data: ndarray,
     x_values: Optional[ndarray] = None,
     method: str = "individual_channels",
     sign: str = "absolute_value",
