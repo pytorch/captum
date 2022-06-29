@@ -374,7 +374,7 @@ def center_crop(
     """
     Center crop a specified amount from a tensor. If input are smaller than the
     specified crop size, padding will be applied.
-    
+
     This function is the functional version of: :class:`.CenterCrop`.
 
     Args:
