@@ -865,13 +865,14 @@ class NaturalImage(ImageParameterization):
     r"""Outputs an optimizable input image wrapped in :class:`.ImageTensor`.
 
     By convention, single images are CHW and float32s in [0, 1].
-    The underlying parameterization can be decorrelated via a ``ToRGB`` transform.
-    When used with the (default) FFT parameterization, this results in a fully
-    uncorrelated image parameterization. :-)
+    The underlying parameterization can be decorrelated via a
+    :class:`captum.optim.transforms.ToRGB` transform.
+    When used with the (default) :class:`.FFTImage` parameterization, this results in
+    a fully uncorrelated image parameterization. :-)
 
     If a model requires a normalization step, such as normalizing imagenet RGB values,
-    or rescaling to [0, 255], it can perform those steps with the provided transforms or
-    inside its module class.
+    or rescaling to [0, 255], it can perform those steps with the provided transforms
+    or inside its module class.
 
     Example::
 
@@ -949,7 +950,8 @@ class NaturalImage(ImageParameterization):
                 recorrelates the colors of an input image. Custom modules can make use
                 of the ``decorrelate_init`` parameter by having a second ``inverse``
                 parameter in their forward functions that performs the inverse
-                operation when it is set to ``True`` (see ``ToRGB`` for an example).
+                operation when it is set to ``True`` (see
+                :class:`captum.optim.transforms.ToRGB` for an example).
                 Set to ``None`` for no recorrelation.
                 Default: ``ToRGB``
             decorrelate_init (bool, optional): Whether or not to apply color
@@ -1000,7 +1002,8 @@ class NaturalImage(ImageParameterization):
         """
         Returns:
             image_tensor (torch.Tensor): The parameterization output wrapped in
-                ``ImageTensor``, that has optionally had its colors recorrelated.
+                :class:`.ImageTensor`, that has optionally had its colors
+                recorrelated.
         """
         image = self.parameterization()
         if self.decorrelate is not None:
