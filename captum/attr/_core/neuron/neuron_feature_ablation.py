@@ -108,6 +108,7 @@ class NeuronFeatureAblation(NeuronAttribution, PerturbationAttribution):
                           this function returns either a tensor with one element
                           or a 1D tensor with length equal to batch_size (one scalar
                           per input example)
+
             baselines (scalar, tensor, tuple of scalars or tensors, optional):
                         Baselines define reference value which replaces each
                         feature when ablated.
@@ -132,6 +133,7 @@ class NeuronFeatureAblation(NeuronAttribution, PerturbationAttribution):
                           - or a scalar, corresponding to a tensor in the
                             inputs' tuple. This scalar value is broadcasted
                             for corresponding input tensor.
+
                         In the cases when `baselines` is not provided, we internally
                         use zero scalar corresponding to each input tensor.
                         Default: None

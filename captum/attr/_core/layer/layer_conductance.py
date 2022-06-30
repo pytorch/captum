@@ -152,6 +152,7 @@ class LayerConductance(LayerAttribution, GradientAttribution):
                           - or a scalar, corresponding to a tensor in the
                             inputs' tuple. This scalar value is broadcasted
                             for corresponding input tensor.
+
                         In the cases when `baselines` is not provided, we internally
                         use zero scalar corresponding to each input tensor.
 
