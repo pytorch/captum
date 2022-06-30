@@ -1,5 +1,5 @@
 Shapley Value Sampling
-=========
+======================
 
 .. autoclass:: captum.attr.ShapleyValueSampling
     :members:
