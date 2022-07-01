@@ -133,6 +133,7 @@ if __name__ == "__main__":
             "Model Understanding",
             "Feature Importance",
             "Neuron Importance",
+            "Feature Visualization",
             "PyTorch",
         ],
         classifiers=[
