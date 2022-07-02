@@ -28,7 +28,7 @@ class ChannelReducer:
         reduction_alg (str or callable, optional): The desired dimensionality
             reduction algorithm to use. The default ``reduction_alg`` is set to NMF
             from sklearn, which requires users to put inputs on CPU before passing them
-            to ``fit_transform``.
+            to :func:`ChannelReducer.fit_transform`.
             Default: ``NMF``
         **kwargs (optional): Arbitrary keyword arguments used by the specified
             reduction_alg.
@@ -76,14 +76,14 @@ class ChannelReducer:
 
         Args:
 
-            tensor (tensor): A tensor to perform dimensionality reduction on.
+            tensor (torch.Tensor): A tensor to perform dimensionality reduction on.
             swap_2nd_and_last_dims (bool, optional): If ``True``, input channels are
                 expected to be in the second dimension unless the input tensor has a
                 shape of CHW.
                 Default: ``True``.
 
         Returns:
-            *tensor*:  A tensor with one of it's dimensions reduced.
+            tensor: A tensor with one of it's dimensions reduced.
         """
 
         if x.dim() == 3 and swap_2nd_and_last_dims:
@@ -138,12 +138,12 @@ def posneg(x: torch.Tensor, dim: int = 0) -> torch.Tensor:
 
     Args:
 
-        x (tensor): A tensor to make positive.
+        x (torch.Tensor): A tensor to make positive.
         dim (int, optional): The dimension to concatinate the two tensor halves at.
             Default: ``0``
 
     Returns:
-        tensor (torch.tensor): A positive tensor for one-sided dimensionality
+        tensor (torch.Tensor): A positive tensor for one-sided dimensionality
             reduction.
     """
 
