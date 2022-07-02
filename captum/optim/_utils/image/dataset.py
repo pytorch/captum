@@ -23,7 +23,7 @@ def image_cov(x: torch.Tensor) -> torch.Tensor:
             dimension.
 
     Returns:
-        *tensor* (torch.Tensor): The average color channel covariance matrix for the
+        tensor (torch.Tensor): The average color channel covariance matrix for the
             for the input tensor, with a shape of: [n_channels, n_channels].
     """
 
@@ -53,7 +53,7 @@ def dataset_cov_matrix(
             Default: ``torch.device("cpu")``
 
     Returns:
-        *tensor* (torch.Tensor): A covariance matrix for the specified dataset.
+        tensor (torch.Tensor): A covariance matrix for the specified dataset.
     """
 
     if show_progress:
@@ -91,7 +91,7 @@ def cov_matrix_to_klt(
 
     Args:
 
-        cov_mtx (tensor): A 3 by 3 covariance matrix generated from a dataset.
+        cov_mtx (torch.Tensor): A 3 by 3 covariance matrix generated from a dataset.
         normalize (bool): Whether or not to normalize the resulting KLT matrix.
             Default: ``False``
         epsilon (float, optional): A small epsilon value to use for numerical
@@ -99,7 +99,7 @@ def cov_matrix_to_klt(
             Default: ``1e-10``
 
     Returns:
-        *tensor* (torch.Tensor): A KLT matrix for the specified covariance
+        tensor (torch.Tensor): A KLT matrix for the specified covariance
             matrix.
     """
 
@@ -135,7 +135,7 @@ def dataset_klt_matrix(
             Default: ``torch.device("cpu")``
 
     Returns:
-        *tensor* (torch.Tensor): A KLT matrix for the specified dataset.
+        tensor (torch.Tensor): A KLT matrix for the specified dataset.
     """
 
     cov_mtx = dataset_cov_matrix(loader, show_progress=show_progress, device=device)

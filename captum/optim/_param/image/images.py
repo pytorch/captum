@@ -29,7 +29,7 @@ class ImageTensor(torch.Tensor):
 
         >>> image_tensor = opt.images.ImageTensor.load(<path/to/image_file>)
         >>> image_tensor.export(filename="image_tensor.jpg")  # Save image(s)
-        >>> image_tensor.show(figsize=(8, 8))  # Displays image(s) via Matplotlib
+        >>> image_tensor.show()  # Displays image(s) via Matplotlib
 
     Example using ``torch.Tensor``::
 
@@ -124,7 +124,7 @@ class ImageTensor(torch.Tensor):
 
     def show(
         self,
-        figsize: Optional[Tuple[int, int]] = None,
+        figsize: Optional[Tuple[int, int]] = (8, 8),
         scale: float = 255.0,
         images_per_row: Optional[int] = None,
         padding: int = 2,
@@ -138,6 +138,7 @@ class ImageTensor(torch.Tensor):
 
             figsize (Tuple[int, int], optional): height & width to use
                 for displaying the ``ImageTensor`` figure.
+                Default: ``(8, 8)``
             scale (float, optional): Value to multiply the ``ImageTensor`` by so that
                 it's value range is [0-255] for display.
                 Default: ``255.0``
