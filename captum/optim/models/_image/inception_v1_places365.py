@@ -55,7 +55,7 @@ def googlenet_places365(
             Default: ``True``
 
     Returns:
-        **model** (InceptionV1Places365): An InceptionV1 Places365 model instance.
+        model (InceptionV1Places365): An InceptionV1 Places365 model instance.
     """
 
     if pretrained:
