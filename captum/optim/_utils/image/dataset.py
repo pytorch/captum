@@ -42,6 +42,15 @@ def dataset_cov_matrix(
     """
     Calculate the covariance matrix for an image dataset.
 
+    Example::
+
+        >>> # Load image dataset
+        >>> dataset = torchvision.datasets.ImageFolder("<path/to/dataset>")
+        >>> dataset_loader = torch.utils.data.DataLoader(dataset)
+        >>> # Calculate dataset COV matrix
+        >>> cov_mtx = opt.dataset.dataset_cov(dataset_loader, True)
+        >>> print(cov_mtx)
+
     Args:
 
         loader (torch.utils.data.DataLoader): The reference to a PyTorch
@@ -117,10 +126,19 @@ def dataset_klt_matrix(
     device: torch.device = torch.device("cpu"),
 ) -> torch.Tensor:
     """
-    Calculate the color correlation matrix, also known as
-    a Karhunen-Loève transform (KLT) matrix, for a dataset.
-    The color correlation matrix can then used in color decorrelation
-    transforms for models trained on the dataset.
+    Calculate the color correlation matrix, also known as a Karhunen-Loève transform
+    (KLT) matrix, for a dataset. The color correlation matrix can then used in color
+    decorrelation & recorrelation transforms like
+    :class:`captum.optim.transforms.ToRGB` for models trained on the dataset.
+
+    Example::
+
+        >>> # Load image dataset
+        >>> dataset = torchvision.datasets.ImageFolder("<path/to/dataset>")
+        >>> dataset_loader = torch.utils.data.DataLoader(dataset)
+        >>> # Calculate dataset KLT matrix
+        >>> klt_mtx = opt.dataset.dataset_klt_matrix(dataset_loader, True, True)
+        >>> print(klt_mtx)
 
     Args:
 
