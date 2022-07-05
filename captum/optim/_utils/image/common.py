@@ -70,7 +70,7 @@ def make_grid_image(
 
 def show(
     x: torch.Tensor,
-    figsize: Optional[Tuple[int, int]] = (8, 8),
+    figsize: Optional[Tuple[int, int]] = None,
     scale: float = 255.0,
     images_per_row: Optional[int] = None,
     padding: int = 2,
@@ -84,7 +84,7 @@ def show(
         x (torch.Tensor): The tensor you want to display as an image.
         figsize (Tuple[int, int], optional): height & width to use
             for displaying the image figure.
-            Default: ``(8, 8)``
+            Default: ``None``
         scale (float, optional): Value to multiply the input tensor by so that
             it's value range is [0-255] for display.
             Default: ``255.0``

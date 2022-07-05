@@ -53,7 +53,7 @@ def googlenet(
             Default: ``False``
 
     Returns:
-        **model** (InceptionV1): An Inception5h model instance.
+        model (InceptionV1): An Inception5h model instance.
     """
 
     if pretrained:
