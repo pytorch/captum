@@ -20,7 +20,7 @@ class BlendAlpha(nn.Module):
         """
         Args:
 
-            background (tensor, optional):  An NCHW image tensor to be used as the
+            background (tensor, optional): An NCHW image tensor to be used as the
                 Alpha channel's background.
                 Default: ``None``
         """
@@ -36,7 +36,7 @@ class BlendAlpha(nn.Module):
             x (torch.Tensor): RGBA image tensor to blend into an RGB image tensor.
 
         Returns:
-            **blended** (torch.Tensor): RGB image tensor.
+            blended (torch.Tensor): RGB image tensor.
         """
         assert x.dim() == 4
         assert x.size(1) == 4
@@ -60,7 +60,7 @@ class IgnoreAlpha(nn.Module):
             x (torch.Tensor): RGBA image tensor.
 
         Returns:
-            **rgb** (torch.Tensor): RGB image tensor without the alpha channel.
+            rgb (torch.Tensor): RGB image tensor without the alpha channel.
         """
         assert x.dim() == 4
         assert x.size(1) == 4
@@ -101,7 +101,7 @@ class ToRGB(nn.Module):
         Karhunen-Loève transform (KLT) measured on ImageNet
 
         Returns:
-            **transform** (torch.Tensor): A Karhunen-Loève transform (KLT) measured on
+            transform (torch.Tensor): A Karhunen-Loève transform (KLT) measured on
                 the ImageNet dataset.
         """
         # Handle older versions of PyTorch
@@ -120,7 +120,7 @@ class ToRGB(nn.Module):
     def i1i2i3_transform() -> torch.Tensor:
         """
         Returns:
-            **transform** (torch.Tensor): An approximation of natural colors transform
+            transform (torch.Tensor): An approximation of natural colors transform
                 (i1i2i3).
         """
         i1i2i3_matrix = [
@@ -134,7 +134,7 @@ class ToRGB(nn.Module):
         """
         Args:
 
-            transform (str or tensor):  Either a string for one of the precalculated
+            transform (str or tensor): Either a string for one of the precalculated
                 transform matrices, or a 3x3 matrix for the 3 RGB channels of input
                 tensors.
         """
@@ -352,7 +352,7 @@ class CenterCrop(torch.nn.Module):
             input (torch.Tensor): Input to center crop.
 
         Returns:
-            **tensor** (torch.Tensor): A center cropped *tensor*.
+            tensor (torch.Tensor): A center cropped NCHW tensor.
         """
 
         return center_crop(
@@ -402,7 +402,7 @@ def center_crop(
             Default: ``0.0``
 
     Returns:
-        **tensor** (torch.Tensor):  A center cropped *tensor*.
+        tensor (torch.Tensor): A center cropped NCHW tensor.
     """
 
     assert input.dim() == 3 or input.dim() == 4
@@ -537,7 +537,7 @@ class RandomScale(nn.Module):
             scale (float): The amount to scale the NCHW image by.
 
         Returns:
-            **x** (torch.Tensor): A scaled NCHW image tensor.
+            x (torch.Tensor): A scaled NCHW image tensor.
         """
         if self._has_antialias:
             x = F.interpolate(
@@ -567,7 +567,7 @@ class RandomScale(nn.Module):
             x (torch.Tensor): NCHW image tensor to randomly scale.
 
         Returns:
-            **x** (torch.Tensor): A randomly scaled NCHW image *tensor*.
+            x (torch.Tensor): A randomly scaled NCHW image tensor.
         """
         assert x.dim() == 4
         if self._is_distribution:
@@ -669,7 +669,7 @@ class RandomScaleAffine(nn.Module):
             m (float): The scale value to use.
 
         Returns:
-            **scale_mat** (torch.Tensor): A scale matrix.
+            scale_mat (torch.Tensor): A scale matrix.
         """
         scale_mat = torch.tensor(
             [[m, 0.0, 0.0], [0.0, m, 0.0]], device=device, dtype=dtype
@@ -686,7 +686,7 @@ class RandomScaleAffine(nn.Module):
             scale (float): The amount to scale the NCHW image by.
 
         Returns:
-            **x** (torch.Tensor): A scaled NCHW image tensor.
+            x (torch.Tensor): A scaled NCHW image tensor.
         """
         scale_matrix = self._get_scale_mat(scale, x.device, x.dtype)[None, ...].repeat(
             x.shape[0], 1, 1
@@ -710,7 +710,7 @@ class RandomScaleAffine(nn.Module):
             x (torch.Tensor): NCHW image tensor to randomly scale.
 
         Returns:
-            **x** (torch.Tensor): A randomly scaled NCHW image *tensor*.
+            x (torch.Tensor): A randomly scaled NCHW image tensor.
         """
         assert x.dim() == 4
         if self._is_distribution:
@@ -768,7 +768,7 @@ class RandomSpatialJitter(torch.nn.Module):
             input (torch.Tensor): Input to randomly translate.
 
         Returns:
-            **tensor** (torch.Tensor): A randomly translated *tensor*.
+            tensor (torch.Tensor): A randomly translated NCHW tensor.
         """
         insets = torch.randint(
             high=self.pad_range,
@@ -854,7 +854,7 @@ class RandomRotation(nn.Module):
             theta (float): The rotation value in degrees.
 
         Returns:
-            **rot_mat** (torch.Tensor): A rotation matrix.
+            rot_mat (torch.Tensor): A rotation matrix.
         """
         theta = theta * math.pi / 180.0
         rot_mat = torch.tensor(
@@ -877,7 +877,7 @@ class RandomRotation(nn.Module):
             theta (float): The amount to rotate the NCHW image, in degrees.
 
         Returns:
-            **x** (torch.Tensor): A rotated NCHW image tensor.
+            x (torch.Tensor): A rotated NCHW image tensor.
         """
         rot_matrix = self._get_rot_mat(theta, x.device, x.dtype)[None, ...].repeat(
             x.shape[0], 1, 1
@@ -901,7 +901,7 @@ class RandomRotation(nn.Module):
             x (torch.Tensor): NCHW image tensor to randomly rotate.
 
         Returns:
-            **x** (torch.Tensor): A randomly rotated NCHW image *tensor*.
+            x (torch.Tensor): A randomly rotated NCHW image tensor.
         """
         assert x.dim() == 4
         if self._is_distribution:
@@ -933,7 +933,7 @@ class ScaleInputRange(nn.Module):
         """
         Args:
 
-            multiplier (float, optional):  A float value used to scale the input.
+            multiplier (float, optional): A float value used to scale the input.
         """
         super().__init__()
         self.multiplier = multiplier
@@ -947,7 +947,7 @@ class ScaleInputRange(nn.Module):
             x (torch.Tensor): Input to scale values of.
 
         Returns:
-            **tensor** (torch.Tensor): tensor with it's values scaled.
+            tensor (torch.Tensor): tensor with it's values scaled.
         """
         return x * self.multiplier
 
@@ -966,7 +966,7 @@ class RGBToBGR(nn.Module):
             x (torch.Tensor): RGB image tensor to convert to BGR.
 
         Returns:
-            **BGR tensor** (torch.Tensor): A BGR tensor.
+            BGR tensor (torch.Tensor): A BGR tensor.
         """
         assert x.dim() == 4
         assert x.size(1) == 3
@@ -1104,7 +1104,7 @@ class SymmetricPadding(torch.autograd.Function):
             x (torch.Tensor): Input to apply symmetric padding on.
 
         Returns:
-            **tensor** (torch.Tensor): Padded tensor.
+            tensor (torch.Tensor): Padded tensor.
         """
         ctx.padding = padding
         x_device = x.device
@@ -1127,7 +1127,7 @@ class SymmetricPadding(torch.autograd.Function):
             grad_output (torch.Tensor): Input to remove symmetric padding from.
 
         Returns:
-            **grad_input** (torch.Tensor): Unpadded tensor.
+            grad_input (torch.Tensor): Unpadded tensor.
         """
         grad_input = grad_output.clone()
         B, C, H, W = grad_input.size()
@@ -1166,7 +1166,7 @@ class NChannelsToRGB(nn.Module):
             x (torch.Tensor): Input to reduce channel dimensions on.
 
         Returns:
-            **3 channel RGB tensor** (torch.Tensor): RGB image tensor.
+            x (torch.Tensor): A 3 channel RGB image tensor.
         """
         assert x.dim() == 4
         return nchannels_to_rgb(x, self.warp)
@@ -1216,6 +1216,16 @@ class RandomCrop(nn.Module):
         ]
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
+        """
+        Randomly crop an NCHW image tensor.
+
+        Args:
+
+            x (torch.Tensor): The NCHW image tensor to randomly crop.
+
+        Returns
+            x (torch.Tensor): The randomly cropped NCHW image tensor.
+        """
         assert x.dim() == 4
         hs = int(math.ceil((x.shape[2] - self.crop_size[0]) / 2.0))
         ws = int(math.ceil((x.shape[3] - self.crop_size[1]) / 2.0))

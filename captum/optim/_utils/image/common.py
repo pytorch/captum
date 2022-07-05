@@ -348,7 +348,7 @@ def weights_to_heatmap_2d(
             Default: ``["0571b0", "92c5de", "f7f7f7", "f4a582", "ca0020"]``
 
     Returns:
-        color_tensor (torch.Tensor):  A weight heatmap.
+        color_tensor (torch.Tensor): A weight heatmap.
     """
 
     assert weight.dim() == 2

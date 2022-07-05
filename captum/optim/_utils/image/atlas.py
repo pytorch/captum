@@ -146,13 +146,14 @@ def compute_avg_cell_samples(
             Default: ``8``
 
     Returns:
-        cell_vecs (torch.tensor): A tensor containing all the direction vectors that
-            were created, stacked along the batch dimension with a shape of:
-            [n_vecs, n_channels].
-        cell_coords (list of Tuple[int, int, int]): List of coordinates for grid
-            spatial positions of each direction vector, and the number of samples used
-            for the cell. The list for each cell is in the format of:
-            [x_coord, y_coord, number_of_samples_used].
+        cell_vecs_and_cell_coords: A 2 element tuple of: ``(cell_vecs, cell_coords)``.
+            - cell_vecs (torch.tensor): A tensor containing all the direction vectors
+                  that were created, stacked along the batch dimension with a shape of:
+                  [n_vecs, n_channels].
+            - cell_coords (list of Tuple[int, int, int]): List of coordinates for grid
+                  spatial positions of each direction vector, and the number of samples
+                  used for the cell. The list for each cell is in the format of:
+                  [x_coord, y_coord, number_of_samples_used].
     """
     assert raw_samples.dim() == 2
 
@@ -205,13 +206,14 @@ def create_atlas_vectors(
             Default: ``(0.0, 1.0)``
 
     Returns:
-        grid_vecs (torch.tensor): A tensor containing all the direction vectors that
-            were created, stacked along the batch dimension, with a shape of:
-            [n_vecs, n_channels].
-        cell_coords (list of Tuple[int, int, int]): List of coordinates for grid
-            spatial positions of each direction vector, and the number of samples used
-            for the cell. The list for each cell is in the format of:
-            [x_coord, y_coord, number_of_samples_used].
+        grid_vecs_and_cell_coords: A 2 element tuple of: ``(grid_vecs, cell_coords)``.
+            - grid_vecs (torch.tensor): A tensor containing all the direction vectors
+                  that were created, stacked along the batch dimension, with a shape
+                  of: [n_vecs, n_channels].
+            - cell_coords (list of Tuple[int, int, int]): List of coordinates for grid
+                  spatial positions of each direction vector, and the number of samples
+                  used for the cell. The list for each cell is in the format of:
+                  [x_coord, y_coord, number_of_samples_used].
     """
 
     assert xy_grid.dim() == 2 and xy_grid.size(1) == 2

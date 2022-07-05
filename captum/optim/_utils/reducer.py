@@ -21,6 +21,14 @@ class ChannelReducer:
 
     See here for more information: https://distill.pub/2018/building-blocks/
 
+    Example::
+
+        >>> reducer = opt.reducer.ChannelReducer(2, "NMF")
+        >>> x = torch.randn(1, 8, 128, 128).abs()
+        >>> output = reducer.fit_transform(x)
+        >>> print(output.shape)
+        torch.Size([1, 2, 128, 128])
+
     Args:
 
         n_components (int, optional): The number of channels to reduce the target
@@ -30,7 +38,7 @@ class ChannelReducer:
             from sklearn, which requires users to put inputs on CPU before passing them
             to :func:`ChannelReducer.fit_transform`.
             Default: ``NMF``
-        **kwargs (optional): Arbitrary keyword arguments used by the specified
+        **kwargs (any, optional): Arbitrary keyword arguments used by the specified
             reduction_alg.
     """
 
@@ -72,7 +80,8 @@ class ChannelReducer:
         self, x: torch.Tensor, swap_2nd_and_last_dims: bool = True
     ) -> torch.Tensor:
         """
-        Perform dimensionality reduction on an input tensor.
+        Perform dimensionality reduction on an input tensor using the specified
+        ``reduction_alg``'s ``.fit_transform`` function.
 
         Args:
 

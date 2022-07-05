@@ -20,6 +20,24 @@ def extract_expanded_weights(
     literally adjacent in a neural network, or where the weights aren’t directly
     represented in a single weight tensor.
 
+    Example::
+
+        >>> # Load InceptionV1 model with nonlinear layers replaced by
+        >>> # their linear equivalents
+        >>> linear_model = opt.models.googlenet(
+        >>>     pretrained=True, use_linear_modules_only=True
+        >>> ).eval()
+        >>> # Extract weight interactions between target layers
+        >>> W_3a_3b = opt.circuits.extract_expanded_weights(
+        >>>     linear_model, linear_model.mixed3a, linear_model.mixed3b, 5
+        >>> )
+        >>> # Display results for channel 147 of mixed3a and channel 379 of
+        >>> # mixed3b, in human readable format
+        >>> W_3a_3b_hm = opt.weights_to_heatmap_2d(
+        >>>     W_3a_3b[379, 147, ...] / W_3a_3b[379, ...].max()
+        >>> )
+        >>> opt.show(W_3a_3b_hm)
+
     Voss, et al., "Visualizing Weights", Distill, 2021.
     See: https://distill.pub/2020/circuits/visualizing-weights/
 
