@@ -1045,7 +1045,7 @@ class GaussianSmoothing(nn.Module):
             input (torch.Tensor): Input to apply gaussian filter on.
 
         Returns:
-            **filtered** (torch.Tensor): Filtered output.
+            filtered (torch.Tensor): Filtered output.
         """
         return self.conv(
             input, weight=self.weight, groups=self.groups, padding=self.padding
