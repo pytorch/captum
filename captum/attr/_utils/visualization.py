@@ -132,6 +132,7 @@ def visualize_image_attr(
 
                     5. `alpha_scaling` - Sets alpha channel of each pixel
                        to be equal to normalized attribution value.
+
                     Default: `heat_map`
         sign (string, optional): Chosen sign of attributions to visualize. Supported
                     options are:
@@ -147,6 +148,7 @@ def visualize_image_attr(
                        values. This is not supported for `masked_image` or
                        `alpha_scaling` modes, since signed information cannot
                        be represented in these modes.
+
                     Default: `absolute_value`
         plt_fig_axis (tuple, optional): Tuple of matplotlib.pyplot.figure and axis
                     on which to visualize. If None is provided, then a new figure

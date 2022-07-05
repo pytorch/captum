@@ -261,11 +261,13 @@ class LayerIntegratedGradients(LayerAttribution, GradientAttribution):
                         tensors or any arbitrary python types. These arguments
                         are provided to forward_func in order following the
                         arguments in inputs.
+
                         For a tensor, the first dimension of the tensor must
                         correspond to the number of examples. It will be
                         repeated for each of `n_steps` along the integrated
                         path. For all other types, the given argument is used
                         for all forward evaluations.
+
                         Note that attributions are not computed with respect
                         to these arguments.
                         Default: None
@@ -280,6 +282,7 @@ class LayerIntegratedGradients(LayerAttribution, GradientAttribution):
                         which are computed (forward / backward passes)
                         sequentially. internal_batch_size must be at least equal to
                         #examples.
+
                         For DataParallel models, each batch is split among the
                         available devices, so evaluations on each available
                         device contain internal_batch_size / num_devices examples.
@@ -297,11 +300,13 @@ class LayerIntegratedGradients(LayerAttribution, GradientAttribution):
                         then the attributions will be computed with respect to
                         layer input, otherwise it will be computed with respect
                         to layer output.
+
                         Note that currently it is assumed that either the input
                         or the output of internal layer, depending on whether we
                         attribute to the input or output, is a single tensor.
                         Support for multiple tensors will be added later.
                         Default: False
+
             Returns:
                 **attributions** or 2-element tuple of **attributions**, **delta**:
                 - **attributions** (*tensor*, tuple of *tensors* or tuple of *tensors*):

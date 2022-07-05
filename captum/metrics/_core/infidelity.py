@@ -205,6 +205,7 @@ def infidelity(
                    Similar to previous case here as well we need to return only
                    perturbed inputs in case `infidelity_perturb_func_decorator`
                    decorates out `perturb_func`.
+
                 It is important to note that for performance reasons `perturb_func`
                 isn't called for each example individually but on a batch of
                 input examples that are repeated `max_examples_per_batch / batch_size`

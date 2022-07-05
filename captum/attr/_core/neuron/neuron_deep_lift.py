@@ -279,6 +279,7 @@ class NeuronDeepLiftShap(NeuronAttribution, GradientAttribution):
         1. Assumes that input features are independent of one another
         2. Is linear, meaning that the explanations are modeled through
             the additive composition of feature effects.
+
     Although, it assumes a linear model for each explanation, the overall
     model across multiple explanations can be complex and non-linear.
     """
@@ -376,6 +377,7 @@ class NeuronDeepLiftShap(NeuronAttribution, GradientAttribution):
                           this function returns either a tensor with one element
                           or a 1D tensor with length equal to batch_size (one scalar
                           per input example)
+
             baselines (tensor, tuple of tensors, callable):
                         Baselines define reference samples that are compared with
                         the inputs. In order to assign attribution scores DeepLift
