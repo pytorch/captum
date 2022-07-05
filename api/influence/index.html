@@ -73,11 +73,11 @@ implementation of <cite>DataInfluence</cite> abstract class.</p></li>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>module</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/generated/torch.nn.Module.html#torch.nn.Module" title="(in PyTorch v1.11.0)"><em>torch.nn.Module</em></a>) – An instance of pytorch model. This model should
+<li><p><strong>module</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/generated/torch.nn.Module.html#torch.nn.Module" title="(in PyTorch v1.12)"><em>torch.nn.Module</em></a>) – An instance of pytorch model. This model should
 define all of its layers as attributes of the model.</p></li>
 <li><p><strong>layers</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><em>str</em></a><em> or </em><em>List of str</em>) – The fully qualified layer(s) for which the
 activation vectors are computed.</p></li>
-<li><p><strong>influence_src_dataset</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/data.html#torch.utils.data.Dataset" title="(in PyTorch v1.11.0)"><em>torch.utils.data.Dataset</em></a>) – PyTorch Dataset that is
+<li><p><strong>influence_src_dataset</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/data.html#torch.utils.data.Dataset" title="(in PyTorch v1.12)"><em>torch.utils.data.Dataset</em></a>) – PyTorch Dataset that is
 used to create a PyTorch Dataloader to iterate over the dataset and
 its labels. This is the dataset for which we will be seeking for
 influential instances. In most cases this is the training dataset.</p></li>
@@ -182,9 +182,9 @@ private methods.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>model</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/generated/torch.nn.Module.html#torch.nn.Module" title="(in PyTorch v1.11.0)"><em>torch.nn.Module</em></a>) – An instance of pytorch model. This model should
+<li><p><strong>model</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/generated/torch.nn.Module.html#torch.nn.Module" title="(in PyTorch v1.12)"><em>torch.nn.Module</em></a>) – An instance of pytorch model. This model should
 define all of its layers as attributes of the model.</p></li>
-<li><p><strong>influence_src_dataset</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/data.html#torch.utils.data.Dataset" title="(in PyTorch v1.11.0)"><em>torch.utils.data.Dataset</em></a><em> or </em><em>torch.utils.DataLoader</em>) – In the <cite>influence</cite> method, we either compute the influence score of
+<li><p><strong>influence_src_dataset</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/data.html#torch.utils.data.Dataset" title="(in PyTorch v1.12)"><em>torch.utils.data.Dataset</em></a><em> or </em><em>torch.utils.DataLoader</em>) – In the <cite>influence</cite> method, we either compute the influence score of
 training examples on examples in a test batch, or self influence
 scores for those training examples, depending on which mode is used.
 This argument represents the training dataset containing those
@@ -312,7 +312,7 @@ Default: False</p></li>
 </ul>
 </dd>
 <dt class="field-even">Return type</dt>
-<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Union" title="(in Python v3.10)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code></a>[<a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.11.0)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tensor</span></code></a>, <code class="xref py py-class docutils literal notranslate"><span class="pre">KMostInfluentialResults</span></code>]</p>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Union" title="(in Python v3.10)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code></a>[<a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tensor</span></code></a>, <code class="xref py py-class docutils literal notranslate"><span class="pre">KMostInfluentialResults</span></code>]</p>
 </dd>
 <dt class="field-odd">Returns</dt>
 <dd class="field-odd"><p><p>The return value of this method depends on which mode is run.</p>
@@ -359,9 +359,9 @@ example <cite>i</cite> in the test batch represented by <cite>inputs</cite> and
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>model</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/generated/torch.nn.Module.html#torch.nn.Module" title="(in PyTorch v1.11.0)"><em>torch.nn.Module</em></a>) – An instance of pytorch model. This model should
+<li><p><strong>model</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/generated/torch.nn.Module.html#torch.nn.Module" title="(in PyTorch v1.12)"><em>torch.nn.Module</em></a>) – An instance of pytorch model. This model should
 define all of its layers as attributes of the model.</p></li>
-<li><p><strong>influence_src_dataset</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/data.html#torch.utils.data.Dataset" title="(in PyTorch v1.11.0)"><em>torch.utils.data.Dataset</em></a><em> or </em><em>torch.utils.DataLoader</em>) – In the <cite>influence</cite> method, we either compute the influence score of
+<li><p><strong>influence_src_dataset</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/data.html#torch.utils.data.Dataset" title="(in PyTorch v1.12)"><em>torch.utils.data.Dataset</em></a><em> or </em><em>torch.utils.DataLoader</em>) – In the <cite>influence</cite> method, we either compute the influence score of
 training examples on examples in a test batch, or self influence
 scores for those training examples, depending on which mode is used.
 This argument represents the training dataset containing those
@@ -509,7 +509,7 @@ Default: False</p></li>
 </ul>
 </dd>
 <dt class="field-even">Return type</dt>
-<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Union" title="(in Python v3.10)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code></a>[<a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.11.0)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tensor</span></code></a>, <code class="xref py py-class docutils literal notranslate"><span class="pre">KMostInfluentialResults</span></code>]</p>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Union" title="(in Python v3.10)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code></a>[<a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tensor</span></code></a>, <code class="xref py py-class docutils literal notranslate"><span class="pre">KMostInfluentialResults</span></code>]</p>
 </dd>
 <dt class="field-odd">Returns</dt>
 <dd class="field-odd"><p><p>The return value of this method depends on which mode is run.</p>
@@ -563,14 +563,14 @@ there is no loss in accuracy.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>model</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/generated/torch.nn.Module.html#torch.nn.Module" title="(in PyTorch v1.11.0)"><em>torch.nn.Module</em></a>) – An instance of pytorch model. This model should
+<li><p><strong>model</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/generated/torch.nn.Module.html#torch.nn.Module" title="(in PyTorch v1.12)"><em>torch.nn.Module</em></a>) – An instance of pytorch model. This model should
 define all of its layers as attributes of the model.</p></li>
-<li><p><strong>final_fc_layer</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/generated/torch.nn.Module.html#torch.nn.Module" title="(in PyTorch v1.11.0)"><em>torch.nn.Module</em></a><em> or </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><em>str</em></a>) – The last fully connected layer in
+<li><p><strong>final_fc_layer</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/generated/torch.nn.Module.html#torch.nn.Module" title="(in PyTorch v1.12)"><em>torch.nn.Module</em></a><em> or </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><em>str</em></a>) – The last fully connected layer in
 the network for which gradients will be approximated via fast random
 projection method. Can be either the layer module itself, or the
 fully qualified name of the layer if it is a defined attribute of
 the passed <cite>model</cite>.</p></li>
-<li><p><strong>influence_src_dataset</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/data.html#torch.utils.data.Dataset" title="(in PyTorch v1.11.0)"><em>torch.utils.data.Dataset</em></a><em> or </em><em>torch.utils.DataLoader</em>) – In the <cite>influence</cite> method, we either compute the influence score of
+<li><p><strong>influence_src_dataset</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/data.html#torch.utils.data.Dataset" title="(in PyTorch v1.12)"><em>torch.utils.data.Dataset</em></a><em> or </em><em>torch.utils.DataLoader</em>) – In the <cite>influence</cite> method, we either compute the influence score of
 training examples on examples in a test batch, or self influence
 scores for those training examples, depending on which mode is used.
 This argument represents the training dataset containing those
@@ -691,7 +691,7 @@ Default: False</p></li>
 </ul>
 </dd>
 <dt class="field-even">Return type</dt>
-<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Union" title="(in Python v3.10)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code></a>[<a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.11.0)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tensor</span></code></a>, <code class="xref py py-class docutils literal notranslate"><span class="pre">KMostInfluentialResults</span></code>]</p>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Union" title="(in Python v3.10)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code></a>[<a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tensor</span></code></a>, <code class="xref py py-class docutils literal notranslate"><span class="pre">KMostInfluentialResults</span></code>]</p>
 </dd>
 <dt class="field-odd">Returns</dt>
 <dd class="field-odd"><p><p>The return value of this method depends on which mode is run.</p>
@@ -766,14 +766,14 @@ accurate, though correct in expectation.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>model</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/generated/torch.nn.Module.html#torch.nn.Module" title="(in PyTorch v1.11.0)"><em>torch.nn.Module</em></a>) – An instance of pytorch model. This model should
+<li><p><strong>model</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/generated/torch.nn.Module.html#torch.nn.Module" title="(in PyTorch v1.12)"><em>torch.nn.Module</em></a>) – An instance of pytorch model. This model should
 define all of its layers as attributes of the model.</p></li>
-<li><p><strong>final_fc_layer</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/generated/torch.nn.Module.html#torch.nn.Module" title="(in PyTorch v1.11.0)"><em>torch.nn.Module</em></a><em> or </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><em>str</em></a>) – The last fully connected layer in
+<li><p><strong>final_fc_layer</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/generated/torch.nn.Module.html#torch.nn.Module" title="(in PyTorch v1.12)"><em>torch.nn.Module</em></a><em> or </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><em>str</em></a>) – The last fully connected layer in
 the network for which gradients will be approximated via fast random
 projection method. Can be either the layer module itself, or the
 fully qualified name of the layer if it is a defined attribute of
 the passed <cite>model</cite>.</p></li>
-<li><p><strong>influence_src_dataset</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/data.html#torch.utils.data.Dataset" title="(in PyTorch v1.11.0)"><em>torch.utils.data.Dataset</em></a><em> or </em><em>torch.utils.DataLoader</em>) – In the <cite>influence</cite> method, we either compute the influence score of
+<li><p><strong>influence_src_dataset</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/data.html#torch.utils.data.Dataset" title="(in PyTorch v1.12)"><em>torch.utils.data.Dataset</em></a><em> or </em><em>torch.utils.DataLoader</em>) – In the <cite>influence</cite> method, we either compute the influence score of
 training examples on examples in a test batch, or self influence
 scores for those training examples, depending on which mode is used.
 This argument represents the training dataset containing those
@@ -908,7 +908,7 @@ Default: True</p></li>
 </ul>
 </dd>
 <dt class="field-even">Return type</dt>
-<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Union" title="(in Python v3.10)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code></a>[<a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.11.0)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tensor</span></code></a>, <code class="xref py py-class docutils literal notranslate"><span class="pre">KMostInfluentialResults</span></code>]</p>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Union" title="(in Python v3.10)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code></a>[<a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tensor</span></code></a>, <code class="xref py py-class docutils literal notranslate"><span class="pre">KMostInfluentialResults</span></code>]</p>
 </dd>
 <dt class="field-odd">Returns</dt>
 <dd class="field-odd"><p><p>The return value of this method depends on which mode is run.</p>
