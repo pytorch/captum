@@ -290,14 +290,20 @@ class InceptionModule(nn.Module):
         """
         Args:
 
-            in_channels (int, optional): The number of input channels to use for the
-                inception module.
-            c1x1 (int, optional):
-            c3x3reduce (int, optional):
-            c3x3 (int, optional):
-            c5x5reduce (int, optional):
-            c5x5 (int, optional):
-            pool_proj (int, optional):
+            in_channels (int): The number of input channels to use for the first
+                layers of the inception module branches.
+            c1x1 (int): The number of output channels to use for the first layer in
+                the c1x1 branch.
+            c3x3reduce (int): The number of output channels to use for the first layer
+                in the c3x3 branch.
+            c3x3 (int): The number of output channels to use for the second layer in
+                the c3x3 branch.
+            c5x5reduce (int): The number of output channels to use for the first layer
+                in the c5x5 branch.
+            c5x5 (int): The number of output channels to use for the second layer in
+                the c5x5 branch.
+            pool_proj (int): The number of output channels to use for the second layer
+                in the pool branch.
             activ (type of nn.Module, optional): The nn.Module class type to use for
                 activation layers.
                 Default: ``nn.ReLU``
