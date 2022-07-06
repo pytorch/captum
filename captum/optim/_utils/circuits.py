@@ -44,7 +44,7 @@ def extract_expanded_weights(
     Args:
 
         model (nn.Module): The reference to PyTorch model instance.
-        target1 (nn.module): The starting target layer. Must be below the layer
+        target1 (nn.Module): The starting target layer. Must be below the layer
             specified for ``target2``.
         target2 (nn.Module): The end target layer. Must be above the layer
             specified for ``target1``.

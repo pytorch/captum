@@ -68,6 +68,14 @@ class RedirectedReluLayer(nn.Module):
 
     @torch.jit.ignore
     def forward(self, input: torch.Tensor) -> torch.Tensor:
+        """
+        Args:
+
+            x (torch.Tensor): A tensor to pass through RedirectedReLU.
+
+        Returns:
+            x (torch.Tensor): The output of RedirectedReLU.
+        """
         return RedirectedReLU.apply(input)
 
 

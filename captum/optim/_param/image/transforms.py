@@ -1251,6 +1251,16 @@ class RandomCrop(nn.Module):
         return self._center_crop(x)
 
 
+# Define TransformationRobustness defaults externally for easier Sphinx docs formatting
+_TR_TRANSLATE: List[int] = [4] * 10
+_TR_SCALE: List[float] = [0.995**n for n in range(-5, 80)] + [
+    0.998**n for n in 2 * list(range(20, 40))
+]
+_TR_DEGREES: List[int] = (
+    list(range(-20, 20)) + list(range(-10, 10)) + list(range(-5, 5)) + 5 * [0]
+)
+
+
 class TransformationRobustness(nn.Module):
     """
     This transform combines the standard transforms (:class:`.RandomSpatialJitter`,
@@ -1269,15 +1279,9 @@ class TransformationRobustness(nn.Module):
     def __init__(
         self,
         padding_transform: Optional[nn.Module] = nn.ConstantPad2d(2, value=0.5),
-        translate: Optional[Union[int, List[int]]] = [4] * 10,
-        scale: Optional[NumSeqOrTensorOrProbDistType] = [
-            0.995**n for n in range(-5, 80)
-        ]
-        + [0.998**n for n in 2 * list(range(20, 40))],
-        degrees: Optional[NumSeqOrTensorOrProbDistType] = list(range(-20, 20))
-        + list(range(-10, 10))
-        + list(range(-5, 5))
-        + 5 * [0],
+        translate: Optional[Union[int, List[int]]] = _TR_TRANSLATE,
+        scale: Optional[NumSeqOrTensorOrProbDistType] = _TR_SCALE,
+        degrees: Optional[NumSeqOrTensorOrProbDistType] = _TR_DEGREES,
         final_translate: Optional[int] = 2,
         crop_or_pad_output: bool = False,
     ) -> None:
