@@ -279,7 +279,7 @@ class FFTImage(ImageParameterization):
             width (int): The w dimension of the 2d frequency scale.
 
         Returns:
-            **tensor** (tensor): A 2d frequency scale tensor.
+            tensor (torch.Tensor): A 2d frequency scale tensor.
         """
 
         fy = self.torch_fftfreq(height)[:, None]
@@ -339,7 +339,7 @@ class FFTImage(ImageParameterization):
     def forward(self) -> torch.Tensor:
         """
         Returns:
-            **output** (torch.tensor): A spatially recorrelated tensor.
+            output (torch.tensor): A spatially recorrelated NCHW tensor.
         """
 
         scaled_spectrum = self.fourier_coeffs * self.spectrum_scale
@@ -405,6 +405,10 @@ class PixelImage(ImageParameterization):
         self.image = nn.Parameter(init)
 
     def forward(self) -> torch.Tensor:
+        """
+        Returns:
+            output (torch.tensor): An NCHW tensor.
+        """
         if torch.jit.is_scripting():
             return self.image
         return self.image.refine_names("B", "C", "H", "W")
@@ -497,7 +501,7 @@ class LaplacianImage(ImageParameterization):
     def forward(self) -> torch.Tensor:
         """
         Returns:
-            **output** (torch.tensor): A tensor created from a laplacian pyramid.
+            output (torch.tensor): An NCHW tensor created from a laplacian pyramid.
         """
         A = []
         for xi, upsamplei in zip(self.tensor_params, self.scaler):
@@ -611,7 +615,7 @@ class SharedImage(ImageParameterization):
             n (int): The number of tensors needing offset values.
 
         Returns:
-            **offset** (list of list of int): A list of offset values.
+            offset (list of list of int): A list of offset values.
         """
         if type(offset) is tuple or type(offset) is list:
             if type(offset[0]) is tuple or type(offset[0]) is list:
@@ -635,7 +639,7 @@ class SharedImage(ImageParameterization):
             x_list (list of torch.Tensor): list of tensors to offset.
 
         Returns:
-            **A** (list of torch.Tensor): list of offset tensors.
+            A (list of torch.Tensor): list of offset tensors.
         """
 
         A: List[torch.Tensor] = []
