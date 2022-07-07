@@ -1193,7 +1193,7 @@ class TestNaturalImage(BaseTest):
                 + " test due to insufficient Torch version."
             )
         image_param = images.NaturalImage(
-            init=torch.ones(1, 3, 1, 1),
+            init=torch.ones(1, 3, 1, 1).float(),
             parameterization=images.PixelImage,
             squash_func=torch.sigmoid,
         )
@@ -1242,7 +1242,7 @@ class TestNaturalImage(BaseTest):
                 "Skipping NaturalImage init tensor JIT module test due to"
                 + " insufficient Torch version."
             )
-        init_tensor = torch.ones(1, 3, 1, 1)
+        init_tensor = torch.ones(1, 3, 1, 1).float()
         image_param = images.NaturalImage(init=init_tensor)
         jit_image_param = torch.jit.script(image_param)
         output_tensor = jit_image_param()
@@ -1254,7 +1254,7 @@ class TestNaturalImage(BaseTest):
                 "Skipping NaturalImage PixelImage init tensor JIT module"
                 + " test due to insufficient Torch version."
             )
-        init_tensor = torch.ones(1, 3, 1, 1)
+        init_tensor = torch.ones(1, 3, 1, 1).float()
         image_param = images.NaturalImage(
             init=init_tensor, parameterization=images.PixelImage
         )
