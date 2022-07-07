@@ -288,7 +288,7 @@ class FFTImage(ImageParameterization):
 
     @torch.jit.export
     def _torch_irfftn(self, x: torch.Tensor) -> torch.Tensor:
-        if x.dtype != torch.complex64:
+        if not torch.is_complex(x):
             x = torch.view_as_complex(x)
         return torch.fft.irfftn(x, s=self.size)  # type: ignore
 
