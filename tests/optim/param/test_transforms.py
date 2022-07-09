@@ -1689,13 +1689,6 @@ class TestToRGB(BaseTest):
         inverse_output = to_rgb(output, inverse=True)
         self.assertEqual(inverse_output.dtype, dtype)
 
-    def test_to_rgb_dtype_float16(self) -> None:
-        dtype = torch.float16
-        to_rgb = transforms.ToRGB(transform="klt").to(dtype=dtype)
-        test_tensor = torch.ones(1, 3, 224, 224, dtype=dtype)
-        output = to_rgb(test_tensor.refine_names("B", "C", "H", "W"))
-        self.assertEqual(output.dtype, dtype)
-
     def test_to_rgb_dtype_float16_cuda(self) -> None:
         if not torch.cuda.is_available():
             raise unittest.SkipTest(
@@ -1704,15 +1697,6 @@ class TestToRGB(BaseTest):
         dtype = torch.float16
         to_rgb = transforms.ToRGB(transform="klt").cuda().to(dtype=dtype)
         test_tensor = torch.ones(1, 3, 224, 224, dtype=dtype).cuda()
-        output = to_rgb(test_tensor.refine_names("B", "C", "H", "W"))
-        self.assertEqual(output.dtype, dtype)
-        inverse_output = to_rgb(output, inverse=True)
-        self.assertEqual(inverse_output.dtype, dtype)
-
-    def test_to_rgb_dtype_bfloat16(self) -> None:
-        dtype = torch.bfloat16
-        to_rgb = transforms.ToRGB(transform="klt").to(dtype=dtype)
-        test_tensor = torch.ones(1, 3, 224, 224, dtype=dtype)
         output = to_rgb(test_tensor.refine_names("B", "C", "H", "W"))
         self.assertEqual(output.dtype, dtype)
 
@@ -1726,8 +1710,6 @@ class TestToRGB(BaseTest):
         test_tensor = torch.ones(1, 3, 224, 224, dtype=dtype).cuda()
         output = to_rgb(test_tensor.refine_names("B", "C", "H", "W"))
         self.assertEqual(output.dtype, dtype)
-        inverse_output = to_rgb(output, inverse=True)
-        self.assertEqual(inverse_output.dtype, dtype)
 
 
 class TestGaussianSmoothing(BaseTest):

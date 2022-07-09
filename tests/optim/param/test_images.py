@@ -349,7 +349,7 @@ class TestFFTImage(BaseTest):
             raise unittest.SkipTest(
                 "Skipping FFTImage float16 dtype test due to not supporting CUDA."
             )
-        image_param = images.FFTImage(size=(256, 256)).to(dtype=dtype)
+        image_param = images.FFTImage(size=(256, 256)).cuda().to(dtype=dtype)
         output = image_param()
         self.assertEqual(output.dtype, dtype)
 
