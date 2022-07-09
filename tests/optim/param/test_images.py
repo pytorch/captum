@@ -362,12 +362,7 @@ class TestPixelImage(BaseTest):
         size = (224, 224)
         channels = 3
         image_param = images.PixelImage(size=size, channels=channels)
-
-        self.assertEqual(image_param.image.dim(), 4)
-        self.assertEqual(image_param.image.size(0), 1)
-        self.assertEqual(image_param.image.size(1), channels)
-        self.assertEqual(image_param.image.size(2), size[0])
-        self.assertEqual(image_param.image.size(3), size[1])
+        self.assertEqual(list(image_param.image.shape), [1, channels] + list(size))
         self.assertTrue(image_param.image.requires_grad)
 
     def test_pixelimage_init(self) -> None:
@@ -376,11 +371,7 @@ class TestPixelImage(BaseTest):
         init_tensor = torch.randn(channels, *size)
         image_param = images.PixelImage(size=size, channels=channels, init=init_tensor)
 
-        self.assertEqual(image_param.image.dim(), 4)
-        self.assertEqual(image_param.image.size(0), 1)
-        self.assertEqual(image_param.image.size(1), channels)
-        self.assertEqual(image_param.image.size(2), size[0])
-        self.assertEqual(image_param.image.size(3), size[1])
+        self.assertEqual(list(image_param.image.shape), [1, channels] + list(size))
         assertTensorAlmostEqual(self, image_param.image, init_tensor[None, :], 0)
         self.assertTrue(image_param.image.requires_grad)
 
@@ -389,12 +380,7 @@ class TestPixelImage(BaseTest):
         channels = 3
         image_param = images.PixelImage(size=size, channels=channels)
         test_tensor = image_param.forward().rename(None)
-
-        self.assertEqual(test_tensor.dim(), 4)
-        self.assertEqual(test_tensor.size(0), 1)
-        self.assertEqual(test_tensor.size(1), channels)
-        self.assertEqual(test_tensor.size(2), size[0])
-        self.assertEqual(test_tensor.size(3), size[1])
+        self.assertEqual(list(test_tensor.shape), [1, channels] + list(size))
 
     def test_pixelimage_forward_jit_module(self) -> None:
         if version.parse(torch.__version__) <= version.parse("1.8.0"):
@@ -414,11 +400,7 @@ class TestPixelImage(BaseTest):
         image_param = images.PixelImage(size=size, channels=channels, init=init_tensor)
         test_tensor = image_param.forward().rename(None)
 
-        self.assertEqual(test_tensor.dim(), 4)
-        self.assertEqual(test_tensor.size(0), 1)
-        self.assertEqual(test_tensor.size(1), channels)
-        self.assertEqual(test_tensor.size(2), size[0])
-        self.assertEqual(test_tensor.size(3), size[1])
+        self.assertEqual(list(test_tensor.shape), [1, channels] + list(size))
         assertTensorAlmostEqual(self, test_tensor, init_tensor[None, :], 0)
 
     def test_pixelimage_forward_dtype_float64(self) -> None:
@@ -789,12 +771,7 @@ class TestSharedImage(BaseTest):
         output_tensor = image_param._interpolate_tensor(
             test_tensor, batch, channels, size[0], size[1]
         )
-
-        self.assertEqual(output_tensor.dim(), 4)
-        self.assertEqual(output_tensor.size(0), batch)
-        self.assertEqual(output_tensor.size(1), channels)
-        self.assertEqual(output_tensor.size(2), size[0])
-        self.assertEqual(output_tensor.size(3), size[1])
+        self.assertEqual(list(output_tensor.shape), [batch, channels] + list(size))
 
     def test_sharedimage_single_shape_hw_forward(self) -> None:
         shared_shapes = (128 // 2, 128 // 2)
@@ -812,11 +789,7 @@ class TestSharedImage(BaseTest):
         self.assertEqual(
             list(image_param.shared_init[0]().shape), [1, 1] + list(shared_shapes)
         )
-        self.assertEqual(test_tensor.dim(), 4)
-        self.assertEqual(test_tensor.size(0), batch)
-        self.assertEqual(test_tensor.size(1), channels)
-        self.assertEqual(test_tensor.size(2), size[0])
-        self.assertEqual(test_tensor.size(3), size[1])
+        self.assertEqual(list(test_tensor.shape), [batch, channels] + list(size))
 
     def test_sharedimage_single_shape_chw_forward(self) -> None:
         shared_shapes = (3, 128 // 2, 128 // 2)
@@ -834,11 +807,7 @@ class TestSharedImage(BaseTest):
         self.assertEqual(
             list(image_param.shared_init[0]().shape), [1] + list(shared_shapes)
         )
-        self.assertEqual(test_tensor.dim(), 4)
-        self.assertEqual(test_tensor.size(0), batch)
-        self.assertEqual(test_tensor.size(1), channels)
-        self.assertEqual(test_tensor.size(2), size[0])
-        self.assertEqual(test_tensor.size(3), size[1])
+        self.assertEqual(list(test_tensor.shape), [batch, channels] + list(size))
 
     def test_sharedimage_single_shape_bchw_forward(self) -> None:
         shared_shapes = (1, 3, 128 // 2, 128 // 2)
@@ -854,11 +823,7 @@ class TestSharedImage(BaseTest):
         self.assertIsNone(image_param.offset)
         self.assertEqual(image_param.shared_init[0]().dim(), 4)
         self.assertEqual(list(image_param.shared_init[0]().shape), list(shared_shapes))
-        self.assertEqual(test_tensor.dim(), 4)
-        self.assertEqual(test_tensor.size(0), batch)
-        self.assertEqual(test_tensor.size(1), channels)
-        self.assertEqual(test_tensor.size(2), size[0])
-        self.assertEqual(test_tensor.size(3), size[1])
+        self.assertEqual(list(test_tensor.shape), [batch, channels] + list(size))
 
     def test_sharedimage_multiple_shapes_forward(self) -> None:
         shared_shapes = (
@@ -884,11 +849,7 @@ class TestSharedImage(BaseTest):
             self.assertEqual(
                 list(image_param.shared_init[i]().shape), list(shared_shapes[i])
             )
-        self.assertEqual(test_tensor.dim(), 4)
-        self.assertEqual(test_tensor.size(0), batch)
-        self.assertEqual(test_tensor.size(1), channels)
-        self.assertEqual(test_tensor.size(2), size[0])
-        self.assertEqual(test_tensor.size(3), size[1])
+        self.assertEqual(list(test_tensor.shape), [batch, channels] + list(size))
 
     def test_sharedimage_multiple_shapes_diff_len_forward(self) -> None:
         shared_shapes = (
@@ -915,11 +876,7 @@ class TestSharedImage(BaseTest):
             s_shape = ([1] * (4 - len(s_shape))) + list(s_shape)
             self.assertEqual(list(image_param.shared_init[i]().shape), s_shape)
 
-        self.assertEqual(test_tensor.dim(), 4)
-        self.assertEqual(test_tensor.size(0), batch)
-        self.assertEqual(test_tensor.size(1), channels)
-        self.assertEqual(test_tensor.size(2), size[0])
-        self.assertEqual(test_tensor.size(3), size[1])
+        self.assertEqual(list(test_tensor.shape), [batch, channels] + list(size))
 
     def test_sharedimage_multiple_shapes_diff_len_forward_jit_module(self) -> None:
         if version.parse(torch.__version__) <= version.parse("1.8.0"):
@@ -946,12 +903,7 @@ class TestSharedImage(BaseTest):
         )
         jit_image_param = torch.jit.script(image_param)
         test_tensor = jit_image_param()
-
-        self.assertEqual(test_tensor.dim(), 4)
-        self.assertEqual(test_tensor.size(0), batch)
-        self.assertEqual(test_tensor.size(1), channels)
-        self.assertEqual(test_tensor.size(2), size[0])
-        self.assertEqual(test_tensor.size(3), size[1])
+        self.assertEqual(list(test_tensor.shape), [batch, channels] + list(size))
 
 
 class TestStackImage(BaseTest):
