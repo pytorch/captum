@@ -327,14 +327,16 @@ class TestFFTImage(BaseTest):
         )
 
     def test_fftimage_forward_dtype_float64(self) -> None:
-        image_param = images.FFTImage(size=(224, 224)).to(dtype=torch.float64)
+        dtype = torch.float64
+        image_param = images.FFTImage(size=(224, 224)).to(dtype=dtype)
         output = image_param()
-        self.assertEqual(output.dtype, torch.float64)
+        self.assertEqual(output.dtype, dtype)
 
     def test_fftimage_forward_dtype_float32(self) -> None:
-        image_param = images.FFTImage(size=(224, 224)).to(dtype=torch.float32)
+        dtype = torch.float32
+        image_param = images.FFTImage(size=(224, 224)).to(dtype=dtype)
         output = image_param()
-        self.assertEqual(output.dtype, torch.float32)
+        self.assertEqual(output.dtype, dtype)
 
     def test_fftimage_forward_dtype_float16(self) -> None:
         if version.parse(torch.__version__) <= version.parse("1.12.0"):
@@ -342,13 +344,14 @@ class TestFFTImage(BaseTest):
                 "Skipping FFTImage float16 dtype test due to"
                 + "  insufficient Torch version."
             )
+        dtype = torch.float16
         if not torch.cuda.is_available():
             raise unittest.SkipTest(
                 "Skipping FFTImage float16 dtype test due to not supporting CUDA."
             )
-        image_param = images.FFTImage(size=(256, 256)).to(dtype=torch.float16)
+        image_param = images.FFTImage(size=(256, 256)).to(dtype=dtype)
         output = image_param()
-        self.assertEqual(output.dtype, torch.float16)
+        self.assertEqual(output.dtype, dtype)
 
 
 class TestPixelImage(BaseTest):
@@ -419,19 +422,28 @@ class TestPixelImage(BaseTest):
         assertTensorAlmostEqual(self, test_tensor, init_tensor[None, :], 0)
 
     def test_pixelimage_forward_dtype_float64(self) -> None:
-        image_param = images.PixelImage(size=(224, 224)).to(dtype=torch.float64)
+        dtype = torch.float64
+        image_param = images.PixelImage(size=(224, 224)).to(dtype=dtype)
         output = image_param()
         self.assertEqual(output.dtype, torch.float64)
 
     def test_pixelimage_forward_dtype_float32(self) -> None:
-        image_param = images.PixelImage(size=(224, 224)).to(dtype=torch.float32)
+        dtype = torch.float32
+        image_param = images.PixelImage(size=(224, 224)).to(dtype=dtype)
         output = image_param()
         self.assertEqual(output.dtype, torch.float32)
 
     def test_pixelimage_forward_dtype_float16(self) -> None:
-        image_param = images.PixelImage(size=(224, 224)).to(dtype=torch.float16)
+        dtype = torch.float16
+        image_param = images.PixelImage(size=(224, 224)).to(dtype)
         output = image_param()
-        self.assertEqual(output.dtype, torch.float16)
+        self.assertEqual(output.dtype, dtype)
+
+    def test_pixelimage_forward_dtype_bfloat16(self) -> None:
+        dtype = torch.bfloat16
+        image_param = images.PixelImage(size=(224, 224)).to(dtype=dtype)
+        output = image_param()
+        self.assertEqual(output.dtype, dtype)
 
 
 class TestLaplacianImage(BaseTest):
@@ -491,14 +503,16 @@ class TestLaplacianImage(BaseTest):
         self.assertTrue(test_tensor.requires_grad)
 
     def test_laplcianimage_forward_dtype_float64(self) -> None:
-        image_param = images.LaplacianImage(size=(224, 224)).to(dtype=torch.float64)
+        dtype = torch.float64
+        image_param = images.LaplacianImage(size=(224, 224)).to(dtype=dtype)
         output = image_param()
-        self.assertEqual(output.dtype, torch.float64)
+        self.assertEqual(output.dtype, dtype)
 
     def test_laplcianimage_forward_dtype_float32(self) -> None:
-        image_param = images.LaplacianImage(size=(224, 224)).to(dtype=torch.float32)
+        dtype = torch.float32
+        image_param = images.LaplacianImage(size=(224, 224)).to(dtype=dtype)
         output = image_param()
-        self.assertEqual(output.dtype, torch.float32)
+        self.assertEqual(output.dtype, dtype)
 
 
 class TestSimpleTensorParameterization(BaseTest):
@@ -1275,13 +1289,36 @@ class TestNaturalImage(BaseTest):
         assertTensorAlmostEqual(self, image, torch.sigmoid(init_tensor))
 
     def test_natural_image_forward_dtype_float64(self) -> None:
-        raise unittest.SkipTest("Skipping test due to bug")
-        image_param = images.NaturalImage(size=(224, 224)).to(dtype=torch.float64)
+        dtype = torch.float64
+        image_param = images.NaturalImage(
+            size=(224, 224), decorrelation_module=ToRGB("klt")
+        ).to(dtype=dtype)
         output = image_param()
-        self.assertEqual(output.dtype, torch.float64)
+        self.assertEqual(output.dtype, dtype)
 
     def test_natural_image_forward_dtype_float32(self) -> None:
-        raise unittest.SkipTest("Skipping test due to bug")
-        image_param = images.NaturalImage(size=(224, 224)).to(dtype=torch.float32)
+        dtype = torch.float32
+        image_param = images.NaturalImage(
+            size=(224, 224), decorrelation_module=ToRGB("klt")
+        ).to(dtype=dtype)
         output = image_param()
-        self.assertEqual(output.dtype, torch.float32)
+        self.assertEqual(output.dtype, dtype)
+
+    def test_fftimage_forward_dtype_float16(self) -> None:
+        if version.parse(torch.__version__) <= version.parse("1.12.0"):
+            raise unittest.SkipTest(
+                "Skipping NaturalImage float16 dtype test due to"
+                + "  insufficient Torch version."
+            )
+        if not torch.cuda.is_available():
+            raise unittest.SkipTest(
+                "Skipping NaturalImage float16 dtype test due to not supporting CUDA."
+            )
+        dtype = torch.float16
+        image_param = (
+            images.NaturalImage(size=(256, 256), decorrelation_module=ToRGB("klt"))
+            .cuda()
+            .to(dtype=dtype)
+        )
+        output = image_param()
+        self.assertEqual(output.dtype, dtype)
