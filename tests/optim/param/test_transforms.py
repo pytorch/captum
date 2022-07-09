@@ -1700,17 +1700,6 @@ class TestToRGB(BaseTest):
         output = to_rgb(test_tensor.refine_names("B", "C", "H", "W"))
         self.assertEqual(output.dtype, dtype)
 
-    def test_to_rgb_dtype_bfloat16_cuda(self) -> None:
-        if not torch.cuda.is_available():
-            raise unittest.SkipTest(
-                "Skipping ToRGB bfloat16 dtype test due to not supporting CUDA."
-            )
-        dtype = torch.bfloat16
-        to_rgb = transforms.ToRGB(transform="klt").cuda().to(dtype=dtype)
-        test_tensor = torch.ones(1, 3, 224, 224, dtype=dtype).cuda()
-        output = to_rgb(test_tensor.refine_names("B", "C", "H", "W"))
-        self.assertEqual(output.dtype, dtype)
-
 
 class TestGaussianSmoothing(BaseTest):
     def test_gaussian_smoothing_init_1d(self) -> None:
