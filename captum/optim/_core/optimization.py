@@ -33,8 +33,9 @@ class InputOptimization(Objective, Parameterized):
     This is similar to gradient-based methods for adversarial examples, such
     as FGSM. The code for this was based on the implementation by the authors of Lucid.
     For more details, see the following:
-        https://github.com/tensorflow/lucid
-        https://distill.pub/2017/feature-visualization/
+
+      * https://github.com/tensorflow/lucid
+      * https://distill.pub/2017/feature-visualization/
 
     Example::
 
