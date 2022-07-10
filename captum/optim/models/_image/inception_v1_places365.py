@@ -18,7 +18,7 @@ def googlenet_places365(
     **kwargs: Any,
 ) -> "InceptionV1Places365":
     r"""GoogLeNet (also known as Inception v1 & Inception 5h) model architecture from
-    `"Going Deeper with Convolutions" <http://arxiv.org/abs/1409.4842>`_.
+    `"Going Deeper with Convolutions" <https://arxiv.org/abs/1409.4842>`_.
 
     The pretrained GoogleNet model was trained using the MIT Places365 Standard
     dataset. See here for more information: https://arxiv.org/abs/1610.02055
