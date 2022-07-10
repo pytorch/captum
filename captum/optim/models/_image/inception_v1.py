@@ -15,7 +15,7 @@ def googlenet(
     **kwargs: Any,
 ) -> "InceptionV1":
     r"""GoogLeNet (also known as Inception v1 & Inception 5h) model architecture from
-    `"Going Deeper with Convolutions" <http://arxiv.org/abs/1409.4842>`_.
+    `"Going Deeper with Convolutions" <https://arxiv.org/abs/1409.4842>`_.
 
     Example::
 
