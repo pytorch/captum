@@ -16,10 +16,11 @@ import torch
 
 class ChannelReducer:
     """
-    Dimensionality reduction for the channel dimension of an input tensor.
-    Olah, et al., "The Building Blocks of Interpretability", Distill, 2018.
-
-    See here for more information: https://distill.pub/2018/building-blocks/
+    The ChannelReducer class is a wrapper for PyTorch and NumPy based dimensonality
+    reduction algorithms, like those from ``sklearn.decomposition`` (ex: NMF, PCA),
+    ``sklearn.manifold`` (ex: TSNE), UMAP, and other libraries. This class handles
+    things like reshaping, algorithm search by name (for scikit-learn only), and
+    PyTorch tensor conversions to and from NumPy arrays.
 
     Example::
 
@@ -28,6 +29,16 @@ class ChannelReducer:
         >>> output = reducer.fit_transform(x)
         >>> print(output.shape)
         torch.Size([1, 2, 128, 128])
+
+        >>> # reduction_alg attributes are easily accessible
+        >>> print(reducer.components.shape)
+        torch.Size([2, 8])
+
+    Dimensionality reduction for the channel dimension of an input tensor.
+    Olah, et al., "The Building Blocks of Interpretability", Distill, 2018.
+
+    See here for more information: https://distill.pub/2018/building-blocks/
+
 
     Args:
 
@@ -57,14 +68,43 @@ class ChannelReducer:
         self._reducer = reduction_alg(n_components=n_components, **kwargs)
 
     def _get_reduction_algo_instance(self, name: str) -> Union[None, Callable]:
+        """
+        Search through a library for a ``reduction_alg`` matching the provided str
+        name.
+
+        Args:
+
+            name (str): The name of the reduction_alg to search for.
+
+        Returns:
+            reduction_alg (callable or None): The ``reduction_alg`` if it was found,
+                otherwise None.
+        """
         if hasattr(sklearn.decomposition, name):
             obj = sklearn.decomposition.__getattribute__(name)
+            if issubclass(obj, BaseEstimator):
+                return obj
+        elif hasattr(sklearn.manifold, name):
+            obj = sklearn.manifold.__getattribute__(name)
             if issubclass(obj, BaseEstimator):
                 return obj
         return None
 
     @classmethod
     def _apply_flat(cls, func: Callable, x: torch.Tensor) -> torch.Tensor:
+        """
+        Flatten inputs, run them through the reduction_alg, and then reshape them back
+        to their original size using the resized dimension.
+
+        Args:
+
+            cls (ChannelReducer): The ``ChannelReducer`` class being used.
+            func (callable): The ``reduction_alg`` transform function being used.
+            x (torch.Tensor): The tensor being transformed and reduced.
+
+        Returns:
+            x (torch.Tensor): A transformed tensor.
+        """
         orig_shape = x.shape
         try:
             return func(x.reshape([-1, x.shape[-1]])).reshape(
@@ -88,7 +128,9 @@ class ChannelReducer:
             tensor (torch.Tensor): A tensor to perform dimensionality reduction on.
             swap_2nd_and_last_dims (bool, optional): If ``True``, input channels are
                 expected to be in the second dimension unless the input tensor has a
-                shape of CHW.
+                shape of CHW. When reducing the channel dimension, this parameter
+                should be set to ``True`` unless you are already using the channels
+                last format.
                 Default: ``True``.
 
         Returns:
