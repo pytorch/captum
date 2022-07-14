@@ -924,7 +924,7 @@ class VectorLoss(BaseLoss):
                 Default: ``torch.nn.functional.relu``
             move_channel_dim_to_final_dim (bool, optional): Whether or not to move the
                 channel dimension to the last dimension before computing the matrix
-                product.
+                product. Set to ``False`` if the using the channels last format.
                 Default: ``True``
             batch_index (int, optional): The index of activations to optimize if
                 optimizing a batch of activations. If set to ``None``, defaults to all
@@ -988,8 +988,8 @@ class FacetLoss(BaseLoss):
                 to use for batch dimension weighting. If using a single value, then it
                 will be applied to all batch dimensions equally. Otherwise a list of
                 floats with a shape of: [start, end] should be used for
-                ``torch.linspace`` to calculate the step values in between. Default is
-                set to ``None`` for no weighting.
+                :func:`torch.linspace` to calculate the step values in between. Default
+                is set to ``None`` for no weighting.
                 Default: ``None``
             batch_index (int, optional): The index of the activations to optimize if
                 optimizing a batch of activations. If set to ``None``, defaults to all
