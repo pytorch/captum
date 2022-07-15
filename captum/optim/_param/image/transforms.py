@@ -1363,8 +1363,8 @@ class CLIPTokenizer(torch.nn.Module):
 
             merges_path (str, optional): Path to file containing the merges, or where
                 to save the merges file if pretrained_merges is set to ``True``. The
-                ``torch.hub.get_dir()`` function will be used to get the directory if
-                set to ``None``, resulting in a path of: <PATH_TO_HUB_DIR>/vocab.
+                :func:`torch.hub.get_dir()` function will be used to get the directory
+                if set to ``None``, resulting in a path of: <PATH_TO_HUB_DIR>/vocab.
                 Default: ``None``
             context_length (int, optional): The required context length for the model.
                 Inputs with lengths less than ``context_length`` will be padded with
@@ -1426,7 +1426,7 @@ class CLIPTokenizer(torch.nn.Module):
         Args:
 
             file_dir (str, optional): Optionally provide a location to save the
-                file to. The ``torch.hub.get_dir()`` function will be used to get
+                file to. The :func:`torch.hub.get_dir()` function will be used to get
                 the directory if set to None, resulting in a path
                 of: <PATH_TO_HUB_DIR>/vocab.
                 Default: ``None``
