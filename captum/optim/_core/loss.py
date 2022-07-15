@@ -209,7 +209,7 @@ class BaseLoss(Loss):
         """
         Args:
 
-            target (nn.Module or list of nn.module): A target nn.Module or list of
+            target (nn.Module or list of nn.Module): A target nn.Module or list of
                 nn.Module.
             batch_index (int or list of int, optional): The index or index range of
                 activations to optimize if optimizing a batch of activations. If set to
@@ -339,7 +339,7 @@ class CompositeLoss(BaseLoss):
             name (str, optional): The name of all composable operations in the
                 instance.
                 Default: ``""``
-            target (nn.Module or list of nn.module): A target nn.Module or list of
+            target (nn.Module or list of nn.Module): A target nn.Module or list of
                 nn.Module.
         """
         super().__init__(target)
@@ -1227,7 +1227,7 @@ def default_loss_summarize(loss_value: torch.Tensor) -> torch.Tensor:
     """
     Helper function to summarize tensor outputs from loss objectives.
 
-    default_loss_summarize applies `mean` to the loss tensor
+    default_loss_summarize applies :func:`torch.mean` to the loss tensor
     and negates it so that optimizing it maximizes the activations we
     are interested in.
 
