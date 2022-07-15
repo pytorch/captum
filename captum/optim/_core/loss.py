@@ -522,8 +522,8 @@ class DeepDream(BaseLoss):
 
     DeepDream tries to increase the values of neurons proportional to the amount
     they are presently active. This is equivalent to maximizing the sum of the
-    squares. If you remove the square, you'd be doing a direciton visualization
-    of: ``[1,1,1,....]``.
+    squares. If you remove the square, you'd be visualizing a direction of:
+    ``[1,1,1,....]`` (which is same as :class:`.LayerActivation`).
     """
 
     def __init__(
