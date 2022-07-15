@@ -515,9 +515,15 @@ class DeepDream(BaseLoss):
     Maximize 'interestingness' at the target layer.
     Mordvintsev et al., 2015.
     https://github.com/google/deepdream
+
     This loss returns the squared layer activations. When combined with a negative
     mean loss summarization, this loss will create hallucinogenic visuals commonly
     referred to as 'Deep Dream'.
+
+    DeepDream tries to increase the values of neurons proportional to the amount
+    they are presently active. This is equivalent to maximizing the sum of the
+    squares. If you remove the square, you'd be doing a direciton visualization
+    of: ``[1,1,1,....]``.
     """
 
     def __init__(
