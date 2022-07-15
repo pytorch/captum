@@ -215,7 +215,7 @@ class Conv2dSame(nn.Conv2d):
         """
         Args:
 
-            x (torch.tensor): The input tensor to apply 2D convolution to.
+            x (torch.Tensor): The input tensor to apply 2D convolution to.
 
         Returns
             x (torch.Tensor): The input tensor after the 2D convolution was applied.
@@ -283,6 +283,7 @@ class SkipLayer(torch.nn.Module):
     https://pytorch.org/docs/stable/generated/torch.nn.Identity.html
 
     Args:
+
         args (Any): Any argument. Arguments will be safely ignored.
         kwargs (Any) Any keyword argument. Arguments will be safely ignored.
     """
@@ -295,9 +296,11 @@ class SkipLayer(torch.nn.Module):
     ) -> Union[torch.Tensor, Tuple[torch.Tensor]]:
         """
         Args:
+
             x (torch.Tensor or tuple of torch.Tensor): The input tensor or tensors.
             args (Any): Any argument. Arguments will be safely ignored.
             kwargs (Any) Any keyword argument. Arguments will be safely ignored.
+
         Returns:
             x (torch.Tensor or tuple of torch.Tensor): The unmodified input tensor or
                 tensors.
@@ -314,7 +317,9 @@ def skip_layers(
     with layers that do nothing.
     This is useful for removing the nonlinear ReLU
     layers when creating expanded weights.
+
     Args:
+
         model (nn.Module): A PyTorch model instance.
         layers (nn.Module or list of nn.Module): The layer
             class type to replace in the model.

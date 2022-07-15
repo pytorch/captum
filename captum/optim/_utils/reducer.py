@@ -125,7 +125,7 @@ class ChannelReducer:
 
         Args:
 
-            tensor (torch.Tensor): A tensor to perform dimensionality reduction on.
+            x (torch.Tensor): A tensor to perform dimensionality reduction on.
             swap_2nd_and_last_dims (bool, optional): If ``True``, input channels are
                 expected to be in the second dimension unless the input tensor has a
                 shape of CHW. When reducing the channel dimension, this parameter
@@ -134,7 +134,7 @@ class ChannelReducer:
                 Default: ``True``.
 
         Returns:
-            tensor: A tensor with one of it's dimensions reduced.
+            x (torch.Tensor): A tensor with one of it's dimensions reduced.
         """
 
         if x.dim() == 3 and swap_2nd_and_last_dims:

@@ -20,7 +20,7 @@ class BlendAlpha(nn.Module):
         """
         Args:
 
-            background (tensor, optional): An NCHW image tensor to be used as the
+            background (torch.Tensor, optional): An NCHW image tensor to be used as the
                 Alpha channel's background.
                 Default: ``None``
         """
@@ -134,9 +134,9 @@ class ToRGB(nn.Module):
         """
         Args:
 
-            transform (str or tensor): Either a string for one of the precalculated
-                transform matrices, or a 3x3 matrix for the 3 RGB channels of input
-                tensors.
+            transform (str or torch.Tensor): Either a string for one of the
+                precalculated transform matrices, or a 3x3 matrix for the 3 RGB
+                channels of input tensors.
         """
         super().__init__()
         assert isinstance(transform, str) or torch.is_tensor(transform)
@@ -158,12 +158,12 @@ class ToRGB(nn.Module):
         """
         Args:
 
-            x (torch.tensor): A CHW or NCHW RGB or RGBA image tensor.
+            x (torch.Tensor): A CHW or NCHW RGB or RGBA image tensor.
             inverse (bool, optional): Whether to recorrelate or decorrelate colors.
                 Default: ``False``
 
         Returns:
-            chw (torch.tensor): A tensor with it's colors recorrelated or
+            chw (torch.Tensor): A tensor with it's colors recorrelated or
                 decorrelated.
         """
 
@@ -212,12 +212,12 @@ class ToRGB(nn.Module):
 
         Args:
 
-            x (torch.tensor): A CHW pr NCHW RGB or RGBA image tensor.
+            x (torch.Tensor): A CHW pr NCHW RGB or RGBA image tensor.
             inverse (bool, optional): Whether to recorrelate or decorrelate colors.
                 Default: ``False``
 
         Returns:
-            chw (torch.tensor): A tensor with it's colors recorrelated or
+            chw (torch.Tensor): A tensor with it's colors recorrelated or
                 decorrelated.
         """
 
@@ -259,12 +259,12 @@ class ToRGB(nn.Module):
 
         Args:
 
-            x (torch.tensor): A CHW or NCHW RGB or RGBA image tensor.
+            x (torch.Tensor): A CHW or NCHW RGB or RGBA image tensor.
             inverse (bool, optional): Whether to recorrelate or decorrelate colors.
                 Default: ``False``
 
         Returns:
-            chw (torch.tensor): A tensor with it's colors recorrelated or
+            chw (torch.Tensor): A tensor with it's colors recorrelated or
                 decorrelated.
         """
         if torch.jit.is_scripting():
@@ -381,7 +381,7 @@ def center_crop(
 
     Args:
 
-        input (tensor): A CHW or NCHW image tensor to center crop.
+        input (torch.Tensor): A CHW or NCHW image tensor to center crop.
         size (int, sequence, int): Number of pixels to center crop away.
         pixels_from_edges (bool, optional): Whether to treat crop size
             values as the number of pixels from the tensor's edge, or an
