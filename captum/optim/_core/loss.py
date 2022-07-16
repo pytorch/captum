@@ -857,7 +857,7 @@ class L2Mean(BaseLoss):
         target: torch.nn.Module,
         channel_index: Optional[int] = None,
         constant: float = 0.5,
-        batch_index: Optional[int] = None,
+        batch_index: Optional[Union[int, List[int]]] = None,
     ) -> None:
         """
         Args:
@@ -869,9 +869,10 @@ class L2Mean(BaseLoss):
                 Default: ``None``
             constant (float, optional): Constant value to deduct from the activations.
                 Default: ``0.5``
-            batch_index (int, optional): The index of activations to optimize if
-                optimizing a batch of activations. If set to ``None``, defaults to all
-                activations in the batch.
+            batch_index (int or List[int], optional): The index or index range of
+                activations to optimize if optimizing a batch of activations. If set
+                to ``None``, defaults to all activations in the batch. Index ranges
+                should be in the format of: [start, end].
                 Default: ``None``
         """
         BaseLoss.__init__(self, target, batch_index)
@@ -910,7 +911,7 @@ class VectorLoss(BaseLoss):
         vec: torch.Tensor,
         activation_fn: Optional[Callable] = torch.nn.functional.relu,
         move_channel_dim_to_final_dim: bool = True,
-        batch_index: Optional[int] = None,
+        batch_index: Optional[Union[int, List[int]]] = None,
     ) -> None:
         """
         Args:
@@ -926,9 +927,10 @@ class VectorLoss(BaseLoss):
                 channel dimension to the last dimension before computing the matrix
                 product. Set to ``False`` if the using the channels last format.
                 Default: ``True``
-            batch_index (int, optional): The index of activations to optimize if
-                optimizing a batch of activations. If set to ``None``, defaults to all
-                activations in the batch.
+            batch_index (int or List[int], optional): The index or index range of
+                activations to optimize if optimizing a batch of activations. If set
+                to ``None``, defaults to all activations in the batch. Index ranges
+                should be in the format of: [start, end].
                 Default: ``None``
         """
         BaseLoss.__init__(self, target, batch_index)
@@ -984,16 +986,17 @@ class FacetLoss(BaseLoss):
             facet_weights (torch.Tensor): Weighting that steers the objective
                 towards a particular theme or concept. These weight values should
                 come from linear probes trained on ``layer_target``.
-            strength (float, list of float, optional): A single float or list of floats
+            strength (float, List[float], optional): A single float or list of floats
                 to use for batch dimension weighting. If using a single value, then it
                 will be applied to all batch dimensions equally. Otherwise a list of
                 floats with a shape of: [start, end] should be used for
                 :func:`torch.linspace` to calculate the step values in between. Default
                 is set to ``None`` for no weighting.
                 Default: ``None``
-            batch_index (int, optional): The index of the activations to optimize if
-                optimizing a batch of activations. If set to ``None``, defaults to all
-                activations in the batch.
+            batch_index (int or List[int], optional): The index or index range of
+                activations to optimize if optimizing a batch of activations. If set
+                to ``None``, defaults to all activations in the batch. Index ranges
+                should be in the format of: [start, end].
                 Default: ``None``
         """
         BaseLoss.__init__(self, [ultimate_target, layer_target], batch_index)
