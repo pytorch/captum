@@ -1475,7 +1475,7 @@ class CLIPTokenizer(torch.nn.Module):
 
         Args:
 
-            x (torch.Tensor or list of int or list of list of int): A set of tokens
+            x (torch.Tensor or List[int] or List[List[int]]): A set of tokens
                 stacked across the batch dimension, a list of tokens, or a list of
                 lists of tokens.
             include_special_tokens (bool, optional): Whether or not to included added
@@ -1483,7 +1483,7 @@ class CLIPTokenizer(torch.nn.Module):
                 Default: ``False``
 
         Returns:
-            token_str (list of list of str): A set of strings that correspond to the
+            token_str (List[List[str]]): A set of strings that correspond to the
                 token values in the input.
         """
         if isinstance(x, torch.Tensor):
