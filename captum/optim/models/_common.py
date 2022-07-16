@@ -16,6 +16,9 @@ def get_model_layers(model: nn.Module) -> List[str]:
     Args:
 
         model (nn.Module): A PyTorch model or module instance to collect layers from.
+
+    Returns:
+        model_layers (List[str]): A list of hookable layers in the model.
     """
     layers = []
 
@@ -68,6 +71,14 @@ class RedirectedReluLayer(nn.Module):
 
     @torch.jit.ignore
     def forward(self, input: torch.Tensor) -> torch.Tensor:
+        """
+        Args:
+
+            x (torch.Tensor): A tensor to pass through RedirectedReLU.
+
+        Returns:
+            x (torch.Tensor): The output of RedirectedReLU.
+        """
         return RedirectedReLU.apply(input)
 
 
@@ -218,7 +229,7 @@ class Conv2dSame(nn.Conv2d):
         """
         Args:
 
-            x (torch.tensor): The input tensor to apply 2D convolution to.
+            x (torch.Tensor): The input tensor to apply 2D convolution to.
 
         Returns
             x (torch.Tensor): The input tensor after the 2D convolution was applied.
@@ -254,7 +265,7 @@ def collect_activations(
     Args:
 
         model (nn.Module): A PyTorch model instance.
-        targets (nn.Module or list of nn.Module): One or more layer targets for the
+        targets (nn.Module or List[nn.Module]): One or more layer targets for the
             given model.
         model_input (torch.Tensor or tuple of torch.Tensor, optional): Optionally
             provide an input tensor to use when collecting the target activations.
@@ -278,9 +289,9 @@ class SkipLayer(torch.nn.Module):
     during the forward pass. Use cases include removing nonlinear activation layers
     like ReLU for circuits research.
 
-    This layer works almost exactly the same way that ``nn.Indentiy`` does, except it
-    also ignores any additional arguments passed to the forward function. Any layer
-    replaced by ``SkipLayer`` must have the same input and output shapes.
+    This layer works almost exactly the same way that nn.Indentiy does, except it also
+    ignores any additional arguments passed to the forward function. Any layer replaced
+    by SkipLayer must have the same input and output shapes.
 
     See nn.Identity for more details:
     https://pytorch.org/docs/stable/generated/torch.nn.Identity.html
@@ -290,24 +301,23 @@ class SkipLayer(torch.nn.Module):
         """
         Args:
 
-            args (Any): Any argument. Arguments will be safely ignored.
-            kwargs (Any) Any keyword argument. Arguments will be safely ignored.
+            args (Any, optional): Any argument. Arguments will be safely ignored.
+            kwargs (Any, optional) Any keyword argument. Arguments will be safely
+                ignored.
         """
         super().__init__()
 
-    def forward(
-        self, x: Union[torch.Tensor, Tuple[torch.Tensor]], *args, **kwargs
-    ) -> Union[torch.Tensor, Tuple[torch.Tensor]]:
+    def forward(self, x: torch.Tensor, *args, **kwargs) -> torch.Tensor:
         """
         Args:
 
-            x (torch.Tensor or tuple of torch.Tensor): The input tensor or tensors.
-            args (Any): Any argument. Arguments will be safely ignored.
-            kwargs (Any) Any keyword argument. Arguments will be safely ignored.
+            x (torch.Tensor): The input tensor.
+            args (Any, optional): Any argument. Arguments will be safely ignored.
+            kwargs (Any, optional) Any keyword argument. Arguments will be safely
+                ignored.
 
         Returns:
-            x (torch.Tensor or tuple of torch.Tensor): The unmodified input tensor or
-                tensors.
+            x (torch.Tensor): The unmodified input tensor.
         """
         return x
 
@@ -316,17 +326,15 @@ def skip_layers(
     model: nn.Module, layers: Union[List[Type[nn.Module]], Type[nn.Module]]
 ) -> None:
     """
-    This function is a wrapper function for
-    replace_layers and replaces the target layer
-    with layers that do nothing.
-    This is useful for removing the nonlinear ReLU
-    layers when creating expanded weights.
+    This function is a wrapper function for :func:`.replace_layers` and replaces the
+    target layer with layers that do nothing. This is useful for removing the nonlinear
+    ReLU layers when creating expanded weights.
 
     Args:
 
         model (nn.Module): A PyTorch model instance.
-        layers (nn.Module or list of nn.Module): The layer
-            class type to replace in the model.
+        layers (nn.Module or List[nn.Module]): The layer class type to replace in the
+            model.
     """
     if not hasattr(layers, "__iter__"):
         layers = cast(Type[nn.Module], layers)
