@@ -304,8 +304,8 @@ class FFTImage(ImageParameterization):
         torch.fft update.
 
         Returns:
-            fft functions (Tuple[Callable]): A list of FFT functions
-                to use for irfft, rfft, and fftfreq operations.
+            fft functions (Tuple[Callable, Callable, Callable]): A list of FFT
+                functions to use for irfft, rfft, and fftfreq operations.
         """
 
         if version.parse(TORCH_VERSION) > version.parse("1.7.0"):
@@ -679,7 +679,7 @@ class SharedImage(ImageParameterization):
         Args:
 
             x (torch.Tensor): The NCHW tensor to resize.
-            size (Tuple[int]): The desired output size to resize the input
+            size (Tuple[int, int]): The desired output size to resize the input
                 to, with a format of: [height, width].
 
         Returns:
@@ -708,7 +708,7 @@ class SharedImage(ImageParameterization):
         Args:
 
             x (torch.Tensor): The NCHW tensor to resize.
-            size (Tuple[int]): The desired output size to resize the input
+            size (Tuple[int, int, int]): The desired output size to resize the input
                 to, with a format of: [channels, height, width].
 
         Returns:
