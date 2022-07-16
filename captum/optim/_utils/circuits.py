@@ -59,7 +59,7 @@ def extract_expanded_weights(
             Default: ``center_crop``
 
     Returns:
-        *tensor* (torch.Tensor): A tensor containing the expanded weights in the form
+        tensor (torch.Tensor): A tensor containing the expanded weights in the form
             of: (target2 output channels, target1 output channels, height, width)
     """
     if isinstance(model_input, torch.Tensor):
