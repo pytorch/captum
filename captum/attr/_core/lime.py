@@ -734,7 +734,7 @@ class Lime(LimeBase):
 
             forward_func (callable):  The forward function of the model or any
                     modification of it
-            interpretable_model (optional, Model): Model object to train
+            interpretable_model (Model, optional): Model object to train
                     interpretable model.
 
                     This argument is optional and defaults to SkLearnLasso(alpha=0.01),
@@ -760,7 +760,7 @@ class Lime(LimeBase):
                     Note that calling fit multiple times should retrain the
                     interpretable model, each attribution call reuses
                     the same given interpretable model object.
-            similarity_func (optional, callable): Function which takes a single sample
+            similarity_func (callable, optional): Function which takes a single sample
                     along with its corresponding interpretable representation
                     and returns the weight of the interpretable sample for
                     training the interpretable model.
@@ -793,7 +793,7 @@ class Lime(LimeBase):
 
                     kwargs includes baselines, feature_mask, num_interp_features
                     (integer, determined from feature mask).
-            perturb_func (optional, callable): Function which returns a single
+            perturb_func (callable, optional): Function which returns a single
                     sampled input, which is a binary vector of length
                     num_interp_features, or a generator of such tensors.
 
