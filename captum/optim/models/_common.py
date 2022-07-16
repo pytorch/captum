@@ -16,6 +16,9 @@ def get_model_layers(model: nn.Module) -> List[str]:
     Args:
 
         model (nn.Module): A PyTorch model or module instance to collect layers from.
+
+    Returns:
+        model_layers (list of str): A list of hookable layers in the model.
     """
     layers = []
 
