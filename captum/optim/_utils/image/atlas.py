@@ -242,9 +242,9 @@ def create_atlas(
 
     Args:
 
-        cells (list of torch.Tensor or torch.Tensor): A list or stack of NCHW image
+        cells (List[torch.Tensor] or torch.Tensor): A list or stack of NCHW image
             tensors made with atlas direction vectors.
-        coords (list of Tuple[int, int] or list of Tuple[int, int, int]): A list of
+        coords (List[Tuple[int, int]] or List[Tuple[int, int, int]]): A list of
             coordinates to use for the atlas image tensors. The first 2 values in each
             coordinate list should be: [x, y, ...].
         grid_size (Tuple[int, int]): The size of grid cells to use. The ``grid_size``
