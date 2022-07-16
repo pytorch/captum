@@ -1541,7 +1541,7 @@ class CLIPTokenizer(torch.nn.Module):
         """
         Args:
 
-            x (str or list of str): Text values to be converted to tokenized tensors.
+            x (str or List[str]): Text values to be converted to tokenized tensors.
 
         Returns:
             tokens (torch.Tensor): A tensor containing each set of tokens stacked
