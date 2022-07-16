@@ -304,7 +304,7 @@ class FFTImage(ImageParameterization):
         torch.fft update.
 
         Returns:
-            fft functions (tuple of Callable): A list of FFT functions
+            fft functions (Tuple[Callable]): A list of FFT functions
                 to use for irfft, rfft, and fftfreq operations.
         """
 
@@ -468,7 +468,7 @@ class LaplacianImage(ImageParameterization):
                 Default: ``None``
             power (float, optional): The desired power value to use.
                 Default: ``0.1``
-            scale_list (list of float, optional): The desired list of scale values to
+            scale_list (List[float], optional): The desired list of scale values to
                 use in the laplacian pyramid. The height & width dimensions specified
                 in ``size`` or used in the ``init`` tensor should be divisable by every
                 scale value in the scale list with no remainder left over. The default
@@ -585,11 +585,11 @@ class SharedImage(ImageParameterization):
         """
         Args:
 
-            shapes (list of int or list of list of ints): The shapes of the shared
+            shapes (List[int] or List[List[int]]): The shapes of the shared
                 tensors to use for creating the nn.Parameter tensors.
             parameterization (ImageParameterization): An image parameterization
                 instance.
-            offset (int or list of int or list of list of ints , optional): The offsets
+            offset (int or List[int] or List[List[int]] , optional): The offsets
                 to use for the shared tensors.
                 Default: ``None``
         """
@@ -615,12 +615,12 @@ class SharedImage(ImageParameterization):
 
         Args:
 
-            offset (int or list of int or list of list of ints, optional): The offsets
+            offset (int or List[int] or List[List[int]], optional): The offsets
                 to use for the shared tensors.
             n (int): The number of tensors needing offset values.
 
         Returns:
-            offset (list of list of int): A list of offset values.
+            offset (List[List[int]]): A list of offset values.
         """
         if type(offset) is tuple or type(offset) is list:
             if type(offset[0]) is tuple or type(offset[0]) is list:
@@ -641,10 +641,10 @@ class SharedImage(ImageParameterization):
 
         Args:
 
-            x_list (list of torch.Tensor): list of tensors to offset.
+            x_list (List[torch.Tensor]): list of tensors to offset.
 
         Returns:
-            A (list of torch.Tensor): list of offset tensors.
+            A (List[torch.Tensor]): list of offset tensors.
         """
 
         A: List[torch.Tensor] = []
@@ -679,7 +679,7 @@ class SharedImage(ImageParameterization):
         Args:
 
             x (torch.Tensor): The NCHW tensor to resize.
-            size (tuple of int): The desired output size to resize the input
+            size (Tuple[int]): The desired output size to resize the input
                 to, with a format of: [height, width].
 
         Returns:
@@ -708,7 +708,7 @@ class SharedImage(ImageParameterization):
         Args:
 
             x (torch.Tensor): The NCHW tensor to resize.
-            size (tuple of int): The desired output size to resize the input
+            size (Tuple[int]): The desired output size to resize the input
                 to, with a format of: [channels, height, width].
 
         Returns:
@@ -819,11 +819,12 @@ class StackImage(ImageParameterization):
         """
         Args:
 
-            parameterizations (list of ImageParameterization and torch.Tensor): A list
-                 of image parameterizations to stack across their batch dimensions.
+            parameterizations (List[Union[ImageParameterization, torch.Tensor]]): A
+                list of image parameterizations and tensors to concatenate across a
+                specified dimension.
             dim (int, optional): Optionally specify the dim to concatinate
-                 parameterization outputs on. Default is set to the batch dimension.
-                 Default: ``0``
+                parameterization outputs on. Default is set to the batch dimension.
+                Default: ``0``
             output_device (torch.device, optional): If the parameterizations are on
                 different devices, then their outputs will be moved to the device
                 specified by this variable. Default is set to ``None`` with the
