@@ -53,13 +53,14 @@ class InputOptimization(Objective, Parameterized):
 
     :ivar model: initial value (nn.Module): The given model instance given when
         initializing ``InputOptimization``.
-    :ivar input_param: initial value (ImageParameterization): The given image
+    :ivar input_param: initial value (InputParameterization): The given input
         parameterization instance given when initializing ``InputOptimization``.
     :ivar loss_function: initial value (Loss): The given composable loss instance
         given when initializing ``InputOptimization``.
     :ivar transform: initial value (nn.Module): The given transform instance given
         when initializing ``InputOptimization``. If it was set to ``None`` during
-        initialization, then an instance of ``torch.nn.Identity`` will be returned.
+        initialization, then an instance of :class:`torch.nn.Identity` will be
+        returned.
     """
 
     def __init__(
@@ -73,12 +74,12 @@ class InputOptimization(Objective, Parameterized):
         Args:
 
             model (nn.Module, optional): The reference to PyTorch model instance.
+            loss_function (callable): The loss function to minimize during
+                optimization.
             input_param (nn.Module, optional): A module that generates an input,
                 consumed by the model.
             transform (nn.Module, optional): A module that transforms or preprocesses
                 the input before being passed to the model.
-            loss_function (callable): The loss function to minimize during
-                optimization.
         """
         self.model = model or nn.Identity()
         # Grab targets from loss_function
@@ -139,7 +140,7 @@ class InputOptimization(Objective, Parameterized):
         """
         Returns:
             parameters (iterable of nn.Parameter): An iterable of parameters in the
-                image parameterization.
+                input parameterization.
         """
         return self.input_param.parameters()
 
