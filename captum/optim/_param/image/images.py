@@ -25,6 +25,8 @@ class ImageTensor(torch.Tensor):
     A subclass of torch.Tensor that provides functions for easy loading, saving, and
     displaying image tensors.
 
+    Alias: ``captum.optim.ImageTensor``
+
     Example using file path or URL::
 
         >>> image_tensor = opt.images.ImageTensor.load(<path/to/image_file>)

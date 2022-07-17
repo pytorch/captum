@@ -37,6 +37,8 @@ class InputOptimization(Objective, Parameterized):
       * https://github.com/tensorflow/lucid
       * https://distill.pub/2017/feature-visualization/
 
+    Alias: ``captum.optim.InputOptimization``
+
     Example::
 
         >>> model = opt.models.googlenet(pretrained=True)
