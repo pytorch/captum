@@ -102,7 +102,7 @@ class NoiseTunnel(Attribution):
                         that for all given input tensors, dimension 0 corresponds
                         to the number of examples, and if multiple input tensors
                         are provided, the examples must be aligned appropriately.
-            nt_type (string, optional): Smoothing type of the attributions.
+            nt_type (str, optional): Smoothing type of the attributions.
                         `smoothgrad`, `smoothgrad_sq` or `vargrad`
                         Default: `smoothgrad` if `type` is not provided.
             nt_samples (int, optional):  The number of randomly generated examples

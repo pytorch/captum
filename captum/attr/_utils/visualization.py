@@ -116,7 +116,7 @@ def visualize_image_attr(
                     This is a necessary argument for any visualization method
                     which utilizes the original image.
                     Default: None
-        method (string, optional): Chosen method for visualizing attribution.
+        method (str, optional): Chosen method for visualizing attribution.
                     Supported options are:
 
                     1. `heat_map` - Display heat map of chosen attributions
@@ -134,7 +134,7 @@ def visualize_image_attr(
                        to be equal to normalized attribution value.
 
                     Default: `heat_map`
-        sign (string, optional): Chosen sign of attributions to visualize. Supported
+        sign (str, optional): Chosen sign of attributions to visualize. Supported
                     options are:
 
                     1. `positive` - Displays only positive pixel attributions.
@@ -161,7 +161,7 @@ def visualize_image_attr(
                     and scale value are computed using absolute value of
                     attributions.
                     Default: 2
-        cmap (string, optional): String corresponding to desired colormap for
+        cmap (str, optional): String corresponding to desired colormap for
                     heatmap visualization. This defaults to "Reds" for negative
                     sign, "Blues" for absolute value, "Greens" for positive sign,
                     and a spectrum from red to green for all. Note that this
@@ -177,7 +177,7 @@ def visualize_image_attr(
                     necessary for appropriate alignment when visualizing
                     multiple plots, some with colorbars and some without.
                     Default: False
-        title (string, optional): Title string for plot. If None, no title is
+        title (str, optional): Title string for plot. If None, no title is
                     set.
                     Default: None
         fig_size (tuple, optional): Size of figure created.
@@ -346,13 +346,13 @@ def visualize_image_attr_multiple(
                     with values in range 0-1 or 0-255. This is a necessary
                     argument for any visualization method which utilizes
                     the original image.
-        methods (list of strings): List of strings of length k, defining method
+        methods (list of str): List of strings of length k, defining method
                         for each visualization. Each method must be a valid
                         string argument for method to visualize_image_attr.
-        signs (list of strings): List of strings of length k, defining signs for
+        signs (list of str): List of strings of length k, defining signs for
                         each visualization. Each sign must be a valid
                         string argument for sign to visualize_image_attr.
-        titles (list of strings, optional):  List of strings of length k, providing
+        titles (list of str, optional):  List of strings of length k, providing
                     a title string for each plot. If None is provided, no titles
                     are added to subplots.
                     Default: None

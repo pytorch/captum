@@ -211,7 +211,7 @@ class IntegratedGradients(GradientAttribution):
                         Default: None
             n_steps (int, optional): The number of steps used by the approximation
                         method. Default: 50.
-            method (string, optional): Method for approximating the integral,
+            method (str, optional): Method for approximating the integral,
                         one of `riemann_right`, `riemann_left`, `riemann_middle`,
                         `riemann_trapezoid` or `gausslegendre`.
                         Default: `gausslegendre` if no method is provided.
