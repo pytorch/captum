@@ -687,6 +687,7 @@ class Diversity(BaseLoss):
                 Default: ``None``
         """
         if batch_index:
+            assert isinstance(batch_index, (list, tuple))
             assert len(batch_index) == 2
         BaseLoss.__init__(self, target, batch_index)
 
@@ -807,6 +808,7 @@ class Alignment(BaseLoss):
                 Default: ``None``
         """
         if batch_index:
+            assert isinstance(batch_index, (list, tuple))
             assert len(batch_index) == 2
         BaseLoss.__init__(self, target, batch_index)
         self.decay_ratio = decay_ratio
