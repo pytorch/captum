@@ -289,9 +289,9 @@ class SkipLayer(torch.nn.Module):
     during the forward pass. Use cases include removing nonlinear activation layers
     like ReLU for circuits research.
 
-    This layer works almost exactly the same way that nn.Indentiy does, except it also
-    ignores any additional arguments passed to the forward function. Any layer replaced
-    by SkipLayer must have the same input and output shapes.
+    This layer works almost exactly the same way that :class:`torch.nn.Identity` does,
+    except it also ignores any additional arguments passed to the forward function.
+    Any layer replaced by SkipLayer must have the same input and output shapes.
 
     See nn.Identity for more details:
     https://pytorch.org/docs/stable/generated/torch.nn.Identity.html
@@ -355,9 +355,10 @@ class MaxPool2dRelaxed(torch.nn.Module):
     attributions of spatial posititions can be estimated using the rate at which
     increasing the neuron affects the output classes.
 
-    This layer peforms a MaxPool2d operation on the input, while using an equivalent
-    AvgPool2d layer to compute the gradient. This means that the forward pass returns
-    nn.MaxPool2d(input) while the backward pass uses nn.AvgPool2d(input).
+    This layer peforms a :class:`torch.nn.MaxPool2d` operation on the input, while
+    using an equivalent :class:`torch.nn.AvgPool2d` layer to compute the gradient.
+    This means that the forward pass returns ``nn.MaxPool2d(input)`` while the
+    backward pass uses ``nn.AvgPool2d(input)``.
 
     Carter, et al., "Activation Atlas", Distill, 2019.
     https://distill.pub/2019/activation-atlas/
