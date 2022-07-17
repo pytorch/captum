@@ -79,6 +79,8 @@ def show(
     """
     Show CHW & NCHW tensors as an image.
 
+    Alias: ``captum.optim.images.show``
+
     Args:
 
         x (torch.Tensor): The tensor you want to display as an image.
@@ -129,6 +131,8 @@ def save_tensor_as_image(
 ) -> None:
     """
     Save RGB & RGBA image tensors with a shape of CHW or NCHW as images.
+
+    Alias: ``captum.optim.images.save_tensor_as_image``
 
     Args:
 
