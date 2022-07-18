@@ -82,7 +82,7 @@ class SimilarityInfluence(DataInfluence):
         Args:
             module (torch.nn.Module): An instance of pytorch model. This model should
                     define all of its layers as attributes of the model.
-            layers (str or List of str): The fully qualified layer(s) for which the
+            layers (str or list of str): The fully qualified layer(s) for which the
                     activation vectors are computed.
             influence_src_dataset (torch.utils.data.Dataset): PyTorch Dataset that is
                     used to create a PyTorch Dataloader to iterate over the dataset and
@@ -94,7 +94,7 @@ class SimilarityInfluence(DataInfluence):
             model_id (str): The name/version of the model for which layer
                         activations are being computed. Activations will be stored and
                         loaded under the subdirectory with this name if provided.
-            similarity_metric (Callable): This is a callable function that computes a
+            similarity_metric (callable): This is a callable function that computes a
                     similarity metric between two representations. For example, the
                     representations pair could be from the training and test sets.
 

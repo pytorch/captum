@@ -67,7 +67,7 @@ class MinParamPerturbation:
                 of pytorch model or any modification of a model's forward
                 function.
 
-            attack (Perturbation or Callable): This can either be an instance
+            attack (Perturbation or callable): This can either be an instance
                 of a Captum Perturbation / Attack
                 or any other perturbation or attack function such
                 as a torchvision transform.
@@ -103,7 +103,7 @@ class MinParamPerturbation:
                 applied before or after preproc function.
                 Default: False
 
-            correct_fn (Callable, optional): This determines whether the perturbed input
+            correct_fn (callable, optional): This determines whether the perturbed input
                 leads to a correct or incorrect prediction. By default, this function
                 is set to the standard classification test for correctness
                 (comparing argmax of output with target), which requires model output to

@@ -54,7 +54,7 @@ class FGSM(Perturbation):
                         e.g. image pixels must be in the range 0-255
 
         Attributes:
-            bound (Callable): A function that bounds the input values based on
+            bound (callable): A function that bounds the input values based on
                         given lower_bound and upper_bound. Can be overwritten for
                         custom use cases if necessary.
             zero_thresh (float): The threshold below which gradient will be treated
