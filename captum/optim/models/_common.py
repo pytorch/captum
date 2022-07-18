@@ -275,7 +275,7 @@ def collect_activations(
         activ_dict (ModuleOutputMapping): A dictionary of collected activations where
             the keys are the target layers.
     """
-    if not isinstance(targets, list):
+    if not isinstance(targets, (list, tuple)):
         targets = [targets]
     targets = list(dict.fromkeys(targets))
     catch_activ = ActivationFetcher(model, targets)
@@ -336,7 +336,7 @@ def skip_layers(
         layers (nn.Module or list of nn.Module): The layer class type to replace in the
             model.
     """
-    if not hasattr(layers, "__iter__"):
+    if not isinstance(layers, (tuple, list)):
         layers = cast(Type[nn.Module], layers)
         replace_layers(model, layers, SkipLayer)
     else:
