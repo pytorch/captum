@@ -32,7 +32,7 @@ class DataInfluence(ABC):
     def influence(self, inputs: Any = None, **kwargs: Any) -> Any:
         r"""
         Args:
-            inputs (Any): Batch of examples for which influential
+            inputs (any): Batch of examples for which influential
                     instances are computed. They are passed to the forward_func. If
                     `inputs` if a tensor or tuple of tensors, the first dimension
                     of a tensor corresponds to the batch dimension.
@@ -40,7 +40,7 @@ class DataInfluence(ABC):
                     implementation of `DataInfluence` abstract class.
 
         Returns:
-            influences (Any): We do not add restrictions on the return type for now,
+            influences (any): We do not add restrictions on the return type for now,
                     though this may change in the future.
         """
         pass

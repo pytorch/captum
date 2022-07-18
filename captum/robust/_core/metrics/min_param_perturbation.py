@@ -355,7 +355,7 @@ class MinParamPerturbation:
 
         Args:
 
-            inputs (Any): Input for which minimal perturbation
+            inputs (any): Input for which minimal perturbation
                     is computed. It can be provided as a tensor, tuple of tensors,
                     or any raw input type (e.g. PIL image or text string).
                     This input is provided directly as input to preproc function
@@ -402,7 +402,7 @@ class MinParamPerturbation:
             Tuple of (perturbed_inputs, param_val) if successful
             else Tuple of (None, None)
 
-            - **perturbed inputs** (Any):
+            - **perturbed inputs** (any):
                    Perturbed input (output of attack) which results in incorrect
                    prediction.
             - param_val (int, float)

@@ -35,7 +35,7 @@ class InterpretableEmbeddingBase(Module):
 
         Args:
 
-           *inputs (Any, optional): A sequence of inputs arguments that the
+           *inputs (any, optional): A sequence of inputs arguments that the
                    forward function takes. Since forward functions can take any
                    type and number of arguments, this will ensure that we can
                    execute the forward pass using interpretable embedding layer.
@@ -43,7 +43,7 @@ class InterpretableEmbeddingBase(Module):
                    argument is the embedding tensor generated using the
                    `self.embedding` layer using all input arguments provided in
                    `inputs` and `kwargs`.
-           **kwargs (Any, optional): Similar to `inputs` we want to make sure
+           **kwargs (any, optional): Similar to `inputs` we want to make sure
                    that our forward pass supports arbitrary number and type of
                    key-value arguments. If `inputs` is not provided, `kwargs` must
                    be provided and the first argument corresponds to the embedding
@@ -76,10 +76,10 @@ class InterpretableEmbeddingBase(Module):
 
         Args:
 
-            *input (Any, Optional): This can be a tensor(s) of input indices or any
+            *input (any, Optional): This can be a tensor(s) of input indices or any
                     other variable necessary to comput the embeddings. A typical
                     example of input indices are word or token indices.
-            **kwargs (Any, optional): Similar to `input` this can be any sequence
+            **kwargs (any, optional): Similar to `input` this can be any sequence
                     of key-value arguments necessary to compute final embedding
                     tensor.
         Returns:

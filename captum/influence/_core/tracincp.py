@@ -325,7 +325,7 @@ class TracInCPBase(DataInfluence):
           opponent) on the test example.
 
         Args:
-            inputs (Any, optional): If not provided or `None`, the self influence mode
+            inputs (any, optional): If not provided or `None`, the self influence mode
                     will be run. Otherwise, `inputs` is the test batch that will be
                     used when running in either influence score or k-most influential
                     mode. If the argument `unpack_inputs` is False, the
@@ -645,7 +645,7 @@ class TracInCP(TracInCPBase):
           opponent) on the test example.
 
         Args:
-            inputs (Any, optional): If not provided or `None`, the self influence mode
+            inputs (any, optional): If not provided or `None`, the self influence mode
                     will be run. Otherwise, `inputs` is the test batch that will be
                     used when running in either influence score or k-most influential
                     mode. If the argument `unpack_inputs` is False, the

@@ -26,7 +26,7 @@ class Stat:
             name (str, optional):
                 The name of the statistic. If not provided,
                 the class name will be used alongside it's parameters
-            kwargs (Any):
+            kwargs (any):
                 Additional arguments used to construct the statistic
         """
         self.params = kwargs

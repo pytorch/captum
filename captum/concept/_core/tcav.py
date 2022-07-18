@@ -603,7 +603,7 @@ class TCAV(ConceptInterpreter):
                         #output_dims - 1 elements. Each tuple is applied as the
                         target for the corresponding example.
 
-            additional_forward_args (Any, optional): Extra arguments that are passed to
+            additional_forward_args (any, optional): Extra arguments that are passed to
                      model when computing the attributions for `inputs`
                      w.r.t. layer output.
                      Default: None
@@ -613,7 +613,7 @@ class TCAV(ConceptInterpreter):
                     `processes`. Otherwise, CAV computations will be performed
                     sequential.
                     Default:None
-            **kwargs (Any, optional): A list of arguments that are passed to layer
+            **kwargs (any, optional): A list of arguments that are passed to layer
                     attribution algorithm's attribute method. This could be for
                     example `n_steps` in case of integrated gradients.
                     Default: None

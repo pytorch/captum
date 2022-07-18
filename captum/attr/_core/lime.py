@@ -335,7 +335,7 @@ class LimeBase(PerturbationAttribution):
                         (e.g. time estimation). Otherwise, it will fallback to
                         a simple output of progress.
                         Default: False
-            **kwargs (Any, optional): Any additional arguments necessary for
+            **kwargs (any, optional): Any additional arguments necessary for
                         sampling and transformation functions (provided to
                         constructor).
                         Default: None
