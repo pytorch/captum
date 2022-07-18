@@ -25,7 +25,7 @@ def make_grid_image(
 
     Args:
 
-        tiles (torch.Tensor or List[torch.Tensor]): A stack of NCHW image tensors or
+        tiles (torch.Tensor or list of torch.Tensor): A stack of NCHW image tensors or
             a list of NCHW image tensors to create a grid from.
         images_per_row (int, optional): The number of rows to use for the grid image.
             Default: ``4``
@@ -84,9 +84,9 @@ def show(
     Args:
 
         x (torch.Tensor): The tensor you want to display as an image.
-        figsize (Tuple[int, int], optional): height & width to use
-            for displaying the image figure.
-            Default: ``None``
+        figsize (tuple of int, optional): The height & width to use for displaying the
+            ``ImageTensor`` figure, in the format of: (height, width).
+                Default: ``None``
         scale (float, optional): Value to multiply the input tensor by so that
             it's value range is [0-255] for display.
             Default: ``255.0``
@@ -346,7 +346,7 @@ def weights_to_heatmap_2d(
     Args:
 
         weight (torch.Tensor): A 2d tensor to create the heatmap from.
-        colors (List[str], optional): A list of 5 strings containing hex triplet
+        colors (list of str, optional): A list of 5 strings containing hex triplet
             (six digit), three-byte hexadecimal color values to use for coloring
             the heatmap.
             Default: ``["0571b0", "92c5de", "f7f7f7", "f4a582", "ca0020"]``

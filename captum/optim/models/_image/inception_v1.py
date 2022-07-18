@@ -33,7 +33,7 @@ def googlenet(
         model_path (str, optional): Optional path for InceptionV1 model file.
             Default: ``None``
         replace_relus_with_redirectedrelu (bool, optional): If ``True``, return
-            pretrained model with Redirected ReLU in place of ReLU layers.
+            pretrained model with :class:`.RedirectedReLU` in place of ReLU layers.
             Default: *``True``* when pretrained is True otherwise *``False``*
         use_linear_modules_only (bool, optional): If ``True``, return pretrained
             model with all nonlinear layers replaced with linear equivalents.
@@ -101,7 +101,7 @@ class InceptionV1(nn.Module):
         Args:
 
             replace_relus_with_redirectedrelu (bool, optional): If ``True``, return
-                pretrained model with Redirected ReLU in place of ReLU layers.
+                pretrained model with :class:`.RedirectedReLU` in place of ReLU layers.
                 Default: ``False``
             use_linear_modules_only (bool, optional): If ``True``, return pretrained
                 model with all nonlinear layers replaced with linear equivalents.
@@ -307,10 +307,10 @@ class InceptionModule(nn.Module):
                 in the pool branch.
             activ (type of nn.Module, optional): The nn.Module class type to use for
                 activation layers.
-                Default: ``nn.ReLU``
+                Default: :class:`torch.nn.ReLU`
             p_layer (type of nn.Module, optional): The nn.Module class type to use for
                 pooling layers.
-                Default: ``nn.MaxPool2d``
+                Default: :class:`torch.nn.MaxPool2d`
         """
         super().__init__()
         self.conv_1x1 = nn.Conv2d(
@@ -410,7 +410,7 @@ class AuxBranch(nn.Module):
                 Default: ``1008``
             activ (type of nn.Module, optional): The nn.Module class type to use for
                 activation layers.
-                Default: ``nn.ReLU``
+                Default: :class:`nn.ReLU`
         """
         super().__init__()
         self.avg_pool = nn.AdaptiveAvgPool2d((4, 4))

@@ -84,11 +84,14 @@ def calc_grid_indices(
 
         xy_grid (torch.Tensor): The xy coordinate grid activation samples, with a shape
             of: [n_points, 2].
-        grid_size (Tuple[int, int]): The grid_size of grid cells to use. The
-            ``grid_size`` variable should be in the format of: [width, height].
-        x_extent (Tuple[float, float], optional): The x axis range to use.
+        grid_size (tuple of int): The number of grid cells to use across the height
+            and width dimensions. The ``grid_size`` variable should be in the format
+            of: [width, height].
+        x_extent (tuple of float, optional): The x axis range to use, in the format
+            of: (min, max).
             Default: ``(0.0, 1.0)``
-        y_extent (Tuple[float, float], optional): The y axis range to use.
+        y_extent (tuple of float, optional): The y axis range to use, in the format
+            of: (min, max).
             Default: ``(0.0, 1.0)``
 
     Returns:
@@ -139,8 +142,9 @@ def compute_avg_cell_samples(
             0 to n_indices.
         raw_samples (torch.Tensor): Raw unmodified activation or attribution samples,
              with a shape of: [n_samples, n_channels].
-        grid_size (Tuple[int, int]): The size of grid cells to use. The ``grid_size``
-            variable should be in the format of: [width, height].
+        grid_size (tuple of int): The number of grid cells to use across the height
+            and width dimensions. The ``grid_size`` variable should be in the format
+            of: [width, height].
         min_density (int, optional): The minimum number of points for a cell to be
             counted.
             Default: ``8``
@@ -150,7 +154,7 @@ def compute_avg_cell_samples(
             - cell_vecs (torch.Tensor): A tensor containing all the direction vectors
                   that were created, stacked along the batch dimension with a shape of:
                   [n_vecs, n_channels].
-            - cell_coords (list of Tuple[int, int, int]): List of coordinates for grid
+            - cell_coords (list of tuple of int): List of coordinates for grid
                   spatial positions of each direction vector, and the number of samples
                   used for the cell. The list for each cell is in the format of:
                   [x_coord, y_coord, number_of_samples_used].
@@ -192,17 +196,20 @@ def create_atlas_vectors(
             of: [n_points, 2].
         raw_activations (torch.Tensor): Raw unmodified activation samples, with a shape
             of: [n_samples, n_channels].
-        grid_size (Tuple[int, int]): The size of grid cells to use. The ``grid_size``
-            variable should be in the format of: [width, height].
+        grid_size (tuple of int): The number of grid cells to use across the height
+            and width dimensions. The ``grid_size`` variable should be in the format
+            of: [width, height].
         min_density (int, optional): The minimum number of points for a cell to be
             counted.
             Default: ``8``
         normalize (bool, optional): Whether or not to remove outliers from an xy
             coordinate grid tensor, and rescale it to [0, 1].
             Default: ``True``
-        x_extent (Tuple[float, float], optional): The x axis range to use.
+        x_extent (tuple of float, optional): The x axis range to use, in the format
+            of: (min, max).
             Default: ``(0.0, 1.0)``
-        y_extent (Tuple[float, float], optional): The y axis range to use.
+        y_extent (tuple of float, optional): The y axis range to use, in the format
+            of: (min, max).
             Default: ``(0.0, 1.0)``
 
     Returns:
@@ -210,7 +217,7 @@ def create_atlas_vectors(
             - grid_vecs (torch.Tensor): A tensor containing all the direction vectors
                   that were created, stacked along the batch dimension, with a shape
                   of: [n_vecs, n_channels].
-            - cell_coords (list of Tuple[int, int, int]): List of coordinates for grid
+            - cell_coords (list of tuple of int): List of coordinates for grid
                   spatial positions of each direction vector, and the number of samples
                   used for the cell. The list for each cell is in the format of:
                   [x_coord, y_coord, number_of_samples_used].
@@ -242,16 +249,16 @@ def create_atlas(
 
     Args:
 
-        cells (List[torch.Tensor] or torch.Tensor): A list or stack of NCHW image
+        cells (list of torch.Tensor or torch.Tensor): A list or stack of NCHW image
             tensors made with atlas direction vectors.
-        coords (List[Tuple[int, int]] or List[Tuple[int, int, int]]): A list of
-            coordinates to use for the atlas image tensors. The first 2 values in each
-            coordinate list should be: [x, y, ...].
-        grid_size (Tuple[int, int]): The size of grid cells to use. The ``grid_size``
-            variable should be in the format of: [width, height].
-        base_tensor (Callable, optional): What to use for the atlas base tensor. Basic
-            choices are: ``torch.ones`` or ``torch.zeros``.
-            Default: ``torch.ones``
+        coords (list of tuple of int): A list of coordinates to use for the atlas image
+            tensors. The first 2 values in each coordinate list should be: [x, y, ...].
+        grid_size (tuple of int): The number of grid cells to use across the height
+            and width dimensions. The ``grid_size`` variable should be in the format
+            of: [width, height].
+        base_tensor (callable, optional): What to use for the atlas base tensor. Basic
+            choices are: :class:`torch.ones` or :class:`torch.zeros`.
+            Default: :class:`torch.ones`
 
     Returns:
         atlas_canvas (torch.Tensor): The full activation atlas visualization, with a

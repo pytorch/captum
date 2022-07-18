@@ -44,7 +44,7 @@ class ChannelReducer:
 
         n_components (int, optional): The number of channels to reduce the target
             dimension to.
-        reduction_alg (str or Callable, optional): The desired dimensionality
+        reduction_alg (str or callable, optional): The desired dimensionality
             reduction algorithm to use. The default ``reduction_alg`` is set to NMF
             from sklearn, which requires users to put inputs on CPU before passing them
             to :func:`ChannelReducer.fit_transform`.
@@ -77,7 +77,7 @@ class ChannelReducer:
             name (str): The name of the reduction_alg to search for.
 
         Returns:
-            reduction_alg (Callable or None): The ``reduction_alg`` if it was found,
+            reduction_alg (callable or None): The ``reduction_alg`` if it was found,
                 otherwise None.
         """
         if hasattr(sklearn.decomposition, name):
@@ -98,7 +98,7 @@ class ChannelReducer:
 
         Args:
 
-            func (Callable): The ``reduction_alg`` transform function being used.
+            func (callable): The ``reduction_alg`` transform function being used.
             x (torch.Tensor): The tensor being transformed and reduced.
 
         Returns:

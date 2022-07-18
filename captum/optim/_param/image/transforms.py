@@ -314,7 +314,7 @@ class CenterCrop(torch.nn.Module):
                 This parameter is only valid when ``pixels_from_edges`` is
                 ``False``.
                 Default: ``False``
-            padding_mode (str, optional): One of ``"constant"``, ``"reflect"``,
+            padding_mode (str, optional): One of: ``"constant"``, ``"reflect"``,
                 ``"replicate"``, or ``"circular"``. This parameter is only used if the
                 crop size is larger than the image size.
                 Default: ``"constant"``
@@ -392,7 +392,7 @@ def center_crop(
             This parameter is only valid when ``pixels_from_edges`` is
             ``False``.
             Default: ``False``
-        padding_mode (str, optional): One of ``"constant"``, ``"reflect"``,
+        padding_mode (str, optional): One of: ``"constant"``, ``"reflect"``,
             ``"replicate"``, or ``"circular"``. This parameter is only used if the crop
             size is larger than the image size.
             Default: ``"constant"``
