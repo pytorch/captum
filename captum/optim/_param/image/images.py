@@ -225,14 +225,14 @@ class FFTImage(ImageParameterization):
         """
         Args:
 
-            size (Tuple[int, int]): The height & width dimensions to use for the
-                parameterized output image tensor.
+            size (tuple of int): The height & width dimensions to use for the
+                parameterized output image tensor, in the format of: (height, width).
             channels (int, optional): The number of channels to use for each image.
                 Default: ``3``
             batch (int, optional): The number of images to stack along the batch
                 dimension.
                 Default: ``1``
-            init (torch.Tensor, optional): Optionally specify a tensor to
+            init (torch.Tensor, optional): Optionally specify a CHW or NCHW tensor to
                 use instead of creating one.
                 Default: ``None``
         """
@@ -304,8 +304,8 @@ class FFTImage(ImageParameterization):
         torch.fft update.
 
         Returns:
-            fft functions (Tuple[Callable, Callable, Callable]): A list of FFT
-                functions to use for irfft, rfft, and fftfreq operations.
+            fft_functions (tuple of callable): A list of FFT functions to use for
+                irfft, rfft, and fftfreq operations.
         """
 
         if version.parse(TORCH_VERSION) > version.parse("1.7.0"):
@@ -388,14 +388,14 @@ class PixelImage(ImageParameterization):
         """
         Args:
 
-            size (Tuple[int, int]): The height & width dimensions to use for the
-                parameterized output image tensor.
+            size (tuple of int): The height & width dimensions to use for the
+                parameterized output image tensor, in the format of: (height, width).
             channels (int, optional): The number of channels to use for each image.
                 Default: ``3``
             batch (int, optional): The number of images to stack along the batch
                 dimension.
                 Default: ``1``
-            init (torch.Tensor, optional): Optionally specify a tensor to
+            init (torch.Tensor, optional): Optionally specify a CHW or NCHW tensor to
                 use instead of creating one.
                 Default: ``None``
         """
@@ -445,7 +445,7 @@ class LaplacianImage(ImageParameterization):
 
     def __init__(
         self,
-        size: Tuple[int, int] = (224, 225),
+        size: Tuple[int, int] = (224, 224),
         channels: int = 3,
         batch: int = 1,
         init: Optional[torch.Tensor] = None,
@@ -455,15 +455,14 @@ class LaplacianImage(ImageParameterization):
         """
         Args:
 
-            size (Tuple[int, int], optional): The height & width dimensions to use for
-                the parameterized output image tensor.
-                Default: ``(224, 224)``
+            size (tuple of int): The height & width dimensions to use for the
+                parameterized output image tensor, in the format of: (height, width).
             channels (int, optional): The number of channels to use for each image.
                 Default: ``3``
             batch (int, optional): The number of images to stack along the batch
                 dimension.
                 Default: ``1``
-            init (torch.Tensor, optional): Optionally specify a tensor to
+            init (torch.Tensor, optional): Optionally specify a CHW or NCHW tensor to
                 use instead of creating one.
                 Default: ``None``
             power (float, optional): The desired power value to use.
@@ -585,11 +584,11 @@ class SharedImage(ImageParameterization):
         """
         Args:
 
-            shapes (List[int] or List[List[int]]): The shapes of the shared
+            shapes (list of int or list of list of int): The shapes of the shared
                 tensors to use for creating the nn.Parameter tensors.
             parameterization (ImageParameterization): An image parameterization
                 instance.
-            offset (int or List[int] or List[List[int]] , optional): The offsets
+            offset (int or list of int or list of list of int, optional): The offsets
                 to use for the shared tensors.
                 Default: ``None``
         """
@@ -615,7 +614,7 @@ class SharedImage(ImageParameterization):
 
         Args:
 
-            offset (int or List[int] or List[List[int]], optional): The offsets
+            offset (int or list of int or list of list of int, optional): The offsets
                 to use for the shared tensors.
             n (int): The number of tensors needing offset values.
 
@@ -641,10 +640,10 @@ class SharedImage(ImageParameterization):
 
         Args:
 
-            x_list (List[torch.Tensor]): list of tensors to offset.
+            x_list (list of torch.Tensor): list of tensors to offset.
 
         Returns:
-            A (List[torch.Tensor]): list of offset tensors.
+            A (list of torch.Tensor): list of offset tensors.
         """
 
         A: List[torch.Tensor] = []
@@ -679,8 +678,8 @@ class SharedImage(ImageParameterization):
         Args:
 
             x (torch.Tensor): The NCHW tensor to resize.
-            size (Tuple[int, int]): The desired output size to resize the input
-                to, with a format of: [height, width].
+            size (tuple of int): The desired output size to resize the input to, with
+                a format of: [height, width].
 
         Returns:
             x (torch.Tensor): A resized NCHW tensor.
@@ -708,8 +707,8 @@ class SharedImage(ImageParameterization):
         Args:
 
             x (torch.Tensor): The NCHW tensor to resize.
-            size (Tuple[int, int, int]): The desired output size to resize the input
-                to, with a format of: [channels, height, width].
+            size (tuple of int): The desired output size to resize the input to, with
+                a format of: [channels, height, width].
 
         Returns:
             x (torch.Tensor): A resized NCHW tensor.
@@ -819,8 +818,8 @@ class StackImage(ImageParameterization):
         """
         Args:
 
-            parameterizations (List[Union[ImageParameterization, torch.Tensor]]): A
-                list of image parameterizations and tensors to concatenate across a
+            parameterizations (list of ImageParameterization and torch.Tensor): A list
+                of image parameterizations and tensors to concatenate across a
                 specified dimension.
             dim (int, optional): Optionally specify the dim to concatinate
                 parameterization outputs on. Default is set to the batch dimension.
@@ -912,11 +911,6 @@ class NaturalImage(ImageParameterization):
         True
         >>> print(image_tensor.shape)
         torch.Size([1, 3, 224, 224])
-
-    :ivar parameterization: initial value (ImageParameterization): The given image
-        parameterization instance given when initializing ``NaturalImage``.
-    :ivar decorrelation_module: initial value (nn.Module): The given decorrelation
-        module instance given when initializing ``NaturalImage``.
     """
 
     def __init__(
@@ -926,48 +920,60 @@ class NaturalImage(ImageParameterization):
         batch: int = 1,
         init: Optional[torch.Tensor] = None,
         parameterization: ImageParameterization = FFTImage,
-        squash_func: Optional[Callable[[torch.Tensor], torch.Tensor]] = None,
+        squash_func: Optional[Callable[[torch.Tensor], torch.Tensor]] = torch.sigmoid,
         decorrelation_module: Optional[nn.Module] = ToRGB(transform="klt"),
         decorrelate_init: bool = True,
     ) -> None:
         """
         Args:
 
-            size (Tuple[int, int], optional): The height and width to use for the
-                nn.Parameter image tensor. This parameter is not used if
-                parameterization is an instance.
-                Default: ``(224, 224)``
+            size (tuple of int, optional): The height and width to use for the
+                nn.Parameter image tensor, in the format of: (height, width).
+                This parameter is not used if the given ``parameterization`` is an
+                instance.
+                Default: ``(224, 224)`
             channels (int, optional): The number of channels to use when creating the
-                nn.Parameter tensor. This parameter is not used if parameterization is
-                an instance.
+                nn.Parameter tensor. This parameter is not used if the given
+                ``parameterization`` is an instance.
                 Default: ``3``
             batch (int, optional): The number of channels to use when creating the
-                nn.Parameter tensor. This parameter is not used if ``parameterization``
-                is an instance.
+                nn.Parameter tensor. This parameter is not used if the given
+                ``parameterization`` is an instance.
                 Default: ``1``
             init (torch.Tensor, optional): Optionally specify a tensor to use instead
-                of creating one from random noise. This parameter is not used if
-                ``parameterization`` is an instance. Set to ``None`` for random init.
+                of creating one from random noise. This parameter is not used if the
+                given ``parameterization`` is an instance. Set to ``None`` for random
+                init.
                 Default: ``None``
             parameterization (ImageParameterization, optional): An image
                 parameterization class, or instance of an image parameterization class.
-                Default: FFTImage
-            squash_func (Callable[[torch.Tensor], torch.Tensor]], optional): The squash
-                function to use after color recorrelation. A function, lambda function,
-                or callable class instance.
-                Default: ``None``
+                Default: :class:`.FFTImage`
+            squash_func (callable, optional): The squash function to use after color
+                recorrelation. A function, lambda function, or callable class instance.
+                Any provided squash function should take a single input tensor and
+                return a single output tensor. If set to ``None``, then
+                :class:`torch.nn.Identity` will be used to make it a non op.
+                Default: :func:`torch.sigmoid`
             decorrelation_module (nn.Module, optional): A module instance that
                 recorrelates the colors of an input image. Custom modules can make use
                 of the ``decorrelate_init`` parameter by having a second ``inverse``
                 parameter in their forward functions that performs the inverse
-                operation when it is set to ``True`` (see
-                :class:`captum.optim.transforms.ToRGB` for an example).
-                Set to ``None`` for no recorrelation.
-                Default: ``ToRGB``
+                operation when it is set to ``True`` (see :class:`.ToRGB` for an
+                example). Set to ``None`` for no recorrelation.
+                Default: :class:`.ToRGB`
             decorrelate_init (bool, optional): Whether or not to apply color
                 decorrelation to the init tensor input. This parameter is not used if
-                ``parameterization`` is an instance or if init is ``None``.
+                the given ``parameterization`` is an instance or if init is ``None``.
                 Default: ``True``
+
+        Attributes:
+
+            parameterization (ImageParameterization): The given image parameterization
+                instance given when initializing ``NaturalImage``.
+                Default: :class:`.FFTImage`
+            decorrelation_module (torch.nn.Module): The given decorrelation module
+                instance given when initializing ``NaturalImage``.
+                Default: :class:`.ToRGB`
         """
         super().__init__()
         if not isinstance(parameterization, ImageParameterization):
@@ -987,7 +993,7 @@ class NaturalImage(ImageParameterization):
                 )
                 init = self.decorrelate(init, inverse=True).rename(None)
 
-        self.squash_func = torch.sigmoid if squash_func is None else squash_func
+        self.squash_func = squash_func or torch.nn.Identity()
         if not isinstance(parameterization, ImageParameterization):
             parameterization = parameterization(
                 size=size, channels=channels, batch=batch, init=init
