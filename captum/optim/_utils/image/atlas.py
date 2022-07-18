@@ -257,8 +257,8 @@ def create_atlas(
             and width dimensions. The ``grid_size`` variable should be in the format
             of: [width, height].
         base_tensor (callable, optional): What to use for the atlas base tensor. Basic
-            choices are: :class:`torch.ones` or :class:`torch.zeros`.
-            Default: :class:`torch.ones`
+            choices are: :func:`torch.ones` or :func:`torch.zeros`.
+            Default: :func:`torch.ones`
 
     Returns:
         atlas_canvas (torch.Tensor): The full activation atlas visualization, with a
