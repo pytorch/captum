@@ -22,8 +22,8 @@ TORCH_VERSION = torch.__version__
 
 class ImageTensor(torch.Tensor):
     r"""
-    A subclass of torch.Tensor that provides functions for easy loading, saving, and
-    displaying image tensors.
+    A subclass of :class:`torch.Tensor` that provides functions for easy loading,
+    saving, and displaying image tensors.
 
     Alias: ``captum.optim.ImageTensor``
 
@@ -138,8 +138,8 @@ class ImageTensor(torch.Tensor):
 
         Args:
 
-            figsize (Tuple[int, int], optional): height & width to use
-                for displaying the ``ImageTensor`` figure.
+            figsize (tuple of int, optional): The height & width to use for displaying
+                the ``ImageTensor`` figure, in the format of: (height, width).
                 Default: ``None``
             scale (float, optional): Value to multiply the ``ImageTensor`` by so that
                 it's value range is [0-255] for display.

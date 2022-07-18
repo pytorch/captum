@@ -18,7 +18,7 @@ def get_model_layers(model: nn.Module) -> List[str]:
         model (nn.Module): A PyTorch model or module instance to collect layers from.
 
     Returns:
-        model_layers (List[str]): A list of hookable layers in the model.
+        model_layers (list of str): A list of hookable layers in the model.
     """
     layers = []
 
@@ -101,16 +101,16 @@ def replace_layers(
 
     Args:
 
-        model: (nn.Module): A PyTorch model instance.
-        layer1: (Type[nn.Module]): The layer class that you want to transfer
+        model (nn.Module): A PyTorch model instance.
+        layer1 (Type[nn.Module]): The layer class that you want to transfer
             initialization variables from.
-        layer2: (Type[nn.Module]): The layer class to create with the variables
+        layer2 (Type[nn.Module]): The layer class to create with the variables
             from ``layer1``.
         transfer_vars (bool, optional): Whether or not to try and copy
             initialization variables from ``layer1`` instances to the replacement
             ``layer2`` instances.
             Default: ``False``
-        kwargs: (Any, optional): Any additional variables to use when creating
+        kwargs (Any, optional): Any additional variables to use when creating
             the new layer.
     """
 
@@ -134,11 +134,11 @@ def _transfer_layer_vars(
 
     Args:
 
-        layer1: (nn.Module): A layer instance that you want to transfer
+        layer1 (nn.Module): A layer instance that you want to transfer
             initialization variables from.
-        layer2: (nn.Module): The layer class to create with the variables
+        layer2 (nn.Module): The layer class to create with the variables
             from of layer1.
-        kwargs: (Any, optional): Any additional variables to use when creating
+        kwargs (Any, optional): Any additional variables to use when creating
             the new layer.
 
     Returns:
@@ -265,7 +265,7 @@ def collect_activations(
     Args:
 
         model (nn.Module): A PyTorch model instance.
-        targets (nn.Module or List[nn.Module]): One or more layer targets for the
+        targets (nn.Module or list of nn.Module): One or more layer targets for the
             given model.
         model_input (torch.Tensor or tuple of torch.Tensor, optional): Optionally
             provide an input tensor to use when collecting the target activations.
@@ -333,7 +333,7 @@ def skip_layers(
     Args:
 
         model (nn.Module): A PyTorch model instance.
-        layers (nn.Module or List[nn.Module]): The layer class type to replace in the
+        layers (nn.Module or list of nn.Module): The layer class type to replace in the
             model.
     """
     if not hasattr(layers, "__iter__"):
@@ -382,8 +382,8 @@ class MaxPool2dRelaxed(torch.nn.Module):
         """
         Args:
 
-            kernel_size (int or tuple of int): The size of the window to perform max &
-                average pooling with.
+            kernel_size (int or tuple of int): The size of the window to perform max
+                and average pooling with.
             stride (int or tuple of int, optional): The stride window size to use.
                 Default: ``None``
             padding (int or tuple of int): The amount of zero padding to add to both
