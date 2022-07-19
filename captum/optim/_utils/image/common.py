@@ -86,7 +86,7 @@ def show(
         x (torch.Tensor): The tensor you want to display as an image.
         figsize (tuple of int, optional): The height & width to use for displaying the
             ``ImageTensor`` figure, in the format of: (height, width).
-                Default: ``None``
+            Default: ``None``
         scale (float, optional): Value to multiply the input tensor by so that
             it's value range is [0-255] for display.
             Default: ``255.0``
