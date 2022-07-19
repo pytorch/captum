@@ -931,7 +931,7 @@ class NaturalImage(ImageParameterization):
                 nn.Parameter image tensor, in the format of: (height, width).
                 This parameter is not used if the given ``parameterization`` is an
                 instance.
-                Default: ``(224, 224)`
+                Default: ``(224, 224)``
             channels (int, optional): The number of channels to use when creating the
                 nn.Parameter tensor. This parameter is not used if the given
                 ``parameterization`` is an instance.
