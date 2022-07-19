@@ -71,7 +71,7 @@ class Occlusion(FeatureAblation):
                             to the number of examples (aka batch size), and if
                             multiple input tensors are provided, the examples must
                             be aligned appropriately.
-                sliding_window_shapes (tuple or tuple of tuples): Shape of patch
+                sliding_window_shapes (tuple or tuple of tuple): Shape of patch
                             (hyperrectangle) to occlude each input. For a single
                             input tensor, this must be a tuple of length equal to the
                             number of dimensions of the input tensor - 1, defining
@@ -80,7 +80,7 @@ class Occlusion(FeatureAblation):
                             this must be a tuple containing one tuple for each input
                             tensor defining the dimensions of the patch for that
                             input tensor, as described for the single tensor case.
-                strides (int or tuple or tuple of ints or tuple of tuples, optional):
+                strides (int or tuple or tuple of ints or tuple of tuple, optional):
                             This defines the step by which the occlusion hyperrectangle
                             should be shifted by in each direction for each iteration.
                             For a single tensor input, this can be either a single
