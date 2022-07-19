@@ -255,7 +255,7 @@ class TracInCPFast(TracInCPBase):
             show_progress (bool, optional): For all modes, computation of results
                     requires "training dataset computations": computations for each
                     batch in the training dataset `influence_src_dataset`, which may
-                    take a long time. If `show_progress`is true, the progress of
+                    take a long time. If `show_progress` is true, the progress of
                     "training dataset computations" will be displayed. In particular,
                     the number of batches for which computations have been performed
                     will be displayed. It will try to use tqdm if available for
@@ -271,7 +271,7 @@ class TracInCPFast(TracInCPBase):
               `influence_src_dataset`. The length of this tensor is the number of
               examples in `influence_src_dataset`, regardless of whether it is a
               Dataset or DataLoader.
-            - influence score mode: if this mode is run (`inputs is not None, `k` is
+            - influence score mode: if this mode is run (`inputs` is not None, `k` is
               None), returns a 2D tensor `influence_scores` of shape
               `(input_size, influence_src_dataset_size)`, where `input_size` is
               the number of examples in the test batch, and
@@ -955,7 +955,7 @@ class TracInCPFastRandProj(TracInCPFast):
 
             The return value of this method depends on which mode is run.
 
-            - influence score mode: if this mode is run (`inputs is not None, `k` is
+            - influence score mode: if this mode is run (`inputs` is not None, `k` is
               None), returns a 2D tensor `influence_scores` of shape
               `(input_size, influence_src_dataset_size)`, where `input_size` is
               the number of examples in the test batch, and
