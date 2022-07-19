@@ -1388,7 +1388,7 @@ class CLIPTokenizer(torch.nn.Module):
             truncate (bool, optional): Whether or not to truncate outputs larger than
                 ``context_length``.
                 Default: ``False``
-            preprocessing_module (Callable, optional): An optional function that takes
+            preprocessing_module (callable, optional): An optional function that takes
                 a list of str and returns a list of str. This can be used to implement
                 whitespace cleaning, HTML to unicode conversions, or heuristic unicode
                 correction. Set to ``None`` for no text str preprocessing.
@@ -1475,7 +1475,7 @@ class CLIPTokenizer(torch.nn.Module):
 
         Args:
 
-            x (torch.Tensor or List[int] or List[List[int]]): A set of tokens
+            x (torch.Tensor, list of int, or list of list of int): A set of tokens
                 stacked across the batch dimension, a list of tokens, or a list of
                 lists of tokens.
             include_special_tokens (bool, optional): Whether or not to included added
@@ -1483,7 +1483,7 @@ class CLIPTokenizer(torch.nn.Module):
                 Default: ``False``
 
         Returns:
-            token_str (List[List[str]]): A set of strings that correspond to the
+            token_str (list of list of str): A set of strings that correspond to the
                 token values in the input.
         """
         if isinstance(x, torch.Tensor):
@@ -1541,7 +1541,7 @@ class CLIPTokenizer(torch.nn.Module):
         """
         Args:
 
-            x (str or List[str]): Text values to be converted to tokenized tensors.
+            x (str or list of str): Text values to be converted to tokenized tensors.
 
         Returns:
             tokens (torch.Tensor): A tensor containing each set of tokens stacked
