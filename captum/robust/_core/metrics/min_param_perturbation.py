@@ -392,9 +392,9 @@ class MinParamPerturbation:
                     (or inputs itself if no preproc_fn is provided) must be a tensor
                     or tuple of tensors.
                     Default: 1
-            attack_kwargs (dictionary, optional): Optional dictionary of keyword
+            attack_kwargs (dict, optional): Optional dictionary of keyword
                     arguments provided to attack function
-            correct_fn_kwargs (dictionary, optional): Optional dictionary of keyword
+            correct_fn_kwargs (dict, optional): Optional dictionary of keyword
                     arguments provided to correct function
 
         Returns:
