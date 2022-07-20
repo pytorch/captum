@@ -156,20 +156,20 @@ class InputOptimization(Objective, Parameterized):
         loss_summarize_fn: Optional[Callable] = None,
         lr: float = 0.025,
     ) -> torch.Tensor:
-        r"""Optimize input based on loss function and objectives.
+       r"""Optimize input based on loss function and objectives.
 
         Args:
 
             stop_criteria (StopCriteria, optional): A function that is called
                 every iteration and returns a bool that determines whether to stop the
                 optimization.
-                Default: ``n_steps(512)``
+                Default: :func:`n_steps(512) <.n_steps>`
             optimizer (torch.optim.Optimizer, optional): A ``torch.optim.Optimizer``
                 instance to use for optimizing the input based on the loss function.
-                Default: ``torch.optim.Adam``
+                Default: :class:`torch.optim.Adam`
             loss_summarize_fn (callable, optional): The function to use for summarizing
                 tensor outputs from loss functions.
-                Default: ``default_loss_summarize``
+                Default: :func:`.default_loss_summarize`
             lr (float, optional): If no optimizer is given, then lr is used as the
                 learning rate for the Adam optimizer.
                 Default: ``0.025``
