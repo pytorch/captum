@@ -27,7 +27,7 @@ class LayerActivation(LayerAttribution):
 
             forward_func (callable):  The forward function of the model or any
                           modification of it
-            layer (torch.nn.Module or list(torch.nn.Module)): Layer or layers
+            layer (torch.nn.Module or list of torch.nn.Module): Layer or layers
                           for which attributions are computed.
                           Output size of attribute matches this layer's input or
                           output dimensions, depending on whether we attribute to

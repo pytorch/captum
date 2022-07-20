@@ -51,7 +51,7 @@ class LayerLRP(LRP, LayerAttribution):
                         PyTorch API starting from PyTorch v1.9.
 
 
-            layer (torch.nn.Module or list(torch.nn.Module)): Layer or layers
+            layer (torch.nn.Module or list of torch.nn.Module): Layer or layers
                           for which attributions are computed.
                           The size and dimensionality of the attributions
                           corresponds to the size and dimensionality of the layer's
