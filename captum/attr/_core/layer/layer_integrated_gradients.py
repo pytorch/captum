@@ -55,10 +55,9 @@ class LayerIntegratedGradients(LayerAttribution, GradientAttribution):
         Args:
             forward_func (callable):  The forward function of the model or any
                         modification of it
-            layer (ModuleOrModuleList):
-                        Layer or list of layers for which attributions are computed.
-                        For each layer the output size of the attribute matches
-                        this layer's input or output dimensions, depending on
+            layer (ModuleOrModuleList): Layer or list of layers for which attributions
+                        are computed. For each layer the output size of the attribute
+                        matches this layer's input or output dimensions, depending on
                         whether we attribute to the inputs or outputs of the
                         layer, corresponding to the attribution of each neuron
                         in the input or output of this layer.

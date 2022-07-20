@@ -108,11 +108,11 @@ class LRP(GradientAttribution):
                         are provided, the examples must be aligned appropriately.
 
             target (int, tuple, tensor or list, optional):  Output indices for
-                        which gradients are computed (for classification cases,
-                        this is usually the target class).
-                        If the network returns a scalar value per example,
-                        no target index is necessary.
-                        For general 2D outputs, targets can be either:
+                    which gradients are computed (for classification cases,
+                    this is usually the target class).
+                    If the network returns a scalar value per example,
+                    no target index is necessary.
+                    For general 2D outputs, targets can be either:
 
                     - a single integer or a tensor containing a single
                         integer, which is applied to all input examples
