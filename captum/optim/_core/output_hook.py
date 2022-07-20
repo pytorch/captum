@@ -113,7 +113,7 @@ class ActivationFetcher:
         """
         Args:
 
-            input_t (tensor or tuple of tensors, optional): The input to use
+            input_t (torch.Tensor or tuple of torch.Tensor, optional): The input to use
                 with the specified model.
 
         Returns:
