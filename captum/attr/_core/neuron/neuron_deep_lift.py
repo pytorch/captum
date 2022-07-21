@@ -273,7 +273,7 @@ class NeuronDeepLiftShap(NeuronAttribution, GradientAttribution):
     by the input flag `attribute_to_layer_input`.
     More details about the algorithm can be found here:
 
-    http://papers.nips.cc/paper/7062-a-unified-approach-to-interpreting-model-predictions
+    https://papers.nips.cc/paper/7062-a-unified-approach-to-interpreting-model-predictions.pdf
 
     Note that the explanation model:
         1. Assumes that input features are independent of one another

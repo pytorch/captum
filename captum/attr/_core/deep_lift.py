@@ -611,7 +611,7 @@ class DeepLiftShap(DeepLift):
     each baseline and averages resulting attributions.
     More details about the algorithm can be found here:
 
-    http://papers.nips.cc/paper/7062-a-unified-approach-to-interpreting-model-predictions
+    https://papers.nips.cc/paper/7062-a-unified-approach-to-interpreting-model-predictions.pdf
 
     Note that the explanation model:
 

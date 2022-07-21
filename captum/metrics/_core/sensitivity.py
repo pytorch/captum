@@ -95,7 +95,7 @@ def sensitivity_max(
     `Towards Robust Interpretability with Self-Explaining Neural Networks`
     https://papers.nips.cc/paper\
     8003-towards-robust-interpretability-
-    with-self-explaining-neural-networks
+    with-self-explaining-neural-networks.pdf
 
     More details about sensitivity max can be found here:
     `On the (In)fidelity and Sensitivity of Explanations`
