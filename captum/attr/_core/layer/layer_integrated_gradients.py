@@ -309,10 +309,10 @@ class LayerIntegratedGradients(LayerAttribution, GradientAttribution):
 
             Returns:
                 **attributions** or 2-element tuple of **attributions**, **delta**:
+
                   - **attributions** (*tensor*, tuple of *tensors* or tuple of
-                  *tensors*):
-                        Integrated gradients with respect to `layer`'s inputs or
-                        outputs. Attributions will always be the same size and
+                  *tensors*): Integrated gradients with respect to `layer`'s inputs
+                        or outputs. Attributions will always be the same size and
                         dimensionality as the input or output of the given layer,
                         depending on whether we attribute to the inputs or outputs
                         of the layer which is decided by the input flag
