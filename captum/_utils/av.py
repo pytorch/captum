@@ -213,7 +213,7 @@ class AV:
                     `layers` is provided.
             layers (str or list of str): The layer(s) for which the activation vectors
                     are computed.
-            act_tensors (Tensor or List of Tensor): A batch of activation vectors.
+            act_tensors (tensor or list of tensor): A batch of activation vectors.
                     This must match the dimension of `layers`.
             num_id (str): string representing the batch number for which the activation
                     vectors are computed
