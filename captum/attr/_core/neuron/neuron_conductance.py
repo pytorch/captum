@@ -45,7 +45,7 @@ class NeuronConductance(NeuronAttribution, GradientAttribution):
         r"""
         Args:
 
-            forward_func (callable): The forward function of the model or any
+            forward_func (Callable): The forward function of the model or any
                         modification of it
             layer (torch.nn.Module): Layer for which neuron attributions are computed.
                         Attributions for a particular neuron in the input or output
@@ -111,7 +111,7 @@ class NeuronConductance(NeuronAttribution, GradientAttribution):
                         that for all given input tensors, dimension 0 corresponds
                         to the number of examples, and if multiple input tensors
                         are provided, the examples must be aligned appropriately.
-            neuron_selector (int, callable, or tuple of int or slice):
+            neuron_selector (int, Callable, or tuple of int or slice):
                         Selector for neuron
                         in given layer for which attribution is desired.
                         Neuron selector can be provided as:
@@ -197,7 +197,7 @@ class NeuronConductance(NeuronAttribution, GradientAttribution):
                           target for the corresponding example.
 
                         Default: None
-            additional_forward_args (any, optional): If the forward function
+            additional_forward_args (Any, optional): If the forward function
                         requires additional arguments other than the inputs for
                         which attributions should not be computed, this argument
                         can be provided. It must be either a single additional

@@ -47,7 +47,7 @@ class FeatureAblation(PerturbationAttribution):
         r"""
         Args:
 
-            forward_func (callable): The forward function of the model or
+            forward_func (Callable): The forward function of the model or
                         any modification of it
         """
         PerturbationAttribution.__init__(self, forward_func)
@@ -130,7 +130,7 @@ class FeatureAblation(PerturbationAttribution):
                           target for the corresponding example.
 
                         Default: None
-            additional_forward_args (any, optional): If the forward function
+            additional_forward_args (Any, optional): If the forward function
                         requires additional arguments other than the inputs for
                         which attributions should not be computed, this argument
                         can be provided. It must be either a single additional
@@ -187,7 +187,7 @@ class FeatureAblation(PerturbationAttribution):
                         (e.g. time estimation). Otherwise, it will fallback to
                         a simple output of progress.
                         Default: False
-            **kwargs (any, optional): Any additional arguments used by child
+            **kwargs (Any, optional): Any additional arguments used by child
                         classes of FeatureAblation (such as Occlusion) to construct
                         ablations. These arguments are ignored when using
                         FeatureAblation directly.

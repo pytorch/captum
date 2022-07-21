@@ -56,7 +56,7 @@ class NeuronGradientShap(NeuronAttribution, GradientAttribution):
         r"""
         Args:
 
-            forward_func (callable): The forward function of the model or any
+            forward_func (Callable): The forward function of the model or any
                         modification of it
             layer (torch.nn.Module): Layer for which neuron attributions are computed.
                         The output size of the attribute method matches the
@@ -114,7 +114,7 @@ class NeuronGradientShap(NeuronAttribution, GradientAttribution):
                         that for all given input tensors, dimension 0 corresponds
                         to the number of examples, and if multiple input tensors
                         are provided, the examples must be aligned appropriately.
-            neuron_selector (int, callable, or tuple of int or slice):
+            neuron_selector (int, Callable, or tuple of int or slice):
                         Selector for neuron
                         in given layer for which attribution is desired.
                         Neuron selector can be provided as:
@@ -147,7 +147,7 @@ class NeuronGradientShap(NeuronAttribution, GradientAttribution):
                           this function returns either a tensor with one element
                           or a 1D tensor with length equal to batch_size (one scalar
                           per input example)
-            baselines (tensor, tuple of tensors, callable):
+            baselines (tensor, tuple of tensors, Callable):
                         Baselines define the starting point from which expectation
                         is computed and can be provided as:
 
@@ -183,7 +183,7 @@ class NeuronGradientShap(NeuronAttribution, GradientAttribution):
                         corresponds to the input with the same index in the inputs
                         tuple.
                         Default: 0.0
-            additional_forward_args (any, optional): If the forward function
+            additional_forward_args (Any, optional): If the forward function
                         requires additional arguments other than the inputs for
                         which attributions should not be computed, this argument
                         can be provided. It can contain a tuple of ND tensors or

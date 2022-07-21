@@ -75,9 +75,9 @@ class FeaturePermutation(FeatureAblation):
         r"""
         Args:
 
-            forward_func (callable): The forward function of the model or
+            forward_func (Callable): The forward function of the model or
                 any modification of it
-            perm_func (callable, optional): A function that accepts a batch of
+            perm_func (Callable, optional): A function that accepts a batch of
                 inputs and a feature mask, and "permutes" the feature using
                 feature mask across the batch. This defaults to a function
                 which applies a random permutation, this argument only needs
@@ -143,7 +143,7 @@ class FeaturePermutation(FeatureAblation):
                               target for the corresponding example.
 
                             Default: None
-                additional_forward_args (any, optional): If the forward function
+                additional_forward_args (Any, optional): If the forward function
                             requires additional arguments other than the inputs for
                             which attributions should not be computed, this argument
                             can be provided. It must be either a single additional
@@ -195,7 +195,7 @@ class FeaturePermutation(FeatureAblation):
                             (e.g. time estimation). Otherwise, it will fallback to
                             a simple output of progress.
                             Default: False
-                **kwargs (any, optional): Any additional arguments used by child
+                **kwargs (Any, optional): Any additional arguments used by child
                             classes of FeatureAblation (such as Occlusion) to construct
                             ablations. These arguments are ignored when using
                             FeatureAblation directly.

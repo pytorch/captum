@@ -128,7 +128,7 @@ class TracInCPBase(DataInfluence):
                     path to store and retrieve model checkpoints, a list of
                     filepaths with checkpoints from which to load, or an iterator which
                     returns objects from which to load checkpoints.
-            checkpoints_load_func (callable, optional): The function to load a saved
+            checkpoints_load_func (Callable, optional): The function to load a saved
                     checkpoint into a model to update its parameters, and get the
                     learning rate if it is saved. By default uses a utility to load a
                     model saved as a state dict.
@@ -138,7 +138,7 @@ class TracInCPBase(DataInfluence):
                     be computed for all layers. Otherwise, they will only be computed
                     for the layers specified in `layers`.
                     Default: None
-            loss_fn (callable, optional): The loss function applied to model.
+            loss_fn (Callable, optional): The loss function applied to model.
                     Default: None
             batch_size (int or None, optional): Batch size of the DataLoader created to
                     iterate through `influence_src_dataset`, if it is a Dataset.
@@ -329,7 +329,7 @@ class TracInCPBase(DataInfluence):
 
         Args:
 
-            inputs (any, optional): If not provided or `None`, the self influence mode
+            inputs (Any, optional): If not provided or `None`, the self influence mode
                     will be run. Otherwise, `inputs` is the test batch that will be
                     used when running in either influence score or k-most influential
                     mode. If the argument `unpack_inputs` is False, the
@@ -483,7 +483,7 @@ class TracInCP(TracInCPBase):
                     path to store and retrieve model checkpoints, a list of
                     filepaths with checkpoints from which to load, or an iterator which
                     returns objects from which to load checkpoints.
-            checkpoints_load_func (callable, optional): The function to load a saved
+            checkpoints_load_func (Callable, optional): The function to load a saved
                     checkpoint into a model to update its parameters, and get the
                     learning rate if it is saved. By default uses a utility to load a
                     model saved as a state dict.
@@ -493,7 +493,7 @@ class TracInCP(TracInCPBase):
                     be computed for all layers. Otherwise, they will only be computed
                     for the layers specified in `layers`.
                     Default: None
-            loss_fn (callable, optional): The loss function applied to model. There
+            loss_fn (Callable, optional): The loss function applied to model. There
                     are two options for the return type of `loss_fn`. First, `loss_fn`
                     can be a "per-example" loss function - returns a 1D Tensor of
                     losses for each example in a batch. `nn.BCELoss(reduction="none")`
@@ -651,7 +651,7 @@ class TracInCP(TracInCPBase):
 
         Args:
 
-            inputs (any, optional): If not provided or `None`, the self influence mode
+            inputs (Any, optional): If not provided or `None`, the self influence mode
                     will be run. Otherwise, `inputs` is the test batch that will be
                     used when running in either influence score or k-most influential
                     mode. If the argument `unpack_inputs` is False, the

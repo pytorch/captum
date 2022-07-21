@@ -67,7 +67,7 @@ class LayerGradientShap(LayerAttribution, GradientAttribution):
         r"""
         Args:
 
-            forward_func (callable): The forward function of the model or any
+            forward_func (Callable): The forward function of the model or any
                         modification of it
             layer (torch.nn.Module): Layer for which attributions are computed.
                         Output size of attribute matches this layer's input or
@@ -155,7 +155,7 @@ class LayerGradientShap(LayerAttribution, GradientAttribution):
                         that for all given input tensors, dimension 0 corresponds
                         to the number of examples, and if multiple input tensors
                         are provided, the examples must be aligned appropriately.
-            baselines (tensor, tuple of tensors, callable):
+            baselines (tensor, tuple of tensors, Callable):
                         Baselines define the starting point from which expectation
                         is computed and can be provided as:
 
@@ -216,7 +216,7 @@ class LayerGradientShap(LayerAttribution, GradientAttribution):
                           target for the corresponding example.
 
                         Default: None
-            additional_forward_args (any, optional): If the forward function
+            additional_forward_args (Any, optional): If the forward function
                         requires additional arguments other than the inputs for
                         which attributions should not be computed, this argument
                         can be provided. It can contain a tuple of ND tensors or
@@ -335,7 +335,7 @@ class LayerInputBaselineXGradient(LayerAttribution, GradientAttribution):
         r"""
         Args:
 
-            forward_func (callable): The forward function of the model or any
+            forward_func (Callable): The forward function of the model or any
                         modification of it
             layer (torch.nn.Module): Layer for which attributions are computed.
                         Output size of attribute matches this layer's input or

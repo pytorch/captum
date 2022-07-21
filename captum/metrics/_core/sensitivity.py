@@ -103,7 +103,7 @@ def sensitivity_max(
 
     Args:
 
-        explanation_func (callable):
+        explanation_func (Callable):
                 This function can be the `attribute` method of an
                 attribution algorithm or any other explanation method
                 that returns the explanations.
@@ -119,7 +119,7 @@ def sensitivity_max(
                 multiple input tensors are provided, the examples must
                 be aligned appropriately.
 
-        perturb_func (callable):
+        perturb_func (Callable):
                 The perturbation function of model inputs. This function takes
                 model inputs and optionally `perturb_radius` if
                 the function takes more than one argument and returns
@@ -166,7 +166,7 @@ def sensitivity_max(
                 `input batch size * n_perturb_samples`.
 
                 Default: None
-         **kwargs (any, optional): Contains a list of arguments that are passed
+         **kwargs (Any, optional): Contains a list of arguments that are passed
                 to `explanation_func` explanation function which in some cases
                 could be the `attribute` function of an attribution algorithm.
                 Any additional arguments that need be passed to the explanation

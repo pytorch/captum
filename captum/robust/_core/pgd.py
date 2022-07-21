@@ -44,9 +44,9 @@ class PGD(Perturbation):
     ) -> None:
         r"""
         Args:
-            forward_func (callable): The pytorch model for which the attack is
+            forward_func (Callable): The pytorch model for which the attack is
                         computed.
-            loss_func (callable, optional): Loss function of which the gradient
+            loss_func (Callable, optional): Loss function of which the gradient
                         computed. The loss function should take in outputs of the
                         model and labels, and return the loss for each input tensor.
                         The default loss function is negative log.
@@ -55,7 +55,7 @@ class PGD(Perturbation):
                         e.g. image pixels must be in the range 0-255
 
         Attributes:
-            bound (callable): A function that bounds the input values based on
+            bound (Callable): A function that bounds the input values based on
                         given lower_bound and upper_bound. Can be overwritten for
                         custom use cases if necessary.
         """
@@ -92,7 +92,7 @@ class PGD(Perturbation):
             step_size (float): Step size of each gradient step.
             step_num (int): Step numbers. It usually guarantees that the perturbation
                         can reach the border.
-            target (any): True labels of inputs if non-targeted attack is
+            target (Any): True labels of inputs if non-targeted attack is
                         desired. Target class of inputs if targeted attack
                         is desired. Target will be passed to the loss function
                         to compute loss, so the type needs to match the
@@ -118,7 +118,7 @@ class PGD(Perturbation):
                           examples in inputs (dim 0), and each tuple containing
                           #output_dims - 1 elements. Each tuple is applied as the
                           label for the corresponding example.
-            additional_forward_args (any, optional): If the forward function
+            additional_forward_args (Any, optional): If the forward function
                         requires additional arguments other than the inputs for
                         which attributions should not be computed, this argument
                         can be provided. These arguments are provided to

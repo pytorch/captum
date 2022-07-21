@@ -82,7 +82,7 @@ class LimeBase(PerturbationAttribution):
         Args:
 
 
-            forward_func (callable): The forward function of the model or any
+            forward_func (Callable): The forward function of the model or any
                     modification of it. If a batch is provided as input for
                     attribution, it is expected that forward_func returns a scalar
                     representing the entire batch.
@@ -106,7 +106,7 @@ class LimeBase(PerturbationAttribution):
                     Note that calling fit multiple times should retrain the
                     interpretable model, each attribution call reuses
                     the same given interpretable model object.
-            similarity_func (callable): Function which takes a single sample
+            similarity_func (Callable): Function which takes a single sample
                     along with its corresponding interpretable representation
                     and returns the weight of the interpretable sample for
                     training interpretable model. Weight is generally
@@ -131,7 +131,7 @@ class LimeBase(PerturbationAttribution):
 
                     All kwargs passed to the attribute method are
                     provided as keyword arguments (kwargs) to this callable.
-            perturb_func (callable): Function which returns a single
+            perturb_func (Callable): Function which returns a single
                     sampled input, generally a perturbation of the original
                     input, which is used to train the interpretable surrogate
                     model. Function can return samples in either
@@ -171,7 +171,7 @@ class LimeBase(PerturbationAttribution):
                     input. Once sampled, inputs can be converted to / from
                     the interpretable representation with either
                     to_interp_rep_transform or from_interp_rep_transform.
-            from_interp_rep_transform (callable): Function which takes a
+            from_interp_rep_transform (Callable): Function which takes a
                     single sampled interpretable representation (tensor
                     of shape 1 x num_interp_features) and returns
                     the corresponding representation in the input space
@@ -194,7 +194,7 @@ class LimeBase(PerturbationAttribution):
                     All kwargs passed to the attribute method are
                     provided as keyword arguments (kwargs) to this callable.
 
-            to_interp_rep_transform (callable): Function which takes a
+            to_interp_rep_transform (Callable): Function which takes a
                     sample in the original input space and converts to
                     its interpretable representation (tensor
                     of shape 1 x num_interp_features).
@@ -300,7 +300,7 @@ class LimeBase(PerturbationAttribution):
                           target for the corresponding example.
 
                         Default: None
-            additional_forward_args (any, optional): If the forward function
+            additional_forward_args (Any, optional): If the forward function
                         requires additional arguments other than the inputs for
                         which attributions should not be computed, this argument
                         can be provided. It must be either a single additional
@@ -335,7 +335,7 @@ class LimeBase(PerturbationAttribution):
                         (e.g. time estimation). Otherwise, it will fallback to
                         a simple output of progress.
                         Default: False
-            **kwargs (any, optional): Any additional arguments necessary for
+            **kwargs (Any, optional): Any additional arguments necessary for
                         sampling and transformation functions (provided to
                         constructor).
                         Default: None
@@ -732,9 +732,9 @@ class Lime(LimeBase):
         Args:
 
 
-            forward_func (callable): The forward function of the model or any
+            forward_func (Callable): The forward function of the model or any
                     modification of it
-            interpretable_model (optional, Model): Model object to train
+            interpretable_model (Model, optional): Model object to train
                     interpretable model.
 
                     This argument is optional and defaults to SkLearnLasso(alpha=0.01),
@@ -760,7 +760,7 @@ class Lime(LimeBase):
                     Note that calling fit multiple times should retrain the
                     interpretable model, each attribution call reuses
                     the same given interpretable model object.
-            similarity_func (optional, callable): Function which takes a single sample
+            similarity_func (Callable, optional): Function which takes a single sample
                     along with its corresponding interpretable representation
                     and returns the weight of the interpretable sample for
                     training the interpretable model.
@@ -793,7 +793,7 @@ class Lime(LimeBase):
 
                     kwargs includes baselines, feature_mask, num_interp_features
                     (integer, determined from feature mask).
-            perturb_func (optional, callable): Function which returns a single
+            perturb_func (Callable, optional): Function which returns a single
                     sampled input, which is a binary vector of length
                     num_interp_features, or a generator of such tensors.
 
@@ -943,7 +943,7 @@ class Lime(LimeBase):
                           target for the corresponding example.
 
                         Default: None
-            additional_forward_args (any, optional): If the forward function
+            additional_forward_args (Any, optional): If the forward function
                         requires additional arguments other than the inputs for
                         which attributions should not be computed, this argument
                         can be provided. It must be either a single additional

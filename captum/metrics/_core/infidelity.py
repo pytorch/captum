@@ -44,12 +44,12 @@ def infidelity_perturb_func_decorator(multipy_by_inputs: bool = True) -> Callabl
         r"""
         Args:
 
-            pertub_func(callable): Input perturbation function that takes inputs
+            pertub_func(Callable): Input perturbation function that takes inputs
                 and optionally baselines and returns perturbed inputs
 
         Returns:
 
-            default_perturb_func(callable): Internal default perturbation
+            default_perturb_func(Callable): Internal default perturbation
             function that computes the perturbations internally and returns
             perturbations and perturbed inputs.
 
@@ -147,10 +147,10 @@ def infidelity(
 
     Args:
 
-        forward_func (callable):
+        forward_func (Callable):
                 The forward function of the model or any modification of it.
 
-        perturb_func (callable):
+        perturb_func (Callable):
                 The perturbation function of model inputs. This function takes
                 model inputs and optionally baselines as input arguments and returns
                 either a tuple of perturbations and perturbed inputs or just
@@ -292,7 +292,7 @@ def infidelity(
                 tensor as well. If inputs is provided as a tuple of tensors
                 then attributions will be tuples of tensors as well.
 
-        additional_forward_args (any, optional): If the forward function
+        additional_forward_args (Any, optional): If the forward function
                 requires additional arguments other than the inputs for
                 which attributions should not be computed, this argument
                 can be provided. It must be either a single additional

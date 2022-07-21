@@ -33,7 +33,7 @@ class NeuronIntegratedGradients(NeuronAttribution, GradientAttribution):
         r"""
         Args:
 
-            forward_func (callable): The forward function of the model or any
+            forward_func (Callable): The forward function of the model or any
                         modification of it
             layer (torch.nn.Module): Layer for which attributions are computed.
                         Output size of attribute matches this layer's input or
@@ -92,7 +92,7 @@ class NeuronIntegratedGradients(NeuronAttribution, GradientAttribution):
                         that for all given input tensors, dimension 0 corresponds
                         to the number of examples, and if multiple input tensors
                         are provided, the examples must be aligned appropriately.
-            neuron_selector (int, callable, or tuple of int or slice):
+            neuron_selector (int, Callable, or tuple of int or slice):
                         Selector for neuron
                         in given layer for which attribution is desired.
                         Neuron selector can be provided as:
@@ -155,7 +155,7 @@ class NeuronIntegratedGradients(NeuronAttribution, GradientAttribution):
                         use zero scalar corresponding to each input tensor.
 
                         Default: None
-            additional_forward_args (any, optional): If the forward function
+            additional_forward_args (Any, optional): If the forward function
                         requires additional arguments other than the inputs for
                         which attributions should not be computed, this argument
                         can be provided. It must be either a single additional

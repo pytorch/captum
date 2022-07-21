@@ -94,7 +94,7 @@ class SimilarityInfluence(DataInfluence):
             model_id (str): The name/version of the model for which layer
                         activations are being computed. Activations will be stored and
                         loaded under the subdirectory with this name if provided.
-            similarity_metric (callable): This is a callable function that computes a
+            similarity_metric (Callable): This is a callable function that computes a
                     similarity metric between two representations. For example, the
                     representations pair could be from the training and test sets.
 

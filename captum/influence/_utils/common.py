@@ -206,7 +206,7 @@ def _get_k_most_influential_helper(
     Args:
         influence_src_dataloader (DataLoader): The DataLoader, representing training
                 data, for which we want to compute proponents / opponents.
-        influence_batch_fn (callable): A callable that will be called via
+        influence_batch_fn (Callable): A callable that will be called via
                 `influence_batch_fn(inputs, targets, batch)`, where `batch` is a batch
                 in the `influence_src_dataloader` argument.
         inputs (tuple of Any): A batch of examples. Does not represent labels,

@@ -39,7 +39,7 @@ class Occlusion(FeatureAblation):
         r"""
         Args:
 
-            forward_func (callable): The forward function of the model or
+            forward_func (Callable): The forward function of the model or
                         any modification of it
         """
         FeatureAblation.__init__(self, forward_func)
@@ -153,7 +153,7 @@ class Occlusion(FeatureAblation):
                               target for the corresponding example.
 
                             Default: None
-                additional_forward_args (any, optional): If the forward function
+                additional_forward_args (Any, optional): If the forward function
                             requires additional arguments other than the inputs for
                             which attributions should not be computed, this argument
                             can be provided. It must be either a single additional

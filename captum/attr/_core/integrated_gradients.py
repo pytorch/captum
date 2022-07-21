@@ -53,7 +53,7 @@ class IntegratedGradients(GradientAttribution):
         r"""
         Args:
 
-            forward_func (callable): The forward function of the model or any
+            forward_func (Callable): The forward function of the model or any
                     modification of it
             multiply_by_inputs (bool, optional): Indicates whether to factor
                     model inputs' multiplier in the final attribution scores.
@@ -192,7 +192,7 @@ class IntegratedGradients(GradientAttribution):
                           target for the corresponding example.
 
                         Default: None
-            additional_forward_args (any, optional): If the forward function
+            additional_forward_args (Any, optional): If the forward function
                         requires additional arguments other than the inputs for
                         which attributions should not be computed, this argument
                         can be provided. It must be either a single additional

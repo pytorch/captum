@@ -280,7 +280,7 @@ class TCAV(ConceptInterpreter):
                     attribution algorithm.
             save_path (str, optional): The path for storing CAVs and
                     Activation Vectors (AVs).
-            classifier_kwargs (any, optional): Additional arguments such as
+            classifier_kwargs (Any, optional): Additional arguments such as
                     `test_split_ratio` that are passed to concept `classifier`.
 
         Examples::
@@ -612,7 +612,7 @@ class TCAV(ConceptInterpreter):
                         #output_dims - 1 elements. Each tuple is applied as the
                         target for the corresponding example.
 
-            additional_forward_args (any, optional): Extra arguments that are passed to
+            additional_forward_args (Any, optional): Extra arguments that are passed to
                      model when computing the attributions for `inputs`
                      w.r.t. layer output.
                      Default: None
@@ -622,7 +622,7 @@ class TCAV(ConceptInterpreter):
                     `processes`. Otherwise, CAV computations will be performed
                     sequential.
                     Default:None
-            **kwargs (any, optional): A list of arguments that are passed to layer
+            **kwargs (Any, optional): A list of arguments that are passed to layer
                     attribution algorithm's attribute method. This could be for
                     example `n_steps` in case of integrated gradients.
                     Default: None

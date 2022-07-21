@@ -210,7 +210,7 @@ class LayerDeepLift(LayerAttribution, DeepLift):
                           target for the corresponding example.
 
                         Default: None
-            additional_forward_args (any, optional): If the forward function
+            additional_forward_args (Any, optional): If the forward function
                         requires additional arguments other than the inputs for
                         which attributions should not be computed, this argument
                         can be provided. It must be either a single additional
@@ -237,7 +237,7 @@ class LayerDeepLift(LayerAttribution, DeepLift):
                         attribute to the input or output, is a single tensor.
                         Support for multiple tensors will be added later.
                         Default: False
-            custom_attribution_func (callable, optional): A custom function for
+            custom_attribution_func (Callable, optional): A custom function for
                         computing final attribution scores. This function can take
                         at least one and at most three arguments with the
                         following signature:
@@ -491,7 +491,7 @@ class LayerDeepLiftShap(LayerDeepLift, DeepLiftShap):
                         to the number of examples (aka batch size), and if
                         multiple input tensors are provided, the examples must
                         be aligned appropriately.
-            baselines (tensor, tuple of tensors, callable):
+            baselines (tensor, tuple of tensors, Callable):
                         Baselines define reference samples that are compared with
                         the inputs. In order to assign attribution scores DeepLift
                         computes the differences between the inputs/outputs and
@@ -541,7 +541,7 @@ class LayerDeepLiftShap(LayerDeepLift, DeepLiftShap):
                           target for the corresponding example.
 
                         Default: None
-            additional_forward_args (any, optional): If the forward function
+            additional_forward_args (Any, optional): If the forward function
                         requires additional arguments other than the inputs for
                         which attributions should not be computed, this argument
                         can be provided. It must be either a single additional
@@ -567,7 +567,7 @@ class LayerDeepLiftShap(LayerDeepLift, DeepLiftShap):
                         outputs of internal layers are single tensors.
                         Support for multiple tensors will be added later.
                         Default: False
-            custom_attribution_func (callable, optional): A custom function for
+            custom_attribution_func (Callable, optional): A custom function for
                         computing final attribution scores. This function can take
                         at least one and at most three arguments with the
                         following signature:

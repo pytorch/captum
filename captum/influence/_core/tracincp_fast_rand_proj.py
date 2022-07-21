@@ -116,12 +116,12 @@ class TracInCPFast(TracInCPBase):
                     path to store and retrieve model checkpoints, a list of
                     filepaths with checkpoints from which to load, or an iterator which
                     returns objects from which to load checkpoints.
-            checkpoints_load_func (callable, optional): The function to load a saved
+            checkpoints_load_func (Callable, optional): The function to load a saved
                     checkpoint into a model to update its parameters, and get the
                     learning rate if it is saved. By default uses a utility to load a
                     model saved as a state dict.
                     Default: _load_flexible_state_dict
-            loss_fn (callable, optional): The loss function applied to model. `loss_fn`
+            loss_fn (Callable, optional): The loss function applied to model. `loss_fn`
                     must be a "reduction" loss function that reduces the per-example
                     losses in a batch, and returns a single scalar Tensor. Furthermore,
                     the reduction must be the *sum* or the *mean* of the per-example
@@ -226,7 +226,7 @@ class TracInCPFast(TracInCPBase):
 
         Args:
 
-            inputs (any, optional): If not provided or `None`, the self influence mode
+            inputs (Any, optional): If not provided or `None`, the self influence mode
                     will be run. Otherwise, `inputs` is the test batch that will be
                     used when running in either influence score or k-most influential
                     mode. If the argument `unpack_inputs` is False, the
@@ -675,12 +675,12 @@ class TracInCPFastRandProj(TracInCPFast):
                     path to store and retrieve model checkpoints, a list of
                     filepaths with checkpoints from which to load, or an iterator which
                     returns objects from which to load checkpoints.
-            checkpoints_load_func (callable, optional): The function to load a saved
+            checkpoints_load_func (Callable, optional): The function to load a saved
                     checkpoint into a model to update its parameters, and get the
                     learning rate if it is saved. By default uses a utility to load a
                     model saved as a state dict.
                     Default: _load_flexible_state_dict
-            loss_fn (callable, optional): The loss function applied to model. `loss_fn`
+            loss_fn (Callable, optional): The loss function applied to model. `loss_fn`
                     must be a "reduction" loss function that reduces the per-example
                     losses in a batch, and returns a single scalar Tensor. Furthermore,
                     the reduction must be the *sum* of the per-example losses. For
@@ -932,7 +932,7 @@ class TracInCPFastRandProj(TracInCPFast):
 
         Args:
 
-            inputs (any, optional): If not provided or `None`, the self influence mode
+            inputs (Any, optional): If not provided or `None`, the self influence mode
                     will be run. Otherwise, `inputs` is the test batch that will be
                     used when running in either influence score or k-most influential
                     mode. If the argument `unpack_inputs` is False, the

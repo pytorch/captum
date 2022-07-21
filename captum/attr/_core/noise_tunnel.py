@@ -129,7 +129,7 @@ class NoiseTunnel(Attribution):
                         randomly draw baseline samples from the `baselines`
                         distribution provided as an input tensor.
                         Default: False
-            **kwargs (any, optional): Contains a list of arguments that are passed
+            **kwargs (Any, optional): Contains a list of arguments that are passed
                         to `attribution_method` attribution algorithm.
                         Any additional arguments that should be used for the
                         chosen attribution method should be included here.

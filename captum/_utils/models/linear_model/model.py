@@ -20,7 +20,7 @@ class LinearModel(nn.Module, Model):
         Please note that this is an experimental feature.
 
         Args:
-            train_fn (callable)
+            train_fn (Callable)
                 The function to train with. See
                 `captum._utils.models.linear_model.train.sgd_train_linear_model`
                 and

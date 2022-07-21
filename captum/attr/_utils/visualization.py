@@ -376,7 +376,7 @@ def visualize_image_attr_multiple(
                     uses Matplotlib object oriented API and simply returns a
                     figure object without showing.
                     Default: True.
-        **kwargs (any, optional): Any additional arguments which will be passed
+        **kwargs (Any, optional): Any additional arguments which will be passed
                     to every individual visualization. Such arguments include
                     `show_colorbar`, `alpha_overlay`, `cmap`, etc.
 

@@ -31,7 +31,7 @@ class Attribution:
     def __init__(self, forward_func: Callable) -> None:
         r"""
         Args:
-            forward_func (callable or torch.nn.Module): This can either be an instance
+            forward_func (Callable or torch.nn.Module): This can either be an instance
                         of pytorch model or any modification of model's forward
                         function.
         """
@@ -150,7 +150,7 @@ class GradientAttribution(Attribution):
         r"""
         Args:
 
-            forward_func (callable or torch.nn.Module): This can either be an instance
+            forward_func (Callable or torch.nn.Module): This can either be an instance
                         of pytorch model or any modification of model's forward
                         function.
         """
@@ -228,7 +228,7 @@ class GradientAttribution(Attribution):
                               target for the corresponding example.
 
                             Default: None
-                additional_forward_args (any, optional): If the forward function
+                additional_forward_args (Any, optional): If the forward function
                             requires additional arguments other than the inputs for
                             which attributions should not be computed, this argument
                             can be provided. It must be either a single additional
@@ -306,7 +306,7 @@ class PerturbationAttribution(Attribution):
         r"""
         Args:
 
-            forward_func (callable or torch.nn.Module): This can either be an instance
+            forward_func (Callable or torch.nn.Module): This can either be an instance
                         of pytorch model or any modification of model's forward
                         function.
         """
@@ -333,7 +333,7 @@ class InternalAttribution(Attribution, Generic[ModuleOrModuleList]):
         r"""
         Args:
 
-            forward_func (callable or torch.nn.Module): This can either be an instance
+            forward_func (Callable or torch.nn.Module): This can either be an instance
                         of pytorch model or any modification of model's forward
                         function.
             layer (torch.nn.Module): Layer for which output attributions are computed.
@@ -366,7 +366,7 @@ class LayerAttribution(InternalAttribution):
         r"""
         Args:
 
-            forward_func (callable or torch.nn.Module): This can either be an instance
+            forward_func (Callable or torch.nn.Module): This can either be an instance
                         of pytorch model or any modification of model's forward
                         function.
             layer (torch.nn.Module): Layer for which output attributions are computed.
@@ -436,7 +436,7 @@ class NeuronAttribution(InternalAttribution):
         r"""
         Args:
 
-            forward_func (callable or torch.nn.Module): This can either be an instance
+            forward_func (Callable or torch.nn.Module): This can either be an instance
                         of pytorch model or any modification of model's forward
                         function.
             layer (torch.nn.Module): Layer for which output attributions are computed.

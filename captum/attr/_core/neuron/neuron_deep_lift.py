@@ -99,7 +99,7 @@ class NeuronDeepLift(NeuronAttribution, GradientAttribution):
                         corresponds to the number of examples (aka batch size),
                         and if multiple input tensors are provided, the examples
                         must be aligned appropriately.
-            neuron_selector (int, callable, or tuple of int or slice):
+            neuron_selector (int, Callable, or tuple of int or slice):
                         Selector for neuron
                         in given layer for which attribution is desired.
                         Neuron selector can be provided as:
@@ -165,7 +165,7 @@ class NeuronDeepLift(NeuronAttribution, GradientAttribution):
                         use zero scalar corresponding to each input tensor.
 
                         Default: None
-            additional_forward_args (any, optional): If the forward function
+            additional_forward_args (Any, optional): If the forward function
                         requires additional arguments other than the inputs for
                         which attributions should not be computed, this argument
                         can be provided. It must be either a single additional
@@ -187,7 +187,7 @@ class NeuronDeepLift(NeuronAttribution, GradientAttribution):
                         attribute to the input or output, is a single tensor.
                         Support for multiple tensors will be added later.
                         Default: False
-            custom_attribution_func (callable, optional): A custom function for
+            custom_attribution_func (Callable, optional): A custom function for
                         computing final attribution scores. This function can take
                         at least one and at most three arguments with the
                         following signature:
@@ -344,7 +344,7 @@ class NeuronDeepLiftShap(NeuronAttribution, GradientAttribution):
                         corresponds to the number of examples (aka batch size),
                         and if multiple input tensors are provided, the examples
                         must be aligned appropriately.
-            neuron_selector (int, callable, or tuple of int or slice):
+            neuron_selector (int, Callable, or tuple of int or slice):
                         Selector for neuron
                         in given layer for which attribution is desired.
                         Neuron selector can be provided as:
@@ -378,7 +378,7 @@ class NeuronDeepLiftShap(NeuronAttribution, GradientAttribution):
                           or a 1D tensor with length equal to batch_size (one scalar
                           per input example)
 
-            baselines (tensor, tuple of tensors, callable):
+            baselines (tensor, tuple of tensors, Callable):
                         Baselines define reference samples that are compared with
                         the inputs. In order to assign attribution scores DeepLift
                         computes the differences between the inputs/outputs and
@@ -403,7 +403,7 @@ class NeuronDeepLiftShap(NeuronAttribution, GradientAttribution):
 
                         It is recommended that the number of samples in the baselines'
                         tensors is larger than one.
-            additional_forward_args (any, optional): If the forward function
+            additional_forward_args (Any, optional): If the forward function
                         requires additional arguments other than the inputs for
                         which attributions should not be computed, this argument
                         can be provided. It must be either a single additional
@@ -425,7 +425,7 @@ class NeuronDeepLiftShap(NeuronAttribution, GradientAttribution):
                         attribute to the input or output, is a single tensor.
                         Support for multiple tensors will be added later.
                         Default: False
-            custom_attribution_func (callable, optional): A custom function for
+            custom_attribution_func (Callable, optional): A custom function for
                         computing final attribution scores. This function can take
                         at least one and at most three arguments with the
                         following signature:
