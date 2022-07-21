@@ -188,12 +188,12 @@ class InternalInfluence(LayerAttribution, GradientAttribution):
 
         Returns:
             *tensor* or tuple of *tensors* of **attributions**:
-            - **attributions** (*tensor* or tuple of *tensors*):
+              - **attributions** (*tensor* or tuple of *tensors*):
                         Internal influence of each neuron in given
                         layer output. Attributions will always be the same size
                         as the output or input of the given layer depending on
                         whether `attribute_to_layer_input` is set to `False` or
-                        `True`respectively.
+                        `True` respectively.
                         Attributions are returned in a tuple if
                         the layer inputs / outputs contain multiple tensors,
                         otherwise a single tensor is returned.
