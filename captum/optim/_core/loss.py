@@ -957,10 +957,8 @@ class AngledNeuronDirection(BaseLoss):
     https://github.com/tensorflow/lucid/issues/116
 
     This Lucid equivalents of this loss objective can be found here:
-    https://github.com/tensorflow/lucid/blob/master/notebooks/
-    activation-atlas/activation-atlas-simple.ipynb
-    https://github.com/tensorflow/lucid/blob/master/notebooks/
-    activation-atlas/class-activation-atlas.ipynb
+    https://github.com/tensorflow/lucid/blob/master/notebooks/activation-atlas/activation-atlas-simple.ipynb
+    https://github.com/tensorflow/lucid/blob/master/notebooks/activation-atlas/class-activation-atlas.ipynb
 
     Like the Lucid equivalents, our implementation differs slightly from the
     associated research paper.
