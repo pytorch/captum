@@ -82,9 +82,9 @@ class LabelledDataset(Dataset):
             i (int): which (activation vector, label) batch in the dataset to
                     return
         Returns:
-            inputs (Tensor): i-th batch in Dataset (representing activation
+            inputs (tensor): i-th batch in Dataset (representing activation
                     vectors)
-            labels (Tensor): labels of i-th batch in Dataset
+            labels (tensor): labels of i-th batch in Dataset
         """
         assert i < self.length
         k = self._i_to_k(i)
