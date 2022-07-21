@@ -39,7 +39,7 @@ def _capture_inputs(layer: Module, input: Tensor, output: Tensor) -> None:
 r"""
 Implements abstract DataInfluence class and also provides implementation details for
 influence computation based on the logic provided in TracIn paper
-(https://arxiv.org/pdf/2002.08484.pdf).
+(https://arxiv.org/abs/2002.08484).
 
 The TracIn paper proposes an idealized notion of influence which can be represented by
 the total amount a training example reduces loss for a test example via a training
@@ -722,7 +722,7 @@ class TracInCPFastRandProj(TracInCPFast):
                     int, and random projection will be performed to ensure that the
                     vector is of dimension no more than `projection_dim` * C.
                     `projection_dim` corresponds to the variable d in the top of page
-                    15 of the TracIn paper: https://arxiv.org/pdf/2002.08484.pdf.
+                    15 of the TracIn paper: https://arxiv.org/abs/2002.08484.
                     Default: None
             seed (int, optional): Because this implementation chooses a random
                     projection, its output is random. Setting this seed specifies the
@@ -1071,7 +1071,7 @@ class TracInCPFastRandProj(TracInCPFast):
             # allowable dimension of the "partial" intermediate quantity. Therefore,
             # we only project if `jacobian_dim` * `layer_input_dim` > `projection_dim`.
             # `projection_dim` corresponds to the variable d in the top of page 15 of
-            # the TracIn paper: https://arxiv.org/pdf/2002.08484.pdf.
+            # the TracIn paper: https://arxiv.org/abs/2002.08484.
             if jacobian_dim * layer_input_dim > projection_dim:
                 jacobian_projection_dim = min(int(projection_dim**0.5), jacobian_dim)
                 layer_input_projection_dim = min(
@@ -1153,7 +1153,7 @@ class TracInCPFastRandProj(TracInCPFast):
                     performed to ensure that the vector is of dimension no more than
                     `self.projection_dim` * C. `self.projection_dim` corresponds to
                     the variable d in the top of page 15 of the TracIn paper:
-                    https://arxiv.org/pdf/2002.08484.pdf.
+                    https://arxiv.org/abs/2002.08484.
         """
         checkpoint_projections: List[Any] = [[] for _ in self.checkpoints]
 

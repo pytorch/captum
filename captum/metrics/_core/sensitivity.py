@@ -90,16 +90,16 @@ def sensitivity_max(
 
     More about the Lipschitz Continuity Metric can also be found here
     `On the Robustness of Interpretability Methods`
-    https://arxiv.org/pdf/1806.08049.pdf
+    https://arxiv.org/abs/1806.08049
     and
     `Towards Robust Interpretability with Self-Explaining Neural Networks`
     https://papers.nips.cc/paper\
     8003-towards-robust-interpretability-
-    with-self-explaining-neural-networks.pdf
+    with-self-explaining-neural-networks
 
     More details about sensitivity max can be found here:
     `On the (In)fidelity and Sensitivity of Explanations`
-    https://arxiv.org/pdf/1901.09392.pdf
+    https://arxiv.org/abs/1901.09392
 
     Args:
 

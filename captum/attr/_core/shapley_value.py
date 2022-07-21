@@ -59,7 +59,7 @@ class ShapleyValueSampling(PerturbationAttribution):
 
     More details regarding Shapley Value sampling can be found in these papers:
     https://www.sciencedirect.com/science/article/pii/S0305054808000804
-    https://pdfs.semanticscholar.org/7715/bb1070691455d1fcfc6346ff458dbca77b2c.pdf
+    https://pdfs.semanticscholar.org/7715/bb1070691455d1fcfc6346ff458dbca77b2c
     """
 
     def __init__(self, forward_func: Callable) -> None:
@@ -504,9 +504,9 @@ class ShapleyValues(ShapleyValueSampling):
     the entire feature group.
 
     More details regarding Shapley Values can be found in these papers:
-    https://apps.dtic.mil/dtic/tr/fulltext/u2/604084.pdf
+    https://apps.dtic.mil/dtic/tr/fulltext/u2/604084
     https://www.sciencedirect.com/science/article/pii/S0305054808000804
-    https://pdfs.semanticscholar.org/7715/bb1070691455d1fcfc6346ff458dbca77b2c.pdf
+    https://pdfs.semanticscholar.org/7715/bb1070691455d1fcfc6346ff458dbca77b2c
 
     NOTE: The method implemented here is very computationally intensive, and
     should only be used with a very small number of features (e.g. < 7).

@@ -207,7 +207,7 @@ class TCAV(ConceptInterpreter):
     This class implements ConceptInterpreter abstract class using an
     approach called Testing with Concept Activation Vectors (TCAVs),
     as described in the paper:
-    https://arxiv.org/pdf/1711.11279.pdf
+    https://arxiv.org/abs/1711.11279
 
     TCAV scores for a given layer, a list of concepts and input example
     are computed using the dot product between prediction's layer

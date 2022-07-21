@@ -47,7 +47,7 @@ class LayerGradCam(LayerAttribution, GradientAttribution):
 
     More details regarding the GradCAM method can be found in the
     original paper here:
-    https://arxiv.org/pdf/1610.02391.pdf
+    https://arxiv.org/abs/1610.02391
     """
 
     def __init__(

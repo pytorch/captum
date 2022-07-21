@@ -32,7 +32,7 @@ class LayerConductance(LayerAttribution, GradientAttribution):
 
     The details of the approach can be found here:
     https://arxiv.org/abs/1805.12233
-    https://arxiv.org/pdf/1807.09946.pdf
+    https://arxiv.org/abs/1807.09946
 
     Note that this provides the total conductance of each neuron in the
     layer's output. To obtain the breakdown of a neuron's conductance by input

@@ -31,7 +31,7 @@ class FGSM(Perturbation):
 
     More details on Fast Gradient Sign Method can be found in the original
     paper:
-    https://arxiv.org/pdf/1412.6572.pdf
+    https://arxiv.org/abs/1412.6572
     """
 
     def __init__(

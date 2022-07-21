@@ -20,7 +20,7 @@ class Saliency(GradientAttribution):
     the default, the absolute value of the gradients is returned.
 
     More details about the approach can be found in the following paper:
-        https://arxiv.org/pdf/1312.6034.pdf
+        https://arxiv.org/abs/1312.6034
     """
 
     def __init__(self, forward_func: Callable) -> None:

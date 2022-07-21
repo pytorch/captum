@@ -30,7 +30,7 @@ class InternalInfluence(LayerAttribution, GradientAttribution):
     given input.
     If no baseline is provided, the default baseline is the zero tensor.
     More details on this approach can be found here:
-    https://arxiv.org/pdf/1802.03788.pdf
+    https://arxiv.org/abs/1802.03788
 
     Note that this method is similar to applying integrated gradients and
     taking the layer as input, integrating the gradient of the layer with

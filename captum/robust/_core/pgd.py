@@ -32,7 +32,7 @@ class PGD(Perturbation):
 
     More details on Projected Gradient Descent can be found in the original
     paper:
-    https://arxiv.org/pdf/1706.06083.pdf
+    https://arxiv.org/abs/1706.06083
     """
 
     def __init__(

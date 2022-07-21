@@ -43,7 +43,7 @@ child classes.  They are not part of the API.
 
 Implements abstract DataInfluence class and provides implementation details for
 influence computation based on the logic provided in TracIn paper
-(https://arxiv.org/pdf/2002.08484.pdf).
+(https://arxiv.org/abs/2002.08484).
 
 The TracIn paper proposes an idealized notion of influence which can be represented by
 the total amount a training example reduces loss for a test example via a training

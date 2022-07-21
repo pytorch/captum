@@ -38,7 +38,7 @@ class GuidedGradCam(GradientAttribution):
 
     More details regarding GuidedGradCAM can be found in the original
     GradCAM paper here:
-    https://arxiv.org/pdf/1610.02391.pdf
+    https://arxiv.org/abs/1610.02391
 
     Warning: Ensure that all ReLU operations in the forward function of the
     given model are performed using a module (nn.module.ReLU).

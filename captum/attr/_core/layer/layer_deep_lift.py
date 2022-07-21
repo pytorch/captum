@@ -382,7 +382,7 @@ class LayerDeepLiftShap(LayerDeepLift, DeepLiftShap):
     input flag `attribute_to_layer_input`.
     More details about the algorithm can be found here:
 
-    http://papers.nips.cc/paper/7062-a-unified-approach-to-interpreting-model-predictions.pdf
+    http://papers.nips.cc/paper/7062-a-unified-approach-to-interpreting-model-predictions
 
     Note that the explanation model:
 

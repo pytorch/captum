@@ -126,7 +126,7 @@ def infidelity(
     and the differences between the predictor function at its input
     and perturbed input.
     More details about the measure can be found in the following paper:
-    https://arxiv.org/pdf/1901.09392.pdf
+    https://arxiv.org/abs/1901.09392
 
     It is derived from the completeness property of well-known attribution
     algorithms and is a computationally more efficient and generalized
@@ -134,7 +134,7 @@ def infidelity(
     of the attributions and the differences of the predictor function at
     its input and fixed baseline. More details about the Sensitivity-n can
     be found here:
-    https://arxiv.org/pdf/1711.06104.pdfs
+    https://arxiv.org/abs/1711.06104s
 
     The users can perturb the inputs any desired way by providing any
     perturbation function that takes the inputs (and optionally baselines)
@@ -256,7 +256,7 @@ def infidelity(
                 provided in the `captum.attr` package. Some of those attribution
                 approaches are so called global methods, which means that
                 they factor in model inputs' multiplier, as described in:
-                https://arxiv.org/pdf/1711.06104.pdf
+                https://arxiv.org/abs/1711.06104
                 Many global attribution algorithms can be used in local modes,
                 meaning that the inputs multiplier isn't factored in the
                 attribution scores.
@@ -272,7 +272,7 @@ def infidelity(
 
                 For local attributions we can use real-valued perturbations
                 whereas for global attributions that perturbation is binary.
-                https://arxiv.org/pdf/1901.09392.pdf
+                https://arxiv.org/abs/1901.09392
 
                 If we want to compute the infidelity of global attributions we
                 can use a binary perturbation matrix that will allow us to select

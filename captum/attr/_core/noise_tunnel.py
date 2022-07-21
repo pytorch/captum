@@ -46,7 +46,7 @@ class NoiseTunnel(Attribution):
         https://arxiv.org/abs/1810.03292
         https://arxiv.org/abs/1810.03307
         https://arxiv.org/abs/1706.03825
-        https://arxiv.org/pdf/1806.10758
+        https://arxiv.org/abs/1806.10758
 
     This method currently also supports batches of multiple examples input,
     however it can be computationally expensive depending on the model,

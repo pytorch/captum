@@ -14,7 +14,7 @@ class CAV:
     boundary of a classifier which distinguishes between activation
     vectors produced by different concepts.
     More details can be found in the paper:
-        https://arxiv.org/pdf/1711.11279.pdf
+        https://arxiv.org/abs/1711.11279
     """
 
     def __init__(
