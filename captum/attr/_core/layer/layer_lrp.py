@@ -198,6 +198,7 @@ class LayerLRP(LRP, LayerAttribution):
                         If attributions for all layers are returned (layer=None) a list
                         of tensors is returned with entries for
                         each layer.
+
         Examples::
 
                 >>> # ImageClassifier takes a single input tensor of images Nx3x32x32,

@@ -86,6 +86,7 @@ class TracInCPFast(TracInCPBase):
     ) -> None:
         r"""
         Args:
+
             model (torch.nn.Module): An instance of pytorch model. This model should
                     define all of its layers as attributes of the model.
             final_fc_layer (torch.nn.Module or str): The last fully connected layer in
@@ -111,7 +112,7 @@ class TracInCPFast(TracInCPBase):
                     `influence_src_dataset` is a Dataset, `batch_size` should be large.
                     If `influence_src_dataset` was already a DataLoader to begin with,
                     it should have been constructed to have a large batch size.
-            checkpoints (str or List of str or Iterator): Either the directory of the
+            checkpoints (str or list of str or Iterator): Either the directory of the
                     path to store and retrieve model checkpoints, a list of
                     filepaths with checkpoints from which to load, or an iterator which
                     returns objects from which to load checkpoints.
@@ -224,6 +225,7 @@ class TracInCPFast(TracInCPBase):
           opponent) on the test example.
 
         Args:
+
             inputs (any, optional): If not provided or `None`, the self influence mode
                     will be run. Otherwise, `inputs` is the test batch that will be
                     used when running in either influence score or k-most influential
@@ -358,7 +360,8 @@ class TracInCPFast(TracInCPBase):
         output of `_basic_computation_tracincp_fast`.
 
         Args:
-            inputs (Tuple of Any): A batch of examples. Does not represent labels,
+
+            inputs (tuple of Any): A batch of examples. Does not represent labels,
                     which are passed as `targets`. The assumption is that
                     `self.model(*inputs)` produces the predictions for the batch.
             targets (tensor): The labels corresponding to the batch `inputs`. This
@@ -415,7 +418,8 @@ class TracInCPFast(TracInCPBase):
     ) -> KMostInfluentialResults:
         r"""
         Args:
-            inputs (Tuple of Any): A tuple that represents a batch of examples. It does
+
+            inputs (tuple of Any): A tuple that represents a batch of examples. It does
                     not represent labels, which are passed as `targets`.
             targets (tensor): The labels corresponding to the batch `inputs`. This
                     method is designed to be applied for a loss function, so labels
@@ -555,13 +559,14 @@ def _basic_computation_tracincp_fast(
     and batches.
 
     Args:
+
         influence_instance (TracInCPFast): A instance of TracInCPFast or its children.
                 We assume `influence_instance` has a `loss_fn` attribute, i.e. the loss
                 function applied to the output of the last fully-connected layer, as
                 well as a `reduction_type` attribute, which indicates whether `loss_fn`
                 reduces the per-example losses by using their mean or sum. The
                 `reduction_type` attribute must either be "mean" or "sum".
-        inputs (Tuple of Any): A batch of examples, which could be a training batch
+        inputs (tuple of Any): A batch of examples, which could be a training batch
                 or test batch, depending which method is the caller. Does not
                 represent labels, which are passed as `targets`. The assumption is
                 that `self.model(*inputs)` produces the predictions for the batch.
@@ -632,7 +637,7 @@ class TracInCPFastRandProj(TracInCPFast):
         to obtain proponents / opponents or influence scores will be made in an
         "interactive" manner, and there is sufficient memory to store vectors for the
         entire `influence_src_dataset`. This is because in order to enable interactive
-        analysis, this implementation incures overhead in ``__init__` to setup the
+        analysis, this implementation incures overhead in `__init__` to setup the
         nearest-neighbors data structure, which is both time and memory intensive, as
         vectors corresponding to all training examples needed to be stored. To reduce
         memory usage, this implementation enables random projections of those vectors.
@@ -640,6 +645,7 @@ class TracInCPFastRandProj(TracInCPFast):
         accurate, though correct in expectation.
 
         Args:
+
             model (torch.nn.Module): An instance of pytorch model. This model should
                     define all of its layers as attributes of the model.
             final_fc_layer (torch.nn.Module or str): The last fully connected layer in
@@ -665,7 +671,7 @@ class TracInCPFastRandProj(TracInCPFast):
                     `influence_src_dataset` is a Dataset, `batch_size` should be large.
                     If `influence_src_dataset` was already a DataLoader to begin with,
                     it should have been constructed to have a large batch size.
-            checkpoints (str or List of str or Iterator): Either the directory of the
+            checkpoints (str or list of str or Iterator): Either the directory of the
                     path to store and retrieve model checkpoints, a list of
                     filepaths with checkpoints from which to load, or an iterator which
                     returns objects from which to load checkpoints.
@@ -776,6 +782,7 @@ class TracInCPFastRandProj(TracInCPFast):
     ) -> Tensor:
         r"""
         Args:
+
             inputs (tuple of Any): A batch of examples. Does not represent labels,
                     which are passed as `targets`. The assumption is that
                     `self.model(*inputs)` produces the predictions for the batch.
@@ -813,7 +820,8 @@ class TracInCPFastRandProj(TracInCPFast):
     ) -> KMostInfluentialResults:
         r"""
         Args:
-            inputs (Tuple of Any): A tuple that represents a batch of examples. It does
+
+            inputs (tuple of Any): A tuple that represents a batch of examples. It does
                     not represent labels, which are passed as `targets`.
             targets (tensor): The labels corresponding to the batch `inputs`. This
                     method is designed to be applied for a loss function, so labels
@@ -923,6 +931,7 @@ class TracInCPFastRandProj(TracInCPFast):
         gradients in the last fully-connected layer, please use `TracInCPFast` instead.
 
         Args:
+
             inputs (any, optional): If not provided or `None`, the self influence mode
                     will be run. Otherwise, `inputs` is the test batch that will be
                     used when running in either influence score or k-most influential
@@ -1011,6 +1020,7 @@ class TracInCPFastRandProj(TracInCPFast):
         `TracInCPFastRandProj.__init__`.
 
         Args:
+
             dataloader (DataLoader): determining the projection requires knowing the
                     dimensionality of the last layer's parameters (`jacobian_dim`
                     below) and its input (`layer_input_dim` below). These are
@@ -1094,6 +1104,7 @@ class TracInCPFastRandProj(TracInCPFast):
         method creates that data structure. This method has side effects.
 
         Args:
+
             src_intermediate_quantities (tensor): the output of the
                     `_get_intermediate_quantities_tracin_fast_rand_proj` function when
                     applied to training dataset `influence_src_dataset`. This
@@ -1118,6 +1129,7 @@ class TracInCPFastRandProj(TracInCPFast):
         specifically, largest dot-product) data structure.
 
         Args:
+
             dataloader (DataLoader): DataLoader for which the intermediate quantities
                     are computed.
             projection_quantities (tuple or None): Is either the two tensors defining

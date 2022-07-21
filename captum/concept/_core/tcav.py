@@ -37,11 +37,13 @@ class LabelledDataset(Dataset):
         However, __get_item__ not only returns a batch of activation vectors,
         but also a batch of labels indicating which concept that batch of
         activation vectors is associated with.
+
         Args:
+
             datasets (list[Dataset]): The k-th element of datasets is a Dataset
                     representing activation vectors associated with the k-th
                     concept
-            labels (list[Int]): The k-th element of labels is the integer label
+            labels (list[int]): The k-th element of labels is the integer label
                     associated with the k-th concept
         """
         assert len(datasets) == len(
@@ -75,10 +77,11 @@ class LabelledDataset(Dataset):
         indicating which concept the batch of activation vectors is associated
         with.
 
-        args:
+        Args:
+
             i (int): which (activation vector, label) batch in the dataset to
                     return
-        returns:
+        Returns:
             inputs (Tensor): i-th batch in Dataset (representing activation
                     vectors)
             labels (Tensor): labels of i-th batch in Dataset
@@ -113,6 +116,7 @@ def train_cav(
     Please see the TCAV class documentation for further information.
 
     Args:
+
         model_id (str): A unique identifier for the PyTorch model for which
                 we would like to load the layer activations and train a
                 model in order to compute CAVs.
@@ -251,6 +255,7 @@ class TCAV(ConceptInterpreter):
     ) -> None:
         r"""
         Args:
+
             model (Module): An instance of pytorch model that is used to compute
                     layer activations and attributions.
             layers (str, list[str]): A list of layer name(s) that are
@@ -403,6 +408,7 @@ class TCAV(ConceptInterpreter):
         of concepts and layer.
 
         Args:
+
             concepts (list[Concept]): A list of Concept objects for which we want
                     to load the CAV.
 
@@ -458,6 +464,7 @@ class TCAV(ConceptInterpreter):
         the argument.
 
         Args:
+
             experimental_sets (list[list[Concept]]): A list of lists of concept
                     instances for which the cavs will be computed.
             force_train (bool, optional): A flag that indicates whether to
@@ -469,6 +476,7 @@ class TCAV(ConceptInterpreter):
                     multi-processing, otherwise it will be performed sequentially
                     in a single process.
                     Default: None
+
         Returns:
             cavs (dict) : A mapping of concept ids and layers to CAV objects.
                     If CAVs for the concept_ids-layer pairs are present in the
@@ -569,6 +577,7 @@ class TCAV(ConceptInterpreter):
         scores for specific predictions and CAV vectors.
 
         Args:
+
             inputs (tensor or tuple of tensors): Inputs for which predictions
                     are performed and attributions are computed.
                     If model takes a single tensor as
@@ -617,6 +626,7 @@ class TCAV(ConceptInterpreter):
                     attribution algorithm's attribute method. This could be for
                     example `n_steps` in case of integrated gradients.
                     Default: None
+
         Returns:
             results (dict): A dictionary of sign and magnitude -based tcav scores
                     for each concept set per layer.

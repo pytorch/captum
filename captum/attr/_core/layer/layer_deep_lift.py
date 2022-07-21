@@ -385,9 +385,11 @@ class LayerDeepLiftShap(LayerDeepLift, DeepLiftShap):
     http://papers.nips.cc/paper/7062-a-unified-approach-to-interpreting-model-predictions.pdf
 
     Note that the explanation model:
+
         1. Assumes that input features are independent of one another
         2. Is linear, meaning that the explanations are modeled through
             the additive composition of feature effects.
+
     Although, it assumes a linear model for each explanation, the overall
     model across multiple explanations can be complex and non-linear.
     """

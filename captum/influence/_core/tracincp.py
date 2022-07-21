@@ -103,6 +103,7 @@ class TracInCPBase(DataInfluence):
     ) -> None:
         r"""
         Args:
+
             model (torch.nn.Module): An instance of pytorch model. This model should
                     define all of its layers as attributes of the model.
             influence_src_dataset (torch.utils.data.Dataset or torch.utils.DataLoader):
@@ -123,7 +124,7 @@ class TracInCPBase(DataInfluence):
                     `influence_src_dataset` is a Dataset, `batch_size` should be large.
                     If `influence_src_dataset` was already a DataLoader to begin with,
                     it should have been constructed to have a large batch size.
-            checkpoints (str or List of str or Iterator): Either the directory of the
+            checkpoints (str or list of str or Iterator): Either the directory of the
                     path to store and retrieve model checkpoints, a list of
                     filepaths with checkpoints from which to load, or an iterator which
                     returns objects from which to load checkpoints.
@@ -132,7 +133,7 @@ class TracInCPBase(DataInfluence):
                     learning rate if it is saved. By default uses a utility to load a
                     model saved as a state dict.
                     Default: _load_flexible_state_dict
-            layers (List of str or None, optional): A list of layer names for which
+            layers (list of str or None, optional): A list of layer names for which
                     gradients should be computed. If `layers` is None, gradients will
                     be computed for all layers. Otherwise, they will only be computed
                     for the layers specified in `layers`.
@@ -217,7 +218,8 @@ class TracInCPBase(DataInfluence):
     ) -> KMostInfluentialResults:
         r"""
         Args:
-            inputs (Tuple of Any): A tuple that represents a batch of examples. It does
+
+            inputs (tuple of Any): A tuple that represents a batch of examples. It does
                     not represent labels, which are passed as `targets`.
             targets (tensor, optional): If computing influence scores on a loss
                     function, these are the labels corresponding to the batch `inputs`.
@@ -265,7 +267,8 @@ class TracInCPBase(DataInfluence):
     ) -> Tensor:
         r"""
         Args:
-            inputs (Tuple of Any): A batch of examples. Does not represent labels,
+
+            inputs (tuple of Any): A batch of examples. Does not represent labels,
                     which are passed as `targets`. The assumption is that
                     `self.model(*inputs)` produces the predictions for the batch.
             targets (tensor, optional): If computing influence scores on a loss
@@ -325,6 +328,7 @@ class TracInCPBase(DataInfluence):
           opponent) on the test example.
 
         Args:
+
             inputs (any, optional): If not provided or `None`, the self influence mode
                     will be run. Otherwise, `inputs` is the test batch that will be
                     used when running in either influence score or k-most influential
@@ -454,6 +458,7 @@ class TracInCP(TracInCPBase):
     ) -> None:
         r"""
         Args:
+
             model (torch.nn.Module): An instance of pytorch model. This model should
                     define all of its layers as attributes of the model.
             influence_src_dataset (torch.utils.data.Dataset or torch.utils.DataLoader):
@@ -474,7 +479,7 @@ class TracInCP(TracInCPBase):
                     `influence_src_dataset` is a Dataset, `batch_size` should be large.
                     If `influence_src_dataset` was already a DataLoader to begin with,
                     it should have been constructed to have a large batch size.
-            checkpoints (str or List of str or Iterator): Either the directory of the
+            checkpoints (str or list of str or Iterator): Either the directory of the
                     path to store and retrieve model checkpoints, a list of
                     filepaths with checkpoints from which to load, or an iterator which
                     returns objects from which to load checkpoints.
@@ -483,7 +488,7 @@ class TracInCP(TracInCPBase):
                     learning rate if it is saved. By default uses a utility to load a
                     model saved as a state dict.
                     Default: _load_flexible_state_dict
-            layers (List of str or None, optional): A list of layer names for which
+            layers (list of str or None, optional): A list of layer names for which
                     gradients should be computed. If `layers` is None, gradients will
                     be computed for all layers. Otherwise, they will only be computed
                     for the layers specified in `layers`.
@@ -645,6 +650,7 @@ class TracInCP(TracInCPBase):
           opponent) on the test example.
 
         Args:
+
             inputs (any, optional): If not provided or `None`, the self influence mode
                     will be run. Otherwise, `inputs` is the test batch that will be
                     used when running in either influence score or k-most influential
@@ -776,7 +782,8 @@ class TracInCP(TracInCPBase):
         output of `self._basic_computation_tracincp`.
 
         Args:
-            inputs (Tuple of Any): A test batch of examples. Does not represent labels,
+
+            inputs (tuple of Any): A test batch of examples. Does not represent labels,
                     which are passed as `targets`. The assumption is that
                     `self.model(*inputs)` produces the predictions for the batch.
             targets (tensor, optional): If computing influence scores on a loss
@@ -831,9 +838,10 @@ class TracInCP(TracInCPBase):
     ) -> KMostInfluentialResults:
         r"""
         Args:
-            inputs (Tuple of Any): A tuple that represents a batch of examples. It does
+
+            inputs (tuple of Any): A tuple that represents a batch of examples. It does
                     not represent labels, which are passed as `targets`.
-            targets (Tensor, optional): If computing influence scores on a loss
+            targets (tensor, optional): If computing influence scores on a loss
                     function, these are the labels corresponding to the batch `inputs`.
                     Default: None
             k (int, optional): The number of proponents or opponents to return per test
@@ -984,7 +992,8 @@ class TracInCP(TracInCPBase):
         and batches.
 
         Args:
-            inputs (Tuple of Any): A batch of examples, which could be a training batch
+
+            inputs (tuple of Any): A batch of examples, which could be a training batch
                     or test batch, depending which method is the caller. Does not
                     represent labels, which are passed as `targets`. The assumption is
                     that `self.model(*inputs)` produces the predictions for the batch.

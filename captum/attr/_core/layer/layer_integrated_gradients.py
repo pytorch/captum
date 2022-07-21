@@ -41,7 +41,6 @@ class LayerIntegratedGradients(LayerAttribution, GradientAttribution):
     More details regarding the integrated gradients method can be found in the
     original paper:
     https://arxiv.org/abs/1703.01365
-
     """
 
     def __init__(
@@ -53,6 +52,7 @@ class LayerIntegratedGradients(LayerAttribution, GradientAttribution):
     ) -> None:
         r"""
         Args:
+
             forward_func (callable):  The forward function of the model or any
                         modification of it
             layer (ModuleOrModuleList): Layer or list of layers for which attributions
