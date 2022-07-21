@@ -56,7 +56,7 @@ def extract_expanded_weights(
             Default: ``torch.zeros(1, 3, 224, 224)``
         crop_func (callable, optional): Specify a function to crop away the padding
             from the output weights.
-            Default: ``center_crop``
+            Default: :func:`.center_crop`
 
     Returns:
         tensor (torch.Tensor): A tensor containing the expanded weights in the form
