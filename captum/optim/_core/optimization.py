@@ -29,8 +29,8 @@ class InputOptimization(Objective, Parameterized):
     """
     Core function that optimizes an input to maximize a target (aka objective).
     This is similar to gradient-based methods for adversarial examples, such
-    as FGSM. The code for this was based on the implementation by the authors of Lucid.
-    For more details, see the following:
+    as :class:`FGSM <captum.robust.FGSM>`. The code for this was based on the
+    implementation by the authors of Lucid. For more details, see the following:
 
       * https://github.com/tensorflow/lucid
       * https://distill.pub/2017/feature-visualization/

@@ -272,8 +272,8 @@ def collect_activations(
             Default: ``torch.zeros(1, 3, 224, 224)``
 
     Returns:
-        activ_dict (ModuleOutputMapping): A dictionary of collected activations where
-            the keys are the target layers.
+        activ_dict (dict[nn.Module, torch.Tensor]): A dictionary of collected
+            activations where the keys are the target layers.
     """
     if not isinstance(targets, (list, tuple)):
         targets = [targets]
