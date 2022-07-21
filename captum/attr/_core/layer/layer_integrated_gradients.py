@@ -329,6 +329,7 @@ class LayerIntegratedGradients(LayerAttribution, GradientAttribution):
                         multiple tensors: the corresponding output element will be
                         a tuple of tensors. The ordering of the outputs will be
                         the same order as the layers given in the constructor.
+
                   - **delta** (*tensor*, returned if return_convergence_delta=True):
                         The difference between the total approximated and true
                         integrated gradients. This is computed using the property
