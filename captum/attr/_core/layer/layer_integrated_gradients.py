@@ -213,6 +213,7 @@ class LayerIntegratedGradients(LayerAttribution, GradientAttribution):
 
                         - a tuple of tensors or scalars, the baseline corresponding
                           to each tensor in the inputs' tuple can be:
+
                             - either a tensor with matching dimensions to
                               corresponding tensor in the inputs' tuple
                               or the first dimension is one and the remaining
@@ -308,7 +309,7 @@ class LayerIntegratedGradients(LayerAttribution, GradientAttribution):
 
             Returns:
                 **attributions** or 2-element tuple of **attributions**, **delta**:
-                - **attributions** (*tensor*, tuple of *tensors* or tuple of *tensors*):
+                  - **attributions** (*tensor*, tuple of *tensors* or tuple of *tensors*):
                         Integrated gradients with respect to `layer`'s inputs or
                         outputs. Attributions will always be the same size and
                         dimensionality as the input or output of the given layer,
@@ -327,7 +328,7 @@ class LayerIntegratedGradients(LayerAttribution, GradientAttribution):
                         multiple tensors: the corresponding output element will be
                         a tuple of tensors. The ordering of the outputs will be
                         the same order as the layers given in the constructor.
-                - **delta** (*tensor*, returned if return_convergence_delta=True):
+                  - **delta** (*tensor*, returned if return_convergence_delta=True):
                         The difference between the total approximated and true
                         integrated gradients. This is computed using the property
                         that the total sum of forward_func(inputs) -

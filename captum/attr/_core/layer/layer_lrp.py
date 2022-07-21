@@ -50,7 +50,6 @@ class LayerLRP(LRP, LayerAttribution):
                         these are not supported by the register_full_backward_hook
                         PyTorch API starting from PyTorch v1.9.
 
-
             layer (torch.nn.Module or list of torch.nn.Module): Layer or layers
                           for which attributions are computed.
                           The size and dimensionality of the attributions
@@ -110,8 +109,8 @@ class LayerLRP(LRP, LayerAttribution):
         ],
     ]:
         r"""
-
         Args:
+
             inputs (tensor or tuple of tensors): Input for which relevance is
                         propagated.
                         If forward_func takes a single
@@ -122,11 +121,11 @@ class LayerLRP(LRP, LayerAttribution):
                         to the number of examples, and if multiple input tensors
                         are provided, the examples must be aligned appropriately.
             target (int, tuple, tensor or list, optional): Output indices for
-                        which gradients are computed (for classification cases,
-                        this is usually the target class).
-                        If the network returns a scalar value per example,
-                        no target index is necessary.
-                        For general 2D outputs, targets can be either:
+                    which gradients are computed (for classification cases,
+                    this is usually the target class).
+                    If the network returns a scalar value per example,
+                    no target index is necessary.
+                    For general 2D outputs, targets can be either:
 
                     - a single integer or a tensor containing a single
                         integer, which is applied to all input examples
@@ -177,8 +176,9 @@ class LayerLRP(LRP, LayerAttribution):
 
         Returns:
             *tensor* or tuple of *tensors* of **attributions** or 2-element tuple of
-                **attributions**, **delta** or lists of **attributions** and **delta**:
-            - **attributions** (*tensor* or tuple of *tensors*):
+            **attributions**, **delta** or lists of **attributions** and **delta**:
+
+              - **attributions** (*tensor* or tuple of *tensors*):
                         The propagated relevance values with respect to each
                         input feature. Attributions will always
                         be the same size as the provided inputs, with each value
@@ -190,8 +190,8 @@ class LayerLRP(LRP, LayerAttribution):
                         implementations. If attributions for all layers are returned
                         (layer=None) a list of tensors or tuples of tensors is returned
                         with entries for each layer.
-            - **delta** (*tensor* or list of *tensors*
-                         returned if return_convergence_delta=True):
+              - **delta** (*tensor* or list of *tensors*
+                        returned if return_convergence_delta=True):
                         Delta is calculated per example, meaning that the number of
                         elements in returned delta tensor is equal to the number of
                         of examples in input.

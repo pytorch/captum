@@ -157,7 +157,8 @@ class LRP(GradientAttribution):
         Returns:
             *tensor* or tuple of *tensors* of **attributions**
             or 2-element tuple of **attributions**, **delta**:
-            - **attributions** (*tensor* or tuple of *tensors*):
+
+              - **attributions** (*tensor* or tuple of *tensors*):
                         The propagated relevance values with respect to each
                         input feature. The values are normalized by the output score
                         value (sum(relevance)=1). To obtain values comparable to other
@@ -171,7 +172,7 @@ class LRP(GradientAttribution):
                         is one and not corresponding to the prediction score as in other
                         implementations.
 
-            - **delta** (*tensor*, returned if return_convergence_delta=True):
+              - **delta** (*tensor*, returned if return_convergence_delta=True):
                         Delta is calculated per example, meaning that the number of
                         elements in returned delta tensor is equal to the number of
                         of examples in the inputs.
