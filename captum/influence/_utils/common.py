@@ -222,7 +222,7 @@ def _get_k_most_influential_helper(
                 Default: True
         show_progress (bool, optional): To compute the proponents (or opponents)
                 for the batch of examples, we perform computation for each batch in
-                training dataset `influence_src_dataloader`, If `show_progress`is
+                training dataset `influence_src_dataloader`, If `show_progress` is
                 true, the progress of this computation will be displayed. In
                 particular, the number of batches for which the computation has
                 been performed will be displayed. It will try to use tqdm if

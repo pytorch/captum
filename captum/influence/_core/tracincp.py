@@ -197,7 +197,7 @@ class TracInCPBase(DataInfluence):
             show_progress (bool, optional): To compute the self influence scores for
                     all examples in training dataset `influence_src_dataset`, we
                     compute the self influence scores for each batch. If
-                    `show_progress`is true, the progress of this computation will be
+                    `show_progress` is true, the progress of this computation will be
                     displayed. In particular, the number of batches for which self
                     influence scores have been computed will be displayed. It will
                     try to use tqdm if available for advanced features (e.g. time
@@ -232,7 +232,7 @@ class TracInCPBase(DataInfluence):
                     Default: True
             show_progress (bool, optional): To compute the proponents (or opponents)
                     for the batch of examples, we perform computation for each batch in
-                    training dataset `influence_src_dataset`, If `show_progress`is
+                    training dataset `influence_src_dataset`, If `show_progress` is
                     true, the progress of this computation will be displayed. In
                     particular, the number of batches for which the computation has
                     been performed will be displayed. It will try to use tqdm if
@@ -284,7 +284,7 @@ class TracInCPBase(DataInfluence):
                     example to the i-th input example.
             show_progress (bool, optional): To compute the influence of examples in
                     training dataset `influence_src_dataset`, we compute the influence
-                    of each batch. If `show_progress`is true, the progress of this
+                    of each batch. If `show_progress` is true, the progress of this
                     computation will be displayed. In particular, the number of batches
                     for which influence has been computed will be displayed. It will
                     try to use tqdm if available for advanced features (e.g. time
@@ -359,7 +359,7 @@ class TracInCPBase(DataInfluence):
             show_progress (bool, optional): For all modes, computation of results
                     requires "training dataset computations": computations for each
                     batch in the training dataset `influence_src_dataset`, which may
-                    take a long time. If `show_progress`is true, the progress of
+                    take a long time. If `show_progress` is true, the progress of
                     "training dataset computations" will be displayed. In particular,
                     the number of batches for which computations have been performed
                     will be displayed. It will try to use tqdm if available for
@@ -681,7 +681,7 @@ class TracInCP(TracInCPBase):
             show_progress (bool, optional): For all modes, computation of results
                     requires "training dataset computations": computations for each
                     batch in the training dataset `influence_src_dataset`, which may
-                    take a long time. If `show_progress`is true, the progress of
+                    take a long time. If `show_progress` is true, the progress of
                     "training dataset computations" will be displayed. In particular,
                     the number of batches for which computations have been performed
                     will be displayed. It will try to use tqdm if available for
@@ -791,7 +791,7 @@ class TracInCP(TracInCPBase):
                     Default: None
             show_progress (bool, optional): To compute the influence of examples in
                     training dataset `influence_src_dataset`, we compute the influence
-                    of each batch. If `show_progress`is true, the progress of this
+                    of each batch. If `show_progress` is true, the progress of this
                     computation will be displayed. In particular, the number of batches
                     for which influence has been computed will be displayed. It will
                     try to use tqdm if available for advanced features (e.g. time
@@ -852,7 +852,7 @@ class TracInCP(TracInCPBase):
                     Default: True
             show_progress (bool, optional): To compute the proponents (or opponents)
                     for the batch of examples, we perform computation for each batch in
-                    training dataset `influence_src_dataset`, If `show_progress`is
+                    training dataset `influence_src_dataset`, If `show_progress` is
                     true, the progress of this computation will be displayed. In
                     particular, the number of batches for which the computation has
                     been performed will be displayed. It will try to use tqdm if
@@ -953,7 +953,7 @@ class TracInCP(TracInCPBase):
             show_progress (bool, optional): To compute the self influence scores for
                     all examples in training dataset `influence_src_dataset`, we
                     compute the self influence scores for each batch. If
-                    `show_progress`is true, the progress of this computation will be
+                    `show_progress` is true, the progress of this computation will be
                     displayed. In particular, the number of batches for which self
                     influence scores have been computed will be displayed. It will
                     try to use tqdm if available for advanced features (e.g. time
