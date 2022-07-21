@@ -118,11 +118,11 @@ def visualize_image_attr(
 
     Args:
 
-        attr (numpy.array): Numpy array corresponding to attributions to be
+        attr (numpy.ndarray): Numpy array corresponding to attributions to be
                     visualized. Shape must be in the form (H, W, C), with
                     channels as last dimension. Shape must also match that of
                     the original image if provided.
-        original_image (numpy.array, optional): Numpy array corresponding to
+        original_image (numpy.ndarray, optional): Numpy array corresponding to
                     original image. Shape must be in the form (H, W, C), with
                     channels as the last dimension. Image can be provided either
                     with float values in range 0-1 or int values between 0-255.
@@ -349,11 +349,11 @@ def visualize_image_attr_multiple(
 
     Args:
 
-        attr (numpy.array): Numpy array corresponding to attributions to be
+        attr (numpy.ndarray): Numpy array corresponding to attributions to be
                     visualized. Shape must be in the form (H, W, C), with
                     channels as last dimension. Shape must also match that of
                     the original image if provided.
-        original_image (numpy.array, optional): Numpy array corresponding to
+        original_image (numpy.ndarray, optional): Numpy array corresponding to
                     original image. Shape must be in the form (H, W, C), with
                     channels as the last dimension. Image can be provided either
                     with values in range 0-1 or 0-255. This is a necessary
@@ -462,15 +462,15 @@ def visualize_timeseries_attr(
 
     Args:
 
-        attr (numpy.array): Numpy array corresponding to attributions to be
+        attr (numpy.ndarray): Numpy array corresponding to attributions to be
                     visualized. Shape must be in the form (N, C) with channels
                     as last dimension, unless `channels_last` is set to True.
                     Shape must also match that of the timeseries data.
-        data (numpy.array): Numpy array corresponding to the original,
+        data (numpy.ndarray): Numpy array corresponding to the original,
                     equidistant timeseries data. Shape must be in the form
                     (N, C) with channels as last dimension, unless
                     `channels_last` is set to true.
-        x_values (numpy.array, optional): Numpy array corresponding to the
+        x_values (numpy.ndarray, optional): Numpy array corresponding to the
                     points on the x-axis. Shape must be in the form (N, ). If
                     not provided, integers from 0 to N-1 are used.
                     Default: None
