@@ -211,7 +211,7 @@ def infidelity(
                 input examples that are repeated `max_examples_per_batch / batch_size`
                 times within the batch.
 
-        inputs (tensor or tuple of tensors):  Input for which
+        inputs (tensor or tuple of tensors): Input for which
                 attributions are computed. If forward_func takes a single
                 tensor as input, a single input tensor should be provided.
                 If forward_func takes multiple tensors as input, a tuple

@@ -590,7 +590,7 @@ class TCAV(ConceptInterpreter):
                     provided, the examples must be aligned appropriately.
             experimental_sets (list[list[Concept]]): A list of list of Concept
                     instances.
-            target (int, tuple, tensor or list, optional):  Output indices for
+            target (int, tuple, tensor or list, optional): Output indices for
                     which attributions are computed (for classification cases,
                     this is usually the target class).
                     If the network returns a scalar value per example,

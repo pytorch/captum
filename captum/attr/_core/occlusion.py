@@ -62,7 +62,7 @@ class Occlusion(FeatureAblation):
         r"""
         Args:
 
-                inputs (tensor or tuple of tensors):  Input for which occlusion
+                inputs (tensor or tuple of tensors): Input for which occlusion
                             attributions are computed. If forward_func takes a single
                             tensor as input, a single input tensor should be provided.
                             If forward_func takes multiple tensors as input, a tuple
@@ -128,7 +128,7 @@ class Occlusion(FeatureAblation):
                             In the cases when `baselines` is not provided, we internally
                             use zero scalar corresponding to each input tensor.
                             Default: None
-                target (int, tuple, tensor or list, optional):  Output indices for
+                target (int, tuple, tensor or list, optional): Output indices for
                             which difference is computed (for classification cases,
                             this is usually the target class).
                             If the network returns a scalar value per example,

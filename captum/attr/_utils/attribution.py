@@ -47,7 +47,7 @@ class Attribution:
 
     Args:
 
-        inputs (tensor or tuple of tensors):  Input for which attribution
+        inputs (tensor or tuple of tensors): Input for which attribution
                     is computed. It can be provided as a single tensor or
                     a tuple of multiple tensors. If multiple input tensors
                     are provided, the batch sizes must be aligned accross all
@@ -198,12 +198,12 @@ class GradientAttribution(Attribution):
                             is the starting point of attributions' approximation.
                             It is assumed that both `start_point` and `end_point`
                             have the same shape and dimensionality.
-                end_point (tensor or tuple of tensors):  `end_point`
+                end_point (tensor or tuple of tensors): `end_point`
                             is passed as an input to model's forward function. It
                             is the end point of attributions' approximation.
                             It is assumed that both `start_point` and `end_point`
                             have the same shape and dimensionality.
-                target (int, tuple, tensor or list, optional):  Output indices for
+                target (int, tuple, tensor or list, optional): Output indices for
                             which gradients are computed (for classification cases,
                             this is usually the target class).
                             If the network returns a scalar value per example,
@@ -333,7 +333,7 @@ class InternalAttribution(Attribution, Generic[ModuleOrModuleList]):
         r"""
         Args:
 
-            forward_func (callable or torch.nn.Module):  This can either be an instance
+            forward_func (callable or torch.nn.Module): This can either be an instance
                         of pytorch model or any modification of model's forward
                         function.
             layer (torch.nn.Module): Layer for which output attributions are computed.
@@ -366,7 +366,7 @@ class LayerAttribution(InternalAttribution):
         r"""
         Args:
 
-            forward_func (callable or torch.nn.Module):  This can either be an instance
+            forward_func (callable or torch.nn.Module): This can either be an instance
                         of pytorch model or any modification of model's forward
                         function.
             layer (torch.nn.Module): Layer for which output attributions are computed.
@@ -392,13 +392,13 @@ class LayerAttribution(InternalAttribution):
 
         Args:
 
-            layer_attribution (torch.Tensor):  Tensor of given layer attributions.
+            layer_attribution (torch.Tensor): Tensor of given layer attributions.
             interpolate_dims (int or tuple): Upsampled dimensions. The
                         number of elements must be the number of dimensions
                         of layer_attribution - 2, since the first dimension
                         corresponds to number of examples and the second is
                         assumed to correspond to the number of channels.
-            interpolate_mode (str):  Method for interpolation, which
+            interpolate_mode (str): Method for interpolation, which
                         must be a valid input interpolation mode for
                         torch.nn.functional. These methods are
                         "nearest", "area", "linear" (3D-only), "bilinear"
@@ -436,7 +436,7 @@ class NeuronAttribution(InternalAttribution):
         r"""
         Args:
 
-            forward_func (callable or torch.nn.Module):  This can either be an instance
+            forward_func (callable or torch.nn.Module): This can either be an instance
                         of pytorch model or any modification of model's forward
                         function.
             layer (torch.nn.Module): Layer for which output attributions are computed.

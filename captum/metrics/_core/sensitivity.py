@@ -108,7 +108,7 @@ def sensitivity_max(
                 attribution algorithm or any other explanation method
                 that returns the explanations.
 
-        inputs (tensor or tuple of tensors):  Input for which
+        inputs (tensor or tuple of tensors): Input for which
                 explanations are computed. If `explanation_func` takes a
                 single tensor as input, a single input tensor should
                 be provided.

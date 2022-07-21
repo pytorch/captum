@@ -112,7 +112,7 @@ class DeepLift(GradientAttribution):
         r"""
         Args:
 
-            model (nn.Module):  The reference to PyTorch model instance. Model cannot
+            model (nn.Module): The reference to PyTorch model instance. Model cannot
                         contain any in-place nonlinear submodules; these are not
                         supported by the register_full_backward_hook PyTorch API
                         starting from PyTorch v1.9.
@@ -185,7 +185,7 @@ class DeepLift(GradientAttribution):
         r"""
         Args:
 
-            inputs (tensor or tuple of tensors):  Input for which
+            inputs (tensor or tuple of tensors): Input for which
                         attributions are computed. If forward_func takes a single
                         tensor as input, a single input tensor should be provided.
                         If forward_func takes multiple tensors as input, a tuple
@@ -226,7 +226,7 @@ class DeepLift(GradientAttribution):
                         use zero scalar corresponding to each input tensor.
 
                         Default: None
-            target (int, tuple, tensor or list, optional):  Output indices for
+            target (int, tuple, tensor or list, optional): Output indices for
                         which gradients are computed (for classification cases,
                         this is usually the target class).
                         If the network returns a scalar value per example,
@@ -627,7 +627,7 @@ class DeepLiftShap(DeepLift):
         r"""
         Args:
 
-            model (nn.Module):  The reference to PyTorch model instance. Model cannot
+            model (nn.Module): The reference to PyTorch model instance. Model cannot
                         contain any in-place nonlinear submodules; these are not
                         supported by the register_full_backward_hook PyTorch API.
             multiply_by_inputs (bool, optional): Indicates whether to factor
@@ -696,7 +696,7 @@ class DeepLiftShap(DeepLift):
         r"""
         Args:
 
-            inputs (tensor or tuple of tensors):  Input for which
+            inputs (tensor or tuple of tensors): Input for which
                         attributions are computed. If forward_func takes a single
                         tensor as input, a single input tensor should be provided.
                         If forward_func takes multiple tensors as input, a tuple
@@ -730,7 +730,7 @@ class DeepLiftShap(DeepLift):
 
                         It is recommended that the number of samples in the baselines'
                         tensors is larger than one.
-            target (int, tuple, tensor or list, optional):  Output indices for
+            target (int, tuple, tensor or list, optional): Output indices for
                         which gradients are computed (for classification cases,
                         this is usually the target class).
                         If the network returns a scalar value per example,

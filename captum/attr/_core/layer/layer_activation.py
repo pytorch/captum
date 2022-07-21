@@ -25,7 +25,7 @@ class LayerActivation(LayerAttribution):
         r"""
         Args:
 
-            forward_func (callable):  The forward function of the model or any
+            forward_func (callable): The forward function of the model or any
                           modification of it
             layer (torch.nn.Module or list of torch.nn.Module): Layer or layers
                           for which attributions are computed.
@@ -54,7 +54,7 @@ class LayerActivation(LayerAttribution):
         r"""
         Args:
 
-            inputs (tensor or tuple of tensors):  Input for which layer
+            inputs (tensor or tuple of tensors): Input for which layer
                         activation is computed. If forward_func takes a single
                         tensor as input, a single input tensor should be provided.
                         If forward_func takes multiple tensors as input, a tuple

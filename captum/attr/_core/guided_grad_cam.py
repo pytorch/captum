@@ -51,7 +51,7 @@ class GuidedGradCam(GradientAttribution):
         r"""
         Args:
 
-            model (nn.Module):  The reference to PyTorch model instance. Model cannot
+            model (nn.Module): The reference to PyTorch model instance. Model cannot
                         contain any in-place ReLU submodules; these are not
                         supported by the register_full_backward_hook PyTorch API
                         starting from PyTorch v1.9.
@@ -80,7 +80,7 @@ class GuidedGradCam(GradientAttribution):
         r"""
         Args:
 
-            inputs (tensor or tuple of tensors):  Input for which attributions
+            inputs (tensor or tuple of tensors): Input for which attributions
                         are computed. If forward_func takes a single
                         tensor as input, a single input tensor should be provided.
                         If forward_func takes multiple tensors as input, a tuple
@@ -88,7 +88,7 @@ class GuidedGradCam(GradientAttribution):
                         that for all given input tensors, dimension 0 corresponds
                         to the number of examples, and if multiple input tensors
                         are provided, the examples must be aligned appropriately.
-            target (int, tuple, tensor or list, optional):  Output indices for
+            target (int, tuple, tensor or list, optional): Output indices for
                         which gradients are computed (for classification cases,
                         this is usually the target class).
                         If the network returns a scalar value per example,

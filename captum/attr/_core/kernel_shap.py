@@ -86,7 +86,7 @@ class KernelShap(Lime):
 
         Args:
 
-            inputs (tensor or tuple of tensors):  Input for which KernelShap
+            inputs (tensor or tuple of tensors): Input for which KernelShap
                         is computed. If forward_func takes a single
                         tensor as input, a single input tensor should be provided.
                         If forward_func takes multiple tensors as input, a tuple
@@ -124,7 +124,7 @@ class KernelShap(Lime):
                         In the cases when `baselines` is not provided, we internally
                         use zero scalar corresponding to each input tensor.
                         Default: None
-            target (int, tuple, tensor or list, optional):  Output indices for
+            target (int, tuple, tensor or list, optional): Output indices for
                         which surrogate model is trained
                         (for classification cases,
                         this is usually the target class).
@@ -185,7 +185,7 @@ class KernelShap(Lime):
                         If None, then a feature mask is constructed which assigns
                         each scalar within a tensor as a separate feature.
                         Default: None
-            n_samples (int, optional):  The number of samples of the original
+            n_samples (int, optional): The number of samples of the original
                         model used to train the surrogate interpretable model.
                         Default: `50` if `n_samples` is not provided.
             perturbations_per_eval (int, optional): Allows multiple samples

@@ -122,7 +122,7 @@ def visualize_image_attr(
                     visualized. Shape must be in the form (H, W, C), with
                     channels as last dimension. Shape must also match that of
                     the original image if provided.
-        original_image (numpy.array, optional):  Numpy array corresponding to
+        original_image (numpy.array, optional): Numpy array corresponding to
                     original image. Shape must be in the form (H, W, C), with
                     channels as the last dimension. Image can be provided either
                     with float values in range 0-1 or int values between 0-255.
@@ -353,7 +353,7 @@ def visualize_image_attr_multiple(
                     visualized. Shape must be in the form (H, W, C), with
                     channels as last dimension. Shape must also match that of
                     the original image if provided.
-        original_image (numpy.array, optional):  Numpy array corresponding to
+        original_image (numpy.array, optional): Numpy array corresponding to
                     original image. Shape must be in the form (H, W, C), with
                     channels as the last dimension. Image can be provided either
                     with values in range 0-1 or 0-255. This is a necessary
@@ -365,7 +365,7 @@ def visualize_image_attr_multiple(
         signs (list of str): List of strings of length k, defining signs for
                         each visualization. Each sign must be a valid
                         string argument for sign to visualize_image_attr.
-        titles (list of str, optional):  List of strings of length k, providing
+        titles (list of str, optional): List of strings of length k, providing
                     a title string for each plot. If None is provided, no titles
                     are added to subplots.
                     Default: None

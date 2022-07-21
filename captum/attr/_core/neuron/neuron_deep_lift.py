@@ -46,7 +46,7 @@ class NeuronDeepLift(NeuronAttribution, GradientAttribution):
         r"""
         Args:
 
-            model (nn.Module):  The reference to PyTorch model instance. Model cannot
+            model (nn.Module): The reference to PyTorch model instance. Model cannot
                         contain any in-place nonlinear submodules; these are not
                         supported by the register_full_backward_hook PyTorch API
                         starting from PyTorch v1.9.
@@ -90,7 +90,7 @@ class NeuronDeepLift(NeuronAttribution, GradientAttribution):
         r"""
         Args:
 
-            inputs (tensor or tuple of tensors):  Input for which layer
+            inputs (tensor or tuple of tensors): Input for which layer
                         attributions are computed. If forward_func takes a
                         single tensor as input, a single input tensor should be
                         provided. If forward_func takes multiple tensors as input,
@@ -290,7 +290,7 @@ class NeuronDeepLiftShap(NeuronAttribution, GradientAttribution):
         r"""
         Args:
 
-            model (nn.Module):  The reference to PyTorch model instance. Model cannot
+            model (nn.Module): The reference to PyTorch model instance. Model cannot
                         contain any in-place nonlinear submodules; these are not
                         supported by the register_full_backward_hook PyTorch API
                         starting from PyTorch v1.9.
@@ -335,7 +335,7 @@ class NeuronDeepLiftShap(NeuronAttribution, GradientAttribution):
         r"""
         Args:
 
-            inputs (tensor or tuple of tensors):  Input for which layer
+            inputs (tensor or tuple of tensors): Input for which layer
                         attributions are computed. If forward_func takes a
                         single tensor as input, a single input tensor should be
                         provided. If forward_func takes multiple tensors as input,

@@ -146,7 +146,7 @@ class CAV:
             model_id (str): A unique model identifier associated with the
                     CAVs. There exist a folder named `model_id` under
                     `cavs_path` path. The CAVs are loaded from this folder.
-            concepts (list[Concept]):  A List of concepts for which
+            concepts (list[Concept]): A List of concepts for which
                     we would like to load the cavs.
             layer (str): The layer name. Ex.: "inception4c". In case of nested
                     layers we use dots to specify the depth / hierarchy.

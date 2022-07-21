@@ -69,7 +69,7 @@ class LayerDeepLift(LayerAttribution, DeepLift):
         r"""
         Args:
 
-            model (nn.Module):  The reference to PyTorch model instance. Model cannot
+            model (nn.Module): The reference to PyTorch model instance. Model cannot
                         contain any in-place nonlinear submodules; these are not
                         supported by the register_full_backward_hook PyTorch API
                         starting from PyTorch v1.9.
@@ -144,7 +144,7 @@ class LayerDeepLift(LayerAttribution, DeepLift):
         r"""
         Args:
 
-            inputs (tensor or tuple of tensors):  Input for which layer
+            inputs (tensor or tuple of tensors): Input for which layer
                         attributions are computed. If forward_func takes a
                         single tensor as input, a single input tensor should be
                         provided. If forward_func takes multiple tensors as input,
@@ -185,7 +185,7 @@ class LayerDeepLift(LayerAttribution, DeepLift):
                         use zero scalar corresponding to each input tensor.
 
                         Default: None
-            target (int, tuple, tensor or list, optional):  Output indices for
+            target (int, tuple, tensor or list, optional): Output indices for
                         which gradients are computed (for classification cases,
                         this is usually the target class).
                         If the network returns a scalar value per example,
@@ -403,7 +403,7 @@ class LayerDeepLiftShap(LayerDeepLift, DeepLiftShap):
         r"""
         Args:
 
-            model (nn.Module):  The reference to PyTorch model instance. Model cannot
+            model (nn.Module): The reference to PyTorch model instance. Model cannot
                         contain any in-place nonlinear submodules; these are not
                         supported by the register_full_backward_hook PyTorch API
                         starting from PyTorch v1.9.
@@ -482,7 +482,7 @@ class LayerDeepLiftShap(LayerDeepLift, DeepLiftShap):
         r"""
         Args:
 
-            inputs (tensor or tuple of tensors):  Input for which layer
+            inputs (tensor or tuple of tensors): Input for which layer
                         attributions are computed. If forward_func takes a single
                         tensor as input, a single input tensor should be provided.
                         If forward_func takes multiple tensors as input, a tuple
@@ -516,7 +516,7 @@ class LayerDeepLiftShap(LayerDeepLift, DeepLiftShap):
 
                         It is recommended that the number of samples in the baselines'
                         tensors is larger than one.
-            target (int, tuple, tensor or list, optional):  Output indices for
+            target (int, tuple, tensor or list, optional): Output indices for
                         which gradients are computed (for classification cases,
                         this is usually the target class).
                         If the network returns a scalar value per example,

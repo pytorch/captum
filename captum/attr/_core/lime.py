@@ -82,7 +82,7 @@ class LimeBase(PerturbationAttribution):
         Args:
 
 
-            forward_func (callable):  The forward function of the model or any
+            forward_func (callable): The forward function of the model or any
                     modification of it. If a batch is provided as input for
                     attribution, it is expected that forward_func returns a scalar
                     representing the entire batch.
@@ -266,7 +266,7 @@ class LimeBase(PerturbationAttribution):
 
         Args:
 
-            inputs (tensor or tuple of tensors):  Input for which LIME
+            inputs (tensor or tuple of tensors): Input for which LIME
                         is computed. If forward_func takes a single
                         tensor as input, a single input tensor should be provided.
                         If forward_func takes multiple tensors as input, a tuple
@@ -274,7 +274,7 @@ class LimeBase(PerturbationAttribution):
                         that for all given input tensors, dimension 0 corresponds
                         to the number of examples, and if multiple input tensors
                         are provided, the examples must be aligned appropriately.
-            target (int, tuple, tensor or list, optional):  Output indices for
+            target (int, tuple, tensor or list, optional): Output indices for
                         which surrogate model is trained
                         (for classification cases,
                         this is usually the target class).
@@ -315,7 +315,7 @@ class LimeBase(PerturbationAttribution):
                         Note that attributions are not computed with respect
                         to these arguments.
                         Default: None
-            n_samples (int, optional):  The number of samples of the original
+            n_samples (int, optional): The number of samples of the original
                         model used to train the surrogate interpretable model.
                         Default: `50` if `n_samples` is not provided.
             perturbations_per_eval (int, optional): Allows multiple samples
@@ -603,7 +603,7 @@ def get_exp_kernel_similarity_function(
 
     Args:
 
-        distance_mode (str, optional):  Distance mode can be either "cosine" or
+        distance_mode (str, optional): Distance mode can be either "cosine" or
                     "euclidean" corresponding to either cosine distance
                     or Euclidean distance respectively. Distance is computed
                     by flattening the original inputs and perturbed inputs
@@ -732,7 +732,7 @@ class Lime(LimeBase):
         Args:
 
 
-            forward_func (callable):  The forward function of the model or any
+            forward_func (callable): The forward function of the model or any
                     modification of it
             interpretable_model (optional, Model): Model object to train
                     interpretable model.
@@ -879,7 +879,7 @@ class Lime(LimeBase):
 
         Args:
 
-            inputs (tensor or tuple of tensors):  Input for which LIME
+            inputs (tensor or tuple of tensors): Input for which LIME
                         is computed. If forward_func takes a single
                         tensor as input, a single input tensor should be provided.
                         If forward_func takes multiple tensors as input, a tuple
@@ -917,7 +917,7 @@ class Lime(LimeBase):
                         In the cases when `baselines` is not provided, we internally
                         use zero scalar corresponding to each input tensor.
                         Default: None
-            target (int, tuple, tensor or list, optional):  Output indices for
+            target (int, tuple, tensor or list, optional): Output indices for
                         which surrogate model is trained
                         (for classification cases,
                         this is usually the target class).
@@ -978,7 +978,7 @@ class Lime(LimeBase):
                         If None, then a feature mask is constructed which assigns
                         each scalar within a tensor as a separate feature.
                         Default: None
-            n_samples (int, optional):  The number of samples of the original
+            n_samples (int, optional): The number of samples of the original
                         model used to train the surrogate interpretable model.
                         Default: `50` if `n_samples` is not provided.
             perturbations_per_eval (int, optional): Allows multiple samples

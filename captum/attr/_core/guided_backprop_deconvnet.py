@@ -27,7 +27,7 @@ class ModifiedReluGradientAttribution(GradientAttribution):
         r"""
         Args:
 
-            model (nn.Module):  The reference to PyTorch model instance.
+            model (nn.Module): The reference to PyTorch model instance.
         """
         GradientAttribution.__init__(self, model)
         self.model = model
@@ -121,7 +121,7 @@ class GuidedBackprop(ModifiedReluGradientAttribution):
         r"""
         Args:
 
-            model (nn.Module):  The reference to PyTorch model instance. Model cannot
+            model (nn.Module): The reference to PyTorch model instance. Model cannot
                         contain any in-place ReLU submodules; these are not
                         supported by the register_full_backward_hook PyTorch API.
         """
@@ -139,7 +139,7 @@ class GuidedBackprop(ModifiedReluGradientAttribution):
         r"""
         Args:
 
-            inputs (tensor or tuple of tensors):  Input for which
+            inputs (tensor or tuple of tensors): Input for which
                         attributions are computed. If forward_func takes a single
                         tensor as input, a single input tensor should be provided.
                         If forward_func takes multiple tensors as input, a tuple
@@ -148,7 +148,7 @@ class GuidedBackprop(ModifiedReluGradientAttribution):
                         to the number of examples (aka batch size), and if
                         multiple input tensors are provided, the examples must
                         be aligned appropriately.
-            target (int, tuple, tensor or list, optional):  Output indices for
+            target (int, tuple, tensor or list, optional): Output indices for
                         which gradients are computed (for classification cases,
                         this is usually the target class).
                         If the network returns a scalar value per example,
@@ -234,7 +234,7 @@ class Deconvolution(ModifiedReluGradientAttribution):
         r"""
         Args:
 
-            model (nn.Module):  The reference to PyTorch model instance. Model cannot
+            model (nn.Module): The reference to PyTorch model instance. Model cannot
                         contain any in-place ReLU submodules; these are not
                         supported by the register_full_backward_hook PyTorch API.
         """
@@ -250,7 +250,7 @@ class Deconvolution(ModifiedReluGradientAttribution):
         r"""
         Args:
 
-            inputs (tensor or tuple of tensors):  Input for which
+            inputs (tensor or tuple of tensors): Input for which
                         attributions are computed. If forward_func takes a single
                         tensor as input, a single input tensor should be provided.
                         If forward_func takes multiple tensors as input, a tuple
@@ -259,7 +259,7 @@ class Deconvolution(ModifiedReluGradientAttribution):
                         to the number of examples (aka batch size), and if
                         multiple input tensors are provided, the examples must
                         be aligned appropriately.
-            target (int, tuple, tensor or list, optional):  Output indices for
+            target (int, tuple, tensor or list, optional): Output indices for
                         which gradients are computed (for classification cases,
                         this is usually the target class).
                         If the network returns a scalar value per example,

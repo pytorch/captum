@@ -35,7 +35,7 @@ class NeuronFeatureAblation(NeuronAttribution, PerturbationAttribution):
         r"""
         Args:
 
-            forward_func (callable):  The forward function of the model or any
+            forward_func (callable): The forward function of the model or any
                           modification of it
             layer (torch.nn.Module): Layer for which attributions are computed.
                           Attributions for a particular neuron in the input or output
@@ -67,7 +67,7 @@ class NeuronFeatureAblation(NeuronAttribution, PerturbationAttribution):
         r"""
         Args:
 
-            inputs (tensor or tuple of tensors):  Input for which neuron
+            inputs (tensor or tuple of tensors): Input for which neuron
                         attributions are computed. If forward_func takes a single
                         tensor as input, a single input tensor should be provided.
                         If forward_func takes multiple tensors as input, a tuple

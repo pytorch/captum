@@ -96,7 +96,7 @@ class ShapleyValueSampling(PerturbationAttribution):
 
         Args:
 
-                inputs (tensor or tuple of tensors):  Input for which Shapley value
+                inputs (tensor or tuple of tensors): Input for which Shapley value
                             sampling attributions are computed. If forward_func takes
                             a single tensor as input, a single input tensor should
                             be provided.
@@ -135,7 +135,7 @@ class ShapleyValueSampling(PerturbationAttribution):
                             In the cases when `baselines` is not provided, we internally
                             use zero scalar corresponding to each input tensor.
                             Default: None
-                target (int, tuple, tensor or list, optional):  Output indices for
+                target (int, tuple, tensor or list, optional): Output indices for
                             which difference is computed (for classification cases,
                             this is usually the target class).
                             If the network returns a scalar value per example,
@@ -197,7 +197,7 @@ class ShapleyValueSampling(PerturbationAttribution):
                             If None, then a feature mask is constructed which assigns
                             each scalar within a tensor as a separate feature
                             Default: None
-                n_samples (int, optional):  The number of feature permutations
+                n_samples (int, optional): The number of feature permutations
                             tested.
                             Default: `25` if `n_samples` is not provided.
                 perturbations_per_eval (int, optional): Allows multiple ablations
@@ -549,7 +549,7 @@ class ShapleyValues(ShapleyValueSampling):
 
         Args:
 
-                inputs (tensor or tuple of tensors):  Input for which Shapley value
+                inputs (tensor or tuple of tensors): Input for which Shapley value
                             sampling attributions are computed. If forward_func takes
                             a single tensor as input, a single input tensor should
                             be provided.
@@ -588,7 +588,7 @@ class ShapleyValues(ShapleyValueSampling):
                             In the cases when `baselines` is not provided, we internally
                             use zero scalar corresponding to each input tensor.
                             Default: None
-                target (int, tuple, tensor or list, optional):  Output indices for
+                target (int, tuple, tensor or list, optional): Output indices for
                             which difference is computed (for classification cases,
                             this is usually the target class).
                             If the network returns a scalar value per example,

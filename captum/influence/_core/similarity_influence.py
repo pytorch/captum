@@ -172,7 +172,7 @@ class SimilarityInfluence(DataInfluence):
                     to the batch size. A tuple of tensors is only passed in if this
                     is the input form that `module` accepts.
             top_k (int): The number of top-matching activations to return
-            additional_forward_args (optional):  Additional arguments that will be
+            additional_forward_args (optional): Additional arguments that will be
                     passed to forward_func after inputs.
             load_src_from_disk (bool): Loads activations for `influence_src_dataset`
                     where possible. Setting to False would force regeneration of
