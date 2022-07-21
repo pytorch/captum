@@ -151,7 +151,7 @@ class AttributionVisualizer:
 
             models (torch.nn.module): One or more PyTorch modules (models) for
                           attribution visualization.
-            classes (list of string): List of strings corresponding to the names of
+            classes (list of str): List of strings corresponding to the names of
                           classes for classification.
             features (list of BaseFeature): List of BaseFeatures, which correspond
                           to input arguments to the model. Each feature object defines
@@ -175,7 +175,7 @@ class AttributionVisualizer:
                           are taken directly and assumed to correspond to the
                           class scores.
                           Default: None
-            use_label_for_attr (boolean, optional): If true, the class index is passed
+            use_label_for_attr (bool, optional): If true, the class index is passed
                           to the relevant attribution method. This is necessary in most
                           cases where there is an output neuron corresponding to each
                           class. When the model output is a scalar and class index
