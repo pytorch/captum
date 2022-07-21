@@ -29,7 +29,7 @@ class LayerGradientShap(LayerAttribution, GradientAttribution):
     #deep-learning-example-with-gradientexplainer-tensorflowkeraspytorch-models
 
     A Unified Approach to Interpreting Model Predictions
-    http://papers.nips.cc/paper\
+    https://papers.nips.cc/paper\
     7062-a-unified-approach-to-interpreting-model-predictions
 
     GradientShap approximates SHAP values by computing the expectations of
