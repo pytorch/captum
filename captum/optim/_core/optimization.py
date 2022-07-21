@@ -156,7 +156,7 @@ class InputOptimization(Objective, Parameterized):
         loss_summarize_fn: Optional[Callable] = None,
         lr: float = 0.025,
     ) -> torch.Tensor:
-       r"""Optimize input based on loss function and objectives.
+        r"""Optimize input based on loss function and objectives.
 
         Args:
 
