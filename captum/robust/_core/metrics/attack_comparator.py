@@ -133,7 +133,7 @@ class AttackComparator(Generic[MetricResultType]):
             attack_kwargs (dict): Additional arguments to be provided to given attack.
                 This should be provided as a dictionary of keyword arguments.
 
-            additional_attack_arg_names (list[str]): Any additional arguments for the
+            additional_attack_arg_names (list of str): Any additional arguments for the
                 attack which are specific to the particular input example or batch.
                 An example of this is target, which is necessary for some attacks such
                 as FGSM or PGD. These arguments are included if provided as a kwarg
