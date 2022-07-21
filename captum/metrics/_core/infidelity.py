@@ -134,7 +134,7 @@ def infidelity(
     of the attributions and the differences of the predictor function at
     its input and fixed baseline. More details about the Sensitivity-n can
     be found here:
-    https://arxiv.org/abs/1711.06104s
+    https://arxiv.org/abs/1711.06104
 
     The users can perturb the inputs any desired way by providing any
     perturbation function that takes the inputs (and optionally baselines)

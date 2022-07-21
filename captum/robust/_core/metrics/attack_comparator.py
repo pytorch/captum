@@ -78,7 +78,7 @@ class AttackComparator(Generic[MetricResultType]):
                 All kwargs provided to evaluate are provided to the metric function,
                 following the model output. A single metric can be returned as
                 a float or tensor, and multiple metrics should be returned as either
-                a tuple or named tuple of float or tensors. For a tensor metric,
+                a tuple or named tuple of floats or tensors. For a tensor metric,
                 the first dimension should match the batch size, corresponding to
                 metrics for each example. Tensor metrics are averaged over the first
                 dimension when aggregating multiple batch results.
