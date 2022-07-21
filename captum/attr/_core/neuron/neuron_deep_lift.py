@@ -99,7 +99,7 @@ class NeuronDeepLift(NeuronAttribution, GradientAttribution):
                         corresponds to the number of examples (aka batch size),
                         and if multiple input tensors are provided, the examples
                         must be aligned appropriately.
-            neuron_selector (int, callable, or tuple of ints or slices):
+            neuron_selector (int, callable, or tuple of int or slices):
                         Selector for neuron
                         in given layer for which attribution is desired.
                         Neuron selector can be provided as:
@@ -344,7 +344,7 @@ class NeuronDeepLiftShap(NeuronAttribution, GradientAttribution):
                         corresponds to the number of examples (aka batch size),
                         and if multiple input tensors are provided, the examples
                         must be aligned appropriately.
-            neuron_selector (int, callable, or tuple of ints or slices):
+            neuron_selector (int, callable, or tuple of int or slices):
                         Selector for neuron
                         in given layer for which attribution is desired.
                         Neuron selector can be provided as:
