@@ -60,7 +60,7 @@ class AttackComparator(Generic[MetricResultType]):
         self,
         forward_func: Callable,
         metric: Callable[..., MetricResultType],
-        preproc_fn: Callable = None,
+        preproc_fn: Optional[Callable] = None,
     ) -> None:
         r"""
         Args:
@@ -88,6 +88,7 @@ class AttackComparator(Generic[MetricResultType]):
             preproc_fn (Callable, optional): Optional method applied to inputs. Output
                 of preproc_fn is then provided as input to model, in addition to
                 additional_forward_args provided to evaluate.
+                Default: ``None``
         """
         self.forward_func = forward_func
         self.metric: Callable = metric
@@ -113,6 +114,7 @@ class AttackComparator(Generic[MetricResultType]):
         Adds attack to be evaluated when calling evaluate.
 
         Args:
+
             attack (Perturbation or Callable): This can either be an instance
                 of a Captum Perturbation / Attack
                 or any other perturbation or attack function such
@@ -121,23 +123,29 @@ class AttackComparator(Generic[MetricResultType]):
             name (str, optional): Name or identifier for attack, used as key for
                 attack results. This defaults to attack.__class__.__name__
                 if not provided and must be unique for all added attacks.
+                Default: ``None``
 
-            num_attempts (int): Number of attempts that attack should be
+            num_attempts (int, optional): Number of attempts that attack should be
                 repeated. This should only be set to > 1 for non-deterministic
                 attacks. The minimum, maximum, and average (best, worst, and
                 average case) are tracked for attack attempts.
+                Default: ``1``
 
-            apply_before_preproc (bool): Defines whether attack should be applied
-                before or after preproc function.
+            apply_before_preproc (bool, optional): Defines whether attack should be
+                applied before or after preproc function.
+                Default: ``True``
 
-            attack_kwargs (dict): Additional arguments to be provided to given attack.
-                This should be provided as a dictionary of keyword arguments.
+            attack_kwargs (dict, optional): Additional arguments to be provided to
+                given attack. This should be provided as a dictionary of keyword
+                arguments.
+                Default: ``None``
 
-            additional_attack_arg_names (list of str): Any additional arguments for the
-                attack which are specific to the particular input example or batch.
-                An example of this is target, which is necessary for some attacks such
-                as FGSM or PGD. These arguments are included if provided as a kwarg
-                to evaluate.
+            additional_attack_arg_names (list of str, optional): Any additional
+                arguments for the attack which are specific to the particular input
+                example or batch. An example of this is target, which is necessary
+                for some attacks such as FGSM or PGD. These arguments are included
+                if provided as a kwarg to evaluate.
+                Default: ``None``
         """
         if name is None:
             name = attack.__class__.__name__
@@ -259,7 +267,7 @@ class AttackComparator(Generic[MetricResultType]):
                 For a tensor, the first dimension of the tensor must
                 correspond to the number of examples. For all other types,
                 the given argument is used for all forward evaluations.
-                Default: None
+                Default: ``None``
         perturbations_per_eval (int, optional): Allows perturbations of multiple
                 attacks to be grouped and evaluated in one call of forward_fn
                 Each forward pass will contain a maximum of
@@ -272,9 +280,10 @@ class AttackComparator(Generic[MetricResultType]):
                 In order to apply this functionality, the output of preproc_fn
                 (or inputs itself if no preproc_fn is provided) must be a tensor
                 or tuple of tensors.
-                Default: 1
+                Default: ``1``
         kwargs (Any, optional): Additional keyword arguments provided to metric function
-                as well as selected attacks based on chosen additional_args
+                as well as selected attacks based on chosen additional_args.
+                Default: ``None``
 
         Returns:
 

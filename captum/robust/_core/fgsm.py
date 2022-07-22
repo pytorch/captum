@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-from typing import Any, Callable, Tuple
+from typing import Any, Callable, Optional, Tuple
 
 import torch
 from captum._utils.common import (
@@ -22,22 +22,27 @@ from torch import Tensor
 class FGSM(Perturbation):
     r"""
     Fast Gradient Sign Method is an one-step method that can generate
-    adversarial examples. For non-targeted attack, the formulation is
-    x' = x + epsilon * sign(gradient of L(theta, x, y)).
-    For targeted attack on t, the formulation is
-    x' = x - epsilon * sign(gradient of L(theta, x, t)).
-    L(theta, x, y) is the model's loss function with respect to model
+    adversarial examples.
+
+    For non-targeted attack, the formulation is::
+
+        x' = x + epsilon * sign(gradient of L(theta, x, y))
+
+    For targeted attack on t, the formulation is::
+
+        x' = x - epsilon * sign(gradient of L(theta, x, t))
+
+    ``L(theta, x, y)`` is the model's loss function with respect to model
     parameters, inputs and labels.
 
     More details on Fast Gradient Sign Method can be found in the original
-    paper:
-    https://arxiv.org/abs/1412.6572
+    paper: https://arxiv.org/abs/1412.6572
     """
 
     def __init__(
         self,
         forward_func: Callable,
-        loss_func: Callable = None,
+        loss_func: Optional[Callable] = None,
         lower_bound: float = float("-inf"),
         upper_bound: float = float("inf"),
     ) -> None:
@@ -50,8 +55,10 @@ class FGSM(Perturbation):
                         model and labels, and return a loss tensor.
                         The default loss function is negative log.
             lower_bound (float, optional): Lower bound of input values.
+                        Default: ``float("-inf")``
             upper_bound (float, optional): Upper bound of input values.
                         e.g. image pixels must be in the range 0-255
+                        Default: ``float("inf")``
 
         Attributes:
             bound (Callable): A function that bounds the input values based on
@@ -112,6 +119,7 @@ class FGSM(Perturbation):
                           examples in inputs (dim 0), and each tuple containing
                           #output_dims - 1 elements. Each tuple is applied as the
                           label for the corresponding example.
+
             additional_forward_args (Any, optional): If the forward function
                         requires additional arguments other than the inputs for
                         which attributions should not be computed, this argument

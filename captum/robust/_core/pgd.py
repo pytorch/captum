@@ -31,8 +31,7 @@ class PGD(Perturbation):
         x_(t+1) = Clip_r(x_t - alpha * sign(gradient of L(theta, x, t)))
 
     More details on Projected Gradient Descent can be found in the original
-    paper:
-    https://arxiv.org/abs/1706.06083
+    paper: https://arxiv.org/abs/1706.06083
     """
 
     def __init__(
@@ -51,8 +50,10 @@ class PGD(Perturbation):
                         model and labels, and return the loss for each input tensor.
                         The default loss function is negative log.
             lower_bound (float, optional): Lower bound of input values.
+                        Default: ``float("-inf")``
             upper_bound (float, optional): Upper bound of input values.
                         e.g. image pixels must be in the range 0-255
+                        Default: ``float("inf")``
 
         Attributes:
             bound (Callable): A function that bounds the input values based on
@@ -123,14 +124,14 @@ class PGD(Perturbation):
                         which attributions should not be computed, this argument
                         can be provided. These arguments are provided to
                         forward_func in order following the arguments in inputs.
-                        Default: None.
+                        Default: ``None``
             targeted (bool, optional): If attack should be targeted.
-                        Default: False.
+                        Default: ``False``
             random_start (bool, optional): If a random initialization is added to
-                        inputs. Default: False.
+                        inputs. Default: ``False``
             norm (str, optional): Specifies the norm to calculate distance from
-                        original inputs: 'Linf'|'L2'.
-                        Default: 'Linf'.
+                        original inputs: ``Linf`` | ``L2``.
+                        Default: ``Linf``
 
         Returns:
 
