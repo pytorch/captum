@@ -159,8 +159,7 @@ model.eval()
 Next, we need to define simple input and baseline tensors.
 Baselines belong to the input space and often carry no predictive signal.
 Zero tensor can serve as a baseline for many tasks.
-Some interpretability algorithms such as `Integrated
-Gradients`, `Deeplift` and `GradientShap` are designed to attribute the change
+Some interpretability algorithms such as `IntegratedGradients`, `Deeplift` and `GradientShap` are designed to attribute the change
 between the input and baseline to a predictive class or a value that the neural
 network outputs.
 
