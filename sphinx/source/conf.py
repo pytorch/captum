@@ -10,7 +10,9 @@
 # -- Path setup --------------------------------------------------------------
 
 import os
+import re
 import sys
+from typing import List
 
 base_path = os.path.abspath(os.path.join(__file__, "..", "..", ".."))
 # read module from src instead of installation
@@ -201,3 +203,64 @@ epub_exclude_files = ["search.html"]
 
 # If true, `todo` and `todoList` produce output, else they produce nothing.
 todo_include_todos = True
+
+
+# -- Docstring Improvements --------------------------------------------------
+
+
+def autodoc_process_docstring(
+    app, what: str, name: str, obj, options, lines: List[str]
+) -> None:
+    """
+    Modify docstrings before creating html files.
+
+    Sphinx converts the 'Args:' and 'Returns:' sections of docstrings into
+    reStructuredText (rST) syntax, which can then be found via ':type' & ':rtype'.
+
+    See here for more information:
+    https://www.sphinx-doc.org/en/master/usage/extensions/autodoc.html
+    """
+    for i in range(len(lines)):
+        # Skip unless line is an parameter doc or a return doc
+        if not (lines[i].startswith(":type") or lines[i].startswith(":rtype")):
+            continue
+
+        # Change "nn.Module" to "torch.nn.Module" in doc type hints for intersphinx
+        lines[i] = re.sub(r"\bnn.Module\b", "torch.nn.Module", lines[i])
+        lines[i] = lines[i].replace("torch.torch.", "torch.")
+
+        # Ensure nn.Module and torch.Tensor are hyperlinked
+        lines[i] = re.sub(r"\btorch.nn.Module\b", ":obj:`torch.nn.Module`", lines[i])
+        lines[i] = re.sub(r"\btorch.Tensor\b", ":obj:`torch.Tensor`", lines[i])
+
+        # Handle Any & Callable types
+        lines[i] = re.sub(r"\bAny\b", ":obj:`Any <typing.Any>`", lines[i])
+        lines[i] = re.sub(
+            r"\bCallable\b", ":obj:`Callable <typing.Callable>`", lines[i]
+        )
+
+        # Handle list & tuple types
+        lines[i] = re.sub(r"\blist\b", ":obj:`list`", lines[i])
+        lines[i] = re.sub(r"\btuple\b", ":obj:`tuple`", lines[i])
+
+        # Handle str & slice types
+        lines[i] = re.sub(r"\bstr\b", ":obj:`str`", lines[i])
+        lines[i] = re.sub(r"\bslice\b", ":obj:`slice`", lines[i])
+
+        # Handle int & float types
+        lines[i] = re.sub(r"\bint\b", ":obj:`int`", lines[i])
+        lines[i] = re.sub(r"\bfloat\b", ":obj:`float`", lines[i])
+
+        # Handle tensor types that are using lowercase
+        # Bolding return types doesn't work with Sphinx hyperlinks
+        lines[i] = lines[i].replace("*tensors*", "tensors")
+        lines[i] = lines[i].replace("*tensor*", "tensor")
+        lines[i] = re.sub(r"\btensor\b", ":class:`tensor <torch.Tensor>`", lines[i])
+        lines[i] = re.sub(r"\btensors\b", ":class:`tensors <torch.Tensor>`", lines[i])
+
+        # Handle None type
+        lines[i] = re.sub(r"\bNone\b", ":obj:`None`", lines[i])
+
+
+def setup(app) -> None:
+    app.connect("autodoc-process-docstring", autodoc_process_docstring)
