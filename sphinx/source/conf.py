@@ -77,6 +77,11 @@ autodoc_default_options = {}
 # Inlcude init docstrings into body of autoclass directives
 autoclass_content = "both"
 
+# Preserve signature defaults
+# Prevents entire tensors from being printed, & gives callable functions
+# proper names
+autodoc_preserve_defaults = True
+
 # Configuration for intersphinx: refer to the Python standard library and PyTorch
 intersphinx_mapping = {
     "python": ("https://docs.python.org/3", None),
