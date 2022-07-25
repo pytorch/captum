@@ -50,7 +50,7 @@ class GradientShap(GradientAttribution):
     In some sense it can be viewed as an approximation of integrated gradients
     by computing the expectations of gradients for different baselines.
 
-    Current implementation uses Smoothgrad from `NoiseTunnel` in order to
+    Current implementation uses Smoothgrad from :class:`.NoiseTunnel` in order to
     randomly draw samples from the distribution of baselines, add noise to input
     samples and compute the expectation (smoothgrad).
     """
