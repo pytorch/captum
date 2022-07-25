@@ -57,7 +57,7 @@ class InterpretableEmbeddingBase(Module):
 
         Returns:
 
-           embedding_tensor (Tensor):
+           embedding_tensor (tensor):
                    Returns a tensor which is the same as first argument passed
                    to the forward function.
                    It passes pre-computed embedding tensors to lower layers
