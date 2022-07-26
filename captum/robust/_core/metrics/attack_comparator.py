@@ -118,7 +118,7 @@ class AttackComparator(Generic[MetricResultType]):
                 or any other perturbation or attack function such
                 as a torchvision transform.
 
-            name (optional, str): Name or identifier for attack, used as key for
+            name (str, optional): Name or identifier for attack, used as key for
                 attack results. This defaults to attack.__class__.__name__
                 if not provided and must be unique for all added attacks.
 
