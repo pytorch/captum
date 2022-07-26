@@ -415,7 +415,7 @@ class FeatureAblation(PerturbationAttribution):
         **kwargs,
     ):
         """
-        This method return an generator of ablation perturbations of the i-th input
+        This method returns a generator of ablation perturbations of the i-th input
 
         Returns:
             ablation_iter (generator): yields each perturbation to be evaluated

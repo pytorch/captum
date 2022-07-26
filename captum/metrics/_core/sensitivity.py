@@ -31,7 +31,7 @@ def default_perturb_func(
     Args:
 
         inputs (tensor or a tuple of tensors): The input tensors that we'd
-                like to perturb by adding a random noise sampled unifromly
+                like to perturb by adding a random noise sampled uniformly
                 random from an L_infinity ball with a radius `perturb_radius`.
 
         radius (float): A radius used for sampling from
@@ -39,8 +39,8 @@ def default_perturb_func(
 
     Returns:
 
-        perturbed_input (tuple(tensor)): A list of perturbed inputs that
-                are createed by adding noise sampled uniformly random
+        perturbed_input (tuple of tensor): A list of perturbed inputs that
+                are created by adding noise sampled uniformly random
                 from L_infiniy ball with a radius `perturb_radius` to the
                 original inputs.
 
@@ -138,7 +138,7 @@ def sensitivity_max(
         perturb_radius (float, optional): The epsilon radius used for sampling.
             In the `default_perturb_func` it is used as the radius of
             the L-Infinity ball. In a general case it can serve as a radius of
-            any L_p nom.
+            any L_p norm.
             This argument is passed to `perturb_func` if it takes more than
             one argument.
 

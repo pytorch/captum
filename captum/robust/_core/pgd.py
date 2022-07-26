@@ -87,7 +87,7 @@ class PGD(Perturbation):
                         attack is computed. It can be provided as a single
                         tensor or a tuple of multiple tensors. If multiple
                         input tensors are provided, the batch sizes must be
-                        aligned accross all tensors.
+                        aligned across all tensors.
             radius (float): Radius of the neighbor ball centered around inputs.
                         The perturbation should be within this range.
             step_size (float): Step size of each gradient step.

@@ -194,7 +194,7 @@ class LayerLRP(LRP, LayerAttribution):
                         returned if return_convergence_delta=True):
                         Delta is calculated per example, meaning that the number of
                         elements in returned delta tensor is equal to the number of
-                        of examples in input.
+                        examples in input.
                         If attributions for all layers are returned (layer=None) a list
                         of tensors is returned with entries for
                         each layer.

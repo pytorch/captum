@@ -21,7 +21,7 @@ from torch import Tensor
 
 class FGSM(Perturbation):
     r"""
-    Fast Gradient Sign Method is an one-step method that can generate
+    Fast Gradient Sign Method is a one-step method that can generate
     adversarial examples.
 
     For non-targeted attack, the formulation is::
@@ -91,7 +91,7 @@ class FGSM(Perturbation):
                         attack is computed. It can be provided as a single
                         tensor or a tuple of multiple tensors. If multiple
                         input tensors are provided, the batch sizes must be
-                        aligned accross all tensors.
+                        aligned across all tensors.
             epsilon (float): Step size of perturbation.
             target (Any): True labels of inputs if non-targeted attack is
                         desired. Target class of inputs if targeted attack
@@ -175,7 +175,7 @@ class FGSM(Perturbation):
         r"""
         A helper function to calculate the perturbed inputs given original
         inputs, gradient of loss function and epsilon. The calculation is
-        different for targetd v.s. non-targeted as described above.
+        different for targeted v.s. non-targeted as described above.
         """
         multiplier = -1 if targeted else 1
         inputs = tuple(

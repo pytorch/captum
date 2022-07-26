@@ -50,7 +50,7 @@ class Attribution:
         inputs (tensor or tuple of tensors): Input for which attribution
                     is computed. It can be provided as a single tensor or
                     a tuple of multiple tensors. If multiple input tensors
-                    are provided, the batch sizes must be aligned accross all
+                    are provided, the batch sizes must be aligned across all
                     tensors.
 
 
@@ -186,7 +186,7 @@ class GradientAttribution(Attribution):
 
                 attributions (tensor or tuple of tensors): Precomputed attribution
                             scores. The user can compute those using any attribution
-                            algorithm. It is assumed the the shape and the
+                            algorithm. It is assumed the shape and the
                             dimensionality of attributions must match the shape and
                             the dimensionality of `start_point` and `end_point`.
                             It also assumes that the attribution tensor's
@@ -351,7 +351,7 @@ class InternalAttribution(Attribution, Generic[ModuleOrModuleList]):
 
 class LayerAttribution(InternalAttribution):
     r"""
-    Layer attribution provides attribution values for the given layer, quanitfying
+    Layer attribution provides attribution values for the given layer, quantifying
     the importance of each neuron within the given layer's output. The output
     attribution of calling attribute on a LayerAttribution object always matches
     the size of the layer output.
@@ -418,7 +418,7 @@ class LayerAttribution(InternalAttribution):
 
 class NeuronAttribution(InternalAttribution):
     r"""
-    Neuron attribution provides input attribution for a given neuron, quanitfying
+    Neuron attribution provides input attribution for a given neuron, quantifying
     the importance of each input feature in the activation of a particular neuron.
     Calling attribute on a NeuronAttribution object requires also providing
     the index of the neuron in the output of the given layer for which attributions

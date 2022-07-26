@@ -60,7 +60,7 @@ class NeuronGradientShap(NeuronAttribution, GradientAttribution):
                         modification of it
             layer (torch.nn.Module): Layer for which neuron attributions are computed.
                         The output size of the attribute method matches the
-                        dimensions of the inputs or ouputs of the neuron with
+                        dimensions of the inputs or outputs of the neuron with
                         index `neuron_selector` in this layer, depending on whether
                         we attribute to the inputs or outputs of the neuron.
                         Currently, it is assumed that the inputs or the outputs
@@ -135,7 +135,7 @@ class NeuronGradientShap(NeuronAttribution, GradientAttribution):
                           indexed output tensor is used for attribution. Note
                           that specifying a slice of a tensor would amount to
                           computing the attribution of the sum of the specified
-                          neurons, and not the individual neurons independantly.
+                          neurons, and not the individual neurons independently.
 
                         - a callable, which should
                           take the target layer as input (single tensor or tuple

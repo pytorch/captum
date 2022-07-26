@@ -168,7 +168,7 @@ class NoiseTunnel(Attribution):
             >>> nt = NoiseTunnel(ig)
             >>> # Generates 10 perturbed input tensors per image.
             >>> # Computes integrated gradients for class 3 for each generated
-            >>> # input and averages attributions accros all 10
+            >>> # input and averages attributions across all 10
             >>> # perturbed inputs per image
             >>> attribution = nt.attribute(input, nt_type='smoothgrad',
             >>>                            nt_samples=10, target=3)

@@ -253,7 +253,7 @@ class LayerConductance(LayerAttribution, GradientAttribution):
                         the total sum of the attributions.
                         Delta is calculated per example, meaning that the number of
                         elements in returned delta tensor is equal to the number of
-                        of examples in inputs.
+                        examples in inputs.
 
         Examples::
 

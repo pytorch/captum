@@ -272,7 +272,7 @@ class LayerDeepLift(LayerAttribution, DeepLift):
                 rescale rule.
                 Delta is calculated per example, meaning that the number of
                 elements in returned delta tensor is equal to the number of
-                of examples in input.
+                examples in input.
                 Note that the logic described for deltas is guaranteed
                 when the default logic for attribution computations is used,
                 meaning that the `custom_attribution_func=None`, otherwise
