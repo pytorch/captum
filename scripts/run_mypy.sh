@@ -5,7 +5,6 @@ set -e
 # hints.
 
 mypy -p captum.attr --ignore-missing-imports --allow-redefinition
-mypy -p captum.optim --ignore-missing-imports --allow-redefinition
 mypy -p captum.insights --ignore-missing-imports --allow-redefinition
 mypy -p captum.metrics --ignore-missing-imports --allow-redefinition
 mypy -p captum.robust --ignore-missing-imports --allow-redefinition
