@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 import operator
 import unittest
-from typing import Any, List, Optional, Type, Union
+from typing import Any, List, Type, Union
 
 import captum.optim._core.loss as opt_loss
 import torch
@@ -175,7 +175,7 @@ class TestLayerActivation(BaseTest):
     def test_layer_activation_batch_index_negative(self) -> None:
         model = torch.nn.Identity()
         batch_index = -2
-        loss = opt.loss.LayerActivation(model, batch_index=batch_index)
+        loss = opt_loss.LayerActivation(model, batch_index=batch_index)
 
         model_input = torch.arange(0, 5 * 3 * 5 * 5).view(5, 3, 5, 5).float()
         output = get_loss_value(model, loss, model_input)
