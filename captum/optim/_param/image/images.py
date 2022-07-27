@@ -469,9 +469,10 @@ class LaplacianImage(ImageParameterization):
                 Default: ``0.1``
             scale_list (list of float, optional): The desired list of scale values to
                 use in the laplacian pyramid. The height & width dimensions specified
-                in ``size`` or used in the ``init`` tensor should be divisable by every
+                in ``size`` or used in the ``init`` tensor should be divisible by every
                 scale value in the scale list with no remainder left over. The default
-                scale_list values are set to work with a ``size`` of ``(224, 224)``.
+                ``scale_list`` values are set to work with a ``size`` of
+                ``(224, 224)``.
                 Default: ``[1.0, 2.0, 4.0, 8.0, 16.0, 32.0]``
         """
         super().__init__()
@@ -484,7 +485,7 @@ class LaplacianImage(ImageParameterization):
         for scale in scale_list:
             assert size[0] % scale == 0 and size[1] % scale == 0, (
                 "The chosen image height & width dimensions"
-                + " must be divisable by all scale values "
+                + " must be divisible by all scale values "
                 + " with no remainder left over."
             )
 
@@ -535,7 +536,8 @@ class SimpleTensorParameterization(ImageParameterization):
         """
         Args:
 
-            tensor (torch.Tensor): The tensor to return everytime this module is called.
+            tensor (torch.Tensor): The tensor to return every time this module is
+                called.
         """
         super().__init__()
         assert isinstance(tensor, torch.Tensor)
@@ -821,7 +823,7 @@ class StackImage(ImageParameterization):
             parameterizations (list of ImageParameterization and torch.Tensor): A list
                 of image parameterizations and tensors to concatenate across a
                 specified dimension.
-            dim (int, optional): Optionally specify the dim to concatinate
+            dim (int, optional): Optionally specify the dim to concatenate
                 parameterization outputs on. Default is set to the batch dimension.
                 Default: ``0``
             output_device (torch.device, optional): If the parameterizations are on
