@@ -1,7 +1,6 @@
-import functools
 import operator
 from abc import ABC, abstractmethod, abstractproperty
-from typing import Any, Callable, List, Optional, Tuple, Union
+from typing import Callable, List, Optional, Tuple, Union
 
 import torch
 import torch.nn as nn
@@ -1203,7 +1202,6 @@ def default_loss_summarize(loss_value: torch.Tensor) -> torch.Tensor:
 
 __all__ = [
     "Loss",
-    "loss_wrapper",
     "BaseLoss",
     "CompositeLoss",
     "LayerActivation",
