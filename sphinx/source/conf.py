@@ -248,8 +248,9 @@ def autodoc_process_docstring(
         lines[i] = re.sub(r"\blist\b", ":obj:`list`", lines[i])
         lines[i] = re.sub(r"\btuple\b", ":obj:`tuple`", lines[i])
 
-        # Handle str & slice types
+        # Handle str, bool, & slice types
         lines[i] = re.sub(r"\bstr\b", ":obj:`str`", lines[i])
+        lines[i] = re.sub(r"\bbool\b", ":obj:`bool`", lines[i])
         lines[i] = re.sub(r"\bslice\b", ":obj:`slice`", lines[i])
 
         # Handle int & float types
