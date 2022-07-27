@@ -17,6 +17,8 @@ while getopts 'nf' flag; do
 # removing due to setuptools error during update
 #conda update -y -n base -c defaults conda
 
+conda config --set channel_priority false
+
 # required to use conda develop
 conda install -y conda-build
 
