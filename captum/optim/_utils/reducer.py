@@ -41,9 +41,9 @@ class ChannelReducer:
 
     Some of the possible algorithm choices:
 
-      * https://scikit-learn.org/stable/modules/classes.html#module-sklearn.decomposition
-      * https://scikit-learn.org/stable/modules/classes.html#module-sklearn.manifold
-      * https://umap-learn.readthedocs.io/en/latest/
+     * https://scikit-learn.org/stable/modules/classes.html#module-sklearn.decomposition
+     * https://scikit-learn.org/stable/modules/classes.html#module-sklearn.manifold
+     * https://umap-learn.readthedocs.io/en/latest/
 
     Args:
 
