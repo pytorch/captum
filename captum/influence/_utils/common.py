@@ -5,6 +5,8 @@ from typing import Any, Callable, List, Optional, Tuple, Union
 import torch
 import torch.nn as nn
 from captum._utils.progress import progress
+
+from packaging import version
 from torch import Tensor
 from torch.nn import Module
 from torch.utils.data import DataLoader, Dataset
@@ -125,7 +127,7 @@ def _jacobian_loss_wrt_inputs(
             "Must be either 'sum' or 'mean'."
         )
 
-    if torch.__version__ >= "1.8":
+    if version.parse(torch.__version__) >= version.parse("1.8.0"):
         input_jacobians = torch.autograd.functional.jacobian(
             lambda out: loss_fn(out, targets), out, vectorize=vectorize
         )

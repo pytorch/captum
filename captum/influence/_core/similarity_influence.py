@@ -9,6 +9,7 @@ import torch
 from captum._utils.av import AV
 from captum.attr import LayerActivation
 from captum.influence._core.influence import DataInfluence
+from packaging import version
 from torch import Tensor
 from torch.nn import Module
 from torch.utils.data import DataLoader, Dataset
@@ -40,7 +41,7 @@ def cosine_similarity(test, train, replace_nan=0) -> Tensor:
     test = test.view(test.shape[0], -1)
     train = train.view(train.shape[0], -1)
 
-    if torch.__version__ <= "1.6.0":
+    if version.parse(torch.__version__) <= version.parse("1.6.0"):
         test_norm = torch.norm(test, p=None, dim=1, keepdim=True)
         train_norm = torch.norm(train, p=None, dim=1, keepdim=True)
     else:

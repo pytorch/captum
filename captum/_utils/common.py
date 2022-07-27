@@ -14,6 +14,7 @@ from captum._utils.typing import (
     TensorOrTupleOfTensorsGeneric,
     TupleOrTensorOrBoolGeneric,
 )
+from packaging import version
 from torch import device, Tensor
 from torch.nn import Module
 
@@ -671,7 +672,7 @@ def _register_backward_hook(
     ):
         return module.register_backward_hook(hook)
 
-    if torch.__version__ >= "1.9":
+    if version.parse(torch.__version__) >= version.parse("1.9.0"):
         # Only supported for torch >= 1.9
         return module.register_full_backward_hook(hook)
     else:
