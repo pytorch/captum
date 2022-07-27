@@ -57,8 +57,8 @@ def dataset_cov_matrix(
             dataloader instance.
         show_progress (bool, optional): Whether or not to display a tqdm progress bar.
             Default: ``False``
-        device (torch.device, optional): The PyTorch device to use for for calculating
-            the cov matrix.
+        device (torch.device, optional): The PyTorch device to use for calculating the
+            cov matrix.
             Default: ``torch.device("cpu")``
 
     Returns:
@@ -148,8 +148,8 @@ def dataset_klt_matrix(
             Default: ``False``
         show_progress (bool, optional): Whether or not to display a tqdm progress bar.
             Default: ``False``
-        device (torch.device, optional): The PyTorch device to use for for calculating
-            the cov matrix.
+        device (torch.device, optional): The PyTorch device to use for calculating the
+            cov matrix.
             Default: ``torch.device("cpu")``
 
     Returns:
