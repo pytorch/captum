@@ -198,7 +198,7 @@ class Conv2dSame(nn.Conv2d):
                kernel points.
                Default: ``1``
            groups (int, optional): Number of blocked connections from input channels
-               to output channels. Both in_channels and out_channels must be divisable
+               to output channels. Both in_channels and out_channels must be divisible
                by groups.
                Default: ``1``
            bias (bool, optional): Whether or not to apply a learnable bias to the
