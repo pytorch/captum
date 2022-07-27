@@ -6,6 +6,7 @@ import captum.optim.models._common as model_utils
 import torch
 import torch.nn.functional as F
 from captum.optim.models import googlenet
+from packaging import version
 from tests.helpers.basic import BaseTest, assertTensorAlmostEqual
 
 
@@ -37,7 +38,10 @@ class TestRedirectedReluLayer(BaseTest):
 
         rr_layer = model_utils.RedirectedReluLayer()
         x = torch.zeros(1, 3, 4, 4, requires_grad=True)
-        rr_layer.register_backward_hook(check_grad)
+        if version.parse(torch.__version__) >= version.parse("1.8.0"):
+            rr_layer.register_full_backward_hook(check_grad)
+        else:
+            rr_layer.register_backward_hook(check_grad)
         rr_loss = rr_layer(x * 1).mean()
         rr_loss.backward()
 

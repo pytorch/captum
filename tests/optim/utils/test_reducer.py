@@ -34,10 +34,10 @@ class TestChannelReducer(BaseTest):
         test_input = torch.randn(1, 32, 224, 224).abs()
         c_reducer = reducer.ChannelReducer(n_components=3, max_iter=100)
         test_output = c_reducer.fit_transform(test_input)
-        self.assertEquals(test_output.size(0), 1)
-        self.assertEquals(test_output.size(1), 3)
-        self.assertEquals(test_output.size(2), 224)
-        self.assertEquals(test_output.size(3), 224)
+        self.assertEqual(test_output.size(0), 1)
+        self.assertEqual(test_output.size(1), 3)
+        self.assertEqual(test_output.size(2), 224)
+        self.assertEqual(test_output.size(3), 224)
 
     def test_channelreducer_pytorch_dim_three(self) -> None:
         try:
@@ -52,9 +52,7 @@ class TestChannelReducer(BaseTest):
         test_input = torch.randn(32, 224, 224).abs()
         c_reducer = reducer.ChannelReducer(n_components=3, max_iter=100)
         test_output = c_reducer.fit_transform(test_input)
-        self.assertEquals(test_output.size(0), 3)
-        self.assertEquals(test_output.size(1), 224)
-        self.assertEquals(test_output.size(2), 224)
+        self.assertEqual(list(test_output.shape), [3, 224, 224])
 
     def test_channelreducer_pytorch_pca(self) -> None:
         try:
@@ -70,10 +68,7 @@ class TestChannelReducer(BaseTest):
         c_reducer = reducer.ChannelReducer(n_components=3, reduction_alg="PCA")
 
         test_output = c_reducer.fit_transform(test_input)
-        self.assertEquals(test_output.size(0), 1)
-        self.assertEquals(test_output.size(1), 3)
-        self.assertEquals(test_output.size(2), 224)
-        self.assertEquals(test_output.size(3), 224)
+        self.assertEqual(list(test_output.shape), [1, 3, 224, 224])
 
     def test_channelreducer_pytorch_custom_alg(self) -> None:
         test_input = torch.randn(1, 32, 224, 224).abs()
@@ -82,10 +77,7 @@ class TestChannelReducer(BaseTest):
             n_components=3, reduction_alg=reduction_alg, max_iter=100
         )
         test_output = c_reducer.fit_transform(test_input)
-        self.assertEquals(test_output.size(0), 1)
-        self.assertEquals(test_output.size(1), 3)
-        self.assertEquals(test_output.size(2), 224)
-        self.assertEquals(test_output.size(3), 224)
+        self.assertEqual(list(test_output.shape), [1, 3, 224, 224])
 
     def test_channelreducer_pytorch_custom_alg_components(self) -> None:
         reduction_alg = FakeReductionAlgorithm
@@ -149,10 +141,7 @@ class TestChannelReducer(BaseTest):
         test_input = torch.randn(1, 224, 224, 32).abs()
         c_reducer = reducer.ChannelReducer(n_components=3, max_iter=100)
         test_output = c_reducer.fit_transform(test_input, swap_2nd_and_last_dims=False)
-        self.assertEquals(test_output.size(0), 1)
-        self.assertEquals(test_output.size(1), 224)
-        self.assertEquals(test_output.size(2), 224)
-        self.assertEquals(test_output.size(3), 3)
+        self.assertEqual(list(test_output.shape), [1, 224, 224, 3])
 
     def test_channelreducer_error(self) -> None:
         if not torch.cuda.is_available():
