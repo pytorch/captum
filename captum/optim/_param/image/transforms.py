@@ -1009,7 +1009,7 @@ class RGBToBGR(nn.Module):
 class GaussianSmoothing(nn.Module):
     """
     Apply gaussian smoothing on a
-    1d, 2d or 3d tensor. Filtering is performed seperately for each channel
+    1d, 2d or 3d tensor. Filtering is performed separately for each channel
     in the input using a depthwise convolution.
     """
 

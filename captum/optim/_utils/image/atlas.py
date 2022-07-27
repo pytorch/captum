@@ -276,7 +276,7 @@ def create_atlas(
 
     #  cell_b -> number of images
     #  cell_c -> image channel
-    #  cell_h ->  image hight
+    #  cell_h ->  image height
     #  cell_w -> image width
     cell_b, cell_c, cell_h, cell_w = cells[0].shape
     atlas_canvas = base_tensor(

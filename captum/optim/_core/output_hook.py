@@ -117,7 +117,7 @@ class ActivationFetcher:
                 with the specified model.
 
         Returns:
-            activations_dict (ModuleOutputMapping): An dict containing the collected
+            activations_dict (ModuleOutputMapping): A dict containing the collected
                 activations. The keys for the returned dictionary are the target
                 layers.
         """

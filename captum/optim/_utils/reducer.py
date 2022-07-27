@@ -16,7 +16,7 @@ import torch
 
 class ChannelReducer:
     """
-    The ChannelReducer class is a wrapper for PyTorch and NumPy based dimensonality
+    The ChannelReducer class is a wrapper for PyTorch and NumPy based dimensionality
     reduction algorithms, like those from ``sklearn.decomposition`` (ex: NMF, PCA),
     ``sklearn.manifold`` (ex: TSNE), UMAP, and other libraries. This class handles
     things like reshaping, algorithm search by name (for scikit-learn only), and
@@ -189,7 +189,7 @@ class ChannelReducer:
 
 def posneg(x: torch.Tensor, dim: int = 0) -> torch.Tensor:
     """
-    Hack that makes a matrix positive by concatination in order to simulate one-sided
+    Hack that makes a matrix positive by concatenation in order to simulate one-sided
     NMF with regular NMF.
 
     Voss, et al., "Visualizing Weights", Distill, 2021.
@@ -198,7 +198,7 @@ def posneg(x: torch.Tensor, dim: int = 0) -> torch.Tensor:
     Args:
 
         x (torch.Tensor): A tensor to make positive.
-        dim (int, optional): The dimension to concatinate the two tensor halves at.
+        dim (int, optional): The dimension to concatenate the two tensor halves at.
             Default: ``0``
 
     Returns:
