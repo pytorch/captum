@@ -49,12 +49,12 @@ class RedirectedReLU(torch.autograd.Function):
     """
 
     @staticmethod
-    def forward(self, input_tensor: torch.Tensor) -> torch.Tensor:
+    def forward(self, input_tensor: torch.Tensor) -> torch.Tensor:  # type: ignore
         self.save_for_backward(input_tensor)
         return input_tensor.clamp(min=0)
 
     @staticmethod
-    def backward(self, grad_output: torch.Tensor) -> torch.Tensor:
+    def backward(self, grad_output: torch.Tensor) -> torch.Tensor:  # type: ignore
         (input_tensor,) = self.saved_tensors
         relu_grad = grad_output.clone()
         relu_grad[input_tensor < 0] = 0
@@ -374,20 +374,25 @@ class MaxPool2dRelaxed(torch.nn.Module):
 
     def __init__(
         self,
-        kernel_size: Union[int, Tuple[int, ...]],
-        stride: Optional[Union[int, Tuple[int, ...]]] = None,
-        padding: Union[int, Tuple[int, ...]] = 0,
+        kernel_size: Union[int, Tuple[int, int]],
+        stride: Optional[Union[int, Tuple[int, int]]] = None,
+        padding: Union[int, Tuple[int, int]] = 0,
         ceil_mode: bool = False,
     ) -> None:
         """
         Args:
 
             kernel_size (int or tuple of int): The size of the window to perform max
-                and average pooling with.
+                and average pooling with. Either a single int to use for both the
+				height & width or a tuple of 2 integers in format of: (height, width).
             stride (int or tuple of int, optional): The stride window size to use.
+                Either a single int to use for both the height & width or a tuple of 2
+				integers in format of: (height, width).
                 Default: ``None``
             padding (int or tuple of int): The amount of zero padding to add to both
-                sides in the ``nn.MaxPool2d`` & ``nn.AvgPool2d`` modules.
+                sides in the ``nn.MaxPool2d`` & ``nn.AvgPool2d`` modules. Either a
+				single int to use for both the height & width or a tuple of 2 integers
+				in format of: (height, width).
                 Default: ``0``
             ceil_mode (bool, optional): Whether to use ceil or floor for creating the
                 output shape.
