@@ -230,12 +230,7 @@ def autodoc_process_docstring(
         if not (lines[i].startswith(":type") or lines[i].startswith(":rtype")):
             continue
 
-        # Change "nn.Module" to "torch.nn.Module" in doc type hints for intersphinx
-        lines[i] = re.sub(r"\bnn\.Module\b", "torch.nn.Module", lines[i])
-        lines[i] = lines[i].replace("torch.torch.", "torch.")
-
-        # Ensure nn.Module and torch.Tensor are hyperlinked
-        lines[i] = re.sub(r"\btorch\.nn\.Module\b", ":obj:`torch.nn.Module`", lines[i])
+        # Ensure torch.Tensor is hyperlinked
         lines[i] = re.sub(r"\btorch\.Tensor\b", ":obj:`torch.Tensor`", lines[i])
 
         # Handle Any & Callable types
@@ -256,13 +251,6 @@ def autodoc_process_docstring(
         # Handle int & float types
         lines[i] = re.sub(r"\bint\b", ":obj:`int`", lines[i])
         lines[i] = re.sub(r"\bfloat\b", ":obj:`float`", lines[i])
-
-        # Handle tensor types that are using lowercase
-        # Bolding return types doesn't work with Sphinx hyperlinks
-        lines[i] = lines[i].replace("*tensors*", "tensors")
-        lines[i] = lines[i].replace("*tensor*", "tensor")
-        lines[i] = re.sub(r"\btensor\b", ":class:`tensor <torch.Tensor>`", lines[i])
-        lines[i] = re.sub(r"\btensors\b", ":class:`tensors <torch.Tensor>`", lines[i])
 
         # Handle None type
         lines[i] = re.sub(r"\bNone\b", ":obj:`None`", lines[i])
