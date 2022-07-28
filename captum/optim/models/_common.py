@@ -384,15 +384,15 @@ class MaxPool2dRelaxed(torch.nn.Module):
 
             kernel_size (int or tuple of int): The size of the window to perform max
                 and average pooling with. Either a single int to use for both the
-				height & width or a tuple of 2 integers in format of: (height, width).
+                height & width or a tuple of 2 integers in format of: (height, width).
             stride (int or tuple of int, optional): The stride window size to use.
                 Either a single int to use for both the height & width or a tuple of 2
-				integers in format of: (height, width).
+                integers in format of: (height, width).
                 Default: ``None``
             padding (int or tuple of int): The amount of zero padding to add to both
                 sides in the ``nn.MaxPool2d`` & ``nn.AvgPool2d`` modules. Either a
-				single int to use for both the height & width or a tuple of 2 integers
-				in format of: (height, width).
+                single int to use for both the height & width or a tuple of 2 integers
+                in format of: (height, width).
                 Default: ``0``
             ceil_mode (bool, optional): Whether to use ceil or floor for creating the
                 output shape.
