@@ -256,7 +256,7 @@ def create_atlas(
         grid_size (tuple of int): The number of grid cells to use across the height
             and width dimensions. The ``grid_size`` variable should be in the format
             of: [width, height].
-        base_tensor (callable, optional): What to use for the atlas base tensor. Basic
+        base_tensor (Callable, optional): What to use for the atlas base tensor. Basic
             choices are: :func:`torch.ones` or :func:`torch.zeros`.
             Default: :func:`torch.ones`
 
