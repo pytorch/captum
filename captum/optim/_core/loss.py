@@ -806,7 +806,7 @@ class Direction(BaseLoss):
         self,
         target: nn.Module,
         vec: torch.Tensor,
-        cossim_pow: Optional[float] = 0.0,
+        cossim_pow: float = 0.0,
         batch_index: Optional[int] = None,
     ) -> None:
         """
@@ -849,7 +849,7 @@ class NeuronDirection(BaseLoss):
         x: Optional[int] = None,
         y: Optional[int] = None,
         channel_index: Optional[int] = None,
-        cossim_pow: Optional[float] = 0.0,
+        cossim_pow: float = 0.0,
         batch_index: Optional[int] = None,
     ) -> None:
         """
@@ -1009,7 +1009,7 @@ class TensorDirection(BaseLoss):
         self,
         target: nn.Module,
         vec: torch.Tensor,
-        cossim_pow: Optional[float] = 0.0,
+        cossim_pow: float = 0.0,
         batch_index: Optional[int] = None,
     ) -> None:
         """
