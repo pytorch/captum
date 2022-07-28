@@ -420,7 +420,7 @@ linear model convey the importance of each super-pixel.</p>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>forward_func</strong> (<em>callable</em>) – The forward function of the model or any
 modification of it</p></li>
-<li><p><strong>interpretable_model</strong> (<em>optional</em><em>, </em><a class="reference internal" href="utilities.html#captum._utils.models.model.Model" title="captum._utils.models.model.Model"><em>Model</em></a>) – <p>Model object to train
+<li><p><strong>interpretable_model</strong> (<a class="reference internal" href="utilities.html#captum._utils.models.model.Model" title="captum._utils.models.model.Model"><em>Model</em></a><em>, </em><em>optional</em>) – <p>Model object to train
 interpretable model.</p>
 <p>This argument is optional and defaults to SkLearnLasso(alpha=0.01),
 which is a wrapper around the Lasso linear model in SkLearn.
@@ -443,7 +443,7 @@ interpretable model after fitting.</p>
 interpretable model, each attribution call reuses
 the same given interpretable model object.</p>
 </p></li>
-<li><p><strong>similarity_func</strong> (<em>optional</em><em>, </em><em>callable</em>) – <p>Function which takes a single sample
+<li><p><strong>similarity_func</strong> (<em>callable</em><em>, </em><em>optional</em>) – <p>Function which takes a single sample
 along with its corresponding interpretable representation
 and returns the weight of the interpretable sample for
 training the interpretable model.
@@ -473,7 +473,7 @@ being the same as the input provided when calling attribute.</p>
 <p>kwargs includes baselines, feature_mask, num_interp_features
 (integer, determined from feature mask).</p>
 </p></li>
-<li><p><strong>perturb_func</strong> (<em>optional</em><em>, </em><em>callable</em>) – <p>Function which returns a single
+<li><p><strong>perturb_func</strong> (<em>callable</em><em>, </em><em>optional</em>) – <p>Function which returns a single
 sampled input, which is a binary vector of length
 num_interp_features, or a generator of such tensors.</p>
 <p>This function is optional, the default function returns

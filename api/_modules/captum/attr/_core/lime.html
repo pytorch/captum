@@ -766,7 +766,7 @@ src="/_sphinx/documentation_options.js"></script>
 
 <span class="sd">            forward_func (callable):  The forward function of the model or any</span>
 <span class="sd">                    modification of it</span>
-<span class="sd">            interpretable_model (optional, Model): Model object to train</span>
+<span class="sd">            interpretable_model (Model, optional): Model object to train</span>
 <span class="sd">                    interpretable model.</span>
 
 <span class="sd">                    This argument is optional and defaults to SkLearnLasso(alpha=0.01),</span>
@@ -792,7 +792,7 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">                    Note that calling fit multiple times should retrain the</span>
 <span class="sd">                    interpretable model, each attribution call reuses</span>
 <span class="sd">                    the same given interpretable model object.</span>
-<span class="sd">            similarity_func (optional, callable): Function which takes a single sample</span>
+<span class="sd">            similarity_func (callable, optional): Function which takes a single sample</span>
 <span class="sd">                    along with its corresponding interpretable representation</span>
 <span class="sd">                    and returns the weight of the interpretable sample for</span>
 <span class="sd">                    training the interpretable model.</span>
@@ -825,7 +825,7 @@ src="/_sphinx/documentation_options.js"></script>
 
 <span class="sd">                    kwargs includes baselines, feature_mask, num_interp_features</span>
 <span class="sd">                    (integer, determined from feature mask).</span>
-<span class="sd">            perturb_func (optional, callable): Function which returns a single</span>
+<span class="sd">            perturb_func (callable, optional): Function which returns a single</span>
 <span class="sd">                    sampled input, which is a binary vector of length</span>
 <span class="sd">                    num_interp_features, or a generator of such tensors.</span>
 
