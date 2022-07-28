@@ -61,7 +61,7 @@ class InputOptimization(Objective, Parameterized):
 
             model (nn.Module, optional): The reference to PyTorch model instance. Set
                 to ``None`` for no model instance.
-            loss_function (callable): The :mod:`Loss <.loss>` objective instance to
+            loss_function (Callable): The :mod:`Loss <.loss>` objective instance to
                 minimize during optimization.
             input_param (InputParameterization, optional): A module that generates an
                 input, consumed by the model. Example: An
@@ -167,7 +167,7 @@ class InputOptimization(Objective, Parameterized):
             optimizer (torch.optim.Optimizer, optional): A ``torch.optim.Optimizer``
                 instance to use for optimizing the input based on the loss function.
                 Default: :class:`torch.optim.Adam`
-            loss_summarize_fn (callable, optional): The function to use for summarizing
+            loss_summarize_fn (Callable, optional): The function to use for summarizing
                 tensor outputs from loss functions.
                 Default: :func:`.default_loss_summarize`
             lr (float, optional): If no optimizer is given, then lr is used as the
@@ -213,7 +213,7 @@ def n_steps(n: int, show_progress: bool = True) -> StopCriteria:
             Default: ``True``
 
     Returns:
-        StopCriteria (callable): A stop criteria function.
+        StopCriteria (Callable): A stop criteria function.
     """
 
     if show_progress:
