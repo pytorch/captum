@@ -1335,7 +1335,7 @@ class TestIgnoreAlpha(BaseTest):
         assert rgb_tensor.size(1) == 3
 
     def test_ignore_alpha_jit_module(self) -> None:
-        if torch.__version__ <= "1.8.0":
+        if version.parse(torch.__version__) <= version.parse("1.8.0"):
             raise unittest.SkipTest(
                 "Skipping IgnoreAlpha JIT module test due to insufficient"
                 + " Torch version."

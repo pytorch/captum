@@ -90,10 +90,10 @@ def show(
             grid image. Default is set to None for no grid image creation.
             Default: None
         padding (int, optional): The amount of padding between images in the grid
-            images. This parameter only has an effect if nrow is not None.
+            images. This parameter only has an effect if `images_per_row` is not None.
             Default: 2
         pad_value (float, optional): The value to use for the padding. This parameter
-            only has an effect if nrow is not None.
+            only has an effect if `images_per_row` is not None.
             Default: 0.0
     """
 
@@ -140,10 +140,10 @@ def save_tensor_as_image(
             grid image. Default is set to None for no grid image creation.
             Default: None
         padding (int, optional): The amount of padding between images in the grid
-            images. This parameter only has an effect if `nrow` is not None.
+            images. This parameter only has an effect if `images_per_row` is not None.
             Default: 2
         pad_value (float, optional): The value to use for the padding. This parameter
-            only has an effect if `nrow` is not None.
+            only has an effect if `images_per_row` is not None.
             Default: 0.0
     """
 
@@ -208,6 +208,7 @@ def _dot_cossim(
     a specified dimension.
 
     Args:
+
         x (torch.Tensor): The tensor that you wish to compute the cosine similarity
             for in relation to tensor y.
         y (torch.Tensor): The tensor that you wish to compute the cosine similarity
@@ -216,6 +217,7 @@ def _dot_cossim(
         dim (int, optional): The target dimension for computing cosine similarity.
         eps (float, optional): If cossim_pow is greater than zero, the desired
             epsilon value to use for cosine similarity calculations.
+
     Returns:
         tensor (torch.Tensor): Dot cosine similarity between x and y, along the
         specified dim.
@@ -241,13 +243,16 @@ def hue_to_rgb(
 ) -> torch.Tensor:
     """
     Create an RGB unit vector based on a hue of the input angle.
+
     Args:
+
         angle (float): The hue angle to create an RGB color for.
         device (torch.device, optional): The device to create the angle color tensor
             on.
             Default: torch.device("cpu")
         warp (bool, optional): Whether or not to make colors more distinguishable.
             Default: True
+
     Returns:
         color_vec (torch.Tensor): A color vector.
     """
@@ -293,6 +298,7 @@ def nchannels_to_rgb(
             Default: True
         eps (float, optional): An optional epsilon value.
             Default: 1e-4
+
     Returns:
         tensor (torch.Tensor): An NCHW RGB image tensor.
     """
@@ -326,6 +332,7 @@ def weights_to_heatmap_2d(
     no excitation or inhibition.
 
     Args:
+
         weight (torch.Tensor):  A 2d tensor to create the heatmap from.
         colors (list of str):  A list of 5 strings containing hex triplet
             (six digit), three-byte hexadecimal color values to use for coloring

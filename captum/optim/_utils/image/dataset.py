@@ -1,6 +1,7 @@
 from typing import cast
 
 import torch
+from packaging import version
 
 try:
     from tqdm.auto import tqdm
@@ -18,11 +19,11 @@ def image_cov(x: torch.Tensor) -> torch.Tensor:
 
     Args:
 
-        x (torch.Tensor):  One or more NCHW image tensors stacked across the batch
+        x (torch.Tensor): One or more NCHW image tensors stacked across the batch
             dimension.
 
     Returns:
-        *tensor* (torch.Tensor):  The average color channel covariance matrix for the
+        tensor (torch.Tensor): The average color channel covariance matrix for the
             for the input tensor, with a shape of: [n_channels, n_channels].
     """
 
@@ -41,18 +42,27 @@ def dataset_cov_matrix(
     """
     Calculate the covariance matrix for an image dataset.
 
+    Example::
+
+        >>> # Load image dataset
+        >>> dataset = torchvision.datasets.ImageFolder("<path/to/dataset>")
+        >>> dataset_loader = torch.utils.data.DataLoader(dataset)
+        >>> # Calculate dataset COV matrix
+        >>> cov_mtx = opt.dataset.dataset_cov(dataset_loader, True)
+        >>> print(cov_mtx)
+
     Args:
 
-        loader (torch.utils.data.DataLoader):  The reference to a PyTorch
+        loader (torch.utils.data.DataLoader): The reference to a PyTorch
             dataloader instance.
         show_progress (bool, optional): Whether or not to display a tqdm progress bar.
-            Default: False
-        device (torch.device, optional): The PyTorch device to use for for calculating
-            the cov matrix.
-            Default: torch.device("cpu")
+            Default: ``False``
+        device (torch.device, optional): The PyTorch device to use for calculating the
+            cov matrix.
+            Default: ``torch.device("cpu")``
 
     Returns:
-        *tensor*:  A covariance matrix for the specified dataset.
+        tensor (torch.Tensor): A covariance matrix for the specified dataset.
     """
 
     if show_progress:
@@ -73,6 +83,15 @@ def dataset_cov_matrix(
     return cov_mtx
 
 
+# Handle older versions of PyTorch
+# Defined outside of function in order to support JIT
+_torch_norm = (
+    torch.linalg.norm
+    if version.parse(torch.__version__) >= version.parse("1.7.0")
+    else torch.norm
+)
+
+
 def cov_matrix_to_klt(
     cov_mtx: torch.Tensor, normalize: bool = False, epsilon: float = 1e-10
 ) -> torch.Tensor:
@@ -81,22 +100,22 @@ def cov_matrix_to_klt(
 
     Args:
 
-        cov_mtx (tensor):  A 3 by 3 covariance matrix generated from a dataset.
-        normalize (bool):  Whether or not to normalize the resulting KLT matrix.
-            Default: False
-        epsilon (float):
+        cov_mtx (torch.Tensor): A 3 by 3 covariance matrix generated from a dataset.
+        normalize (bool): Whether or not to normalize the resulting KLT matrix.
+            Default: ``False``
+        epsilon (float, optional): A small epsilon value to use for numerical
+            stability.
+            Default: ``1e-10``
 
     Returns:
-        *tensor*:  A KLT matrix for the specified covariance matrix.
+        tensor (torch.Tensor): A KLT matrix for the specified covariance
+            matrix.
     """
-
-    # Handle older versions of PyTorch
-    torch_norm = torch.linalg.norm if torch.__version__ >= "1.9.0" else torch.norm
 
     U, S, V = torch.svd(cov_mtx)
     svd_sqrt = U @ torch.diag(torch.sqrt(S + epsilon))
     if normalize:
-        svd_sqrt / torch.max(torch_norm(svd_sqrt, dim=0))
+        svd_sqrt / torch.max(_torch_norm(svd_sqrt, dim=0))
     return svd_sqrt
 
 
@@ -107,25 +126,34 @@ def dataset_klt_matrix(
     device: torch.device = torch.device("cpu"),
 ) -> torch.Tensor:
     """
-    Calculate the color correlation matrix, also known as
-    a Karhunen-Loève transform (KLT) matrix, for a dataset.
-    The color correlation matrix can then used in color decorrelation
-    transforms for models trained on the dataset.
+    Calculate the color correlation matrix, also known as a Karhunen-Loève transform
+    (KLT) matrix, for a dataset. The color correlation matrix can then used in color
+    decorrelation & recorrelation transforms like
+    :class:`captum.optim.transforms.ToRGB` for models trained on the dataset.
+
+    Example::
+
+        >>> # Load image dataset
+        >>> dataset = torchvision.datasets.ImageFolder("<path/to/dataset>")
+        >>> dataset_loader = torch.utils.data.DataLoader(dataset)
+        >>> # Calculate dataset KLT matrix
+        >>> klt_mtx = opt.dataset.dataset_klt_matrix(dataset_loader, True, True)
+        >>> print(klt_mtx)
 
     Args:
 
-        loader (torch.utils.data.DataLoader):  The reference to a PyTorch
+        loader (torch.utils.data.DataLoader): The reference to a PyTorch
             dataloader instance.
-        normalize (bool):  Whether or not to normalize the resulting KLT matrix.
-            Default: False
+        normalize (bool): Whether or not to normalize the resulting KLT matrix.
+            Default: ``False``
         show_progress (bool, optional): Whether or not to display a tqdm progress bar.
-            Default: False
-        device (torch.device, optional): The PyTorch device to use for for calculating
-            the cov matrix.
-            Default: torch.device("cpu")
+            Default: ``False``
+        device (torch.device, optional): The PyTorch device to use for calculating the
+            cov matrix.
+            Default: ``torch.device("cpu")``
 
     Returns:
-        *tensor*:  A KLT matrix for the specified dataset.
+        tensor (torch.Tensor): A KLT matrix for the specified dataset.
     """
 
     cov_mtx = dataset_cov_matrix(loader, show_progress=show_progress, device=device)

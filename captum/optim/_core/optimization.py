@@ -1,5 +1,3 @@
-"""captum.optim.optimization."""
-
 import warnings
 from typing import Callable, Iterable, Optional
 
@@ -31,10 +29,24 @@ class InputOptimization(Objective, Parameterized):
     """
     Core function that optimizes an input to maximize a target (aka objective).
     This is similar to gradient-based methods for adversarial examples, such
-    as FGSM. The code for this was based on the implementation by the authors of Lucid.
-    For more details, see the following:
-        https://github.com/tensorflow/lucid
-        https://distill.pub/2017/feature-visualization/
+    as :class:`FGSM <captum.robust.FGSM>`. The code for this was based on the
+    implementation by the authors of Lucid. For more details, see the following:
+
+      * https://github.com/tensorflow/lucid
+      * https://distill.pub/2017/feature-visualization/
+
+    Alias: ``captum.optim.InputOptimization``
+
+    Example::
+
+        >>> model = opt.models.googlenet(pretrained=True)
+        >>> loss_fn = opt.loss.LayerActivation(model.mixed4c)
+        >>> image = opt.images.NaturalImage(size=(224, 224))
+        >>> transform = opt.transforms.TransformationRobustness()
+        >>>
+        >>> obj = opt.InputOptimization(model, loss_fn, image, transform)
+        >>> history = obj.optimize(opt.optimization.n_steps(512))
+        >>> image().show(figsize=(10, 10)) # Display results
     """
 
     def __init__(
@@ -47,13 +59,32 @@ class InputOptimization(Objective, Parameterized):
         r"""
         Args:
 
-            model (nn.Module, optional):  The reference to PyTorch model instance.
-            input_param (nn.Module, optional):  A module that generates an input,
-                        consumed by the model.
-            transform (nn.Module, optional):  A module that transforms or preprocesses
-                        the input before being passed to the model.
-            loss_function (callable): The loss function to minimize during optimization
-                        optimization.
+            model (nn.Module, optional): The reference to PyTorch model instance. Set
+                to ``None`` for no model instance.
+            loss_function (Callable): The :mod:`Loss <.loss>` objective instance to
+                minimize during optimization.
+            input_param (InputParameterization, optional): A module that generates an
+                input, consumed by the model. Example: An
+                :mod:`ImageParameterization <captum.optim.images>` instance.
+            transform (nn.Module, optional): A module that transforms or preprocesses
+                the input before being passed to the model. Set to
+                :class:`torch.nn.Identity` for no transforms.
+
+        Instance variables that be used in the :func:`InputOptimization.optimize`
+        function, custom optimization functions, and StopCriteria functions:
+
+        Attributes:
+
+            model (torch.nn.Module): The given model instance given when initializing
+                ``InputOptimization``. If ``model`` was set to ``None`` during
+                initialization, then an instance of :class:`torch.nn.Identity` will be
+                returned.
+            input_param (InputParameterization): The given input parameterization
+                instance given when initializing ``InputOptimization``.
+            loss_function (Loss): The composable :mod:`Loss <.loss>` instance given
+                when initializing ``InputOptimization``.
+            transform (torch.nn.Module): The given transform instance given when
+                initializing ``InputOptimization``.
         """
         self.model = model or nn.Identity()
         # Grab targets from loss_function
@@ -76,9 +107,9 @@ class InputOptimization(Objective, Parameterized):
         r"""Compute loss value for current iteration.
 
         Returns:
-            *tensor* representing **loss**:
-            - **loss** (*tensor*):
-                        Size of the tensor corresponds to the targets passed.
+            tensor representing **loss**:
+            - **loss** (torch.Tensor): Size of the tensor corresponds to the targets
+                passed.
         """
         input_t = self.input_param()
 
@@ -95,7 +126,9 @@ class InputOptimization(Objective, Parameterized):
         return loss_value
 
     def cleanup(self) -> None:
-        r"""Garbage collection, mainly removing hooks."""
+        r"""Garbage collection, mainly removing hooks.
+        This should only be run after optimize is finished running.
+        """
         self.hooks.remove_hooks()
 
     # Targets are managed by ModuleOutputHooks; we mainly just want a convenient setter
@@ -109,6 +142,11 @@ class InputOptimization(Objective, Parameterized):
         self.hooks = ModuleOutputsHook(value)
 
     def parameters(self) -> Iterable[nn.Parameter]:
+        """
+        Returns:
+            parameters (iterable of torch.nn.Parameter): An iterable of parameters in
+                the input parameterization.
+        """
         return self.input_param.parameters()
 
     def optimize(
@@ -122,18 +160,19 @@ class InputOptimization(Objective, Parameterized):
 
         Args:
 
-            stop_criteria (StopCriteria, optional):  A function that is called
-                        every iteration and returns a bool that determines whether
-                        to stop the optimization.
-                        See captum.optim.typing.StopCriteria for details.
-            optimizer (Optimizer, optional):  An torch.optim.Optimizer used to
-                        optimize the input based on the loss function.
+            stop_criteria (StopCriteria, optional): A function that is called
+                every iteration and returns a bool that determines whether to stop the
+                optimization.
+                Default: :func:`n_steps(512) <.n_steps>`
+            optimizer (torch.optim.Optimizer, optional): A ``torch.optim.Optimizer``
+                instance to use for optimizing the input based on the loss function.
+                Default: :class:`torch.optim.Adam`
             loss_summarize_fn (Callable, optional): The function to use for summarizing
                 tensor outputs from loss functions.
-                Default: default_loss_summarize
-            lr: (float, optional): If no optimizer is given, then lr is used as the
+                Default: :func:`.default_loss_summarize`
+            lr (float, optional): If no optimizer is given, then lr is used as the
                 learning rate for the Adam optimizer.
-                Default: 0.025
+                Default: ``0.025``
 
         Returns:
             history (torch.Tensor): A stack of loss values per iteration. The size
@@ -163,13 +202,18 @@ class InputOptimization(Objective, Parameterized):
 def n_steps(n: int, show_progress: bool = True) -> StopCriteria:
     """StopCriteria generator that uses number of steps as a stop criteria.
 
+    Example::
+
+        >>> stop_criteria = opt.optimization.n_steps(512, True)
+
     Args:
-        n (int):  Number of steps to run optimization.
-        show_progress (bool, optional):  Whether or not to show progress bar.
-            Default: True
+
+        n (int): Number of steps to run optimization.
+        show_progress (bool, optional): Whether or not to show progress bar.
+            Default: ``True``
 
     Returns:
-        *StopCriteria* callable
+        StopCriteria (Callable): A stop criteria function.
     """
 
     if show_progress:

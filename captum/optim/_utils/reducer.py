@@ -22,6 +22,7 @@ class ChannelReducer:
     See here for more information: https://distill.pub/2018/building-blocks/
 
     Args:
+
         n_components (int, optional):  The number of channels to reduce the target
             dimension to.
         reduction_alg (str or callable, optional):  The desired dimensionality
@@ -71,11 +72,14 @@ class ChannelReducer:
     ) -> torch.Tensor:
         """
         Perform dimensionality reduction on an input tensor.
+
         Args:
+
             tensor (tensor):  A tensor to perform dimensionality reduction on.
             swap_2nd_and_last_dims (bool, optional): If true, input channels are
                 expected to be in the second dimension unless the input tensor has a
                 shape of CHW. Default is set to True.
+
         Returns:
             *tensor*:  A tensor with one of it's dimensions reduced.
         """
@@ -131,8 +135,10 @@ def posneg(x: torch.Tensor, dim: int = 0) -> torch.Tensor:
     NMF with regular NMF.
 
     Args:
+
         x (tensor):  A tensor to make positive.
         dim (int, optional):  The dimension to concatinate the two tensor halves at.
+
     Returns:
         tensor (torch.tensor):  A positive tensor for one-sided dimensionality
             reduction.
