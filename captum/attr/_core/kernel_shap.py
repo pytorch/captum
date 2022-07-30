@@ -30,7 +30,7 @@ class KernelShap(Lime):
         Args:
 
             forward_func (Callable): The forward function of the model or
-                        any modification of it
+                        any modification of it.
         """
         Lime.__init__(
             self,

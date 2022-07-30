@@ -40,7 +40,7 @@ class Occlusion(FeatureAblation):
         Args:
 
             forward_func (Callable): The forward function of the model or
-                        any modification of it
+                        any modification of it.
         """
         FeatureAblation.__init__(self, forward_func)
         self.use_weights = True

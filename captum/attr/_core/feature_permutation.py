@@ -76,7 +76,7 @@ class FeaturePermutation(FeatureAblation):
         Args:
 
             forward_func (Callable): The forward function of the model or
-                any modification of it
+                any modification of it.
             perm_func (Callable, optional): A function that accepts a batch of
                 inputs and a feature mask, and "permutes" the feature using
                 feature mask across the batch. This defaults to a function

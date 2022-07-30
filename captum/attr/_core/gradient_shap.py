@@ -295,7 +295,7 @@ class InputBaselineXGradient(GradientAttribution):
         Args:
 
             forward_func (Callable): The forward function of the model or
-                        any modification of it
+                        any modification of it.
             multiply_by_inputs (bool, optional): Indicates whether to factor
                         model inputs' multiplier in the final attribution scores.
                         In the literature this is also known as local vs global

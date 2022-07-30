@@ -176,7 +176,7 @@ class LayerLRP(LRP, LayerAttribution):
 
         Returns:
             *tensor* or tuple of *tensors* of **attributions** or 2-element tuple of
-            **attributions**, **delta** or lists of **attributions** and **delta**:
+            **attributions**, **delta** or list of **attributions** and **delta**:
 
               - **attributions** (*tensor* or tuple of *tensors*):
                         The propagated relevance values with respect to each

@@ -28,7 +28,7 @@ class Saliency(GradientAttribution):
         Args:
 
             forward_func (Callable): The forward function of the model or
-                        any modification of it
+                        any modification of it.
         """
         GradientAttribution.__init__(self, forward_func)
 
