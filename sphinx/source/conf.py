@@ -224,6 +224,8 @@ def autodoc_process_docstring(
         # Skip unless line is an parameter doc or a return doc
         if not (lines[i].startswith(":type") or lines[i].startswith(":rtype")):
             continue
+        if ":py:data:" in lines[i]:
+            continue
 
         # Ensure torch.Tensor is hyperlinked
         lines[i] = re.sub(r"\btorch\.Tensor\b", ":class:`torch.Tensor`", lines[i])
