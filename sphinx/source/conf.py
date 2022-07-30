@@ -226,7 +226,7 @@ def autodoc_process_docstring(
             continue
 
         # Ensure torch.Tensor is hyperlinked
-        lines[i] = re.sub(r"\btorch\.Tensor\b", ":obj:`torch.Tensor`", lines[i])
+        lines[i] = re.sub(r"\btorch\.Tensor\b", ":class:`torch.Tensor`", lines[i])
 
         # Handle Any & Callable types
         lines[i] = re.sub(r"\bAny\b", ":obj:`Any <typing.Any>`", lines[i])
@@ -235,20 +235,20 @@ def autodoc_process_docstring(
         )
 
         # Handle list & tuple types
-        lines[i] = re.sub(r"\blist\b", ":obj:`list`", lines[i])
-        lines[i] = re.sub(r"\btuple\b", ":obj:`tuple`", lines[i])
+        lines[i] = re.sub(r"\blist\b", ":class:`list`", lines[i])
+        lines[i] = re.sub(r"\btuple\b", ":class:`tuple`", lines[i])
 
         # Handle str, bool, & slice types
-        lines[i] = re.sub(r"\bstr\b", ":obj:`str`", lines[i])
-        lines[i] = re.sub(r"\bbool\b", ":obj:`bool`", lines[i])
-        lines[i] = re.sub(r"\bslice\b", ":obj:`slice`", lines[i])
+        lines[i] = re.sub(r"\bstr\b", ":class:`str`", lines[i])
+        lines[i] = re.sub(r"\bbool\b", ":class:`bool`", lines[i])
+        lines[i] = re.sub(r"\bslice\b", ":class:`slice`", lines[i])
 
         # Handle int & float types
-        lines[i] = re.sub(r"\bint\b", ":obj:`int`", lines[i])
-        lines[i] = re.sub(r"\bfloat\b", ":obj:`float`", lines[i])
+        lines[i] = re.sub(r"\bint\b", ":class:`int`", lines[i])
+        lines[i] = re.sub(r"\bfloat\b", ":class:`float`", lines[i])
 
         # Handle None type
-        lines[i] = re.sub(r"\bNone\b", ":obj:`None`", lines[i])
+        lines[i] = re.sub(r"\bNone\b", ":class:`None`", lines[i])
 
 
 def setup(app) -> None:
