@@ -258,8 +258,8 @@ def autodoc_process_docstring(
 
         # Handle str, bool, & slice types
         lines[i] = re.sub(replace_pattern(r"\bstr\b"), ":class:`str`", lines[i])
-        lines[i] = re.sub(replace_pattern(r"\bbool\b", ":class:`bool`", lines[i])
-        lines[i] = re.sub(replace_pattern(r"\bslice\b", ":class:`slice`", lines[i])
+        lines[i] = re.sub(replace_pattern(r"\bbool\b"), ":class:`bool`", lines[i])
+        lines[i] = re.sub(replace_pattern(r"\bslice\b"), ":class:`slice`", lines[i])
 
         # Handle int & float types
         lines[i] = re.sub(replace_pattern(r"\bint\b"), ":class:`int`", lines[i])
