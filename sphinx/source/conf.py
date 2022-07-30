@@ -208,6 +208,22 @@ todo_include_todos = True
 # -- Docstring Improvements --------------------------------------------------
 
 
+def replace_pattern(s: str) -> str:
+    """
+    Wrap a string in regex code so that existing Sphinx formatting is not interfered
+    with. This function ensures that the string will not be replaced if it is preceded
+    by '`' or '<', ends with '>', or is inside square brackets '[' & ']'.
+
+    Args:
+
+        s (str): A string to replace.
+    
+    Returns:
+        s (str): The input string wrapped in regex code.
+    """
+    return r"(?<![\[`<])(" + s + r")(?![\]`>])"
+
+
 def autodoc_process_docstring(
     app, what: str, name: str, obj, options, lines: List[str]
 ) -> None:
@@ -228,7 +244,7 @@ def autodoc_process_docstring(
             continue
 
         # Ensure torch.Tensor is hyperlinked
-        lines[i] = re.sub(r"\btorch\.Tensor\b", ":class:`torch.Tensor`", lines[i])
+        lines[i] = re.sub(replace_pattern(r"\btorch\.Tensor\b"), ":class:`torch.Tensor`", lines[i])
 
         # Handle Any & Callable types
         lines[i] = re.sub(r"\bAny\b", ":obj:`Any <typing.Any>`", lines[i])
@@ -237,20 +253,20 @@ def autodoc_process_docstring(
         )
 
         # Handle list & tuple types
-        lines[i] = re.sub(r"\blist\b", ":class:`list`", lines[i])
-        lines[i] = re.sub(r"\btuple\b", ":class:`tuple`", lines[i])
+        lines[i] = re.sub(replace_pattern(r"\blist\b"), ":class:`list`", lines[i])
+        lines[i] = re.sub(replace_pattern(r"\btuple\b"), ":class:`tuple`", lines[i])
 
         # Handle str, bool, & slice types
-        lines[i] = re.sub(r"\bstr\b", ":class:`str`", lines[i])
-        lines[i] = re.sub(r"\bbool\b", ":class:`bool`", lines[i])
-        lines[i] = re.sub(r"\bslice\b", ":class:`slice`", lines[i])
+        lines[i] = re.sub(replace_pattern(r"\bstr\b"), ":class:`str`", lines[i])
+        lines[i] = re.sub(replace_pattern(r"\bbool\b", ":class:`bool`", lines[i])
+        lines[i] = re.sub(replace_pattern(r"\bslice\b", ":class:`slice`", lines[i])
 
         # Handle int & float types
-        lines[i] = re.sub(r"\bint\b", ":class:`int`", lines[i])
-        lines[i] = re.sub(r"\bfloat\b", ":class:`float`", lines[i])
+        lines[i] = re.sub(replace_pattern(r"\bint\b"), ":class:`int`", lines[i])
+        lines[i] = re.sub(replace_pattern(r"\bfloat\b"), ":class:`float`", lines[i])
 
         # Handle None type
-        lines[i] = re.sub(r"\bNone\b", ":class:`None`", lines[i])
+        lines[i] = re.sub(replace_pattern(r"\bNone\b"), ":class:`None`", lines[i])
 
 
 def setup(app) -> None:
