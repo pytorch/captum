@@ -247,9 +247,9 @@ def autodoc_process_docstring(
         lines[i] = re.sub(replace_pattern(r"\btorch\.Tensor\b"), ":class:`torch.Tensor`", lines[i])
 
         # Handle Any & Callable types
-        lines[i] = re.sub(r"\bAny\b", ":obj:`Any <typing.Any>`", lines[i])
+        lines[i] = re.sub(replace_pattern(r"\bAny\b"), ":data:`~typing.Any`", lines[i])
         lines[i] = re.sub(
-            r"\bCallable\b", ":obj:`Callable <typing.Callable>`", lines[i]
+            replace_pattern(r"\bCallable\b"), ":data:`~typing.Callable`", lines[i]
         )
 
         # Handle list & tuple types
