@@ -222,7 +222,7 @@ def replace_pattern(s: str) -> str:
     Args:
 
         s (str): A string to replace.
-    
+
     Returns:
         s (str): The input string wrapped in regex code.
     """
@@ -249,7 +249,9 @@ def autodoc_process_docstring(
             continue
 
         # Ensure torch.Tensor is hyperlinked
-        lines[i] = re.sub(replace_pattern(r"\btorch\.Tensor\b"), ":class:`torch.Tensor`", lines[i])
+        lines[i] = re.sub(
+            replace_pattern(r"\btorch\.Tensor\b"), ":class:`torch.Tensor`", lines[i]
+        )
 
         # Handle Any & Callable types
         lines[i] = re.sub(replace_pattern(r"\bAny\b"), ":data:`~typing.Any`", lines[i])
