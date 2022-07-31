@@ -104,7 +104,7 @@ class Attribution:
                         tensor's dimension 0 corresponds to the number of
                         examples, and if multiple input tensors are provided,
                         the examples must be aligned appropriately.
-            *args (optional): Additonal arguments that are used by the
+            *args (Any, optional): Additonal arguments that are used by the
                         sub-classes depending on the specific implementation
                         of `compute_convergence_delta`.
 

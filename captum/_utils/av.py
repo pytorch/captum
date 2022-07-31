@@ -368,7 +368,7 @@ class AV:
                     different training batches.
             num_id (str): An required string representing the batch number for which the
                     activation vectors are computed
-            additional_forward_args (optional): Additional arguments that will be
+            additional_forward_args (Any, optional): Additional arguments that will be
                     passed to `model` after inputs.
                     Default: None
             load_from_disk (bool): Forces function to regenerate activations if False.
