@@ -17,6 +17,7 @@ from captum.influence._utils.common import (
     _get_k_most_influential_helper,
     _jacobian_loss_wrt_inputs,
     _load_flexible_state_dict,
+    _self_influence_by_batches_helper,
     _tensor_batch_dot,
 )
 from captum.influence._utils.nearest_neighbors import (
@@ -263,11 +264,9 @@ class TracInCPFast(TracInCPBase):
                     requires "training dataset computations": computations for each
                     batch in the training dataset `train_dataset`, which may
                     take a long time. If `show_progress`is true, the progress of
-                    "training dataset computations" will be displayed. In particular,
-                    the number of batches for which computations have been performed
-                    will be displayed. It will try to use tqdm if available for
-                    advanced features (e.g. time estimation). Otherwise, it will
-                    fallback to a simple output of progress.
+                    "training dataset computations" will be displayed. It will try to
+                    use tqdm if available for advanced features (e.g. time estimation).
+                    Otherwise, it will fallback to a simple output of progress.
                     Default: False
 
         Returns:
@@ -466,7 +465,7 @@ class TracInCPFast(TracInCPBase):
                 (
                     f"Using {self.get_name()} to perform computation for "
                     f'getting {"proponents" if proponents else "opponents"}. '
-                    "Processing training batches: 100%"
+                    "Processing training batches"
                 )
             )
         )
@@ -483,7 +482,7 @@ class TracInCPFast(TracInCPBase):
             )
         )
 
-    def self_influence(
+    def _self_influence_by_checkpoints(
         self,
         inputs_dataset: Union[Tuple[Any, ...], DataLoader],
         show_progress: bool = False,
@@ -497,7 +496,11 @@ class TracInCPFast(TracInCPBase):
         will call `model` on that single batch, and if `inputs_dataset` yields
         batches, this will call `model` on each batch that is yielded. Therefore,
         please ensure that for both cases, the batch(es) that `model` is called
-        with are not too large, so that there will not be an out-of-memory error.
+        with are not too large, so that there will not be an out-of-memory error. This
+        implementation performs an outer iteration over checkpoints, and an inner
+        iteration over all batches that `inputs_dataset` represents. The pros of this
+        implementation are that the checkpoints do not need to be loaded too many
+        times.
 
         Args:
             batches (Tuple, or DataLoader): Either a single tuple of any, or a
@@ -516,13 +519,10 @@ class TracInCPFast(TracInCPBase):
                     displayed. In more detail, this computation will iterate over all
                     checkpoints (provided as the `checkpoints` initialization argument)
                     in an outer loop, and iterate over all batches that
-                    `inputs_dataset` represents in an inner loop. Therefore, the
-                    total number of (checkpoint, batch) combinations that need to be
-                    iterated over is
-                    (# of checkpoints x # of batches that `inputs_dataset` represents).
-                    If `show_progress` is True, the total progress of both the outer
-                    iteration over checkpoints and the inner iteration over batches is
-                    displayed. It will try to use tqdm if available for advanced
+                    `inputs_dataset` represents in an inner loop. Thus if
+                    `show_progress` is True, the progress of both the outer
+                    iteration and the inner iterations will be displayed. To show
+                    progress, it will try to use tqdm if available for advanced
                     features (e.g. time estimation). Otherwise, it will fallback to a
                     simple output of progress.
                     Default: False
@@ -618,6 +618,75 @@ class TracInCPFast(TracInCPBase):
             batches_self_tracin_scores += get_checkpoint_contribution(checkpoint)
 
         return batches_self_tracin_scores
+
+    def self_influence(
+        self,
+        inputs_dataset: Union[Tuple[Any, ...], DataLoader],
+        show_progress: bool = False,
+        outer_loop_by_checkpoints: bool = False,
+    ) -> Tensor:
+        """
+        Computes self influence scores for the examples in `inputs_dataset`, which is
+        either a single batch or a Pytorch `DataLoader` that yields batches. Therefore,
+        the computed self influence scores are *not* for the examples in training
+        dataset `train_dataset` (unlike when computing self influence scores using the
+        `influence` method). Note that if `inputs_dataset` is a single batch, this
+        will call `model` on that single batch, and if `inputs_dataset` yields
+        batches, this will call `model` on each batch that is yielded. Therefore,
+        please ensure that for both cases, the batch(es) that `model` is called
+        with are not too large, so that there will not be an out-of-memory error.
+        Internally, this computation requires iterating both over the batches in
+        `inputs_dataset`, as well as different model checkpoints. There are two ways
+        this iteration can be done. If `outer_loop_by_checkpoints` is False, the outer
+        iteration will be over batches, and the inner iteration will be over
+        checkpoints. This has the pro that displaying the progress of the computation
+        is more intuitive, involving displaying the number of batches for which self
+        influence scores have been computed. If `outer_loop_by_checkpoints` is True,
+        the outer iteration will be over checkpoints, and the inner iteration will be
+        over batches. This has the pro that the checkpoints do not need to be loaded
+        for each batch. For large models, loading checkpoints can be time-intensive.
+
+        Args:
+            batches (Tuple, or DataLoader): Either a single tuple of any, or a
+                    `DataLoader`, where each batch yielded is a tuple of any. In
+                    either case, the tuple represents a single batch, where the last
+                    element is assumed to be the labels for the batch. That is,
+                    `model(*batch[0:-1])` produces the output for `model`,
+                    and `batch[-1]` are the labels, if any. This is the same
+                    assumption made for each batch yielded by training dataset
+                    `train_dataset`. Please see documentation for the
+                    `train_dataset` argument to `TracInCP.__init__` for
+                    more details on the assumed structure of a batch.
+            show_progress (bool, optional): Computation of self influence scores can
+                    take a long time if `inputs_dataset` represents many examples. If
+                    `show_progress`is true, the progress of this computation will be
+                    displayed. In more detail, if `outer_loop_by_checkpoints` is False,
+                    this computation will iterate over all batches in an outer loop.
+                    Thus if `show_progress` is True, the number of batches for which
+                    self influence scores have been computed will be displayed. If
+                    `outer_loop_by_checkpoints` is True, this computation will iterate
+                    over all checkpoints (provided as the `checkpoints` initialization
+                    argument) in an outer loop, and iterate over all batches that
+                    `inputs_dataset` represents in an inner loop. Thus if
+                    `show_progress` is True, the progress of both the outer
+                    iteration and the inner iterations will be displayed. To show
+                    progress, it will try to use tqdm if available for advanced
+                    features (e.g. time estimation). Otherwise, it will fallback to a
+                    simple output of progress.
+                    Default: False
+            outer_loop_by_checkpoints (bool, optional): If performing an outer
+                    iteration over checkpoints; see method description for more
+                    details.
+                    Default: False
+        """
+        if outer_loop_by_checkpoints:
+            return self._self_influence_by_checkpoints(inputs_dataset, show_progress)
+        return _self_influence_by_batches_helper(
+            self._self_influence_by_checkpoints,
+            self.get_name(),
+            inputs_dataset,
+            show_progress,
+        )
 
 
 def _basic_computation_tracincp_fast(
@@ -946,6 +1015,7 @@ class TracInCPFastRandProj(TracInCPFast):
         self,
         inputs_dataset: Union[Tuple[Any, ...], DataLoader],
         show_progress: bool = False,
+        outer_loop_by_checkpoints: bool = False,
     ) -> Tensor:
         """
         NOT IMPLEMENTED - no need to implement `TracInCPFastRandProj.self_influence`,
@@ -984,6 +1054,10 @@ class TracInCPFastRandProj(TracInCPFast):
                     that have been iterated over is displayed. It will try to use tqdm
                     if available for advanced features (e.g. time estimation).
                     Otherwise, it will fallback to a simple output of progress.
+                    Default: False
+            outer_loop_by_checkpoints (bool, optional): If performing an outer
+                    iteration over checkpoints; see method description for more
+                    details.
                     Default: False
 
         Returns:
