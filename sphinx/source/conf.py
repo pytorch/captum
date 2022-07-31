@@ -10,9 +10,7 @@
 # -- Path setup --------------------------------------------------------------
 
 import os
-import re
 import sys
-from typing import List
 
 base_path = os.path.abspath(os.path.join(__file__, "..", "..", ".."))
 # read module from src instead of installation
@@ -208,71 +206,3 @@ epub_exclude_files = ["search.html"]
 
 # If true, `todo` and `todoList` produce output, else they produce nothing.
 todo_include_todos = True
-
-
-# -- Docstring Improvements --------------------------------------------------
-
-
-def replace_pattern(s: str) -> str:
-    """
-    Wrap a string in regex code so that existing Sphinx formatting is not interfered
-    with. This function ensures that the string will not be replaced if it is preceded
-    by '`' or '<', ends with '>', or is inside square brackets '[' & ']'.
-
-    Args:
-
-        s (str): A string to replace.
-
-    Returns:
-        s (str): The input string wrapped in regex code.
-    """
-    return r"(?<![\[`<])(" + s + r")(?![\]`>])"
-
-
-def autodoc_process_docstring(
-    app, what: str, name: str, obj, options, lines: List[str]
-) -> None:
-    """
-    Modify docstrings before creating html files.
-
-    Sphinx converts the 'Args:' and 'Returns:' sections of docstrings into
-    reStructuredText (rST) syntax, which can then be found via ':type' & ':rtype'.
-
-    See here for more information:
-    https://www.sphinx-doc.org/en/master/usage/extensions/autodoc.html
-    """
-    for i in range(len(lines)):
-        # Skip unless line is an parameter doc or a return doc
-        if not (lines[i].startswith(":type") or lines[i].startswith(":rtype")):
-            continue
-        if ":py:data:" in lines[i]:
-            continue
-
-        # Ensure torch.Tensor is hyperlinked
-        lines[i] = re.sub(
-            replace_pattern(r"\btorch\.Tensor\b"), ":class:`torch.Tensor`", lines[i]
-        )
-
-        # Handle Any & Callable types
-        lines[i] = re.sub(r"\bAny\b", ":data:`~typing.Any`", lines[i])
-        lines[i] = re.sub(r"\bCallable\b", ":data:`~typing.Callable`", lines[i])
-
-        # Handle list & tuple types
-        lines[i] = re.sub(replace_pattern(r"\blist\b"), ":class:`list`", lines[i])
-        lines[i] = re.sub(replace_pattern(r"\btuple\b"), ":class:`tuple`", lines[i])
-
-        # Handle str, bool, & slice types
-        lines[i] = re.sub(replace_pattern(r"\bstr\b"), ":class:`str`", lines[i])
-        lines[i] = re.sub(replace_pattern(r"\bbool\b"), ":class:`bool`", lines[i])
-        lines[i] = re.sub(replace_pattern(r"\bslice\b"), ":class:`slice`", lines[i])
-
-        # Handle int & float types
-        lines[i] = re.sub(replace_pattern(r"\bint\b"), ":class:`int`", lines[i])
-        lines[i] = re.sub(replace_pattern(r"\bfloat\b"), ":class:`float`", lines[i])
-
-        # Handle None type
-        lines[i] = re.sub(replace_pattern(r"\bNone\b"), ":class:`None`", lines[i])
-
-
-def setup(app) -> None:
-    app.connect("autodoc-process-docstring", autodoc_process_docstring)
