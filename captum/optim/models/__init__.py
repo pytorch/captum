@@ -6,6 +6,10 @@ from ._common import (  # noqa: F401
     replace_layers,
     skip_layers,
 )
+from ._image.clip_resnet50x4_image import CLIP_ResNet50x4Image  # noqa: F401
+from ._image.clip_resnet50x4_image import clip_resnet50x4_image  # noqa: F401
+from ._image.clip_resnet50x4_text import CLIP_ResNet50x4Text  # noqa: F401
+from ._image.clip_resnet50x4_text import clip_resnet50x4_text  # noqa: F401
 from ._image.inception5h_classes import INCEPTION5H_CLASSES  # noqa: F401
 from ._image.inception_v1 import InceptionV1, googlenet  # noqa: F401
 from ._image.inception_v1_places365 import (  # noqa: F401
@@ -15,6 +19,7 @@ from ._image.inception_v1_places365 import (  # noqa: F401
 from ._image.inception_v1_places365_classes import (  # noqa: F401
     INCEPTIONV1_PLACES365_CLASSES,
 )
+
 
 __all__ = [
     "RedirectedReluLayer",
@@ -29,4 +34,8 @@ __all__ = [
     "InceptionV1Places365",
     "googlenet_places365",
     "INCEPTIONV1_PLACES365_CLASSES",
+    "CLIP_ResNet50x4Image",
+    "clip_resnet50x4_image",
+    "CLIP_ResNet50x4Text",
+    "clip_resnet50x4_text",
 ]
