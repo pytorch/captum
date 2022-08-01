@@ -972,7 +972,7 @@ class TracInCP(TracInCPBase):
         times.
 
         Args:
-            batches (Tuple, or DataLoader): Either a single tuple of any, or a
+            batches (tuple, or DataLoader): Either a single tuple of any, or a
                     `DataLoader`, where each batch yielded is a tuple of any. In
                     either case, the tuple represents a single batch, where the last
                     element is assumed to be the labels for the batch. That is,
@@ -1134,7 +1134,7 @@ class TracInCP(TracInCPBase):
         for each batch. For large models, loading checkpoints can be time-intensive.
 
         Args:
-            batches (Tuple, or DataLoader): Either a single tuple of any, or a
+            batches (tuple, or DataLoader): Either a single tuple of any, or a
                     `DataLoader`, where each batch yielded is a tuple of any. In
                     either case, the tuple represents a single batch, where the last
                     element is assumed to be the labels for the batch. That is,
