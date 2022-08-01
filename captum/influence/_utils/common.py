@@ -313,3 +313,15 @@ class _DatasetFromList(Dataset):
 
     def __len__(self) -> int:
         return len(self._l)
+
+
+def _format_inputs_dataset(inputs_dataset: Union[Tuple[Any, ...], DataLoader]):
+    # if `inputs_dataset` is not a `DataLoader`, turn it into one.
+    # `_DatasetFromList` turns a list into a `Dataset` where `__getitem__`
+    # returns an element in the list, and using it to construct a `DataLoader`
+    # with `batch_size=None` gives a `DataLoader` that yields a single batch.
+    if not isinstance(inputs_dataset, DataLoader):
+        inputs_dataset = DataLoader(
+            _DatasetFromList([inputs_dataset]), shuffle=False, batch_size=None
+        )
+    return inputs_dataset
