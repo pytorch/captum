@@ -14,6 +14,7 @@ from tests.influence._utils.common import (
     DataInfluenceConstructor,
     get_random_model_and_data,
 )
+from torch.utils.data import DataLoader
 
 
 class TestTracInShowProgress(BaseTest):
@@ -27,6 +28,18 @@ class TestTracInShowProgress(BaseTest):
     `TracInCPFastRandProj.__init__`.  TODO: add progress bar for computations done
     in `TracInCPFastRandProj.__init__`).
     """
+
+    def _check_error_msg_multiplicity(self, mock_stderr, msg, msg_multiplicity):
+        """
+        checks that in `mock_stderr`, the error msg `msg` occurs `msg_multiplicity`
+        times
+        """
+        output = mock_stderr.getvalue()
+        self.assertEqual(
+            output.count(msg),
+            msg_multiplicity,
+            f"Error in progress of batches with output: {repr(output)}",
+        )
 
     @parameterized.expand(
         [
@@ -45,7 +58,12 @@ class TestTracInShowProgress(BaseTest):
                     DataInfluenceConstructor(TracInCPFast),
                 ),
             ]
-            for mode in ["self influence", "influence", "k-most"]
+            for mode in [
+                "self influence by checkpoints",
+                "self influence by batches",
+                "influence",
+                "k-most",
+            ]
         ],
         name_func=build_test_name_func(args_to_skip=["reduction"]),
     )
@@ -83,9 +101,13 @@ class TestTracInShowProgress(BaseTest):
                     criterion,
                 )
 
-                if mode == "self influence":
+                if mode == "self influence by checkpoints":
+                    # this tests progress for computing self influence scores, when
+                    # `outer_loop_by_checkpoints` is True. In this case, we should see a
+                    # single outer progress bar over checkpoints, and for every
+                    # checkpoints, a separate progress bar over batches
 
-                    # For self influence, displaying progress involves nested progress
+                    # In this case, displaying progress involves nested progress
                     # bars, which are not currently supported by the backup
                     # `SimpleProgress` that is used if `tqdm` is not installed.
                     # Therefore, we skip the test in this case.
@@ -101,33 +123,50 @@ class TestTracInShowProgress(BaseTest):
                             )
                         )
 
-                    tracin.influence(show_progress=True)
-                    output = mock_stderr.getvalue()
+                    tracin.self_influence(
+                        DataLoader(train_dataset, batch_size=batch_size),
+                        show_progress=True,
+                        outer_loop_by_checkpoints=True,
+                    )
+
                     # We are showing nested progress bars for the `self_influence`
                     # method, with the outer progress bar over checkpoints, and
                     # the inner progress bar over batches. First, we check that
                     # the outer progress bar reaches 100% once
-                    self.assertEqual(
-                        output.count(
-                            (
-                                f"Using {tracin.get_name()} to compute self influence. "
-                                "Processing checkpoint: 100%"
-                            )
+                    self._check_error_msg_multiplicity(
+                        mock_stderr,
+                        (
+                            f"Using {tracin.get_name()} to compute self influence. "
+                            "Processing checkpoint: 100%"
                         ),
                         1,
-                        f"Error in progress of batches with output: {repr(output)}",
                     )
                     # Second, we check that the inner progress bar reaches 100%
                     # once for each checkpoint in `tracin.checkpoints`
-                    self.assertEqual(
-                        output.count(
-                            (
-                                f"Using {tracin.get_name()} to compute self influence. "
-                                "Processing batch: 100%"
-                            )
+                    self._check_error_msg_multiplicity(
+                        mock_stderr,
+                        (
+                            f"Using {tracin.get_name()} to compute self influence. "
+                            "Processing batch: 100%"
                         ),
                         len(tracin.checkpoints),
-                        f"Error in progress of checkpoints with output: {repr(output)}",
+                    )
+                elif mode == "self influence by batches":
+                    # This tests progress for computing self influence scores, when
+                    # `outer_loop_by_checkpoints` is False. In this case, we should see
+                    # a single outer progress bar over batches.
+                    tracin.self_influence(
+                        DataLoader(train_dataset, batch_size=batch_size),
+                        show_progress=True,
+                        outer_loop_by_checkpoints=False,
+                    )
+                    self._check_error_msg_multiplicity(
+                        mock_stderr,
+                        (
+                            f"Using {tracin.get_name()} to compute self influence. "
+                            "Processing batch: 100%"
+                        ),
+                        1,
                     )
                 elif mode == "influence":
 
@@ -137,16 +176,15 @@ class TestTracInShowProgress(BaseTest):
                         k=None,
                         show_progress=True,
                     )
-                    output = mock_stderr.getvalue()
-                    self.assertTrue(
+                    # Since the computation iterates once over training batches, we
+                    # check that the progress bar over batches reaches 100% once
+                    self._check_error_msg_multiplicity(
+                        mock_stderr,
                         (
-                            (
-                                f"Using {tracin.get_name()} to compute influence "
-                                "for training batches: 100%"
-                            )
-                            in output
+                            f"Using {tracin.get_name()} to compute influence "
+                            "for training batches: 100%"
                         ),
-                        f"Error progress output: {repr(output)}",
+                        1,
                     )
                 elif mode == "k-most":
 
@@ -157,16 +195,17 @@ class TestTracInShowProgress(BaseTest):
                         proponents=True,
                         show_progress=True,
                     )
-                    output = mock_stderr.getvalue()
-                    self.assertTrue(
+
+                    # Since the computation iterates once over training batches, we
+                    # check that the progress bar over batches reaches 100% once, and
+                    # that the message is specific for finding proponents.
+                    self._check_error_msg_multiplicity(
+                        mock_stderr,
                         (
-                            (
-                                f"Using {tracin.get_name()} to perform computation for "
-                                "getting proponents. Processing training batches: 100%"
-                            )
-                            in output
+                            f"Using {tracin.get_name()} to perform computation for "
+                            "getting proponents. Processing training batches: 100%"
                         ),
-                        f"Error progress output: {repr(output)}",
+                        1,
                     )
                     mock_stderr.seek(0)
                     mock_stderr.truncate(0)
@@ -178,16 +217,17 @@ class TestTracInShowProgress(BaseTest):
                         proponents=False,
                         show_progress=True,
                     )
-                    output = mock_stderr.getvalue()
-                    self.assertTrue(
+
+                    # Since the computation iterates once over training batches, we
+                    # check that the progress bar over batches reaches 100% once, and
+                    # that the message is specific for finding opponents.
+                    self._check_error_msg_multiplicity(
+                        mock_stderr,
                         (
-                            (
-                                f"Using {tracin.get_name()} to perform computation for "
-                                "getting opponents. Processing training batches: 100%"
-                            )
-                            in output
+                            f"Using {tracin.get_name()} to perform computation for "
+                            "getting opponents. Processing training batches: 100%"
                         ),
-                        f"Error progress output: {repr(output)}",
+                        1,
                     )
                 else:
                     raise Exception("unknown test mode")
