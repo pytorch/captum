@@ -516,7 +516,7 @@ class TracInCPFast(TracInCPBase):
                     more details on the assumed structure of a batch.
             show_progress (bool, optional): Computation of self influence scores can
                     take a long time if `inputs_dataset` represents many examples. If
-                    `show_progress`is true, the progress of this computation will be
+                    `show_progress` is true, the progress of this computation will be
                     displayed. In more detail, this computation will iterate over all
                     checkpoints (provided as the `checkpoints` initialization argument)
                     in an outer loop, and iterate over all batches that
@@ -532,7 +532,7 @@ class TracInCPFast(TracInCPBase):
                     Default: False
 
         Returns:
-            self_influence_scores (Tensor): This is a 1D tensor containing the self
+            self_influence_scores (tensor): This is a 1D tensor containing the self
                     influence scores of all examples in `inputs_dataset`, regardless of
                     whether it represents a single batch or a `DataLoader` that yields
                     batches.
@@ -981,7 +981,7 @@ class TracInCPFastRandProj(TracInCPFast):
                     more details on the assumed structure of a batch.
             show_progress (bool, optional): Computation of self influence scores can
                     take a long time if `inputs_dataset` represents many examples. If
-                    `show_progress`is true, the progress of this computation will be
+                    `show_progress` is true, the progress of this computation will be
                     displayed. In more detail, this computation will iterate over all
                     checkpoints (provided as the `checkpoints` initialization argument)
                     and all batches that `inputs_dataset` represents. Therefore, the
@@ -995,7 +995,7 @@ class TracInCPFastRandProj(TracInCPFast):
                     Default: False
 
         Returns:
-            self_influence_scores (Tensor): This is a 1D tensor containing the self
+            self_influence_scores (tensor): This is a 1D tensor containing the self
                     influence scores of all examples in `inputs_dataset`, regardless of
                     whether it represents a single batch or a `DataLoader` that yields
                     batches.
