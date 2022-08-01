@@ -23,33 +23,40 @@ def clip_resnet50x4_text(
     This model can be combined with the CLIP ResNet 50x4 Image model to create the full
     CLIP ResNet 50x4 model.
 
+    Example::
+
+        >>> model = opt.models.clip_resnet50x4_text(pretrained=True)
+        >>> clip_tokenizer = opt.transforms.CLIPTokenizer(pretrained_merges=True)
+        >>> tokenized_input = clip_tokenizer("Some example text.")
+        >>> output = model(tokenized_input)
+
     See here for more details:
     https://github.com/openai/CLIP
     https://github.com/mlfoundations/open_clip
 
     Args:
 
-        pretrained (bool, optional): If True, returns a pre-trained model.
-            Default: False
-        progress (bool, optional): If True, displays a progress bar of the download to
-            stderr
-            Default: True
+        pretrained (bool, optional): If ``True``, returns a pre-trained model.
+            Default: ``False``
+        progress (bool, optional): If ``True``, displays a progress bar of the download
+            to stderr.
+            Default: ``True``
         model_path (str, optional): Optional path for the model file.
-            Default: None
+            Default: ``None``
         width (int, optional): The desired width size to use for the model.
-            Default: 640
+            Default: ``640``
         num_heads (int, optional): The number of heads to use for the model.
-            Default: 10
+            Default: ``10``
         num_residual_layers (int, optional): The number of residual layers to use for
             each residual attention block in the model.
-            Default: 12
+            Default: ``12``
         content_length (int, optional): The expected size of text inputs to the model.
-            Default: 77
+            Default: ``77``
         vocab_size (int, optional): The size of the vocab used to train the model.
-            Default: 49408
+            Default: ``49408``
 
     Returns:
-        **CLIP_ResNet50x4Text** (CLIP_ResNet50x4Text): A CLIP ResNet 50x4 model's text
+        model (CLIP_ResNet50x4Text): An instance of a CLIP ResNet 50x4 model's text
             portion.
     """
     if pretrained:
@@ -85,17 +92,17 @@ class CLIP_ResNet50x4Text(nn.Module):
         Args:
 
             width (int, optional): The desired width size to use for the model.
-                Default: 640
+                Default: ``640``
             num_heads (int, optional): The num number of heads to use for the model.
-                Default: 10
+                Default: ``10``
             num_residual_layers (int, optional): The number of residual layers to use
                 for each residual attention block.
-                Default: 12
+                Default: ``12``
             content_length (int, optional): The expected size of text inputs to the
                 model.
-                Default: 77
+                Default: ``77``
             vocab_size (int, optional): The size of the vocab used to train the model.
-                Default: 49408
+                Default: ``49408``
         """
         super().__init__()
         self.transformer = nn.Sequential(
@@ -154,11 +161,11 @@ class ResidualAttentionBlock(nn.Module):
         Args:
 
             width (int, optional): The desired width size to use.
-                Default: 640
+                Default: ``640``
             num_heads (int, optional): The num number of heads to use.
-                Default: 10
-            content_length (int, optional): The desired content_length to use.
-                Default: 77
+                Default: ``10``
+            content_length (int, optional): The desired ``content_length`` to use.
+                Default: ``77``
         """
         super().__init__()
         self.attn = nn.MultiheadAttention(width, num_heads)
