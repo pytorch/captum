@@ -57,6 +57,7 @@ class TestTracInSelfInfluence(BaseTest):
                 criterion,
             )
 
+            # calculate influence scores, using the training data as the test batch
             train_scores = tracin.influence(
                 train_dataset.samples,
                 train_dataset.labels,
@@ -65,11 +66,29 @@ class TestTracInSelfInfluence(BaseTest):
             )
 
             # calculate self_tracin_scores
-            self_tracin_scores = tracin.influence()
+            self_tracin_scores = tracin.self_influence(
+                DataLoader(train_dataset, batch_size=batch_size),
+                outer_loop_by_checkpoints=False,
+            )
 
+            # check that self_tracin scores equals the diagonal of influence scores
             assertTensorAlmostEqual(
                 self,
                 torch.diagonal(train_scores),
+                self_tracin_scores,
+                delta=0.01,
+                mode="max",
+            )
+
+            # check that setting `outer_loop_by_checkpoints=False` and
+            # `outer_loop_by_checkpoints=True` gives the same self influence scores
+            self_tracin_scores_by_checkpoints = tracin.self_influence(
+                DataLoader(train_dataset, batch_size=batch_size),
+                outer_loop_by_checkpoints=True,
+            )
+            assertTensorAlmostEqual(
+                self,
+                self_tracin_scores_by_checkpoints,
                 self_tracin_scores,
                 delta=0.01,
                 mode="max",
