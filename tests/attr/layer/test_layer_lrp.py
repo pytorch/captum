@@ -50,7 +50,7 @@ class Test(BaseTest):
         lrp = LayerLRP(model, model.conv1)
         self.assertRaises(TypeError, lrp.attribute, inputs)
 
-    def test_lrp_basic_attributions(self) -> None:
+    def test_lrp_basic_attributions(self):
         model, inputs = _get_basic_config()
         logits = model(inputs)
         score, classIndex = torch.max(logits, 1)
