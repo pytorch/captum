@@ -487,7 +487,7 @@ Image Classification Models and Saliency Maps, K. Simonyan, et. al. 2014](https:
 * `Shapley Value Sampling`: [Polynomial calculation of the Shapley value based on sampling](https://www.sciencedirect.com/science/article/pii/S0305054808000804)
 * `Infidelity and Sensitivity`: [On the (In)fidelity and Sensitivity for Explanations](https://arxiv.org/abs/1901.09392)
 
-More details about the above mentioned [algorithms](https://captum.ai/docs/algorithms) and their pros and cons can be found on our [web-site](https://captum.ai/docs/algorithms_comparison_matrix).
+More details about the above mentioned [attribution algorithms](https://captum.ai/docs/attribution_algorithms) and their pros and cons can be found on our [web-site](https://captum.ai/docs/algorithms_comparison_matrix).
 
 ## License
 Captum is BSD licensed, as found in the [LICENSE](LICENSE) file.
