@@ -63,7 +63,7 @@ class Test(BaseTest):
         )
         assertTensorAlmostEqual(self, delta, torch.Tensor([0]))
 
-    def test_lrp_simple_attributions(self) -> None:
+    def test_lrp_simple_attributions(self):
         model, inputs = _get_simple_model(inplace=False)
         model.eval()
         model.linear.rule = EpsilonRule()

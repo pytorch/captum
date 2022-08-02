@@ -39,7 +39,7 @@ class Test(BaseTest):
         self.assertEqual(len(all_keys), 0)
         self.assertEqual(all_classes.sum(), len(classes))
 
-    def test_classes(self) -> None:
+    def test_classes(self):
         sizes_to_test = [
             # ((1,),),
             ((3, 2, 10, 3), (1,)),

@@ -113,7 +113,7 @@ class Test(BaseTest):
             mode="max",
         )
 
-    def test_stats_random_data(self) -> None:
+    def test_stats_random_data(self):
         N = 1000
         BIG_VAL = 100000
         _values = list(get_values(lo=-BIG_VAL, hi=BIG_VAL, n=N))
