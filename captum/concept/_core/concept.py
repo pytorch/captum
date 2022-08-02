@@ -35,6 +35,7 @@ class Concept:
                         https://pytorch.org/docs/stable/data.html
 
         Example::
+
             >>> # Creates a Concept object named "striped", with a data_iter
             >>> # object to iterate over all files in "./concepts/striped"
             >>> concept_name = "striped"

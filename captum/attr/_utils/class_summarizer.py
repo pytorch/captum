@@ -36,7 +36,7 @@ class ClassSummarizer(Summarizer):
         This accepts either a single tensor to summarise or a tuple of tensors.
 
         Args:
-            x (Tensor or Tuple[Tensor, ...]):
+            x (tensor or tuple of tensor):
                 The input tensor to be summarised. The first
                 dimension of this input must be associated to
                 the batch size of the inputs.
