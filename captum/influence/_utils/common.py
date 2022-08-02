@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import warnings
 from typing import Any, Callable, List, Optional, Tuple, Union
 
 import torch
@@ -315,3 +316,108 @@ class _DatasetFromList(Dataset):
 
     def __len__(self) -> int:
         return len(self._l)
+
+
+def _format_inputs_dataset(inputs_dataset: Union[Tuple[Any, ...], DataLoader]):
+    # if `inputs_dataset` is not a `DataLoader`, turn it into one.
+    # `_DatasetFromList` turns a list into a `Dataset` where `__getitem__`
+    # returns an element in the list, and using it to construct a `DataLoader`
+    # with `batch_size=None` gives a `DataLoader` that yields a single batch.
+    if not isinstance(inputs_dataset, DataLoader):
+        inputs_dataset = DataLoader(
+            _DatasetFromList([inputs_dataset]), shuffle=False, batch_size=None
+        )
+    return inputs_dataset
+
+
+def _self_influence_by_batches_helper(
+    self_influence_batch_fn: Callable,
+    instance_name: str,
+    inputs_dataset: Union[Tuple[Any, ...], DataLoader],
+    show_progress: bool = False,
+) -> Tensor:
+    """
+    Computes self influence scores for the examples in `inputs_dataset`, which is
+    either a single batch or a Pytorch `DataLoader` that yields batches. The self
+    influence scores for a single batch are computed using the
+    `self_influence_batch_fn` input. Note that if `inputs_dataset` is a single batch,
+    this will call `model` on that single batch, where `model` is the model used to
+    compute self influence scores by `self_influence_batch_fn`, and if `inputs_dataset`
+    yields batches, this will call `model` on each batch that is yielded. Therefore,
+    please ensure that for both cases, the batch(es) that `model` is called
+    with are not too large, so that there will not be an out-of-memory error. This
+    implementation performs an outer iteration over all batches that
+    `inputs_dataset` represents, and an inner iteration over checkpoints. The pros
+    of this implementation are that showing the progress of the computation is
+    straightforward.
+
+    Args:
+        self_influence_batch_fn (Callable): This is the function that computes self
+                influence scores for a single batch.
+        instance_name (str): This is the name of the implementation class that
+                `self_influence_batch_fn` is a method of. This is used for displaying
+                warning messages.
+        batches (Tuple, or DataLoader): Either a single tuple of any, or a
+                `DataLoader`, where each batch yielded is a tuple of any. In
+                either case, the tuple represents a single batch, where the last
+                element is assumed to be the labels for the batch. That is,
+                `model(*batch[0:-1])` produces the output for `model`,
+                and `batch[-1]` are the labels, if any. This is the same
+                assumption made for each batch yielded by training dataset
+                `train_dataset`. Please see documentation for the
+                `train_dataset` argument to `TracInCP.__init__` for
+                more details on the assumed structure of a batch.
+        show_progress (bool, optional): Computation of self influence scores can
+                take a long time if `inputs_dataset` represents many examples. If
+                `show_progress`is true, the progress of this computation will be
+                displayed. In particular, the number of batches for which self
+                influence scores have been computed will be displayed. It will try
+                to use tqdm if available for advanced features (e.g. time
+                estimation). Otherwise, it will fallback to a simple output of
+                progress.
+                Default: False
+
+    Returns:
+        self_influence_scores (Tensor): This is a 1D tensor containing the self
+                influence scores of all examples in `inputs_dataset`, regardless of
+                whether it represents a single batch or a `DataLoader` that yields
+                batches.
+    """
+    # If `inputs_dataset` is not a `DataLoader`, turn it into one.
+    inputs_dataset = _format_inputs_dataset(inputs_dataset)
+
+    # If `show_progress` is true, create a progress bar that keeps track of how
+    # many batches have been processed
+    if show_progress:
+        # First, try to determine length of progress bar if possible, with a
+        # default of `None`
+        inputs_dataset_len = None
+        try:
+            inputs_dataset_len = len(inputs_dataset)
+        except TypeError:
+            warnings.warn(
+                "Unable to determine the number of batches in `inputs_dataset`. "
+                "Therefore, if showing the progress of the computation of self "
+                "influence scores, only the number of batches processed can be "
+                "displayed, and not the percentage completion of the computation, "
+                "nor any time estimates."
+            )
+        # then create the progress bar
+        inputs_dataset = progress(
+            inputs_dataset,
+            desc=f"Using {instance_name} to compute self influence. Processing batch",
+            total=inputs_dataset_len,
+        )
+
+    # To compute self influence scores for each batch, we use
+    # `_self_influence_by_checkpoints`, which can accept a tuple representing a
+    # single batch as the `inputs_dataset` argument (as well as a DataLoader).
+    # Because we are already displaying progress in terms of number of batches
+    # processed in this method, we will not show progress for the call to
+    # `_self_influence_by_checkpoints`.
+    return torch.cat(
+        [
+            self_influence_batch_fn(batch, show_progress=False)
+            for batch in inputs_dataset
+        ]
+    )
