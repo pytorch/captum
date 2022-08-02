@@ -11,13 +11,13 @@ class Test(unittest.TestCase):
     def __init__(self, methodName="runTest") -> None:
         super().__init__(methodName)
 
-    def test_riemann_0(self):
+    def test_riemann_0(self) -> None:
         with self.assertRaises(AssertionError):
             step_sizes, alphas = riemann_builders()
             step_sizes(0)
             alphas(0)
 
-    def test_riemann_2(self):
+    def test_riemann_2(self) -> None:
         expected_step_sizes_lrm = [0.5, 0.5]
         expected_step_sizes_trapezoid = [0.25, 0.25]
         expected_left = [0.0, 0.5]
@@ -34,7 +34,7 @@ class Test(unittest.TestCase):
             expected_trapezoid,
         )
 
-    def test_riemann_3(self):
+    def test_riemann_3(self) -> None:
         expected_step_sizes = [1 / 3] * 3
         expected_step_sizes_trapezoid = [1 / 6, 1 / 3, 1 / 6]
         expected_left = [0.0, 1 / 3, 2 / 3]
@@ -51,7 +51,7 @@ class Test(unittest.TestCase):
             expected_trapezoid,
         )
 
-    def test_riemann_4(self):
+    def test_riemann_4(self) -> None:
         expected_step_sizes = [1 / 4] * 4
         expected_step_sizes_trapezoid = [1 / 8, 1 / 4, 1 / 4, 1 / 8]
         expected_left = [0.0, 0.25, 0.5, 0.75]
