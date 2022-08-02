@@ -40,7 +40,7 @@ class Test(BaseTest):
         reduced = _reduce_list(tensors)
         assertTensorAlmostEqual(self, reduced, [[3, 4, 5], [0, 1, 2]])
 
-    def test_reduce_list_tuples(self) -> None:
+    def test_reduce_list_tuples(self):
         tensors = [
             (torch.tensor([[3, 4, 5]]), torch.tensor([[0, 1, 2]])),
             (torch.tensor([[3, 4, 5]]), torch.tensor([[0, 1, 2]])),
