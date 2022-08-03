@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import unittest
+from typing import List
 
 import torch
 from captum.attr._utils.approximation_methods import Riemann, riemann_builders
@@ -8,7 +9,7 @@ from tests.helpers.basic import assertTensorAlmostEqual
 
 
 class Test(unittest.TestCase):
-    def __init__(self, methodName="runTest") -> None:
+    def __init__(self, methodName: str = "runTest") -> None:
         super().__init__(methodName)
 
     def test_riemann_0(self) -> None:
@@ -70,14 +71,14 @@ class Test(unittest.TestCase):
 
     def _assert_steps_and_alphas(
         self,
-        n,
-        expected_step_sizes,
-        expected_step_sizes_trapezoid,
-        expected_left,
-        expected_right,
-        expected_middle,
-        expected_trapezoid,
-    ):
+        n: int,
+        expected_step_sizes: List[float],
+        expected_step_sizes_trapezoid: List[float],
+        expected_left: List[float],
+        expected_right: List[float],
+        expected_middle: List[float],
+        expected_trapezoid: List[float],
+    ) -> None:
         step_sizes_left, alphas_left = riemann_builders(Riemann.left)
         step_sizes_right, alphas_right = riemann_builders(Riemann.right)
         step_sizes_middle, alphas_middle = riemann_builders(Riemann.middle)
