@@ -80,7 +80,7 @@ class AV:
             av = torch.load(fl)
             return av
 
-        def __len__(self):
+        def __len__(self) -> int:
             return len(self.files)
 
     AV_DIR_NAME: str = "av"
@@ -301,11 +301,13 @@ class AV:
                     are being computed and stored.
             layers (str or list of str): The layer(s) for which the activation vectors
                     are computed.
+            load_from_disk (bool, optional): Whether or not to load from disk.
+                Default: True
             identifier (str or None): An optional identifier for the layer
                     activations. Can be used to distinguish between activations for
                     different training batches.
-            num_id (str): An optional string representing the batch number for which the
-                    activation vectors are computed
+            num_id (str, optional): An optional string representing the batch number
+                for which the activation vectors are computed.
 
         Returns:
             List of layer names for which activations should be generated

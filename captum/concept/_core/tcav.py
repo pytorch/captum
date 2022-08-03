@@ -71,7 +71,7 @@ class LabelledDataset(Dataset):
             else:
                 right = mid
 
-    def __getitem__(self, i):
+    def __getitem__(self, i: int):
         """
         Returns a batch of activation vectors, as well as a batch of labels
         indicating which concept the batch of activation vectors is associated
@@ -94,7 +94,7 @@ class LabelledDataset(Dataset):
         labels = torch.tensor([self.labels[k]] * inputs.size(0), device=inputs.device)
         return inputs, labels
 
-    def __len__(self):
+    def __len__(self) -> int:
         """
         returns the total number of batches in the labelled_dataset
         """

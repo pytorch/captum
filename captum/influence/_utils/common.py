@@ -154,9 +154,11 @@ def _load_flexible_state_dict(
     state_dict and other information.
 
     Args:
-        model: The model for which to load a checkpoint
-        path: The filepath to the checkpoint
-        keyname: The key under which the model state_dict is stored, if any.
+        model: The model for which to load a checkpoint.
+        path (str): The filepath to the checkpoint.
+        device_ids (str, optional): The device to use. Default: "cpu"
+        keyname (str, optional): The key under which the model state_dict is stored,
+            if any.
 
     The module state_dict is modified in-place, and the learning rate is returned.
     """
