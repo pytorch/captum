@@ -318,11 +318,12 @@ class PerturbationAttribution(Attribution):
 
 
 class InternalAttribution(Attribution, Generic[ModuleOrModuleList]):
-    layer: ModuleOrModuleList
     r"""
     Shared base class for LayerAttrubution and NeuronAttribution,
     attribution types that require a model and a particular layer.
     """
+
+    layer: ModuleOrModuleList
 
     def __init__(
         self,
