@@ -93,6 +93,9 @@ class ToRGB(nn.Module):
         >>> x = torch.randn(1, 3, 224, 224)
         >>> decorrelated_colors = to_rgb(x, inverse=True)
         >>> recorrelated_colors = to_rgb(decorrelated_colors)
+
+    .. note:: The ``ToRGB`` transform is included by default inside
+              :class:`.NaturalImage`.
     """
 
     @staticmethod
