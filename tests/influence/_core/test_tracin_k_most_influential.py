@@ -17,6 +17,8 @@ from tests.influence._utils.common import (
     get_random_model_and_data,
     is_gpu_ready,
 )
+
+
 class TestTracInGetKMostInfluential(BaseTest):
     """
     This test constructs a random BasicLinearNet, and checks that the proponents

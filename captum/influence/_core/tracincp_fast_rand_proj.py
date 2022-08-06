@@ -744,7 +744,7 @@ def _basic_computation_tracincp_fast(
     )
     handle.remove()
 
-    device_ids = (
+    device_ids: Union[None, List[int]] = (
         influence_instance.model.device_ids
         if hasattr(influence_instance.model, "device_ids")
         else None
