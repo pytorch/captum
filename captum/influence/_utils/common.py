@@ -141,7 +141,7 @@ def _jacobian_loss_wrt_inputs(
     return input_jacobians
 
 
-def _load_flexible_state_dict(model: Module, path: str) -> int:
+def _load_flexible_state_dict(model: Module, path: str) -> float:
     r"""
     Helper to load pytorch models. This function attempts to find compatibility for
     loading models that were trained on different devices / with DataParallel but are
@@ -160,7 +160,7 @@ def _load_flexible_state_dict(model: Module, path: str) -> int:
 
     checkpoint = torch.load(path)
 
-    learning_rate = checkpoint.get("learning_rate", 1)
+    learning_rate = checkpoint.get("learning_rate", 1.0)
     # can get learning rate from optimizer state_dict?
 
     if "module." in next(iter(checkpoint)):

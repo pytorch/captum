@@ -18,17 +18,21 @@ from torch.nn import Module
 from torch.utils.data import DataLoader, Dataset
 
 
-def isSorted(x, key=lambda x: x, descending=True):
+def _isSorted(x, key=lambda x: x, descending=True):
     if descending:
         return all([key(x[i]) >= key(x[i + 1]) for i in range(len(x) - 1)])
     else:
         return all([key(x[i]) <= key(x[i + 1]) for i in range(len(x) - 1)])
 
 
-def wrap_model_in_dataparallel(net):
+def _wrap_model_in_dataparallel(net):
     alt_device_ids = [0] + [x for x in range(torch.cuda.device_count() - 1, 0, -1)]
     net = net.cuda()
     return torch.nn.DataParallel(net, device_ids=alt_device_ids)
+
+
+def _move_sample_to_cuda(samples):
+    return [s.cuda() for s in samples]
 
 
 class ExplicitDataset(Dataset):
@@ -36,7 +40,7 @@ class ExplicitDataset(Dataset):
         self.samples, self.labels = samples, labels
         if use_gpu:
             self.samples = (
-                [s.cuda() for s in self.samples]
+                _move_sample_to_cuda(self.samples)
                 if isinstance(self.samples, list)
                 else self.samples.cuda()
             )
@@ -54,7 +58,7 @@ class UnpackDataset(Dataset):
         self.samples, self.labels = samples, labels
         if use_gpu:
             self.samples = (
-                [s.cuda() for s in self.samples]
+                _move_sample_to_cuda(self.samples)
                 if isinstance(self.samples, list)
                 else self.samples.cuda()
             )
@@ -198,7 +202,7 @@ def get_random_model_and_data(
                 3, 4, (in_features, in_features * num_inputs)
             )
         checkpoint_name = "-".join(["checkpoint-reg", str(i + 1) + ".pt"])
-        net_adjusted = wrap_model_in_dataparallel(net) if use_gpu else net
+        net_adjusted = _wrap_model_in_dataparallel(net) if use_gpu else net
         torch.save(net_adjusted.state_dict(), os.path.join(tmpdir, checkpoint_name))
 
     num_samples = 50
@@ -226,9 +230,9 @@ def get_random_model_and_data(
 
     if return_test_data:
         return (
-            wrap_model_in_dataparallel(net) if use_gpu else net,
+            _wrap_model_in_dataparallel(net) if use_gpu else net,
             dataset,
-            [s.cuda() for s in test_samples]
+            _move_sample_to_cuda(test_samples)
             if isinstance(test_samples, list) and use_gpu
             else test_samples.cuda()
             if use_gpu
@@ -236,7 +240,7 @@ def get_random_model_and_data(
             test_labels.cuda() if use_gpu else test_labels,
         )
     else:
-        return wrap_model_in_dataparallel(net) if use_gpu else net, dataset
+        return _wrap_model_in_dataparallel(net) if use_gpu else net, dataset
 
 
 class DataInfluenceConstructor:
@@ -342,7 +346,7 @@ def build_test_name_func(args_to_skip: Optional[List[str]] = None):
     return partial(generate_test_name, args_to_skip=args_to_skip)
 
 
-def is_gpu_test_ready(
+def is_gpu_ready(
     use_gpu: bool,
     is_sample_wise_grads_mode: bool = False,
     tracin_constructor: DataInfluenceConstructor = None,

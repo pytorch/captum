@@ -1,5 +1,6 @@
 import os
 import tempfile
+import unittest
 from collections import OrderedDict
 from typing import Callable, cast, Optional
 
@@ -10,18 +11,18 @@ from captum.influence._core.tracincp import TracInCP
 from parameterized import parameterized
 from tests.helpers.basic import assertTensorAlmostEqual, BaseTest
 from tests.influence._utils.common import (
+    _wrap_model_in_dataparallel,
     BasicLinearNet,
     BinaryDataset,
     build_test_name_func,
     DataInfluenceConstructor,
-    is_gpu_test_ready,
-    wrap_model_in_dataparallel,
+    is_gpu_ready,
 )
 
 
 class TestTracInXOR(BaseTest):
     # TODO: Move test setup to use setUp and tearDown method overrides.
-    def _test_tracin_xor_setup(self, tmpdir: str, use_gpu: bool = False):
+    def _test_tracin_xor_setup(self, tmpdir: str, is_gpu_ready_: bool = False):
         net = BasicLinearNet(2, 2, 1)
 
         state = OrderedDict(
@@ -36,9 +37,7 @@ class TestTracInXOR(BaseTest):
             ]
         )
         net.load_state_dict(state)
-        net_adjusted = (
-            wrap_model_in_dataparallel(net) if is_gpu_test_ready(use_gpu) else net
-        )
+        net_adjusted = _wrap_model_in_dataparallel(net) if is_gpu_ready_ else net
 
         checkpoint_name = "-".join(["checkpoint", "class", "0" + ".pt"])
         torch.save(net_adjusted.state_dict(), os.path.join(tmpdir, checkpoint_name))
@@ -55,9 +54,7 @@ class TestTracInXOR(BaseTest):
             ]
         )
         net.load_state_dict(state)
-        net_adjusted = (
-            wrap_model_in_dataparallel(net) if is_gpu_test_ready(use_gpu) else net
-        )
+        net_adjusted = _wrap_model_in_dataparallel(net) if is_gpu_ready_ else net
 
         checkpoint_name = "-".join(["checkpoint", "class", "1" + ".pt"])
         torch.save(net_adjusted.state_dict(), os.path.join(tmpdir, checkpoint_name))
@@ -74,9 +71,7 @@ class TestTracInXOR(BaseTest):
             ]
         )
         net.load_state_dict(state)
-        net_adjusted = (
-            wrap_model_in_dataparallel(net) if is_gpu_test_ready(use_gpu) else net
-        )
+        net_adjusted = _wrap_model_in_dataparallel(net) if is_gpu_ready_ else net
 
         checkpoint_name = "-".join(["checkpoint", "class", "2" + ".pt"])
         torch.save(net_adjusted.state_dict(), os.path.join(tmpdir, checkpoint_name))
@@ -93,9 +88,7 @@ class TestTracInXOR(BaseTest):
             ]
         )
         net.load_state_dict(state)
-        net_adjusted = (
-            wrap_model_in_dataparallel(net) if is_gpu_test_ready(use_gpu) else net
-        )
+        net_adjusted = _wrap_model_in_dataparallel(net) if is_gpu_ready_ else net
 
         checkpoint_name = "-".join(["checkpoint", "class", "3" + ".pt"])
         torch.save(net_adjusted.state_dict(), os.path.join(tmpdir, checkpoint_name))
@@ -112,9 +105,7 @@ class TestTracInXOR(BaseTest):
             ]
         )
         net.load_state_dict(state)
-        net_adjusted = (
-            wrap_model_in_dataparallel(net) if is_gpu_test_ready(use_gpu) else net
-        )
+        net_adjusted = _wrap_model_in_dataparallel(net) if is_gpu_ready_ else net
 
         checkpoint_name = "-".join(["checkpoint", "class", "4" + ".pt"])
         torch.save(net_adjusted.state_dict(), os.path.join(tmpdir, checkpoint_name))
@@ -131,9 +122,7 @@ class TestTracInXOR(BaseTest):
             ]
         )
         net.load_state_dict(state)
-        net_adjusted = (
-            wrap_model_in_dataparallel(net) if is_gpu_test_ready(use_gpu) else net
-        )
+        net_adjusted = _wrap_model_in_dataparallel(net) if is_gpu_ready_ else net
 
         checkpoint_name = "-".join(["checkpoint", "class", "5" + ".pt"])
         torch.save(net_adjusted.state_dict(), os.path.join(tmpdir, checkpoint_name))
@@ -150,9 +139,7 @@ class TestTracInXOR(BaseTest):
             ]
         )
         net.load_state_dict(state)
-        net_adjusted = (
-            wrap_model_in_dataparallel(net) if is_gpu_test_ready(use_gpu) else net
-        )
+        net_adjusted = _wrap_model_in_dataparallel(net) if is_gpu_ready_ else net
 
         checkpoint_name = "-".join(["checkpoint", "class", "6" + ".pt"])
         torch.save(net_adjusted.state_dict(), os.path.join(tmpdir, checkpoint_name))
@@ -169,14 +156,12 @@ class TestTracInXOR(BaseTest):
             ]
         )
         net.load_state_dict(state)
-        net_adjusted = (
-            wrap_model_in_dataparallel(net) if is_gpu_test_ready(use_gpu) else net
-        )
+        net_adjusted = _wrap_model_in_dataparallel(net) if is_gpu_ready_ else net
 
         checkpoint_name = "-".join(["checkpoint", "class", "7" + ".pt"])
         torch.save(net_adjusted.state_dict(), os.path.join(tmpdir, checkpoint_name))
 
-        dataset = BinaryDataset(is_gpu_test_ready(use_gpu))
+        dataset = BinaryDataset(is_gpu_ready_)
 
         return net_adjusted, dataset
 
@@ -210,14 +195,19 @@ class TestTracInXOR(BaseTest):
         mode: str,
         use_gpu: bool,
     ) -> None:
+        is_gpu_ready_ = is_gpu_ready(use_gpu)
+        if not is_gpu_ready_ and use_gpu:
+            raise unittest.SkipTest(
+                "GPU test is skipped because GPU device is unavailable or \
+                `sample_wise_trick` option is used."
+            )
+
         with tempfile.TemporaryDirectory() as tmpdir:
             # net = BasicLinearNet(2, 2, 1)
             # net = wrap_model_in_dataparallel(net) if use_gpu else net
             batch_size = 4
 
-            net, dataset = self._test_tracin_xor_setup(
-                tmpdir, is_gpu_test_ready(use_gpu)
-            )
+            net, dataset = self._test_tracin_xor_setup(tmpdir, is_gpu_ready_)
 
             testset = F.normalize(torch.empty(100, 2).normal_(mean=0, std=0.5), dim=1)
             mask = ~torch.logical_xor(testset[:, 0] > 0, testset[:, 1] > 0)
@@ -226,7 +216,7 @@ class TestTracInXOR(BaseTest):
                 .unsqueeze(1)
                 .float()
             )
-            if is_gpu_test_ready(use_gpu):
+            if is_gpu_ready_:
                 testset = testset.cuda()
                 testlabels = testlabels.cuda()
 

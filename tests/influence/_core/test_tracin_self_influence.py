@@ -1,4 +1,5 @@
 import tempfile
+import unittest
 from typing import Callable, cast
 
 import torch
@@ -11,7 +12,7 @@ from tests.influence._utils.common import (
     build_test_name_func,
     DataInfluenceConstructor,
     get_random_model_and_data,
-    is_gpu_test_ready,
+    is_gpu_ready,
 )
 from torch.utils.data import DataLoader
 
@@ -45,17 +46,21 @@ class TestTracInSelfInfluence(BaseTest):
         unpack_inputs: bool,
         use_gpu: bool,
     ) -> None:
+        is_gpu_ready_ = is_gpu_ready(
+            use_gpu,
+            tracin_constructor=cast(DataInfluenceConstructor, tracin_constructor),
+        )
+        if not is_gpu_ready_ and use_gpu:
+            raise unittest.SkipTest(
+                "GPU test is skipped because GPU device is unavailable."
+            )
+
         with tempfile.TemporaryDirectory() as tmpdir:
             (net, train_dataset,) = get_random_model_and_data(
                 tmpdir,
                 unpack_inputs,
                 False,
-                is_gpu_test_ready(
-                    use_gpu,
-                    tracin_constructor=cast(
-                        DataInfluenceConstructor, tracin_constructor
-                    ),
-                ),
+                is_gpu_ready_,
             )
 
             # compute tracin_scores of training data on training data

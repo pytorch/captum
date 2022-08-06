@@ -1,4 +1,5 @@
 import tempfile
+import unittest
 from typing import Callable, cast
 
 import torch
@@ -14,10 +15,8 @@ from tests.influence._utils.common import (
     build_test_name_func,
     DataInfluenceConstructor,
     get_random_model_and_data,
-    is_gpu_test_ready,
+    is_gpu_ready,
 )
-
-
 class TestTracInGetKMostInfluential(BaseTest):
     """
     This test constructs a random BasicLinearNet, and checks that the proponents
@@ -66,8 +65,17 @@ class TestTracInGetKMostInfluential(BaseTest):
         use_gpu: bool,
     ) -> None:
 
-        with tempfile.TemporaryDirectory() as tmpdir:
+        is_gpu_ready_ = is_gpu_ready(
+            use_gpu,
+            tracin_constructor=cast(DataInfluenceConstructor, tracin_constructor),
+        )
+        if not is_gpu_ready_ and use_gpu:
+            raise unittest.SkipTest(
+                "GPU test is skipped because GPU device is unavailable or \
+                 `sample_wise_trick` option is used."
+            )
 
+        with tempfile.TemporaryDirectory() as tmpdir:
             (
                 net,
                 train_dataset,
@@ -77,12 +85,7 @@ class TestTracInGetKMostInfluential(BaseTest):
                 tmpdir,
                 unpack_inputs,
                 True,
-                is_gpu_test_ready(
-                    use_gpu,
-                    tracin_constructor=cast(
-                        DataInfluenceConstructor, tracin_constructor
-                    ),
-                ),
+                is_gpu_ready_,
             )
 
             self.assertTrue(isinstance(reduction, str))

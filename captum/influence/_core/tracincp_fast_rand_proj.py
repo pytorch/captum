@@ -7,7 +7,7 @@ from typing import Any, Callable, Dict, Iterator, List, Optional, Tuple, Union
 
 import torch
 from captum._utils.common import _format_inputs, _get_module_from_name, _sort_key_list
-from captum._utils.gradient import _extract_device_ids, _gather_distributed_tensors
+from captum._utils.gradient import _gather_distributed_tensors
 from captum._utils.progress import progress
 
 from captum.influence._core.tracincp import (
@@ -708,7 +708,7 @@ def _basic_computation_tracincp_fast(
         targets (tensor): If computing influence scores on a loss function,
                 these are the labels corresponding to the batch `inputs`.
     """
-    layer_inputs: Dict[Module, Dict[device, Tuple[Tensor, ...]]] = defaultdict(dict)
+    layer_inputs: Dict[device, Tuple[Tensor, ...]] = defaultdict()
     lock = threading.Lock()
 
     def hook_wrapper(original_module):
@@ -720,9 +720,7 @@ def _basic_computation_tracincp_fast(
                     layer_inputs_val = tuple(inp.detach() for inp in input)
                 else:
                     layer_inputs_val = input.detach()
-                layer_inputs[original_module][
-                    layer_inputs_val[0].device
-                ] = layer_inputs_val
+                layer_inputs[layer_inputs_val[0].device] = layer_inputs_val
 
         return _capture_inputs
 
@@ -746,15 +744,14 @@ def _basic_computation_tracincp_fast(
     )
     handle.remove()
 
-    device_ids = _extract_device_ids(influence_instance.model, layer_inputs, None)
-
-    key_list = _sort_key_list(
-        list(next(iter(layer_inputs.values())).keys()), device_ids
+    device_ids = (
+        influence_instance.model.device_ids
+        if hasattr(influence_instance.model, "device_ids")
+        else None
     )
+    key_list = _sort_key_list(list(layer_inputs.keys()), device_ids)
 
-    _layer_inputs = _gather_distributed_tensors(
-        layer_inputs[influence_instance.final_fc_layer], key_list=key_list
-    )[0]
+    _layer_inputs = _gather_distributed_tensors(layer_inputs, key_list=key_list)[0]
 
     assert len(input_jacobians.shape) == 2
 

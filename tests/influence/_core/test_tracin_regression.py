@@ -1,5 +1,6 @@
 import os
 import tempfile
+import unittest
 from typing import Callable, cast, Optional
 
 import torch
@@ -12,24 +13,24 @@ from captum.influence._core.tracincp_fast_rand_proj import (
 from parameterized import parameterized
 from tests.helpers.basic import assertTensorAlmostEqual, BaseTest
 from tests.influence._utils.common import (
+    _isSorted,
+    _wrap_model_in_dataparallel,
     build_test_name_func,
     CoefficientNet,
     DataInfluenceConstructor,
     IdentityDataset,
-    is_gpu_test_ready,
-    isSorted,
+    is_gpu_ready,
     RangeDataset,
-    wrap_model_in_dataparallel,
 )
 
 
 class TestTracInRegression(BaseTest):
     def _test_tracin_regression_setup(
-        self, tmpdir: str, features: int, use_gpu: bool = False
+        self, tmpdir: str, features: int, is_gpu_ready_: bool = False
     ):
         low = 1
         high = 17
-        dataset = RangeDataset(low, high, features, is_gpu_test_ready(use_gpu))
+        dataset = RangeDataset(low, high, features, is_gpu_ready_)
         net = CoefficientNet(in_features=features)
 
         checkpoint_name = "-".join(["checkpoint-reg", "0" + ".pt"])
@@ -39,9 +40,7 @@ class TestTracInRegression(BaseTest):
 
         for i, weight in enumerate(weights):
             net.fc1.weight.data.fill_(weight)
-            net_adjusted = (
-                wrap_model_in_dataparallel(net) if is_gpu_test_ready(use_gpu) else net
-            )
+            net_adjusted = _wrap_model_in_dataparallel(net) if is_gpu_ready_ else net
             checkpoint_name = "-".join(["checkpoint-reg", str(i + 1) + ".pt"])
             torch.save(net_adjusted.state_dict(), os.path.join(tmpdir, checkpoint_name))
 
@@ -80,6 +79,15 @@ class TestTracInRegression(BaseTest):
         features: int,
         use_gpu: bool,
     ) -> None:
+
+        is_gpu_ready_ = is_gpu_ready(use_gpu, mode == "sample_wise_trick")
+
+        if not is_gpu_ready_ and use_gpu:
+            raise unittest.SkipTest(
+                "GPU test is skipped because GPU device is \
+                unavailable or `sample_wise_trick` option is used"
+            )
+
         with tempfile.TemporaryDirectory() as tmpdir:
 
             batch_size = 4
@@ -87,7 +95,7 @@ class TestTracInRegression(BaseTest):
             dataset, net = self._test_tracin_regression_setup(
                 tmpdir,
                 features,
-                is_gpu_test_ready(use_gpu, mode == "sample_wise_trick"),
+                is_gpu_ready_,
             )  # and not mode == 'sample_wise_trick'
 
             # check influence scores of training data
@@ -99,7 +107,7 @@ class TestTracInRegression(BaseTest):
                 torch.arange(17, 33, dtype=torch.float).unsqueeze(1).repeat(1, features)
             )
 
-            if is_gpu_test_ready(use_gpu, mode == "sample_wise_trick"):
+            if is_gpu_ready_:
                 test_inputs = test_inputs.cuda()
 
             test_labels = test_inputs
@@ -136,7 +144,7 @@ class TestTracInRegression(BaseTest):
                 # check that top influence is one with maximal value
                 # (and hence gradient)
                 for i in range(len(idx)):
-                    self.assertTrue(isSorted(idx[i]))
+                    self.assertTrue(_isSorted(idx[i]))
 
             if mode == "sample_wise_trick":
 
