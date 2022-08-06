@@ -3,7 +3,7 @@
 import threading
 import warnings
 from collections import defaultdict
-from typing import Any, Callable, Dict, Iterator, List, Optional, Tuple, Union
+from typing import Any, Callable, cast, Dict, Iterator, List, Optional, Tuple, Union
 
 import torch
 from captum._utils.common import _format_inputs, _get_module_from_name, _sort_key_list
@@ -744,7 +744,7 @@ def _basic_computation_tracincp_fast(
     )
     handle.remove()
 
-    device_ids: Union[None, List[int]] = (
+    device_ids = cast(Union[None, List[int]],
         influence_instance.model.device_ids
         if hasattr(influence_instance.model, "device_ids")
         else None
