@@ -198,8 +198,7 @@ class TestTracInXOR(BaseTest):
         is_gpu_ready_ = is_gpu_ready(use_gpu)
         if not is_gpu_ready_ and use_gpu:
             raise unittest.SkipTest(
-                "GPU test is skipped because GPU device is unavailable or \
-                `sample_wise_trick` option is used."
+                "GPU test is skipped because GPU device is unavailable."
             )
 
         with tempfile.TemporaryDirectory() as tmpdir:

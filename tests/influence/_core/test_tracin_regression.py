@@ -84,8 +84,8 @@ class TestTracInRegression(BaseTest):
 
         if not is_gpu_ready_ and use_gpu:
             raise unittest.SkipTest(
-                "GPU test is skipped because GPU device is \
-                unavailable or `sample_wise_trick` option is used"
+                "GPU test is skipped because GPU device is "
+                "unavailable or `sample_wise_trick` option is used"
             )
 
         with tempfile.TemporaryDirectory() as tmpdir:
