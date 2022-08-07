@@ -10,7 +10,9 @@
 # -- Path setup --------------------------------------------------------------
 
 import os
+import re
 import sys
+from typing import List
 
 base_path = os.path.abspath(os.path.join(__file__, "..", "..", ".."))
 # read module from src instead of installation
@@ -206,3 +208,51 @@ epub_exclude_files = ["search.html"]
 
 # If true, `todo` and `todoList` produce output, else they produce nothing.
 todo_include_todos = True
+
+
+# -- Docstring Improvements --------------------------------------------------
+
+
+def _replace_pattern(s: str) -> str:
+    """
+    Wrap a string in regex code so that existing Sphinx formatting is not interfered
+    with. This function ensures that the string will not be replaced if it is inside
+    square brackets '[' & ']'.
+
+    Args:
+
+        s (str): A string to replace.
+
+    Returns:
+        s (str): The input string wrapped in regex code.
+    """
+    return r"(?<![\[])(" + s + r")(?![\]])"
+
+
+def autodoc_process_docstring(
+    app, what: str, name: str, obj, options, lines: List[str]
+) -> None:
+    """
+    Modify docstrings before creating html files.
+    Sphinx converts the 'Args:' and 'Returns:' sections of docstrings into
+    reStructuredText (rST) syntax, which can then be found via ':type' & ':rtype'.
+
+    See here for more information:
+    https://www.sphinx-doc.org/en/master/usage/extensions/autodoc.html
+    """
+    for i in range(len(lines)):
+        # Skip unless line is an parameter doc or a return doc
+        if not lines[i].startswith(":type"):
+            continue
+        if ":py:data:" in lines[i]:
+            continue
+
+        # Ensure Any & Callable types of hyperlinked with intersphinx
+        lines[i] = re.sub(_replace_pattern(r"\bAny\b"), "~typing.Any", lines[i])
+        lines[i] = re.sub(
+            _replace_pattern(r"\bCallable\b"), "~typing.Callable", lines[i]
+        )
+
+
+def setup(app) -> None:
+    app.connect("autodoc-process-docstring", autodoc_process_docstring)
