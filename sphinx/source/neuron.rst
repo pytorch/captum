@@ -54,3 +54,4 @@ Neuron Feature Ablation
 
 .. autoclass:: captum.attr.NeuronFeatureAblation
     :members:
+    :exclude-members: compute_convergence_delta
