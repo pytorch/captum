@@ -3,7 +3,13 @@
 from typing import cast, List, Tuple
 
 import torch
-from captum._utils.common import _reduce_list, _select_targets, _sort_key_list, safe_div
+from captum._utils.common import (
+    _parse_version,
+    _reduce_list,
+    _select_targets,
+    _sort_key_list,
+    safe_div,
+)
 from tests.helpers.basic import assertTensorAlmostEqual, BaseTest
 
 
@@ -109,3 +115,40 @@ class Test(BaseTest):
         # Verify error is raised if too many dimensions are provided.
         with self.assertRaises(AssertionError):
             _select_targets(output_tensor, (1, 2, 3))
+
+
+class TestParseVersion(BaseTest):
+    def test_parse_version_dev(self) -> None:
+        version_str = "1.12.0.dev20201109"
+        output = _parse_version(version_str)
+        self.assertEqual(output, (1, 12, 0))
+
+    def test_parse_version_post(self) -> None:
+        version_str = "1.3.0.post2"
+        output = _parse_version(version_str)
+        self.assertEqual(output, (1, 3, 0))
+
+    def test_parse_version_1_12_0(self) -> None:
+        version_str = "1.12.0"
+        output = _parse_version(version_str)
+        self.assertEqual(output, (1, 12, 0))
+
+    def test_parse_version_1_12_2(self) -> None:
+        version_str = "1.12.2"
+        output = _parse_version(version_str)
+        self.assertEqual(output, (1, 12, 2))
+
+    def test_parse_version_1_6_0(self) -> None:
+        version_str = "1.6.0"
+        output = _parse_version(version_str)
+        self.assertEqual(output, (1, 6, 0))
+
+    def test_parse_version_1_12(self) -> None:
+        version_str = "1.12"
+        output = _parse_version(version_str)
+        self.assertEqual(output, (1, 12, 0))
+
+    def test_parse_version_length(self) -> None:
+        version_str = "1.12.0.1"
+        output = _parse_version(version_str, 4)
+        self.assertEqual(output, (1, 12, 0, 1))
