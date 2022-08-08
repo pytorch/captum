@@ -344,24 +344,3 @@ def build_test_name_func(args_to_skip: Optional[List[str]] = None):
     """
 
     return partial(generate_test_name, args_to_skip=args_to_skip)
-
-
-def is_gpu_ready(
-    use_gpu: bool,
-    is_sample_wise_grads_mode: bool = False,
-    tracin_constructor: DataInfluenceConstructor = None,
-):
-    if not (torch.cuda.is_available() and torch.cuda.device_count() != 0):
-        return False
-    # The checks on `sample_wise_grads_per_batch` will be removed after we enable
-    # gpu support for `sample_wise_grads_per_batch` mode as well.
-    return use_gpu and (
-        not is_sample_wise_grads_mode
-        and (
-            tracin_constructor is None
-            or not (
-                "sample_wise_grads_per_batch" in tracin_constructor.kwargs
-                and tracin_constructor.kwargs["sample_wise_grads_per_batch"]
-            )
-        )
-    )

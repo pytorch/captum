@@ -1,6 +1,5 @@
 import tempfile
-import unittest
-from typing import Callable, cast
+from typing import Callable
 
 import torch
 import torch.nn as nn
@@ -12,17 +11,22 @@ from tests.influence._utils.common import (
     build_test_name_func,
     DataInfluenceConstructor,
     get_random_model_and_data,
-    is_gpu_ready,
 )
 from torch.utils.data import DataLoader
 
 
 class TestTracInSelfInfluence(BaseTest):
-    @parameterized.expand(
-        [
-            (reduction, constructor, unpack_inputs, use_gpu)
-            for unpack_inputs in [True, False]
-            for use_gpu in [True, False]
+
+    global use_gpu_list
+    use_gpu_list = (
+        [True, False]
+        if torch.cuda.is_available() and torch.cuda.device_count() != 0
+        else [False]
+    )
+
+    param_list = []
+    for unpack_inputs in [True, False]:
+        for use_gpu in use_gpu_list:
             for (reduction, constructor) in [
                 ("none", DataInfluenceConstructor(TracInCP)),
                 (
@@ -35,8 +39,16 @@ class TestTracInSelfInfluence(BaseTest):
                 ),
                 ("sum", DataInfluenceConstructor(TracInCPFast)),
                 ("mean", DataInfluenceConstructor(TracInCPFast)),
-            ]
-        ],
+            ]:
+                if not (
+                    "sample_wise_grads_per_batch" in constructor.kwargs
+                    and constructor.kwargs["sample_wise_grads_per_batch"]
+                    and use_gpu
+                ):
+                    param_list.append((reduction, constructor, unpack_inputs, use_gpu))
+
+    @parameterized.expand(
+        param_list,
         name_func=build_test_name_func(),
     )
     def test_tracin_self_influence(
@@ -46,21 +58,12 @@ class TestTracInSelfInfluence(BaseTest):
         unpack_inputs: bool,
         use_gpu: bool,
     ) -> None:
-        is_gpu_ready_ = is_gpu_ready(
-            use_gpu,
-            tracin_constructor=cast(DataInfluenceConstructor, tracin_constructor),
-        )
-        if not is_gpu_ready_ and use_gpu:
-            raise unittest.SkipTest(
-                "GPU test is skipped because GPU device is unavailable."
-            )
-
         with tempfile.TemporaryDirectory() as tmpdir:
             (net, train_dataset,) = get_random_model_and_data(
                 tmpdir,
                 unpack_inputs,
                 False,
-                is_gpu_ready_,
+                use_gpu,
             )
 
             # compute tracin_scores of training data on training data

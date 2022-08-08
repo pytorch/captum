@@ -1,6 +1,5 @@
 import tempfile
-import unittest
-from typing import Callable, cast
+from typing import Callable
 
 import torch
 import torch.nn as nn
@@ -15,11 +14,18 @@ from tests.influence._utils.common import (
     build_test_name_func,
     DataInfluenceConstructor,
     get_random_model_and_data,
-    is_gpu_ready,
 )
 
 
 class TestTracInGetKMostInfluential(BaseTest):
+
+    global use_gpu_list
+    use_gpu_list = (
+        [True, False]
+        if torch.cuda.is_available() and torch.cuda.device_count() != 0
+        else [False]
+    )
+
     """
     This test constructs a random BasicLinearNet, and checks that the proponents
     obtained by calling `influence` and sorting are equal to the proponents
@@ -27,33 +33,49 @@ class TestTracInGetKMostInfluential(BaseTest):
     the calls to wrapper method `influence`.
     """
 
+    param_list = []
+    # calls test helper method `test_tracin_k_most_influential` for several
+    # combinations of `batch_size` and `k`.  This is important because the
+    # behavior of `_k_most_influential` depends on whether `k` is larger
+    # than `batch_size`.
+    for (batch_size, k) in [(4, 7), (7, 4), (40, 5), (5, 40), (40, 45)]:
+        for unpack_inputs in [True, False]:
+            for proponents in [True, False]:
+                for use_gpu in use_gpu_list:
+                    for reduction, constr in [
+                        ("none", DataInfluenceConstructor(TracInCP)),
+                        (
+                            "sum",
+                            DataInfluenceConstructor(
+                                TracInCP,
+                                name="TracInCPFastRandProjTests",
+                                sample_wise_grads_per_batch=True,
+                            ),
+                        ),
+                        ("sum", DataInfluenceConstructor(TracInCPFast)),
+                        ("sum", DataInfluenceConstructor(TracInCPFastRandProj)),
+                        ("mean", DataInfluenceConstructor(TracInCPFast)),
+                        ("mean", DataInfluenceConstructor(TracInCPFastRandProj)),
+                    ]:
+                        if not (
+                            "sample_wise_grads_per_batch" in constr.kwargs
+                            and constr.kwargs["sample_wise_grads_per_batch"]
+                            and use_gpu
+                        ):
+                            param_list.append(
+                                (
+                                    reduction,
+                                    constr,
+                                    unpack_inputs,
+                                    proponents,
+                                    batch_size,
+                                    k,
+                                    use_gpu,
+                                )
+                            )
+
     @parameterized.expand(
-        [
-            (reduction, constr, unpack_inputs, proponents, batch_size, k, use_gpu)
-            # calls test helper method `test_tracin_k_most_influential` for several
-            # combinations of `batch_size` and `k`.  This is important because the
-            # behavior of `_k_most_influential` depends on whether `k` is larger
-            # than `batch_size`.
-            for (batch_size, k) in [(4, 7), (7, 4), (40, 5), (5, 40), (40, 45)]
-            for unpack_inputs in [True, False]
-            for proponents in [True, False]
-            for use_gpu in [True, False]
-            for reduction, constr in [
-                ("none", DataInfluenceConstructor(TracInCP)),
-                (
-                    "sum",
-                    DataInfluenceConstructor(
-                        TracInCP,
-                        name="TracInCPFastRandProjTests",
-                        sample_wise_grads_per_batch=True,
-                    ),
-                ),
-                ("sum", DataInfluenceConstructor(TracInCPFast)),
-                ("sum", DataInfluenceConstructor(TracInCPFastRandProj)),
-                ("mean", DataInfluenceConstructor(TracInCPFast)),
-                ("mean", DataInfluenceConstructor(TracInCPFastRandProj)),
-            ]
-        ],
+        param_list,
         name_func=build_test_name_func(),
     )
     def test_tracin_k_most_influential(
@@ -67,16 +89,6 @@ class TestTracInGetKMostInfluential(BaseTest):
         use_gpu: bool,
     ) -> None:
 
-        is_gpu_ready_ = is_gpu_ready(
-            use_gpu,
-            tracin_constructor=cast(DataInfluenceConstructor, tracin_constructor),
-        )
-        if not is_gpu_ready_ and use_gpu:
-            raise unittest.SkipTest(
-                "GPU test is skipped because GPU device is unavailable or "
-                "`sample_wise_trick` option is used."
-            )
-
         with tempfile.TemporaryDirectory() as tmpdir:
             (
                 net,
@@ -87,7 +99,7 @@ class TestTracInGetKMostInfluential(BaseTest):
                 tmpdir,
                 unpack_inputs,
                 True,
-                is_gpu_ready_,
+                use_gpu,
             )
 
             self.assertTrue(isinstance(reduction, str))
