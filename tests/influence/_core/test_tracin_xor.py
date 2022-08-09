@@ -20,7 +20,6 @@ from tests.influence._utils.common import (
 
 class TestTracInXOR(BaseTest):
 
-    global parametrized_list
     parametrized_list = [
         (
             "none",
