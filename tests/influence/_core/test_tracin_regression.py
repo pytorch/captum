@@ -44,7 +44,6 @@ class TestTracInRegression(BaseTest):
 
         return dataset, net_adjusted
 
-    global use_gpu_list
     use_gpu_list = (
         [True, False]
         if torch.cuda.is_available() and torch.cuda.device_count() != 0
