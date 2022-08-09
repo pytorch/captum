@@ -21,7 +21,7 @@ conda update --all --yes
 # required to use conda develop
 conda install -y conda-build
 
-# Use better Conda solver
+# Use faster Conda solver
 conda install -n base conda-libmamba-solver
 conda config --set experimental_solver libmamba
 
