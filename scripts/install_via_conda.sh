@@ -46,7 +46,7 @@ conda install -y -c conda-forge matplotlib pytest-cov mypy flask flask-compress
 # install node/yarn for insights build
 conda install -y -c conda-forge yarn
 # nodejs should be last, otherwise other conda packages will downgrade node
-conda install -y --repodata-fn=repodata.json --no-channel-priority -c conda-forge nodejs=14
+conda install -y --no-channel-priority -c conda-forge nodejs=14
 
 # build insights and install captum
 BUILD_INSIGHTS=1 python setup.py develop
