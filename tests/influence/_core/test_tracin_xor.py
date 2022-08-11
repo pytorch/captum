@@ -188,6 +188,7 @@ class TestTracInXOR(BaseTest):
                 True,
             )
         )
+
     @parameterized.expand(
         parametrized_list,
         name_func=build_test_name_func(args_to_skip=["reduction"]),
