@@ -247,7 +247,7 @@ class AttackComparator(Generic[MetricResultType]):
 
         Args:
 
-        inputs (Any): Input for which attack metrics
+            inputs (Any): Input for which attack metrics
                 are computed. It can be provided as a tensor, tuple of tensors,
                 or any raw input type (e.g. PIL image or text string).
                 This input is provided directly as input to preproc function as well
@@ -255,7 +255,7 @@ class AttackComparator(Generic[MetricResultType]):
                 function is provided, this input is provided directly to the main
                 model and all attacks.
 
-        additional_forward_args (Any, optional): If the forward function
+            additional_forward_args (Any, optional): If the forward function
                 requires additional arguments other than the preprocessing
                 outputs (or inputs if preproc_fn is None), this argument
                 can be provided. It must be either a single additional
@@ -268,7 +268,7 @@ class AttackComparator(Generic[MetricResultType]):
                 correspond to the number of examples. For all other types,
                 the given argument is used for all forward evaluations.
                 Default: ``None``
-        perturbations_per_eval (int, optional): Allows perturbations of multiple
+            perturbations_per_eval (int, optional): Allows perturbations of multiple
                 attacks to be grouped and evaluated in one call of forward_fn
                 Each forward pass will contain a maximum of
                 perturbations_per_eval * #examples samples.
@@ -281,7 +281,7 @@ class AttackComparator(Generic[MetricResultType]):
                 (or inputs itself if no preproc_fn is provided) must be a tensor
                 or tuple of tensors.
                 Default: ``1``
-        kwargs (Any, optional): Additional keyword arguments provided to metric function
+            kwargs (Any, optional): Additional keyword arguments provided to metric function
                 as well as selected attacks based on chosen additional_args.
                 Default: ``None``
 
