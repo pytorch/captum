@@ -319,7 +319,7 @@ class CompositeLoss(BaseLoss):
         """
         Args:
 
-            loss_fn (callable): A function that takes a dict of captured activations
+            loss_fn (Callable): A function that takes a dict of captured activations
                 with nn.Modules as keys, and then passes those activations through loss
                 objective(s) & math operations.
             name (str, optional): The name of all composable operations in the
@@ -1142,7 +1142,7 @@ def sum_loss_list(
     Args:
 
         loss_list (list): A list of loss objectives.
-        to_scalar_fn (callable): A function for converting loss objective outputs to
+        to_scalar_fn (Callable): A function for converting loss objective outputs to
             scalar values, in order to prevent size mismatches. Set to
             :class:`torch.nn.Identity` for no reduction op.
             Default: :func:`torch.mean`
