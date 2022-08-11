@@ -20,31 +20,6 @@ from tests.influence._utils.common import (
 
 class TestTracInXOR(BaseTest):
 
-    parametrized_list = [
-        (
-            "none",
-            DataInfluenceConstructor(TracInCP),
-            "check_idx",
-            False,
-        ),
-        (
-            None,
-            DataInfluenceConstructor(TracInCP),
-            "sample_wise_trick",
-            False,
-        ),
-    ]
-
-    if torch.cuda.is_available() and torch.cuda.device_count() != 0:
-        parametrized_list.append(
-            (
-                "none",
-                DataInfluenceConstructor(TracInCP),
-                "check_idx",
-                True,
-            )
-        )
-
     # TODO: Move test setup to use setUp and tearDown method overrides.
     def _test_tracin_xor_setup(self, tmpdir: str, use_gpu: bool = False):
         net = BasicLinearNet(2, 2, 1)
@@ -189,6 +164,30 @@ class TestTracInXOR(BaseTest):
 
         return net_adjusted, dataset
 
+    parametrized_list = [
+        (
+            "none",
+            DataInfluenceConstructor(TracInCP),
+            "check_idx",
+            False,
+        ),
+        (
+            None,
+            DataInfluenceConstructor(TracInCP),
+            "sample_wise_trick",
+            False,
+        ),
+    ]
+
+    if torch.cuda.is_available() and torch.cuda.device_count() != 0:
+        parametrized_list.append(
+            (
+                "none",
+                DataInfluenceConstructor(TracInCP),
+                "check_idx",
+                True,
+            )
+        )
     @parameterized.expand(
         parametrized_list,
         name_func=build_test_name_func(args_to_skip=["reduction"]),

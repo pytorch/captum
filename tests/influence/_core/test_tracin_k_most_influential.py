@@ -25,18 +25,7 @@ class TestTracInGetKMostInfluential(BaseTest):
         else [False]
     )
 
-    """
-    This test constructs a random BasicLinearNet, and checks that the proponents
-    obtained by calling `influence` and sorting are equal to the proponents
-    obtained by calling `_k_most_influential`.  Those calls are made through
-    the calls to wrapper method `influence`.
-    """
-
     param_list = []
-    # calls test helper method `test_tracin_k_most_influential` for several
-    # combinations of `batch_size` and `k`.  This is important because the
-    # behavior of `_k_most_influential` depends on whether `k` is larger
-    # than `batch_size`.
     for (batch_size, k) in [(4, 7), (7, 4), (40, 5), (5, 40), (40, 45)]:
         for unpack_inputs in [True, False]:
             for proponents in [True, False]:
@@ -87,7 +76,12 @@ class TestTracInGetKMostInfluential(BaseTest):
         k: int,
         use_gpu: bool,
     ) -> None:
-
+        """
+        This test constructs a random BasicLinearNet, and checks that the proponents
+        obtained by calling `influence` and sorting are equal to the proponents
+        obtained by calling `_k_most_influential`.  Those calls are made through
+        the calls to wrapper method `influence`.
+        """
         with tempfile.TemporaryDirectory() as tmpdir:
             (
                 net,
