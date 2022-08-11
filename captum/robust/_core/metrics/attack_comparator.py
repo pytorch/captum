@@ -281,8 +281,8 @@ class AttackComparator(Generic[MetricResultType]):
                 (or inputs itself if no preproc_fn is provided) must be a tensor
                 or tuple of tensors.
                 Default: ``1``
-            kwargs (Any, optional): Additional keyword arguments provided to metric function
-                as well as selected attacks based on chosen additional_args.
+            kwargs (Any, optional): Additional keyword arguments provided to metric
+                function as well as selected attacks based on chosen additional_args.
                 Default: ``None``
 
         Returns:
