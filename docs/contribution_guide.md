@@ -4,7 +4,7 @@ title: The Captum Contribution Process
 ---
 
 The Captum development process involves a healthy amount of open discussions between the core development team and the community.
-Captum operates similar to most open source projects on GitHub. However, if you've never contributed to an open source project before, here is the basic process.
+Captum operates similarly to most open source projects on GitHub. However, if you've never contributed to an open source project before, here is the basic process.
 
 
 1. **Figure out what you're going to work on.**
@@ -59,7 +59,7 @@ https://captum.ai/tutorials/Bert_SQUAD_Interpret
 https://captum.ai/tutorials/IMDB_TorchText_Interpret
 
 **Vision**
-- We provide a sample toy model for CIFAR dataset and examples with ResNet model.
+- We provide a sample toy model for the CIFAR dataset and examples with a ResNet model.
 https://captum.ai/tutorials/CIFAR_TorchVision_Interpret
 https://captum.ai/tutorials/Resnet_TorchVision_Interpret
 These would be great starting points for benchmarking.
