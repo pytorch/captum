@@ -16,34 +16,54 @@ from torch.utils.data import DataLoader
 
 
 class TestTracInSelfInfluence(BaseTest):
-    @parameterized.expand(
-        [
-            (reduction, constructor, unpack_inputs)
-            for unpack_inputs in [True, False]
+
+    use_gpu_list = (
+        [True, False]
+        if torch.cuda.is_available() and torch.cuda.device_count() != 0
+        else [False]
+    )
+
+    param_list = []
+    for unpack_inputs in [True, False]:
+        for use_gpu in use_gpu_list:
             for (reduction, constructor) in [
                 ("none", DataInfluenceConstructor(TracInCP)),
                 (
                     "sum",
                     DataInfluenceConstructor(
                         TracInCP,
-                        name="TracInCPFastRandProjTests",
+                        name="TracInCP_sample_wise_grads_per_batch",
                         sample_wise_grads_per_batch=True,
                     ),
                 ),
                 ("sum", DataInfluenceConstructor(TracInCPFast)),
                 ("mean", DataInfluenceConstructor(TracInCPFast)),
-            ]
-        ],
+            ]:
+                if not (
+                    "sample_wise_grads_per_batch" in constructor.kwargs
+                    and constructor.kwargs["sample_wise_grads_per_batch"]
+                    and use_gpu
+                ):
+                    param_list.append((reduction, constructor, unpack_inputs, use_gpu))
+
+    @parameterized.expand(
+        param_list,
         name_func=build_test_name_func(),
     )
     def test_tracin_self_influence(
-        self, reduction: str, tracin_constructor: Callable, unpack_inputs: bool
+        self,
+        reduction: str,
+        tracin_constructor: Callable,
+        unpack_inputs: bool,
+        use_gpu: bool,
     ) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
-            (
-                net,
-                train_dataset,
-            ) = get_random_model_and_data(tmpdir, unpack_inputs, return_test_data=False)
+            (net, train_dataset,) = get_random_model_and_data(
+                tmpdir,
+                unpack_inputs,
+                False,
+                use_gpu,
+            )
 
             # compute tracin_scores of training data on training data
             criterion = nn.MSELoss(reduction=reduction)
@@ -56,8 +76,6 @@ class TestTracInSelfInfluence(BaseTest):
                 batch_size,
                 criterion,
             )
-
-            # calculate influence scores, using the training data as the test batch
             train_scores = tracin.influence(
                 train_dataset.samples,
                 train_dataset.labels,

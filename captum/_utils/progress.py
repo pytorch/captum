@@ -6,7 +6,7 @@ from time import time
 from typing import cast, Iterable, Sized, TextIO
 
 try:
-    from tqdm import tqdm
+    from tqdm.auto import tqdm
 except ImportError:
     tqdm = None
 
