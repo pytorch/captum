@@ -247,10 +247,16 @@ def autodoc_process_docstring(
         if ":py:data:" in lines[i]:
             continue
 
-        # Ensure Any & Callable types of hyperlinked with intersphinx
+        # Ensure Any, Callable, & Iterator types are hyperlinked with intersphinx
         lines[i] = re.sub(_replace_pattern(r"\bAny\b"), "~typing.Any", lines[i])
         lines[i] = re.sub(
             _replace_pattern(r"\bCallable\b"), "~typing.Callable", lines[i]
+        )
+        lines[i] = re.sub(
+            _replace_pattern(r"\bIterable\b"), "~typing.Iterable", lines[i]
+        )
+        lines[i] = re.sub(
+            _replace_pattern(r"\bIterator\b"), "~typing.Iterator", lines[i]
         )
 
 
