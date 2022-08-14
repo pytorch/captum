@@ -108,7 +108,7 @@ class TracInCPBase(DataInfluence):
 
             model (torch.nn.Module): An instance of pytorch model. This model should
                     define all of its layers as attributes of the model.
-            train_dataset (torch.utils.data.Dataset or torch.utils.DataLoader):
+            train_dataset (torch.utils.data.Dataset or torch.utils.data.DataLoader):
                     In the `influence` method, we either compute the influence score of
                     training examples on examples in a test batch, or self influence
                     scores for those training examples, depending on which mode is used.
@@ -508,7 +508,7 @@ class TracInCP(TracInCPBase):
 
             model (torch.nn.Module): An instance of pytorch model. This model should
                     define all of its layers as attributes of the model.
-            train_dataset (torch.utils.data.Dataset or torch.utils.DataLoader):
+            train_dataset (torch.utils.data.Dataset or torch.utils.data.DataLoader):
                     In the `influence` method, we either compute the influence score of
                     training examples on examples in a test batch, or self influence
                     scores for those training examples, depending on which mode is used.

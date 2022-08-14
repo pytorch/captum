@@ -253,9 +253,6 @@ def autodoc_process_docstring(
             _replace_pattern(r"\bCallable\b"), "~typing.Callable", lines[i]
         )
         lines[i] = re.sub(
-            _replace_pattern(r"\bIterable\b"), "~typing.Iterable", lines[i]
-        )
-        lines[i] = re.sub(
             _replace_pattern(r"\bIterator\b"), "~typing.Iterator", lines[i]
         )
 

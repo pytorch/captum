@@ -91,7 +91,7 @@ class TracInCPFast(TracInCPBase):
                     projection method. Can be either the layer module itself, or the
                     fully qualified name of the layer if it is a defined attribute of
                     the passed `model`.
-            train_dataset (torch.utils.data.Dataset or torch.utils.DataLoader):
+            train_dataset (torch.utils.data.Dataset or torch.utils.data.DataLoader):
                     In the `influence` method, we either compute the influence score of
                     training examples on examples in a test batch, or self influence
                     scores for those training examples, depending on which mode is used.
@@ -818,7 +818,7 @@ class TracInCPFastRandProj(TracInCPFast):
                     projection method. Can be either the layer module itself, or the
                     fully qualified name of the layer if it is a defined attribute of
                     the passed `model`.
-            train_dataset (torch.utils.data.Dataset or torch.utils.DataLoader):
+            train_dataset (torch.utils.data.Dataset or torch.utils.data.DataLoader):
                     In the `influence` method, we either compute the influence score of
                     training examples on examples in a test batch, or self influence
                     scores for those training examples, depending on which mode is used.
