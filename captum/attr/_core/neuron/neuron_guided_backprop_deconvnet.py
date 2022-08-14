@@ -78,7 +78,7 @@ class NeuronDeconvolution(NeuronAttribution, GradientAttribution):
                         to the number of examples (aka batch size), and if
                         multiple input tensors are provided, the examples must
                         be aligned appropriately.
-            neuron_selector (int, Callable, or tuple of int or slice):
+            neuron_selector (int, Callable, tuple of int, or slice):
                         Selector for neuron
                         in given layer for which attribution is desired.
                         Neuron selector can be provided as:
@@ -247,7 +247,7 @@ class NeuronGuidedBackprop(NeuronAttribution, GradientAttribution):
                         to the number of examples (aka batch size), and if
                         multiple input tensors are provided, the examples must
                         be aligned appropriately.
-            neuron_selector (int, Callable, or tuple of int or slice):
+            neuron_selector (int, Callable, tuple of int, or slice):
                         Selector for neuron
                         in given layer for which attribution is desired.
                         Neuron selector can be provided as:

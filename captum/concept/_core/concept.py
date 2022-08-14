@@ -25,7 +25,7 @@ class Concept:
 
         r"""
         Args:
-            id (int):   The unique identifier of the concept.
+            id (int): The unique identifier of the concept.
             name (str): A unique name of the concept.
             data_iter (DataLoader): A pytorch DataLoader object that combines a dataset
                         and a sampler, and provides an iterable over a given
@@ -80,7 +80,7 @@ class ConceptInterpreter:
 
     Args:
 
-        inputs (tensor or tuple of tensors):  Inputs for which concept-based
+        inputs (tensor or tuple of tensors): Inputs for which concept-based
                     interpretation scores are computed. It can be provided as
                     a single tensor or a tuple of multiple tensors. If multiple
                     input tensors are provided, the batch size (the first

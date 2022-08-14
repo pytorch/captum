@@ -111,7 +111,7 @@ class NeuronConductance(NeuronAttribution, GradientAttribution):
                         that for all given input tensors, dimension 0 corresponds
                         to the number of examples, and if multiple input tensors
                         are provided, the examples must be aligned appropriately.
-            neuron_selector (int, Callable, or tuple of int or slice):
+            neuron_selector (int, Callable, tuple of int, or slice):
                         Selector for neuron
                         in given layer for which attribution is desired.
                         Neuron selector can be provided as:

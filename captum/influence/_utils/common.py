@@ -354,7 +354,7 @@ def _self_influence_by_batches_helper(
         instance_name (str): This is the name of the implementation class that
                 `self_influence_batch_fn` is a method of. This is used for displaying
                 warning messages.
-        batches (tuple, or DataLoader): Either a single tuple of any, or a
+        batches (tuple or DataLoader): Either a single tuple of any, or a
                 `DataLoader`, where each batch yielded is a tuple of any. In
                 either case, the tuple represents a single batch, where the last
                 element is assumed to be the labels for the batch. That is,
