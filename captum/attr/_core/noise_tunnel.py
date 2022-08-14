@@ -117,7 +117,7 @@ class NoiseTunnel(Attribution):
                         in each batch.
                         Default: None if `nt_samples_batch_size` is not provided. In
                         this case all `nt_samples` will be processed together.
-            stdevs    (float, or a tuple of float optional): The standard deviation
+            stdevs    (float, or tuple of float, optional): The standard deviation
                         of gaussian noise with zero mean that is added to each
                         input in the batch. If `stdevs` is a single float value
                         then that same value is used for all inputs. If it is

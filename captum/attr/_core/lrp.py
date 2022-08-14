@@ -45,7 +45,7 @@ class LRP(GradientAttribution):
         r"""
         Args:
 
-            model (module): The forward function of the model or any modification of
+            model (Module): The forward function of the model or any modification of
                 it. Custom rules for a given layer need to be defined as attribute
                 `module.rule` and need to be of type PropagationRule. If no rule is
                 specified for a layer, a pre-defined default rule for the module type
@@ -254,9 +254,10 @@ class LRP(GradientAttribution):
                         examples, and if multiple input tensors are provided,
                         the examples must be aligned appropriately.
 
-            output (tensor with single element): The output value with respect to which
+            output (tensor): The output value with respect to which
                         the attribution values are computed. This value corresponds to
-                        the target score of a classification model.
+                        the target score of a classification model. The given tensor
+                        should only have a single element.
 
         Returns:
             *tensor*:

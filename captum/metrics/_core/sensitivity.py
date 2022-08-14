@@ -149,10 +149,12 @@ def sensitivity_max(
                 `perturb_func` function.
 
                 Default: 10
-        norm_ord (int, float, inf, -inf, 'fro', 'nuc', optional): The type of norm
-                that is used to compute the
-                norm of the sensitivity matrix which is defined as the difference
-                between the explanation function at its input and perturbed input.
+        norm_ord (int, float, or str, optional): The type of norm that is used to
+                compute the norm of the sensitivity matrix which is defined as the
+                difference between the explanation function at its input and perturbed
+                input. Acceptable values are either a string of 'fro' or 'nuc', or a
+                number in the range of [-inf, inf] (including float("-inf") &
+                float("inf")).
 
                 Default: 'fro'
         max_examples_per_batch (int, optional): The number of maximum input
