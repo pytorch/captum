@@ -42,7 +42,7 @@ class LayerLRP(LRP, LayerAttribution):
         """
         Args:
 
-            model (module): The forward function of the model or
+            model (Module): The forward function of the model or
                         any modification of it. Custom rules for a given layer need to
                         be defined as attribute
                         `module.rule` and need to be of type PropagationRule.
