@@ -213,22 +213,6 @@ todo_include_todos = True
 # -- Docstring Improvements --------------------------------------------------
 
 
-def _replace_pattern(s: str) -> str:
-    """
-    Wrap a string in regex code so that existing Sphinx formatting is not interfered
-    with. This function ensures that the string will not be replaced if it is inside
-    square brackets '[' & ']'.
-
-    Args:
-
-        s (str): A string to replace.
-
-    Returns:
-        s (str): The input string wrapped in regex code.
-    """
-    return r"(?<![\[])(" + s + r")(?![\]])"
-
-
 def autodoc_process_docstring(
     app, what: str, name: str, obj, options, lines: List[str]
 ) -> None:
@@ -248,13 +232,9 @@ def autodoc_process_docstring(
             continue
 
         # Ensure Any, Callable, & Iterator types are hyperlinked with intersphinx
-        lines[i] = re.sub(_replace_pattern(r"\bAny\b"), "~typing.Any", lines[i])
-        lines[i] = re.sub(
-            _replace_pattern(r"\bCallable\b"), "~typing.Callable", lines[i]
-        )
-        lines[i] = re.sub(
-            _replace_pattern(r"\bIterator\b"), "~typing.Iterator", lines[i]
-        )
+        lines[i] = re.sub(r"\bAny\b", "~typing.Any", lines[i])
+        lines[i] = re.sub(r"\bCallable\b", "~typing.Callable", lines[i])
+        lines[i] = re.sub(r"\bIterator\b", "~typing.Iterator", lines[i])
 
 
 def setup(app) -> None:
