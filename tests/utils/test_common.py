@@ -146,9 +146,4 @@ class TestParseVersion(BaseTest):
     def test_parse_version_1_12(self) -> None:
         version_str = "1.12"
         output = _parse_version(version_str)
-        self.assertEqual(output, (1, 12, 0))
-
-    def test_parse_version_length(self) -> None:
-        version_str = "1.12.0.1"
-        output = _parse_version(version_str, 4)
-        self.assertEqual(output, (1, 12, 0, 1))
+        self.assertEqual(output, (1, 12))

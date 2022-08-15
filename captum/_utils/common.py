@@ -3,7 +3,7 @@ import typing
 from enum import Enum
 from functools import reduce
 from inspect import signature
-from typing import Any, Callable, cast, Dict, List, Optional, overload, Tuple, Union
+from typing import Any, Callable, cast, Dict, List, overload, Tuple, Union
 
 import numpy as np
 import torch
@@ -18,7 +18,7 @@ from torch import device, Tensor
 from torch.nn import Module
 
 
-def _parse_version(v: str, length: Optional[int] = 3) -> Tuple[int, ...]:
+def _parse_version(v: str) -> Tuple[int, ...]:
     """
     Parse version strings into tuples for comparison.
 
@@ -29,10 +29,6 @@ def _parse_version(v: str, length: Optional[int] = 3) -> Tuple[int, ...]:
     Args:
 
         v (str): A version string.
-        length (int, optional): The expected length of the output tuple. If the output
-            is less than the expected length, then it will be padded with 0 values. Set
-            to None for no padding or length checks.
-            Default: ``3``
 
     Returns:
         version_tuple (tuple of int): A tuple of integer values to use for version
@@ -40,9 +36,6 @@ def _parse_version(v: str, length: Optional[int] = 3) -> Tuple[int, ...]:
     """
     v = [n for n in v.split(".") if n.isdigit()]
     assert v != []
-    if length is not None:
-        v += ["0"] * (length - len(v))
-        assert len(v) == length
     return tuple(map(int, v))
 
 
