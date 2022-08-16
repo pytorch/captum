@@ -213,6 +213,13 @@ todo_include_todos = True
 # -- Docstring Improvements --------------------------------------------------
 
 
+# Regex code for typing replacements.
+# The "(?<![\.])" part checks to see if the string
+# starts with a period, and "\b" denotes word boundaries.
+# Only words that don't start with a period are replaced.
+_rt = [r"(?<![\.])(\b", r"\b)"]
+
+
 def autodoc_process_docstring(
     app, what: str, name: str, obj, options, lines: List[str]
 ) -> None:
@@ -231,10 +238,12 @@ def autodoc_process_docstring(
         if ":py:data:" in lines[i]:
             continue
 
-        # Ensure Any, Callable, & Iterator types are hyperlinked with intersphinx
-        lines[i] = re.sub(r"\bAny\b", "~typing.Any", lines[i])
-        lines[i] = re.sub(r"\bCallable\b", "~typing.Callable", lines[i])
-        lines[i] = re.sub(r"\bIterator\b", "~typing.Iterator", lines[i])
+        # Ensure Any, Callable, & Iterator types are hyperlinked with intersphinx.
+        # The tilde '~' character hides the 'typing.' portion of the string.
+        lines[i] = re.sub(_rt[0] + r"Any" + _rt[1], "~typing.Any", lines[i])
+        lines[i] = re.sub(_rt[0] + r"Callable" + _rt[1], "~typing.Callable", lines[i])
+        lines[i] = re.sub(_rt[0] + r"Iterator" + _rt[1], "~typing.Iterator", lines[i])
+        lines[i] = re.sub(_rt[0] + r"Iterable" + _rt[1], "~typing.Iterable", lines[i])
 
 
 def setup(app) -> None:

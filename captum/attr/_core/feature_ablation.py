@@ -418,7 +418,7 @@ class FeatureAblation(PerturbationAttribution):
         This method returns a generator of ablation perturbations of the i-th input
 
         Returns:
-            ablation_iter (generator): yields each perturbation to be evaluated
+            ablation_iter (Generator): yields each perturbation to be evaluated
                         as a tuple (inputs, additional_forward_args, targets, mask).
         """
         extra_args = {}
