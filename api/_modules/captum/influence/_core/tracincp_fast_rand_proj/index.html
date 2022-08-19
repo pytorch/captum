@@ -32,12 +32,16 @@ src="/_sphinx/documentation_options.js"></script>
 <h1>Source code for captum.influence._core.tracincp_fast_rand_proj</h1><div class="highlight"><pre>
 <span></span><span class="ch">#!/usr/bin/env python3</span>
 
+<span class="kn">import</span> <span class="nn">threading</span>
 <span class="kn">import</span> <span class="nn">warnings</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Iterator</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Union</span>
+<span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">defaultdict</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">cast</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Iterator</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Union</span>
 
 <span class="kn">import</span> <span class="nn">torch</span>
-<span class="kn">from</span> <span class="nn">captum._utils.common</span> <span class="kn">import</span> <span class="n">_format_inputs</span><span class="p">,</span> <span class="n">_get_module_from_name</span>
+<span class="kn">from</span> <span class="nn">captum._utils.common</span> <span class="kn">import</span> <span class="n">_format_inputs</span><span class="p">,</span> <span class="n">_get_module_from_name</span><span class="p">,</span> <span class="n">_sort_key_list</span>
+<span class="kn">from</span> <span class="nn">captum._utils.gradient</span> <span class="kn">import</span> <span class="n">_gather_distributed_tensors</span>
 <span class="kn">from</span> <span class="nn">captum._utils.progress</span> <span class="kn">import</span> <span class="n">progress</span>
+
 <span class="kn">from</span> <span class="nn">captum.influence._core.tracincp</span> <span class="kn">import</span> <span class="p">(</span>
     <span class="n">_influence_route_to_helpers</span><span class="p">,</span>
     <span class="n">KMostInfluentialResults</span><span class="p">,</span>
@@ -49,6 +53,7 @@ src="/_sphinx/documentation_options.js"></script>
     <span class="n">_get_k_most_influential_helper</span><span class="p">,</span>
     <span class="n">_jacobian_loss_wrt_inputs</span><span class="p">,</span>
     <span class="n">_load_flexible_state_dict</span><span class="p">,</span>
+    <span class="n">_self_influence_by_batches_helper</span><span class="p">,</span>
     <span class="n">_tensor_batch_dot</span><span class="p">,</span>
 <span class="p">)</span>
 <span class="kn">from</span> <span class="nn">captum.influence._utils.nearest_neighbors</span> <span class="kn">import</span> <span class="p">(</span>
@@ -56,18 +61,9 @@ src="/_sphinx/documentation_options.js"></script>
     <span class="n">NearestNeighbors</span><span class="p">,</span>
 <span class="p">)</span>
 <span class="kn">from</span> <span class="nn">captum.log</span> <span class="kn">import</span> <span class="n">log_usage</span>
-<span class="kn">from</span> <span class="nn">torch</span> <span class="kn">import</span> <span class="n">Tensor</span>
+<span class="kn">from</span> <span class="nn">torch</span> <span class="kn">import</span> <span class="n">device</span><span class="p">,</span> <span class="n">Tensor</span>
 <span class="kn">from</span> <span class="nn">torch.nn</span> <span class="kn">import</span> <span class="n">Module</span>
 <span class="kn">from</span> <span class="nn">torch.utils.data</span> <span class="kn">import</span> <span class="n">DataLoader</span><span class="p">,</span> <span class="n">Dataset</span>
-
-<span class="n">layer_inputs</span> <span class="o">=</span> <span class="p">[]</span>
-
-
-<span class="k">def</span> <span class="nf">_capture_inputs</span><span class="p">(</span><span class="n">layer</span><span class="p">:</span> <span class="n">Module</span><span class="p">,</span> <span class="nb">input</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">,</span> <span class="n">output</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-    <span class="sa">r</span><span class="sd">"""Save activations into layer.activations in forward pass"""</span>
-
-    <span class="n">layer_inputs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">input</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">detach</span><span class="p">())</span>
-
 
 <span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">Implements abstract DataInfluence class and also provides implementation details for</span>
@@ -295,11 +291,9 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">                    requires "training dataset computations": computations for each</span>
 <span class="sd">                    batch in the training dataset `train_dataset`, which may</span>
 <span class="sd">                    take a long time. If `show_progress`is true, the progress of</span>
-<span class="sd">                    "training dataset computations" will be displayed. In particular,</span>
-<span class="sd">                    the number of batches for which computations have been performed</span>
-<span class="sd">                    will be displayed. It will try to use tqdm if available for</span>
-<span class="sd">                    advanced features (e.g. time estimation). Otherwise, it will</span>
-<span class="sd">                    fallback to a simple output of progress.</span>
+<span class="sd">                    "training dataset computations" will be displayed. It will try to</span>
+<span class="sd">                    use tqdm if available for advanced features (e.g. time estimation).</span>
+<span class="sd">                    Otherwise, it will fallback to a simple output of progress.</span>
 <span class="sd">                    Default: False</span>
 
 <span class="sd">        Returns:</span>
@@ -498,7 +492,7 @@ src="/_sphinx/documentation_options.js"></script>
                 <span class="p">(</span>
                     <span class="sa">f</span><span class="s2">"Using </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">get_name</span><span class="p">()</span><span class="si">}</span><span class="s2"> to perform computation for "</span>
                     <span class="sa">f</span><span class="s1">'getting </span><span class="si">{</span><span class="s2">"proponents"</span> <span class="k">if</span> <span class="n">proponents</span> <span class="k">else</span> <span class="s2">"opponents"</span><span class="si">}</span><span class="s1">. '</span>
-                    <span class="s2">"Processing training batches: 100%"</span>
+                    <span class="s2">"Processing training batches"</span>
                 <span class="p">)</span>
             <span class="p">)</span>
         <span class="p">)</span>
@@ -515,7 +509,7 @@ src="/_sphinx/documentation_options.js"></script>
             <span class="p">)</span>
         <span class="p">)</span>
 
-<div class="viewcode-block" id="TracInCPFast.self_influence"><a class="viewcode-back" href="../../../../influence.html#captum.influence.TracInCPFast.self_influence">[docs]</a>    <span class="k">def</span> <span class="nf">self_influence</span><span class="p">(</span>
+    <span class="k">def</span> <span class="nf">_self_influence_by_checkpoints</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">inputs_dataset</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span> <span class="n">DataLoader</span><span class="p">],</span>
         <span class="n">show_progress</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
@@ -529,7 +523,11 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">        will call `model` on that single batch, and if `inputs_dataset` yields</span>
 <span class="sd">        batches, this will call `model` on each batch that is yielded. Therefore,</span>
 <span class="sd">        please ensure that for both cases, the batch(es) that `model` is called</span>
-<span class="sd">        with are not too large, so that there will not be an out-of-memory error.</span>
+<span class="sd">        with are not too large, so that there will not be an out-of-memory error. This</span>
+<span class="sd">        implementation performs an outer iteration over checkpoints, and an inner</span>
+<span class="sd">        iteration over all batches that `inputs_dataset` represents. The pros of this</span>
+<span class="sd">        implementation are that the checkpoints do not need to be loaded too many</span>
+<span class="sd">        times.</span>
 
 <span class="sd">        Args:</span>
 <span class="sd">            batches (Tuple, or DataLoader): Either a single tuple of any, or a</span>
@@ -548,13 +546,10 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">                    displayed. In more detail, this computation will iterate over all</span>
 <span class="sd">                    checkpoints (provided as the `checkpoints` initialization argument)</span>
 <span class="sd">                    in an outer loop, and iterate over all batches that</span>
-<span class="sd">                    `inputs_dataset` represents in an inner loop. Therefore, the</span>
-<span class="sd">                    total number of (checkpoint, batch) combinations that need to be</span>
-<span class="sd">                    iterated over is</span>
-<span class="sd">                    (# of checkpoints x # of batches that `inputs_dataset` represents).</span>
-<span class="sd">                    If `show_progress` is True, the total progress of both the outer</span>
-<span class="sd">                    iteration over checkpoints and the inner iteration over batches is</span>
-<span class="sd">                    displayed. It will try to use tqdm if available for advanced</span>
+<span class="sd">                    `inputs_dataset` represents in an inner loop. Thus if</span>
+<span class="sd">                    `show_progress` is True, the progress of both the outer</span>
+<span class="sd">                    iteration and the inner iterations will be displayed. To show</span>
+<span class="sd">                    progress, it will try to use tqdm if available for advanced</span>
 <span class="sd">                    features (e.g. time estimation). Otherwise, it will fallback to a</span>
 <span class="sd">                    simple output of progress.</span>
 <span class="sd">                    Default: False</span>
@@ -649,7 +644,76 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="k">for</span> <span class="n">checkpoint</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">checkpoints</span><span class="p">[</span><span class="mi">1</span><span class="p">:]:</span>
             <span class="n">batches_self_tracin_scores</span> <span class="o">+=</span> <span class="n">get_checkpoint_contribution</span><span class="p">(</span><span class="n">checkpoint</span><span class="p">)</span>
 
-        <span class="k">return</span> <span class="n">batches_self_tracin_scores</span></div></div>
+        <span class="k">return</span> <span class="n">batches_self_tracin_scores</span>
+
+<div class="viewcode-block" id="TracInCPFast.self_influence"><a class="viewcode-back" href="../../../../influence.html#captum.influence.TracInCPFast.self_influence">[docs]</a>    <span class="k">def</span> <span class="nf">self_influence</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">inputs_dataset</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span> <span class="n">DataLoader</span><span class="p">],</span>
+        <span class="n">show_progress</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="n">outer_loop_by_checkpoints</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tensor</span><span class="p">:</span>
+        <span class="sd">"""</span>
+<span class="sd">        Computes self influence scores for the examples in `inputs_dataset`, which is</span>
+<span class="sd">        either a single batch or a Pytorch `DataLoader` that yields batches. Therefore,</span>
+<span class="sd">        the computed self influence scores are *not* for the examples in training</span>
+<span class="sd">        dataset `train_dataset` (unlike when computing self influence scores using the</span>
+<span class="sd">        `influence` method). Note that if `inputs_dataset` is a single batch, this</span>
+<span class="sd">        will call `model` on that single batch, and if `inputs_dataset` yields</span>
+<span class="sd">        batches, this will call `model` on each batch that is yielded. Therefore,</span>
+<span class="sd">        please ensure that for both cases, the batch(es) that `model` is called</span>
+<span class="sd">        with are not too large, so that there will not be an out-of-memory error.</span>
+<span class="sd">        Internally, this computation requires iterating both over the batches in</span>
+<span class="sd">        `inputs_dataset`, as well as different model checkpoints. There are two ways</span>
+<span class="sd">        this iteration can be done. If `outer_loop_by_checkpoints` is False, the outer</span>
+<span class="sd">        iteration will be over batches, and the inner iteration will be over</span>
+<span class="sd">        checkpoints. This has the pro that displaying the progress of the computation</span>
+<span class="sd">        is more intuitive, involving displaying the number of batches for which self</span>
+<span class="sd">        influence scores have been computed. If `outer_loop_by_checkpoints` is True,</span>
+<span class="sd">        the outer iteration will be over checkpoints, and the inner iteration will be</span>
+<span class="sd">        over batches. This has the pro that the checkpoints do not need to be loaded</span>
+<span class="sd">        for each batch. For large models, loading checkpoints can be time-intensive.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            batches (Tuple, or DataLoader): Either a single tuple of any, or a</span>
+<span class="sd">                    `DataLoader`, where each batch yielded is a tuple of any. In</span>
+<span class="sd">                    either case, the tuple represents a single batch, where the last</span>
+<span class="sd">                    element is assumed to be the labels for the batch. That is,</span>
+<span class="sd">                    `model(*batch[0:-1])` produces the output for `model`,</span>
+<span class="sd">                    and `batch[-1]` are the labels, if any. This is the same</span>
+<span class="sd">                    assumption made for each batch yielded by training dataset</span>
+<span class="sd">                    `train_dataset`. Please see documentation for the</span>
+<span class="sd">                    `train_dataset` argument to `TracInCP.__init__` for</span>
+<span class="sd">                    more details on the assumed structure of a batch.</span>
+<span class="sd">            show_progress (bool, optional): Computation of self influence scores can</span>
+<span class="sd">                    take a long time if `inputs_dataset` represents many examples. If</span>
+<span class="sd">                    `show_progress`is true, the progress of this computation will be</span>
+<span class="sd">                    displayed. In more detail, if `outer_loop_by_checkpoints` is False,</span>
+<span class="sd">                    this computation will iterate over all batches in an outer loop.</span>
+<span class="sd">                    Thus if `show_progress` is True, the number of batches for which</span>
+<span class="sd">                    self influence scores have been computed will be displayed. If</span>
+<span class="sd">                    `outer_loop_by_checkpoints` is True, this computation will iterate</span>
+<span class="sd">                    over all checkpoints (provided as the `checkpoints` initialization</span>
+<span class="sd">                    argument) in an outer loop, and iterate over all batches that</span>
+<span class="sd">                    `inputs_dataset` represents in an inner loop. Thus if</span>
+<span class="sd">                    `show_progress` is True, the progress of both the outer</span>
+<span class="sd">                    iteration and the inner iterations will be displayed. To show</span>
+<span class="sd">                    progress, it will try to use tqdm if available for advanced</span>
+<span class="sd">                    features (e.g. time estimation). Otherwise, it will fallback to a</span>
+<span class="sd">                    simple output of progress.</span>
+<span class="sd">                    Default: False</span>
+<span class="sd">            outer_loop_by_checkpoints (bool, optional): If performing an outer</span>
+<span class="sd">                    iteration over checkpoints; see method description for more</span>
+<span class="sd">                    details.</span>
+<span class="sd">                    Default: False</span>
+<span class="sd">        """</span>
+        <span class="k">if</span> <span class="n">outer_loop_by_checkpoints</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_self_influence_by_checkpoints</span><span class="p">(</span><span class="n">inputs_dataset</span><span class="p">,</span> <span class="n">show_progress</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">_self_influence_by_batches_helper</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_self_influence_by_checkpoints</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">get_name</span><span class="p">(),</span>
+            <span class="n">inputs_dataset</span><span class="p">,</span>
+            <span class="n">show_progress</span><span class="p">,</span>
+        <span class="p">)</span></div></div>
 
 
 <span class="k">def</span> <span class="nf">_basic_computation_tracincp_fast</span><span class="p">(</span>
@@ -676,10 +740,26 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">        targets (tensor): If computing influence scores on a loss function,</span>
 <span class="sd">                these are the labels corresponding to the batch `inputs`.</span>
 <span class="sd">    """</span>
-    <span class="k">global</span> <span class="n">layer_inputs</span>
-    <span class="n">layer_inputs</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">layer_inputs</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="n">device</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">]]</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">()</span>
+    <span class="n">lock</span> <span class="o">=</span> <span class="n">threading</span><span class="o">.</span><span class="n">Lock</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">hook_wrapper</span><span class="p">(</span><span class="n">original_module</span><span class="p">):</span>
+        <span class="k">def</span> <span class="nf">_capture_inputs</span><span class="p">(</span><span class="n">layer</span><span class="p">,</span> <span class="nb">input</span><span class="p">,</span> <span class="n">output</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="sa">r</span><span class="sd">"""Save activations into layer_inputs in forward pass"""</span>
+            <span class="k">with</span> <span class="n">lock</span><span class="p">:</span>
+                <span class="n">is_eval_tuple</span> <span class="o">=</span> <span class="nb">isinstance</span><span class="p">(</span><span class="nb">input</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">is_eval_tuple</span><span class="p">:</span>
+                    <span class="n">layer_inputs_val</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">inp</span><span class="o">.</span><span class="n">detach</span><span class="p">()</span> <span class="k">for</span> <span class="n">inp</span> <span class="ow">in</span> <span class="nb">input</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">layer_inputs_val</span> <span class="o">=</span> <span class="nb">input</span><span class="o">.</span><span class="n">detach</span><span class="p">()</span>
+                <span class="n">layer_inputs</span><span class="p">[</span><span class="n">layer_inputs_val</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">device</span><span class="p">]</span> <span class="o">=</span> <span class="n">layer_inputs_val</span>
+
+        <span class="k">return</span> <span class="n">_capture_inputs</span>
+
     <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">influence_instance</span><span class="o">.</span><span class="n">final_fc_layer</span><span class="p">,</span> <span class="n">Module</span><span class="p">)</span>
-    <span class="n">handle</span> <span class="o">=</span> <span class="n">influence_instance</span><span class="o">.</span><span class="n">final_fc_layer</span><span class="o">.</span><span class="n">register_forward_hook</span><span class="p">(</span><span class="n">_capture_inputs</span><span class="p">)</span>
+    <span class="n">handle</span> <span class="o">=</span> <span class="n">influence_instance</span><span class="o">.</span><span class="n">final_fc_layer</span><span class="o">.</span><span class="n">register_forward_hook</span><span class="p">(</span>
+        <span class="n">hook_wrapper</span><span class="p">(</span><span class="n">influence_instance</span><span class="o">.</span><span class="n">final_fc_layer</span><span class="p">)</span>
+    <span class="p">)</span>
     <span class="n">out</span> <span class="o">=</span> <span class="n">influence_instance</span><span class="o">.</span><span class="n">model</span><span class="p">(</span><span class="o">*</span><span class="n">inputs</span><span class="p">)</span>
 
     <span class="k">assert</span> <span class="n">influence_instance</span><span class="o">.</span><span class="n">loss_fn</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">,</span> <span class="s2">"loss function is required"</span>
@@ -695,7 +775,16 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="n">influence_instance</span><span class="o">.</span><span class="n">reduction_type</span><span class="p">,</span>
     <span class="p">)</span>
     <span class="n">handle</span><span class="o">.</span><span class="n">remove</span><span class="p">()</span>
-    <span class="n">_layer_inputs</span> <span class="o">=</span> <span class="n">layer_inputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+    <span class="n">device_ids</span> <span class="o">=</span> <span class="n">cast</span><span class="p">(</span>
+        <span class="n">Union</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]],</span>
+        <span class="n">influence_instance</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">device_ids</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">influence_instance</span><span class="o">.</span><span class="n">model</span><span class="p">,</span> <span class="s2">"device_ids"</span><span class="p">)</span>
+        <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">key_list</span> <span class="o">=</span> <span class="n">_sort_key_list</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">layer_inputs</span><span class="o">.</span><span class="n">keys</span><span class="p">()),</span> <span class="n">device_ids</span><span class="p">)</span>
+
+    <span class="n">_layer_inputs</span> <span class="o">=</span> <span class="n">_gather_distributed_tensors</span><span class="p">(</span><span class="n">layer_inputs</span><span class="p">,</span> <span class="n">key_list</span><span class="o">=</span><span class="n">key_list</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
 
     <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">input_jacobians</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span>
 
@@ -978,6 +1067,7 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">inputs_dataset</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span> <span class="n">DataLoader</span><span class="p">],</span>
         <span class="n">show_progress</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="n">outer_loop_by_checkpoints</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tensor</span><span class="p">:</span>
         <span class="sd">"""</span>
 <span class="sd">        NOT IMPLEMENTED - no need to implement `TracInCPFastRandProj.self_influence`,</span>
@@ -1016,6 +1106,10 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">                    that have been iterated over is displayed. It will try to use tqdm</span>
 <span class="sd">                    if available for advanced features (e.g. time estimation).</span>
 <span class="sd">                    Otherwise, it will fallback to a simple output of progress.</span>
+<span class="sd">                    Default: False</span>
+<span class="sd">            outer_loop_by_checkpoints (bool, optional): If performing an outer</span>
+<span class="sd">                    iteration over checkpoints; see method description for more</span>
+<span class="sd">                    details.</span>
 <span class="sd">                    Default: False</span>
 
 <span class="sd">        Returns:</span>
@@ -1200,6 +1294,7 @@ src="/_sphinx/documentation_options.js"></script>
             <span class="n">layer_input_dim</span> <span class="o">=</span> <span class="n">batch_layer_inputs</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span>
                 <span class="mi">1</span>
             <span class="p">]</span>  <span class="c1"># this is the dimension of the input of the last fully-connected layer</span>
+            <span class="n">device</span> <span class="o">=</span> <span class="n">batch_jacobians</span><span class="o">.</span><span class="n">device</span>
 
             <span class="c1"># choose projection if needed</span>
             <span class="c1"># without projection, the dimension of the intermediate quantities returned</span>
@@ -1228,7 +1323,9 @@ src="/_sphinx/documentation_options.js"></script>
                     <span class="mf">1.0</span> <span class="o">/</span> <span class="n">layer_input_projection_dim</span><span class="o">**</span><span class="mf">0.5</span><span class="p">,</span>
                 <span class="p">)</span>
 
-                <span class="n">projection_quantities</span> <span class="o">=</span> <span class="n">jacobian_projection</span><span class="p">,</span> <span class="n">layer_input_projection</span>
+                <span class="n">projection_quantities</span> <span class="o">=</span> <span class="n">jacobian_projection</span><span class="o">.</span><span class="n">to</span><span class="p">(</span>
+                    <span class="n">device</span>
+                <span class="p">),</span> <span class="n">layer_input_projection</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">device</span><span class="p">)</span>
 
         <span class="k">return</span> <span class="n">projection_quantities</span>
 
@@ -1299,9 +1396,8 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="c1"># each element in this list will be of shape (batch_size, projection_dim)</span>
         <span class="n">checkpoint_projections</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">[[]</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">checkpoints</span><span class="p">]</span>
 
-        <span class="k">if</span> <span class="n">projection_quantities</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">project</span> <span class="o">=</span> <span class="kc">False</span>
-        <span class="k">else</span><span class="p">:</span>
+        <span class="n">project</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="k">if</span> <span class="n">projection_quantities</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">project</span> <span class="o">=</span> <span class="kc">True</span>
             <span class="n">jacobian_projection</span><span class="p">,</span> <span class="n">layer_input_projection</span> <span class="o">=</span> <span class="n">projection_quantities</span>
 

@@ -569,11 +569,9 @@ Default: True</p></li>
 requires “training dataset computations”: computations for each
 batch in the training dataset <cite>train_dataset</cite>, which may
 take a long time. If <a href="#id3"><span class="problematic" id="id4">`</span></a>show_progress`is true, the progress of
-“training dataset computations” will be displayed. In particular,
-the number of batches for which computations have been performed
-will be displayed. It will try to use tqdm if available for
-advanced features (e.g. time estimation). Otherwise, it will
-fallback to a simple output of progress.
+“training dataset computations” will be displayed. It will try to
+use tqdm if available for advanced features (e.g. time estimation).
+Otherwise, it will fallback to a simple output of progress.
 Default: False</p></li>
 </ul>
 </dd>
@@ -617,7 +615,7 @@ example <cite>i</cite> in the test batch represented by <cite>inputs</cite> and
 </dd></dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="captum.influence.TracInCP.self_influence">
-<span class="sig-name descname"><span class="pre">self_influence</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inputs_dataset</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">show_progress</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/influence/_core/tracincp.html#TracInCP.self_influence"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum.influence.TracInCP.self_influence" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">self_influence</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inputs_dataset</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">show_progress</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">outer_loop_by_checkpoints</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/influence/_core/tracincp.html#TracInCP.self_influence"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum.influence.TracInCP.self_influence" title="Permalink to this definition">¶</a></dt>
 <dd><p>Computes self influence scores for the examples in <cite>inputs_dataset</cite>, which is
 either a single batch or a Pytorch <cite>DataLoader</cite> that yields batches. Therefore,
 the computed self influence scores are <em>not</em> for the examples in training
@@ -626,7 +624,17 @@ dataset <cite>train_dataset</cite> (unlike when computing self influence scores 
 will call <cite>model</cite> on that single batch, and if <cite>inputs_dataset</cite> yields
 batches, this will call <cite>model</cite> on each batch that is yielded. Therefore,
 please ensure that for both cases, the batch(es) that <cite>model</cite> is called
-with are not too large, so that there will not be an out-of-memory error.</p>
+with are not too large, so that there will not be an out-of-memory error.
+Internally, this computation requires iterating both over the batches in
+<cite>inputs_dataset</cite>, as well as different model checkpoints. There are two ways
+this iteration can be done. If <cite>outer_loop_by_checkpoints</cite> is False, the outer
+iteration will be over batches, and the inner iteration will be over
+checkpoints. This has the pro that displaying the progress of the computation
+is more intuitive, involving displaying the number of batches for which self
+influence scores have been computed. If <cite>outer_loop_by_checkpoints</cite> is True,
+the outer iteration will be over checkpoints, and the inner iteration will be
+over batches. This has the pro that the checkpoints do not need to be loaded
+for each batch. For large models, loading checkpoints can be time-intensive.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -643,32 +651,28 @@ more details on the assumed structure of a batch.</p></li>
 <li><p><strong>show_progress</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.10)"><em>bool</em></a><em>, </em><em>optional</em>) – Computation of self influence scores can
 take a long time if <cite>inputs_dataset</cite> represents many examples. If
 <cite>show_progress`is true, the progress of this computation will be
-displayed. In more detail, this computation will iterate over all
-checkpoints (provided as the `checkpoints</cite> initialization argument)
-in an outer loop, and iterate over all batches that
-<cite>inputs_dataset</cite> represents in an inner loop. Therefore, the
-total number of (checkpoint, batch) combinations that need to be
-iterated over is
-(# of checkpoints x # of batches that <cite>inputs_dataset</cite> represents).
-If <cite>show_progress</cite> is True, the total progress of both the outer
-iteration over checkpoints and the inner iteration over batches is
-displayed. It will try to use tqdm if available for advanced
+displayed. In more detail, if `outer_loop_by_checkpoints</cite> is False,
+this computation will iterate over all batches in an outer loop.
+Thus if <cite>show_progress</cite> is True, the number of batches for which
+self influence scores have been computed will be displayed. If
+<cite>outer_loop_by_checkpoints</cite> is True, this computation will iterate
+over all checkpoints (provided as the <cite>checkpoints</cite> initialization
+argument) in an outer loop, and iterate over all batches that
+<cite>inputs_dataset</cite> represents in an inner loop. Thus if
+<cite>show_progress</cite> is True, the progress of both the outer
+iteration and the inner iterations will be displayed. To show
+progress, it will try to use tqdm if available for advanced
 features (e.g. time estimation). Otherwise, it will fallback to a
 simple output of progress.
 Default: False</p></li>
+<li><p><strong>outer_loop_by_checkpoints</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.10)"><em>bool</em></a><em>, </em><em>optional</em>) – If performing an outer
+iteration over checkpoints; see method description for more
+details.
+Default: False</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p><dl class="simple">
-<dt>This is a 1D tensor containing the self</dt><dd><p>influence scores of all examples in <cite>inputs_dataset</cite>, regardless of
-whether it represents a single batch or a <cite>DataLoader</cite> that yields
-batches.</p>
-</dd>
-</dl>
-</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>self_influence_scores (Tensor)</p>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tensor</span></code></a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -814,11 +818,9 @@ Default: True</p></li>
 requires “training dataset computations”: computations for each
 batch in the training dataset <cite>train_dataset</cite>, which may
 take a long time. If <a href="#id5"><span class="problematic" id="id6">`</span></a>show_progress`is true, the progress of
-“training dataset computations” will be displayed. In particular,
-the number of batches for which computations have been performed
-will be displayed. It will try to use tqdm if available for
-advanced features (e.g. time estimation). Otherwise, it will
-fallback to a simple output of progress.
+“training dataset computations” will be displayed. It will try to
+use tqdm if available for advanced features (e.g. time estimation).
+Otherwise, it will fallback to a simple output of progress.
 Default: False</p></li>
 </ul>
 </dd>
@@ -862,7 +864,7 @@ example <cite>i</cite> in the test batch represented by <cite>inputs</cite> and
 </dd></dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="captum.influence.TracInCPFast.self_influence">
-<span class="sig-name descname"><span class="pre">self_influence</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inputs_dataset</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">show_progress</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/influence/_core/tracincp_fast_rand_proj.html#TracInCPFast.self_influence"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum.influence.TracInCPFast.self_influence" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">self_influence</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inputs_dataset</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">show_progress</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">outer_loop_by_checkpoints</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/influence/_core/tracincp_fast_rand_proj.html#TracInCPFast.self_influence"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum.influence.TracInCPFast.self_influence" title="Permalink to this definition">¶</a></dt>
 <dd><p>Computes self influence scores for the examples in <cite>inputs_dataset</cite>, which is
 either a single batch or a Pytorch <cite>DataLoader</cite> that yields batches. Therefore,
 the computed self influence scores are <em>not</em> for the examples in training
@@ -871,7 +873,17 @@ dataset <cite>train_dataset</cite> (unlike when computing self influence scores 
 will call <cite>model</cite> on that single batch, and if <cite>inputs_dataset</cite> yields
 batches, this will call <cite>model</cite> on each batch that is yielded. Therefore,
 please ensure that for both cases, the batch(es) that <cite>model</cite> is called
-with are not too large, so that there will not be an out-of-memory error.</p>
+with are not too large, so that there will not be an out-of-memory error.
+Internally, this computation requires iterating both over the batches in
+<cite>inputs_dataset</cite>, as well as different model checkpoints. There are two ways
+this iteration can be done. If <cite>outer_loop_by_checkpoints</cite> is False, the outer
+iteration will be over batches, and the inner iteration will be over
+checkpoints. This has the pro that displaying the progress of the computation
+is more intuitive, involving displaying the number of batches for which self
+influence scores have been computed. If <cite>outer_loop_by_checkpoints</cite> is True,
+the outer iteration will be over checkpoints, and the inner iteration will be
+over batches. This has the pro that the checkpoints do not need to be loaded
+for each batch. For large models, loading checkpoints can be time-intensive.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -888,32 +900,28 @@ more details on the assumed structure of a batch.</p></li>
 <li><p><strong>show_progress</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.10)"><em>bool</em></a><em>, </em><em>optional</em>) – Computation of self influence scores can
 take a long time if <cite>inputs_dataset</cite> represents many examples. If
 <cite>show_progress`is true, the progress of this computation will be
-displayed. In more detail, this computation will iterate over all
-checkpoints (provided as the `checkpoints</cite> initialization argument)
-in an outer loop, and iterate over all batches that
-<cite>inputs_dataset</cite> represents in an inner loop. Therefore, the
-total number of (checkpoint, batch) combinations that need to be
-iterated over is
-(# of checkpoints x # of batches that <cite>inputs_dataset</cite> represents).
-If <cite>show_progress</cite> is True, the total progress of both the outer
-iteration over checkpoints and the inner iteration over batches is
-displayed. It will try to use tqdm if available for advanced
+displayed. In more detail, if `outer_loop_by_checkpoints</cite> is False,
+this computation will iterate over all batches in an outer loop.
+Thus if <cite>show_progress</cite> is True, the number of batches for which
+self influence scores have been computed will be displayed. If
+<cite>outer_loop_by_checkpoints</cite> is True, this computation will iterate
+over all checkpoints (provided as the <cite>checkpoints</cite> initialization
+argument) in an outer loop, and iterate over all batches that
+<cite>inputs_dataset</cite> represents in an inner loop. Thus if
+<cite>show_progress</cite> is True, the progress of both the outer
+iteration and the inner iterations will be displayed. To show
+progress, it will try to use tqdm if available for advanced
 features (e.g. time estimation). Otherwise, it will fallback to a
 simple output of progress.
 Default: False</p></li>
+<li><p><strong>outer_loop_by_checkpoints</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.10)"><em>bool</em></a><em>, </em><em>optional</em>) – If performing an outer
+iteration over checkpoints; see method description for more
+details.
+Default: False</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p><dl class="simple">
-<dt>This is a 1D tensor containing the self</dt><dd><p>influence scores of all examples in <cite>inputs_dataset</cite>, regardless of
-whether it represents a single batch or a <cite>DataLoader</cite> that yields
-batches.</p>
-</dd>
-</dl>
-</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>self_influence_scores (Tensor)</p>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tensor</span></code></a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -1137,7 +1145,7 @@ example <cite>i</cite> in the test batch represented by <cite>inputs</cite> and
 </dd></dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="captum.influence.TracInCPFastRandProj.self_influence">
-<span class="sig-name descname"><span class="pre">self_influence</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inputs_dataset</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">show_progress</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/influence/_core/tracincp_fast_rand_proj.html#TracInCPFastRandProj.self_influence"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum.influence.TracInCPFastRandProj.self_influence" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">self_influence</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inputs_dataset</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">show_progress</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">outer_loop_by_checkpoints</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/influence/_core/tracincp_fast_rand_proj.html#TracInCPFastRandProj.self_influence"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum.influence.TracInCPFastRandProj.self_influence" title="Permalink to this definition">¶</a></dt>
 <dd><p>NOT IMPLEMENTED - no need to implement <cite>TracInCPFastRandProj.self_influence</cite>,
 as <cite>TracInCPFast.self_influence</cite> is sufficient - the latter does not benefit
 from random projections, since no quantities associated with a training
@@ -1174,6 +1182,10 @@ If <cite>show_progress</cite> is True, the total number of such combinations
 that have been iterated over is displayed. It will try to use tqdm
 if available for advanced features (e.g. time estimation).
 Otherwise, it will fallback to a simple output of progress.
+Default: False</p></li>
+<li><p><strong>outer_loop_by_checkpoints</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.10)"><em>bool</em></a><em>, </em><em>optional</em>) – If performing an outer
+iteration over checkpoints; see method description for more
+details.
 Default: False</p></li>
 </ul>
 </dd>

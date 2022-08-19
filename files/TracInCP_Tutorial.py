@@ -298,7 +298,7 @@ test_examples_true_labels = torch.Tensor([test_dataset[i][1] for i in test_examp
 tracin_cp_fast = TracInCPFast(
     model=net,
     final_fc_layer=list(net.children())[-1],
-    influence_src_dataset=correct_dataset,
+    train_dataset=correct_dataset,
     checkpoints=correct_dataset_checkpoint_paths,
     checkpoints_load_func=checkpoints_load_func,
     loss_fn=nn.CrossEntropyLoss(reduction="sum"),
@@ -312,7 +312,7 @@ tracin_cp_fast = TracInCPFast(
 # 
 # This call returns a `namedtuple` with ordered elements `(indices, influence_scores)`.  `indices` is a 2D tensor of shape `(test_batch_size, k)`, where `test_batch_size` is the number of test examples in `test_examples_batch`.  `influence_scores` is of the same shape, but stores the influence scores of the proponents / opponents for each test example in sorted order.  For example, if `proponents` is `True`, `influence_scores[i][j]` is the influence score of the training example with the `j`-th most positive influence score on test example `i`.
 
-# In[16]:
+# In[ ]:
 
 
 k = 10
@@ -427,7 +427,7 @@ display_proponents_and_opponents(
 # 
 # ***Note***: initialization will take ~10 minutes, so feel free to skip the tutorial parts related to `TracInCPFastRandProj`
 
-# In[19]:
+# In[ ]:
 
 
 from captum.influence._utils.nearest_neighbors import AnnoyNearestNeighbors
@@ -435,7 +435,7 @@ start_time = datetime.datetime.now()
 tracin_cp_fast_rand_proj = TracInCPFastRandProj(
     model=net,
     final_fc_layer=list(net.children())[-1],
-    influence_src_dataset=correct_dataset,
+    train_dataset=correct_dataset,
     checkpoints=correct_dataset_checkpoint_paths,
     checkpoints_load_func=checkpoints_load_func,
     loss_fn=nn.CrossEntropyLoss(reduction="sum"),
@@ -453,7 +453,7 @@ print(
 # #### Compute the proponents / opponents using `TracInCPFastRandProj`
 # As before, we can compute the proponents / opponents using the `influence` method of this `TracInCPFastRandProj` instance.  Unlike the `TracInCPFast` instance, this computation should be very fast, due to the preprocessing done during initialization.
 
-# In[20]:
+# In[ ]:
 
 
 k = 10
@@ -522,7 +522,7 @@ checkpoints_load_func(correct_dataset_net, correct_dataset_final_checkpoint)
 
 # Then, we generate both incorrect labels and extract correct labels for every example in `correct_dataset`.  We need the correct labels since some of the examples in `incorrect_dataset` will still be correctly labelled.  This should take < 10 minutes.
 
-# In[24]:
+# In[ ]:
 
 
 start_time = datetime.datetime.now()
@@ -618,7 +618,7 @@ elif not os.path.exists(mislabelled_dataset_checkpoints_dir):
 
 # We define the list of checkpoints, `mislabelled_dataset_checkpoint_paths`, to be all saved checkpoints from training.
 
-# In[31]:
+# In[30]:
 
 
 mislabelled_dataset_checkpoint_paths = glob.glob(os.path.join(mislabelled_dataset_checkpoints_dir, "*.pt"))
@@ -630,13 +630,13 @@ mislabelled_dataset_checkpoint_paths = glob.glob(os.path.join(mislabelled_datase
 # #### Defining the `TracInCPFast` instance
 # We now define the `TracInCPFast` instance.  Initialization should be instantaneous, as no pre-processing is done.  Note that we use the mislabelled dataset and checkpoints from training with it, i.e. `mislabelled_dataset` and `mislabelled_dataset_checkpoint_paths`
 
-# In[32]:
+# In[31]:
 
 
 tracin_cp_fast = TracInCPFast(
     model=net,
     final_fc_layer=list(net.children())[-1],
-    influence_src_dataset=mislabelled_dataset,
+    train_dataset=mislabelled_dataset,
     checkpoints=mislabelled_dataset_checkpoint_paths,
     checkpoints_load_func=checkpoints_load_func,
     loss_fn=nn.CrossEntropyLoss(reduction="sum"),
@@ -647,7 +647,7 @@ tracin_cp_fast = TracInCPFast(
 # #### Calculating self influence scores
 # We can now calculate self influence for `incorrect_dataset`.  Note that the function call will have no arguments, because `incorrect_dataset` was already loaded during the initialization of `tracin_cp_fast`.  This should take several minutes.
 
-# In[33]:
+# In[32]:
 
 
 start_time = datetime.datetime.now()
@@ -661,7 +661,7 @@ print('computed self influence scores for %d examples in %.2f minutes' % (len(se
 # We can answer this by displaying the ROC curve from using self influence scores to identify mislabelled examples.  This is similar to how we display the ROC curve to measure performance when we use the predicted positive probability to identify true positives.
 # Recall that we have already calculated `is_mislabelled`, the ground-truth of whether each example is mislabelled.  Below is the ROC curve:
 
-# In[35]:
+# In[33]:
 
 
 fpr, tpr, _ = roc_curve(is_mislabelled, self_influence_scores)

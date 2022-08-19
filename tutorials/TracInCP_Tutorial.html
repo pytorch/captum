@@ -569,7 +569,7 @@ For this tutorial, we have saved the checkpoints from this training on AWS S3, a
 <div class="highlight hl-ipython3"><pre><span></span><span class="n">tracin_cp_fast</span> <span class="o">=</span> <span class="n">TracInCPFast</span><span class="p">(</span>
     <span class="n">model</span><span class="o">=</span><span class="n">net</span><span class="p">,</span>
     <span class="n">final_fc_layer</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="n">net</span><span class="o">.</span><span class="n">children</span><span class="p">())[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span>
-    <span class="n">influence_src_dataset</span><span class="o">=</span><span class="n">correct_dataset</span><span class="p">,</span>
+    <span class="n">train_dataset</span><span class="o">=</span><span class="n">correct_dataset</span><span class="p">,</span>
     <span class="n">checkpoints</span><span class="o">=</span><span class="n">correct_dataset_checkpoint_paths</span><span class="p">,</span>
     <span class="n">checkpoints_load_func</span><span class="o">=</span><span class="n">checkpoints_load_func</span><span class="p">,</span>
     <span class="n">loss_fn</span><span class="o">=</span><span class="n">nn</span><span class="o">.</span><span class="n">CrossEntropyLoss</span><span class="p">(</span><span class="n">reduction</span><span class="o">=</span><span class="s2">"sum"</span><span class="p">),</span>
@@ -591,7 +591,7 @@ For this tutorial, we have saved the checkpoints from this training on AWS S3, a
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In [16]:</div>
+<div class="prompt input_prompt">In [ ]:</div>
 <div class="inner_cell">
 <div class="input_area">
 <div class="highlight hl-ipython3"><pre><span></span><span class="n">k</span> <span class="o">=</span> <span class="mi">10</span>
@@ -608,17 +608,6 @@ For this tutorial, we have saved the checkpoints from this training on AWS S3, a
     <span class="o">%</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">correct_dataset</span><span class="p">),</span> <span class="n">total_minutes</span><span class="p">)</span>
 <span class="p">)</span>
 </pre></div>
-</div>
-</div>
-</div>
-<div class="output_wrapper">
-<div class="output">
-<div class="output_area">
-<div class="prompt"></div>
-<div class="output_subarea output_stream output_stdout output_text">
-<pre>Computed proponents / opponents over a dataset of 50000 examples in 1.22 minutes
-</pre>
-</div>
 </div>
 </div>
 </div>
@@ -934,7 +923,7 @@ Note that <code>__init__</code> has 2 new arguments, due to the fact <code>TracI
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In [19]:</div>
+<div class="prompt input_prompt">In [ ]:</div>
 <div class="inner_cell">
 <div class="input_area">
 <div class="highlight hl-ipython3"><pre><span></span><span class="kn">from</span> <span class="nn">captum.influence._utils.nearest_neighbors</span> <span class="kn">import</span> <span class="n">AnnoyNearestNeighbors</span>
@@ -942,7 +931,7 @@ Note that <code>__init__</code> has 2 new arguments, due to the fact <code>TracI
 <span class="n">tracin_cp_fast_rand_proj</span> <span class="o">=</span> <span class="n">TracInCPFastRandProj</span><span class="p">(</span>
     <span class="n">model</span><span class="o">=</span><span class="n">net</span><span class="p">,</span>
     <span class="n">final_fc_layer</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="n">net</span><span class="o">.</span><span class="n">children</span><span class="p">())[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span>
-    <span class="n">influence_src_dataset</span><span class="o">=</span><span class="n">correct_dataset</span><span class="p">,</span>
+    <span class="n">train_dataset</span><span class="o">=</span><span class="n">correct_dataset</span><span class="p">,</span>
     <span class="n">checkpoints</span><span class="o">=</span><span class="n">correct_dataset_checkpoint_paths</span><span class="p">,</span>
     <span class="n">checkpoints_load_func</span><span class="o">=</span><span class="n">checkpoints_load_func</span><span class="p">,</span>
     <span class="n">loss_fn</span><span class="o">=</span><span class="n">nn</span><span class="o">.</span><span class="n">CrossEntropyLoss</span><span class="p">(</span><span class="n">reduction</span><span class="o">=</span><span class="s2">"sum"</span><span class="p">),</span>
@@ -959,17 +948,6 @@ Note that <code>__init__</code> has 2 new arguments, due to the fact <code>TracI
 </div>
 </div>
 </div>
-<div class="output_wrapper">
-<div class="output">
-<div class="output_area">
-<div class="prompt"></div>
-<div class="output_subarea output_stream output_stdout output_text">
-<pre>Performed pre-processing of a dataset of 50000 examples in 5.92 minutes
-</pre>
-</div>
-</div>
-</div>
-</div>
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
@@ -980,7 +958,7 @@ Note that <code>__init__</code> has 2 new arguments, due to the fact <code>TracI
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In [20]:</div>
+<div class="prompt input_prompt">In [ ]:</div>
 <div class="inner_cell">
 <div class="input_area">
 <div class="highlight hl-ipython3"><pre><span></span><span class="n">k</span> <span class="o">=</span> <span class="mi">10</span>
@@ -997,17 +975,6 @@ Note that <code>__init__</code> has 2 new arguments, due to the fact <code>TracI
     <span class="o">%</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">correct_dataset</span><span class="p">),</span> <span class="n">total_minutes</span><span class="p">)</span>
 <span class="p">)</span>
 </pre></div>
-</div>
-</div>
-</div>
-<div class="output_wrapper">
-<div class="output">
-<div class="output_area">
-<div class="prompt"></div>
-<div class="output_subarea output_stream output_stdout output_text">
-<pre>Computed proponents / opponents over a dataset of 50000 examples in 0.01 minutes
-</pre>
-</div>
 </div>
 </div>
 </div>
@@ -1305,7 +1272,7 @@ predicted_prob tensor(0.6398, grad_fn=&lt;UnbindBackward&gt;)
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In [24]:</div>
+<div class="prompt input_prompt">In [ ]:</div>
 <div class="inner_cell">
 <div class="input_area">
 <div class="highlight hl-ipython3"><pre><span></span><span class="n">start_time</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span>
@@ -1328,17 +1295,6 @@ predicted_prob tensor(0.6398, grad_fn=&lt;UnbindBackward&gt;)
 <span class="n">total_minutes</span> <span class="o">=</span> <span class="p">(</span><span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span> <span class="o">-</span> <span class="n">start_time</span><span class="p">)</span><span class="o">.</span><span class="n">total_seconds</span><span class="p">()</span> <span class="o">/</span> <span class="mf">60.0</span>
 <span class="nb">print</span><span class="p">(</span><span class="s2">"Generated incorrect labels in </span><span class="si">%.2f</span><span class="s2"> minutes"</span> <span class="o">%</span> <span class="n">total_minutes</span><span class="p">)</span>
 </pre></div>
-</div>
-</div>
-</div>
-<div class="output_wrapper">
-<div class="output">
-<div class="output_area">
-<div class="prompt"></div>
-<div class="output_subarea output_stream output_stdout output_text">
-<pre>Generated incorrect labels in 0.52 minutes
-</pre>
-</div>
 </div>
 </div>
 </div>
@@ -1487,7 +1443,7 @@ For this tutorial, we have saved the checkpoints from this training on AWS S3, a
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In [31]:</div>
+<div class="prompt input_prompt">In [30]:</div>
 <div class="inner_cell">
 <div class="input_area">
 <div class="highlight hl-ipython3"><pre><span></span><span class="n">mislabelled_dataset_checkpoint_paths</span> <span class="o">=</span> <span class="n">glob</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">mislabelled_dataset_checkpoints_dir</span><span class="p">,</span> <span class="s2">"*.pt"</span><span class="p">))</span>
@@ -1512,13 +1468,13 @@ For this tutorial, we have saved the checkpoints from this training on AWS S3, a
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In [32]:</div>
+<div class="prompt input_prompt">In [31]:</div>
 <div class="inner_cell">
 <div class="input_area">
 <div class="highlight hl-ipython3"><pre><span></span><span class="n">tracin_cp_fast</span> <span class="o">=</span> <span class="n">TracInCPFast</span><span class="p">(</span>
     <span class="n">model</span><span class="o">=</span><span class="n">net</span><span class="p">,</span>
     <span class="n">final_fc_layer</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="n">net</span><span class="o">.</span><span class="n">children</span><span class="p">())[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span>
-    <span class="n">influence_src_dataset</span><span class="o">=</span><span class="n">mislabelled_dataset</span><span class="p">,</span>
+    <span class="n">train_dataset</span><span class="o">=</span><span class="n">mislabelled_dataset</span><span class="p">,</span>
     <span class="n">checkpoints</span><span class="o">=</span><span class="n">mislabelled_dataset_checkpoint_paths</span><span class="p">,</span>
     <span class="n">checkpoints_load_func</span><span class="o">=</span><span class="n">checkpoints_load_func</span><span class="p">,</span>
     <span class="n">loss_fn</span><span class="o">=</span><span class="n">nn</span><span class="o">.</span><span class="n">CrossEntropyLoss</span><span class="p">(</span><span class="n">reduction</span><span class="o">=</span><span class="s2">"sum"</span><span class="p">),</span>
@@ -1538,7 +1494,7 @@ For this tutorial, we have saved the checkpoints from this training on AWS S3, a
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In [33]:</div>
+<div class="prompt input_prompt">In [32]:</div>
 <div class="inner_cell">
 <div class="input_area">
 <div class="highlight hl-ipython3"><pre><span></span><span class="n">start_time</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span>
@@ -1554,7 +1510,7 @@ For this tutorial, we have saved the checkpoints from this training on AWS S3, a
 <div class="output_area">
 <div class="prompt"></div>
 <div class="output_subarea output_stream output_stdout output_text">
-<pre>computed self influence scores for 50000 examples in 0.59 minutes
+<pre>computed self influence scores for 50000 examples in 0.48 minutes
 </pre>
 </div>
 </div>
@@ -1572,7 +1528,7 @@ Recall that we have already calculated <code>is_mislabelled</code>, the ground-t
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In [35]:</div>
+<div class="prompt input_prompt">In [33]:</div>
 <div class="inner_cell">
 <div class="input_area">
 <div class="highlight hl-ipython3"><pre><span></span><span class="n">fpr</span><span class="p">,</span> <span class="n">tpr</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">roc_curve</span><span class="p">(</span><span class="n">is_mislabelled</span><span class="p">,</span> <span class="n">self_influence_scores</span><span class="p">)</span>

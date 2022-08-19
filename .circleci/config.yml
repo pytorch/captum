@@ -121,6 +121,7 @@ commands:
             sudo dpkg -i cuda-repo-ubuntu2004-11-4-local_11.4.2-470.57.02-1_amd64.deb
             sudo apt-key add /var/cuda-repo-ubuntu2004-11-4-local/7fa2af80.pub
             sudo apt-get update
+            sudo dpkg --configure -a
             sudo apt-get --yes --force-yes install cuda
 
 jobs:
