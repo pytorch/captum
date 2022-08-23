@@ -242,7 +242,7 @@ print('model err: ', err)
 # 
 # Note: Please, be patient! The execution of the cell below takes half a minute.
 
-# In[ ]:
+# In[15]:
 
 
 ig = IntegratedGradients(model)
@@ -335,15 +335,14 @@ plt.show()
 # 
 # In the cell below we will attribute to the inputs of the second linear layer of our model. Similar to the previous case, the attribution is performed on the test dataset.
 
-# In[17]:
+# In[21]:
 
 
 # Compute the attributions of the output with respect to the inputs of the fourth linear layer
 lc = LayerConductance(model, model.lin4)
-lc_attr_test = lc.attribute(X_test, n_steps=100, attribute_to_layer_input=True)
 
 # shape: test_examples x size_hidden
-lc_attr_test = lc_attr_test[0]
+lc_attr_test = lc.attribute(X_test, n_steps=100, attribute_to_layer_input=True)
 
 # weights from forth linear layer
 # shape: size_hidden4 x size_hidden3
@@ -353,7 +352,7 @@ lin4_weight = model.lin4.weight
 # In the cell below we normalize and visualize the attributions and learned model weights for all 10 neurons in the fourth hidden layer. 
 # The weights represent the weight matrix of the fourth linear layer. The attributions are computed with respect to the inputs of the fourth linear layer.
 
-# In[18]:
+# In[22]:
 
 
 plt.figure(figsize=(15, 8))
