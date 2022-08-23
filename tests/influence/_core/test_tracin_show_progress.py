@@ -29,17 +29,35 @@ class TestTracInShowProgress(BaseTest):
     in `TracInCPFastRandProj.__init__`).
     """
 
-    def _check_error_msg_multiplicity(self, mock_stderr, msg, msg_multiplicity):
+    def _check_error_msg_multiplicity(
+        self,
+        mock_stderr: io.StringIO,
+        msg: str,
+        msg_multiplicity: int,
+        greater_than: bool = True,
+    ):
         """
-        checks that in `mock_stderr`, the error msg `msg` occurs `msg_multiplicity`
-        times
+        Checks that in `mock_stderr`, the error msg `msg` occurs `msg_multiplicity`
+        times. If 'greater_than' is true, it checks that the `msg` occurs at least
+        `msg_multiplicity` times. Otherwise, it checks that `msg` occurs exactly
+        `msg_multiplicity` times. The reason to let `greater_than` as true by default
+        is that tqdm sometimes displays the "100%" more than once for each progress bar
+        because it may want to correct its estimation of it/s. In this case, the
+        tqdm could remove the original "100%" and then re-display "100%" with the
+        updated estimate of it/s.
         """
         output = mock_stderr.getvalue()
-        self.assertEqual(
-            output.count(msg),
-            msg_multiplicity,
-            f"Error in progress of batches with output: {repr(output)}",
-        )
+        actual_msg_multiplicity = output.count(msg)
+        assert isinstance(actual_msg_multiplicity, int)
+        error_msg = f"Error in progress of batches with output: {repr(output)}"
+        if greater_than:
+            self.assertTrue(actual_msg_multiplicity - msg_multiplicity >= 0, error_msg)
+        else:
+            self.assertEqual(
+                actual_msg_multiplicity,
+                msg_multiplicity,
+                error_msg,
+            )
 
     @parameterized.expand(
         [
