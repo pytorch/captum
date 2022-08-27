@@ -26,7 +26,7 @@ class RealFeature(BaseFeature):
             visualization_transform=None,
         )
 
-    def visualization_type(self):
+    def visualization_type(self) -> str:
         return "real"
 
     def visualize(self, attribution, data, contribution_frac) -> FeatureOutput:
@@ -135,7 +135,7 @@ def to_iter(data_loader):
 
 
 class Test(BaseTest):
-    def test_one_feature(self):
+    def test_one_feature(self) -> None:
         batch_size = 2
         classes = _get_classes()
         dataset = list(
@@ -169,7 +169,7 @@ class Test(BaseTest):
             total_contrib = sum(abs(f.contribution) for f in output[0].feature_outputs)
             self.assertAlmostEqual(total_contrib, 1.0, places=6)
 
-    def test_multi_features(self):
+    def test_multi_features(self) -> None:
         batch_size = 2
         classes = _get_classes()
         img_dataset = list(
