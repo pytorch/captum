@@ -86,7 +86,7 @@ Docstring is required for all public APIs to provide users the details of the ar
 - common collection types: `list`, `tuple`, `dict`
     - [PEP 585](https://peps.python.org/pep-0585/#implementation) has deprecated the duplicate types: `List`, `Tuple`, `Dict`
     - element types: `list[int]`, `dict[int, str]`
-- other foundamental types: `Any`, `Callable`, `Interable`
+- other foundamental types: `Any`, `Callable`, `Iterable`
 - class types: `MyClass`, `external_lib.SomeClass`
 - omit `torch` for common Pytorch types: `Tensor`, `nn.Module`
 - use `or` and `,` for union types: `type1 or type2`, `type1, tyep2, or type3`
