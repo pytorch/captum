@@ -221,7 +221,7 @@ def infidelity(
                 multiple input tensors are provided, the examples must
                 be aligned appropriately.
 
-        baselines (scalar, tensor, tuple of scalars or tensors, optional):
+        baselines (scalar, tensor, tuple of scalar, or tensors, optional):
                 Baselines define reference values which sometimes represent ablated
                 values and are used to compare with the actual inputs to compute
                 importance scores in attribution algorithms. They can be represented
@@ -305,7 +305,7 @@ def infidelity(
                 being passed to `perturb_func` as an input argument.
 
                 Default: None
-        target (int, tuple, tensor or list, optional): Indices for selecting
+        target (int, tuple, tensor, or list, optional): Indices for selecting
                 predictions from output(for classification cases,
                 this is usually the target class).
                 If the network returns a scalar value per example, no target

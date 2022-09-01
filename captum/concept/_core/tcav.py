@@ -40,10 +40,10 @@ class LabelledDataset(Dataset):
 
         Args:
 
-            datasets (list of Dataset): The k-th element of datasets is a Dataset
+            datasets (list[Dataset]): The k-th element of datasets is a Dataset
                     representing activation vectors associated with the k-th
                     concept
-            labels (list of int): The k-th element of labels is the integer label
+            labels (list[int]): The k-th element of labels is the integer label
                     associated with the k-th concept
         """
         assert len(datasets) == len(
@@ -120,11 +120,11 @@ def train_cav(
         model_id (str): A unique identifier for the PyTorch model for which
                 we would like to load the layer activations and train a
                 model in order to compute CAVs.
-        concepts (list of Concept): A list of Concept objects that are used
+        concepts (list[Concept]): A list of Concept objects that are used
                 to train a classifier and learn decision boundaries between
                 those concepts for each layer defined in the `layers`
                 argument.
-        layers (str, list of str): A list of layer names or a single layer
+        layers (str or list[str]): A list of layer names or a single layer
                 name that is used to compute the activations of all concept
                 examples per concept and train a classifier using those
                 activations.
@@ -258,7 +258,7 @@ class TCAV(ConceptInterpreter):
 
             model (Module): An instance of pytorch model that is used to compute
                     layer activations and attributions.
-            layers (str, list of str): A list of layer name(s) that are
+            layers (str or list[str]): A list of layer name(s) that are
                     used for computing concept activations (cavs) and layer
                     attributions.
             model_id (str, optional): A unique identifier for the PyTorch `model`
@@ -347,7 +347,7 @@ class TCAV(ConceptInterpreter):
         the list of layer(s) `layers`.
 
         Args:
-            layers (str, list of str): A list of layer names or a layer name
+            layers (str or list[str]): A list of layer names or a layer name
                     that is used to compute layer activations for the
                     specific `concept`.
             concept (Concept): A single Concept object that provides access
@@ -384,7 +384,7 @@ class TCAV(ConceptInterpreter):
         `concept_layers` dictionary.
 
         Args:
-            concept_layers (dict[Concept, list of str]): Dictionay that maps
+            concept_layers (dict[Concept, list[str]]): Dictionay that maps
                     Concept objects to a list of layer names to generate
                     the activations. Ex.: concept_layers =
                     {"striped": ['inception4c', 'inception4d']}
@@ -409,11 +409,11 @@ class TCAV(ConceptInterpreter):
 
         Args:
 
-            concepts (list of Concept): A list of Concept objects for which we want
+            concepts (list[Concept]): A list of Concept objects for which we want
                     to load the CAV.
 
         Returns:
-            layers (list of layer): A list of layers for which some CAVs still need
+            layers (list[layer]): A list of layers for which some CAVs still need
                     to be computed.
             concept_layers (dict[concept, layer]): A dictionay of concept-layers
                     mapping for which we need to perform CAV computation through
@@ -590,7 +590,7 @@ class TCAV(ConceptInterpreter):
                     provided, the examples must be aligned appropriately.
             experimental_sets (list of list of Concept): A list of list of Concept
                     instances.
-            target (int, tuple, tensor or list, optional): Output indices for
+            target (int, tuple, tensor, or list, optional): Output indices for
                     which attributions are computed (for classification cases,
                     this is usually the target class).
                     If the network returns a scalar value per example,

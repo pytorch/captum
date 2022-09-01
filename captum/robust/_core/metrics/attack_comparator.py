@@ -140,7 +140,7 @@ class AttackComparator(Generic[MetricResultType]):
                 arguments.
                 Default: ``None``
 
-            additional_attack_arg_names (list of str, optional): Any additional
+            additional_attack_arg_names (list[str], optional): Any additional
                 arguments for the attack which are specific to the particular input
                 example or batch. An example of this is target, which is necessary
                 for some attacks such as FGSM or PGD. These arguments are included

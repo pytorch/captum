@@ -239,7 +239,7 @@ class GeneralFeature(BaseFeature):
         Args:
             name (str): The label of the specific feature. For example, an
                         ImageFeature's name can be "Photo".
-            categories (list of str): Category labels for the general feature. The
+            categories (list[str]): Category labels for the general feature. The
                         order and size should match the second dimension of the
                         ``data`` tensor parameter in ``visualize``.
         """

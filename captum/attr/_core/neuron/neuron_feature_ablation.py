@@ -44,7 +44,7 @@ class NeuronFeatureAblation(NeuronAttribution, PerturbationAttribution):
                           Currently, it is assumed that the inputs or the outputs
                           of the layer, depending on which one is used for
                           attribution, can only be a single tensor.
-            device_ids (list of int): Device ID list, necessary only if forward_func
+            device_ids (list[int]): Device ID list, necessary only if forward_func
                           applies a DataParallel model. This allows reconstruction of
                           intermediate outputs from batched results across devices.
                           If forward_func is given as the DataParallel model itself,
@@ -109,7 +109,7 @@ class NeuronFeatureAblation(NeuronAttribution, PerturbationAttribution):
                           or a 1D tensor with length equal to batch_size (one scalar
                           per input example)
 
-            baselines (scalar, tensor, tuple of scalars or tensors, optional):
+            baselines (scalar, tensor, tuple of scalar, or tensors, optional):
                         Baselines define reference value which replaces each
                         feature when ablated.
                         Baselines can be provided as:

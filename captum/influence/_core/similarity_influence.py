@@ -82,7 +82,7 @@ class SimilarityInfluence(DataInfluence):
         Args:
             module (torch.nn.Module): An instance of pytorch model. This model should
                     define all of its layers as attributes of the model.
-            layers (str or list of str): The fully qualified layer(s) for which the
+            layers (str or list[str]): The fully qualified layer(s) for which the
                     activation vectors are computed.
             influence_src_dataset (torch.utils.data.Dataset): PyTorch Dataset that is
                     used to create a PyTorch Dataloader to iterate over the dataset and

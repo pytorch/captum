@@ -62,7 +62,7 @@ class NeuronConductance(NeuronAttribution, GradientAttribution):
                         Currently, it is assumed that the inputs or the outputs
                         of the layer, depending on which one is used for
                         attribution, can only be a single tensor.
-            device_ids (list of int): Device ID list, necessary only if forward_func
+            device_ids (list[int]): Device ID list, necessary only if forward_func
                         applies a DataParallel model. This allows reconstruction of
                         intermediate outputs from batched results across devices.
                         If forward_func is given as the DataParallel model itself,
@@ -143,7 +143,7 @@ class NeuronConductance(NeuronAttribution, GradientAttribution):
                           the gradient of output with respect to the intermedite neuron,
                           which cannot be computed for aggregations of multiple
                           intemediate neurons.
-            baselines (scalar, tensor, tuple of scalars or tensors, optional):
+            baselines (scalar, tensor, tuple of scalar, or tensors, optional):
                         Baselines define the starting point from which integral
                         is computed and can be provided as:
 
@@ -172,7 +172,7 @@ class NeuronConductance(NeuronAttribution, GradientAttribution):
                         use zero scalar corresponding to each input tensor.
 
                         Default: None
-            target (int, tuple, tensor or list, optional): Output indices for
+            target (int, tuple, tensor, or list, optional): Output indices for
                         which gradients are computed (for classification cases,
                         this is usually the target class).
                         If the network returns a scalar value per example,

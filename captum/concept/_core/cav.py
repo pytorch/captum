@@ -30,7 +30,7 @@ class CAV:
         and loads them from the disk (storage).
 
         Args:
-            concepts (list of Concept): a List of Concept objects. Only their
+            concepts (list[Concept]): a List of Concept objects. Only their
                         names will be saved and loaded.
             layer (str): The layer where concept activation vectors are
                         computed using a predefined classifier.
@@ -65,7 +65,7 @@ class CAV:
                     layer name.
             model_id (str): A unique model identifier associated with input
                     `layer` and `concepts`
-            concepts (list of Concept): A list of concepts that are concatenated
+            concepts (list[Concept]): A list of concepts that are concatenated
                     together and used as a concept key using their ids. These
                     concept ids are retrieved from TCAV s`Concept` objects.
             layer (str): The name of the layer for which the activations are
@@ -146,7 +146,7 @@ class CAV:
             model_id (str): A unique model identifier associated with the
                     CAVs. There exist a folder named `model_id` under
                     `cavs_path` path. The CAVs are loaded from this folder.
-            concepts (list of Concept): A List of concepts for which
+            concepts (list[Concept]): A List of concepts for which
                     we would like to load the cavs.
             layer (str): The layer name. Ex.: "inception4c". In case of nested
                     layers we use dots to specify the depth / hierarchy.

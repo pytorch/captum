@@ -11,7 +11,7 @@ def concepts_to_str(concepts: List[Concept]) -> str:
     Example output: "striped-random_0-random_1"
 
     Args:
-        concepts (list of Concept): a List of concept names to be
+        concepts (list[Concept]): a List of concept names to be
                 concatenated and used as a concepts key. These concept
                 names are respective to the Concept objects used for
                 the classifier train.

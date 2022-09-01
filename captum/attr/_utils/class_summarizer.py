@@ -40,7 +40,7 @@ class ClassSummarizer(Summarizer):
                 The input tensor to be summarised. The first
                 dimension of this input must be associated to
                 the batch size of the inputs.
-            labels (int, tuple, tensor or list, optional):
+            labels (int, tuple, tensor, or list, optional):
                 The associated labels for `x`. If Any, we
                 assume `labels` represents the label for all inputs in `x`.
 

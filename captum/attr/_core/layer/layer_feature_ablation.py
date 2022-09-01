@@ -50,7 +50,7 @@ class LayerFeatureAblation(LayerAttribution, PerturbationAttribution):
                           the inputs or outputs of the layer, corresponding to
                           attribution of each neuron in the input or output of
                           this layer.
-            device_ids (list of int): Device ID list, necessary only if forward_func
+            device_ids (list[int]): Device ID list, necessary only if forward_func
                           applies a DataParallel model. This allows reconstruction of
                           intermediate outputs from batched results across devices.
                           If forward_func is given as the DataParallel model itself
@@ -83,7 +83,7 @@ class LayerFeatureAblation(LayerAttribution, PerturbationAttribution):
                         that for all given input tensors, dimension 0 corresponds
                         to the number of examples, and if multiple input tensors
                         are provided, the examples must be aligned appropriately.
-            layer_baselines (scalar, tensor, tuple of scalars or tensors, optional):
+            layer_baselines (scalar, tensor, tuple of scalar, or tensors, optional):
                         Layer baselines define reference values which replace each
                         layer input / output value when ablated.
                         Layer baselines should be a single tensor with dimensions
@@ -94,7 +94,7 @@ class LayerFeatureAblation(LayerAttribution, PerturbationAttribution):
                         In the cases when `baselines` is not provided, we internally
                         use zero as the baseline for each neuron.
                         Default: None
-            target (int, tuple, tensor or list, optional): Output indices for
+            target (int, tuple, tensor, or list, optional): Output indices for
                         which gradients are computed (for classification cases,
                         this is usually the target class).
                         If the network returns a scalar value per example,

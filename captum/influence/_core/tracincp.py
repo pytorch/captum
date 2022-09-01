@@ -132,7 +132,7 @@ class TracInCPBase(DataInfluence):
                     `model` accepts `L-1` arguments, and the last element of `batch` is
                     the label. In other words, `model(*batch[:-1])` gives the output of
                     `model`, and `batch[-1]` are the labels for the batch.
-            checkpoints (str, list of str, or Iterator): Either the directory of the
+            checkpoints (str, list[str], or Iterator): Either the directory of the
                     path to store and retrieve model checkpoints, a list of
                     filepaths with checkpoints from which to load, or an iterator which
                     returns objects from which to load checkpoints.
@@ -141,7 +141,7 @@ class TracInCPBase(DataInfluence):
                     learning rate if it is saved. By default uses a utility to load a
                     model saved as a state dict.
                     Default: _load_flexible_state_dict
-            layers (list of str or None, optional): A list of layer names for which
+            layers (list[str] or None, optional): A list of layer names for which
                     gradients should be computed. If `layers` is None, gradients will
                     be computed for all layers. Otherwise, they will only be computed
                     for the layers specified in `layers`.
@@ -532,7 +532,7 @@ class TracInCP(TracInCPBase):
                     `model` accepts `L-1` arguments, and the last element of `batch` is
                     the label. In other words, `model(*batch[:-1])` gives the output of
                     `model`, and `batch[-1]` are the labels for the batch.
-            checkpoints (str, list of str, or Iterator): Either the directory of the
+            checkpoints (str, list[str], or Iterator): Either the directory of the
                     path to store and retrieve model checkpoints, a list of
                     filepaths with checkpoints from which to load, or an iterator which
                     returns objects from which to load checkpoints.
@@ -541,7 +541,7 @@ class TracInCP(TracInCPBase):
                     learning rate if it is saved. By default uses a utility to load a
                     model saved as a state dict.
                     Default: _load_flexible_state_dict
-            layers (list of str or None, optional): A list of layer names for which
+            layers (list[str] or None, optional): A list of layer names for which
                     gradients should be computed. If `layers` is None, gradients will
                     be computed for all layers. Otherwise, they will only be computed
                     for the layers specified in `layers`.

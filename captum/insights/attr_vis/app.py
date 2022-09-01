@@ -151,9 +151,9 @@ class AttributionVisualizer:
 
             models (torch.nn.Module): One or more PyTorch modules (models) for
                           attribution visualization.
-            classes (list of str): List of strings corresponding to the names of
+            classes (list[str]): List of strings corresponding to the names of
                           classes for classification.
-            features (list of BaseFeature): List of BaseFeatures, which correspond
+            features (list[BaseFeature]): List of BaseFeatures, which correspond
                           to input arguments to the model. Each feature object defines
                           relevant transformations for converting to model input,
                           constructing baselines, and visualizing. The length of the

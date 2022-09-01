@@ -211,7 +211,7 @@ class AV:
                     AV.generate_dataset_activations from batch index.
                     It assumes identifier is same for all layers if a list of
                     `layers` is provided.
-            layers (str or list of str): The layer(s) for which the activation vectors
+            layers (str or list[str]): The layer(s) for which the activation vectors
                     are computed.
             act_tensors (tensor or list of tensor): A batch of activation vectors.
                     This must match the dimension of `layers`.
@@ -299,7 +299,7 @@ class AV:
                     for the `layer` are stored.
             model_id (str): The name/version of the model for which layer activations
                     are being computed and stored.
-            layers (str or list of str): The layer(s) for which the activation vectors
+            layers (str or list[str]): The layer(s) for which the activation vectors
                     are computed.
             load_from_disk (bool, optional): Whether or not to load from disk.
                 Default: True
@@ -359,7 +359,7 @@ class AV:
                     define all of its layers as attributes of the model.
             model_id (str): The name/version of the model for which layer activations
                     are being computed and stored.
-            layers (str or list of str): The layer(s) for which the activation vectors
+            layers (str or list[str]): The layer(s) for which the activation vectors
                     are computed.
             inputs (tensor or tuple of tensors): Batch of examples for
                     which influential instances are computed. They are passed to the
@@ -435,7 +435,7 @@ class AV:
                     define all of its layers as attributes of the model.
             model_id (str): The name/version of the model for which layer activations
                     are being computed and stored.
-            layers (str or list of str): The layer(s) for which the activation vectors
+            layers (str or list[str]): The layer(s) for which the activation vectors
                     are computed.
             dataloader (torch.utils.data.DataLoader): DataLoader that yields Dataset
                     for which influential instances are computed. They are passed to

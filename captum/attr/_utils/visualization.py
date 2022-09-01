@@ -359,13 +359,13 @@ def visualize_image_attr_multiple(
                     with values in range 0-1 or 0-255. This is a necessary
                     argument for any visualization method which utilizes
                     the original image.
-        methods (list of str): List of strings of length k, defining method
+        methods (list[str]): List of strings of length k, defining method
                         for each visualization. Each method must be a valid
                         string argument for method to visualize_image_attr.
-        signs (list of str): List of strings of length k, defining signs for
+        signs (list[str]): List of strings of length k, defining signs for
                         each visualization. Each sign must be a valid
                         string argument for sign to visualize_image_attr.
-        titles (list of str, optional): List of strings of length k, providing
+        titles (list[str], optional): List of strings of length k, providing
                     a title string for each plot. If None is provided, no titles
                     are added to subplots.
                     Default: None
@@ -505,7 +505,7 @@ def visualize_timeseries_attr(
                         values.
 
                     Default: `absolute_value`
-        channel_labels (list of str, optional): List of labels
+        channel_labels (list[str], optional): List of labels
                     corresponding to each channel in data.
                     Default: None
         channels_last (bool, optional): If True, data is expected to have

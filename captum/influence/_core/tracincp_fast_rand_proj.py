@@ -115,7 +115,7 @@ class TracInCPFast(TracInCPBase):
                     `model` accepts `L-1` arguments, and the last element of `batch` is
                     the label. In other words, `model(*batch[:-1])` gives the output of
                     `model`, and `batch[-1]` are the labels for the batch.
-            checkpoints (str, list of str, or Iterator): Either the directory of the
+            checkpoints (str, list[str], or Iterator): Either the directory of the
                     path to store and retrieve model checkpoints, a list of
                     filepaths with checkpoints from which to load, or an iterator which
                     returns objects from which to load checkpoints.
@@ -842,7 +842,7 @@ class TracInCPFastRandProj(TracInCPFast):
                     `model` accepts `L-1` arguments, and the last element of `batch` is
                     the label. In other words, `model(*batch[:-1])` gives the output of
                     `model`, and `batch[-1]` are the labels for the batch.
-            checkpoints (str, list of str, or Iterator): Either the directory of the
+            checkpoints (str, list[str], or Iterator): Either the directory of the
                     path to store and retrieve model checkpoints, a list of
                     filepaths with checkpoints from which to load, or an iterator which
                     returns objects from which to load checkpoints.

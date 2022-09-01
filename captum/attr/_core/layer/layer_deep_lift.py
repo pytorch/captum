@@ -153,7 +153,7 @@ class LayerDeepLift(LayerAttribution, DeepLift):
                         corresponds to the number of examples (aka batch size),
                         and if multiple input tensors are provided, the examples
                         must be aligned appropriately.
-            baselines (scalar, tensor, tuple of scalars or tensors, optional):
+            baselines (scalar, tensor, tuple of scalar, or tensors, optional):
                         Baselines define reference samples that are compared with
                         the inputs. In order to assign attribution scores DeepLift
                         computes the differences between the inputs/outputs and
@@ -185,7 +185,7 @@ class LayerDeepLift(LayerAttribution, DeepLift):
                         use zero scalar corresponding to each input tensor.
 
                         Default: None
-            target (int, tuple, tensor or list, optional): Output indices for
+            target (int, tuple, tensor, or list, optional): Output indices for
                         which gradients are computed (for classification cases,
                         this is usually the target class).
                         If the network returns a scalar value per example,
@@ -491,7 +491,7 @@ class LayerDeepLiftShap(LayerDeepLift, DeepLiftShap):
                         to the number of examples (aka batch size), and if
                         multiple input tensors are provided, the examples must
                         be aligned appropriately.
-            baselines (tensor, tuple of tensors, Callable):
+            baselines (tensor, tuple of tensors, or Callable):
                         Baselines define reference samples that are compared with
                         the inputs. In order to assign attribution scores DeepLift
                         computes the differences between the inputs/outputs and
@@ -516,7 +516,7 @@ class LayerDeepLiftShap(LayerDeepLift, DeepLiftShap):
 
                         It is recommended that the number of samples in the baselines'
                         tensors is larger than one.
-            target (int, tuple, tensor or list, optional): Output indices for
+            target (int, tuple, tensor, or list, optional): Output indices for
                         which gradients are computed (for classification cases,
                         this is usually the target class).
                         If the network returns a scalar value per example,

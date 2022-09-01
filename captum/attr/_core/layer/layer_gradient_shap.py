@@ -75,7 +75,7 @@ class LayerGradientShap(LayerAttribution, GradientAttribution):
                         the inputs or outputs of the layer, corresponding to
                         attribution of each neuron in the input or output of
                         this layer.
-            device_ids (list of int): Device ID list, necessary only if forward_func
+            device_ids (list[int]): Device ID list, necessary only if forward_func
                         applies a DataParallel model. This allows reconstruction of
                         intermediate outputs from batched results across devices.
                         If forward_func is given as the DataParallel model itself,
@@ -155,7 +155,7 @@ class LayerGradientShap(LayerAttribution, GradientAttribution):
                         that for all given input tensors, dimension 0 corresponds
                         to the number of examples, and if multiple input tensors
                         are provided, the examples must be aligned appropriately.
-            baselines (tensor, tuple of tensors, Callable):
+            baselines (tensor, tuple of tensors, or Callable):
                         Baselines define the starting point from which expectation
                         is computed and can be provided as:
 
@@ -191,7 +191,7 @@ class LayerGradientShap(LayerAttribution, GradientAttribution):
                         corresponds to the input with the same index in the inputs
                         tuple.
                         Default: 0.0
-            target (int, tuple, tensor or list, optional): Output indices for
+            target (int, tuple, tensor, or list, optional): Output indices for
                         which gradients are computed (for classification cases,
                         this is usually the target class).
                         If the network returns a scalar value per example,
@@ -343,7 +343,7 @@ class LayerInputBaselineXGradient(LayerAttribution, GradientAttribution):
                         the inputs or outputs of the layer, corresponding to
                         attribution of each neuron in the input or output of
                         this layer.
-            device_ids (list of int): Device ID list, necessary only if forward_func
+            device_ids (list[int]): Device ID list, necessary only if forward_func
                         applies a DataParallel model. This allows reconstruction of
                         intermediate outputs from batched results across devices.
                         If forward_func is given as the DataParallel model itself,
