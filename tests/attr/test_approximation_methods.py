@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import unittest
+from typing import List
 
 import torch
 from captum.attr._utils.approximation_methods import Riemann, riemann_builders
@@ -8,16 +9,16 @@ from tests.helpers.basic import assertTensorAlmostEqual
 
 
 class Test(unittest.TestCase):
-    def __init__(self, methodName="runTest") -> None:
+    def __init__(self, methodName: str = "runTest") -> None:
         super().__init__(methodName)
 
-    def test_riemann_0(self):
+    def test_riemann_0(self) -> None:
         with self.assertRaises(AssertionError):
             step_sizes, alphas = riemann_builders()
             step_sizes(0)
             alphas(0)
 
-    def test_riemann_2(self):
+    def test_riemann_2(self) -> None:
         expected_step_sizes_lrm = [0.5, 0.5]
         expected_step_sizes_trapezoid = [0.25, 0.25]
         expected_left = [0.0, 0.5]
@@ -34,7 +35,7 @@ class Test(unittest.TestCase):
             expected_trapezoid,
         )
 
-    def test_riemann_3(self):
+    def test_riemann_3(self) -> None:
         expected_step_sizes = [1 / 3] * 3
         expected_step_sizes_trapezoid = [1 / 6, 1 / 3, 1 / 6]
         expected_left = [0.0, 1 / 3, 2 / 3]
@@ -51,7 +52,7 @@ class Test(unittest.TestCase):
             expected_trapezoid,
         )
 
-    def test_riemann_4(self):
+    def test_riemann_4(self) -> None:
         expected_step_sizes = [1 / 4] * 4
         expected_step_sizes_trapezoid = [1 / 8, 1 / 4, 1 / 4, 1 / 8]
         expected_left = [0.0, 0.25, 0.5, 0.75]
@@ -70,14 +71,14 @@ class Test(unittest.TestCase):
 
     def _assert_steps_and_alphas(
         self,
-        n,
-        expected_step_sizes,
-        expected_step_sizes_trapezoid,
-        expected_left,
-        expected_right,
-        expected_middle,
-        expected_trapezoid,
-    ):
+        n: int,
+        expected_step_sizes: List[float],
+        expected_step_sizes_trapezoid: List[float],
+        expected_left: List[float],
+        expected_right: List[float],
+        expected_middle: List[float],
+        expected_trapezoid: List[float],
+    ) -> None:
         step_sizes_left, alphas_left = riemann_builders(Riemann.left)
         step_sizes_right, alphas_right = riemann_builders(Riemann.right)
         step_sizes_middle, alphas_middle = riemann_builders(Riemann.middle)

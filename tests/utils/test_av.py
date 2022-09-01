@@ -20,7 +20,7 @@ class RangeDataset(Dataset):
             .transpose(1, 0)
         )
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self.samples)
 
     def __getitem__(self, idx):

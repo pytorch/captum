@@ -52,7 +52,7 @@ class TestWordEmbeddings(unittest.TestCase):
         self.model = self._create_dummy_model()
         self.data_handler = self._create_dummy_data_handler()
 
-    def tearDown(self):
+    def tearDown(self) -> None:
         for f in (
             self.embedding_file,
             self.word_embedding_file,
@@ -68,7 +68,7 @@ class TestWordEmbeddings(unittest.TestCase):
         ):
             os.remove(p)
 
-    def test_word_embeddings(self):
+    def test_word_embeddings(self) -> None:
         embedding_list = configure_model_integ_grads_embeddings(self.model)
         integrated_gradients_embedding = embedding_list[0]
         input = torch.arange(0, 300).unsqueeze(0).unsqueeze(0)
@@ -81,7 +81,7 @@ class TestWordEmbeddings(unittest.TestCase):
             )
         )
 
-    def test_baseline_generation(self):
+    def test_baseline_generation(self) -> None:
         baseline_generator = BaselineGenerator(self.model, self.data_handler, "cpu")
         embedding_list = configure_model_integ_grads_embeddings(self.model)
         integrated_gradients_embedding = embedding_list[0]
