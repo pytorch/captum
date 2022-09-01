@@ -47,7 +47,7 @@ class Attribution:
 
     Args:
 
-        inputs (tensor or tuple of tensors): Input for which attribution
+        inputs (Tensor or tuple of Tensor): Input for which attribution
                     is computed. It can be provided as a single tensor or
                     a tuple of multiple tensors. If multiple input tensors
                     are provided, the batch sizes must be aligned across all
@@ -97,7 +97,7 @@ class Attribution:
 
     Args:
 
-            attributions (tensor or tuple of tensors): Attribution scores that
+            attributions (Tensor or tuple of Tensor): Attribution scores that
                         are precomputed by an attribution algorithm.
                         Attributions can be provided in form of a single tensor
                         or a tuple of those. It is assumed that attribution
@@ -184,7 +184,7 @@ class GradientAttribution(Attribution):
 
         Args:
 
-                attributions (tensor or tuple of tensors): Precomputed attribution
+                attributions (Tensor or tuple of Tensor): Precomputed attribution
                             scores. The user can compute those using any attribution
                             algorithm. It is assumed the shape and the
                             dimensionality of attributions must match the shape and
@@ -193,17 +193,17 @@ class GradientAttribution(Attribution):
                             dimension 0 corresponds to the number of
                             examples, and if multiple input tensors are provided,
                             the examples must be aligned appropriately.
-                start_point (tensor or tuple of tensors, optional): `start_point`
+                start_point (Tensor or tuple of Tensor, optional): `start_point`
                             is passed as an input to model's forward function. It
                             is the starting point of attributions' approximation.
                             It is assumed that both `start_point` and `end_point`
                             have the same shape and dimensionality.
-                end_point (tensor or tuple of tensors): `end_point`
+                end_point (Tensor or tuple of Tensor): `end_point`
                             is passed as an input to model's forward function. It
                             is the end point of attributions' approximation.
                             It is assumed that both `start_point` and `end_point`
                             have the same shape and dimensionality.
-                target (int, tuple, tensor, or list, optional): Output indices for
+                target (int, tuple, Tensor, or list, optional): Output indices for
                             which gradients are computed (for classification cases,
                             this is usually the target class).
                             If the network returns a scalar value per example,

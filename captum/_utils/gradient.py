@@ -730,7 +730,7 @@ def _compute_jacobian_wrt_params(
                 but must behave as a library loss function would if `reduction='none'`.
 
     Returns:
-        grads (tuple of tensor): Returns the Jacobian for the minibatch as a
+        grads (tuple of Tensor): Returns the Jacobian for the minibatch as a
                 tuple of gradients corresponding to the tuple of trainable parameters
                 returned by `model.parameters()`. Each object grads[i] references to the
                 gradients for the parameters in the i-th trainable layer of the model.
@@ -804,7 +804,7 @@ def _compute_jacobian_wrt_params_with_sample_wise_trick(
                 Defaults to 'sum'.
 
     Returns:
-        grads (tuple of tensor): Returns the Jacobian for the minibatch as a
+        grads (tuple of Tensor): Returns the Jacobian for the minibatch as a
                 tuple of gradients corresponding to the tuple of trainable parameters
                 returned by `model.parameters()`. Each object grads[i] references to the
                 gradients for the parameters in the i-th trainable layer of the model.

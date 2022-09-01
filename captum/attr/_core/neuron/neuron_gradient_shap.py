@@ -106,7 +106,7 @@ class NeuronGradientShap(NeuronAttribution, GradientAttribution):
         r"""
         Args:
 
-            inputs (tensor or tuple of tensors): Input for which SHAP attribution
+            inputs (Tensor or tuple of Tensor): Input for which SHAP attribution
                         values are computed. If `forward_func` takes a single
                         tensor as input, a single input tensor should be provided.
                         If `forward_func` takes multiple tensors as input, a tuple
@@ -147,7 +147,7 @@ class NeuronGradientShap(NeuronAttribution, GradientAttribution):
                           this function returns either a tensor with one element
                           or a 1D tensor with length equal to batch_size (one scalar
                           per input example)
-            baselines (tensor, tuple of tensors, or Callable):
+            baselines (Tensor, tuple of Tensor, or Callable):
                         Baselines define the starting point from which expectation
                         is computed and can be provided as:
 

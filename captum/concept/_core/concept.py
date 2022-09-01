@@ -80,7 +80,7 @@ class ConceptInterpreter:
 
     Args:
 
-        inputs (tensor or tuple of tensors): Inputs for which concept-based
+        inputs (Tensor or tuple of Tensor): Inputs for which concept-based
                     interpretation scores are computed. It can be provided as
                     a single tensor or a tuple of multiple tensors. If multiple
                     input tensors are provided, the batch size (the first

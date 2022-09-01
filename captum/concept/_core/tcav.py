@@ -82,9 +82,9 @@ class LabelledDataset(Dataset):
             i (int): which (activation vector, label) batch in the dataset to
                     return
         Returns:
-            inputs (tensor): i-th batch in Dataset (representing activation
+            inputs (Tensor): i-th batch in Dataset (representing activation
                     vectors)
-            labels (tensor): labels of i-th batch in Dataset
+            labels (Tensor): labels of i-th batch in Dataset
         """
         assert i < self.length
         k = self._i_to_k(i)
@@ -578,7 +578,7 @@ class TCAV(ConceptInterpreter):
 
         Args:
 
-            inputs (tensor or tuple of tensors): Inputs for which predictions
+            inputs (Tensor or tuple of Tensor): Inputs for which predictions
                     are performed and attributions are computed.
                     If model takes a single tensor as
                     input, a single input tensor should be provided.
@@ -590,7 +590,7 @@ class TCAV(ConceptInterpreter):
                     provided, the examples must be aligned appropriately.
             experimental_sets (list of list of Concept): A list of list of Concept
                     instances.
-            target (int, tuple, tensor, or list, optional): Output indices for
+            target (int, tuple, Tensor, or list, optional): Output indices for
                     which attributions are computed (for classification cases,
                     this is usually the target class).
                     If the network returns a scalar value per example,

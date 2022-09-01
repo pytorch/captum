@@ -38,7 +38,7 @@ def _divide_and_aggregate_metrics(
 
         Returns:
 
-            metric (tensor): A metric score estimated by `metric_func` per
+            metric (Tensor): A metric score estimated by `metric_func` per
                         input example.
     """
     bsz = inputs[0].size(0)

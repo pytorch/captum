@@ -266,7 +266,7 @@ class LimeBase(PerturbationAttribution):
 
         Args:
 
-            inputs (tensor or tuple of tensors): Input for which LIME
+            inputs (Tensor or tuple of Tensor): Input for which LIME
                         is computed. If forward_func takes a single
                         tensor as input, a single input tensor should be provided.
                         If forward_func takes multiple tensors as input, a tuple
@@ -274,7 +274,7 @@ class LimeBase(PerturbationAttribution):
                         that for all given input tensors, dimension 0 corresponds
                         to the number of examples, and if multiple input tensors
                         are provided, the examples must be aligned appropriately.
-            target (int, tuple, tensor, or list, optional): Output indices for
+            target (int, tuple, Tensor, or list, optional): Output indices for
                         which surrogate model is trained
                         (for classification cases,
                         this is usually the target class).
@@ -879,7 +879,7 @@ class Lime(LimeBase):
 
         Args:
 
-            inputs (tensor or tuple of tensors): Input for which LIME
+            inputs (Tensor or tuple of Tensor): Input for which LIME
                         is computed. If forward_func takes a single
                         tensor as input, a single input tensor should be provided.
                         If forward_func takes multiple tensors as input, a tuple
@@ -887,7 +887,7 @@ class Lime(LimeBase):
                         that for all given input tensors, dimension 0 corresponds
                         to the number of examples, and if multiple input tensors
                         are provided, the examples must be aligned appropriately.
-            baselines (scalar, tensor, tuple of scalar, or tensors, optional):
+            baselines (scalar, Tensor, tuple of scalar, or Tensor, optional):
                         Baselines define reference value which replaces each
                         feature when the corresponding interpretable feature
                         is set to 0.
@@ -917,7 +917,7 @@ class Lime(LimeBase):
                         In the cases when `baselines` is not provided, we internally
                         use zero scalar corresponding to each input tensor.
                         Default: None
-            target (int, tuple, tensor, or list, optional): Output indices for
+            target (int, tuple, Tensor, or list, optional): Output indices for
                         which surrogate model is trained
                         (for classification cases,
                         this is usually the target class).
@@ -960,7 +960,7 @@ class Lime(LimeBase):
                         Note that attributions are not computed with respect
                         to these arguments.
                         Default: None
-            feature_mask (tensor or tuple of tensors, optional):
+            feature_mask (Tensor or tuple of Tensor, optional):
                         feature_mask defines a mask for the input, grouping
                         features which correspond to the same
                         interpretable feature. feature_mask

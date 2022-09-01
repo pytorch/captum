@@ -69,7 +69,7 @@ class NeuronDeconvolution(NeuronAttribution, GradientAttribution):
         r"""
         Args:
 
-            inputs (tensor or tuple of tensors): Input for which
+            inputs (Tensor or tuple of Tensor): Input for which
                         attributions are computed. If forward_func takes a single
                         tensor as input, a single input tensor should be provided.
                         If forward_func takes multiple tensors as input, a tuple
@@ -238,7 +238,7 @@ class NeuronGuidedBackprop(NeuronAttribution, GradientAttribution):
         r"""
         Args:
 
-            inputs (tensor or tuple of tensors): Input for which
+            inputs (Tensor or tuple of Tensor): Input for which
                         attributions are computed. If forward_func takes a single
                         tensor as input, a single input tensor should be provided.
                         If forward_func takes multiple tensors as input, a tuple

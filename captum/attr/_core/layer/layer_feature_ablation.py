@@ -75,7 +75,7 @@ class LayerFeatureAblation(LayerAttribution, PerturbationAttribution):
         r"""
         Args:
 
-            inputs (tensor or tuple of tensors): Input for which layer
+            inputs (Tensor or tuple of Tensor): Input for which layer
                         attributions are computed. If forward_func takes a single
                         tensor as input, a single input tensor should be provided.
                         If forward_func takes multiple tensors as input, a tuple
@@ -83,7 +83,7 @@ class LayerFeatureAblation(LayerAttribution, PerturbationAttribution):
                         that for all given input tensors, dimension 0 corresponds
                         to the number of examples, and if multiple input tensors
                         are provided, the examples must be aligned appropriately.
-            layer_baselines (scalar, tensor, tuple of scalar, or tensors, optional):
+            layer_baselines (scalar, Tensor, tuple of scalar, or Tensor, optional):
                         Layer baselines define reference values which replace each
                         layer input / output value when ablated.
                         Layer baselines should be a single tensor with dimensions
@@ -94,7 +94,7 @@ class LayerFeatureAblation(LayerAttribution, PerturbationAttribution):
                         In the cases when `baselines` is not provided, we internally
                         use zero as the baseline for each neuron.
                         Default: None
-            target (int, tuple, tensor, or list, optional): Output indices for
+            target (int, tuple, Tensor, or list, optional): Output indices for
                         which gradients are computed (for classification cases,
                         this is usually the target class).
                         If the network returns a scalar value per example,
@@ -131,7 +131,7 @@ class LayerFeatureAblation(LayerAttribution, PerturbationAttribution):
                         Note that attributions are not computed with respect
                         to these arguments.
                         Default: None
-            layer_mask (tensor or tuple of tensors, optional):
+            layer_mask (Tensor or tuple of Tensor, optional):
                         layer_mask defines a mask for the layer, grouping
                         elements of the layer input / output which should be
                         ablated together.

@@ -185,7 +185,7 @@ class DeepLift(GradientAttribution):
         r"""
         Args:
 
-            inputs (tensor or tuple of tensors): Input for which
+            inputs (Tensor or tuple of Tensor): Input for which
                         attributions are computed. If forward_func takes a single
                         tensor as input, a single input tensor should be provided.
                         If forward_func takes multiple tensors as input, a tuple
@@ -194,7 +194,7 @@ class DeepLift(GradientAttribution):
                         to the number of examples (aka batch size), and if
                         multiple input tensors are provided, the examples must
                         be aligned appropriately.
-            baselines (scalar, tensor, tuple of scalar, or tensors, optional):
+            baselines (scalar, Tensor, tuple of scalar, or Tensor, optional):
                         Baselines define reference samples that are compared with
                         the inputs. In order to assign attribution scores DeepLift
                         computes the differences between the inputs/outputs and
@@ -226,7 +226,7 @@ class DeepLift(GradientAttribution):
                         use zero scalar corresponding to each input tensor.
 
                         Default: None
-            target (int, tuple, tensor, or list, optional): Output indices for
+            target (int, tuple, Tensor, or list, optional): Output indices for
                         which gradients are computed (for classification cases,
                         this is usually the target class).
                         If the network returns a scalar value per example,
@@ -696,7 +696,7 @@ class DeepLiftShap(DeepLift):
         r"""
         Args:
 
-            inputs (tensor or tuple of tensors): Input for which
+            inputs (Tensor or tuple of Tensor): Input for which
                         attributions are computed. If forward_func takes a single
                         tensor as input, a single input tensor should be provided.
                         If forward_func takes multiple tensors as input, a tuple
@@ -705,7 +705,7 @@ class DeepLiftShap(DeepLift):
                         to the number of examples (aka batch size), and if
                         multiple input tensors are provided, the examples must
                         be aligned appropriately.
-            baselines (tensor, tuple of tensors, or Callable):
+            baselines (Tensor, tuple of Tensor, or Callable):
                         Baselines define reference samples that are compared with
                         the inputs. In order to assign attribution scores DeepLift
                         computes the differences between the inputs/outputs and
@@ -730,7 +730,7 @@ class DeepLiftShap(DeepLift):
 
                         It is recommended that the number of samples in the baselines'
                         tensors is larger than one.
-            target (int, tuple, tensor, or list, optional): Output indices for
+            target (int, tuple, Tensor, or list, optional): Output indices for
                         which gradients are computed (for classification cases,
                         this is usually the target class).
                         If the network returns a scalar value per example,

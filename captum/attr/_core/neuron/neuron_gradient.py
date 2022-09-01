@@ -64,7 +64,7 @@ class NeuronGradient(NeuronAttribution, GradientAttribution):
         r"""
         Args:
 
-            inputs (tensor or tuple of tensors): Input for which neuron
+            inputs (Tensor or tuple of Tensor): Input for which neuron
                         gradients are computed. If forward_func takes a single
                         tensor as input, a single input tensor should be provided.
                         If forward_func takes multiple tensors as input, a tuple

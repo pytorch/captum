@@ -103,7 +103,7 @@ class NeuronConductance(NeuronAttribution, GradientAttribution):
         r"""
         Args:
 
-            inputs (tensor or tuple of tensors): Input for which neuron
+            inputs (Tensor or tuple of Tensor): Input for which neuron
                         conductance is computed. If forward_func takes a single
                         tensor as input, a single input tensor should be provided.
                         If forward_func takes multiple tensors as input, a tuple
@@ -143,7 +143,7 @@ class NeuronConductance(NeuronAttribution, GradientAttribution):
                           the gradient of output with respect to the intermedite neuron,
                           which cannot be computed for aggregations of multiple
                           intemediate neurons.
-            baselines (scalar, tensor, tuple of scalar, or tensors, optional):
+            baselines (scalar, Tensor, tuple of scalar, or Tensor, optional):
                         Baselines define the starting point from which integral
                         is computed and can be provided as:
 
@@ -172,7 +172,7 @@ class NeuronConductance(NeuronAttribution, GradientAttribution):
                         use zero scalar corresponding to each input tensor.
 
                         Default: None
-            target (int, tuple, tensor, or list, optional): Output indices for
+            target (int, tuple, Tensor, or list, optional): Output indices for
                         which gradients are computed (for classification cases,
                         this is usually the target class).
                         If the network returns a scalar value per example,

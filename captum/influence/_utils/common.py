@@ -91,12 +91,12 @@ def _jacobian_loss_wrt_inputs(
                 torch.nn.Module. If a custom loss is provided, it can be either type,
                 but must behave as a library loss function would if `reduction='sum'`
                 or `reduction='mean'`.
-        out (tensor): This is a tensor that represents the batch of inputs to
+        out (Tensor): This is a tensor that represents the batch of inputs to
                 `loss_fn`. In practice, this will be the output of a model; this is
                 why this argument is named `out`. `out` is a 2D tensor of shape
                 (batch size, model output dimensionality). We will call `loss_fn` via
                 `loss_fn(out, targets)`.
-        targets (tensor): The labels for the batch of inputs.
+        targets (Tensor): The labels for the batch of inputs.
         vectorize (bool): Flag to use experimental vectorize functionality for
                 `torch.autograd.functional.jacobian`.
         reduction_type (str): The type of reduction used by `loss_fn`. If `loss_fn`
@@ -104,7 +104,7 @@ def _jacobian_loss_wrt_inputs(
                 only be "mean" or "sum".
 
     Returns:
-        jacobians (tensor): Returns the jacobian of the per-sample loss (implicitly
+        jacobians (Tensor): Returns the jacobian of the per-sample loss (implicitly
                 defined by `loss_fn` and `reduction_type`) w.r.t each sample
                 in the batch represented by `out`. This is a 2D tensor, where the
                 first dimension is the batch dimension.
@@ -206,7 +206,7 @@ def _get_k_most_influential_helper(
                 in the `influence_src_dataloader` argument.
         inputs (tuple of Any): A batch of examples. Does not represent labels,
                 which are passed as `targets`.
-        targets (tensor, optional): If computing TracIn scores on a loss function,
+        targets (Tensor, optional): If computing TracIn scores on a loss function,
                 these are the labels corresponding to the batch `inputs`.
                 Default: None
         k (int, optional): The number of proponents or opponents to return per test

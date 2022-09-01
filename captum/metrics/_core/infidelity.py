@@ -211,7 +211,7 @@ def infidelity(
                 input examples that are repeated `max_examples_per_batch / batch_size`
                 times within the batch.
 
-        inputs (tensor or tuple of tensors): Input for which
+        inputs (Tensor or tuple of Tensor): Input for which
                 attributions are computed. If forward_func takes a single
                 tensor as input, a single input tensor should be provided.
                 If forward_func takes multiple tensors as input, a tuple
@@ -221,7 +221,7 @@ def infidelity(
                 multiple input tensors are provided, the examples must
                 be aligned appropriately.
 
-        baselines (scalar, tensor, tuple of scalar, or tensors, optional):
+        baselines (scalar, Tensor, tuple of scalar, or Tensor, optional):
                 Baselines define reference values which sometimes represent ablated
                 values and are used to compare with the actual inputs to compute
                 importance scores in attribution algorithms. They can be represented
@@ -250,7 +250,7 @@ def infidelity(
 
                 Default: None
 
-        attributions (tensor or tuple of tensors):
+        attributions (Tensor or tuple of Tensor):
                 Attribution scores computed based on an attribution algorithm.
                 This attribution scores can be computed using the implementations
                 provided in the `captum.attr` package. Some of those attribution
@@ -305,7 +305,7 @@ def infidelity(
                 being passed to `perturb_func` as an input argument.
 
                 Default: None
-        target (int, tuple, tensor, or list, optional): Indices for selecting
+        target (int, tuple, Tensor, or list, optional): Indices for selecting
                 predictions from output(for classification cases,
                 this is usually the target class).
                 If the network returns a scalar value per example, no target
@@ -366,7 +366,7 @@ def infidelity(
                 Default: False
     Returns:
 
-        infidelities (tensor): A tensor of scalar infidelity scores per
+        infidelities (Tensor): A tensor of scalar infidelity scores per
                 input example. The first dimension is equal to the
                 number of examples in the input batch and the second
                 dimension is one.

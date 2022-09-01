@@ -18,7 +18,7 @@ class Perturbation:
 
     Args:
 
-        inputs (tensor or tuple of tensors): Input for which adversarial attack
+        inputs (Tensor or tuple of Tensor): Input for which adversarial attack
                     is computed. It can be provided as a single tensor or
                     a tuple of multiple tensors. If multiple input tensors
                     are provided, the batch sizes must be aligned across all

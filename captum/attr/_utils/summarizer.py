@@ -193,7 +193,7 @@ class SummarizerSingleTensor:
         Updates the summary of a given tensor `x`
 
         Args:
-            x (tensor):
+            x (Tensor):
                 The tensor to summarize
         """
         for stat in self._stats:

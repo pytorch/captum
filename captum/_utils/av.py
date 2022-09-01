@@ -361,7 +361,7 @@ class AV:
                     are being computed and stored.
             layers (str or list[str]): The layer(s) for which the activation vectors
                     are computed.
-            inputs (tensor or tuple of tensors): Batch of examples for
+            inputs (Tensor or tuple of Tensor): Batch of examples for
                     which influential instances are computed. They are passed to the
                     input `model`. The first dimension in `inputs` tensor or tuple of
                     tensors corresponds to the batch size.

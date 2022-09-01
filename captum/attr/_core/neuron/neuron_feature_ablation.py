@@ -67,7 +67,7 @@ class NeuronFeatureAblation(NeuronAttribution, PerturbationAttribution):
         r"""
         Args:
 
-            inputs (tensor or tuple of tensors): Input for which neuron
+            inputs (Tensor or tuple of Tensor): Input for which neuron
                         attributions are computed. If forward_func takes a single
                         tensor as input, a single input tensor should be provided.
                         If forward_func takes multiple tensors as input, a tuple
@@ -109,7 +109,7 @@ class NeuronFeatureAblation(NeuronAttribution, PerturbationAttribution):
                           or a 1D tensor with length equal to batch_size (one scalar
                           per input example)
 
-            baselines (scalar, tensor, tuple of scalar, or tensors, optional):
+            baselines (scalar, Tensor, tuple of scalar, or Tensor, optional):
                         Baselines define reference value which replaces each
                         feature when ablated.
                         Baselines can be provided as:
@@ -149,7 +149,7 @@ class NeuronFeatureAblation(NeuronAttribution, PerturbationAttribution):
                         Note that attributions are not computed with respect
                         to these arguments.
                         Default: None
-            feature_mask (tensor or tuple of tensors, optional):
+            feature_mask (Tensor or tuple of Tensor, optional):
                         feature_mask defines a mask for the input, grouping
                         features which should be ablated together. feature_mask
                         should contain the same number of tensors as inputs.

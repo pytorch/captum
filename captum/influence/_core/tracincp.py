@@ -244,7 +244,7 @@ class TracInCPBase(DataInfluence):
                     Default: False
 
         Returns:
-            self_influence_scores (tensor): This is a 1D tensor containing the self
+            self_influence_scores (Tensor): This is a 1D tensor containing the self
                     influence scores of all examples in `inputs_dataset`, regardless of
                     whether it represents a single batch or a `DataLoader` that yields
                     batches.
@@ -265,7 +265,7 @@ class TracInCPBase(DataInfluence):
 
             inputs (tuple of Any): A tuple that represents a batch of examples. It does
                     not represent labels, which are passed as `targets`.
-            targets (tensor, optional): If computing influence scores on a loss
+            targets (Tensor, optional): If computing influence scores on a loss
                     function, these are the labels corresponding to the batch `inputs`.
                     Default: None
             k (int, optional): The number of proponents or opponents to return per test
@@ -315,13 +315,13 @@ class TracInCPBase(DataInfluence):
             inputs (tuple of Any): A batch of examples. Does not represent labels,
                     which are passed as `targets`. The assumption is that
                     `model(*inputs)` produces the predictions for the batch.
-            targets (tensor, optional): If computing influence scores on a loss
+            targets (Tensor, optional): If computing influence scores on a loss
                     function, these are the labels corresponding to the batch
                     `inputs`.
                     Default: None
 
         Returns:
-            influence_scores (tensor): Influence scores over the entire
+            influence_scores (Tensor): Influence scores over the entire
                     training dataset `train_dataset`. Dimensionality is
                     (inputs_batch_size, src_dataset_size). For example:
                     influence_scores[i][j] = the influence score for the j-th training
@@ -384,7 +384,7 @@ class TracInCPBase(DataInfluence):
                     `inputs` will need to be a tuple. In other words, `inputs` will be
                     unpacked as an argument when passing to `model`.
                     Default: None
-            targets (tensor, optional): If computing influence scores on a loss
+            targets (Tensor, optional): If computing influence scores on a loss
                     function, these are the labels corresponding to the batch `inputs`.
                     Default: None
             k (int, optional): If not provided or `None`, the influence score mode will
@@ -715,7 +715,7 @@ class TracInCP(TracInCPBase):
                     `inputs` will need to be a tuple. In other words, `inputs` will be
                     unpacked as an argument when passing to `model`.
                     Default: None
-            targets (tensor, optional): If computing influence scores on a loss
+            targets (Tensor, optional): If computing influence scores on a loss
                     function, these are the labels corresponding to the batch `inputs`.
                     Default: None
             k (int, optional): If not provided or `None`, the influence score mode will
@@ -837,7 +837,7 @@ class TracInCP(TracInCPBase):
             inputs (tuple of Any): A test batch of examples. Does not represent labels,
                     which are passed as `targets`. The assumption is that
                     `model(*inputs)` produces the predictions for the batch.
-            targets (tensor, optional): If computing influence scores on a loss
+            targets (Tensor, optional): If computing influence scores on a loss
                     function, these are the labels corresponding to the batch `inputs`.
                     Default: None
             show_progress (bool, optional): To compute the influence of examples in
@@ -851,7 +851,7 @@ class TracInCP(TracInCPBase):
                     Default: False
 
         Returns:
-            influence_scores (tensor): Influence scores from the TracInCP method.
+            influence_scores (Tensor): Influence scores from the TracInCP method.
             Its shape is `(input_size, train_dataset_size)`, where `input_size`
             is the number of examples in the test batch, and
             `train_dataset_size` is the number of examples in
@@ -892,7 +892,7 @@ class TracInCP(TracInCPBase):
 
             inputs (tuple of Any): A tuple that represents a batch of examples. It does
                     not represent labels, which are passed as `targets`.
-            targets (tensor, optional): If computing influence scores on a loss
+            targets (Tensor, optional): If computing influence scores on a loss
                     function, these are the labels corresponding to the batch `inputs`.
                     Default: None
             k (int, optional): The number of proponents or opponents to return per test
@@ -997,7 +997,7 @@ class TracInCP(TracInCPBase):
                     Default: False
 
         Returns:
-            self_influence_scores (tensor): This is a 1D tensor containing the self
+            self_influence_scores (Tensor): This is a 1D tensor containing the self
                     influence scores of all examples in `inputs_dataset`, regardless of
                     whether it represents a single batch or a `DataLoader` that yields
                     batches.

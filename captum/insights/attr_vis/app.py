@@ -108,7 +108,7 @@ class Batch:
 
         Args:
 
-            inputs (tensor or tuple of tensors): Batch of inputs for a model.
+            inputs (Tensor or tuple of Tensor): Batch of inputs for a model.
                         These may be either a Tensor or tuple of tensors. Each tensor
                         must correspond to a feature for AttributionVisualizer, and
                         the corresponding input transform function of the feature
@@ -116,7 +116,7 @@ class Batch:
                         model. It is assumed that the first dimension of each
                         input tensor corresponds to the number of examples
                         (batch size) and is aligned for all input tensors.
-            labels (tensor): Tensor containing correct labels for input examples.
+            labels (Tensor): Tensor containing correct labels for input examples.
                         This must be a 1D tensor with length matching the first
                         dimension of each input tensor.
             additional_args (tuple, optional): If the forward function

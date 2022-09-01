@@ -146,7 +146,7 @@ class LayerGradientShap(LayerAttribution, GradientAttribution):
         r"""
         Args:
 
-            inputs (tensor or tuple of tensors): Input which are used to compute
+            inputs (Tensor or tuple of Tensor): Input which are used to compute
                         SHAP attribution values for a given `layer`. If `forward_func`
                         takes a single tensor as input, a single input tensor should
                         be provided.
@@ -155,7 +155,7 @@ class LayerGradientShap(LayerAttribution, GradientAttribution):
                         that for all given input tensors, dimension 0 corresponds
                         to the number of examples, and if multiple input tensors
                         are provided, the examples must be aligned appropriately.
-            baselines (tensor, tuple of tensors, or Callable):
+            baselines (Tensor, tuple of Tensor, or Callable):
                         Baselines define the starting point from which expectation
                         is computed and can be provided as:
 
@@ -191,7 +191,7 @@ class LayerGradientShap(LayerAttribution, GradientAttribution):
                         corresponds to the input with the same index in the inputs
                         tuple.
                         Default: 0.0
-            target (int, tuple, tensor, or list, optional): Output indices for
+            target (int, tuple, Tensor, or list, optional): Output indices for
                         which gradients are computed (for classification cases,
                         this is usually the target class).
                         If the network returns a scalar value per example,

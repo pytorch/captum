@@ -96,7 +96,7 @@ class ShapleyValueSampling(PerturbationAttribution):
 
         Args:
 
-                inputs (tensor or tuple of tensors): Input for which Shapley value
+                inputs (Tensor or tuple of Tensor): Input for which Shapley value
                             sampling attributions are computed. If forward_func takes
                             a single tensor as input, a single input tensor should
                             be provided.
@@ -106,7 +106,7 @@ class ShapleyValueSampling(PerturbationAttribution):
                             to the number of examples (aka batch size), and if
                             multiple input tensors are provided, the examples must
                             be aligned appropriately.
-                baselines (scalar, tensor, tuple of scalar, or tensors, optional):
+                baselines (scalar, Tensor, tuple of scalar, or Tensor, optional):
                             Baselines define reference value which replaces each
                             feature when ablated.
                             Baselines can be provided as:
@@ -135,7 +135,7 @@ class ShapleyValueSampling(PerturbationAttribution):
                             In the cases when `baselines` is not provided, we internally
                             use zero scalar corresponding to each input tensor.
                             Default: None
-                target (int, tuple, tensor, or list, optional): Output indices for
+                target (int, tuple, Tensor, or list, optional): Output indices for
                             which difference is computed (for classification cases,
                             this is usually the target class).
                             If the network returns a scalar value per example,
@@ -175,7 +175,7 @@ class ShapleyValueSampling(PerturbationAttribution):
                             Note that attributions are not computed with respect
                             to these arguments.
                             Default: None
-                feature_mask (tensor or tuple of tensors, optional):
+                feature_mask (Tensor or tuple of Tensor, optional):
                             feature_mask defines a mask for the input, grouping
                             features which should be added together. feature_mask
                             should contain the same number of tensors as inputs.
@@ -549,7 +549,7 @@ class ShapleyValues(ShapleyValueSampling):
 
         Args:
 
-                inputs (tensor or tuple of tensors): Input for which Shapley value
+                inputs (Tensor or tuple of Tensor): Input for which Shapley value
                             sampling attributions are computed. If forward_func takes
                             a single tensor as input, a single input tensor should
                             be provided.
@@ -559,7 +559,7 @@ class ShapleyValues(ShapleyValueSampling):
                             to the number of examples (aka batch size), and if
                             multiple input tensors are provided, the examples must
                             be aligned appropriately.
-                baselines (scalar, tensor, tuple of scalar, or tensors, optional):
+                baselines (scalar, Tensor, tuple of scalar, or Tensor, optional):
                             Baselines define reference value which replaces each
                             feature when ablated.
                             Baselines can be provided as:
@@ -588,7 +588,7 @@ class ShapleyValues(ShapleyValueSampling):
                             In the cases when `baselines` is not provided, we internally
                             use zero scalar corresponding to each input tensor.
                             Default: None
-                target (int, tuple, tensor, or list, optional): Output indices for
+                target (int, tuple, Tensor, or list, optional): Output indices for
                             which difference is computed (for classification cases,
                             this is usually the target class).
                             If the network returns a scalar value per example,
@@ -628,7 +628,7 @@ class ShapleyValues(ShapleyValueSampling):
                             Note that attributions are not computed with respect
                             to these arguments.
                             Default: None
-                feature_mask (tensor or tuple of tensors, optional):
+                feature_mask (Tensor or tuple of Tensor, optional):
                             feature_mask defines a mask for the input, grouping
                             features which should be added together. feature_mask
                             should contain the same number of tensors as inputs.

@@ -30,7 +30,7 @@ def default_perturb_func(
 
     Args:
 
-        inputs (tensor or a tuple of tensors): The input tensors that we'd
+        inputs (Tensor or tuple of Tensor): The input tensors that we'd
                 like to perturb by adding a random noise sampled uniformly
                 random from an L_infinity ball with a radius `perturb_radius`.
 
@@ -39,7 +39,7 @@ def default_perturb_func(
 
     Returns:
 
-        perturbed_input (tuple of tensor): A list of perturbed inputs that
+        perturbed_input (tuple of Tensor): A list of perturbed inputs that
                 are created by adding noise sampled uniformly random
                 from L_infiniy ball with a radius `perturb_radius` to the
                 original inputs.
@@ -108,7 +108,7 @@ def sensitivity_max(
                 attribution algorithm or any other explanation method
                 that returns the explanations.
 
-        inputs (tensor or tuple of tensors): Input for which
+        inputs (Tensor or tuple of Tensor): Input for which
                 explanations are computed. If `explanation_func` takes a
                 single tensor as input, a single input tensor should
                 be provided.
@@ -178,7 +178,7 @@ def sensitivity_max(
 
     Returns:
 
-        sensitivities (tensor): A tensor of scalar sensitivity scores per
+        sensitivities (Tensor): A tensor of scalar sensitivity scores per
                input example. The first dimension is equal to the
                number of examples in the input batch and the second
                dimension is one. Returned sensitivities are normalized by

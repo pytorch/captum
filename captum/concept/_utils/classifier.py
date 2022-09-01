@@ -95,7 +95,7 @@ class Classifier(ABC):
         C is the number of classes and F is the number of features.
 
         Returns:
-            weights (tensor): A torch Tensor with the weights resulting from
+            weights (Tensor): A torch Tensor with the weights resulting from
                 the model training.
         """
         pass
@@ -192,7 +192,7 @@ class DefaultClassifier(Classifier):
         In case of binary classification, C = 2 otherwise it is > 2.
 
         Returns:
-            weights (tensor): A torch Tensor with the weights resulting from
+            weights (Tensor): A torch Tensor with the weights resulting from
                 the model training.
         """
         assert self.lm.linear is not None, (

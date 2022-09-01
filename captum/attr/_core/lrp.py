@@ -99,7 +99,7 @@ class LRP(GradientAttribution):
         r"""
         Args:
 
-            inputs (tensor or tuple of tensors): Input for which relevance is
+            inputs (Tensor or tuple of Tensor): Input for which relevance is
                         propagated. If forward_func takes a single
                         tensor as input, a single input tensor should be provided.
                         If forward_func takes multiple tensors as input, a tuple
@@ -108,7 +108,7 @@ class LRP(GradientAttribution):
                         to the number of examples, and if multiple input tensors
                         are provided, the examples must be aligned appropriately.
 
-            target (int, tuple, tensor, or list, optional): Output indices for
+            target (int, tuple, Tensor, or list, optional): Output indices for
                     which gradients are computed (for classification cases,
                     this is usually the target class).
                     If the network returns a scalar value per example,
@@ -246,7 +246,7 @@ class LRP(GradientAttribution):
 
         Args:
 
-            attributions (tensor or tuple of tensors): Attribution scores that
+            attributions (Tensor or tuple of Tensor): Attribution scores that
                         are precomputed by an attribution algorithm.
                         Attributions can be provided in form of a single tensor
                         or a tuple of those. It is assumed that attribution
@@ -254,7 +254,7 @@ class LRP(GradientAttribution):
                         examples, and if multiple input tensors are provided,
                         the examples must be aligned appropriately.
 
-            output (tensor): The output value with respect to which
+            output (Tensor): The output value with respect to which
                         the attribution values are computed. This value corresponds to
                         the target score of a classification model. The given tensor
                         should only have a single element.

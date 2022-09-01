@@ -43,7 +43,7 @@ class Saliency(GradientAttribution):
         r"""
         Args:
 
-            inputs (tensor or tuple of tensors): Input for which saliency
+            inputs (Tensor or tuple of Tensor): Input for which saliency
                         is computed. If forward_func takes a single tensor
                         as input, a single input tensor should be provided.
                         If forward_func takes multiple tensors as input, a tuple
@@ -52,7 +52,7 @@ class Saliency(GradientAttribution):
                         to the number of examples (aka batch size), and if
                         multiple input tensors are provided, the examples must
                         be aligned appropriately.
-            target (int, tuple, tensor, or list, optional): Output indices for
+            target (int, tuple, Tensor, or list, optional): Output indices for
                         which gradients are computed (for classification cases,
                         this is usually the target class).
                         If the network returns a scalar value per example,

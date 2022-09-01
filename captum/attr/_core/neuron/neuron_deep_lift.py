@@ -90,7 +90,7 @@ class NeuronDeepLift(NeuronAttribution, GradientAttribution):
         r"""
         Args:
 
-            inputs (tensor or tuple of tensors): Input for which layer
+            inputs (Tensor or tuple of Tensor): Input for which layer
                         attributions are computed. If forward_func takes a
                         single tensor as input, a single input tensor should be
                         provided. If forward_func takes multiple tensors as input,
@@ -133,7 +133,7 @@ class NeuronDeepLift(NeuronAttribution, GradientAttribution):
                           or a 1D tensor with length equal to batch_size (one scalar
                           per input example)
 
-            baselines (scalar, tensor, tuple of scalar, or tensors, optional):
+            baselines (scalar, Tensor, tuple of scalar, or Tensor, optional):
                         Baselines define reference samples that are compared with
                         the inputs. In order to assign attribution scores DeepLift
                         computes the differences between the inputs/outputs and
@@ -335,7 +335,7 @@ class NeuronDeepLiftShap(NeuronAttribution, GradientAttribution):
         r"""
         Args:
 
-            inputs (tensor or tuple of tensors): Input for which layer
+            inputs (Tensor or tuple of Tensor): Input for which layer
                         attributions are computed. If forward_func takes a
                         single tensor as input, a single input tensor should be
                         provided. If forward_func takes multiple tensors as input,
@@ -378,7 +378,7 @@ class NeuronDeepLiftShap(NeuronAttribution, GradientAttribution):
                           or a 1D tensor with length equal to batch_size (one scalar
                           per input example)
 
-            baselines (tensor, tuple of tensors, or Callable):
+            baselines (Tensor, tuple of Tensor, or Callable):
                         Baselines define reference samples that are compared with
                         the inputs. In order to assign attribution scores DeepLift
                         computes the differences between the inputs/outputs and
