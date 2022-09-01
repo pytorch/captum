@@ -25,15 +25,6 @@ conda install -y conda-build
 conda install -n base conda-libmamba-solver
 conda config --set experimental_solver libmamba
 
-OUTPUT=$(conda info)
-echo "${OUTPUT}"
-
-OUTPUT=$(conda list --show-channel-urls)
-echo "${OUTPUT}"
-
-OUTPUT=$(conda config --show-sources)
-echo "${OUTPUT}"
-
 # install other frameworks if asked for and make sure this is before pytorch
 if [[ $FRAMEWORKS == true ]]; then
   pip install pytext-nlp
