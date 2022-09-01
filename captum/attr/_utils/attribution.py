@@ -393,7 +393,7 @@ class LayerAttribution(InternalAttribution):
 
         Args:
 
-            layer_attribution (torch.Tensor): Tensor of given layer attributions.
+            layer_attribution (Tensor): Tensor of given layer attributions.
             interpolate_dims (int or tuple): Upsampled dimensions. The
                         number of elements must be the number of dimensions
                         of layer_attribution - 2, since the first dimension
