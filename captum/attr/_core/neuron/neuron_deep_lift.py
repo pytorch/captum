@@ -207,7 +207,7 @@ class NeuronDeepLift(NeuronAttribution, GradientAttribution):
 
         Returns:
             **attributions** or 2-element tuple of **attributions**, **delta**:
-            - **attributions** (*tensor* or tuple of *tensors*):
+            - **attributions** (*Tensor* or tuple of *Tensor*):
                 Computes attributions using Deeplift's rescale rule for
                 particular neuron with respect to each input feature.
                 Attributions will always be the same size as the provided
@@ -445,7 +445,7 @@ class NeuronDeepLiftShap(NeuronAttribution, GradientAttribution):
 
         Returns:
             **attributions** or 2-element tuple of **attributions**, **delta**:
-            - **attributions** (*tensor* or tuple of *tensors*):
+            - **attributions** (*Tensor* or tuple of *Tensor*):
                         Computes attributions using Deeplift's rescale rule for
                         particular neuron with respect to each input feature.
                         Attributions will always be the same size as the provided

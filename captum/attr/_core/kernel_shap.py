@@ -220,8 +220,8 @@ class KernelShap(Lime):
                         Default: False
 
         Returns:
-            *tensor* or tuple of *tensors* of **attributions**:
-            - **attributions** (*tensor* or tuple of *tensors*):
+            *Tensor* or tuple of *Tensor* of **attributions**:
+            - **attributions** (*Tensor* or tuple of *Tensor*):
                         The attributions with respect to each input feature.
                         If return_input_shape = True, attributions will be
                         the same size as the provided inputs, with each value

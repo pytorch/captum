@@ -175,10 +175,10 @@ class LayerLRP(LRP, LayerAttribution):
                     Default: False
 
         Returns:
-            *tensor* or tuple of *tensors* of **attributions** or 2-element tuple of
+            *Tensor* or tuple of *Tensor* of **attributions** or 2-element tuple of
             **attributions**, **delta** or list of **attributions** and **delta**:
 
-              - **attributions** (*tensor* or tuple of *tensors*):
+              - **attributions** (*Tensor* or tuple of *Tensor*):
                         The propagated relevance values with respect to each
                         input feature. Attributions will always
                         be the same size as the provided inputs, with each value
@@ -190,7 +190,7 @@ class LayerLRP(LRP, LayerAttribution):
                         implementations. If attributions for all layers are returned
                         (layer=None) a list of tensors or tuples of tensors is returned
                         with entries for each layer.
-              - **delta** (*tensor* or list of *tensors*
+              - **delta** (*Tensor* or list of *Tensor*
                         returned if return_convergence_delta=True):
                         Delta is calculated per example, meaning that the number of
                         elements in returned delta tensor is equal to the number of

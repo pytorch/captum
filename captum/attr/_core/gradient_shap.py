@@ -215,7 +215,7 @@ class GradientShap(GradientAttribution):
                         Default: False
         Returns:
             **attributions** or 2-element tuple of **attributions**, **delta**:
-            - **attributions** (*tensor* or tuple of *tensors*):
+            - **attributions** (*Tensor* or tuple of *Tensor*):
                         Attribution score computed based on GradientSHAP with respect
                         to each input feature. Attributions will always be
                         the same size as the provided inputs, with each value
@@ -223,7 +223,7 @@ class GradientShap(GradientAttribution):
                         If a single tensor is provided as inputs, a single tensor is
                         returned. If a tuple is provided for inputs, a tuple of
                         corresponding sized tensors is returned.
-            - **delta** (*tensor*, returned if return_convergence_delta=True):
+            - **delta** (*Tensor*, returned if return_convergence_delta=True):
                         This is computed using the property that the total
                         sum of forward_func(inputs) - forward_func(baselines)
                         must be very close to the total sum of the attributions

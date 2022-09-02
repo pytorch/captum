@@ -56,8 +56,8 @@ class Attribution:
 
     Returns:
 
-        *tensor* or tuple of *tensors* of **attributions**:
-        - **attributions** (*tensor* or tuple of *tensors*):
+        *Tensor* or tuple of *Tensor* of **attributions**:
+        - **attributions** (*Tensor* or tuple of *Tensor*):
                     Attribution values for each
                     input tensor. The `attributions` have the same shape and
                     dimensionality as the inputs.
@@ -110,8 +110,8 @@ class Attribution:
 
     Returns:
 
-            *tensor* of **deltas**:
-            - **deltas** (*tensor*):
+            *Tensor* of **deltas**:
+            - **deltas** (*Tensor*):
                 Depending on specific implementaion of
                 sub-classes, convergence delta can be returned per
                 sample in form of a tensor or it can be aggregated
@@ -245,8 +245,8 @@ class GradientAttribution(Attribution):
 
         Returns:
 
-                *tensor* of **deltas**:
-                - **deltas** (*tensor*):
+                *Tensor* of **deltas**:
+                - **deltas** (*Tensor*):
                     This implementation returns convergence delta per
                     sample. Deriving sub-classes may do any type of aggregation
                     of those values, if necessary.
@@ -408,8 +408,8 @@ class LayerAttribution(InternalAttribution):
                         attribution.
 
         Returns:
-            *tensor* of upsampled **attributions**:
-            - **attributions** (*tensor*):
+            *Tensor* of upsampled **attributions**:
+            - **attributions** (*Tensor*):
                 Upsampled layer attributions with first 2 dimensions matching
                 slayer_attribution and remaining dimensions given by
                 interpolate_dims.
@@ -470,8 +470,8 @@ class NeuronAttribution(InternalAttribution):
 
     Returns:
 
-            *tensor* or tuple of *tensors* of **attributions**:
-            - **attributions** (*tensor* or tuple of *tensors*):
+            *Tensor* or tuple of *Tensor* of **attributions**:
+            - **attributions** (*Tensor* or tuple of *Tensor*):
                     Attribution values for
                     each input vector. The `attributions` have the
                     dimensionality of inputs.

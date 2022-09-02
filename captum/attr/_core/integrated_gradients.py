@@ -233,7 +233,7 @@ class IntegratedGradients(GradientAttribution):
                     Default: False
         Returns:
             **attributions** or 2-element tuple of **attributions**, **delta**:
-            - **attributions** (*tensor* or tuple of *tensors*):
+            - **attributions** (*Tensor* or tuple of *Tensor*):
                     Integrated gradients with respect to each input feature.
                     attributions will always be the same size as the provided
                     inputs, with each value providing the attribution of the
@@ -241,7 +241,7 @@ class IntegratedGradients(GradientAttribution):
                     If a single tensor is provided as inputs, a single tensor is
                     returned. If a tuple is provided for inputs, a tuple of
                     corresponding sized tensors is returned.
-            - **delta** (*tensor*, returned if return_convergence_delta=True):
+            - **delta** (*Tensor*, returned if return_convergence_delta=True):
                     The difference between the total approximated and true
                     integrated gradients. This is computed using the property
                     that the total sum of forward_func(inputs) -

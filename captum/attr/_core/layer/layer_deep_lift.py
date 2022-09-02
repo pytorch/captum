@@ -256,7 +256,7 @@ class LayerDeepLift(LayerAttribution, DeepLift):
 
         Returns:
             **attributions** or 2-element tuple of **attributions**, **delta**:
-            - **attributions** (*tensor* or tuple of *tensors*):
+            - **attributions** (*Tensor* or tuple of *Tensor*):
                 Attribution score computed based on DeepLift's rescale rule with
                 respect to layer's inputs or outputs. Attributions will always be the
                 same size as the provided layer's inputs or outputs, depending on
@@ -265,7 +265,7 @@ class LayerDeepLift(LayerAttribution, DeepLift):
                 just a tensor is returned; if the layer input / output
                 has multiple tensors, then a corresponding tuple
                 of tensors is returned.
-            - **delta** (*tensor*, returned if return_convergence_delta=True):
+            - **delta** (*Tensor*, returned if return_convergence_delta=True):
                 This is computed using the property that the total sum of
                 forward_func(inputs) - forward_func(baselines) must equal the
                 total sum of the attributions computed based on DeepLift's
@@ -587,7 +587,7 @@ class LayerDeepLiftShap(LayerDeepLift, DeepLiftShap):
 
         Returns:
             **attributions** or 2-element tuple of **attributions**, **delta**:
-            - **attributions** (*tensor* or tuple of *tensors*):
+            - **attributions** (*Tensor* or tuple of *Tensor*):
                         Attribution score computed based on DeepLift's rescale rule
                         with respect to layer's inputs or outputs. Attributions
                         will always be the same size as the provided layer's inputs
@@ -598,7 +598,7 @@ class LayerDeepLiftShap(LayerDeepLift, DeepLiftShap):
                         from a forward hook. For standard modules, inputs of
                         a single tensor are usually wrapped in a tuple, while
                         outputs of a single tensor are not.
-            - **delta** (*tensor*, returned if return_convergence_delta=True):
+            - **delta** (*Tensor*, returned if return_convergence_delta=True):
                         This is computed using the property that the
                         total sum of forward_func(inputs) - forward_func(baselines)
                         must be very close to the total sum of attributions

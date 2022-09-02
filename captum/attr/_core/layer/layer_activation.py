@@ -87,8 +87,8 @@ class LayerActivation(LayerAttribution):
                         Default: False
 
         Returns:
-            *tensor* or tuple of *tensors* or list of **attributions**:
-            - **attributions** (*tensor* or tuple of *tensors* or *list*):
+            *Tensor* or tuple of *Tensor* or list of **attributions**:
+            - **attributions** (*Tensor* or tuple of *Tensor* or *list*):
                         Activation of each neuron in given layer output.
                         Attributions will always be the same size as the
                         output of the given layer.

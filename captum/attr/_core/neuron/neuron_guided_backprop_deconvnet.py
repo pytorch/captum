@@ -134,8 +134,8 @@ class NeuronDeconvolution(NeuronAttribution, GradientAttribution):
                         Support for multiple tensors will be added later.
                         Default: False
         Returns:
-            *tensor* or tuple of *tensors* of **attributions**:
-            - **attributions** (*tensor* or tuple of *tensors*):
+            *Tensor* or tuple of *Tensor* of **attributions**:
+            - **attributions** (*Tensor* or tuple of *Tensor*):
                         Deconvolution attribution of
                         particular neuron with respect to each input feature.
                         Attributions will always be the same size as the provided
@@ -303,8 +303,8 @@ class NeuronGuidedBackprop(NeuronAttribution, GradientAttribution):
                         Support for multiple tensors will be added later.
                         Default: False
         Returns:
-            *tensor* or tuple of *tensors* of **attributions**:
-            - **attributions** (*tensor* or tuple of *tensors*):
+            *Tensor* or tuple of *Tensor* of **attributions**:
+            - **attributions** (*Tensor* or tuple of *Tensor*):
                         Guided backprop attribution of
                         particular neuron with respect to each input feature.
                         Attributions will always be the same size as the provided

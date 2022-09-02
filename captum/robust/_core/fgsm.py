@@ -132,7 +132,7 @@ class FGSM(Perturbation):
 
         Returns:
 
-            - **perturbed inputs** (*tensor* or tuple of *tensors*):
+            - **perturbed inputs** (*Tensor* or tuple of *Tensor*):
                         Perturbed input for each
                         input tensor. The perturbed inputs have the same shape and
                         dimensionality as the inputs.

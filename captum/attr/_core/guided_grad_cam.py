@@ -151,8 +151,8 @@ class GuidedGradCam(GradientAttribution):
                         Default: False
 
         Returns:
-            *tensor* of **attributions**:
-            - **attributions** (*tensor*):
+            *Tensor* of **attributions**:
+            - **attributions** (*Tensor*):
                     Element-wise product of (upsampled) GradCAM
                     and Guided Backprop attributions.
                     If a single tensor is provided as inputs, a single tensor is

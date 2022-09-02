@@ -465,7 +465,7 @@ class TCAV(ConceptInterpreter):
 
         Args:
 
-            experimental_sets (list of list of Concept): A list of lists of concept
+            experimental_sets (list[list[Concept]]): A list of lists of concept
                     instances for which the cavs will be computed.
             force_train (bool, optional): A flag that indicates whether to
                     train the CAVs regardless of whether they are saved or not.
@@ -588,7 +588,7 @@ class TCAV(ConceptInterpreter):
                     dimension 0 corresponds to the number of examples
                     (aka batch size), and if multiple input tensors are
                     provided, the examples must be aligned appropriately.
-            experimental_sets (list of list of Concept): A list of list of Concept
+            experimental_sets (list[list[Concept]]): A list of list of Concept
                     instances.
             target (int, tuple, Tensor, or list, optional): Output indices for
                     which attributions are computed (for classification cases,

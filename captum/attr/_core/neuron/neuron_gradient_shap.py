@@ -209,7 +209,7 @@ class NeuronGradientShap(NeuronAttribution, GradientAttribution):
 
         Returns:
             **attributions** or 2-element tuple of **attributions**, **delta**:
-            - **attributions** (*tensor* or tuple of *tensors*):
+            - **attributions** (*Tensor* or tuple of *Tensor*):
                         Attribution score computed based on GradientSHAP with respect
                         to each input feature. Attributions will always be
                         the same size as the provided inputs, with each value

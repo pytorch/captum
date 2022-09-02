@@ -151,8 +151,8 @@ class LayerGradCam(LayerAttribution, GradientAttribution):
                         Default: False
 
         Returns:
-            *tensor* or tuple of *tensors* of **attributions**:
-            - **attributions** (*tensor* or tuple of *tensors*):
+            *Tensor* or tuple of *Tensor* of **attributions**:
+            - **attributions** (*Tensor* or tuple of *Tensor*):
                         Attributions based on GradCAM method.
                         Attributions will be the same size as the
                         output of the given layer, except for dimension 2,
