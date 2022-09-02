@@ -245,6 +245,9 @@ def autodoc_process_docstring(
         lines[i] = re.sub(_rt[0] + r"Iterator" + _rt[1], "~typing.Iterator", lines[i])
         lines[i] = re.sub(_rt[0] + r"Iterable" + _rt[1], "~typing.Iterable", lines[i])
 
+        # Ensure Tensor type is hyperlinked by interpshinx
+        lines[i] = re.sub(_rt[0] + r"Tensor" + _rt[1], "~torch.Tensor", lines[i])
+
 
 def setup(app) -> None:
     app.connect("autodoc-process-docstring", autodoc_process_docstring)
