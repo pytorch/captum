@@ -21,7 +21,6 @@ Captum API Reference
    influence
    utilities
    base_classes
-   approximation_methods
 
 .. toctree::
    :maxdepth: 2
