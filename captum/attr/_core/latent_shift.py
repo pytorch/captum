@@ -22,20 +22,22 @@ import matplotlib.pyplot as plt
 
 class LatentShift(GradientAttribution):
     r"""An implementation of the Latent Shift method to generate 
-    counterfactual explainations. This method uses an audoencoder to restrict
-    the possible  adverserial examples to remain in the dataspace by adjusting 
-    the latent space of the autoencoder using dy/dz instead of dy/dx in order 
-    to change the classifier's prediction.
+    counterfactual explainations. This method uses an audoencoder 
+    to restrict the possible  adverserial examples to remain in 
+    the dataspace by adjusting the latent space of the autoencoder 
+    using dy/dz instead of dy/dx in order  to change the classifier's 
+    prediction.
     
-    This class implements a search strategy to determine the lambda needed 
-    to change the prediction of the classifier by a specific amount as well
-    as the code to generate a video and construct a heatmap representing 
-    the image changes for viewing as an image.
+    This class implements a search strategy to determine the lambda 
+    needed to change the prediction of the classifier by a specific 
+    amount as well  as the code to generate a video and construct a 
+    heatmap representing the image changes for viewing as an image.
     
     Publication:
-    Cohen, J. P., et al. Gifsplanation via Latent Shift: A Simple Autoencoder 
-    Approach to Counterfactual Generation for Chest X-rays. Medical Imaging 
-    with Deep Learning. https://arxiv.org/abs/2102.09475
+    Cohen, J. P., et al. Gifsplanation via Latent Shift: A Simple 
+    Autoencoder Approach to Counterfactual Generation for Chest 
+    X-rays. Medical Imaging with Deep Learning. 
+    https://arxiv.org/abs/2102.09475
     """
 
     def __init__(self, forward_func: Callable, autoencoder) -> None:
