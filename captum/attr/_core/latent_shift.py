@@ -2,7 +2,10 @@
 
 from typing import Any, Callable, Tuple
 
+import os, sys
+import shutil
 import torch
+import numpy as np
 from torch import Tensor
 from captum._utils.common import _format_output, _format_tensor_into_tuples, _is_tuple
 from captum._utils.gradient import (
@@ -12,6 +15,9 @@ from captum._utils.gradient import (
 from captum._utils.typing import TargetType
 from captum.attr._utils.attribution import GradientAttribution
 from captum.log import log_usage
+import subprocess
+import matplotlib
+import matplotlib.pyplot as plt
 
 
 class LatentShift(GradientAttribution):
@@ -55,10 +61,12 @@ class LatentShift(GradientAttribution):
         inputs: Tensor,
         target: TargetType = None,
         fix_range: Tuple = None,
-        pred_diff: float = 0.8,
-        shift_step_size: float = 10.0,
-        max_pixel_diff: float = 5000.0,
-        aggregrate_method: str = 'int',
+        search_pred_diff: float = 0.8,
+        search_step_size: float = 10.0,
+        search_max_steps: int = 3000,
+        search_max_pixel_diff: float = 5000.0,
+        lambda_sweep_steps: int = 10,
+        heatmap_method: str = 'int',
     ) -> dict:
         r"""
         Args:
@@ -68,17 +76,18 @@ class LatentShift(GradientAttribution):
                         classification cases, this is usually the target class).
             fix_range (tuple): Overrides searching and directly specifies the
                         lambda range to use. e.g. [-100,0].
-            pred_diff (float): The desired change in the classifiers prediction.
+            search_pred_diff (float): The desired change in the classifiers
+                        prediction.
                         For example if the classifer predicts 0.9 and 
                         pred_diff=0.8 the search will try to generate a  
                         counterfactual where the prediction is 0.1. 
-            shift_step_size (float): When searching for the right lambda to use 
+            search_step_size (float): When searching for the right lambda to use 
                         this will be the initial step size. This is similar to 
                         a learning rate. Smaller values avoid jumping over the 
                         ideal lambda but the search may take a long time.
-            max_pixel_diff (float): When searching stop of the pixel difference
-                        is larger than this amount. This will prevent large 
-                        artifacts being introduced into the image.
+            search_max_pixel_diff (float): When searching stop of the pixel 
+                        difference is larger than this amount. This will 
+                        prevent large  artifacts being introduced into the image.
             aggregate_method:  Default: 'int'. Possible methods: 'int': Average 
                         per frame differences. 'mean' : Average difference 
                         between 0 and other lambda frames. 'mm': Difference 
@@ -122,15 +131,15 @@ class LatentShift(GradientAttribution):
         
         # Cache so we can reuse at sweep stage
         cache = {}
-        def compute_shift(lam):
+        def compute_shift(lambdax):
             """Compute the shift for a specific lambda"""
-            if lam not in cache:
-                x_lambdax = self.ae.decode(z+dzdxp*lam).detach()
+            if lambdax not in cache:
+                x_lambdax = self.ae.decode(z+dzdxp*lambdax).detach()
                 pred1 = torch.sigmoid(self.forward_func(x_lambdax))[:,target]
                 pred1 = pred1.detach().cpu().numpy() 
-                cache[lam] = x_lambdax, pred1
-                print(f'Shift: {lam} , Prediction: {pred1}')
-            return cache[lam]
+                cache[lambdax] = x_lambdax, pred1
+                print(f'Shift: {lambdax} , Prediction: {pred1}')
+            return cache[lambdax]
         
         _, initial_pred = compute_shift(0)
         
@@ -142,7 +151,7 @@ class LatentShift(GradientAttribution):
             last_pred = initial_pred
             while True:
                 x_lambdax, cur_pred = compute_shift(lbound)
-                pixel_diff = torch.abs(x_lambda0-x_lambdax).sum().detach()
+                pixel_diff = torch.abs(x_lambda0 - x_lambdax).sum().detach()
                 
                 # If we stop decreasing the prediction
                 if last_pred < cur_pred:
@@ -151,17 +160,17 @@ class LatentShift(GradientAttribution):
                 if cur_pred < 0.05:
                     break
                 # If we have decreased the prediction by pred_diff
-                if initial_pred - pred_diff > cur_pred:
+                if initial_pred - search_pred_diff > cur_pred:
                     break
                 # If we are moving in the latent space too much
-                if lbound <= -3000:
+                if lbound <= -search_max_steps:
                     break
                 # If we move too far we will distort the image
-                if pixel_diff > max_pixel_diff:
+                if pixel_diff > search_max_pixel_diff:
                     break
                     
                 last_pred = cur_pred
-                lbound = lbound - shift_step_size + lbound//10
+                lbound = lbound - search_step_size + lbound//10
 
             # Right range search not implemented
             rbound = 0
@@ -210,3 +219,82 @@ class LatentShift(GradientAttribution):
         params["heatmap"] = heatmap
         
         return params
+
+    
+    @log_usage()
+    def generate_video(
+        self,
+        params: dict,
+        target_filename: str,
+        watermark: bool = True,
+        ffmpeg_path: str = "ffmpeg",
+        temp_path: str = "/tmp/gifsplanation",
+        show=True,
+    ):
+                    
+        if not target_filename:
+            target_filename = f'video-{target}'
+        
+        
+        if os.path.exists(target_filename + ".mp4"):
+            os.remove(target_filename + ".mp4") 
+        
+        shutil.rmtree(temp_path, ignore_errors=True) 
+        os.mkdir(temp_path)
+        
+        
+        imgs = [h.transpose(0,2,3,1) for h in params["generated_images"]]
+        towrite = list(reversed(imgs)) + list(imgs)
+        ys = list(reversed(params['preds'])) + list(params['preds'])
+        
+        
+        for idx, img in enumerate(towrite):
+                
+            px = 1/plt.rcParams['figure.dpi']
+            full_frame(img[0].shape[0]*px, img[0].shape[1]*px)
+            plt.imshow(img[0], interpolation='none')
+            
+            
+            if watermark:
+                plt.text(
+                    0.05, 0.95, f"{float(ys[idx]):1.1f}",
+                    ha='left', va='top',
+                    transform=plt.gca().transAxes
+                )
+                plt.text(
+                    0.96, 0.1, 'gifsplanation',
+                    ha='right', va='bottom',
+                    transform=plt.gca().transAxes
+                )
+            
+            plt.savefig(f'{temp_path}/image-{idx}.png', bbox_inches='tight', pad_inches=0, transparent=False)
+            
+            plt.close()
+
+        
+        cmd = "{} -loglevel quiet -stats -y -i {}/image-%d.png -c:v libx264 -vf scale=-2:{} -profile:v baseline -level 3.0 -pix_fmt yuv420p '{}.mp4'".format(ffmpeg_path, temp_path, img[0][0].shape[0], target_filename)
+
+        print(cmd)
+        output = subprocess.check_output(cmd, shell=True)
+        print(output)
+
+        if show:
+            from IPython.core.display import Video
+            return Video(target_filename + ".mp4", 
+                         html_attributes = "controls loop autoplay muted",
+                         embed=True,
+                        )
+        else:
+            return target_filename + ".mp4"
+        
+        
+
+def full_frame(width=None, height=None):
+
+    matplotlib.rcParams['savefig.pad_inches'] = 0
+    figsize = None if width is None else (width, height)
+    fig = plt.figure(figsize=figsize)
+    ax = plt.axes([0,0,1,1], frameon=False)
+    ax.get_xaxis().set_visible(False)
+    ax.get_yaxis().set_visible(False)
+    plt.autoscale(tight=True)
