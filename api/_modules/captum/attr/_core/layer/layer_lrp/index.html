@@ -236,10 +236,10 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">                &gt;&gt;&gt; # and returns an Nx10 tensor of class probabilities. It has one</span>
 <span class="sd">                &gt;&gt;&gt; # Conv2D and a ReLU layer.</span>
 <span class="sd">                &gt;&gt;&gt; net = ImageClassifier()</span>
-<span class="sd">                &gt;&gt;&gt; lrp = LRP(net, net.conv1)</span>
+<span class="sd">                &gt;&gt;&gt; layer_lrp = LayerLRP(net, net.conv1)</span>
 <span class="sd">                &gt;&gt;&gt; input = torch.randn(3, 3, 32, 32)</span>
 <span class="sd">                &gt;&gt;&gt; # Attribution size matches input size: 3x3x32x32</span>
-<span class="sd">                &gt;&gt;&gt; attribution = lrp.attribute(input, target=5)</span>
+<span class="sd">                &gt;&gt;&gt; attribution = layer_lrp.attribute(input, target=5)</span>
 
 <span class="sd">        """</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span> <span class="o">=</span> <span class="n">verbose</span>

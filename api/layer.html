@@ -2239,10 +2239,10 @@ each layer.</p>
 <span class="gp">&gt;&gt;&gt; </span><span class="c1"># and returns an Nx10 tensor of class probabilities. It has one</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="c1"># Conv2D and a ReLU layer.</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">net</span> <span class="o">=</span> <span class="n">ImageClassifier</span><span class="p">()</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">lrp</span> <span class="o">=</span> <span class="n">LRP</span><span class="p">(</span><span class="n">net</span><span class="p">,</span> <span class="n">net</span><span class="o">.</span><span class="n">conv1</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">layer_lrp</span> <span class="o">=</span> <span class="n">LayerLRP</span><span class="p">(</span><span class="n">net</span><span class="p">,</span> <span class="n">net</span><span class="o">.</span><span class="n">conv1</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="nb">input</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">32</span><span class="p">,</span> <span class="mi">32</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="c1"># Attribution size matches input size: 3x3x32x32</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">attribution</span> <span class="o">=</span> <span class="n">lrp</span><span class="o">.</span><span class="n">attribute</span><span class="p">(</span><span class="nb">input</span><span class="p">,</span> <span class="n">target</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">attribution</span> <span class="o">=</span> <span class="n">layer_lrp</span><span class="o">.</span><span class="n">attribute</span><span class="p">(</span><span class="nb">input</span><span class="p">,</span> <span class="n">target</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
 </pre></div>
 </div>
 </dd></dl>
