@@ -99,6 +99,15 @@ commands:
             python -m pip install --upgrade pip
             python -m pip install -e .[dev]
 
+  build_package:
+    description: "Build the source and wheel packages"
+    steps:
+      - run:
+          name: "Build captum"
+          command: |
+            python -m pip install build
+            python -m build
+
   py_3_7_setup:
     description: "Set python version to 3.7 and install pip and pytest"
     steps:
@@ -211,6 +220,7 @@ jobs:
       - install_cuda
       - py_3_7_setup
       - simple_pip_install
+      - build_package
       - unit_tests
 
   auto_deploy_site:
