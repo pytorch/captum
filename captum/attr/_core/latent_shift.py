@@ -62,6 +62,7 @@ class LatentShift(GradientAttribution):
         search_max_pixel_diff: float = 5000.0,
         lambda_sweep_steps: int = 10,
         heatmap_method: str = 'int',
+        verbose: bool = True,
     ) -> dict:
         r"""
         This method performs a search in order to determine the correct lambda
@@ -104,6 +105,7 @@ class LatentShift(GradientAttribution):
                         between 0 and other lambda frames. 'mm': Difference
                         between first and last frames. 'max': Max difference
                         from lambda 0 frame
+            verbose: True to print debug text
 
         Returns:
             dict containing the follow keys:
@@ -150,7 +152,8 @@ class LatentShift(GradientAttribution):
                 pred1 = torch.sigmoid(self.forward_func(x_lambdax))[:, target]
                 pred1 = pred1.detach().cpu().numpy() 
                 cache[lambdax] = x_lambdax, pred1
-                print(f'Shift: {lambdax} , Prediction: {pred1}')
+                if verbose:
+                    print(f'Shift: {lambdax} , Prediction: {pred1}')
             return cache[lambdax]
         
         _, initial_pred = compute_shift(0)
@@ -186,8 +189,9 @@ class LatentShift(GradientAttribution):
 
             # Right range search not implemented
             rbound = 0
-        
-        print('Selected bounds: ', lbound, rbound)
+
+        if verbose:
+            print('Selected bounds: ', lbound, rbound)
         
         # Sweep over the range of lambda values to create a sequence
         lambdas = np.arange(
@@ -253,6 +257,7 @@ class LatentShift(GradientAttribution):
         ffmpeg_path: str = "ffmpeg",
         temp_path: str = "/tmp/gifsplanation",
         show: bool = True,
+        verbose: bool = True,
     ):
         """Generate a video from the generated images.
 
@@ -265,6 +270,7 @@ class LatentShift(GradientAttribution):
                 ffmpeg_path: The path to call `ffmpeg`
                 temp_path: A temp path to write images.
                 show: To try and show the video in a jupyter notebook.
+                verbose: True to print debug text
 
             Returns:
                 The filename of the video if show=False, otherwise it will
@@ -315,15 +321,17 @@ class LatentShift(GradientAttribution):
             plt.close()
 
         # Command for ffmpeg to generate an mp4
-        cmd = "{} -loglevel quiet -stats -y -i {}/image-%d.png -c:v libx264 " \
-              "-vf scale=-2:{} -profile:v baseline -level 3.0 -pix_fmt " \
-              "yuv420p '{}.mp4'".format( 
-                    ffmpeg_path, temp_path, imgs[0][0].shape[0], target_filename
-                )
+        cmd = f"{ffmpeg_path} -loglevel quiet -stats -y " \
+              f"-i {temp_path}/image-%d.png " \
+              f"-c:v libx264 -vf scale=-2:{imgs[0][0].shape[0]} " \
+              f"-profile:v baseline -level 3.0 -pix_fmt yuv420p " \
+              f"'{target_filename}.mp4'"
 
-        print(cmd)
+        if verbose:
+            print(cmd)
         output = subprocess.check_output(cmd, shell=True)
-        print(output)
+        if verbose:
+            print(output)
 
         if show:
             # If we in a jupyter notebook then show the video.
