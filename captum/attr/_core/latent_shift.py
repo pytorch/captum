@@ -84,10 +84,15 @@ class LatentShift(GradientAttribution):
                         this will be the initial step size. This is similar to
                         a learning rate. Smaller values avoid jumping over the
                         ideal lambda but the search may take a long time.
+            search_max_steps (int): The max steps to take when doing the search.
+                        Sometimes steps make a tiny improvement and can go on
+                        forever. This just bounds the time and gives up the
+                        search.
             search_max_pixel_diff (float): When searching stop of the pixel
                         difference is larger than this amount. This will
                         prevent large  artifacts being introduced into the
                         image.
+            lambda_sweep_steps (int): How many frames to generate for the video.
             heatmap_method:  Default: 'int'. Possible methods: 'int': Average
                         per frame differences. 'mean' : Average difference
                         between 0 and other lambda frames. 'mm': Difference
@@ -116,7 +121,7 @@ class LatentShift(GradientAttribution):
             >>> # Load image
             >>> input = torch.randn(1, 3, 1024, 1024)
             >>> 
-            >>> # Defining Saliency interpreter
+            >>> # Defining Latent Shift module
             >>> attr = captum.attr.LatentShift(model, ae)
             >>> 
             >>> # Computes counterfactual for class 3.
