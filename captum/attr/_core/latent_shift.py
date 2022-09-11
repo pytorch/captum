@@ -22,8 +22,8 @@ import matplotlib.pyplot as plt
 
 class LatentShift(GradientAttribution):
     r"""An implementation of the Latent Shift method to generate
-    counterfactual explainations. This method uses an audoencoder to restrict
-    the possible  adverserial examples to remain in the dataspace by
+    counterfactual explanations. This method uses an autoencoder to restrict
+    the possible  adversarial examples to remain in the data space by
     adjusting the latent space of the autoencoder using dy/dz instead of
     dy/dx in order  to change the classifier's prediction.
     
@@ -132,10 +132,11 @@ class LatentShift(GradientAttribution):
         z.requires_grad = True
         x_lambda0 = self.ae.decode(z)
         pred = torch.sigmoid(self.forward_func(x_lambda0))[:,target]
-        dzdxp = torch.autograd.grad((pred), z)[0]
+        dzdxp = torch.autograd.grad(pred, z)[0]
         
         # Cache so we can reuse at sweep stage
         cache = {}
+
         def compute_shift(lambdax):
             """Compute the shift for a specific lambda"""
             if lambdax not in cache:
@@ -198,8 +199,7 @@ class LatentShift(GradientAttribution):
         params['lambdas'] = lambdas
         params['preds'] = preds
         params['target'] = target
-        
-        
+
         x_lambda0 = x_lambda0.detach().cpu().numpy()
         if heatmap_method == 'max':
             # Max difference from lambda 0 frame
