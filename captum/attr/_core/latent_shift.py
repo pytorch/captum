@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-from typing import Any, Callable, Tuple
+from typing import Callable, Tuple
 
 import os
 import shutil
@@ -146,7 +146,7 @@ class LatentShift(GradientAttribution):
         def compute_shift(lambdax):
             """Compute the shift for a specific lambda"""
             if lambdax not in cache:
-                x_lambdax = self.ae.decode(z+dzdxp*lambdax).detach()
+                x_lambdax = self.ae.decode(z + dzdxp * lambdax).detach()
                 pred1 = torch.sigmoid(self.forward_func(x_lambdax))[:, target]
                 pred1 = pred1.detach().cpu().numpy() 
                 cache[lambdax] = x_lambdax, pred1
@@ -182,7 +182,7 @@ class LatentShift(GradientAttribution):
                     break
                     
                 last_pred = cur_pred
-                lbound = lbound - search_step_size + lbound//10
+                lbound = lbound - search_step_size + lbound // 10
 
             # Right range search not implemented
             rbound = 0
@@ -193,7 +193,7 @@ class LatentShift(GradientAttribution):
         lambdas = np.arange(
             lbound,
             rbound,
-            np.abs((lbound-rbound)/lambda_sweep_steps)
+            np.abs((lbound - rbound) / lambda_sweep_steps)
         )
         
         preds = []
@@ -232,9 +232,9 @@ class LatentShift(GradientAttribution):
         elif heatmap_method == 'int':
             # Average per frame differences 
             image_changes = []
-            for i in range(len(generated_images)-1):
+            for i in range(len(generated_images) - 1):
                 image_changes.append(np.abs(
-                    generated_images[i][0][0] - generated_images[i+1][0][0]
+                    generated_images[i][0][0] - generated_images[i + 1][0][0]
                 ))
             heatmap = np.mean(image_changes, 0)
         else:
@@ -288,8 +288,8 @@ class LatentShift(GradientAttribution):
         
         for idx, img in enumerate(towrite):
                 
-            px = 1/plt.rcParams['figure.dpi']
-            full_frame(img[0].shape[0]*px, img[0].shape[1]*px)
+            px = 1 / plt.rcParams['figure.dpi']
+            full_frame(img[0].shape[0] * px, img[0].shape[1] * px)
             plt.imshow(img[0], interpolation='none')
 
             if watermark:
@@ -315,7 +315,9 @@ class LatentShift(GradientAttribution):
             plt.close()
 
         # Command for ffmpeg to generate an mp4
-        cmd = "{} -loglevel quiet -stats -y -i {}/image-%d.png -c:v libx264 -vf scale=-2:{} -profile:v baseline -level 3.0 -pix_fmt yuv420p '{}.mp4'".format(
+        cmd = "{} -loglevel quiet -stats -y -i {}/image-%d.png -c:v libx264 " \
+              "-vf scale=-2:{} -profile:v baseline -level 3.0 -pix_fmt " \
+              "yuv420p '{}.mp4'".format( 
             ffmpeg_path, temp_path, imgs[0][0].shape[0], target_filename
         )
 
