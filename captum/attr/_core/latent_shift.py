@@ -7,7 +7,6 @@ import shutil
 import torch
 import numpy as np
 from torch import Tensor
-from captum._utils.typing import TargetType
 from captum.attr._utils.attribution import GradientAttribution
 from captum.log import log_usage
 import subprocess
