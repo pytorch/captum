@@ -69,6 +69,17 @@ class LatentShift(GradientAttribution):
         heatmap_method: str = 'int',
     ) -> dict:
         r"""
+        This method performs a search in order to determine the correct lambda
+        values to generate the shift. The search starts by stepping by
+        `search_step_size` in the negative direction while trying to determine
+        if the output of the classifier has changed by `search_pred_diff` or
+        when the change in the predict in stops going down. In order to avoid
+        artifacts if the shift is too large or in the wrong direction an extra
+        stop conditions is added `search_max_pixel_diff` if the change in the
+        image is too large. To avoid the search from taking too long a
+        `search_max_steps` will prevent the search from going on endlessly.
+
+
         Args:
 
             inputs (tensor):  Input for which the counterfactual is computed.
