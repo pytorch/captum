@@ -252,8 +252,24 @@ class LatentShift(GradientAttribution):
         watermark: bool = True,
         ffmpeg_path: str = "ffmpeg",
         temp_path: str = "/tmp/gifsplanation",
-        show=True,
+        show: bool = True,
     ):
+        """Generate a video from the generated images.
+
+            Args:
+                params: The dict returned from the call to `attribute`.
+                target_filename: The filename to write the video to. `.mp4` will
+                    be added to the end of the string.
+                watermark: To add the probability output and the name of the
+                    method.
+                ffmpeg_path: The path to call `ffmpeg`
+                temp_path: A temp path to write images.
+                show: To try and show the video in a jupyter notebook.
+
+            Returns:
+                The filename of the video if show=False, otherwise it will
+                return a video to show in a jupyter notebook.
+        """
                     
         if not target_filename:
             target_filename = f'video-{params["target"]}'
@@ -265,6 +281,7 @@ class LatentShift(GradientAttribution):
         os.mkdir(temp_path)
         
         imgs = [h.transpose(0, 2, 3, 1) for h in params["generated_images"]]
+
         # Add reversed so we have an animation cycle
         towrite = list(reversed(imgs)) + list(imgs)
         ys = list(reversed(params['preds'])) + list(params['preds'])
@@ -298,7 +315,9 @@ class LatentShift(GradientAttribution):
             plt.close()
 
         # Command for ffmpeg to generate an mp4
-        cmd = "{} -loglevel quiet -stats -y -i {}/image-%d.png -c:v libx264 -vf scale=-2:{} -profile:v baseline -level 3.0 -pix_fmt yuv420p '{}.mp4'".format(ffmpeg_path, temp_path, imgs[0][0].shape[0], target_filename)
+        cmd = "{} -loglevel quiet -stats -y -i {}/image-%d.png -c:v libx264 -vf scale=-2:{} -profile:v baseline -level 3.0 -pix_fmt yuv420p '{}.mp4'".format(
+            ffmpeg_path, temp_path, imgs[0][0].shape[0], target_filename
+        )
 
         print(cmd)
         output = subprocess.check_output(cmd, shell=True)
