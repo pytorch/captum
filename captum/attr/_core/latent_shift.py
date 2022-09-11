@@ -318,8 +318,8 @@ class LatentShift(GradientAttribution):
         cmd = "{} -loglevel quiet -stats -y -i {}/image-%d.png -c:v libx264 " \
               "-vf scale=-2:{} -profile:v baseline -level 3.0 -pix_fmt " \
               "yuv420p '{}.mp4'".format( 
-            ffmpeg_path, temp_path, imgs[0][0].shape[0], target_filename
-        )
+                    ffmpeg_path, temp_path, imgs[0][0].shape[0], target_filename
+                )
 
         print(cmd)
         output = subprocess.check_output(cmd, shell=True)
