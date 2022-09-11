@@ -2,7 +2,8 @@
 
 from typing import Any, Callable, Tuple
 
-import os, sys
+import os
+import sys
 import shutil
 import torch
 import numpy as np
@@ -127,7 +128,7 @@ class LatentShift(GradientAttribution):
 
             >>> # Load classifier and autoencoder
             >>> model = classifiers.FaceAttribute()
-            >>> ae = autoencoders.Transformer(weights="celeba")
+            >>> ae = autoencoders.Transformer(weights="faceshq")
             >>> 
             >>> # Load image
             >>> input = torch.randn(1, 3, 1024, 1024)
@@ -142,7 +143,7 @@ class LatentShift(GradientAttribution):
         z = self.ae.encode(inputs).detach()
         z.requires_grad = True
         x_lambda0 = self.ae.decode(z)
-        pred = torch.sigmoid(self.forward_func(x_lambda0))[:,target]
+        pred = torch.sigmoid(self.forward_func(x_lambda0))[:, target]
         dzdxp = torch.autograd.grad(pred, z)[0]
         
         # Cache so we can reuse at sweep stage
@@ -152,7 +153,7 @@ class LatentShift(GradientAttribution):
             """Compute the shift for a specific lambda"""
             if lambdax not in cache:
                 x_lambdax = self.ae.decode(z+dzdxp*lambdax).detach()
-                pred1 = torch.sigmoid(self.forward_func(x_lambdax))[:,target]
+                pred1 = torch.sigmoid(self.forward_func(x_lambdax))[:, target]
                 pred1 = pred1.detach().cpu().numpy() 
                 cache[lambdax] = x_lambdax, pred1
                 print(f'Shift: {lambdax} , Prediction: {pred1}')
@@ -195,7 +196,11 @@ class LatentShift(GradientAttribution):
         print('Selected bounds: ', lbound, rbound)
         
         # Sweep over the range of lambda values to create a sequence
-        lambdas = np.arange(lbound, rbound, np.abs((lbound-rbound)/lambda_sweep_steps))
+        lambdas = np.arange(
+            lbound,
+            rbound,
+            np.abs((lbound-rbound)/lambda_sweep_steps)
+        )
         
         preds = []
         generated_images = []
@@ -214,21 +219,29 @@ class LatentShift(GradientAttribution):
         x_lambda0 = x_lambda0.detach().cpu().numpy()
         if heatmap_method == 'max':
             # Max difference from lambda 0 frame
-            heatmap = np.max(np.abs(x_lambda0[0][0] - generated_images[0][0]), 0)
+            heatmap = np.max(
+                np.abs(x_lambda0[0][0] - generated_images[0][0]), 0
+            )
         
         elif heatmap_method == 'mean':
             # Average difference between 0 and other lambda frames
-            heatmap = np.mean(np.abs(x_lambda0[0][0] - generated_images[0][0]), 0)
+            heatmap = np.mean(
+                np.abs(x_lambda0[0][0] - generated_images[0][0]), 0
+            )
         
         elif heatmap_method == 'mm':
             # Difference between first and last frames
-            heatmap = np.abs(generated_images[0][0][0] - generated_images[-1][0][0])
+            heatmap = np.abs(
+                generated_images[0][0][0] - generated_images[-1][0][0]
+            )
         
         elif heatmap_method == 'int':
             # Average per frame differences 
             image_changes = []
             for i in range(len(generated_images)-1):
-                image_changes.append(np.abs(generated_images[i][0][0] - generated_images[i+1][0][0]))
+                image_changes.append(np.abs(
+                    generated_images[i][0][0] - generated_images[i+1][0][0]
+                ))
             heatmap = np.mean(image_changes, 0)
         else:
             raise Exception('Unknown heatmap_method for 2d image')
@@ -282,7 +295,12 @@ class LatentShift(GradientAttribution):
                     transform=plt.gca().transAxes
                 )
             
-            plt.savefig(f'{temp_path}/image-{idx}.png', bbox_inches='tight', pad_inches=0, transparent=False)
+            plt.savefig(
+                f'{temp_path}/image-{idx}.png',
+                bbox_inches='tight',
+                pad_inches=0,
+                transparent=False
+            )
             plt.close()
 
         # Command for ffmpeg to generate an mp4
@@ -300,7 +318,7 @@ class LatentShift(GradientAttribution):
                              html_attributes="controls loop autoplay muted",
                              embed=True,
                              )
-            except TypeError as e:
+            except TypeError:
                 return Video(target_filename + ".mp4",
                              embed=True
                              )
@@ -313,7 +331,7 @@ def full_frame(width=None, height=None):
 
     matplotlib.rcParams['savefig.pad_inches'] = 0
     figsize = None if width is None else (width, height)
-    fig = plt.figure(figsize=figsize)
+    plt.figure(figsize=figsize)
     ax = plt.axes([0, 0, 1, 1], frameon=False)
     ax.get_xaxis().set_visible(False)
     ax.get_yaxis().set_visible(False)
