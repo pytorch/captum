@@ -3,16 +3,10 @@
 from typing import Any, Callable, Tuple
 
 import os
-import sys
 import shutil
 import torch
 import numpy as np
 from torch import Tensor
-from captum._utils.common import _format_output, _format_tensor_into_tuples, _is_tuple
-from captum._utils.gradient import (
-    apply_gradient_requirements,
-    undo_gradient_requirements,
-)
 from captum._utils.typing import TargetType
 from captum.attr._utils.attribution import GradientAttribution
 from captum.log import log_usage
@@ -131,13 +125,13 @@ class LatentShift(GradientAttribution):
             >>> ae = autoencoders.Transformer(weights="faceshq")
             >>> 
             >>> # Load image
-            >>> input = torch.randn(1, 3, 1024, 1024)
+            >>> x = torch.randn(1, 3, 1024, 1024)
             >>> 
             >>> # Defining Latent Shift module
             >>> attr = captum.attr.LatentShift(model, ae)
             >>> 
             >>> # Computes counterfactual for class 3.
-            >>> output = attr.attribute(input, target=3)
+            >>> output = attr.attribute(x, target=3)
 
         """
         z = self.ae.encode(inputs).detach()
