@@ -54,7 +54,7 @@ class LatentShift(GradientAttribution):
     def attribute(
         self,
         inputs: Tensor,
-        target: TargetType = None,
+        target: int = None,
         fix_range: Tuple = None,
         search_pred_diff: float = 0.8,
         search_step_size: float = 10.0,
