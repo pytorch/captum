@@ -21,17 +21,16 @@ import matplotlib.pyplot as plt
 
 
 class LatentShift(GradientAttribution):
-    r"""An implementation of the Latent Shift method to generate 
-    counterfactual explainations. This method uses an audoencoder 
-    to restrict the possible  adverserial examples to remain in 
-    the dataspace by adjusting the latent space of the autoencoder 
-    using dy/dz instead of dy/dx in order  to change the classifier's 
-    prediction.
+    r"""An implementation of the Latent Shift method to generate
+    counterfactual explainations. This method uses an audoencoder to restrict
+    the possible  adverserial examples to remain in the dataspace by
+    adjusting the latent space of the autoencoder using dy/dz instead of
+    dy/dx in order  to change the classifier's prediction.
     
-    This class implements a search strategy to determine the lambda 
-    needed to change the prediction of the classifier by a specific 
-    amount as well  as the code to generate a video and construct a 
-    heatmap representing the image changes for viewing as an image.
+    This class implements a search strategy to determine the lambda needed to
+    change the prediction of the classifier by a specific amount as well  as
+    the code to generate a video and construct a heatmap representing the
+    image changes for viewing as an image.
     
     Publication:
     Cohen, J. P., et al. Gifsplanation via Latent Shift: A Simple 
@@ -55,7 +54,6 @@ class LatentShift(GradientAttribution):
         # check if ae has encode and decode
         assert hasattr(self.ae, 'encode')
         assert hasattr(self.ae, 'decode')
-        
 
     @log_usage()
     def attribute(
@@ -79,21 +77,21 @@ class LatentShift(GradientAttribution):
             fix_range (tuple): Overrides searching and directly specifies the
                         lambda range to use. e.g. [-100,0].
             search_pred_diff (float): The desired change in the classifiers
-                        prediction.
-                        For example if the classifer predicts 0.9 and 
-                        pred_diff=0.8 the search will try to generate a  
-                        counterfactual where the prediction is 0.1. 
-            search_step_size (float): When searching for the right lambda to use 
-                        this will be the initial step size. This is similar to 
-                        a learning rate. Smaller values avoid jumping over the 
+                        prediction. For example if the classifer predicts 0.9
+                        and pred_diff=0.8 the search will try to generate a
+                        counterfactual where the prediction is 0.1.
+            search_step_size (float): When searching for the right lambda to use
+                        this will be the initial step size. This is similar to
+                        a learning rate. Smaller values avoid jumping over the
                         ideal lambda but the search may take a long time.
-            search_max_pixel_diff (float): When searching stop of the pixel 
-                        difference is larger than this amount. This will 
-                        prevent large  artifacts being introduced into the image.
-            aggregate_method:  Default: 'int'. Possible methods: 'int': Average 
-                        per frame differences. 'mean' : Average difference 
-                        between 0 and other lambda frames. 'mm': Difference 
-                        between first and last frames. 'max': Max difference 
+            search_max_pixel_diff (float): When searching stop of the pixel
+                        difference is larger than this amount. This will
+                        prevent large  artifacts being introduced into the
+                        image.
+            heatmap_method:  Default: 'int'. Possible methods: 'int': Average
+                        per frame differences. 'mean' : Average difference
+                        between 0 and other lambda frames. 'mm': Difference
+                        between first and last frames. 'max': Max difference
                         from lambda 0 frame
 
         Returns:
@@ -109,7 +107,7 @@ class LatentShift(GradientAttribution):
                     video sequence of images.
 
 
-        Examples::
+        Example::
 
             >>> # Load classifier and autoencoder
             >>> model = classifiers.FaceAttribute()
@@ -194,16 +192,17 @@ class LatentShift(GradientAttribution):
         params['generated_images'] = generated_images
         params['lambdas'] = lambdas
         params['preds'] = preds
+        params['target'] = target
         
         
         x_lambda0 = x_lambda0.detach().cpu().numpy()
         if heatmap_method == 'max':
             # Max difference from lambda 0 frame
-            heatmap = np.max(np.abs(x_lambda0[0][0] - generated_images[0][0]),0)
+            heatmap = np.max(np.abs(x_lambda0[0][0] - generated_images[0][0]), 0)
         
         elif heatmap_method == 'mean':
             # Average difference between 0 and other lambda frames
-            heatmap = np.mean(np.abs(x_lambda0[0][0] - generated_images[0][0]),0)
+            heatmap = np.mean(np.abs(x_lambda0[0][0] - generated_images[0][0]), 0)
         
         elif heatmap_method == 'mm':
             # Difference between first and last frames
@@ -221,7 +220,6 @@ class LatentShift(GradientAttribution):
         params["heatmap"] = heatmap
         
         return params
-
     
     @log_usage()
     def generate_video(
@@ -235,8 +233,7 @@ class LatentShift(GradientAttribution):
     ):
                     
         if not target_filename:
-            target_filename = f'video-{target}'
-        
+            target_filename = f'video-{params["target"]}'
         
         if os.path.exists(target_filename + ".mp4"):
             os.remove(target_filename + ".mp4") 
@@ -244,25 +241,25 @@ class LatentShift(GradientAttribution):
         shutil.rmtree(temp_path, ignore_errors=True) 
         os.mkdir(temp_path)
         
-        
-        imgs = [h.transpose(0,2,3,1) for h in params["generated_images"]]
+        imgs = [h.transpose(0, 2, 3, 1) for h in params["generated_images"]]
+        # Add reversed so we have an animation cycle
         towrite = list(reversed(imgs)) + list(imgs)
         ys = list(reversed(params['preds'])) + list(params['preds'])
-        
         
         for idx, img in enumerate(towrite):
                 
             px = 1/plt.rcParams['figure.dpi']
             full_frame(img[0].shape[0]*px, img[0].shape[1]*px)
             plt.imshow(img[0], interpolation='none')
-            
-            
+
             if watermark:
+                # Write prob output in upper left
                 plt.text(
                     0.05, 0.95, f"{float(ys[idx]):1.1f}",
                     ha='left', va='top',
                     transform=plt.gca().transAxes
                 )
+                # Write method name in lower right
                 plt.text(
                     0.96, 0.1, 'gifsplanation',
                     ha='right', va='bottom',
@@ -270,17 +267,17 @@ class LatentShift(GradientAttribution):
                 )
             
             plt.savefig(f'{temp_path}/image-{idx}.png', bbox_inches='tight', pad_inches=0, transparent=False)
-            
             plt.close()
 
-        
-        cmd = "{} -loglevel quiet -stats -y -i {}/image-%d.png -c:v libx264 -vf scale=-2:{} -profile:v baseline -level 3.0 -pix_fmt yuv420p '{}.mp4'".format(ffmpeg_path, temp_path, img[0][0].shape[0], target_filename)
+        # Command for ffmpeg to generate an mp4
+        cmd = "{} -loglevel quiet -stats -y -i {}/image-%d.png -c:v libx264 -vf scale=-2:{} -profile:v baseline -level 3.0 -pix_fmt yuv420p '{}.mp4'".format(ffmpeg_path, temp_path, imgs[0][0].shape[0], target_filename)
 
         print(cmd)
         output = subprocess.check_output(cmd, shell=True)
         print(output)
 
         if show:
+            # If we in a jupyter notebook then show the video.
             from IPython.core.display import Video
             return Video(target_filename + ".mp4", 
                          html_attributes = "controls loop autoplay muted",
@@ -289,14 +286,14 @@ class LatentShift(GradientAttribution):
         else:
             return target_filename + ".mp4"
         
-        
 
 def full_frame(width=None, height=None):
+    """Setup matplotlib so we can write to the entire canvas"""
 
     matplotlib.rcParams['savefig.pad_inches'] = 0
     figsize = None if width is None else (width, height)
     fig = plt.figure(figsize=figsize)
-    ax = plt.axes([0,0,1,1], frameon=False)
+    ax = plt.axes([0, 0, 1, 1], frameon=False)
     ax.get_xaxis().set_visible(False)
     ax.get_yaxis().set_visible(False)
     plt.autoscale(tight=True)
