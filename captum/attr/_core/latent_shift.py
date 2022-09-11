@@ -284,10 +284,15 @@ class LatentShift(GradientAttribution):
         if show:
             # If we in a jupyter notebook then show the video.
             from IPython.core.display import Video
-            return Video(target_filename + ".mp4", 
-                         html_attributes = "controls loop autoplay muted",
-                         embed=True,
-                        )
+            try:
+                return Video(target_filename + ".mp4",
+                             html_attributes="controls loop autoplay muted",
+                             embed=True,
+                             )
+            except TypeError as e:
+                return Video(target_filename + ".mp4",
+                             embed=True
+                             )
         else:
             return target_filename + ".mp4"
         
