@@ -26,11 +26,11 @@ class LatentShift(GradientAttribution):
     the code to generate a video and construct a heatmap representing the
     image changes for viewing as an image.
 
-    Publication:
-    Cohen, J. P., et al. Gifsplanation via Latent Shift: A Simple
-    Autoencoder Approach to Counterfactual Generation for Chest
-    X-rays. Medical Imaging with Deep Learning.
+    More details regarding the latent shift method can be found in the
+    original paper:
     https://arxiv.org/abs/2102.09475
+    And the original code repository:
+    https://github.com/mlmed/gifsplanation
     """
 
     def __init__(self, forward_func: Callable, autoencoder) -> None:
