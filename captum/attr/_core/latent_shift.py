@@ -3,7 +3,7 @@
 import os
 import shutil
 import subprocess
-from typing import Callable, List, Tuple
+from typing import Callable, Tuple
 
 import matplotlib
 import matplotlib.pyplot as plt
