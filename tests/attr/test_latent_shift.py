@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
-import torch
 import captum
+import torch
 from tests.helpers.basic import BaseTest
 
 
@@ -23,7 +23,6 @@ class TinyModel(torch.nn.Module):
 
 
 class TinyAE(torch.nn.Module):
-
     def __init__(self):
         super(TinyAE, self).__init__()
 
@@ -55,5 +54,5 @@ class Test(BaseTest):
         # Computes counterfactual for class 3.
         output = attr.attribute(x, target=3, lambda_sweep_steps=10)
 
-        assert 10 == len(output['generated_images'])
-        assert (1, 100) == output['generated_images'][0].shape
+        assert 10 == len(output["generated_images"])
+        assert (1, 100) == output["generated_images"][0].shape
