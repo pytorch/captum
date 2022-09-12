@@ -1,17 +1,17 @@
 #!/usr/bin/env python3
 
-from typing import Callable, Tuple, List
-
 import os
 import shutil
-import torch
-import numpy as np
-from torch import Tensor
-from captum.attr._utils.attribution import GradientAttribution
-from captum.log import log_usage
 import subprocess
+from typing import Callable, List, Tuple
+
 import matplotlib
 import matplotlib.pyplot as plt
+import numpy as np
+import torch
+from captum.attr._utils.attribution import GradientAttribution
+from captum.log import log_usage
+from torch import Tensor
 
 
 class LatentShift(GradientAttribution):
@@ -46,8 +46,8 @@ class LatentShift(GradientAttribution):
         self.ae = autoencoder
 
         # check if ae has encode and decode
-        assert hasattr(self.ae, 'encode')
-        assert hasattr(self.ae, 'decode')
+        assert hasattr(self.ae, "encode")
+        assert hasattr(self.ae, "decode")
 
     @log_usage()
     def attribute(
@@ -60,7 +60,7 @@ class LatentShift(GradientAttribution):
         search_max_steps: int = 3000,
         search_max_pixel_diff: float = 5000.0,
         lambda_sweep_steps: int = 10,
-        heatmap_method: str = 'int',
+        heatmap_method: str = "int",
         verbose: bool = True,
     ) -> dict:
         r"""
@@ -152,7 +152,7 @@ class LatentShift(GradientAttribution):
                 pred1 = pred1.detach().cpu().numpy()
                 cache[lambdax] = x_lambdax, pred1
                 if verbose:
-                    print(f'Shift: {lambdax} , Prediction: {pred1}')
+                    print(f"Shift: {lambdax} , Prediction: {pred1}")
             return cache[lambdax]
 
         _, initial_pred = compute_shift(0)
@@ -190,13 +190,11 @@ class LatentShift(GradientAttribution):
             rbound = 0
 
         if verbose:
-            print('Selected bounds: ', lbound, rbound)
+            print("Selected bounds: ", lbound, rbound)
 
         # Sweep over the range of lambda values to create a sequence
         lambdas = np.arange(
-            lbound,
-            rbound,
-            np.abs((lbound - rbound) / lambda_sweep_steps)
+            lbound, rbound, np.abs((lbound - rbound) / lambda_sweep_steps)
         ).tolist()
 
         preds = []
@@ -208,39 +206,33 @@ class LatentShift(GradientAttribution):
             preds.append(float(pred))
 
         params = {}
-        params['generated_images'] = generated_images
-        params['lambdas'] = lambdas
-        params['preds'] = preds
+        params["generated_images"] = generated_images
+        params["lambdas"] = lambdas
+        params["preds"] = preds
 
         x_lambda0 = x_lambda0.detach().cpu().numpy()
-        if heatmap_method == 'max':
+        if heatmap_method == "max":
             # Max difference from lambda 0 frame
-            heatmap = np.max(
-                np.abs(x_lambda0[0][0] - generated_images[0][0]), 0
-            )
+            heatmap = np.max(np.abs(x_lambda0[0][0] - generated_images[0][0]), 0)
 
-        elif heatmap_method == 'mean':
+        elif heatmap_method == "mean":
             # Average difference between 0 and other lambda frames
-            heatmap = np.mean(
-                np.abs(x_lambda0[0][0] - generated_images[0][0]), 0
-            )
+            heatmap = np.mean(np.abs(x_lambda0[0][0] - generated_images[0][0]), 0)
 
-        elif heatmap_method == 'mm':
+        elif heatmap_method == "mm":
             # Difference between first and last frames
-            heatmap = np.abs(
-                generated_images[0][0][0] - generated_images[-1][0][0]
-            )
+            heatmap = np.abs(generated_images[0][0][0] - generated_images[-1][0][0])
 
-        elif heatmap_method == 'int':
+        elif heatmap_method == "int":
             # Average per frame differences
             image_changes = []
             for i in range(len(generated_images) - 1):
-                image_changes.append(np.abs(
-                    generated_images[i][0][0] - generated_images[i + 1][0][0]
-                ))
+                image_changes.append(
+                    np.abs(generated_images[i][0][0] - generated_images[i + 1][0][0])
+                )
             heatmap = np.mean(image_changes, 0)
         else:
-            raise Exception('Unknown heatmap_method for 2d image')
+            raise Exception("Unknown heatmap_method for 2d image")
 
         params["heatmap"] = heatmap
 
@@ -259,20 +251,20 @@ class LatentShift(GradientAttribution):
     ):
         """Generate a video from the generated images.
 
-            Args:
-                params: The dict returned from the call to `attribute`.
-                target_filename: The filename to write the video to. `.mp4` will
-                    be added to the end of the string.
-                watermark: To add the probability output and the name of the
-                    method.
-                ffmpeg_path: The path to call `ffmpeg`
-                temp_path: A temp path to write images.
-                show: To try and show the video in a jupyter notebook.
-                verbose: True to print debug text
+        Args:
+            params: The dict returned from the call to `attribute`.
+            target_filename: The filename to write the video to. `.mp4` will
+                be added to the end of the string.
+            watermark: To add the probability output and the name of the
+                method.
+            ffmpeg_path: The path to call `ffmpeg`
+            temp_path: A temp path to write images.
+            show: To try and show the video in a jupyter notebook.
+            verbose: True to print debug text
 
-            Returns:
-                The filename of the video if show=False, otherwise it will
-                return a video to show in a jupyter notebook.
+        Returns:
+            The filename of the video if show=False, otherwise it will
+            return a video to show in a jupyter notebook.
         """
 
         if os.path.exists(target_filename + ".mp4"):
@@ -285,42 +277,50 @@ class LatentShift(GradientAttribution):
 
         # Add reversed so we have an animation cycle
         towrite = list(reversed(imgs)) + list(imgs)
-        ys = list(reversed(params['preds'])) + list(params['preds'])
+        ys = list(reversed(params["preds"])) + list(params["preds"])
 
         for idx, img in enumerate(towrite):
 
-            px = 1 / plt.rcParams['figure.dpi']
+            px = 1 / plt.rcParams["figure.dpi"]
             full_frame(img[0].shape[0] * px, img[0].shape[1] * px)
-            plt.imshow(img[0], interpolation='none')
+            plt.imshow(img[0], interpolation="none")
 
             if watermark:
                 # Write prob output in upper left
                 plt.text(
-                    0.05, 0.95, f"{float(ys[idx]):1.1f}",
-                    ha='left', va='top',
-                    transform=plt.gca().transAxes
+                    0.05,
+                    0.95,
+                    f"{float(ys[idx]):1.1f}",
+                    ha="left",
+                    va="top",
+                    transform=plt.gca().transAxes,
                 )
                 # Write method name in lower right
                 plt.text(
-                    0.96, 0.1, 'gifsplanation',
-                    ha='right', va='bottom',
-                    transform=plt.gca().transAxes
+                    0.96,
+                    0.1,
+                    "gifsplanation",
+                    ha="right",
+                    va="bottom",
+                    transform=plt.gca().transAxes,
                 )
 
             plt.savefig(
-                f'{temp_path}/image-{idx}.png',
-                bbox_inches='tight',
+                f"{temp_path}/image-{idx}.png",
+                bbox_inches="tight",
                 pad_inches=0,
-                transparent=False
+                transparent=False,
             )
             plt.close()
 
         # Command for ffmpeg to generate an mp4
-        cmd = f"{ffmpeg_path} -loglevel quiet -stats -y " \
-              f"-i {temp_path}/image-%d.png " \
-              f"-c:v libx264 -vf scale=-2:{imgs[0][0].shape[0]} " \
-              f"-profile:v baseline -level 3.0 -pix_fmt yuv420p " \
-              f"'{target_filename}.mp4'"
+        cmd = (
+            f"{ffmpeg_path} -loglevel quiet -stats -y "
+            f"-i {temp_path}/image-%d.png "
+            f"-c:v libx264 -vf scale=-2:{imgs[0][0].shape[0]} "
+            f"-profile:v baseline -level 3.0 -pix_fmt yuv420p "
+            f"'{target_filename}.mp4'"
+        )
 
         if verbose:
             print(cmd)
@@ -331,15 +331,15 @@ class LatentShift(GradientAttribution):
         if show:
             # If we in a jupyter notebook then show the video.
             from IPython.core.display import Video
+
             try:
-                return Video(target_filename + ".mp4",
-                             html_attributes="controls loop autoplay muted",
-                             embed=True,
-                             )
+                return Video(
+                    target_filename + ".mp4",
+                    html_attributes="controls loop autoplay muted",
+                    embed=True,
+                )
             except TypeError:
-                return Video(target_filename + ".mp4",
-                             embed=True
-                             )
+                return Video(target_filename + ".mp4", embed=True)
         else:
             return target_filename + ".mp4"
 
@@ -347,7 +347,7 @@ class LatentShift(GradientAttribution):
 def full_frame(width=None, height=None):
     """Setup matplotlib so we can write to the entire canvas"""
 
-    matplotlib.rcParams['savefig.pad_inches'] = 0
+    matplotlib.rcParams["savefig.pad_inches"] = 0
     figsize = None if width is None else (width, height)
     plt.figure(figsize=figsize)
     ax = plt.axes([0, 0, 1, 1], frameon=False)

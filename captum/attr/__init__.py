@@ -11,6 +11,7 @@ from captum.attr._core.guided_grad_cam import GuidedGradCam  # noqa
 from captum.attr._core.input_x_gradient import InputXGradient  # noqa
 from captum.attr._core.integrated_gradients import IntegratedGradients  # noqa
 from captum.attr._core.kernel_shap import KernelShap  # noqa
+from captum.attr._core.latent_shift import LatentShift  # noqa
 from captum.attr._core.layer.grad_cam import LayerGradCam  # noqa
 from captum.attr._core.layer.internal_influence import InternalInfluence  # noqa
 from captum.attr._core.layer.layer_activation import LayerActivation  # noqa
@@ -50,7 +51,6 @@ from captum.attr._core.neuron.neuron_integrated_gradients import (  # noqa
 from captum.attr._core.noise_tunnel import NoiseTunnel  # noqa
 from captum.attr._core.occlusion import Occlusion  # noqa
 from captum.attr._core.saliency import Saliency  # noqa
-from captum.attr._core.latent_shift import LatentShift  # noqa
 from captum.attr._core.shapley_value import ShapleyValues, ShapleyValueSampling  # noqa
 from captum.attr._models.base import (  # noqa
     configure_interpretable_embedding_layer,
