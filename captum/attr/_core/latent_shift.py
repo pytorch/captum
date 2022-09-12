@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-from typing import Callable, Tuple
+from typing import Callable, Tuple, List
 
 import os
 import shutil
@@ -53,7 +53,7 @@ class LatentShift(GradientAttribution):
     def attribute(
         self,
         inputs: Tensor,
-        target: int = None,
+        target: int,
         fix_range: Tuple = None,
         search_pred_diff: float = 0.8,
         search_step_size: float = 10.0,
@@ -197,7 +197,7 @@ class LatentShift(GradientAttribution):
             lbound,
             rbound,
             np.abs((lbound - rbound) / lambda_sweep_steps)
-        )
+        ).tolist()
 
         preds = []
         generated_images = []
@@ -205,13 +205,12 @@ class LatentShift(GradientAttribution):
         for lam in lambdas:
             x_lambdax, pred = compute_shift(lam)
             generated_images.append(x_lambdax.cpu().numpy())
-            preds.append(pred)
+            preds.append(float(pred))
 
         params = {}
         params['generated_images'] = generated_images
         params['lambdas'] = lambdas
         params['preds'] = preds
-        params['target'] = target
 
         x_lambda0 = x_lambda0.detach().cpu().numpy()
         if heatmap_method == 'max':
@@ -275,9 +274,6 @@ class LatentShift(GradientAttribution):
                 The filename of the video if show=False, otherwise it will
                 return a video to show in a jupyter notebook.
         """
-
-        if not target_filename:
-            target_filename = f'video-{params["target"]}'
 
         if os.path.exists(target_filename + ".mp4"):
             os.remove(target_filename + ".mp4")
