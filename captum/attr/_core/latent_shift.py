@@ -20,16 +20,16 @@ class LatentShift(GradientAttribution):
     the possible  adversarial examples to remain in the data space by
     adjusting the latent space of the autoencoder using dy/dz instead of
     dy/dx in order  to change the classifier's prediction.
-    
+
     This class implements a search strategy to determine the lambda needed to
     change the prediction of the classifier by a specific amount as well  as
     the code to generate a video and construct a heatmap representing the
     image changes for viewing as an image.
-    
+
     Publication:
-    Cohen, J. P., et al. Gifsplanation via Latent Shift: A Simple 
-    Autoencoder Approach to Counterfactual Generation for Chest 
-    X-rays. Medical Imaging with Deep Learning. 
+    Cohen, J. P., et al. Gifsplanation via Latent Shift: A Simple
+    Autoencoder Approach to Counterfactual Generation for Chest
+    X-rays. Medical Imaging with Deep Learning.
     https://arxiv.org/abs/2102.09475
     """
 
@@ -44,7 +44,7 @@ class LatentShift(GradientAttribution):
         """
         GradientAttribution.__init__(self, forward_func)
         self.ae = autoencoder
-        
+
         # check if ae has encode and decode
         assert hasattr(self.ae, 'encode')
         assert hasattr(self.ae, 'decode')
@@ -109,13 +109,13 @@ class LatentShift(GradientAttribution):
         Returns:
             dict containing the follow keys:
                 generated_images: A list of images generated at each step along
-                    the dydz vector from the smallest lambda to the largest. By 
-                    default the smallest lambda represents the counterfactual 
+                    the dydz vector from the smallest lambda to the largest. By
+                    default the smallest lambda represents the counterfactual
                     image and the largest lambda is 0 (representing no change).
                 lambdas: A list of the lambda values for each generated image.
-                preds: A list of the predictions of the model for each generated 
+                preds: A list of the predictions of the model for each generated
                     image.
-                heatmap: A heatmap indicating the pixels which change in the 
+                heatmap: A heatmap indicating the pixels which change in the
                     video sequence of images.
 
 
@@ -124,13 +124,13 @@ class LatentShift(GradientAttribution):
             >>> # Load classifier and autoencoder
             >>> model = classifiers.FaceAttribute()
             >>> ae = autoencoders.Transformer(weights="faceshq")
-            >>> 
+            >>>
             >>> # Load image
             >>> x = torch.randn(1, 3, 1024, 1024)
-            >>> 
+            >>>
             >>> # Defining Latent Shift module
             >>> attr = captum.attr.LatentShift(model, ae)
-            >>> 
+            >>>
             >>> # Computes counterfactual for class 3.
             >>> output = attr.attribute(x, target=3)
 
@@ -140,7 +140,7 @@ class LatentShift(GradientAttribution):
         x_lambda0 = self.ae.decode(z)
         pred = torch.sigmoid(self.forward_func(x_lambda0))[:, target]
         dzdxp = torch.autograd.grad(pred, z)[0]
-        
+
         # Cache so we can reuse at sweep stage
         cache = {}
 
@@ -149,14 +149,14 @@ class LatentShift(GradientAttribution):
             if lambdax not in cache:
                 x_lambdax = self.ae.decode(z + dzdxp * lambdax).detach()
                 pred1 = torch.sigmoid(self.forward_func(x_lambdax))[:, target]
-                pred1 = pred1.detach().cpu().numpy() 
+                pred1 = pred1.detach().cpu().numpy()
                 cache[lambdax] = x_lambdax, pred1
                 if verbose:
                     print(f'Shift: {lambdax} , Prediction: {pred1}')
             return cache[lambdax]
-        
+
         _, initial_pred = compute_shift(0)
-        
+
         if fix_range:
             lbound, rbound = fix_range
         else:
@@ -166,7 +166,7 @@ class LatentShift(GradientAttribution):
             while True:
                 x_lambdax, cur_pred = compute_shift(lbound)
                 pixel_diff = torch.abs(x_lambda0 - x_lambdax).sum().detach()
-                
+
                 # If we stop decreasing the prediction
                 if last_pred < cur_pred:
                     break
@@ -182,7 +182,7 @@ class LatentShift(GradientAttribution):
                 # If we move too far we will distort the image
                 if pixel_diff > search_max_pixel_diff:
                     break
-                    
+
                 last_pred = cur_pred
                 lbound = lbound - search_step_size + lbound // 10
 
@@ -191,22 +191,22 @@ class LatentShift(GradientAttribution):
 
         if verbose:
             print('Selected bounds: ', lbound, rbound)
-        
+
         # Sweep over the range of lambda values to create a sequence
         lambdas = np.arange(
             lbound,
             rbound,
             np.abs((lbound - rbound) / lambda_sweep_steps)
         )
-        
+
         preds = []
         generated_images = []
-        
+
         for lam in lambdas:
             x_lambdax, pred = compute_shift(lam)
             generated_images.append(x_lambdax.cpu().numpy())
             preds.append(pred)
-            
+
         params = {}
         params['generated_images'] = generated_images
         params['lambdas'] = lambdas
@@ -219,21 +219,21 @@ class LatentShift(GradientAttribution):
             heatmap = np.max(
                 np.abs(x_lambda0[0][0] - generated_images[0][0]), 0
             )
-        
+
         elif heatmap_method == 'mean':
             # Average difference between 0 and other lambda frames
             heatmap = np.mean(
                 np.abs(x_lambda0[0][0] - generated_images[0][0]), 0
             )
-        
+
         elif heatmap_method == 'mm':
             # Difference between first and last frames
             heatmap = np.abs(
                 generated_images[0][0][0] - generated_images[-1][0][0]
             )
-        
+
         elif heatmap_method == 'int':
-            # Average per frame differences 
+            # Average per frame differences
             image_changes = []
             for i in range(len(generated_images) - 1):
                 image_changes.append(np.abs(
@@ -242,11 +242,11 @@ class LatentShift(GradientAttribution):
             heatmap = np.mean(image_changes, 0)
         else:
             raise Exception('Unknown heatmap_method for 2d image')
-            
+
         params["heatmap"] = heatmap
-        
+
         return params
-    
+
     @log_usage()
     def generate_video(
         self,
@@ -275,24 +275,24 @@ class LatentShift(GradientAttribution):
                 The filename of the video if show=False, otherwise it will
                 return a video to show in a jupyter notebook.
         """
-                    
+
         if not target_filename:
             target_filename = f'video-{params["target"]}'
-        
+
         if os.path.exists(target_filename + ".mp4"):
-            os.remove(target_filename + ".mp4") 
-        
-        shutil.rmtree(temp_path, ignore_errors=True) 
+            os.remove(target_filename + ".mp4")
+
+        shutil.rmtree(temp_path, ignore_errors=True)
         os.mkdir(temp_path)
-        
+
         imgs = [h.transpose(0, 2, 3, 1) for h in params["generated_images"]]
 
         # Add reversed so we have an animation cycle
         towrite = list(reversed(imgs)) + list(imgs)
         ys = list(reversed(params['preds'])) + list(params['preds'])
-        
+
         for idx, img in enumerate(towrite):
-                
+
             px = 1 / plt.rcParams['figure.dpi']
             full_frame(img[0].shape[0] * px, img[0].shape[1] * px)
             plt.imshow(img[0], interpolation='none')
@@ -310,7 +310,7 @@ class LatentShift(GradientAttribution):
                     ha='right', va='bottom',
                     transform=plt.gca().transAxes
                 )
-            
+
             plt.savefig(
                 f'{temp_path}/image-{idx}.png',
                 bbox_inches='tight',
@@ -346,7 +346,7 @@ class LatentShift(GradientAttribution):
                              )
         else:
             return target_filename + ".mp4"
-        
+
 
 def full_frame(width=None, height=None):
     """Setup matplotlib so we can write to the entire canvas"""
