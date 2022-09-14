@@ -36,7 +36,6 @@ class LatentShift(GradientAttribution):
     def __init__(self, forward_func: Callable, autoencoder) -> None:
         r"""
         Args:
-
             forward_func (callable): The forward function of the model or
                         any modification of it
             autoencoder: An object with an encode and decode function which
