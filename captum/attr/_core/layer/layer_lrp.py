@@ -205,10 +205,10 @@ class LayerLRP(LRP, LayerAttribution):
                 >>> # and returns an Nx10 tensor of class probabilities. It has one
                 >>> # Conv2D and a ReLU layer.
                 >>> net = ImageClassifier()
-                >>> lrp = LRP(net, net.conv1)
+                >>> layer_lrp = LayerLRP(net, net.conv1)
                 >>> input = torch.randn(3, 3, 32, 32)
                 >>> # Attribution size matches input size: 3x3x32x32
-                >>> attribution = lrp.attribute(input, target=5)
+                >>> attribution = layer_lrp.attribute(input, target=5)
 
         """
         self.verbose = verbose

@@ -68,6 +68,15 @@ class TracInCPFast(TracInCPBase):
     computes influence scores for that special case. Note that the computed
     influence scores are exactly the same as when naive back-propagation is used -
     there is no loss in accuracy.
+
+    In more detail regarding the influence score computation: let :math`x`
+    and :math`\nabla_y f(y)` be the input and output-gradient of the last
+    fully-connected layer, respectively, for a training example. Similarly, let
+    :math`x'` and :math`\nabla_{y'} f(y')` be the corresponding quantities for
+    a test example. Then, the influence score of the training example on the test
+    example is the sum of the contribution from each checkpoint. The contribution from
+    a given checkpoint is :math`(x^T x')(\nabla_y f(y)^T \nabla_{y'} f(y'))`.
+
     """
 
     def __init__(
@@ -314,7 +323,9 @@ class TracInCPFast(TracInCPBase):
         batch: Tuple[Any, ...],
     ):
         """
-        computes influence scores for a single training batch
+        computes influence scores for a single training batch, when only considering
+        gradients in the last fully-connected layer, using the computation trick
+        described in the `TracInCPFast` class description.
         """
 
         def get_checkpoint_contribution(checkpoint):
@@ -335,8 +346,15 @@ class TracInCPFast(TracInCPBase):
                 self, batch[0:-1], batch[-1]
             )
             return (
-                _tensor_batch_dot(input_jacobians, src_jacobian)
+                _tensor_batch_dot(
+                    input_jacobians, src_jacobian
+                )  # shape is (test batch size, training batch size), containing x^T x'
+                # for every example x in the training batch and example x' in the test
+                # batch
                 * _tensor_batch_dot(input_layer_inputs, src_layer_input)
+                # shape is (test batch size, training batch size), containing
+                # (\nabla_y f(y)^T \nabla_{y'} f(y')) for every label y in the training
+                # batch and label y' in the test batch
                 * learning_rate
             )
 
@@ -712,6 +730,14 @@ def _basic_computation_tracincp_fast(
                 that `model(*inputs)` produces the predictions for the batch.
         targets (Tensor): If computing influence scores on a loss function,
                 these are the labels corresponding to the batch `inputs`.
+
+    Returns:
+        (input_jacobians, layer_inputs) (tuple): `input_jacobians` is a 2D tensor,
+                where each row is the jacobian of the loss, with respect to the
+                *output* of the last fully-connected layer. `layer_inputs` is a 1D
+                tensor, where each row is the *input* to the last fully-connected
+                layer. For both, the length is the number of examples in the batch
+                represented by `inputs` and `targets`.
     """
     layer_inputs: Dict[device, Tuple[Tensor, ...]] = defaultdict()
     lock = threading.Lock()
@@ -765,6 +791,57 @@ def _basic_computation_tracincp_fast(
 
 
 class TracInCPFastRandProj(TracInCPFast):
+    r"""
+    A version of TracInCPFast which is optimized for "interactive" calls to
+    `influence` for the purpose of calculating proponents / opponents, or
+    influence scores. "Interactive" means there will be multiple calls to
+    `influence`, with each call for a different batch of test examples, and
+    subsequent calls rely on the results of previous calls. The implementation in
+    this class has been optimized so that each call to `influence` is fast, so that
+    it can be used for interactive analysis. This class should only be used for
+    interactive use cases. It should not be used if `influence` will only be
+    called once, because to enable fast calls to `influence`, time and memory
+    intensive preprocessing is required in `__init__`. Furthermore, it should not
+    be used to calculate self influence scores - `TracInCPFast` should be used
+    instead for that purpose. To enable interactive analysis, this implementation
+    computes and saves "embedding" vectors for all training examples in
+    `train_dataset`. Crucially, the influence score of a training
+    example on a test example is simply the dot-product of their corresponding
+    vectors, and proponents / opponents can be found by first storing vectors for
+    training examples in a nearest-neighbor data structure, and then finding the
+    nearest-neighbors for a test example in terms of dot-product (see appendix F
+    of the TracIn paper). This class should only be used if calls to `influence`
+    to obtain proponents / opponents or influence scores will be made in an
+    "interactive" manner, and there is sufficient memory to store vectors for the
+    entire `train_dataset`. This is because in order to enable interactive
+    analysis, this implementation incures overhead in `__init__` to setup the
+    nearest-neighbors data structure, which is both time and memory intensive, as
+    vectors corresponding to all training examples needed to be stored. To reduce
+    memory usage, this implementation enables random projections of those vectors.
+    Note that the influence scores computed with random projections are less
+    accurate, though correct in expectation.
+
+    In more detail regarding the "embedding" vectors - the influence of a training
+    example on a test example, when only considering gradients in the last
+    fully-connected layer, the sum of the contribution from each checkpoint. The
+    contribution from a given checkpoint is
+    :math`(x^T x')(\nabla_y f(y)^T \nabla_{y'} f(y'))`, using the notation in the
+    description of `TracInCPFast`. As is, this is not a dot-product of 2 vectors.
+    However, we can rewrite that contribution as
+    :math`(x \nabla_y f(y)^T) \dot (x' f(y')^T)`. Both terms in this
+    product are 2D matrices, as they are outer products, and the "product" is actually
+    a dot-product, treating both matrices as vectors. Therefore, for a given
+    checkpoint, its contribution to the "embedding" of an example is just the
+    outer-product :math`(x \nabla_y f(y)^T)`, flattened. Furthemore, to reduce the
+    dimension of this contribution, we can right-multiply and
+    left-multiply the outer-product with two separate projection matrices. These
+    transform :math`\nabla_y f(y)` and :math`x` to lower dimensional vectors. While
+    the dimension of these two lower dimensional vectors do not necessarily need to
+    be the same, in our implementation, we let them be the same, both equal to the
+    square root of the desired projection dimension. Finally, the embedding of an
+    example is the concatenation of the contributions from each checkpoint.
+    """
+
     def __init__(
         self,
         model: Module,
@@ -780,35 +857,6 @@ class TracInCPFastRandProj(TracInCPFast):
         seed: int = 0,
     ) -> None:
         r"""
-        A version of TracInCPFast which is optimized for "interactive" calls to
-        `influence` for the purpose of calculating proponents / opponents, or
-        influence scores. "Interactive" means there will be multiple calls to
-        `influence`, with each call for a different batch of test examples, and
-        subsequent calls rely on the results of previous calls. The implementation in
-        this class has been optimized so that each call to `influence` is fast, so that
-        it can be used for interactive analysis. This class should only be used for
-        interactive use cases. It should not be used if `influence` will only be
-        called once, because to enable fast calls to `influence`, time and memory
-        intensive preprocessing is required in `__init__`. Furthermore, it should not
-        be used to calculate self influence scores - `TracInCPFast` should be used
-        instead for that purpose. To enable interactive analysis, this implementation
-        computes and saves "embedding" vectors for all training examples in
-        `train_dataset`. Crucially, the influence score of a training
-        example on a test example is simply the dot-product of their corresponding
-        vectors, and proponents / opponents can be found by first storing vectors for
-        training examples in a nearest-neighbor data structure, and then finding the
-        nearest-neighbors for a test example in terms of dot-product (see appendix F
-        of the TracIn paper). This class should only be used if calls to `influence`
-        to obtain proponents / opponents or influence scores will be made in an
-        "interactive" manner, and there is sufficient memory to store vectors for the
-        entire `train_dataset`. This is because in order to enable interactive
-        analysis, this implementation incures overhead in `__init__` to setup the
-        nearest-neighbors data structure, which is both time and memory intensive, as
-        vectors corresponding to all training examples needed to be stored. To reduce
-        memory usage, this implementation enables random projections of those vectors.
-        Note that the influence scores computed with random projections are less
-        accurate, though correct in expectation.
-
         Args:
 
             model (torch.nn.Module): An instance of pytorch model. This model should
@@ -970,6 +1018,8 @@ class TracInCPFastRandProj(TracInCPFast):
             example, `influence_scores[i][j]` is the influence score for the j-th
             training example to the i-th input example.
         """
+        # TODO: after D35721609 lands, use helper function
+        # `TracInCP._influence_rand_proj` here to avoid duplicated logic
         inputs_batch = (*inputs, targets)
         input_projections = self._get_intermediate_quantities_tracincp_fast_rand_proj(
             DataLoader(
@@ -1242,10 +1292,10 @@ class TracInCPFastRandProj(TracInCPFast):
                     provides that batch.
 
         Returns:
-            jacobian_projection (tensor or None): Projection matrix to apply to
+            jacobian_projection (Tensor or None): Projection matrix to apply to
                     Jacobian of last layer to reduce its dimension, if needed.
                     None otherwise.
-            input_projection (tensor or None): Projection matrix to apply to input of
+            input_projection (Tensor or None): Projection matrix to apply to input of
                     last layer to reduce its dimension, if needed. None otherwise.
         """
         # figure out projection dimensions, if needed
@@ -1334,7 +1384,7 @@ class TracInCPFastRandProj(TracInCPFast):
 
     def _get_intermediate_quantities_tracincp_fast_rand_proj(
         self,
-        dataloader: DataLoader,
+        inputs_dataset: Union[Tuple[Any, ...], DataLoader],
         projection_quantities: Optional[Tuple[torch.Tensor, torch.Tensor]],
     ) -> torch.Tensor:
         r"""
@@ -1346,15 +1396,23 @@ class TracInCPFastRandProj(TracInCPFast):
         specifically, largest dot-product) data structure.
 
         Args:
-
-            dataloader (DataLoader): DataLoader for which the intermediate quantities
-                    are computed.
+            inputs_dataset (Tuple, or DataLoader): Either a single tuple of any, or a
+                    `DataLoader`, where each batch yielded is a tuple of any. In
+                    either case, the tuple represents a single batch, where the last
+                    element is assumed to be the labels for the batch. That is,
+                    `model(*batch[0:-1])` produces the output for `model`, and
+                    and `batch[-1]` are the labels, if any. Here, `model` is model
+                    provided in initialization. This is the same assumption made for
+                    each batch yielded by training dataset `train_dataset`. Please see
+                    documentation for the `train_dataset` argument to
+                    `TracInCPFastRandProj.__init__` for more details on the assumed
+                    structure of a batch.
             projection_quantities (tuple or None): Is either the two tensors defining
                     the randomized projections to apply, or None, which means no
                     projection is to be applied.
 
         Returns:
-            checkpoint_projections (Tensor): A tensor of dimension
+            intermediate_quantities (Tensor): A tensor of dimension
                     (N, D * C), where N is total number of examples in `dataloader`, C
                     is the number of checkpoints passed as the `checkpoints` argument
                     of `TracInCPFastRandProj.__init__`, and each row represents the
@@ -1372,16 +1430,32 @@ class TracInCPFastRandProj(TracInCPFast):
                     the variable d in the top of page 15 of the TracIn paper:
                     https://arxiv.org/abs/2002.08484.
         """
-        # for each checkpoint, this stores a list of projections for a batch
-        # each element in this list will be of shape (batch_size, projection_dim)
-        checkpoint_projections: List[Any] = [[] for _ in self.checkpoints]
+        # if `inputs_dataset` is not a `DataLoader`, turn it into one.
+        inputs_dataset = _format_inputs_dataset(inputs_dataset)
 
+        # internally, whether `projection_quantities` is None determines whether
+        # any projection will be applied to reduce the dimension of the "embedding"
+        # vectors. If projection will be applied, there are actually 2 different
+        # projection matrices - one to project the `input_jacobians`, and one to
+        # project the `layer_inputs`. See below for details of those two quantities.
+        # here, we extract the corresponding projection matrices for those two
+        # quantities, if doing projection. Note that the same projections are used
+        # for each checkpoint.
         project = False
         if projection_quantities is not None:
             project = True
             jacobian_projection, layer_input_projection = projection_quantities
 
+        # for each checkpoint, we will populate a list containing the contribution of
+        # the checkpoint for each batch
+        checkpoint_contributions: List[Union[List, Tensor]] = [
+            [] for _ in self.checkpoints
+        ]
+
+        # the "embedding" vector is the concatenation of contributions from each
+        # checkpoint, which we compute one by one
         for (j, checkpoint) in enumerate(self.checkpoints):
+
             assert (
                 checkpoint is not None
             ), "None returned from `checkpoints`, cannot load."
@@ -1389,30 +1463,119 @@ class TracInCPFastRandProj(TracInCPFast):
             learning_rate = self.checkpoints_load_func(self.model, checkpoint)
             learning_rate_root = learning_rate**0.5
 
-            for batch in dataloader:
+            # after loading a checkpoint, we compute the contribution of that
+            # checkpoint, for *all* batches (instead of a single batch). this enables
+            # increased efficiency.
+            for batch in inputs_dataset:
 
-                batch_jacobians, batch_layer_inputs = _basic_computation_tracincp_fast(
+                # compute `input_jacobians` and `layer_inputs`, for a given checkpoint
+                # using a helper function. `input_jacobians` is a 2D tensor,
+                # where each row is the jacobian of the loss, with respect to the
+                # *output* of the last fully-connected layer. `layer_inputs` is a 2D
+                # tensor, where each row is the *input* to the last fully-connected
+                # layer. For both, the length is the number of examples in `batch`
+                input_jacobians, layer_inputs = _basic_computation_tracincp_fast(
                     self,
                     batch[0:-1],
                     batch[-1],
                 )
 
+                # if doing projection, project those two quantities
                 if project:
 
-                    batch_jacobians = torch.matmul(batch_jacobians, jacobian_projection)
+                    input_jacobians = torch.matmul(input_jacobians, jacobian_projection)
 
-                    batch_layer_inputs = torch.matmul(
-                        batch_layer_inputs, layer_input_projection
-                    )
+                    layer_inputs = torch.matmul(layer_inputs, layer_input_projection)
 
-                checkpoint_projections[j].append(
+                # for an example, the contribution to the "embedding" vector from each
+                # checkpoint is the outer product of its `input_jacobian` and its
+                # `layer_input`, flattened to a 1D tensor. here, we perform this
+                # for the entire batch. we append the contribution to a list containing
+                # the contribution of all batches, from the checkpoint.
+                cast(list, checkpoint_contributions[j]).append(
                     torch.matmul(
-                        torch.unsqueeze(batch_jacobians, 2),
-                        torch.unsqueeze(batch_layer_inputs, 1),
-                    ).flatten(start_dim=1)
+                        torch.unsqueeze(
+                            input_jacobians, 2
+                        ),  # size is (batch_size, output_size, 1)
+                        torch.unsqueeze(
+                            layer_inputs, 1
+                        ),  # size is (batch_size, 1, input_size)
+                    ).flatten(
+                        start_dim=1
+                    )  # matmul does a batched matrix multiplication to return a 3D
+                    # tensor. each element along the batch (0-th) dimension is the
+                    # matrix product of a (output_size, 1) and (1, input_size) tensor
+                    # in other words, each element is an outer product, and the matmul
+                    # is just doing a batched outer product. this is what we want, as
+                    # the contribution to the "embedding" for an example is the outer
+                    # product of the last layer's input and the gradient of its output.
+                    # finally, we flatten the 3rd dimension so that the contribution to
+                    # the embedding for this checkpoint is a 2D tensor, i.e. each
+                    # example's contribution to the embedding is a 1D tensor.
                     * learning_rate_root
                 )
 
-            checkpoint_projections[j] = torch.cat(checkpoint_projections[j], dim=0)
+            # once we have computed the contribution from each batch, for a given
+            # checkpoint, we concatenate them along the batch dimension to get a
+            # single 2D tensor for that checkpoint
+            checkpoint_contributions[j] = torch.cat(
+                checkpoint_contributions[j], dim=0  # type: ignore
+            )
 
-        return torch.cat(checkpoint_projections, dim=1)
+        # finally, we concatenate along the checkpoint dimension, to get a tensor of
+        # shape (batch_size, projection_dim * number of checkpoints)
+        # each row in this result is the "embedding" vector for an example in `batch`
+        return torch.cat(checkpoint_contributions, dim=1)  # type: ignore
+
+    def compute_intermediate_quantities(
+        self,
+        inputs_dataset: Union[Tuple[Any, ...], DataLoader],
+    ) -> Tensor:
+        """
+        Computes "embedding" vectors for all examples in a single batch, or a
+        `Dataloader` that yields batches. These embedding vectors are constructed so
+        that the influence score of a training example on a test example is simply the
+        dot-product of their corresponding vectors. Please see the documentation for
+        `TracInCPFastRandProj.__init__` for more details. Allowing a `DataLoader`
+        yielding batches to be passed in (as opposed to a single batch) gives the
+        potential to improve efficiency, because we load each checkpoint only once in
+        this method call. Thus if a `DataLoader` yielding batches is passed in, this
+        reduces the total number of times each checkpoint is loaded for a dataset,
+        compared to if a single batch is passed in. The reason we do not just increase
+        the batch size is that for large models, large batches do not fit in memory.
+
+        Args:
+            inputs_dataset (Tuple, or DataLoader): Either a single tuple of any, or a
+                    `DataLoader`, where each batch yielded is a tuple of any. In
+                    either case, the tuple represents a single batch, where the last
+                    element is assumed to be the labels for the batch. That is,
+                    `model(*batch[0:-1])` produces the output for `model`, and
+                    and `batch[-1]` are the labels, if any. Here, `model` is model
+                    provided in initialization. This is the same assumption made for
+                    each batch yielded by training dataset `train_dataset`. Please see
+                    documentation for the `train_dataset` argument to
+                    `TracInCPFastRandProj.__init__` for more details on the assumed
+                    structure of a batch.
+
+        Returns:
+            intermediate_quantities (Tensor): A tensor of dimension
+                    (N, D * C), where N is total number of examples in
+                    `inputs_dataset`, C is the number of checkpoints passed as the
+                    `checkpoints` argument of `TracInCPFastRandProj.__init__`, and each
+                    row represents the vector for an example. Regarding D: Let I be the
+                    dimension of the output of the last fully-connected layer times the
+                    dimension of the input of the last fully-connected layer. If
+                    `self.projection_dim` is specified in initialization,
+                    D = min(I * C, `self.projection_dim` * C). Otherwise, D = I * C.
+                    In summary, if `self.projection_dim` is None, the dimension of each
+                    vector will be determined by the size of the input and output of
+                    the last fully-connected layer of `model`. Otherwise,
+                    `self.projection_dim` must be an int, and random projection will be
+                    performed to ensure that the vector is of dimension no more than
+                    `self.projection_dim` * C. `self.projection_dim` corresponds to
+                    the variable d in the top of page 15 of the TracIn paper:
+                    https://arxiv.org/pdf/2002.08484.pdf.
+        """
+        return self._get_intermediate_quantities_tracincp_fast_rand_proj(
+            inputs_dataset, self.projection_quantities
+        )
