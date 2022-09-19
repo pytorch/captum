@@ -42,7 +42,7 @@ class ToyModel(nn.Module):
 
 Second, let's apply integrated gradients on the toy model's output layer using sample data.
 The code snippet below computes the attribution of output with respect to the inputs.
-`attribute` method of `IntegratedGradients` class returns input attributions which
+The `attribute` method of `IntegratedGradients` class returns input attributions which
 have the same size and dimensionality as the inputs and an approximation error which
 is computed based on the completeness property of the integrated gradients.
 Completeness property is one of the axioms that integrated gradients satisfies.
@@ -114,7 +114,7 @@ class ToySoftmaxModel(nn.Module):
 Now, let's apply integrated gradients on the toy classification model defined
 above using inputs that contain a range of numbers. We also choose an arbitrary
 target class (target_class_index: 5) which we use to attribute our predictions to.
-Similar to previous example the output of attribution is a tensor with the same
+Similar to the previous example, the output of attribution is a tensor with the same
 dimensionality as the inputs and an approximation error computed based on the
 completeness property of integrated gradients.
 
@@ -157,9 +157,9 @@ Now, let's look at a model that besides input tensors takes input arguments of
 other types. In practice this can be used to pass the sequence length or the
 word/token indices in a sequence of a text, for instance. The example below
 demonstrates how to use `additional_forward_args`. In this particular example
-`additional_forward_args` represents single integer value.
-Those arguments are passed as `additional_forward_args` to `attribute` method and
-they will be passed to model's forward function followed by inputs in the oder
+`additional_forward_args` represents a single integer value.
+Those arguments are passed as `additional_forward_args` to the `attribute` method and
+they will be passed to the model's forward function followed by inputs in the order
 provided in `additional_forward_args`. In the example below, we also demonstrate
 how to apply integrated gradients to a batch of samples. The first dimension of
 the input corresponds to the batch size.

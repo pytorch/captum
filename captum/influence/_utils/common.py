@@ -91,12 +91,12 @@ def _jacobian_loss_wrt_inputs(
                 torch.nn.Module. If a custom loss is provided, it can be either type,
                 but must behave as a library loss function would if `reduction='sum'`
                 or `reduction='mean'`.
-        out (tensor): This is a tensor that represents the batch of inputs to
+        out (Tensor): This is a tensor that represents the batch of inputs to
                 `loss_fn`. In practice, this will be the output of a model; this is
                 why this argument is named `out`. `out` is a 2D tensor of shape
                 (batch size, model output dimensionality). We will call `loss_fn` via
                 `loss_fn(out, targets)`.
-        targets (tensor): The labels for the batch of inputs.
+        targets (Tensor): The labels for the batch of inputs.
         vectorize (bool): Flag to use experimental vectorize functionality for
                 `torch.autograd.functional.jacobian`.
         reduction_type (str): The type of reduction used by `loss_fn`. If `loss_fn`
@@ -104,7 +104,7 @@ def _jacobian_loss_wrt_inputs(
                 only be "mean" or "sum".
 
     Returns:
-        jacobians (tensor): Returns the jacobian of the per-sample loss (implicitly
+        jacobians (Tensor): Returns the jacobian of the per-sample loss (implicitly
                 defined by `loss_fn` and `reduction_type`) w.r.t each sample
                 in the batch represented by `out`. This is a 2D tensor, where the
                 first dimension is the batch dimension.
@@ -153,8 +153,9 @@ def _load_flexible_state_dict(model: Module, path: str) -> float:
     state_dict and other information.
 
     Args:
-        model: The model for which to load a checkpoint
-        path: The filepath to the checkpoint
+
+        model (torch.nn.Module): The model for which to load a checkpoint
+        path (str): The filepath to the checkpoint
 
     The module state_dict is modified in-place, and the learning rate is returned.
     """
@@ -203,7 +204,7 @@ def _get_k_most_influential_helper(
         influence_batch_fn (Callable): A callable that will be called via
                 `influence_batch_fn(inputs, targets, batch)`, where `batch` is a batch
                 in the `influence_src_dataloader` argument.
-        inputs (Tuple of Any): A batch of examples. Does not represent labels,
+        inputs (tuple of Any): A batch of examples. Does not represent labels,
                 which are passed as `targets`.
         targets (Tensor, optional): If computing TracIn scores on a loss function,
                 these are the labels corresponding to the batch `inputs`.
@@ -216,7 +217,7 @@ def _get_k_most_influential_helper(
                 Default: True
         show_progress (bool, optional): To compute the proponents (or opponents)
                 for the batch of examples, we perform computation for each batch in
-                training dataset `influence_src_dataloader`, If `show_progress`is
+                training dataset `influence_src_dataloader`, If `show_progress` is
                 true, the progress of this computation will be displayed. In
                 particular, the number of batches for which the computation has
                 been performed will be displayed. It will try to use tqdm if
@@ -354,7 +355,7 @@ def _self_influence_by_batches_helper(
         instance_name (str): This is the name of the implementation class that
                 `self_influence_batch_fn` is a method of. This is used for displaying
                 warning messages.
-        batches (Tuple, or DataLoader): Either a single tuple of any, or a
+        batches (tuple or DataLoader): Either a single tuple of any, or a
                 `DataLoader`, where each batch yielded is a tuple of any. In
                 either case, the tuple represents a single batch, where the last
                 element is assumed to be the labels for the batch. That is,

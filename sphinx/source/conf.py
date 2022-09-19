@@ -10,7 +10,9 @@
 # -- Path setup --------------------------------------------------------------
 
 import os
+import re
 import sys
+from typing import List
 
 base_path = os.path.abspath(os.path.join(__file__, "..", "..", ".."))
 # read module from src instead of installation
@@ -74,6 +76,11 @@ autodoc_default_options = {}
 
 # Inlcude init docstrings into body of autoclass directives
 autoclass_content = "both"
+
+# Preserve signature defaults
+# Prevents entire tensors from being printed, & gives callable functions
+# proper names
+autodoc_preserve_defaults = True
 
 # Configuration for intersphinx: refer to the Python standard library and PyTorch
 intersphinx_mapping = {
@@ -201,3 +208,46 @@ epub_exclude_files = ["search.html"]
 
 # If true, `todo` and `todoList` produce output, else they produce nothing.
 todo_include_todos = True
+
+
+# -- Docstring Improvements --------------------------------------------------
+
+
+# Regex code for typing replacements.
+# The "(?<![\.])" part checks to see if the string
+# starts with a period, and "\b" denotes word boundaries.
+# Only words that don't start with a period are replaced.
+_rt = [r"(?<![\.])(\b", r"\b)"]
+
+
+def autodoc_process_docstring(
+    app, what: str, name: str, obj, options, lines: List[str]
+) -> None:
+    """
+    Modify docstrings before creating html files.
+    Sphinx converts the 'Args:' and 'Returns:' sections of docstrings into
+    reStructuredText (rST) syntax, which can then be found via ':type' & ':rtype'.
+
+    See here for more information:
+    https://www.sphinx-doc.org/en/master/usage/extensions/autodoc.html
+    """
+    for i in range(len(lines)):
+        # Skip unless line is an parameter doc or a return doc
+        if not lines[i].startswith(":type"):
+            continue
+        if ":py:data:" in lines[i]:
+            continue
+
+        # Ensure Any, Callable, & Iterator types are hyperlinked with intersphinx.
+        # The tilde '~' character hides the 'typing.' portion of the string.
+        lines[i] = re.sub(_rt[0] + r"Any" + _rt[1], "~typing.Any", lines[i])
+        lines[i] = re.sub(_rt[0] + r"Callable" + _rt[1], "~typing.Callable", lines[i])
+        lines[i] = re.sub(_rt[0] + r"Iterator" + _rt[1], "~typing.Iterator", lines[i])
+        lines[i] = re.sub(_rt[0] + r"Iterable" + _rt[1], "~typing.Iterable", lines[i])
+
+        # Ensure Tensor type is hyperlinked by interpshinx
+        lines[i] = re.sub(_rt[0] + r"Tensor" + _rt[1], "~torch.Tensor", lines[i])
+
+
+def setup(app) -> None:
+    app.connect("autodoc-process-docstring", autodoc_process_docstring)

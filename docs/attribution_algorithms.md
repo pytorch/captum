@@ -1,5 +1,5 @@
 ---
-id: algorithms
+id: attribution_algorithms
 title: Algorithm Descriptions
 ---
 

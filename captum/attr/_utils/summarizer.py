@@ -173,10 +173,10 @@ class SummarizerSingleTensor:
     def __init__(self, stats: List[Stat], summary_stats_indices: List[int]) -> None:
         r"""
         Args:
-            stats (list of Stat): A list of all the Stat objects that
+            stats (list[Stat]): A list of all the Stat objects that
                 need to be updated. This must be in the appropriate order for
                 updates (see `_reorder_stats`)
-            summary_stats (list of int): A list of indicies, referencing `stats`,
+            summary_stats (list[int]): A list of indicies, referencing `stats`,
                 which are the stats you want to show in the .summary property. This
                 does not require any specific order.
         """

@@ -4,12 +4,12 @@ Insights
 Batch
 ^^^^^
 
-.. autoclass:: captum.insights.api.Batch
+.. autoclass:: captum.insights.Batch
     :members:
 
 AttributionVisualizer
 ^^^^^^^^^^^^^^^^^^^^^
-.. autoclass:: captum.insights.api.AttributionVisualizer
+.. autoclass:: captum.insights.AttributionVisualizer
     :members:
 
 

@@ -45,7 +45,7 @@ child classes.  They are not part of the API.
 
 Implements abstract DataInfluence class and provides implementation details for
 influence computation based on the logic provided in TracIn paper
-(https://arxiv.org/pdf/2002.08484.pdf).
+(https://arxiv.org/abs/2002.08484).
 
 The TracIn paper proposes an idealized notion of influence which can be represented by
 the total amount a training example reduces loss for a test example via a training
@@ -105,9 +105,10 @@ class TracInCPBase(DataInfluence):
     ) -> None:
         r"""
         Args:
+
             model (torch.nn.Module): An instance of pytorch model. This model should
                     define all of its layers as attributes of the model.
-            train_dataset (torch.utils.data.Dataset or torch.utils.DataLoader):
+            train_dataset (torch.utils.data.Dataset or torch.utils.data.DataLoader):
                     In the `influence` method, we either compute the influence score of
                     training examples on examples in a test batch, or self influence
                     scores for those training examples, depending on which mode is used.
@@ -131,7 +132,7 @@ class TracInCPBase(DataInfluence):
                     `model` accepts `L-1` arguments, and the last element of `batch` is
                     the label. In other words, `model(*batch[:-1])` gives the output of
                     `model`, and `batch[-1]` are the labels for the batch.
-            checkpoints (str or List of str or Iterator): Either the directory of the
+            checkpoints (str, list[str], or Iterator): Either the directory of the
                     path to store and retrieve model checkpoints, a list of
                     filepaths with checkpoints from which to load, or an iterator which
                     returns objects from which to load checkpoints.
@@ -140,7 +141,7 @@ class TracInCPBase(DataInfluence):
                     learning rate if it is saved. By default uses a utility to load a
                     model saved as a state dict.
                     Default: _load_flexible_state_dict
-            layers (List of str or None, optional): A list of layer names for which
+            layers (list[str] or None, optional): A list of layer names for which
                     gradients should be computed. If `layers` is None, gradients will
                     be computed for all layers. Otherwise, they will only be computed
                     for the layers specified in `layers`.
@@ -215,7 +216,7 @@ class TracInCPBase(DataInfluence):
         with are not too large, so that there will not be an out-of-memory error.
 
         Args:
-            batches (Tuple, or DataLoader): Either a single tuple of any, or a
+            batches (tuple or DataLoader): Either a single tuple of any, or a
                     `DataLoader`, where each batch yielded is a tuple of any. In
                     either case, the tuple represents a single batch, where the last
                     element is assumed to be the labels for the batch. That is,
@@ -227,7 +228,7 @@ class TracInCPBase(DataInfluence):
                     more details on the assumed structure of a batch.
             show_progress (bool, optional): Computation of self influence scores can
                     take a long time if `inputs_dataset` represents many examples. If
-                    `show_progress`is true, the progress of this computation will be
+                    `show_progress` is true, the progress of this computation will be
                     displayed. In more detail, this computation will iterate over all
                     checkpoints (provided as the `checkpoints` initialization argument)
                     in an outer loop, and iterate over all batches that
@@ -261,9 +262,10 @@ class TracInCPBase(DataInfluence):
     ) -> KMostInfluentialResults:
         r"""
         Args:
-            inputs (Tuple of Any): A tuple that represents a batch of examples. It does
+
+            inputs (tuple of Any): A tuple that represents a batch of examples. It does
                     not represent labels, which are passed as `targets`.
-            targets (tensor, optional): If computing influence scores on a loss
+            targets (Tensor, optional): If computing influence scores on a loss
                     function, these are the labels corresponding to the batch `inputs`.
                     Default: None
             k (int, optional): The number of proponents or opponents to return per test
@@ -274,7 +276,7 @@ class TracInCPBase(DataInfluence):
                     Default: True
             show_progress (bool, optional): To compute the proponents (or opponents)
                     for the batch of examples, we perform computation for each batch in
-                    training dataset `train_dataset`, If `show_progress`is
+                    training dataset `train_dataset`, If `show_progress` is
                     true, the progress of this computation will be displayed. In
                     particular, the number of batches for which the computation has
                     been performed will be displayed. It will try to use tqdm if
@@ -309,23 +311,24 @@ class TracInCPBase(DataInfluence):
     ) -> Tensor:
         r"""
         Args:
-            inputs (Tuple of Any): A batch of examples. Does not represent labels,
+
+            inputs (tuple of Any): A batch of examples. Does not represent labels,
                     which are passed as `targets`. The assumption is that
                     `model(*inputs)` produces the predictions for the batch.
-            targets (tensor, optional): If computing influence scores on a loss
+            targets (Tensor, optional): If computing influence scores on a loss
                     function, these are the labels corresponding to the batch
                     `inputs`.
                     Default: None
 
         Returns:
-            influence_scores (tensor): Influence scores over the entire
+            influence_scores (Tensor): Influence scores over the entire
                     training dataset `train_dataset`. Dimensionality is
                     (inputs_batch_size, src_dataset_size). For example:
                     influence_scores[i][j] = the influence score for the j-th training
                     example to the i-th input example.
             show_progress (bool, optional): To compute the influence of examples in
                     training dataset `train_dataset`, we compute the influence
-                    of each batch. If `show_progress`is true, the progress of this
+                    of each batch. If `show_progress` is true, the progress of this
                     computation will be displayed. In particular, the number of batches
                     for which influence has been computed will be displayed. It will
                     try to use tqdm if available for advanced features (e.g. time
@@ -369,6 +372,7 @@ class TracInCPBase(DataInfluence):
           opponent) on the test example.
 
         Args:
+
             inputs (Any, optional): If not provided or `None`, the self influence mode
                     will be run. Otherwise, `inputs` is the test batch that will be
                     used when running in either influence score or k-most influential
@@ -380,7 +384,7 @@ class TracInCPBase(DataInfluence):
                     `inputs` will need to be a tuple. In other words, `inputs` will be
                     unpacked as an argument when passing to `model`.
                     Default: None
-            targets (tensor, optional): If computing influence scores on a loss
+            targets (Tensor, optional): If computing influence scores on a loss
                     function, these are the labels corresponding to the batch `inputs`.
                     Default: None
             k (int, optional): If not provided or `None`, the influence score mode will
@@ -399,7 +403,7 @@ class TracInCPBase(DataInfluence):
             show_progress (bool, optional): For all modes, computation of results
                     requires "training dataset computations": computations for each
                     batch in the training dataset `train_dataset`, which may
-                    take a long time. If `show_progress`is true, the progress of
+                    take a long time. If `show_progress` is true, the progress of
                     "training dataset computations" will be displayed. In particular,
                     the number of batches for which computations have been performed
                     will be displayed. It will try to use tqdm if available for
@@ -501,9 +505,10 @@ class TracInCP(TracInCPBase):
     ) -> None:
         r"""
         Args:
+
             model (torch.nn.Module): An instance of pytorch model. This model should
                     define all of its layers as attributes of the model.
-            train_dataset (torch.utils.data.Dataset or torch.utils.DataLoader):
+            train_dataset (torch.utils.data.Dataset or torch.utils.data.DataLoader):
                     In the `influence` method, we either compute the influence score of
                     training examples on examples in a test batch, or self influence
                     scores for those training examples, depending on which mode is used.
@@ -527,7 +532,7 @@ class TracInCP(TracInCPBase):
                     `model` accepts `L-1` arguments, and the last element of `batch` is
                     the label. In other words, `model(*batch[:-1])` gives the output of
                     `model`, and `batch[-1]` are the labels for the batch.
-            checkpoints (str or List of str or Iterator): Either the directory of the
+            checkpoints (str, list[str], or Iterator): Either the directory of the
                     path to store and retrieve model checkpoints, a list of
                     filepaths with checkpoints from which to load, or an iterator which
                     returns objects from which to load checkpoints.
@@ -536,7 +541,7 @@ class TracInCP(TracInCPBase):
                     learning rate if it is saved. By default uses a utility to load a
                     model saved as a state dict.
                     Default: _load_flexible_state_dict
-            layers (List of str or None, optional): A list of layer names for which
+            layers (list[str] or None, optional): A list of layer names for which
                     gradients should be computed. If `layers` is None, gradients will
                     be computed for all layers. Otherwise, they will only be computed
                     for the layers specified in `layers`.
@@ -698,6 +703,7 @@ class TracInCP(TracInCPBase):
           opponent) on the test example.
 
         Args:
+
             inputs (Any, optional): If not provided or `None`, the self influence mode
                     will be run. Otherwise, `inputs` is the test batch that will be
                     used when running in either influence score or k-most influential
@@ -709,7 +715,7 @@ class TracInCP(TracInCPBase):
                     `inputs` will need to be a tuple. In other words, `inputs` will be
                     unpacked as an argument when passing to `model`.
                     Default: None
-            targets (tensor, optional): If computing influence scores on a loss
+            targets (Tensor, optional): If computing influence scores on a loss
                     function, these are the labels corresponding to the batch `inputs`.
                     Default: None
             k (int, optional): If not provided or `None`, the influence score mode will
@@ -728,7 +734,7 @@ class TracInCP(TracInCPBase):
             show_progress (bool, optional): For all modes, computation of results
                     requires "training dataset computations": computations for each
                     batch in the training dataset `train_dataset`, which may
-                    take a long time. If `show_progress`is true, the progress of
+                    take a long time. If `show_progress` is true, the progress of
                     "training dataset computations" will be displayed. It will try to
                     use tqdm if available for advanced features (e.g. time estimation).
                     Otherwise, it will fallback to a simple output of progress.
@@ -827,15 +833,16 @@ class TracInCP(TracInCPBase):
         output of `self._basic_computation_tracincp`.
 
         Args:
-            inputs (Tuple of Any): A test batch of examples. Does not represent labels,
+
+            inputs (tuple of Any): A test batch of examples. Does not represent labels,
                     which are passed as `targets`. The assumption is that
                     `model(*inputs)` produces the predictions for the batch.
-            targets (tensor, optional): If computing influence scores on a loss
+            targets (Tensor, optional): If computing influence scores on a loss
                     function, these are the labels corresponding to the batch `inputs`.
                     Default: None
             show_progress (bool, optional): To compute the influence of examples in
                     training dataset `train_dataset`, we compute the influence
-                    of each batch. If `show_progress`is true, the progress of this
+                    of each batch. If `show_progress` is true, the progress of this
                     computation will be displayed. In particular, the number of batches
                     for which influence has been computed will be displayed. It will
                     try to use tqdm if available for advanced features (e.g. time
@@ -844,7 +851,7 @@ class TracInCP(TracInCPBase):
                     Default: False
 
         Returns:
-            influence_scores (tensor): Influence scores from the TracInCP method.
+            influence_scores (Tensor): Influence scores from the TracInCP method.
             Its shape is `(input_size, train_dataset_size)`, where `input_size`
             is the number of examples in the test batch, and
             `train_dataset_size` is the number of examples in
@@ -882,7 +889,8 @@ class TracInCP(TracInCPBase):
     ) -> KMostInfluentialResults:
         r"""
         Args:
-            inputs (Tuple of Any): A tuple that represents a batch of examples. It does
+
+            inputs (tuple of Any): A tuple that represents a batch of examples. It does
                     not represent labels, which are passed as `targets`.
             targets (Tensor, optional): If computing influence scores on a loss
                     function, these are the labels corresponding to the batch `inputs`.
@@ -895,7 +903,7 @@ class TracInCP(TracInCPBase):
                     Default: True
             show_progress (bool, optional): To compute the proponents (or opponents)
                     for the batch of examples, we perform computation for each batch in
-                    training dataset `train_dataset`, If `show_progress`is
+                    training dataset `train_dataset`, If `show_progress` is
                     true, the progress of this computation will be displayed. In
                     particular, the number of batches for which the computation has
                     been performed will be displayed. It will try to use tqdm if
@@ -964,7 +972,7 @@ class TracInCP(TracInCPBase):
         times.
 
         Args:
-            batches (Tuple, or DataLoader): Either a single tuple of any, or a
+            batches (tuple or DataLoader): Either a single tuple of any, or a
                     `DataLoader`, where each batch yielded is a tuple of any. In
                     either case, the tuple represents a single batch, where the last
                     element is assumed to be the labels for the batch. That is,
@@ -976,7 +984,7 @@ class TracInCP(TracInCPBase):
                     more details on the assumed structure of a batch.
             show_progress (bool, optional): Computation of self influence scores can
                     take a long time if `inputs_dataset` represents many examples. If
-                    `show_progress`is true, the progress of this computation will be
+                    `show_progress` is true, the progress of this computation will be
                     displayed. In more detail, this computation will iterate over all
                     checkpoints (provided as the `checkpoints` initialization argument)
                     in an outer loop, and iterate over all batches that
@@ -1126,7 +1134,7 @@ class TracInCP(TracInCPBase):
         for each batch. For large models, loading checkpoints can be time-intensive.
 
         Args:
-            batches (Tuple, or DataLoader): Either a single tuple of any, or a
+            batches (tuple or DataLoader): Either a single tuple of any, or a
                     `DataLoader`, where each batch yielded is a tuple of any. In
                     either case, the tuple represents a single batch, where the last
                     element is assumed to be the labels for the batch. That is,
@@ -1178,7 +1186,8 @@ class TracInCP(TracInCPBase):
         and batches.
 
         Args:
-            inputs (Tuple of Any): A batch of examples, which could be a training batch
+
+            inputs (tuple of Any): A batch of examples, which could be a training batch
                     or test batch, depending which method is the caller. Does not
                     represent labels, which are passed as `targets`. The assumption is
                     that `model(*inputs)` produces the predictions for the batch.

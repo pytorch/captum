@@ -118,18 +118,18 @@ def visualize_image_attr(
 
     Args:
 
-        attr (numpy.array): Numpy array corresponding to attributions to be
+        attr (numpy.ndarray): Numpy array corresponding to attributions to be
                     visualized. Shape must be in the form (H, W, C), with
                     channels as last dimension. Shape must also match that of
                     the original image if provided.
-        original_image (numpy.array, optional):  Numpy array corresponding to
+        original_image (numpy.ndarray, optional): Numpy array corresponding to
                     original image. Shape must be in the form (H, W, C), with
                     channels as the last dimension. Image can be provided either
                     with float values in range 0-1 or int values between 0-255.
                     This is a necessary argument for any visualization method
                     which utilizes the original image.
                     Default: None
-        method (string, optional): Chosen method for visualizing attribution.
+        method (str, optional): Chosen method for visualizing attribution.
                     Supported options are:
 
                     1. `heat_map` - Display heat map of chosen attributions
@@ -145,8 +145,9 @@ def visualize_image_attr(
 
                     5. `alpha_scaling` - Sets alpha channel of each pixel
                        to be equal to normalized attribution value.
+
                     Default: `heat_map`
-        sign (string, optional): Chosen sign of attributions to visualize. Supported
+        sign (str, optional): Chosen sign of attributions to visualize. Supported
                     options are:
 
                     1. `positive` - Displays only positive pixel attributions.
@@ -160,6 +161,7 @@ def visualize_image_attr(
                        values. This is not supported for `masked_image` or
                        `alpha_scaling` modes, since signed information cannot
                        be represented in these modes.
+
                     Default: `absolute_value`
         plt_fig_axis (tuple, optional): Tuple of matplotlib.pyplot.figure and axis
                     on which to visualize. If None is provided, then a new figure
@@ -172,7 +174,7 @@ def visualize_image_attr(
                     and scale value are computed using absolute value of
                     attributions.
                     Default: 2
-        cmap (string, optional): String corresponding to desired colormap for
+        cmap (str, optional): String corresponding to desired colormap for
                     heatmap visualization. This defaults to "Reds" for negative
                     sign, "Blues" for absolute value, "Greens" for positive sign,
                     and a spectrum from red to green for all. Note that this
@@ -182,18 +184,18 @@ def visualize_image_attr(
                     `blended_heat_map` visualization mode, which overlays the
                     heat map over the greyscaled original image.
                     Default: 0.5
-        show_colorbar (boolean, optional): Displays colorbar for heatmap below
+        show_colorbar (bool, optional): Displays colorbar for heatmap below
                     the visualization. If given method does not use a heatmap,
                     then a colormap axis is created and hidden. This is
                     necessary for appropriate alignment when visualizing
                     multiple plots, some with colorbars and some without.
                     Default: False
-        title (string, optional): Title string for plot. If None, no title is
+        title (str, optional): Title string for plot. If None, no title is
                     set.
                     Default: None
         fig_size (tuple, optional): Size of figure created.
                     Default: (6,6)
-        use_pyplot (boolean, optional): If true, uses pyplot to create and show
+        use_pyplot (bool, optional): If true, uses pyplot to create and show
                     figure and displays the figure after creating. If False,
                     uses Matplotlib object oriented API and simply returns a
                     figure object without showing.
@@ -347,29 +349,29 @@ def visualize_image_attr_multiple(
 
     Args:
 
-        attr (numpy.array): Numpy array corresponding to attributions to be
+        attr (numpy.ndarray): Numpy array corresponding to attributions to be
                     visualized. Shape must be in the form (H, W, C), with
                     channels as last dimension. Shape must also match that of
                     the original image if provided.
-        original_image (numpy.array, optional):  Numpy array corresponding to
+        original_image (numpy.ndarray, optional): Numpy array corresponding to
                     original image. Shape must be in the form (H, W, C), with
                     channels as the last dimension. Image can be provided either
                     with values in range 0-1 or 0-255. This is a necessary
                     argument for any visualization method which utilizes
                     the original image.
-        methods (list of strings): List of strings of length k, defining method
+        methods (list[str]): List of strings of length k, defining method
                         for each visualization. Each method must be a valid
                         string argument for method to visualize_image_attr.
-        signs (list of strings): List of strings of length k, defining signs for
+        signs (list[str]): List of strings of length k, defining signs for
                         each visualization. Each sign must be a valid
                         string argument for sign to visualize_image_attr.
-        titles (list of strings, optional):  List of strings of length k, providing
+        titles (list[str], optional): List of strings of length k, providing
                     a title string for each plot. If None is provided, no titles
                     are added to subplots.
                     Default: None
         fig_size (tuple, optional): Size of figure created.
                     Default: (8, 6)
-        use_pyplot (boolean, optional): If true, uses pyplot to create and show
+        use_pyplot (bool, optional): If true, uses pyplot to create and show
                     figure and displays the figure after creating. If False,
                     uses Matplotlib object oriented API and simply returns a
                     figure object without showing.
@@ -460,19 +462,19 @@ def visualize_timeseries_attr(
 
     Args:
 
-        attr (numpy.array): Numpy array corresponding to attributions to be
+        attr (numpy.ndarray): Numpy array corresponding to attributions to be
                     visualized. Shape must be in the form (N, C) with channels
                     as last dimension, unless `channels_last` is set to True.
                     Shape must also match that of the timeseries data.
-        data (numpy.array): Numpy array corresponding to the original,
+        data (numpy.ndarray): Numpy array corresponding to the original,
                     equidistant timeseries data. Shape must be in the form
                     (N, C) with channels as last dimension, unless
                     `channels_last` is set to true.
-        x_values (numpy.array, optional): Numpy array corresponding to the
+        x_values (numpy.ndarray, optional): Numpy array corresponding to the
                     points on the x-axis. Shape must be in the form (N, ). If
                     not provided, integers from 0 to N-1 are used.
                     Default: None
-        method (string, optional): Chosen method for visualizing attributions
+        method (str, optional): Chosen method for visualizing attributions
                     overlaid onto data. Supported options are:
 
                     1. `overlay_individual` - Plot each channel individually in
@@ -487,8 +489,9 @@ def visualize_timeseries_attr(
                         and color the graphs according to the attribution
                         values. Works best with color maps that does not contain
                         white or very bright colors.
+
                     Default: `overlay_individual`
-        sign (string, optional): Chosen sign of attributions to visualize.
+        sign (str, optional): Chosen sign of attributions to visualize.
                     Supported options are:
 
                     1. `positive` - Displays only positive pixel attributions.
@@ -500,8 +503,9 @@ def visualize_timeseries_attr(
 
                     4. `all` - Displays both positive and negative attribution
                         values.
+
                     Default: `absolute_value`
-        channel_labels (list of strings, optional): List of labels
+        channel_labels (list[str], optional): List of labels
                     corresponding to each channel in data.
                     Default: None
         channels_last (bool, optional): If True, data is expected to have
@@ -519,7 +523,7 @@ def visualize_timeseries_attr(
                     and scale value are computed using absolute value of
                     attributions.
                     Default: 2
-        cmap (string, optional): String corresponding to desired colormap for
+        cmap (str, optional): String corresponding to desired colormap for
                     heatmap visualization. This defaults to "Reds" for negative
                     sign, "Blues" for absolute value, "Greens" for positive sign,
                     and a spectrum from red to green for all. Note that this
@@ -529,14 +533,14 @@ def visualize_timeseries_attr(
                     `blended_heat_map` visualization mode, which overlays the
                     heat map over the greyscaled original image.
                     Default: 0.7
-        show_colorbar (boolean): Displays colorbar for heat map below
+        show_colorbar (bool): Displays colorbar for heat map below
                     the visualization.
-        title (string, optional): Title string for plot. If None, no title is
+        title (str, optional): Title string for plot. If None, no title is
                     set.
                     Default: None
         fig_size (tuple, optional): Size of figure created.
                     Default: (6,6)
-        use_pyplot (boolean): If true, uses pyplot to create and show
+        use_pyplot (bool): If true, uses pyplot to create and show
                     figure and displays the figure after creating. If False,
                     uses Matplotlib object oriented API and simply returns a
                     figure object without showing.

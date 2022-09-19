@@ -47,7 +47,7 @@ class LayerGradCam(LayerAttribution, GradientAttribution):
 
     More details regarding the GradCAM method can be found in the
     original paper here:
-    https://arxiv.org/pdf/1610.02391.pdf
+    https://arxiv.org/abs/1610.02391
     """
 
     def __init__(
@@ -59,13 +59,13 @@ class LayerGradCam(LayerAttribution, GradientAttribution):
         r"""
         Args:
 
-            forward_func (callable):  The forward function of the model or any
+            forward_func (Callable): The forward function of the model or any
                           modification of it
             layer (torch.nn.Module): Layer for which attributions are computed.
                           Output size of attribute matches this layer's output
                           dimensions, except for dimension 2, which will be 1,
                           since GradCAM sums over channels.
-            device_ids (list(int)): Device ID list, necessary only if forward_func
+            device_ids (list[int]): Device ID list, necessary only if forward_func
                           applies a DataParallel model. This allows reconstruction of
                           intermediate outputs from batched results across devices.
                           If forward_func is given as the DataParallel model itself,
@@ -86,7 +86,7 @@ class LayerGradCam(LayerAttribution, GradientAttribution):
         r"""
         Args:
 
-            inputs (tensor or tuple of tensors):  Input for which attributions
+            inputs (Tensor or tuple of Tensor): Input for which attributions
                         are computed. If forward_func takes a single
                         tensor as input, a single input tensor should be provided.
                         If forward_func takes multiple tensors as input, a tuple
@@ -94,7 +94,7 @@ class LayerGradCam(LayerAttribution, GradientAttribution):
                         that for all given input tensors, dimension 0 corresponds
                         to the number of examples, and if multiple input tensors
                         are provided, the examples must be aligned appropriately.
-            target (int, tuple, tensor or list, optional):  Output indices for
+            target (int, tuple, Tensor, or list, optional): Output indices for
                         which gradients are computed (for classification cases,
                         this is usually the target class).
                         If the network returns a scalar value per example,
@@ -119,7 +119,7 @@ class LayerGradCam(LayerAttribution, GradientAttribution):
                           target for the corresponding example.
 
                         Default: None
-            additional_forward_args (any, optional): If the forward function
+            additional_forward_args (Any, optional): If the forward function
                         requires additional arguments other than the inputs for
                         which attributions should not be computed, this argument
                         can be provided. It must be either a single additional
@@ -151,8 +151,8 @@ class LayerGradCam(LayerAttribution, GradientAttribution):
                         Default: False
 
         Returns:
-            *tensor* or tuple of *tensors* of **attributions**:
-            - **attributions** (*tensor* or tuple of *tensors*):
+            *Tensor* or tuple of *Tensor* of **attributions**:
+            - **attributions** (*Tensor* or tuple of *Tensor*):
                         Attributions based on GradCAM method.
                         Attributions will be the same size as the
                         output of the given layer, except for dimension 2,

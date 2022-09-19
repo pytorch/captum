@@ -31,8 +31,7 @@ class PGD(Perturbation):
         x_(t+1) = Clip_r(x_t - alpha * sign(gradient of L(theta, x, t)))
 
     More details on Projected Gradient Descent can be found in the original
-    paper:
-    https://arxiv.org/pdf/1706.06083.pdf
+    paper: https://arxiv.org/abs/1706.06083
     """
 
     def __init__(
@@ -44,15 +43,17 @@ class PGD(Perturbation):
     ) -> None:
         r"""
         Args:
-            forward_func (callable): The pytorch model for which the attack is
+            forward_func (Callable): The pytorch model for which the attack is
                         computed.
-            loss_func (callable, optional): Loss function of which the gradient
+            loss_func (Callable, optional): Loss function of which the gradient
                         computed. The loss function should take in outputs of the
                         model and labels, and return the loss for each input tensor.
                         The default loss function is negative log.
             lower_bound (float, optional): Lower bound of input values.
+                        Default: ``float("-inf")``
             upper_bound (float, optional): Upper bound of input values.
                         e.g. image pixels must be in the range 0-255
+                        Default: ``float("inf")``
 
         Attributes:
             bound (Callable): A function that bounds the input values based on
@@ -82,17 +83,17 @@ class PGD(Perturbation):
 
         Args:
 
-            inputs (tensor or tuple of tensors): Input for which adversarial
+            inputs (Tensor or tuple of Tensor): Input for which adversarial
                         attack is computed. It can be provided as a single
                         tensor or a tuple of multiple tensors. If multiple
                         input tensors are provided, the batch sizes must be
-                        aligned accross all tensors.
+                        aligned across all tensors.
             radius (float): Radius of the neighbor ball centered around inputs.
                         The perturbation should be within this range.
             step_size (float): Step size of each gradient step.
             step_num (int): Step numbers. It usually guarantees that the perturbation
                         can reach the border.
-            target (any): True labels of inputs if non-targeted attack is
+            target (Any): True labels of inputs if non-targeted attack is
                         desired. Target class of inputs if targeted attack
                         is desired. Target will be passed to the loss function
                         to compute loss, so the type needs to match the
@@ -118,23 +119,23 @@ class PGD(Perturbation):
                           examples in inputs (dim 0), and each tuple containing
                           #output_dims - 1 elements. Each tuple is applied as the
                           label for the corresponding example.
-            additional_forward_args (any, optional): If the forward function
+            additional_forward_args (Any, optional): If the forward function
                         requires additional arguments other than the inputs for
                         which attributions should not be computed, this argument
                         can be provided. These arguments are provided to
                         forward_func in order following the arguments in inputs.
-                        Default: None.
+                        Default: ``None``
             targeted (bool, optional): If attack should be targeted.
-                        Default: False.
+                        Default: ``False``
             random_start (bool, optional): If a random initialization is added to
-                        inputs. Default: False.
+                        inputs. Default: ``False``
             norm (str, optional): Specifies the norm to calculate distance from
-                        original inputs: 'Linf'|'L2'.
-                        Default: 'Linf'.
+                        original inputs: ``Linf`` | ``L2``.
+                        Default: ``Linf``
 
         Returns:
 
-            - **perturbed inputs** (*tensor* or tuple of *tensors*):
+            - **perturbed inputs** (*Tensor* or tuple of *Tensor*):
                         Perturbed input for each
                         input tensor. The perturbed inputs have the same shape and
                         dimensionality as the inputs.
