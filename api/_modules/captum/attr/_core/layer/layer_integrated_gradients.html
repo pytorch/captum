@@ -73,7 +73,6 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">    More details regarding the integrated gradients method can be found in the</span>
 <span class="sd">    original paper:</span>
 <span class="sd">    https://arxiv.org/abs/1703.01365</span>
-
 <span class="sd">    """</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
@@ -85,12 +84,12 @@ src="/_sphinx/documentation_options.js"></script>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        Args:</span>
-<span class="sd">            forward_func (callable):  The forward function of the model or any</span>
+
+<span class="sd">            forward_func (Callable): The forward function of the model or any</span>
 <span class="sd">                        modification of it</span>
-<span class="sd">            layer (ModuleOrModuleList):</span>
-<span class="sd">                        Layer or list of layers for which attributions are computed.</span>
-<span class="sd">                        For each layer the output size of the attribute matches</span>
-<span class="sd">                        this layer's input or output dimensions, depending on</span>
+<span class="sd">            layer (ModuleOrModuleList): Layer or list of layers for which attributions</span>
+<span class="sd">                        are computed. For each layer the output size of the attribute</span>
+<span class="sd">                        matches this layer's input or output dimensions, depending on</span>
 <span class="sd">                        whether we attribute to the inputs or outputs of the</span>
 <span class="sd">                        layer, corresponding to the attribution of each neuron</span>
 <span class="sd">                        in the input or output of this layer.</span>
@@ -106,7 +105,7 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">                        dependence, e.g.  if you pass in l2 you cannot pass in</span>
 <span class="sd">                        l1 or l3.</span>
 
-<span class="sd">            device_ids (list(int)): Device ID list, necessary only if forward_func</span>
+<span class="sd">            device_ids (list[int]): Device ID list, necessary only if forward_func</span>
 <span class="sd">                        applies a DataParallel model. This allows reconstruction of</span>
 <span class="sd">                        intermediate outputs from batched results across devices.</span>
 <span class="sd">                        If forward_func is given as the DataParallel model itself,</span>
@@ -133,7 +132,7 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">layer</span><span class="p">,</span> <span class="nb">list</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">layer</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
             <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
                 <span class="s2">"Multiple layers provided. Please ensure that each layer is"</span>
-                <span class="s2">"**not** solely solely dependent on the outputs of"</span>
+                <span class="s2">"**not** solely dependent on the outputs of"</span>
                 <span class="s2">"another layer. Please refer to the documentation for more"</span>
                 <span class="s2">"detail."</span>
             <span class="p">)</span>
@@ -224,7 +223,7 @@ src="/_sphinx/documentation_options.js"></script>
 
 <span class="sd">        Args:</span>
 
-<span class="sd">            inputs (tensor or tuple of tensors):  Input for which layer integrated</span>
+<span class="sd">            inputs (Tensor or tuple of Tensor): Input for which layer integrated</span>
 <span class="sd">                        gradients are computed. If forward_func takes a single</span>
 <span class="sd">                        tensor as input, a single input tensor should be provided.</span>
 <span class="sd">                        If forward_func takes multiple tensors as input, a tuple</span>
@@ -232,7 +231,7 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">                        that for all given input tensors, dimension 0 corresponds</span>
 <span class="sd">                        to the number of examples, and if multiple input tensors</span>
 <span class="sd">                        are provided, the examples must be aligned appropriately.</span>
-<span class="sd">            baselines (scalar, tensor, tuple of scalars or tensors, optional):</span>
+<span class="sd">            baselines (scalar, Tensor, tuple of scalar, or Tensor, optional):</span>
 <span class="sd">                        Baselines define the starting point from which integral</span>
 <span class="sd">                        is computed and can be provided as:</span>
 
@@ -246,6 +245,7 @@ src="/_sphinx/documentation_options.js"></script>
 
 <span class="sd">                        - a tuple of tensors or scalars, the baseline corresponding</span>
 <span class="sd">                          to each tensor in the inputs' tuple can be:</span>
+
 <span class="sd">                            - either a tensor with matching dimensions to</span>
 <span class="sd">                              corresponding tensor in the inputs' tuple</span>
 <span class="sd">                              or the first dimension is one and the remaining</span>
@@ -259,7 +259,7 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">                        use zero scalar corresponding to each input tensor.</span>
 
 <span class="sd">                        Default: None</span>
-<span class="sd">            target (int, tuple, tensor or list, optional):  Output indices for</span>
+<span class="sd">            target (int, tuple, Tensor, or list, optional): Output indices for</span>
 <span class="sd">                        which gradients are computed (for classification cases,</span>
 <span class="sd">                        this is usually the target class).</span>
 <span class="sd">                        If the network returns a scalar value per example,</span>
@@ -284,7 +284,7 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">                          target for the corresponding example.</span>
 
 <span class="sd">                        Default: None</span>
-<span class="sd">            additional_forward_args (any, optional): If the forward function</span>
+<span class="sd">            additional_forward_args (Any, optional): If the forward function</span>
 <span class="sd">                        requires additional arguments other than the inputs for</span>
 <span class="sd">                        which attributions should not be computed, this argument</span>
 <span class="sd">                        can be provided. It must be either a single additional</span>
@@ -293,17 +293,19 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">                        tensors or any arbitrary python types. These arguments</span>
 <span class="sd">                        are provided to forward_func in order following the</span>
 <span class="sd">                        arguments in inputs.</span>
+
 <span class="sd">                        For a tensor, the first dimension of the tensor must</span>
 <span class="sd">                        correspond to the number of examples. It will be</span>
 <span class="sd">                        repeated for each of `n_steps` along the integrated</span>
 <span class="sd">                        path. For all other types, the given argument is used</span>
 <span class="sd">                        for all forward evaluations.</span>
+
 <span class="sd">                        Note that attributions are not computed with respect</span>
 <span class="sd">                        to these arguments.</span>
 <span class="sd">                        Default: None</span>
 <span class="sd">            n_steps (int, optional): The number of steps used by the approximation</span>
 <span class="sd">                        method. Default: 50.</span>
-<span class="sd">            method (string, optional): Method for approximating the integral,</span>
+<span class="sd">            method (str, optional): Method for approximating the integral,</span>
 <span class="sd">                        one of `riemann_right`, `riemann_left`, `riemann_middle`,</span>
 <span class="sd">                        `riemann_trapezoid` or `gausslegendre`.</span>
 <span class="sd">                        Default: `gausslegendre` if no method is provided.</span>
@@ -312,6 +314,7 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">                        which are computed (forward / backward passes)</span>
 <span class="sd">                        sequentially. internal_batch_size must be at least equal to</span>
 <span class="sd">                        #examples.</span>
+
 <span class="sd">                        For DataParallel models, each batch is split among the</span>
 <span class="sd">                        available devices, so evaluations on each available</span>
 <span class="sd">                        device contain internal_batch_size / num_devices examples.</span>
@@ -329,16 +332,19 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">                        then the attributions will be computed with respect to</span>
 <span class="sd">                        layer input, otherwise it will be computed with respect</span>
 <span class="sd">                        to layer output.</span>
+
 <span class="sd">                        Note that currently it is assumed that either the input</span>
 <span class="sd">                        or the output of internal layer, depending on whether we</span>
 <span class="sd">                        attribute to the input or output, is a single tensor.</span>
 <span class="sd">                        Support for multiple tensors will be added later.</span>
 <span class="sd">                        Default: False</span>
+
 <span class="sd">            Returns:</span>
 <span class="sd">                **attributions** or 2-element tuple of **attributions**, **delta**:</span>
-<span class="sd">                - **attributions** (*tensor*, tuple of *tensors* or tuple of *tensors*):</span>
-<span class="sd">                        Integrated gradients with respect to `layer`'s inputs or</span>
-<span class="sd">                        outputs. Attributions will always be the same size and</span>
+
+<span class="sd">                  - **attributions** (*Tensor*, tuple of *Tensor* or tuple of</span>
+<span class="sd">                  *Tensor*): Integrated gradients with respect to `layer`'s inputs</span>
+<span class="sd">                        or outputs. Attributions will always be the same size and</span>
 <span class="sd">                        dimensionality as the input or output of the given layer,</span>
 <span class="sd">                        depending on whether we attribute to the inputs or outputs</span>
 <span class="sd">                        of the layer which is decided by the input flag</span>
@@ -355,7 +361,8 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">                        multiple tensors: the corresponding output element will be</span>
 <span class="sd">                        a tuple of tensors. The ordering of the outputs will be</span>
 <span class="sd">                        the same order as the layers given in the constructor.</span>
-<span class="sd">                - **delta** (*tensor*, returned if return_convergence_delta=True):</span>
+
+<span class="sd">                  - **delta** (*Tensor*, returned if return_convergence_delta=True):</span>
 <span class="sd">                        The difference between the total approximated and true</span>
 <span class="sd">                        integrated gradients. This is computed using the property</span>
 <span class="sd">                        that the total sum of forward_func(inputs) -</span>
@@ -363,7 +370,7 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">                        integrated gradient.</span>
 <span class="sd">                        Delta is calculated per example, meaning that the number of</span>
 <span class="sd">                        elements in returned delta tensor is equal to the number of</span>
-<span class="sd">                        of examples in inputs.</span>
+<span class="sd">                        examples in inputs.</span>
 
 <span class="sd">            Examples::</span>
 

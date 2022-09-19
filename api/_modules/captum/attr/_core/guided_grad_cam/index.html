@@ -70,7 +70,7 @@ src="/_sphinx/documentation_options.js"></script>
 
 <span class="sd">    More details regarding GuidedGradCAM can be found in the original</span>
 <span class="sd">    GradCAM paper here:</span>
-<span class="sd">    https://arxiv.org/pdf/1610.02391.pdf</span>
+<span class="sd">    https://arxiv.org/abs/1610.02391</span>
 
 <span class="sd">    Warning: Ensure that all ReLU operations in the forward function of the</span>
 <span class="sd">    given model are performed using a module (nn.module.ReLU).</span>
@@ -83,14 +83,14 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        Args:</span>
 
-<span class="sd">            model (nn.Module):  The reference to PyTorch model instance. Model cannot</span>
+<span class="sd">            model (nn.Module): The reference to PyTorch model instance. Model cannot</span>
 <span class="sd">                        contain any in-place ReLU submodules; these are not</span>
 <span class="sd">                        supported by the register_full_backward_hook PyTorch API</span>
 <span class="sd">                        starting from PyTorch v1.9.</span>
 <span class="sd">            layer (torch.nn.Module): Layer for which GradCAM attributions are computed.</span>
 <span class="sd">                          Currently, only layers with a single tensor output are</span>
 <span class="sd">                          supported.</span>
-<span class="sd">            device_ids (list(int)): Device ID list, necessary only if forward_func</span>
+<span class="sd">            device_ids (list[int]): Device ID list, necessary only if forward_func</span>
 <span class="sd">                          applies a DataParallel model. This allows reconstruction of</span>
 <span class="sd">                          intermediate outputs from batched results across devices.</span>
 <span class="sd">                          If forward_func is given as the DataParallel model itself,</span>
@@ -112,7 +112,7 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        Args:</span>
 
-<span class="sd">            inputs (tensor or tuple of tensors):  Input for which attributions</span>
+<span class="sd">            inputs (Tensor or tuple of Tensor): Input for which attributions</span>
 <span class="sd">                        are computed. If forward_func takes a single</span>
 <span class="sd">                        tensor as input, a single input tensor should be provided.</span>
 <span class="sd">                        If forward_func takes multiple tensors as input, a tuple</span>
@@ -120,7 +120,7 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">                        that for all given input tensors, dimension 0 corresponds</span>
 <span class="sd">                        to the number of examples, and if multiple input tensors</span>
 <span class="sd">                        are provided, the examples must be aligned appropriately.</span>
-<span class="sd">            target (int, tuple, tensor or list, optional):  Output indices for</span>
+<span class="sd">            target (int, tuple, Tensor, or list, optional): Output indices for</span>
 <span class="sd">                        which gradients are computed (for classification cases,</span>
 <span class="sd">                        this is usually the target class).</span>
 <span class="sd">                        If the network returns a scalar value per example,</span>
@@ -145,7 +145,7 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">                          target for the corresponding example.</span>
 
 <span class="sd">                        Default: None</span>
-<span class="sd">            additional_forward_args (any, optional): If the forward function</span>
+<span class="sd">            additional_forward_args (Any, optional): If the forward function</span>
 <span class="sd">                        requires additional arguments other than the inputs for</span>
 <span class="sd">                        which attributions should not be computed, this argument</span>
 <span class="sd">                        can be provided. It must be either a single additional</span>
@@ -183,8 +183,8 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">                        Default: False</span>
 
 <span class="sd">        Returns:</span>
-<span class="sd">            *tensor* of **attributions**:</span>
-<span class="sd">            - **attributions** (*tensor*):</span>
+<span class="sd">            *Tensor* of **attributions**:</span>
+<span class="sd">            - **attributions** (*Tensor*):</span>
 <span class="sd">                    Element-wise product of (upsampled) GradCAM</span>
 <span class="sd">                    and Guided Backprop attributions.</span>
 <span class="sd">                    If a single tensor is provided as inputs, a single tensor is</span>

@@ -101,7 +101,7 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        Args:</span>
 
-<span class="sd">            model (nn.Module):  The reference to PyTorch model instance. Model cannot</span>
+<span class="sd">            model (nn.Module): The reference to PyTorch model instance. Model cannot</span>
 <span class="sd">                        contain any in-place nonlinear submodules; these are not</span>
 <span class="sd">                        supported by the register_full_backward_hook PyTorch API</span>
 <span class="sd">                        starting from PyTorch v1.9.</span>
@@ -176,7 +176,7 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        Args:</span>
 
-<span class="sd">            inputs (tensor or tuple of tensors):  Input for which layer</span>
+<span class="sd">            inputs (Tensor or tuple of Tensor): Input for which layer</span>
 <span class="sd">                        attributions are computed. If forward_func takes a</span>
 <span class="sd">                        single tensor as input, a single input tensor should be</span>
 <span class="sd">                        provided. If forward_func takes multiple tensors as input,</span>
@@ -185,7 +185,7 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">                        corresponds to the number of examples (aka batch size),</span>
 <span class="sd">                        and if multiple input tensors are provided, the examples</span>
 <span class="sd">                        must be aligned appropriately.</span>
-<span class="sd">            baselines (scalar, tensor, tuple of scalars or tensors, optional):</span>
+<span class="sd">            baselines (scalar, Tensor, tuple of scalar, or Tensor, optional):</span>
 <span class="sd">                        Baselines define reference samples that are compared with</span>
 <span class="sd">                        the inputs. In order to assign attribution scores DeepLift</span>
 <span class="sd">                        computes the differences between the inputs/outputs and</span>
@@ -212,11 +212,12 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">                          - or a scalar, corresponding to a tensor in the</span>
 <span class="sd">                            inputs' tuple. This scalar value is broadcasted</span>
 <span class="sd">                            for corresponding input tensor.</span>
+
 <span class="sd">                        In the cases when `baselines` is not provided, we internally</span>
 <span class="sd">                        use zero scalar corresponding to each input tensor.</span>
 
 <span class="sd">                        Default: None</span>
-<span class="sd">            target (int, tuple, tensor or list, optional):  Output indices for</span>
+<span class="sd">            target (int, tuple, Tensor, or list, optional): Output indices for</span>
 <span class="sd">                        which gradients are computed (for classification cases,</span>
 <span class="sd">                        this is usually the target class).</span>
 <span class="sd">                        If the network returns a scalar value per example,</span>
@@ -241,7 +242,7 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">                          target for the corresponding example.</span>
 
 <span class="sd">                        Default: None</span>
-<span class="sd">            additional_forward_args (any, optional): If the forward function</span>
+<span class="sd">            additional_forward_args (Any, optional): If the forward function</span>
 <span class="sd">                        requires additional arguments other than the inputs for</span>
 <span class="sd">                        which attributions should not be computed, this argument</span>
 <span class="sd">                        can be provided. It must be either a single additional</span>
@@ -268,7 +269,7 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">                        attribute to the input or output, is a single tensor.</span>
 <span class="sd">                        Support for multiple tensors will be added later.</span>
 <span class="sd">                        Default: False</span>
-<span class="sd">            custom_attribution_func (callable, optional): A custom function for</span>
+<span class="sd">            custom_attribution_func (Callable, optional): A custom function for</span>
 <span class="sd">                        computing final attribution scores. This function can take</span>
 <span class="sd">                        at least one and at most three arguments with the</span>
 <span class="sd">                        following signature:</span>
@@ -287,7 +288,7 @@ src="/_sphinx/documentation_options.js"></script>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            **attributions** or 2-element tuple of **attributions**, **delta**:</span>
-<span class="sd">            - **attributions** (*tensor* or tuple of *tensors*):</span>
+<span class="sd">            - **attributions** (*Tensor* or tuple of *Tensor*):</span>
 <span class="sd">                Attribution score computed based on DeepLift's rescale rule with</span>
 <span class="sd">                respect to layer's inputs or outputs. Attributions will always be the</span>
 <span class="sd">                same size as the provided layer's inputs or outputs, depending on</span>
@@ -296,14 +297,14 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">                just a tensor is returned; if the layer input / output</span>
 <span class="sd">                has multiple tensors, then a corresponding tuple</span>
 <span class="sd">                of tensors is returned.</span>
-<span class="sd">            - **delta** (*tensor*, returned if return_convergence_delta=True):</span>
+<span class="sd">            - **delta** (*Tensor*, returned if return_convergence_delta=True):</span>
 <span class="sd">                This is computed using the property that the total sum of</span>
 <span class="sd">                forward_func(inputs) - forward_func(baselines) must equal the</span>
 <span class="sd">                total sum of the attributions computed based on DeepLift's</span>
 <span class="sd">                rescale rule.</span>
 <span class="sd">                Delta is calculated per example, meaning that the number of</span>
 <span class="sd">                elements in returned delta tensor is equal to the number of</span>
-<span class="sd">                of examples in input.</span>
+<span class="sd">                examples in input.</span>
 <span class="sd">                Note that the logic described for deltas is guaranteed</span>
 <span class="sd">                when the default logic for attribution computations is used,</span>
 <span class="sd">                meaning that the `custom_attribution_func=None`, otherwise</span>
@@ -413,12 +414,14 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">    input flag `attribute_to_layer_input`.</span>
 <span class="sd">    More details about the algorithm can be found here:</span>
 
-<span class="sd">    http://papers.nips.cc/paper/7062-a-unified-approach-to-interpreting-model-predictions.pdf</span>
+<span class="sd">    https://papers.nips.cc/paper/7062-a-unified-approach-to-interpreting-model-predictions.pdf</span>
 
 <span class="sd">    Note that the explanation model:</span>
+
 <span class="sd">        1. Assumes that input features are independent of one another</span>
 <span class="sd">        2. Is linear, meaning that the explanations are modeled through</span>
 <span class="sd">            the additive composition of feature effects.</span>
+
 <span class="sd">    Although, it assumes a linear model for each explanation, the overall</span>
 <span class="sd">    model across multiple explanations can be complex and non-linear.</span>
 <span class="sd">    """</span>
@@ -432,7 +435,7 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        Args:</span>
 
-<span class="sd">            model (nn.Module):  The reference to PyTorch model instance. Model cannot</span>
+<span class="sd">            model (nn.Module): The reference to PyTorch model instance. Model cannot</span>
 <span class="sd">                        contain any in-place nonlinear submodules; these are not</span>
 <span class="sd">                        supported by the register_full_backward_hook PyTorch API</span>
 <span class="sd">                        starting from PyTorch v1.9.</span>
@@ -511,7 +514,7 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        Args:</span>
 
-<span class="sd">            inputs (tensor or tuple of tensors):  Input for which layer</span>
+<span class="sd">            inputs (Tensor or tuple of Tensor): Input for which layer</span>
 <span class="sd">                        attributions are computed. If forward_func takes a single</span>
 <span class="sd">                        tensor as input, a single input tensor should be provided.</span>
 <span class="sd">                        If forward_func takes multiple tensors as input, a tuple</span>
@@ -520,7 +523,7 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">                        to the number of examples (aka batch size), and if</span>
 <span class="sd">                        multiple input tensors are provided, the examples must</span>
 <span class="sd">                        be aligned appropriately.</span>
-<span class="sd">            baselines (tensor, tuple of tensors, callable):</span>
+<span class="sd">            baselines (Tensor, tuple of Tensor, or Callable):</span>
 <span class="sd">                        Baselines define reference samples that are compared with</span>
 <span class="sd">                        the inputs. In order to assign attribution scores DeepLift</span>
 <span class="sd">                        computes the differences between the inputs/outputs and</span>
@@ -545,7 +548,7 @@ src="/_sphinx/documentation_options.js"></script>
 
 <span class="sd">                        It is recommended that the number of samples in the baselines'</span>
 <span class="sd">                        tensors is larger than one.</span>
-<span class="sd">            target (int, tuple, tensor or list, optional):  Output indices for</span>
+<span class="sd">            target (int, tuple, Tensor, or list, optional): Output indices for</span>
 <span class="sd">                        which gradients are computed (for classification cases,</span>
 <span class="sd">                        this is usually the target class).</span>
 <span class="sd">                        If the network returns a scalar value per example,</span>
@@ -570,7 +573,7 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">                          target for the corresponding example.</span>
 
 <span class="sd">                        Default: None</span>
-<span class="sd">            additional_forward_args (any, optional): If the forward function</span>
+<span class="sd">            additional_forward_args (Any, optional): If the forward function</span>
 <span class="sd">                        requires additional arguments other than the inputs for</span>
 <span class="sd">                        which attributions should not be computed, this argument</span>
 <span class="sd">                        can be provided. It must be either a single additional</span>
@@ -596,7 +599,7 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">                        outputs of internal layers are single tensors.</span>
 <span class="sd">                        Support for multiple tensors will be added later.</span>
 <span class="sd">                        Default: False</span>
-<span class="sd">            custom_attribution_func (callable, optional): A custom function for</span>
+<span class="sd">            custom_attribution_func (Callable, optional): A custom function for</span>
 <span class="sd">                        computing final attribution scores. This function can take</span>
 <span class="sd">                        at least one and at most three arguments with the</span>
 <span class="sd">                        following signature:</span>
@@ -616,7 +619,7 @@ src="/_sphinx/documentation_options.js"></script>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            **attributions** or 2-element tuple of **attributions**, **delta**:</span>
-<span class="sd">            - **attributions** (*tensor* or tuple of *tensors*):</span>
+<span class="sd">            - **attributions** (*Tensor* or tuple of *Tensor*):</span>
 <span class="sd">                        Attribution score computed based on DeepLift's rescale rule</span>
 <span class="sd">                        with respect to layer's inputs or outputs. Attributions</span>
 <span class="sd">                        will always be the same size as the provided layer's inputs</span>
@@ -627,7 +630,7 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">                        from a forward hook. For standard modules, inputs of</span>
 <span class="sd">                        a single tensor are usually wrapped in a tuple, while</span>
 <span class="sd">                        outputs of a single tensor are not.</span>
-<span class="sd">            - **delta** (*tensor*, returned if return_convergence_delta=True):</span>
+<span class="sd">            - **delta** (*Tensor*, returned if return_convergence_delta=True):</span>
 <span class="sd">                        This is computed using the property that the</span>
 <span class="sd">                        total sum of forward_func(inputs) - forward_func(baselines)</span>
 <span class="sd">                        must be very close to the total sum of attributions</span>

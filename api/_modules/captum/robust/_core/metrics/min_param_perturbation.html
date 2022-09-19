@@ -95,7 +95,7 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">        corresponding perturbed input.</span>
 
 <span class="sd">        Args:</span>
-<span class="sd">            forward_func (callable or torch.nn.Module): This can either be an instance</span>
+<span class="sd">            forward_func (Callable or torch.nn.Module): This can either be an instance</span>
 <span class="sd">                of pytorch model or any modification of a model's forward</span>
 <span class="sd">                function.</span>
 
@@ -117,23 +117,23 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">            arg_step (int, float): Minimum interval for increase of target variable.</span>
 
 <span class="sd">            mode (str, optional): Mode for search of minimum attack value;</span>
-<span class="sd">                either 'linear' for linear search on variable, or 'binary' for</span>
+<span class="sd">                either ``linear`` for linear search on variable, or ``binary`` for</span>
 <span class="sd">                binary search of variable</span>
-<span class="sd">                Default: 'linear'</span>
+<span class="sd">                Default: ``linear``</span>
 
 <span class="sd">            num_attempts (int, optional): Number of attempts or trials with</span>
 <span class="sd">                given variable. This should only be set to &gt; 1 for non-deterministic</span>
 <span class="sd">                perturbation / attack functions</span>
-<span class="sd">                Default: 1</span>
+<span class="sd">                Default: ``1``</span>
 
-<span class="sd">            preproc_fn (callable, optional): Optional method applied to inputs. Output</span>
+<span class="sd">            preproc_fn (Callable, optional): Optional method applied to inputs. Output</span>
 <span class="sd">                of preproc_fn is then provided as input to model, in addition to</span>
 <span class="sd">                additional_forward_args provided to evaluate.</span>
-<span class="sd">                Default: None</span>
+<span class="sd">                Default: ``None``</span>
 
 <span class="sd">            apply_before_preproc (bool, optional): Defines whether attack should be</span>
 <span class="sd">                applied before or after preproc function.</span>
-<span class="sd">                Default: False</span>
+<span class="sd">                Default: ``False``</span>
 
 <span class="sd">            correct_fn (Callable, optional): This determines whether the perturbed input</span>
 <span class="sd">                leads to a correct or incorrect prediction. By default, this function</span>
@@ -146,13 +146,15 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">                function must be provided which determines correctness.</span>
 
 <span class="sd">                The first argument to this function must be the model out;</span>
-<span class="sd">                any additional arguments should be provided through correct_fn_kwargs.</span>
+<span class="sd">                any additional arguments should be provided through</span>
+<span class="sd">                ``correct_fn_kwargs``.</span>
 
 <span class="sd">                This function should have the following signature:</span>
+
 <span class="sd">                    def correct_fn(model_out: Tensor, **kwargs: Any) -&gt; bool</span>
 
 <span class="sd">                Method should return a boolean if correct (True) and incorrect (False).</span>
-<span class="sd">                Default: None (applies standard correct_fn for classification)</span>
+<span class="sd">                Default: ``None`` (applies standard correct_fn for classification)</span>
 <span class="sd">        """</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">forward_func</span> <span class="o">=</span> <span class="n">forward_func</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">attack</span> <span class="o">=</span> <span class="n">attack</span>
@@ -395,7 +397,7 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">                    pre-processing function is provided,</span>
 <span class="sd">                    this input is provided directly to the main model and all attacks.</span>
 
-<span class="sd">            additional_forward_args (any, optional): If the forward function</span>
+<span class="sd">            additional_forward_args (Any, optional): If the forward function</span>
 <span class="sd">                    requires additional arguments other than the preprocessing</span>
 <span class="sd">                    outputs (or inputs if preproc_fn is None), this argument</span>
 <span class="sd">                    can be provided. It must be either a single additional</span>
@@ -407,9 +409,9 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">                    For a tensor, the first dimension of the tensor must</span>
 <span class="sd">                    correspond to the number of examples. For all other types,</span>
 <span class="sd">                    the given argument is used for all forward evaluations.</span>
-<span class="sd">                    Default: None</span>
+<span class="sd">                    Default: ``None``</span>
 <span class="sd">            target (TargetType): Target class for classification. This is required if</span>
-<span class="sd">                using the default correct_fn</span>
+<span class="sd">                using the default ``correct_fn``.</span>
 
 <span class="sd">            perturbations_per_eval (int, optional): Allows perturbations of multiple</span>
 <span class="sd">                    attacks to be grouped and evaluated in one call of forward_fn</span>
@@ -423,10 +425,10 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">                    In order to apply this functionality, the output of preproc_fn</span>
 <span class="sd">                    (or inputs itself if no preproc_fn is provided) must be a tensor</span>
 <span class="sd">                    or tuple of tensors.</span>
-<span class="sd">                    Default: 1</span>
-<span class="sd">            attack_kwargs (dictionary, optional): Optional dictionary of keyword</span>
+<span class="sd">                    Default: ``1``</span>
+<span class="sd">            attack_kwargs (dict, optional): Optional dictionary of keyword</span>
 <span class="sd">                    arguments provided to attack function</span>
-<span class="sd">            correct_fn_kwargs (dictionary, optional): Optional dictionary of keyword</span>
+<span class="sd">            correct_fn_kwargs (dict, optional): Optional dictionary of keyword</span>
 <span class="sd">                    arguments provided to correct function</span>
 
 <span class="sd">        Returns:</span>

@@ -107,9 +107,9 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        Args:</span>
 
-<span class="sd">            forward_func (callable): The forward function of the model or</span>
-<span class="sd">                any modification of it</span>
-<span class="sd">            perm_func (callable, optional): A function that accepts a batch of</span>
+<span class="sd">            forward_func (Callable): The forward function of the model or</span>
+<span class="sd">                any modification of it.</span>
+<span class="sd">            perm_func (Callable, optional): A function that accepts a batch of</span>
 <span class="sd">                inputs and a feature mask, and "permutes" the feature using</span>
 <span class="sd">                feature mask across the batch. This defaults to a function</span>
 <span class="sd">                which applies a random permutation, this argument only needs</span>
@@ -133,14 +133,16 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TensorOrTupleOfTensorsGeneric</span><span class="p">:</span>
         <span class="sa">r</span><span class="sd">"""</span>
-<span class="sd">        This function is almost equivalent to `FeatureAblation.attribute`. The</span>
-<span class="sd">        main difference is the way ablated examples are generated. Specifically</span>
-<span class="sd">        they are generated through the `perm_func`, as we set the baselines for</span>
-<span class="sd">        `FeatureAblation.attribute` to None.</span>
+<span class="sd">        This function is almost equivalent to</span>
+<span class="sd">        :func:`FeatureAblation.attribute &lt;captum.attr.FeatureAblation.attribute&gt;`. The</span>
+<span class="sd">        main difference is the way ablated examples are generated. Specifically they</span>
+<span class="sd">        are generated through the ``perm_func``, as we set the baselines for</span>
+<span class="sd">        :func:`FeatureAblation.attribute &lt;captum.attr.FeatureAblation.attribute&gt;` to</span>
+<span class="sd">        ``None``.</span>
 
 
 <span class="sd">        Args:</span>
-<span class="sd">                inputs (tensor or tuple of tensors):  Input for which</span>
+<span class="sd">                inputs (Tensor or tuple of Tensor): Input for which</span>
 <span class="sd">                            permutation attributions are computed. If</span>
 <span class="sd">                            forward_func takes a single tensor as input, a</span>
 <span class="sd">                            single input tensor should be provided.  If</span>
@@ -150,7 +152,7 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">                            0 corresponds to the number of examples (aka batch</span>
 <span class="sd">                            size), and if multiple input tensors are provided,</span>
 <span class="sd">                            the examples must be aligned appropriately.</span>
-<span class="sd">                target (int, tuple, tensor or list, optional):  Output indices for</span>
+<span class="sd">                target (int, tuple, Tensor, or list, optional): Output indices for</span>
 <span class="sd">                            which difference is computed (for classification cases,</span>
 <span class="sd">                            this is usually the target class).</span>
 <span class="sd">                            If the network returns a scalar value per example,</span>
@@ -175,7 +177,7 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">                              target for the corresponding example.</span>
 
 <span class="sd">                            Default: None</span>
-<span class="sd">                additional_forward_args (any, optional): If the forward function</span>
+<span class="sd">                additional_forward_args (Any, optional): If the forward function</span>
 <span class="sd">                            requires additional arguments other than the inputs for</span>
 <span class="sd">                            which attributions should not be computed, this argument</span>
 <span class="sd">                            can be provided. It must be either a single additional</span>
@@ -190,7 +192,7 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">                            Note that attributions are not computed with respect</span>
 <span class="sd">                            to these arguments.</span>
 <span class="sd">                            Default: None</span>
-<span class="sd">                feature_mask (tensor or tuple of tensors, optional):</span>
+<span class="sd">                feature_mask (Tensor or tuple of Tensor, optional):</span>
 <span class="sd">                            feature_mask defines a mask for the input, grouping</span>
 <span class="sd">                            features which should be ablated together. feature_mask</span>
 <span class="sd">                            should contain the same number of tensors as inputs.</span>
@@ -228,14 +230,14 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">                            a simple output of progress.</span>
 <span class="sd">                            Default: False</span>
 <span class="sd">                **kwargs (Any, optional): Any additional arguments used by child</span>
-<span class="sd">                            classes of FeatureAblation (such as Occlusion) to construct</span>
-<span class="sd">                            ablations. These arguments are ignored when using</span>
-<span class="sd">                            FeatureAblation directly.</span>
+<span class="sd">                            classes of :class:`.FeatureAblation` (such as</span>
+<span class="sd">                            :class:`.Occlusion`) to construct ablations. These</span>
+<span class="sd">                            arguments are ignored when using FeatureAblation directly.</span>
 <span class="sd">                            Default: None</span>
 
 <span class="sd">        Returns:</span>
-<span class="sd">            *tensor* or tuple of *tensors* of **attributions**:</span>
-<span class="sd">            - **attributions** (*tensor* or tuple of *tensors*):</span>
+<span class="sd">            *Tensor* or tuple of *Tensor* of **attributions**:</span>
+<span class="sd">            - **attributions** (*Tensor* or tuple of *Tensor*):</span>
 <span class="sd">                        The attributions with respect to each input feature.</span>
 <span class="sd">                        If the forward function returns</span>
 <span class="sd">                        a scalar value per example, attributions will be</span>

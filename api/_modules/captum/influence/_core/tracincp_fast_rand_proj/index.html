@@ -68,7 +68,7 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">Implements abstract DataInfluence class and also provides implementation details for</span>
 <span class="sd">influence computation based on the logic provided in TracIn paper</span>
-<span class="sd">(https://arxiv.org/pdf/2002.08484.pdf).</span>
+<span class="sd">(https://arxiv.org/abs/2002.08484).</span>
 
 <span class="sd">The TracIn paper proposes an idealized notion of influence which can be represented by</span>
 <span class="sd">the total amount a training example reduces loss for a test example via a training</span>
@@ -100,6 +100,15 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">    computes influence scores for that special case. Note that the computed</span>
 <span class="sd">    influence scores are exactly the same as when naive back-propagation is used -</span>
 <span class="sd">    there is no loss in accuracy.</span>
+
+<span class="sd">    In more detail regarding the influence score computation: let :math`x`</span>
+<span class="sd">    and :math`\nabla_y f(y)` be the input and output-gradient of the last</span>
+<span class="sd">    fully-connected layer, respectively, for a training example. Similarly, let</span>
+<span class="sd">    :math`x'` and :math`\nabla_{y'} f(y')` be the corresponding quantities for</span>
+<span class="sd">    a test example. Then, the influence score of the training example on the test</span>
+<span class="sd">    example is the sum of the contribution from each checkpoint. The contribution from</span>
+<span class="sd">    a given checkpoint is :math`(x^T x')(\nabla_y f(y)^T \nabla_{y'} f(y'))`.</span>
+
 <span class="sd">    """</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
@@ -115,6 +124,7 @@ src="/_sphinx/documentation_options.js"></script>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        Args:</span>
+
 <span class="sd">            model (torch.nn.Module): An instance of pytorch model. This model should</span>
 <span class="sd">                    define all of its layers as attributes of the model.</span>
 <span class="sd">            final_fc_layer (torch.nn.Module or str): The last fully connected layer in</span>
@@ -122,7 +132,7 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">                    projection method. Can be either the layer module itself, or the</span>
 <span class="sd">                    fully qualified name of the layer if it is a defined attribute of</span>
 <span class="sd">                    the passed `model`.</span>
-<span class="sd">            train_dataset (torch.utils.data.Dataset or torch.utils.DataLoader):</span>
+<span class="sd">            train_dataset (torch.utils.data.Dataset or torch.utils.data.DataLoader):</span>
 <span class="sd">                    In the `influence` method, we either compute the influence score of</span>
 <span class="sd">                    training examples on examples in a test batch, or self influence</span>
 <span class="sd">                    scores for those training examples, depending on which mode is used.</span>
@@ -146,7 +156,7 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">                    `model` accepts `L-1` arguments, and the last element of `batch` is</span>
 <span class="sd">                    the label. In other words, `model(*batch[:-1])` gives the output of</span>
 <span class="sd">                    `model`, and `batch[-1]` are the labels for the batch.</span>
-<span class="sd">            checkpoints (str or List of str or Iterator): Either the directory of the</span>
+<span class="sd">            checkpoints (str, list[str], or Iterator): Either the directory of the</span>
 <span class="sd">                    path to store and retrieve model checkpoints, a list of</span>
 <span class="sd">                    filepaths with checkpoints from which to load, or an iterator which</span>
 <span class="sd">                    returns objects from which to load checkpoints.</span>
@@ -259,6 +269,7 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">          opponent) on the test example.</span>
 
 <span class="sd">        Args:</span>
+
 <span class="sd">            inputs (Any, optional): If not provided or `None`, the self influence mode</span>
 <span class="sd">                    will be run. Otherwise, `inputs` is the test batch that will be</span>
 <span class="sd">                    used when running in either influence score or k-most influential</span>
@@ -270,7 +281,7 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">                    `inputs` will need to be a tuple. In other words, `inputs` will be</span>
 <span class="sd">                    unpacked as an argument when passing to `model`.</span>
 <span class="sd">                    Default: None</span>
-<span class="sd">            targets (tensor, optional): The labels corresponding to the batch `inputs`.</span>
+<span class="sd">            targets (Tensor, optional): The labels corresponding to the batch `inputs`.</span>
 <span class="sd">                    This method is designed to be applied for a loss function, so</span>
 <span class="sd">                    `targets` is required, unless running in "self influence" mode.</span>
 <span class="sd">                    Default: None</span>
@@ -290,7 +301,7 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">            show_progress (bool, optional): For all modes, computation of results</span>
 <span class="sd">                    requires "training dataset computations": computations for each</span>
 <span class="sd">                    batch in the training dataset `train_dataset`, which may</span>
-<span class="sd">                    take a long time. If `show_progress`is true, the progress of</span>
+<span class="sd">                    take a long time. If `show_progress` is true, the progress of</span>
 <span class="sd">                    "training dataset computations" will be displayed. It will try to</span>
 <span class="sd">                    use tqdm if available for advanced features (e.g. time estimation).</span>
 <span class="sd">                    Otherwise, it will fallback to a simple output of progress.</span>
@@ -304,7 +315,7 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">              `train_dataset`. The length of this tensor is the number of</span>
 <span class="sd">              examples in `train_dataset`, regardless of whether it is a</span>
 <span class="sd">              Dataset or DataLoader.</span>
-<span class="sd">            - influence score mode: if this mode is run (`inputs is not None, `k` is</span>
+<span class="sd">            - influence score mode: if this mode is run (`inputs` is not None, `k` is</span>
 <span class="sd">              None), returns a 2D tensor `influence_scores` of shape</span>
 <span class="sd">              `(input_size, train_dataset_size)`, where `input_size` is</span>
 <span class="sd">              the number of examples in the test batch, and</span>
@@ -344,7 +355,9 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="n">batch</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span>
     <span class="p">):</span>
         <span class="sd">"""</span>
-<span class="sd">        computes influence scores for a single training batch</span>
+<span class="sd">        computes influence scores for a single training batch, when only considering</span>
+<span class="sd">        gradients in the last fully-connected layer, using the computation trick</span>
+<span class="sd">        described in the `TracInCPFast` class description.</span>
 <span class="sd">        """</span>
 
         <span class="k">def</span> <span class="nf">get_checkpoint_contribution</span><span class="p">(</span><span class="n">checkpoint</span><span class="p">):</span>
@@ -365,8 +378,15 @@ src="/_sphinx/documentation_options.js"></script>
                 <span class="bp">self</span><span class="p">,</span> <span class="n">batch</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">batch</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
             <span class="p">)</span>
             <span class="k">return</span> <span class="p">(</span>
-                <span class="n">_tensor_batch_dot</span><span class="p">(</span><span class="n">input_jacobians</span><span class="p">,</span> <span class="n">src_jacobian</span><span class="p">)</span>
+                <span class="n">_tensor_batch_dot</span><span class="p">(</span>
+                    <span class="n">input_jacobians</span><span class="p">,</span> <span class="n">src_jacobian</span>
+                <span class="p">)</span>  <span class="c1"># shape is (test batch size, training batch size), containing x^T x'</span>
+                <span class="c1"># for every example x in the training batch and example x' in the test</span>
+                <span class="c1"># batch</span>
                 <span class="o">*</span> <span class="n">_tensor_batch_dot</span><span class="p">(</span><span class="n">input_layer_inputs</span><span class="p">,</span> <span class="n">src_layer_input</span><span class="p">)</span>
+                <span class="c1"># shape is (test batch size, training batch size), containing</span>
+                <span class="c1"># (\nabla_y f(y)^T \nabla_{y'} f(y')) for every label y in the training</span>
+                <span class="c1"># batch and label y' in the test batch</span>
                 <span class="o">*</span> <span class="n">learning_rate</span>
             <span class="p">)</span>
 
@@ -391,15 +411,16 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">        output of `_basic_computation_tracincp_fast`.</span>
 
 <span class="sd">        Args:</span>
-<span class="sd">            inputs (Tuple of Any): A batch of examples. Does not represent labels,</span>
+
+<span class="sd">            inputs (tuple of Any): A batch of examples. Does not represent labels,</span>
 <span class="sd">                    which are passed as `targets`. The assumption is that</span>
 <span class="sd">                    `model(*inputs)` produces the predictions for the batch.</span>
-<span class="sd">            targets (tensor): The labels corresponding to the batch `inputs`. This</span>
+<span class="sd">            targets (Tensor): The labels corresponding to the batch `inputs`. This</span>
 <span class="sd">                    method is designed to be applied for a loss function, so labels</span>
 <span class="sd">                    are required.</span>
 <span class="sd">            show_progress (bool, optional): To compute the influence of examples in</span>
 <span class="sd">                    training dataset `train_dataset`, we compute the influence</span>
-<span class="sd">                    of each batch. If `show_progress`is true, the progress of this</span>
+<span class="sd">                    of each batch. If `show_progress` is true, the progress of this</span>
 <span class="sd">                    computation will be displayed. In particular, the number of batches</span>
 <span class="sd">                    for which influence has been computed will be displayed. It will</span>
 <span class="sd">                    try to use tqdm if available for advanced features (e.g. time</span>
@@ -408,7 +429,7 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">                    Default: False</span>
 
 <span class="sd">        Returns:</span>
-<span class="sd">            influence_scores (tensor): Influence scores from the TracInCPFast method.</span>
+<span class="sd">            influence_scores (Tensor): Influence scores from the TracInCPFast method.</span>
 <span class="sd">            Its shape is `(input_size, train_dataset_size)`, where `input_size`</span>
 <span class="sd">            is the number of examples in the test batch, and</span>
 <span class="sd">            `train_dataset_size` is the number of examples in</span>
@@ -448,9 +469,10 @@ src="/_sphinx/documentation_options.js"></script>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">KMostInfluentialResults</span><span class="p">:</span>
         <span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        Args:</span>
-<span class="sd">            inputs (Tuple of Any): A tuple that represents a batch of examples. It does</span>
+
+<span class="sd">            inputs (tuple of Any): A tuple that represents a batch of examples. It does</span>
 <span class="sd">                    not represent labels, which are passed as `targets`.</span>
-<span class="sd">            targets (tensor): The labels corresponding to the batch `inputs`. This</span>
+<span class="sd">            targets (Tensor): The labels corresponding to the batch `inputs`. This</span>
 <span class="sd">                    method is designed to be applied for a loss function, so labels</span>
 <span class="sd">                    are required.</span>
 <span class="sd">            k (int, optional): The number of proponents or opponents to return per test</span>
@@ -461,7 +483,7 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">                    Default: True</span>
 <span class="sd">            show_progress (bool, optional): To compute the proponents (or opponents)</span>
 <span class="sd">                    for the batch of examples, we perform computation for each batch in</span>
-<span class="sd">                    training dataset `train_dataset`, If `show_progress`is</span>
+<span class="sd">                    training dataset `train_dataset`, If `show_progress` is</span>
 <span class="sd">                    true, the progress of this computation will be displayed. In</span>
 <span class="sd">                    particular, the number of batches for which the computation has</span>
 <span class="sd">                    been performed will be displayed. It will try to use tqdm if</span>
@@ -530,7 +552,7 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">        times.</span>
 
 <span class="sd">        Args:</span>
-<span class="sd">            batches (Tuple, or DataLoader): Either a single tuple of any, or a</span>
+<span class="sd">            batches (tuple or DataLoader): Either a single tuple of any, or a</span>
 <span class="sd">                    `DataLoader`, where each batch yielded is a tuple of any. In</span>
 <span class="sd">                    either case, the tuple represents a single batch, where the last</span>
 <span class="sd">                    element is assumed to be the labels for the batch. That is,</span>
@@ -542,7 +564,7 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">                    more details on the assumed structure of a batch.</span>
 <span class="sd">            show_progress (bool, optional): Computation of self influence scores can</span>
 <span class="sd">                    take a long time if `inputs_dataset` represents many examples. If</span>
-<span class="sd">                    `show_progress`is true, the progress of this computation will be</span>
+<span class="sd">                    `show_progress` is true, the progress of this computation will be</span>
 <span class="sd">                    displayed. In more detail, this computation will iterate over all</span>
 <span class="sd">                    checkpoints (provided as the `checkpoints` initialization argument)</span>
 <span class="sd">                    in an outer loop, and iterate over all batches that</span>
@@ -674,7 +696,7 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">        for each batch. For large models, loading checkpoints can be time-intensive.</span>
 
 <span class="sd">        Args:</span>
-<span class="sd">            batches (Tuple, or DataLoader): Either a single tuple of any, or a</span>
+<span class="sd">            batches (tuple or DataLoader): Either a single tuple of any, or a</span>
 <span class="sd">                    `DataLoader`, where each batch yielded is a tuple of any. In</span>
 <span class="sd">                    either case, the tuple represents a single batch, where the last</span>
 <span class="sd">                    element is assumed to be the labels for the batch. That is,</span>
@@ -727,18 +749,27 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">    and batches.</span>
 
 <span class="sd">    Args:</span>
+
 <span class="sd">        influence_instance (TracInCPFast): A instance of TracInCPFast or its children.</span>
 <span class="sd">                We assume `influence_instance` has a `loss_fn` attribute, i.e. the loss</span>
 <span class="sd">                function applied to the output of the last fully-connected layer, as</span>
 <span class="sd">                well as a `reduction_type` attribute, which indicates whether `loss_fn`</span>
 <span class="sd">                reduces the per-example losses by using their mean or sum. The</span>
 <span class="sd">                `reduction_type` attribute must either be "mean" or "sum".</span>
-<span class="sd">        inputs (Tuple of Any): A batch of examples, which could be a training batch</span>
+<span class="sd">        inputs (tuple of Any): A batch of examples, which could be a training batch</span>
 <span class="sd">                or test batch, depending which method is the caller. Does not</span>
 <span class="sd">                represent labels, which are passed as `targets`. The assumption is</span>
 <span class="sd">                that `model(*inputs)` produces the predictions for the batch.</span>
-<span class="sd">        targets (tensor): If computing influence scores on a loss function,</span>
+<span class="sd">        targets (Tensor): If computing influence scores on a loss function,</span>
 <span class="sd">                these are the labels corresponding to the batch `inputs`.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        (input_jacobians, layer_inputs) (tuple): `input_jacobians` is a 2D tensor,</span>
+<span class="sd">                where each row is the jacobian of the loss, with respect to the</span>
+<span class="sd">                *output* of the last fully-connected layer. `layer_inputs` is a 1D</span>
+<span class="sd">                tensor, where each row is the *input* to the last fully-connected</span>
+<span class="sd">                layer. For both, the length is the number of examples in the batch</span>
+<span class="sd">                represented by `inputs` and `targets`.</span>
 <span class="sd">    """</span>
     <span class="n">layer_inputs</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="n">device</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">]]</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">()</span>
     <span class="n">lock</span> <span class="o">=</span> <span class="n">threading</span><span class="o">.</span><span class="n">Lock</span><span class="p">()</span>
@@ -792,6 +823,57 @@ src="/_sphinx/documentation_options.js"></script>
 
 
 <div class="viewcode-block" id="TracInCPFastRandProj"><a class="viewcode-back" href="../../../../influence.html#captum.influence.TracInCPFastRandProj">[docs]</a><span class="k">class</span> <span class="nc">TracInCPFastRandProj</span><span class="p">(</span><span class="n">TracInCPFast</span><span class="p">):</span>
+    <span class="sa">r</span><span class="sd">"""</span>
+<span class="sd">    A version of TracInCPFast which is optimized for "interactive" calls to</span>
+<span class="sd">    `influence` for the purpose of calculating proponents / opponents, or</span>
+<span class="sd">    influence scores. "Interactive" means there will be multiple calls to</span>
+<span class="sd">    `influence`, with each call for a different batch of test examples, and</span>
+<span class="sd">    subsequent calls rely on the results of previous calls. The implementation in</span>
+<span class="sd">    this class has been optimized so that each call to `influence` is fast, so that</span>
+<span class="sd">    it can be used for interactive analysis. This class should only be used for</span>
+<span class="sd">    interactive use cases. It should not be used if `influence` will only be</span>
+<span class="sd">    called once, because to enable fast calls to `influence`, time and memory</span>
+<span class="sd">    intensive preprocessing is required in `__init__`. Furthermore, it should not</span>
+<span class="sd">    be used to calculate self influence scores - `TracInCPFast` should be used</span>
+<span class="sd">    instead for that purpose. To enable interactive analysis, this implementation</span>
+<span class="sd">    computes and saves "embedding" vectors for all training examples in</span>
+<span class="sd">    `train_dataset`. Crucially, the influence score of a training</span>
+<span class="sd">    example on a test example is simply the dot-product of their corresponding</span>
+<span class="sd">    vectors, and proponents / opponents can be found by first storing vectors for</span>
+<span class="sd">    training examples in a nearest-neighbor data structure, and then finding the</span>
+<span class="sd">    nearest-neighbors for a test example in terms of dot-product (see appendix F</span>
+<span class="sd">    of the TracIn paper). This class should only be used if calls to `influence`</span>
+<span class="sd">    to obtain proponents / opponents or influence scores will be made in an</span>
+<span class="sd">    "interactive" manner, and there is sufficient memory to store vectors for the</span>
+<span class="sd">    entire `train_dataset`. This is because in order to enable interactive</span>
+<span class="sd">    analysis, this implementation incures overhead in `__init__` to setup the</span>
+<span class="sd">    nearest-neighbors data structure, which is both time and memory intensive, as</span>
+<span class="sd">    vectors corresponding to all training examples needed to be stored. To reduce</span>
+<span class="sd">    memory usage, this implementation enables random projections of those vectors.</span>
+<span class="sd">    Note that the influence scores computed with random projections are less</span>
+<span class="sd">    accurate, though correct in expectation.</span>
+
+<span class="sd">    In more detail regarding the "embedding" vectors - the influence of a training</span>
+<span class="sd">    example on a test example, when only considering gradients in the last</span>
+<span class="sd">    fully-connected layer, the sum of the contribution from each checkpoint. The</span>
+<span class="sd">    contribution from a given checkpoint is</span>
+<span class="sd">    :math`(x^T x')(\nabla_y f(y)^T \nabla_{y'} f(y'))`, using the notation in the</span>
+<span class="sd">    description of `TracInCPFast`. As is, this is not a dot-product of 2 vectors.</span>
+<span class="sd">    However, we can rewrite that contribution as</span>
+<span class="sd">    :math`(x \nabla_y f(y)^T) \dot (x' f(y')^T)`. Both terms in this</span>
+<span class="sd">    product are 2D matrices, as they are outer products, and the "product" is actually</span>
+<span class="sd">    a dot-product, treating both matrices as vectors. Therefore, for a given</span>
+<span class="sd">    checkpoint, its contribution to the "embedding" of an example is just the</span>
+<span class="sd">    outer-product :math`(x \nabla_y f(y)^T)`, flattened. Furthemore, to reduce the</span>
+<span class="sd">    dimension of this contribution, we can right-multiply and</span>
+<span class="sd">    left-multiply the outer-product with two separate projection matrices. These</span>
+<span class="sd">    transform :math`\nabla_y f(y)` and :math`x` to lower dimensional vectors. While</span>
+<span class="sd">    the dimension of these two lower dimensional vectors do not necessarily need to</span>
+<span class="sd">    be the same, in our implementation, we let them be the same, both equal to the</span>
+<span class="sd">    square root of the desired projection dimension. Finally, the embedding of an</span>
+<span class="sd">    example is the concatenation of the contributions from each checkpoint.</span>
+<span class="sd">    """</span>
+
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">model</span><span class="p">:</span> <span class="n">Module</span><span class="p">,</span>
@@ -807,36 +889,8 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="n">seed</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="sa">r</span><span class="sd">"""</span>
-<span class="sd">        A version of TracInCPFast which is optimized for "interactive" calls to</span>
-<span class="sd">        `influence` for the purpose of calculating proponents / opponents, or</span>
-<span class="sd">        influence scores. "Interactive" means there will be multiple calls to</span>
-<span class="sd">        `influence`, with each call for a different batch of test examples, and</span>
-<span class="sd">        subsequent calls rely on the results of previous calls. The implementation in</span>
-<span class="sd">        this class has been optimized so that each call to `influence` is fast, so that</span>
-<span class="sd">        it can be used for interactive analysis. This class should only be used for</span>
-<span class="sd">        interactive use cases. It should not be used if `influence` will only be</span>
-<span class="sd">        called once, because to enable fast calls to `influence`, time and memory</span>
-<span class="sd">        intensive preprocessing is required in `__init__`. Furthermore, it should not</span>
-<span class="sd">        be used to calculate self influence scores - `TracInCPFast` should be used</span>
-<span class="sd">        instead for that purpose. To enable interactive analysis, this implementation</span>
-<span class="sd">        computes and saves "embedding" vectors for all training examples in</span>
-<span class="sd">        `train_dataset`. Crucially, the influence score of a training</span>
-<span class="sd">        example on a test example is simply the dot-product of their corresponding</span>
-<span class="sd">        vectors, and proponents / opponents can be found by first storing vectors for</span>
-<span class="sd">        training examples in a nearest-neighbor data structure, and then finding the</span>
-<span class="sd">        nearest-neighbors for a test example in terms of dot-product (see appendix F</span>
-<span class="sd">        of the TracIn paper). This class should only be used if calls to `influence`</span>
-<span class="sd">        to obtain proponents / opponents or influence scores will be made in an</span>
-<span class="sd">        "interactive" manner, and there is sufficient memory to store vectors for the</span>
-<span class="sd">        entire `train_dataset`. This is because in order to enable interactive</span>
-<span class="sd">        analysis, this implementation incures overhead in ``__init__` to setup the</span>
-<span class="sd">        nearest-neighbors data structure, which is both time and memory intensive, as</span>
-<span class="sd">        vectors corresponding to all training examples needed to be stored. To reduce</span>
-<span class="sd">        memory usage, this implementation enables random projections of those vectors.</span>
-<span class="sd">        Note that the influence scores computed with random projections are less</span>
-<span class="sd">        accurate, though correct in expectation.</span>
-
 <span class="sd">        Args:</span>
+
 <span class="sd">            model (torch.nn.Module): An instance of pytorch model. This model should</span>
 <span class="sd">                    define all of its layers as attributes of the model.</span>
 <span class="sd">            final_fc_layer (torch.nn.Module or str): The last fully connected layer in</span>
@@ -844,7 +898,7 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">                    projection method. Can be either the layer module itself, or the</span>
 <span class="sd">                    fully qualified name of the layer if it is a defined attribute of</span>
 <span class="sd">                    the passed `model`.</span>
-<span class="sd">            train_dataset (torch.utils.data.Dataset or torch.utils.DataLoader):</span>
+<span class="sd">            train_dataset (torch.utils.data.Dataset or torch.utils.data.DataLoader):</span>
 <span class="sd">                    In the `influence` method, we either compute the influence score of</span>
 <span class="sd">                    training examples on examples in a test batch, or self influence</span>
 <span class="sd">                    scores for those training examples, depending on which mode is used.</span>
@@ -868,7 +922,7 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">                    `model` accepts `L-1` arguments, and the last element of `batch` is</span>
 <span class="sd">                    the label. In other words, `model(*batch[:-1])` gives the output of</span>
 <span class="sd">                    `model`, and `batch[-1]` are the labels for the batch.</span>
-<span class="sd">            checkpoints (str or List of str or Iterator): Either the directory of the</span>
+<span class="sd">            checkpoints (str, list[str], or Iterator): Either the directory of the</span>
 <span class="sd">                    path to store and retrieve model checkpoints, a list of</span>
 <span class="sd">                    filepaths with checkpoints from which to load, or an iterator which</span>
 <span class="sd">                    returns objects from which to load checkpoints.</span>
@@ -919,7 +973,7 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">                    int, and random projection will be performed to ensure that the</span>
 <span class="sd">                    vector is of dimension no more than `projection_dim` * C.</span>
 <span class="sd">                    `projection_dim` corresponds to the variable d in the top of page</span>
-<span class="sd">                    15 of the TracIn paper: https://arxiv.org/pdf/2002.08484.pdf.</span>
+<span class="sd">                    15 of the TracIn paper: https://arxiv.org/abs/2002.08484.</span>
 <span class="sd">                    Default: None</span>
 <span class="sd">            seed (int, optional): Because this implementation chooses a random</span>
 <span class="sd">                    projection, its output is random. Setting this seed specifies the</span>
@@ -979,15 +1033,16 @@ src="/_sphinx/documentation_options.js"></script>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tensor</span><span class="p">:</span>
         <span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        Args:</span>
+
 <span class="sd">            inputs (tuple of Any): A batch of examples. Does not represent labels,</span>
 <span class="sd">                    which are passed as `targets`. The assumption is that</span>
 <span class="sd">                    `model(*inputs)` produces the predictions for the batch.</span>
-<span class="sd">            targets (tensor): The labels corresponding to the batch `inputs`. This</span>
+<span class="sd">            targets (Tensor): The labels corresponding to the batch `inputs`. This</span>
 <span class="sd">                    method is designed to be applied for a loss function, so labels</span>
 <span class="sd">                    are required.</span>
 
 <span class="sd">        Returns:</span>
-<span class="sd">            influence_scores (tensor): Influence scores from the</span>
+<span class="sd">            influence_scores (Tensor): Influence scores from the</span>
 <span class="sd">            TracInCPFastRandProj method. Its shape is</span>
 <span class="sd">            `(input_size, train_dataset_size)`, where `input_size` is the</span>
 <span class="sd">            number of examples in the test batch, and `train_dataset_size` is</span>
@@ -995,6 +1050,8 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">            example, `influence_scores[i][j]` is the influence score for the j-th</span>
 <span class="sd">            training example to the i-th input example.</span>
 <span class="sd">        """</span>
+        <span class="c1"># TODO: after D35721609 lands, use helper function</span>
+        <span class="c1"># `TracInCP._influence_rand_proj` here to avoid duplicated logic</span>
         <span class="n">inputs_batch</span> <span class="o">=</span> <span class="p">(</span><span class="o">*</span><span class="n">inputs</span><span class="p">,</span> <span class="n">targets</span><span class="p">)</span>
         <span class="n">input_projections</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_intermediate_quantities_tracincp_fast_rand_proj</span><span class="p">(</span>
             <span class="n">DataLoader</span><span class="p">(</span>
@@ -1016,9 +1073,10 @@ src="/_sphinx/documentation_options.js"></script>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">KMostInfluentialResults</span><span class="p">:</span>
         <span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        Args:</span>
-<span class="sd">            inputs (Tuple of Any): A tuple that represents a batch of examples. It does</span>
+
+<span class="sd">            inputs (tuple of Any): A tuple that represents a batch of examples. It does</span>
 <span class="sd">                    not represent labels, which are passed as `targets`.</span>
-<span class="sd">            targets (tensor): The labels corresponding to the batch `inputs`. This</span>
+<span class="sd">            targets (Tensor): The labels corresponding to the batch `inputs`. This</span>
 <span class="sd">                    method is designed to be applied for a loss function, so labels</span>
 <span class="sd">                    are required.</span>
 <span class="sd">            k (int, optional): The number of proponents or opponents to return per test</span>
@@ -1083,7 +1141,7 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">        with are not too large, so that there will not be an out-of-memory error.</span>
 
 <span class="sd">        Args:</span>
-<span class="sd">            batches (Tuple, or DataLoader): Either a single tuple of any, or a</span>
+<span class="sd">            batches (tuple or DataLoader): Either a single tuple of any, or a</span>
 <span class="sd">                    `DataLoader`, where each batch yielded is a tuple of any. In</span>
 <span class="sd">                    either case, the tuple represents a single batch, where the last</span>
 <span class="sd">                    element is assumed to be the labels for the batch. That is,</span>
@@ -1095,7 +1153,7 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">                    more details on the assumed structure of a batch.</span>
 <span class="sd">            show_progress (bool, optional): Computation of self influence scores can</span>
 <span class="sd">                    take a long time if `inputs_dataset` represents many examples. If</span>
-<span class="sd">                    `show_progress`is true, the progress of this computation will be</span>
+<span class="sd">                    `show_progress` is true, the progress of this computation will be</span>
 <span class="sd">                    displayed. In more detail, this computation will iterate over all</span>
 <span class="sd">                    checkpoints (provided as the `checkpoints` initialization argument)</span>
 <span class="sd">                    and all batches that `inputs_dataset` represents. Therefore, the</span>
@@ -1169,6 +1227,7 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">        gradients in the last fully-connected layer, please use `TracInCPFast` instead.</span>
 
 <span class="sd">        Args:</span>
+
 <span class="sd">            inputs (Any, optional): If not provided or `None`, the self influence mode</span>
 <span class="sd">                    will be run. Otherwise, `inputs` is the test batch that will be</span>
 <span class="sd">                    used when running in either influence score or k-most influential</span>
@@ -1180,7 +1239,7 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">                    `inputs` will need to be a tuple. In other words, `inputs` will be</span>
 <span class="sd">                    unpacked as an argument when passing to `model`.</span>
 <span class="sd">                    Default: None</span>
-<span class="sd">            targets (tensor): The labels corresponding to the batch `inputs`. This</span>
+<span class="sd">            targets (Tensor): The labels corresponding to the batch `inputs`. This</span>
 <span class="sd">                    method is designed to be applied for a loss function, so `targets`</span>
 <span class="sd">                    is required.</span>
 <span class="sd">            k (int, optional): If not provided or `None`, the influence score mode will</span>
@@ -1201,7 +1260,7 @@ src="/_sphinx/documentation_options.js"></script>
 
 <span class="sd">            The return value of this method depends on which mode is run.</span>
 
-<span class="sd">            - influence score mode: if this mode is run (`inputs is not None, `k` is</span>
+<span class="sd">            - influence score mode: if this mode is run (`inputs` is not None, `k` is</span>
 <span class="sd">              None), returns a 2D tensor `influence_scores` of shape</span>
 <span class="sd">              `(input_size, train_dataset_size)`, where `input_size` is</span>
 <span class="sd">              the number of examples in the test batch, and</span>
@@ -1257,6 +1316,7 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">        `TracInCPFastRandProj.__init__`.</span>
 
 <span class="sd">        Args:</span>
+
 <span class="sd">            dataloader (DataLoader): determining the projection requires knowing the</span>
 <span class="sd">                    dimensionality of the last layer's parameters (`jacobian_dim`</span>
 <span class="sd">                    below) and its input (`layer_input_dim` below). These are</span>
@@ -1264,10 +1324,10 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">                    provides that batch.</span>
 
 <span class="sd">        Returns:</span>
-<span class="sd">            jacobian_projection (tensor or None): Projection matrix to apply to</span>
+<span class="sd">            jacobian_projection (Tensor or None): Projection matrix to apply to</span>
 <span class="sd">                    Jacobian of last layer to reduce its dimension, if needed.</span>
 <span class="sd">                    None otherwise.</span>
-<span class="sd">            input_projection (tensor or None): Projection matrix to apply to input of</span>
+<span class="sd">            input_projection (Tensor or None): Projection matrix to apply to input of</span>
 <span class="sd">                    last layer to reduce its dimension, if needed. None otherwise.</span>
 <span class="sd">        """</span>
         <span class="c1"># figure out projection dimensions, if needed</span>
@@ -1308,7 +1368,7 @@ src="/_sphinx/documentation_options.js"></script>
             <span class="c1"># allowable dimension of the "partial" intermediate quantity. Therefore,</span>
             <span class="c1"># we only project if `jacobian_dim` * `layer_input_dim` &gt; `projection_dim`.</span>
             <span class="c1"># `projection_dim` corresponds to the variable d in the top of page 15 of</span>
-            <span class="c1"># the TracIn paper: https://arxiv.org/pdf/2002.08484.pdf.</span>
+            <span class="c1"># the TracIn paper: https://arxiv.org/abs/2002.08484.</span>
             <span class="k">if</span> <span class="n">jacobian_dim</span> <span class="o">*</span> <span class="n">layer_input_dim</span> <span class="o">&gt;</span> <span class="n">projection_dim</span><span class="p">:</span>
                 <span class="n">jacobian_projection_dim</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">projection_dim</span><span class="o">**</span><span class="mf">0.5</span><span class="p">),</span> <span class="n">jacobian_dim</span><span class="p">)</span>
                 <span class="n">layer_input_projection_dim</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span>
@@ -1343,7 +1403,8 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">        method creates that data structure. This method has side effects.</span>
 
 <span class="sd">        Args:</span>
-<span class="sd">            src_intermediate_quantities (tensor): the output of the</span>
+
+<span class="sd">            src_intermediate_quantities (Tensor): the output of the</span>
 <span class="sd">                    `_get_intermediate_quantities_tracin_fast_rand_proj` function when</span>
 <span class="sd">                    applied to training dataset `train_dataset`. This</span>
 <span class="sd">                    output is the vector representation of all training examples.</span>
@@ -1355,7 +1416,7 @@ src="/_sphinx/documentation_options.js"></script>
 
     <span class="k">def</span> <span class="nf">_get_intermediate_quantities_tracincp_fast_rand_proj</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
-        <span class="n">dataloader</span><span class="p">:</span> <span class="n">DataLoader</span><span class="p">,</span>
+        <span class="n">inputs_dataset</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span> <span class="n">DataLoader</span><span class="p">],</span>
         <span class="n">projection_quantities</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">]],</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
         <span class="sa">r</span><span class="sd">"""</span>
@@ -1367,14 +1428,23 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">        specifically, largest dot-product) data structure.</span>
 
 <span class="sd">        Args:</span>
-<span class="sd">            dataloader (DataLoader): DataLoader for which the intermediate quantities</span>
-<span class="sd">                    are computed.</span>
+<span class="sd">            inputs_dataset (Tuple, or DataLoader): Either a single tuple of any, or a</span>
+<span class="sd">                    `DataLoader`, where each batch yielded is a tuple of any. In</span>
+<span class="sd">                    either case, the tuple represents a single batch, where the last</span>
+<span class="sd">                    element is assumed to be the labels for the batch. That is,</span>
+<span class="sd">                    `model(*batch[0:-1])` produces the output for `model`, and</span>
+<span class="sd">                    and `batch[-1]` are the labels, if any. Here, `model` is model</span>
+<span class="sd">                    provided in initialization. This is the same assumption made for</span>
+<span class="sd">                    each batch yielded by training dataset `train_dataset`. Please see</span>
+<span class="sd">                    documentation for the `train_dataset` argument to</span>
+<span class="sd">                    `TracInCPFastRandProj.__init__` for more details on the assumed</span>
+<span class="sd">                    structure of a batch.</span>
 <span class="sd">            projection_quantities (tuple or None): Is either the two tensors defining</span>
 <span class="sd">                    the randomized projections to apply, or None, which means no</span>
 <span class="sd">                    projection is to be applied.</span>
 
 <span class="sd">        Returns:</span>
-<span class="sd">            checkpoint_projections (tensor): A tensor of dimension</span>
+<span class="sd">            intermediate_quantities (Tensor): A tensor of dimension</span>
 <span class="sd">                    (N, D * C), where N is total number of examples in `dataloader`, C</span>
 <span class="sd">                    is the number of checkpoints passed as the `checkpoints` argument</span>
 <span class="sd">                    of `TracInCPFastRandProj.__init__`, and each row represents the</span>
@@ -1390,18 +1460,34 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">                    performed to ensure that the vector is of dimension no more than</span>
 <span class="sd">                    `self.projection_dim` * C. `self.projection_dim` corresponds to</span>
 <span class="sd">                    the variable d in the top of page 15 of the TracIn paper:</span>
-<span class="sd">                    https://arxiv.org/pdf/2002.08484.pdf.</span>
+<span class="sd">                    https://arxiv.org/abs/2002.08484.</span>
 <span class="sd">        """</span>
-        <span class="c1"># for each checkpoint, this stores a list of projections for a batch</span>
-        <span class="c1"># each element in this list will be of shape (batch_size, projection_dim)</span>
-        <span class="n">checkpoint_projections</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">[[]</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">checkpoints</span><span class="p">]</span>
+        <span class="c1"># if `inputs_dataset` is not a `DataLoader`, turn it into one.</span>
+        <span class="n">inputs_dataset</span> <span class="o">=</span> <span class="n">_format_inputs_dataset</span><span class="p">(</span><span class="n">inputs_dataset</span><span class="p">)</span>
 
+        <span class="c1"># internally, whether `projection_quantities` is None determines whether</span>
+        <span class="c1"># any projection will be applied to reduce the dimension of the "embedding"</span>
+        <span class="c1"># vectors. If projection will be applied, there are actually 2 different</span>
+        <span class="c1"># projection matrices - one to project the `input_jacobians`, and one to</span>
+        <span class="c1"># project the `layer_inputs`. See below for details of those two quantities.</span>
+        <span class="c1"># here, we extract the corresponding projection matrices for those two</span>
+        <span class="c1"># quantities, if doing projection. Note that the same projections are used</span>
+        <span class="c1"># for each checkpoint.</span>
         <span class="n">project</span> <span class="o">=</span> <span class="kc">False</span>
         <span class="k">if</span> <span class="n">projection_quantities</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">project</span> <span class="o">=</span> <span class="kc">True</span>
             <span class="n">jacobian_projection</span><span class="p">,</span> <span class="n">layer_input_projection</span> <span class="o">=</span> <span class="n">projection_quantities</span>
 
+        <span class="c1"># for each checkpoint, we will populate a list containing the contribution of</span>
+        <span class="c1"># the checkpoint for each batch</span>
+        <span class="n">checkpoint_contributions</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">List</span><span class="p">,</span> <span class="n">Tensor</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="p">[]</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">checkpoints</span>
+        <span class="p">]</span>
+
+        <span class="c1"># the "embedding" vector is the concatenation of contributions from each</span>
+        <span class="c1"># checkpoint, which we compute one by one</span>
         <span class="k">for</span> <span class="p">(</span><span class="n">j</span><span class="p">,</span> <span class="n">checkpoint</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">checkpoints</span><span class="p">):</span>
+
             <span class="k">assert</span> <span class="p">(</span>
                 <span class="n">checkpoint</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
             <span class="p">),</span> <span class="s2">"None returned from `checkpoints`, cannot load."</span>
@@ -1409,33 +1495,122 @@ src="/_sphinx/documentation_options.js"></script>
             <span class="n">learning_rate</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">checkpoints_load_func</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">,</span> <span class="n">checkpoint</span><span class="p">)</span>
             <span class="n">learning_rate_root</span> <span class="o">=</span> <span class="n">learning_rate</span><span class="o">**</span><span class="mf">0.5</span>
 
-            <span class="k">for</span> <span class="n">batch</span> <span class="ow">in</span> <span class="n">dataloader</span><span class="p">:</span>
+            <span class="c1"># after loading a checkpoint, we compute the contribution of that</span>
+            <span class="c1"># checkpoint, for *all* batches (instead of a single batch). this enables</span>
+            <span class="c1"># increased efficiency.</span>
+            <span class="k">for</span> <span class="n">batch</span> <span class="ow">in</span> <span class="n">inputs_dataset</span><span class="p">:</span>
 
-                <span class="n">batch_jacobians</span><span class="p">,</span> <span class="n">batch_layer_inputs</span> <span class="o">=</span> <span class="n">_basic_computation_tracincp_fast</span><span class="p">(</span>
+                <span class="c1"># compute `input_jacobians` and `layer_inputs`, for a given checkpoint</span>
+                <span class="c1"># using a helper function. `input_jacobians` is a 2D tensor,</span>
+                <span class="c1"># where each row is the jacobian of the loss, with respect to the</span>
+                <span class="c1"># *output* of the last fully-connected layer. `layer_inputs` is a 2D</span>
+                <span class="c1"># tensor, where each row is the *input* to the last fully-connected</span>
+                <span class="c1"># layer. For both, the length is the number of examples in `batch`</span>
+                <span class="n">input_jacobians</span><span class="p">,</span> <span class="n">layer_inputs</span> <span class="o">=</span> <span class="n">_basic_computation_tracincp_fast</span><span class="p">(</span>
                     <span class="bp">self</span><span class="p">,</span>
                     <span class="n">batch</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span>
                     <span class="n">batch</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span>
                 <span class="p">)</span>
 
+                <span class="c1"># if doing projection, project those two quantities</span>
                 <span class="k">if</span> <span class="n">project</span><span class="p">:</span>
 
-                    <span class="n">batch_jacobians</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">matmul</span><span class="p">(</span><span class="n">batch_jacobians</span><span class="p">,</span> <span class="n">jacobian_projection</span><span class="p">)</span>
+                    <span class="n">input_jacobians</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">matmul</span><span class="p">(</span><span class="n">input_jacobians</span><span class="p">,</span> <span class="n">jacobian_projection</span><span class="p">)</span>
 
-                    <span class="n">batch_layer_inputs</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">matmul</span><span class="p">(</span>
-                        <span class="n">batch_layer_inputs</span><span class="p">,</span> <span class="n">layer_input_projection</span>
-                    <span class="p">)</span>
+                    <span class="n">layer_inputs</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">matmul</span><span class="p">(</span><span class="n">layer_inputs</span><span class="p">,</span> <span class="n">layer_input_projection</span><span class="p">)</span>
 
-                <span class="n">checkpoint_projections</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="c1"># for an example, the contribution to the "embedding" vector from each</span>
+                <span class="c1"># checkpoint is the outer product of its `input_jacobian` and its</span>
+                <span class="c1"># `layer_input`, flattened to a 1D tensor. here, we perform this</span>
+                <span class="c1"># for the entire batch. we append the contribution to a list containing</span>
+                <span class="c1"># the contribution of all batches, from the checkpoint.</span>
+                <span class="n">cast</span><span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="n">checkpoint_contributions</span><span class="p">[</span><span class="n">j</span><span class="p">])</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
                     <span class="n">torch</span><span class="o">.</span><span class="n">matmul</span><span class="p">(</span>
-                        <span class="n">torch</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="n">batch_jacobians</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span>
-                        <span class="n">torch</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="n">batch_layer_inputs</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span>
-                    <span class="p">)</span><span class="o">.</span><span class="n">flatten</span><span class="p">(</span><span class="n">start_dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+                        <span class="n">torch</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span>
+                            <span class="n">input_jacobians</span><span class="p">,</span> <span class="mi">2</span>
+                        <span class="p">),</span>  <span class="c1"># size is (batch_size, output_size, 1)</span>
+                        <span class="n">torch</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span>
+                            <span class="n">layer_inputs</span><span class="p">,</span> <span class="mi">1</span>
+                        <span class="p">),</span>  <span class="c1"># size is (batch_size, 1, input_size)</span>
+                    <span class="p">)</span><span class="o">.</span><span class="n">flatten</span><span class="p">(</span>
+                        <span class="n">start_dim</span><span class="o">=</span><span class="mi">1</span>
+                    <span class="p">)</span>  <span class="c1"># matmul does a batched matrix multiplication to return a 3D</span>
+                    <span class="c1"># tensor. each element along the batch (0-th) dimension is the</span>
+                    <span class="c1"># matrix product of a (output_size, 1) and (1, input_size) tensor</span>
+                    <span class="c1"># in other words, each element is an outer product, and the matmul</span>
+                    <span class="c1"># is just doing a batched outer product. this is what we want, as</span>
+                    <span class="c1"># the contribution to the "embedding" for an example is the outer</span>
+                    <span class="c1"># product of the last layer's input and the gradient of its output.</span>
+                    <span class="c1"># finally, we flatten the 3rd dimension so that the contribution to</span>
+                    <span class="c1"># the embedding for this checkpoint is a 2D tensor, i.e. each</span>
+                    <span class="c1"># example's contribution to the embedding is a 1D tensor.</span>
                     <span class="o">*</span> <span class="n">learning_rate_root</span>
                 <span class="p">)</span>
 
-            <span class="n">checkpoint_projections</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">(</span><span class="n">checkpoint_projections</span><span class="p">[</span><span class="n">j</span><span class="p">],</span> <span class="n">dim</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+            <span class="c1"># once we have computed the contribution from each batch, for a given</span>
+            <span class="c1"># checkpoint, we concatenate them along the batch dimension to get a</span>
+            <span class="c1"># single 2D tensor for that checkpoint</span>
+            <span class="n">checkpoint_contributions</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">(</span>
+                <span class="n">checkpoint_contributions</span><span class="p">[</span><span class="n">j</span><span class="p">],</span> <span class="n">dim</span><span class="o">=</span><span class="mi">0</span>  <span class="c1"># type: ignore</span>
+            <span class="p">)</span>
 
-        <span class="k">return</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">(</span><span class="n">checkpoint_projections</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span></div>
+        <span class="c1"># finally, we concatenate along the checkpoint dimension, to get a tensor of</span>
+        <span class="c1"># shape (batch_size, projection_dim * number of checkpoints)</span>
+        <span class="c1"># each row in this result is the "embedding" vector for an example in `batch`</span>
+        <span class="k">return</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">(</span><span class="n">checkpoint_contributions</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>  <span class="c1"># type: ignore</span>
+
+<div class="viewcode-block" id="TracInCPFastRandProj.compute_intermediate_quantities"><a class="viewcode-back" href="../../../../influence.html#captum.influence.TracInCPFastRandProj.compute_intermediate_quantities">[docs]</a>    <span class="k">def</span> <span class="nf">compute_intermediate_quantities</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">inputs_dataset</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span> <span class="n">DataLoader</span><span class="p">],</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tensor</span><span class="p">:</span>
+        <span class="sd">"""</span>
+<span class="sd">        Computes "embedding" vectors for all examples in a single batch, or a</span>
+<span class="sd">        `Dataloader` that yields batches. These embedding vectors are constructed so</span>
+<span class="sd">        that the influence score of a training example on a test example is simply the</span>
+<span class="sd">        dot-product of their corresponding vectors. Please see the documentation for</span>
+<span class="sd">        `TracInCPFastRandProj.__init__` for more details. Allowing a `DataLoader`</span>
+<span class="sd">        yielding batches to be passed in (as opposed to a single batch) gives the</span>
+<span class="sd">        potential to improve efficiency, because we load each checkpoint only once in</span>
+<span class="sd">        this method call. Thus if a `DataLoader` yielding batches is passed in, this</span>
+<span class="sd">        reduces the total number of times each checkpoint is loaded for a dataset,</span>
+<span class="sd">        compared to if a single batch is passed in. The reason we do not just increase</span>
+<span class="sd">        the batch size is that for large models, large batches do not fit in memory.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            inputs_dataset (Tuple, or DataLoader): Either a single tuple of any, or a</span>
+<span class="sd">                    `DataLoader`, where each batch yielded is a tuple of any. In</span>
+<span class="sd">                    either case, the tuple represents a single batch, where the last</span>
+<span class="sd">                    element is assumed to be the labels for the batch. That is,</span>
+<span class="sd">                    `model(*batch[0:-1])` produces the output for `model`, and</span>
+<span class="sd">                    and `batch[-1]` are the labels, if any. Here, `model` is model</span>
+<span class="sd">                    provided in initialization. This is the same assumption made for</span>
+<span class="sd">                    each batch yielded by training dataset `train_dataset`. Please see</span>
+<span class="sd">                    documentation for the `train_dataset` argument to</span>
+<span class="sd">                    `TracInCPFastRandProj.__init__` for more details on the assumed</span>
+<span class="sd">                    structure of a batch.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            intermediate_quantities (Tensor): A tensor of dimension</span>
+<span class="sd">                    (N, D * C), where N is total number of examples in</span>
+<span class="sd">                    `inputs_dataset`, C is the number of checkpoints passed as the</span>
+<span class="sd">                    `checkpoints` argument of `TracInCPFastRandProj.__init__`, and each</span>
+<span class="sd">                    row represents the vector for an example. Regarding D: Let I be the</span>
+<span class="sd">                    dimension of the output of the last fully-connected layer times the</span>
+<span class="sd">                    dimension of the input of the last fully-connected layer. If</span>
+<span class="sd">                    `self.projection_dim` is specified in initialization,</span>
+<span class="sd">                    D = min(I * C, `self.projection_dim` * C). Otherwise, D = I * C.</span>
+<span class="sd">                    In summary, if `self.projection_dim` is None, the dimension of each</span>
+<span class="sd">                    vector will be determined by the size of the input and output of</span>
+<span class="sd">                    the last fully-connected layer of `model`. Otherwise,</span>
+<span class="sd">                    `self.projection_dim` must be an int, and random projection will be</span>
+<span class="sd">                    performed to ensure that the vector is of dimension no more than</span>
+<span class="sd">                    `self.projection_dim` * C. `self.projection_dim` corresponds to</span>
+<span class="sd">                    the variable d in the top of page 15 of the TracIn paper:</span>
+<span class="sd">                    https://arxiv.org/pdf/2002.08484.pdf.</span>
+<span class="sd">        """</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_intermediate_quantities_tracincp_fast_rand_proj</span><span class="p">(</span>
+            <span class="n">inputs_dataset</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">projection_quantities</span>
+        <span class="p">)</span></div></div>
 </pre></div>
 </div>
 </div>

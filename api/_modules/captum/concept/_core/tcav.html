@@ -69,11 +69,13 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">        However, __get_item__ not only returns a batch of activation vectors,</span>
 <span class="sd">        but also a batch of labels indicating which concept that batch of</span>
 <span class="sd">        activation vectors is associated with.</span>
+
 <span class="sd">        Args:</span>
+
 <span class="sd">            datasets (list[Dataset]): The k-th element of datasets is a Dataset</span>
 <span class="sd">                    representing activation vectors associated with the k-th</span>
 <span class="sd">                    concept</span>
-<span class="sd">            labels (list[Int]): The k-th element of labels is the integer label</span>
+<span class="sd">            labels (list[int]): The k-th element of labels is the integer label</span>
 <span class="sd">                    associated with the k-th concept</span>
 <span class="sd">        """</span>
         <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">datasets</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span>
@@ -101,16 +103,17 @@ src="/_sphinx/documentation_options.js"></script>
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">right</span> <span class="o">=</span> <span class="n">mid</span>
 
-    <span class="k">def</span> <span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">i</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">i</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
         <span class="sd">"""</span>
 <span class="sd">        Returns a batch of activation vectors, as well as a batch of labels</span>
 <span class="sd">        indicating which concept the batch of activation vectors is associated</span>
 <span class="sd">        with.</span>
 
-<span class="sd">        args:</span>
+<span class="sd">        Args:</span>
+
 <span class="sd">            i (int): which (activation vector, label) batch in the dataset to</span>
 <span class="sd">                    return</span>
-<span class="sd">        returns:</span>
+<span class="sd">        Returns:</span>
 <span class="sd">            inputs (Tensor): i-th batch in Dataset (representing activation</span>
 <span class="sd">                    vectors)</span>
 <span class="sd">            labels (Tensor): labels of i-th batch in Dataset</span>
@@ -123,7 +126,7 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="n">labels</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">labels</span><span class="p">[</span><span class="n">k</span><span class="p">]]</span> <span class="o">*</span> <span class="n">inputs</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="mi">0</span><span class="p">),</span> <span class="n">device</span><span class="o">=</span><span class="n">inputs</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">inputs</span><span class="p">,</span> <span class="n">labels</span>
 
-    <span class="k">def</span> <span class="fm">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
         <span class="sd">"""</span>
 <span class="sd">        returns the total number of batches in the labelled_dataset</span>
 <span class="sd">        """</span>
@@ -145,6 +148,7 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">    Please see the TCAV class documentation for further information.</span>
 
 <span class="sd">    Args:</span>
+
 <span class="sd">        model_id (str): A unique identifier for the PyTorch model for which</span>
 <span class="sd">                we would like to load the layer activations and train a</span>
 <span class="sd">                model in order to compute CAVs.</span>
@@ -152,7 +156,7 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">                to train a classifier and learn decision boundaries between</span>
 <span class="sd">                those concepts for each layer defined in the `layers`</span>
 <span class="sd">                argument.</span>
-<span class="sd">        layers (str, list[str]): A list of layer names or a single layer</span>
+<span class="sd">        layers (str or list[str]): A list of layer names or a single layer</span>
 <span class="sd">                name that is used to compute the activations of all concept</span>
 <span class="sd">                examples per concept and train a classifier using those</span>
 <span class="sd">                activations.</span>
@@ -235,7 +239,7 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">    This class implements ConceptInterpreter abstract class using an</span>
 <span class="sd">    approach called Testing with Concept Activation Vectors (TCAVs),</span>
 <span class="sd">    as described in the paper:</span>
-<span class="sd">    https://arxiv.org/pdf/1711.11279.pdf</span>
+<span class="sd">    https://arxiv.org/abs/1711.11279</span>
 
 <span class="sd">    TCAV scores for a given layer, a list of concepts and input example</span>
 <span class="sd">    are computed using the dot product between prediction's layer</span>
@@ -283,9 +287,10 @@ src="/_sphinx/documentation_options.js"></script>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        Args:</span>
+
 <span class="sd">            model (Module): An instance of pytorch model that is used to compute</span>
 <span class="sd">                    layer activations and attributions.</span>
-<span class="sd">            layers (str, list[str]): A list of layer name(s) that are</span>
+<span class="sd">            layers (str or list[str]): A list of layer name(s) that are</span>
 <span class="sd">                    used for computing concept activations (cavs) and layer</span>
 <span class="sd">                    attributions.</span>
 <span class="sd">            model_id (str, optional): A unique identifier for the PyTorch `model`</span>
@@ -307,7 +312,7 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">                    attribution algorithm.</span>
 <span class="sd">            save_path (str, optional): The path for storing CAVs and</span>
 <span class="sd">                    Activation Vectors (AVs).</span>
-<span class="sd">            classifier_kwargs (any, optional): Additional arguments such as</span>
+<span class="sd">            classifier_kwargs (Any, optional): Additional arguments such as</span>
 <span class="sd">                    `test_split_ratio` that are passed to concept `classifier`.</span>
 
 <span class="sd">        Examples::</span>
@@ -374,7 +379,7 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">        the list of layer(s) `layers`.</span>
 
 <span class="sd">        Args:</span>
-<span class="sd">            layers (str, list[str]): A list of layer names or a layer name</span>
+<span class="sd">            layers (str or list[str]): A list of layer names or a layer name</span>
 <span class="sd">                    that is used to compute layer activations for the</span>
 <span class="sd">                    specific `concept`.</span>
 <span class="sd">            concept (Concept): A single Concept object that provides access</span>
@@ -435,6 +440,7 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">        of concepts and layer.</span>
 
 <span class="sd">        Args:</span>
+
 <span class="sd">            concepts (list[Concept]): A list of Concept objects for which we want</span>
 <span class="sd">                    to load the CAV.</span>
 
@@ -490,6 +496,7 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">        the argument.</span>
 
 <span class="sd">        Args:</span>
+
 <span class="sd">            experimental_sets (list[list[Concept]]): A list of lists of concept</span>
 <span class="sd">                    instances for which the cavs will be computed.</span>
 <span class="sd">            force_train (bool, optional): A flag that indicates whether to</span>
@@ -501,6 +508,7 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">                    multi-processing, otherwise it will be performed sequentially</span>
 <span class="sd">                    in a single process.</span>
 <span class="sd">                    Default: None</span>
+
 <span class="sd">        Returns:</span>
 <span class="sd">            cavs (dict) : A mapping of concept ids and layers to CAV objects.</span>
 <span class="sd">                    If CAVs for the concept_ids-layer pairs are present in the</span>
@@ -601,7 +609,8 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">        scores for specific predictions and CAV vectors.</span>
 
 <span class="sd">        Args:</span>
-<span class="sd">            inputs (tensor or tuple of tensors): Inputs for which predictions</span>
+
+<span class="sd">            inputs (Tensor or tuple of Tensor): Inputs for which predictions</span>
 <span class="sd">                    are performed and attributions are computed.</span>
 <span class="sd">                    If model takes a single tensor as</span>
 <span class="sd">                    input, a single input tensor should be provided.</span>
@@ -613,7 +622,7 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">                    provided, the examples must be aligned appropriately.</span>
 <span class="sd">            experimental_sets (list[list[Concept]]): A list of list of Concept</span>
 <span class="sd">                    instances.</span>
-<span class="sd">            target (int, tuple, tensor or list, optional):  Output indices for</span>
+<span class="sd">            target (int, tuple, Tensor, or list, optional): Output indices for</span>
 <span class="sd">                    which attributions are computed (for classification cases,</span>
 <span class="sd">                    this is usually the target class).</span>
 <span class="sd">                    If the network returns a scalar value per example,</span>
@@ -649,6 +658,7 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">                    attribution algorithm's attribute method. This could be for</span>
 <span class="sd">                    example `n_steps` in case of integrated gradients.</span>
 <span class="sd">                    Default: None</span>
+
 <span class="sd">        Returns:</span>
 <span class="sd">            results (dict): A dictionary of sign and magnitude -based tcav scores</span>
 <span class="sd">                    for each concept set per layer.</span>

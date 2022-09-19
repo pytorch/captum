@@ -62,8 +62,8 @@ src="/_sphinx/documentation_options.js"></script>
 
 <span class="sd">    Args:</span>
 
-<span class="sd">        inputs (tensor or a tuple of tensors): The input tensors that we'd</span>
-<span class="sd">                like to perturb by adding a random noise sampled unifromly</span>
+<span class="sd">        inputs (Tensor or tuple of Tensor): The input tensors that we'd</span>
+<span class="sd">                like to perturb by adding a random noise sampled uniformly</span>
 <span class="sd">                random from an L_infinity ball with a radius `perturb_radius`.</span>
 
 <span class="sd">        radius (float): A radius used for sampling from</span>
@@ -71,8 +71,8 @@ src="/_sphinx/documentation_options.js"></script>
 
 <span class="sd">    Returns:</span>
 
-<span class="sd">        perturbed_input (tuple(tensor)): A list of perturbed inputs that</span>
-<span class="sd">                are createed by adding noise sampled uniformly random</span>
+<span class="sd">        perturbed_input (tuple of Tensor): A list of perturbed inputs that</span>
+<span class="sd">                are created by adding noise sampled uniformly random</span>
 <span class="sd">                from L_infiniy ball with a radius `perturb_radius` to the</span>
 <span class="sd">                original inputs.</span>
 
@@ -122,7 +122,7 @@ src="/_sphinx/documentation_options.js"></script>
 
 <span class="sd">    More about the Lipschitz Continuity Metric can also be found here</span>
 <span class="sd">    `On the Robustness of Interpretability Methods`</span>
-<span class="sd">    https://arxiv.org/pdf/1806.08049.pdf</span>
+<span class="sd">    https://arxiv.org/abs/1806.08049</span>
 <span class="sd">    and</span>
 <span class="sd">    `Towards Robust Interpretability with Self-Explaining Neural Networks`</span>
 <span class="sd">    https://papers.nips.cc/paper\</span>
@@ -131,16 +131,16 @@ src="/_sphinx/documentation_options.js"></script>
 
 <span class="sd">    More details about sensitivity max can be found here:</span>
 <span class="sd">    `On the (In)fidelity and Sensitivity of Explanations`</span>
-<span class="sd">    https://arxiv.org/pdf/1901.09392.pdf</span>
+<span class="sd">    https://arxiv.org/abs/1901.09392</span>
 
 <span class="sd">    Args:</span>
 
-<span class="sd">        explanation_func (callable):</span>
+<span class="sd">        explanation_func (Callable):</span>
 <span class="sd">                This function can be the `attribute` method of an</span>
 <span class="sd">                attribution algorithm or any other explanation method</span>
 <span class="sd">                that returns the explanations.</span>
 
-<span class="sd">        inputs (tensor or tuple of tensors):  Input for which</span>
+<span class="sd">        inputs (Tensor or tuple of Tensor): Input for which</span>
 <span class="sd">                explanations are computed. If `explanation_func` takes a</span>
 <span class="sd">                single tensor as input, a single input tensor should</span>
 <span class="sd">                be provided.</span>
@@ -151,7 +151,7 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">                multiple input tensors are provided, the examples must</span>
 <span class="sd">                be aligned appropriately.</span>
 
-<span class="sd">        perturb_func (callable):</span>
+<span class="sd">        perturb_func (Callable):</span>
 <span class="sd">                The perturbation function of model inputs. This function takes</span>
 <span class="sd">                model inputs and optionally `perturb_radius` if</span>
 <span class="sd">                the function takes more than one argument and returns</span>
@@ -170,7 +170,7 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">        perturb_radius (float, optional): The epsilon radius used for sampling.</span>
 <span class="sd">            In the `default_perturb_func` it is used as the radius of</span>
 <span class="sd">            the L-Infinity ball. In a general case it can serve as a radius of</span>
-<span class="sd">            any L_p nom.</span>
+<span class="sd">            any L_p norm.</span>
 <span class="sd">            This argument is passed to `perturb_func` if it takes more than</span>
 <span class="sd">            one argument.</span>
 
@@ -181,10 +181,12 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">                `perturb_func` function.</span>
 
 <span class="sd">                Default: 10</span>
-<span class="sd">        norm_ord (int, float, inf, -inf, 'fro', 'nuc', optional): The type of norm</span>
-<span class="sd">                that is used to compute the</span>
-<span class="sd">                norm of the sensitivity matrix which is defined as the difference</span>
-<span class="sd">                between the explanation function at its input and perturbed input.</span>
+<span class="sd">        norm_ord (int, float, or str, optional): The type of norm that is used to</span>
+<span class="sd">                compute the norm of the sensitivity matrix which is defined as the</span>
+<span class="sd">                difference between the explanation function at its input and perturbed</span>
+<span class="sd">                input. Acceptable values are either a string of 'fro' or 'nuc', or a</span>
+<span class="sd">                number in the range of [-inf, inf] (including float("-inf") &amp;</span>
+<span class="sd">                float("inf")).</span>
 
 <span class="sd">                Default: 'fro'</span>
 <span class="sd">        max_examples_per_batch (int, optional): The number of maximum input</span>
@@ -208,7 +210,7 @@ src="/_sphinx/documentation_options.js"></script>
 
 <span class="sd">    Returns:</span>
 
-<span class="sd">        sensitivities (tensor): A tensor of scalar sensitivity scores per</span>
+<span class="sd">        sensitivities (Tensor): A tensor of scalar sensitivity scores per</span>
 <span class="sd">               input example. The first dimension is equal to the</span>
 <span class="sd">               number of examples in the input batch and the second</span>
 <span class="sd">               dimension is one. Returned sensitivities are normalized by</span>

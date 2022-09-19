@@ -74,7 +74,7 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="sd">"""</span>
 <span class="sd">        Args:</span>
 
-<span class="sd">            model (module): The forward function of the model or</span>
+<span class="sd">            model (Module): The forward function of the model or</span>
 <span class="sd">                        any modification of it. Custom rules for a given layer need to</span>
 <span class="sd">                        be defined as attribute</span>
 <span class="sd">                        `module.rule` and need to be of type PropagationRule.</span>
@@ -82,8 +82,7 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">                        these are not supported by the register_full_backward_hook</span>
 <span class="sd">                        PyTorch API starting from PyTorch v1.9.</span>
 
-
-<span class="sd">            layer (torch.nn.Module or list(torch.nn.Module)): Layer or layers</span>
+<span class="sd">            layer (torch.nn.Module or list of torch.nn.Module): Layer or layers</span>
 <span class="sd">                          for which attributions are computed.</span>
 <span class="sd">                          The size and dimensionality of the attributions</span>
 <span class="sd">                          corresponds to the size and dimensionality of the layer's</span>
@@ -142,9 +141,9 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="p">],</span>
     <span class="p">]:</span>
         <span class="sa">r</span><span class="sd">"""</span>
-
 <span class="sd">        Args:</span>
-<span class="sd">            inputs (tensor or tuple of tensors):  Input for which relevance is</span>
+
+<span class="sd">            inputs (Tensor or tuple of Tensor): Input for which relevance is</span>
 <span class="sd">                        propagated.</span>
 <span class="sd">                        If forward_func takes a single</span>
 <span class="sd">                        tensor as input, a single input tensor should be provided.</span>
@@ -153,12 +152,12 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">                        that for all given input tensors, dimension 0 corresponds</span>
 <span class="sd">                        to the number of examples, and if multiple input tensors</span>
 <span class="sd">                        are provided, the examples must be aligned appropriately.</span>
-<span class="sd">            target (int, tuple, tensor or list, optional):  Output indices for</span>
-<span class="sd">                        which gradients are computed (for classification cases,</span>
-<span class="sd">                        this is usually the target class).</span>
-<span class="sd">                        If the network returns a scalar value per example,</span>
-<span class="sd">                        no target index is necessary.</span>
-<span class="sd">                        For general 2D outputs, targets can be either:</span>
+<span class="sd">            target (int, tuple, Tensor, or list, optional): Output indices for</span>
+<span class="sd">                    which gradients are computed (for classification cases,</span>
+<span class="sd">                    this is usually the target class).</span>
+<span class="sd">                    If the network returns a scalar value per example,</span>
+<span class="sd">                    no target index is necessary.</span>
+<span class="sd">                    For general 2D outputs, targets can be either:</span>
 
 <span class="sd">                    - a single integer or a tensor containing a single</span>
 <span class="sd">                        integer, which is applied to all input examples</span>
@@ -208,9 +207,10 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">                    Default: False</span>
 
 <span class="sd">        Returns:</span>
-<span class="sd">            *tensor* or tuple of *tensors* of **attributions** or 2-element tuple of</span>
-<span class="sd">                **attributions**, **delta** or lists of **attributions** and **delta**:</span>
-<span class="sd">            - **attributions** (*tensor* or tuple of *tensors*):</span>
+<span class="sd">            *Tensor* or tuple of *Tensor* of **attributions** or 2-element tuple of</span>
+<span class="sd">            **attributions**, **delta** or list of **attributions** and **delta**:</span>
+
+<span class="sd">              - **attributions** (*Tensor* or tuple of *Tensor*):</span>
 <span class="sd">                        The propagated relevance values with respect to each</span>
 <span class="sd">                        input feature. Attributions will always</span>
 <span class="sd">                        be the same size as the provided inputs, with each value</span>
@@ -222,14 +222,15 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">                        implementations. If attributions for all layers are returned</span>
 <span class="sd">                        (layer=None) a list of tensors or tuples of tensors is returned</span>
 <span class="sd">                        with entries for each layer.</span>
-<span class="sd">            - **delta** (*tensor* or list of *tensors*</span>
-<span class="sd">                         returned if return_convergence_delta=True):</span>
+<span class="sd">              - **delta** (*Tensor* or list of *Tensor*</span>
+<span class="sd">                        returned if return_convergence_delta=True):</span>
 <span class="sd">                        Delta is calculated per example, meaning that the number of</span>
 <span class="sd">                        elements in returned delta tensor is equal to the number of</span>
-<span class="sd">                        of examples in input.</span>
+<span class="sd">                        examples in input.</span>
 <span class="sd">                        If attributions for all layers are returned (layer=None) a list</span>
 <span class="sd">                        of tensors is returned with entries for</span>
 <span class="sd">                        each layer.</span>
+
 <span class="sd">        Examples::</span>
 
 <span class="sd">                &gt;&gt;&gt; # ImageClassifier takes a single input tensor of images Nx3x32x32,</span>

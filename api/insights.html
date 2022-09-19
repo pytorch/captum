@@ -33,24 +33,216 @@ src="/_sphinx/documentation_options.js"></script>
 <h1>Insights<a class="headerlink" href="#insights" title="Permalink to this headline">¶</a></h1>
 <section id="batch">
 <h2>Batch<a class="headerlink" href="#batch" title="Permalink to this headline">¶</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="captum.insights.Batch">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">captum.insights.</span></span><span class="sig-name descname"><span class="pre">Batch</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inputs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">labels</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">additional_args</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/insights/attr_vis/app.html#Batch"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum.insights.Batch" title="Permalink to this definition">¶</a></dt>
+<dd><p>Constructs batch of inputs to be attributed and visualized.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>inputs</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.12)"><em>Tensor</em></a><em> or </em><em>tuple of ~torch.Tensor</em>) – Batch of inputs for a model.
+These may be either a Tensor or tuple of tensors. Each tensor
+must correspond to a feature for AttributionVisualizer, and
+the corresponding input transform function of the feature
+is applied to each input tensor prior to passing it to the
+model. It is assumed that the first dimension of each
+input tensor corresponds to the number of examples
+(batch size) and is aligned for all input tensors.</p></li>
+<li><p><strong>labels</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.12)"><em>Tensor</em></a>) – Tensor containing correct labels for input examples.
+This must be a 1D tensor with length matching the first
+dimension of each input tensor.</p></li>
+<li><p><strong>additional_args</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.10)"><em>tuple</em></a><em>, </em><em>optional</em>) – If the forward function
+requires additional arguments other than the inputs for
+which attributions should not be computed, this argument
+can be provided. It must be either a single additional
+argument of a Tensor or arbitrary (non-tuple) type or a
+tuple containing multiple additional arguments including
+tensors or any arbitrary python types. These arguments
+are provided to <code class="docutils literal notranslate"><span class="pre">forward_func</span></code> in order following the
+arguments in inputs.
+For a tensor, the first dimension of the tensor must
+correspond to the number of examples.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
 </section>
 <section id="attributionvisualizer">
 <h2>AttributionVisualizer<a class="headerlink" href="#attributionvisualizer" title="Permalink to this headline">¶</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="captum.insights.AttributionVisualizer">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">captum.insights.</span></span><span class="sig-name descname"><span class="pre">AttributionVisualizer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">models</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">classes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">features</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dataset</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">score_func</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_label_for_attr</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/insights/attr_vis/app.html#AttributionVisualizer"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum.insights.AttributionVisualizer" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>models</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/generated/torch.nn.Module.html#torch.nn.Module" title="(in PyTorch v1.12)"><em>torch.nn.Module</em></a>) – One or more PyTorch modules (models) for
+attribution visualization.</p></li>
+<li><p><strong>classes</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.10)"><em>list</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><em>str</em></a><em>]</em>) – List of strings corresponding to the names of
+classes for classification.</p></li>
+<li><p><strong>features</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.10)"><em>list</em></a><em>[</em><a class="reference internal" href="#captum.insights.features.BaseFeature" title="captum.insights.features.BaseFeature"><em>BaseFeature</em></a><em>]</em>) – List of BaseFeatures, which correspond
+to input arguments to the model. Each feature object defines
+relevant transformations for converting to model input,
+constructing baselines, and visualizing. The length of the
+features list should exactly match the number of (tensor)
+arguments expected by the given model.
+For instance, an image classifier should only provide
+a single BaseFeature, while a multimodal classifier may
+provide a list of features, each corresponding to a different
+tensor input and potentially different modalities.</p></li>
+<li><p><strong>dataset</strong> (<em>Iterable of Batch</em>) – Defines the dataset to visualize attributions
+for. This must be an iterable of batch objects, each of which
+may contain multiple input examples.</p></li>
+<li><p><strong>score_func</strong> (<em>Callable</em><em>, </em><em>optional</em>) – This function is applied to the model
+output to obtain the score for each class. For instance,
+this function could be the softmax or final non-linearity
+of the network, applied to the model output. The indices
+of the second dimension of the output should correspond
+to the class names provided. If None, the model outputs
+are taken directly and assumed to correspond to the
+class scores.
+Default: None</p></li>
+<li><p><strong>use_label_for_attr</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.10)"><em>bool</em></a><em>, </em><em>optional</em>) – If true, the class index is passed
+to the relevant attribution method. This is necessary in most
+cases where there is an output neuron corresponding to each
+class. When the model output is a scalar and class index
+(e.g. positive, negative) is inferred from the output value,
+this argument should be False.
+Default: True</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
 </section>
 </section>
 <section id="features">
 <h1>Features<a class="headerlink" href="#features" title="Permalink to this headline">¶</a></h1>
 <section id="basefeature">
 <h2>BaseFeature<a class="headerlink" href="#basefeature" title="Permalink to this headline">¶</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="captum.insights.features.BaseFeature">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">captum.insights.features.</span></span><span class="sig-name descname"><span class="pre">BaseFeature</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">baseline_transforms</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_transforms</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">visualization_transform</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#captum.insights.features.BaseFeature" title="Permalink to this definition">¶</a></dt>
+<dd><p>All Feature classes extend this class to implement custom visualizations in
+Insights.</p>
+<p>It enforces child classes to implement <code class="docutils literal notranslate"><span class="pre">visualization_type</span></code> and <code class="docutils literal notranslate"><span class="pre">visualize</span></code>
+methods.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><em>str</em></a>) – The label of the specific feature. For example, an
+ImageFeature’s name can be “Photo”.</p></li>
+<li><p><strong>baseline_transforms</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.10)"><em>list</em></a><em>, </em><em>Callable</em><em>, </em><em>optional</em>) – Optional list of
+callables (e.g. functions) to be called on the input tensor
+to construct multiple baselines. Currently only one baseline
+is supported. See
+<a class="reference internal" href="integrated_gradients.html#captum.attr.IntegratedGradients" title="captum.attr.IntegratedGradients"><code class="xref py py-class docutils literal notranslate"><span class="pre">IntegratedGradients</span></code></a> for more
+information about baselines.</p></li>
+<li><p><strong>input_transforms</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.10)"><em>list</em></a><em>, </em><em>Callable</em><em>, </em><em>optional</em>) – Optional list of callables
+(e.g. functions) called on the input tensor sequentially to
+convert it into the format expected by the model.</p></li>
+<li><p><strong>visualization_transform</strong> (<em>Callable</em><em>, </em><em>optional</em>) – Optional callable (e.g.
+function) applied as a postprocessing step of the original
+input data (before <code class="docutils literal notranslate"><span class="pre">input_transforms</span></code>) to convert it to a
+format to be understood by the frontend visualizer as
+specified in <code class="docutils literal notranslate"><span class="pre">captum/captum/insights/frontend/App.js</span></code>.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
 </section>
 <section id="generalfeature">
 <h2>GeneralFeature<a class="headerlink" href="#generalfeature" title="Permalink to this headline">¶</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="captum.insights.features.GeneralFeature">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">captum.insights.features.</span></span><span class="sig-name descname"><span class="pre">GeneralFeature</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">categories</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#captum.insights.features.GeneralFeature" title="Permalink to this definition">¶</a></dt>
+<dd><p>GeneralFeature is used for non-specified feature visualization in Insights.
+It can be used for dense or sparse features.</p>
+<p>Currently general features are only supported for 2-d tensors, in the format (N, C)
+where N is the number of samples and C is the number of categories.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><em>str</em></a>) – The label of the specific feature. For example, an
+ImageFeature’s name can be “Photo”.</p></li>
+<li><p><strong>categories</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.10)"><em>list</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><em>str</em></a><em>]</em>) – Category labels for the general feature. The
+order and size should match the second dimension of the
+<code class="docutils literal notranslate"><span class="pre">data</span></code> tensor parameter in <code class="docutils literal notranslate"><span class="pre">visualize</span></code>.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
 </section>
 <section id="textfeature">
 <h2>TextFeature<a class="headerlink" href="#textfeature" title="Permalink to this headline">¶</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="captum.insights.features.TextFeature">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">captum.insights.features.</span></span><span class="sig-name descname"><span class="pre">TextFeature</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">baseline_transforms</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_transforms</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">visualization_transform</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#captum.insights.features.TextFeature" title="Permalink to this definition">¶</a></dt>
+<dd><p>TextFeature is used to visualize text (e.g. sentences) in Insights.
+It expects the visualization transform to convert the input data (e.g. index to
+string) to the raw text.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><em>str</em></a>) – The label of the specific feature. For example, an
+ImageFeature’s name can be “Photo”.</p></li>
+<li><p><strong>baseline_transforms</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.10)"><em>list</em></a><em>, </em><em>Callable</em><em>, </em><em>optional</em>) – Optional list of
+callables (e.g. functions) to be called on the input tensor
+to construct multiple baselines. Currently only one baseline
+is supported. See
+<a class="reference internal" href="integrated_gradients.html#captum.attr.IntegratedGradients" title="captum.attr.IntegratedGradients"><code class="xref py py-class docutils literal notranslate"><span class="pre">IntegratedGradients</span></code></a> for more
+information about baselines.
+For text features, a common baseline is a tensor of indices
+corresponding to PAD with the same size as the input
+tensor. See <a class="reference internal" href="utilities.html#captum.attr.TokenReferenceBase" title="captum.attr.TokenReferenceBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">TokenReferenceBase</span></code></a> for more
+information.</p></li>
+<li><p><strong>input_transforms</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.10)"><em>list</em></a><em>, </em><em>Callable</em><em>, </em><em>optional</em>) – A list of transforms
+or transform to be applied to the input. For text, a common
+transform is to convert the tokenized input tensor into an
+interpretable embedding. See
+<a class="reference internal" href="utilities.html#captum.attr.InterpretableEmbeddingBase" title="captum.attr.InterpretableEmbeddingBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">InterpretableEmbeddingBase</span></code></a>
+and
+<a class="reference internal" href="utilities.html#captum.attr.configure_interpretable_embedding_layer" title="captum.attr.configure_interpretable_embedding_layer"><code class="xref py py-func docutils literal notranslate"><span class="pre">configure_interpretable_embedding_layer()</span></code></a>
+for more information.</p></li>
+<li><p><strong>visualization_transform</strong> (<em>Callable</em><em>, </em><em>optional</em>) – Optional callable (e.g.
+function) applied as a postprocessing step of the original
+input data (before <code class="docutils literal notranslate"><span class="pre">input_transforms</span></code>) to convert it to a
+suitable format for visualization. For text features,
+a common function is to convert the token indices to their
+corresponding (sub)words.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
 </section>
 <section id="imagefeature">
 <h2>ImageFeature<a class="headerlink" href="#imagefeature" title="Permalink to this headline">¶</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="captum.insights.features.ImageFeature">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">captum.insights.features.</span></span><span class="sig-name descname"><span class="pre">ImageFeature</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">baseline_transforms</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_transforms</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">visualization_transform</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#captum.insights.features.ImageFeature" title="Permalink to this definition">¶</a></dt>
+<dd><p>ImageFeature is used to visualize image features in Insights. It expects an image in
+NCHW format. If C has a dimension of 1, its assumed to be a greyscale image.
+If it has a dimension of 3, its expected to be in RGB format.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><em>str</em></a>) – The label of the specific feature. For example, an
+ImageFeature’s name can be “Photo”.</p></li>
+<li><p><strong>baseline_transforms</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.10)"><em>list</em></a><em>, </em><em>Callable</em><em>, </em><em>optional</em>) – Optional list of
+callables (e.g. functions) to be called on the input tensor
+to construct multiple baselines. Currently only one baseline
+is supported. See
+<a class="reference internal" href="integrated_gradients.html#captum.attr.IntegratedGradients" title="captum.attr.IntegratedGradients"><code class="xref py py-class docutils literal notranslate"><span class="pre">IntegratedGradients</span></code></a> for more
+information about baselines.</p></li>
+<li><p><strong>input_transforms</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.10)"><em>list</em></a><em>, </em><em>Callable</em><em>, </em><em>optional</em>) – A list of transforms
+or transform to be applied to the input. For images,
+normalization is often applied here.</p></li>
+<li><p><strong>visualization_transform</strong> (<em>Callable</em><em>, </em><em>optional</em>) – Optional callable (e.g.
+function) applied as a postprocessing step of the original
+input data (before input_transforms) to convert it to a
+format to be visualized.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
 </section>
 </section>
 </div>

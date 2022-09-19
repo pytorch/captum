@@ -76,12 +76,12 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        Args:</span>
 
-<span class="sd">            pertub_func(callable): Input perturbation function that takes inputs</span>
+<span class="sd">            pertub_func(Callable): Input perturbation function that takes inputs</span>
 <span class="sd">                and optionally baselines and returns perturbed inputs</span>
 
 <span class="sd">        Returns:</span>
 
-<span class="sd">            default_perturb_func(callable): Internal default perturbation</span>
+<span class="sd">            default_perturb_func(Callable): Internal default perturbation</span>
 <span class="sd">            function that computes the perturbations internally and returns</span>
 <span class="sd">            perturbations and perturbed inputs.</span>
 
@@ -158,7 +158,7 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">    and the differences between the predictor function at its input</span>
 <span class="sd">    and perturbed input.</span>
 <span class="sd">    More details about the measure can be found in the following paper:</span>
-<span class="sd">    https://arxiv.org/pdf/1901.09392.pdf</span>
+<span class="sd">    https://arxiv.org/abs/1901.09392</span>
 
 <span class="sd">    It is derived from the completeness property of well-known attribution</span>
 <span class="sd">    algorithms and is a computationally more efficient and generalized</span>
@@ -166,7 +166,7 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">    of the attributions and the differences of the predictor function at</span>
 <span class="sd">    its input and fixed baseline. More details about the Sensitivity-n can</span>
 <span class="sd">    be found here:</span>
-<span class="sd">    https://arxiv.org/pdf/1711.06104.pdfs</span>
+<span class="sd">    https://arxiv.org/abs/1711.06104</span>
 
 <span class="sd">    The users can perturb the inputs any desired way by providing any</span>
 <span class="sd">    perturbation function that takes the inputs (and optionally baselines)</span>
@@ -179,10 +179,10 @@ src="/_sphinx/documentation_options.js"></script>
 
 <span class="sd">    Args:</span>
 
-<span class="sd">        forward_func (callable):</span>
+<span class="sd">        forward_func (Callable):</span>
 <span class="sd">                The forward function of the model or any modification of it.</span>
 
-<span class="sd">        perturb_func (callable):</span>
+<span class="sd">        perturb_func (Callable):</span>
 <span class="sd">                The perturbation function of model inputs. This function takes</span>
 <span class="sd">                model inputs and optionally baselines as input arguments and returns</span>
 <span class="sd">                either a tuple of perturbations and perturbed inputs or just</span>
@@ -237,12 +237,13 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">                   Similar to previous case here as well we need to return only</span>
 <span class="sd">                   perturbed inputs in case `infidelity_perturb_func_decorator`</span>
 <span class="sd">                   decorates out `perturb_func`.</span>
+
 <span class="sd">                It is important to note that for performance reasons `perturb_func`</span>
 <span class="sd">                isn't called for each example individually but on a batch of</span>
 <span class="sd">                input examples that are repeated `max_examples_per_batch / batch_size`</span>
 <span class="sd">                times within the batch.</span>
 
-<span class="sd">        inputs (tensor or tuple of tensors):  Input for which</span>
+<span class="sd">        inputs (Tensor or tuple of Tensor): Input for which</span>
 <span class="sd">                attributions are computed. If forward_func takes a single</span>
 <span class="sd">                tensor as input, a single input tensor should be provided.</span>
 <span class="sd">                If forward_func takes multiple tensors as input, a tuple</span>
@@ -252,7 +253,7 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">                multiple input tensors are provided, the examples must</span>
 <span class="sd">                be aligned appropriately.</span>
 
-<span class="sd">        baselines (scalar, tensor, tuple of scalars or tensors, optional):</span>
+<span class="sd">        baselines (scalar, Tensor, tuple of scalar, or Tensor, optional):</span>
 <span class="sd">                Baselines define reference values which sometimes represent ablated</span>
 <span class="sd">                values and are used to compare with the actual inputs to compute</span>
 <span class="sd">                importance scores in attribution algorithms. They can be represented</span>
@@ -281,13 +282,13 @@ src="/_sphinx/documentation_options.js"></script>
 
 <span class="sd">                Default: None</span>
 
-<span class="sd">        attributions (tensor or tuple of tensors):</span>
+<span class="sd">        attributions (Tensor or tuple of Tensor):</span>
 <span class="sd">                Attribution scores computed based on an attribution algorithm.</span>
 <span class="sd">                This attribution scores can be computed using the implementations</span>
 <span class="sd">                provided in the `captum.attr` package. Some of those attribution</span>
 <span class="sd">                approaches are so called global methods, which means that</span>
 <span class="sd">                they factor in model inputs' multiplier, as described in:</span>
-<span class="sd">                https://arxiv.org/pdf/1711.06104.pdf</span>
+<span class="sd">                https://arxiv.org/abs/1711.06104</span>
 <span class="sd">                Many global attribution algorithms can be used in local modes,</span>
 <span class="sd">                meaning that the inputs multiplier isn't factored in the</span>
 <span class="sd">                attribution scores.</span>
@@ -303,7 +304,7 @@ src="/_sphinx/documentation_options.js"></script>
 
 <span class="sd">                For local attributions we can use real-valued perturbations</span>
 <span class="sd">                whereas for global attributions that perturbation is binary.</span>
-<span class="sd">                https://arxiv.org/pdf/1901.09392.pdf</span>
+<span class="sd">                https://arxiv.org/abs/1901.09392</span>
 
 <span class="sd">                If we want to compute the infidelity of global attributions we</span>
 <span class="sd">                can use a binary perturbation matrix that will allow us to select</span>
@@ -323,7 +324,7 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">                tensor as well. If inputs is provided as a tuple of tensors</span>
 <span class="sd">                then attributions will be tuples of tensors as well.</span>
 
-<span class="sd">        additional_forward_args (any, optional): If the forward function</span>
+<span class="sd">        additional_forward_args (Any, optional): If the forward function</span>
 <span class="sd">                requires additional arguments other than the inputs for</span>
 <span class="sd">                which attributions should not be computed, this argument</span>
 <span class="sd">                can be provided. It must be either a single additional</span>
@@ -336,7 +337,7 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">                being passed to `perturb_func` as an input argument.</span>
 
 <span class="sd">                Default: None</span>
-<span class="sd">        target (int, tuple, tensor or list, optional): Indices for selecting</span>
+<span class="sd">        target (int, tuple, Tensor, or list, optional): Indices for selecting</span>
 <span class="sd">                predictions from output(for classification cases,</span>
 <span class="sd">                this is usually the target class).</span>
 <span class="sd">                If the network returns a scalar value per example, no target</span>
@@ -397,7 +398,7 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">                Default: False</span>
 <span class="sd">    Returns:</span>
 
-<span class="sd">        infidelities (tensor): A tensor of scalar infidelity scores per</span>
+<span class="sd">        infidelities (Tensor): A tensor of scalar infidelity scores per</span>
 <span class="sd">                input example. The first dimension is equal to the</span>
 <span class="sd">                number of examples in the input batch and the second</span>
 <span class="sd">                dimension is one.</span>

@@ -60,7 +60,7 @@ src="/_sphinx/documentation_options.js"></script>
     <span class="sa">r</span><span class="sd">"""Retrieves parameters for the input approximation `method`</span>
 
 <span class="sd">    Args:</span>
-<span class="sd">        method: The name of the approximation method. Currently only `riemann`</span>
+<span class="sd">        method (str): The name of the approximation method. Currently only `riemann`</span>
 <span class="sd">                and gauss legendre are</span>
 <span class="sd">    """</span>
     <span class="k">if</span> <span class="n">method</span> <span class="ow">in</span> <span class="n">SUPPORTED_RIEMANN_METHODS</span><span class="p">:</span>
@@ -77,17 +77,16 @@ src="/_sphinx/documentation_options.js"></script>
 
 <span class="sd">    Args:</span>
 
-<span class="sd">         n: The number of integration steps</span>
-<span class="sd">         method: `left`, `right`, `middle` and `trapezoid` riemann</span>
+<span class="sd">         method (Riemann): `left`, `right`, `middle` and `trapezoid` riemann</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        2-element tuple of **step_sizes**, **alphas**:</span>
-<span class="sd">        - **step_sizes** (*callable*):</span>
+<span class="sd">        - **step_sizes** (*Callable*):</span>
 <span class="sd">                    `step_sizes` takes the number of steps as an</span>
 <span class="sd">                    input argument and returns an array of steps sizes which</span>
 <span class="sd">                    sum is smaller than or equal to one.</span>
 
-<span class="sd">        - **alphas** (*callable*):</span>
+<span class="sd">        - **alphas** (*Callable*):</span>
 <span class="sd">                    `alphas` takes the number of steps as an input argument</span>
 <span class="sd">                    and returns the multipliers/coefficients for the inputs</span>
 <span class="sd">                    of integrand in the range of [0, 1]</span>
@@ -136,18 +135,14 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">    proposed by [Xue Feng and her intern Hauroun Habeeb]</span>
 <span class="sd">    (https://research.fb.com/people/feng-xue/).</span>
 
-<span class="sd">    Args:</span>
-
-<span class="sd">        n (int): The number of integration steps</span>
-
 <span class="sd">    Returns:</span>
 <span class="sd">        2-element tuple of **step_sizes**, **alphas**:</span>
-<span class="sd">        - **step_sizes** (*callable*):</span>
+<span class="sd">        - **step_sizes** (*Callable*):</span>
 <span class="sd">                    `step_sizes` takes the number of steps as an</span>
 <span class="sd">                    input argument and returns an array of steps sizes which</span>
 <span class="sd">                    sum is smaller than or equal to one.</span>
 
-<span class="sd">        - **alphas** (*callable*):</span>
+<span class="sd">        - **alphas** (*Callable*):</span>
 <span class="sd">                    `alphas` takes the number of steps as an input argument</span>
 <span class="sd">                    and returns the multipliers/coefficients for the inputs</span>
 <span class="sd">                    of integrand in the range of [0, 1]</span>

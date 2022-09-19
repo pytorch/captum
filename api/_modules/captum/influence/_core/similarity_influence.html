@@ -114,7 +114,7 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">        Args:</span>
 <span class="sd">            module (torch.nn.Module): An instance of pytorch model. This model should</span>
 <span class="sd">                    define all of its layers as attributes of the model.</span>
-<span class="sd">            layers (str or List of str): The fully qualified layer(s) for which the</span>
+<span class="sd">            layers (str or list[str]): The fully qualified layer(s) for which the</span>
 <span class="sd">                    activation vectors are computed.</span>
 <span class="sd">            influence_src_dataset (torch.utils.data.Dataset): PyTorch Dataset that is</span>
 <span class="sd">                    used to create a PyTorch Dataloader to iterate over the dataset and</span>
@@ -198,13 +198,13 @@ src="/_sphinx/documentation_options.js"></script>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">:</span>
         <span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        Args:</span>
-<span class="sd">            inputs (tensor or tuple of tensors): Batch of examples for which influential</span>
+<span class="sd">            inputs (Tensor or tuple of Tensor): Batch of examples for which influential</span>
 <span class="sd">                    instances are computed. They are passed to the forward_func. The</span>
 <span class="sd">                    first dimension in `inputs` tensor or tuple of tensors corresponds</span>
 <span class="sd">                    to the batch size. A tuple of tensors is only passed in if this</span>
 <span class="sd">                    is the input form that `module` accepts.</span>
 <span class="sd">            top_k (int): The number of top-matching activations to return</span>
-<span class="sd">            additional_forward_args (optional):  Additional arguments that will be</span>
+<span class="sd">            additional_forward_args (Any, optional): Additional arguments that will be</span>
 <span class="sd">                    passed to forward_func after inputs.</span>
 <span class="sd">            load_src_from_disk (bool): Loads activations for `influence_src_dataset`</span>
 <span class="sd">                    where possible. Setting to False would force regeneration of</span>

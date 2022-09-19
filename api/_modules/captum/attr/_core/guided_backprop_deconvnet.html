@@ -59,7 +59,7 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        Args:</span>
 
-<span class="sd">            model (nn.Module):  The reference to PyTorch model instance.</span>
+<span class="sd">            model (nn.Module): The reference to PyTorch model instance.</span>
 <span class="sd">        """</span>
         <span class="n">GradientAttribution</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">model</span> <span class="o">=</span> <span class="n">model</span>
@@ -153,7 +153,7 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        Args:</span>
 
-<span class="sd">            model (nn.Module):  The reference to PyTorch model instance. Model cannot</span>
+<span class="sd">            model (nn.Module): The reference to PyTorch model instance. Model cannot</span>
 <span class="sd">                        contain any in-place ReLU submodules; these are not</span>
 <span class="sd">                        supported by the register_full_backward_hook PyTorch API.</span>
 <span class="sd">        """</span>
@@ -171,7 +171,7 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        Args:</span>
 
-<span class="sd">            inputs (tensor or tuple of tensors):  Input for which</span>
+<span class="sd">            inputs (Tensor or tuple of Tensor): Input for which</span>
 <span class="sd">                        attributions are computed. If forward_func takes a single</span>
 <span class="sd">                        tensor as input, a single input tensor should be provided.</span>
 <span class="sd">                        If forward_func takes multiple tensors as input, a tuple</span>
@@ -180,7 +180,7 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">                        to the number of examples (aka batch size), and if</span>
 <span class="sd">                        multiple input tensors are provided, the examples must</span>
 <span class="sd">                        be aligned appropriately.</span>
-<span class="sd">            target (int, tuple, tensor or list, optional):  Output indices for</span>
+<span class="sd">            target (int, tuple, Tensor, or list, optional): Output indices for</span>
 <span class="sd">                        which gradients are computed (for classification cases,</span>
 <span class="sd">                        this is usually the target class).</span>
 <span class="sd">                        If the network returns a scalar value per example,</span>
@@ -205,7 +205,7 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">                          target for the corresponding example.</span>
 
 <span class="sd">                        Default: None</span>
-<span class="sd">            additional_forward_args (any, optional): If the forward function</span>
+<span class="sd">            additional_forward_args (Any, optional): If the forward function</span>
 <span class="sd">                        requires additional arguments other than the inputs for</span>
 <span class="sd">                        which attributions should not be computed, this argument</span>
 <span class="sd">                        can be provided. It must be either a single additional</span>
@@ -218,8 +218,8 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">                        Default: None</span>
 
 <span class="sd">        Returns:</span>
-<span class="sd">            *tensor* or tuple of *tensors* of **attributions**:</span>
-<span class="sd">            - **attributions** (*tensor* or tuple of *tensors*):</span>
+<span class="sd">            *Tensor* or tuple of *Tensor* of **attributions**:</span>
+<span class="sd">            - **attributions** (*Tensor* or tuple of *Tensor*):</span>
 <span class="sd">                        The guided backprop gradients with respect to each</span>
 <span class="sd">                        input feature. Attributions will always</span>
 <span class="sd">                        be the same size as the provided inputs, with each value</span>
@@ -266,7 +266,7 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        Args:</span>
 
-<span class="sd">            model (nn.Module):  The reference to PyTorch model instance. Model cannot</span>
+<span class="sd">            model (nn.Module): The reference to PyTorch model instance. Model cannot</span>
 <span class="sd">                        contain any in-place ReLU submodules; these are not</span>
 <span class="sd">                        supported by the register_full_backward_hook PyTorch API.</span>
 <span class="sd">        """</span>
@@ -282,7 +282,7 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        Args:</span>
 
-<span class="sd">            inputs (tensor or tuple of tensors):  Input for which</span>
+<span class="sd">            inputs (Tensor or tuple of Tensor): Input for which</span>
 <span class="sd">                        attributions are computed. If forward_func takes a single</span>
 <span class="sd">                        tensor as input, a single input tensor should be provided.</span>
 <span class="sd">                        If forward_func takes multiple tensors as input, a tuple</span>
@@ -291,7 +291,7 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">                        to the number of examples (aka batch size), and if</span>
 <span class="sd">                        multiple input tensors are provided, the examples must</span>
 <span class="sd">                        be aligned appropriately.</span>
-<span class="sd">            target (int, tuple, tensor or list, optional):  Output indices for</span>
+<span class="sd">            target (int, tuple, Tensor, or list, optional): Output indices for</span>
 <span class="sd">                        which gradients are computed (for classification cases,</span>
 <span class="sd">                        this is usually the target class).</span>
 <span class="sd">                        If the network returns a scalar value per example,</span>
@@ -316,7 +316,7 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">                          target for the corresponding example.</span>
 
 <span class="sd">                        Default: None</span>
-<span class="sd">            additional_forward_args (any, optional): If the forward function</span>
+<span class="sd">            additional_forward_args (Any, optional): If the forward function</span>
 <span class="sd">                        requires additional arguments other than the inputs for</span>
 <span class="sd">                        which attributions should not be computed, this argument</span>
 <span class="sd">                        can be provided. It must be either a single additional</span>
@@ -329,8 +329,8 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">                        Default: None</span>
 
 <span class="sd">        Returns:</span>
-<span class="sd">            *tensor* or tuple of *tensors* of **attributions**:</span>
-<span class="sd">            - **attributions** (*tensor* or tuple of *tensors*):</span>
+<span class="sd">            *Tensor* or tuple of *Tensor* of **attributions**:</span>
+<span class="sd">            - **attributions** (*Tensor* or tuple of *Tensor*):</span>
 <span class="sd">                        The deconvolution attributions with respect to each</span>
 <span class="sd">                        input feature. Attributions will always</span>
 <span class="sd">                        be the same size as the provided inputs, with each value</span>

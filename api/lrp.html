@@ -46,7 +46,7 @@ inspired by the tutorial of the same group
 Ancona et al. [<a class="reference external" href="https://openreview.net/forum?id=Sy21R9JAW">https://openreview.net/forum?id=Sy21R9JAW</a>].</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>model</strong> (<em>module</em>) – The forward function of the model or any modification of
+<dd class="field-odd"><p><strong>model</strong> (<em>Module</em>) – The forward function of the model or any modification of
 it. Custom rules for a given layer need to be defined as attribute
 <cite>module.rule</cite> and need to be of type PropagationRule. If no rule is
 specified for a layer, a pre-defined default rule for the module type
@@ -63,7 +63,7 @@ PyTorch API starting from PyTorch v1.9.</p>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>inputs</strong> (<em>tensor</em><em> or </em><em>tuple of tensors</em>) – Input for which relevance is
+<li><p><strong>inputs</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.12)"><em>Tensor</em></a><em> or </em><em>tuple of ~torch.Tensor</em>) – Input for which relevance is
 propagated. If forward_func takes a single
 tensor as input, a single input tensor should be provided.
 If forward_func takes multiple tensors as input, a tuple
@@ -71,14 +71,12 @@ of the input tensors should be provided. It is assumed
 that for all given input tensors, dimension 0 corresponds
 to the number of examples, and if multiple input tensors
 are provided, the examples must be aligned appropriately.</p></li>
-<li><p><strong>target</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><em>int</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.10)"><em>tuple</em></a><em>, </em><em>tensor</em><em> or </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.10)"><em>list</em></a><em>, </em><em>optional</em>) – <dl class="simple">
-<dt>Output indices for</dt><dd><p>which gradients are computed (for classification cases,
+<li><p><strong>target</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><em>int</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.10)"><em>tuple</em></a><em>, </em><a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.12)"><em>Tensor</em></a><em>, or </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.10)"><em>list</em></a><em>, </em><em>optional</em>) – <p>Output indices for
+which gradients are computed (for classification cases,
 this is usually the target class).
 If the network returns a scalar value per example,
 no target index is necessary.
 For general 2D outputs, targets can be either:</p>
-</dd>
-</dl>
 <ul>
 <li><dl class="simple">
 <dt>a single integer or a tensor containing a single</dt><dd><p>integer, which is applied to all input examples</p>
@@ -133,11 +131,12 @@ of rules is printed during propagation.</p></li>
 <dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Union" title="(in Python v3.10)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code></a>[~TensorOrTupleOfTensorsGeneric, <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Tuple" title="(in Python v3.10)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Tuple</span></code></a>[~TensorOrTupleOfTensorsGeneric, <a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tensor</span></code></a>]]</p>
 </dd>
 <dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p><p><em>tensor</em> or tuple of <em>tensors</em> of <strong>attributions</strong>
-or 2-element tuple of <strong>attributions</strong>, <strong>delta</strong>::
-- <strong>attributions</strong> (<em>tensor</em> or tuple of <em>tensors</em>):</p>
+<dd class="field-odd"><p><p><em>Tensor</em> or tuple of <em>Tensor</em> of <strong>attributions</strong>
+or 2-element tuple of <strong>attributions</strong>, <strong>delta</strong>:</p>
 <blockquote>
-<div><p>The propagated relevance values with respect to each
+<div><ul class="simple">
+<li><dl class="simple">
+<dt><strong>attributions</strong> (<em>Tensor</em> or tuple of <em>Tensor</em>):</dt><dd><p>The propagated relevance values with respect to each
 input feature. The values are normalized by the output score
 value (sum(relevance)=1). To obtain values comparable to other
 methods or implementations these values need to be multiplied
@@ -149,16 +148,18 @@ returned. If a tuple is provided for inputs, a tuple of
 corresponding sized tensors is returned. The sum of attributions
 is one and not corresponding to the prediction score as in other
 implementations.</p>
-</div></blockquote>
-<ul class="simple">
+</dd>
+</dl>
+</li>
 <li><dl class="simple">
-<dt><strong>delta</strong> (<em>tensor</em>, returned if return_convergence_delta=True):</dt><dd><p>Delta is calculated per example, meaning that the number of
+<dt><strong>delta</strong> (<em>Tensor</em>, returned if return_convergence_delta=True):</dt><dd><p>Delta is calculated per example, meaning that the number of
 elements in returned delta tensor is equal to the number of
 of examples in the inputs.</p>
 </dd>
 </dl>
 </li>
 </ul>
+</div></blockquote>
 </p>
 </dd>
 </dl>
@@ -186,16 +187,17 @@ absorbed during propagation and the convergence delta is non-zero.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>attributions</strong> (<em>tensor</em><em> or </em><em>tuple of tensors</em>) – Attribution scores that
+<li><p><strong>attributions</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.12)"><em>Tensor</em></a><em> or </em><em>tuple of ~torch.Tensor</em>) – Attribution scores that
 are precomputed by an attribution algorithm.
 Attributions can be provided in form of a single tensor
 or a tuple of those. It is assumed that attribution
 tensor’s dimension 0 corresponds to the number of
 examples, and if multiple input tensors are provided,
 the examples must be aligned appropriately.</p></li>
-<li><p><strong>output</strong> (<em>tensor with single element</em>) – The output value with respect to which
+<li><p><strong>output</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.12)"><em>Tensor</em></a>) – The output value with respect to which
 the attribution values are computed. This value corresponds to
-the target score of a classification model.</p></li>
+the target score of a classification model. The given tensor
+should only have a single element.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -205,7 +207,7 @@ the target score of a classification model.</p></li>
 </p>
 </dd>
 <dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p><em>tensor</em></p>
+<dd class="field-odd"><p><em>Tensor</em></p>
 </dd>
 </dl>
 </dd></dl>

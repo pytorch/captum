@@ -33,7 +33,7 @@ src="/_sphinx/documentation_options.js"></script>
 <h1>Feature Permutation<a class="headerlink" href="#feature-permutation" title="Permalink to this headline">¶</a></h1>
 <dl class="py class">
 <dt class="sig sig-object py" id="captum.attr.FeaturePermutation">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">captum.attr.</span></span><span class="sig-name descname"><span class="pre">FeaturePermutation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">forward_func</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">perm_func=&lt;function</span> <span class="pre">_permute_feature&gt;</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/feature_permutation.html#FeaturePermutation"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum.attr.FeaturePermutation" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">captum.attr.</span></span><span class="sig-name descname"><span class="pre">FeaturePermutation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">forward_func</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">perm_func</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">_permute_feature</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/feature_permutation.html#FeaturePermutation"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum.attr.FeaturePermutation" title="Permalink to this definition">¶</a></dt>
 <dd><p>A perturbation based approach to compute attribution, which
 takes each input feature, permutes the feature values within a batch,
 and computes the difference between original and shuffled outputs for
@@ -75,9 +75,9 @@ importance algorithm description here:
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>forward_func</strong> (<em>callable</em>) – The forward function of the model or
-any modification of it</p></li>
-<li><p><strong>perm_func</strong> (<em>callable</em><em>, </em><em>optional</em>) – A function that accepts a batch of
+<li><p><strong>forward_func</strong> (<em>Callable</em>) – The forward function of the model or
+any modification of it.</p></li>
+<li><p><strong>perm_func</strong> (<em>Callable</em><em>, </em><em>optional</em>) – A function that accepts a batch of
 inputs and a feature mask, and “permutes” the feature using
 feature mask across the batch. This defaults to a function
 which applies a random permutation, this argument only needs
@@ -89,14 +89,16 @@ Default: <cite>_permute_feature</cite></p></li>
 <dl class="py method">
 <dt class="sig sig-object py" id="captum.attr.FeaturePermutation.attribute">
 <span class="sig-name descname"><span class="pre">attribute</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inputs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">additional_forward_args</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">feature_mask</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">perturbations_per_eval</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">show_progress</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/feature_permutation.html#FeaturePermutation.attribute"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum.attr.FeaturePermutation.attribute" title="Permalink to this definition">¶</a></dt>
-<dd><p>This function is almost equivalent to <cite>FeatureAblation.attribute</cite>. The
-main difference is the way ablated examples are generated. Specifically
-they are generated through the <cite>perm_func</cite>, as we set the baselines for
-<cite>FeatureAblation.attribute</cite> to None.</p>
+<dd><p>This function is almost equivalent to
+<a class="reference internal" href="feature_ablation.html#captum.attr.FeatureAblation.attribute" title="captum.attr.FeatureAblation.attribute"><code class="xref py py-func docutils literal notranslate"><span class="pre">FeatureAblation.attribute</span></code></a>. The
+main difference is the way ablated examples are generated. Specifically they
+are generated through the <code class="docutils literal notranslate"><span class="pre">perm_func</span></code>, as we set the baselines for
+<a class="reference internal" href="feature_ablation.html#captum.attr.FeatureAblation.attribute" title="captum.attr.FeatureAblation.attribute"><code class="xref py py-func docutils literal notranslate"><span class="pre">FeatureAblation.attribute</span></code></a> to
+<code class="docutils literal notranslate"><span class="pre">None</span></code>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>inputs</strong> (<em>tensor</em><em> or </em><em>tuple of tensors</em>) – Input for which
+<li><p><strong>inputs</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.12)"><em>Tensor</em></a><em> or </em><em>tuple of ~torch.Tensor</em>) – Input for which
 permutation attributions are computed. If
 forward_func takes a single tensor as input, a
 single input tensor should be provided.  If
@@ -106,7 +108,7 @@ assumed that for all given input tensors, dimension
 0 corresponds to the number of examples (aka batch
 size), and if multiple input tensors are provided,
 the examples must be aligned appropriately.</p></li>
-<li><p><strong>target</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><em>int</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.10)"><em>tuple</em></a><em>, </em><em>tensor</em><em> or </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.10)"><em>list</em></a><em>, </em><em>optional</em>) – <p>Output indices for
+<li><p><strong>target</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><em>int</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.10)"><em>tuple</em></a><em>, </em><a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.12)"><em>Tensor</em></a><em>, or </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.10)"><em>list</em></a><em>, </em><em>optional</em>) – <p>Output indices for
 which difference is computed (for classification cases,
 this is usually the target class).
 If the network returns a scalar value per example,
@@ -130,7 +132,7 @@ target for the corresponding example.</p></li>
 </ul>
 <p>Default: None</p>
 </p></li>
-<li><p><strong>additional_forward_args</strong> (<em>any</em><em>, </em><em>optional</em>) – If the forward function
+<li><p><strong>additional_forward_args</strong> (<em>Any</em><em>, </em><em>optional</em>) – If the forward function
 requires additional arguments other than the inputs for
 which attributions should not be computed, this argument
 can be provided. It must be either a single additional
@@ -145,7 +147,7 @@ the given argument is used for all forward evaluations.
 Note that attributions are not computed with respect
 to these arguments.
 Default: None</p></li>
-<li><p><strong>feature_mask</strong> (<em>tensor</em><em> or </em><em>tuple of tensors</em><em>, </em><em>optional</em>) – <p>feature_mask defines a mask for the input, grouping
+<li><p><strong>feature_mask</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.12)"><em>Tensor</em></a><em> or </em><em>tuple of ~torch.Tensor</em><em>, </em><em>optional</em>) – <p>feature_mask defines a mask for the input, grouping
 features which should be ablated together. feature_mask
 should contain the same number of tensors as inputs.
 Each tensor should be the same size as the
@@ -181,16 +183,16 @@ It will try to use tqdm if available for advanced features
 a simple output of progress.
 Default: False</p></li>
 <li><p><strong>**kwargs</strong> (<em>Any</em><em>, </em><em>optional</em>) – Any additional arguments used by child
-classes of FeatureAblation (such as Occlusion) to construct
-ablations. These arguments are ignored when using
-FeatureAblation directly.
+classes of <a class="reference internal" href="feature_ablation.html#captum.attr.FeatureAblation" title="captum.attr.FeatureAblation"><code class="xref py py-class docutils literal notranslate"><span class="pre">FeatureAblation</span></code></a> (such as
+<a class="reference internal" href="occlusion.html#captum.attr.Occlusion" title="captum.attr.Occlusion"><code class="xref py py-class docutils literal notranslate"><span class="pre">Occlusion</span></code></a>) to construct ablations. These
+arguments are ignored when using FeatureAblation directly.
 Default: None</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p><ul class="simple">
 <li><dl class="simple">
-<dt><strong>attributions</strong> (<em>tensor</em> or tuple of <em>tensors</em>):</dt><dd><p>The attributions with respect to each input feature.
+<dt><strong>attributions</strong> (<em>Tensor</em> or tuple of <em>Tensor</em>):</dt><dd><p>The attributions with respect to each input feature.
 If the forward function returns
 a scalar value per example, attributions will be
 the same size as the provided inputs, with each value
@@ -208,7 +210,7 @@ a tuple of corresponding sized tensors is returned.</p>
 </p>
 </dd>
 <dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p><em>tensor</em> or tuple of <em>tensors</em> of <strong>attributions</strong></p>
+<dd class="field-odd"><p><em>Tensor</em> or tuple of <em>Tensor</em> of <strong>attributions</strong></p>
 </dd>
 </dl>
 <p>Examples:</p>

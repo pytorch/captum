@@ -31,8 +31,7 @@ src="/_sphinx/documentation_options.js"></script>
 <div class="body" role="main">
 <h1 id="index">Index</h1>
 <div class="genindex-jumpbox">
-<a href="#_"><strong>_</strong></a>
- | <a href="#A"><strong>A</strong></a>
+<a href="#A"><strong>A</strong></a>
  | <a href="#B"><strong>B</strong></a>
  | <a href="#C"><strong>C</strong></a>
  | <a href="#D"><strong>D</strong></a>
@@ -54,13 +53,6 @@ src="/_sphinx/documentation_options.js"></script>
  | <a href="#W"><strong>W</strong></a>
  | <a href="#Z"><strong>Z</strong></a>
 </div>
-<h2 id="_">_</h2>
-<table class="indextable genindextable" style="width: 100%"><tr>
-<td style="width: 33%; vertical-align: top;"><ul>
-<li><a href="common.html#captum.attr._utils.common._reshape_and_sum">_reshape_and_sum() (in module captum.attr._utils.common)</a>
-</li>
-</ul></td>
-</tr></table>
 <h2 id="A">A</h2>
 <table class="indextable genindextable" style="width: 100%"><tr>
 <td style="width: 33%; vertical-align: top;"><ul>
@@ -156,10 +148,18 @@ src="/_sphinx/documentation_options.js"></script>
 <td style="width: 33%; vertical-align: top;"><ul>
 <li><a href="base_classes.html#captum.attr.Attribution">Attribution (class in captum.attr)</a>
 </li>
+<li><a href="insights.html#captum.insights.AttributionVisualizer">AttributionVisualizer (class in captum.insights)</a>
+</li>
 </ul></td>
 </tr></table>
 <h2 id="B">B</h2>
 <table class="indextable genindextable" style="width: 100%"><tr>
+<td style="width: 33%; vertical-align: top;"><ul>
+<li><a href="insights.html#captum.insights.features.BaseFeature">BaseFeature (class in captum.insights.features)</a>
+</li>
+<li><a href="insights.html#captum.insights.Batch">Batch (class in captum.insights)</a>
+</li>
+</ul></td>
 <td style="width: 33%; vertical-align: top;"><ul>
 <li><a href="robust.html#captum.robust.FGSM.bound">bound (captum.robust.FGSM attribute)</a>
 <ul>
@@ -178,28 +178,23 @@ src="/_sphinx/documentation_options.js"></script>
 <li><a href="approximation_methods.html#module-captum.attr._utils.approximation_methods">module</a>
 </li>
 </ul></li>
-<li>
-    captum.attr._utils.common
-
-      <ul>
-<li><a href="common.html#module-captum.attr._utils.common">module</a>
-</li>
-</ul></li>
 <li><a href="concept.html#captum.concept.Classifier.classes">classes() (captum.concept.Classifier method)</a>
 </li>
 <li><a href="concept.html#captum.concept.Classifier">Classifier (class in captum.concept)</a>
 </li>
-</ul></td>
-<td style="width: 33%; vertical-align: top;"><ul>
 <li><a href="concept.html#captum.concept.TCAV.compute_cavs">compute_cavs() (captum.concept.TCAV method)</a>
 </li>
 <li><a href="base_classes.html#captum.attr.Attribution.compute_convergence_delta">compute_convergence_delta (captum.attr.Attribution attribute)</a>
 </li>
+</ul></td>
+<td style="width: 33%; vertical-align: top;"><ul>
 <li><a href="base_classes.html#captum.attr.GradientAttribution.compute_convergence_delta">compute_convergence_delta() (captum.attr.GradientAttribution method)</a>
 <ul>
 <li><a href="lrp.html#captum.attr.LRP.compute_convergence_delta">(captum.attr.LRP method)</a>
 </li>
 </ul></li>
+<li><a href="influence.html#captum.influence.TracInCPFastRandProj.compute_intermediate_quantities">compute_intermediate_quantities() (captum.influence.TracInCPFastRandProj method)</a>
+</li>
 <li><a href="concept.html#captum.concept.Concept">Concept (class in captum.concept)</a>
 </li>
 <li><a href="concept.html#captum.concept.ConceptInterpreter">ConceptInterpreter (class in captum.concept)</a>
@@ -266,6 +261,8 @@ src="/_sphinx/documentation_options.js"></script>
 <h2 id="G">G</h2>
 <table class="indextable genindextable" style="width: 100%"><tr>
 <td style="width: 33%; vertical-align: top;"><ul>
+<li><a href="insights.html#captum.insights.features.GeneralFeature">GeneralFeature (class in captum.insights.features)</a>
+</li>
 <li><a href="concept.html#captum.concept.TCAV.generate_activation">generate_activation() (captum.concept.TCAV method)</a>
 </li>
 <li><a href="concept.html#captum.concept.TCAV.generate_activations">generate_activations() (captum.concept.TCAV method)</a>
@@ -322,6 +319,8 @@ src="/_sphinx/documentation_options.js"></script>
 <h2 id="I">I</h2>
 <table class="indextable genindextable" style="width: 100%"><tr>
 <td style="width: 33%; vertical-align: top;"><ul>
+<li><a href="insights.html#captum.insights.features.ImageFeature">ImageFeature (class in captum.insights.features)</a>
+</li>
 <li><a href="utilities.html#captum.attr.InterpretableEmbeddingBase.indices_to_embeddings">indices_to_embeddings() (captum.attr.InterpretableEmbeddingBase method)</a>
 </li>
 <li><a href="metrics.html#captum.metrics.infidelity">infidelity (class in captum.metrics)</a>
@@ -419,8 +418,6 @@ src="/_sphinx/documentation_options.js"></script>
 
       <ul>
 <li><a href="approximation_methods.html#module-captum.attr._utils.approximation_methods">captum.attr._utils.approximation_methods</a>
-</li>
-<li><a href="common.html#module-captum.attr._utils.common">captum.attr._utils.common</a>
 </li>
 </ul></li>
 </ul></td>
@@ -539,6 +536,8 @@ src="/_sphinx/documentation_options.js"></script>
 <td style="width: 33%; vertical-align: top;"><ul>
 <li><a href="concept.html#captum.concept.TCAV">TCAV (class in captum.concept)</a>
 </li>
+<li><a href="insights.html#captum.insights.features.TextFeature">TextFeature (class in captum.insights.features)</a>
+</li>
 <li><a href="utilities.html#captum.attr.TokenReferenceBase">TokenReferenceBase (class in captum.attr)</a>
 </li>
 <li><a href="influence.html#captum.influence.TracInCP">TracInCP (class in captum.influence)</a>
@@ -563,6 +562,8 @@ src="/_sphinx/documentation_options.js"></script>
 </ul></td>
 <td style="width: 33%; vertical-align: top;"><ul>
 <li><a href="utilities.html#captum.attr.visualization.visualize_image_attr_multiple">visualize_image_attr_multiple() (in module captum.attr.visualization)</a>
+</li>
+<li><a href="utilities.html#captum.attr.visualization.visualize_timeseries_attr">visualize_timeseries_attr() (in module captum.attr.visualization)</a>
 </li>
 </ul></td>
 </tr></table>

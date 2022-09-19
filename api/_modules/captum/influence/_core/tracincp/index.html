@@ -77,7 +77,7 @@ src="/_sphinx/documentation_options.js"></script>
 
 <span class="sd">Implements abstract DataInfluence class and provides implementation details for</span>
 <span class="sd">influence computation based on the logic provided in TracIn paper</span>
-<span class="sd">(https://arxiv.org/pdf/2002.08484.pdf).</span>
+<span class="sd">(https://arxiv.org/abs/2002.08484).</span>
 
 <span class="sd">The TracIn paper proposes an idealized notion of influence which can be represented by</span>
 <span class="sd">the total amount a training example reduces loss for a test example via a training</span>
@@ -137,9 +137,10 @@ src="/_sphinx/documentation_options.js"></script>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        Args:</span>
+
 <span class="sd">            model (torch.nn.Module): An instance of pytorch model. This model should</span>
 <span class="sd">                    define all of its layers as attributes of the model.</span>
-<span class="sd">            train_dataset (torch.utils.data.Dataset or torch.utils.DataLoader):</span>
+<span class="sd">            train_dataset (torch.utils.data.Dataset or torch.utils.data.DataLoader):</span>
 <span class="sd">                    In the `influence` method, we either compute the influence score of</span>
 <span class="sd">                    training examples on examples in a test batch, or self influence</span>
 <span class="sd">                    scores for those training examples, depending on which mode is used.</span>
@@ -163,7 +164,7 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">                    `model` accepts `L-1` arguments, and the last element of `batch` is</span>
 <span class="sd">                    the label. In other words, `model(*batch[:-1])` gives the output of</span>
 <span class="sd">                    `model`, and `batch[-1]` are the labels for the batch.</span>
-<span class="sd">            checkpoints (str or List of str or Iterator): Either the directory of the</span>
+<span class="sd">            checkpoints (str, list[str], or Iterator): Either the directory of the</span>
 <span class="sd">                    path to store and retrieve model checkpoints, a list of</span>
 <span class="sd">                    filepaths with checkpoints from which to load, or an iterator which</span>
 <span class="sd">                    returns objects from which to load checkpoints.</span>
@@ -172,7 +173,7 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">                    learning rate if it is saved. By default uses a utility to load a</span>
 <span class="sd">                    model saved as a state dict.</span>
 <span class="sd">                    Default: _load_flexible_state_dict</span>
-<span class="sd">            layers (List of str or None, optional): A list of layer names for which</span>
+<span class="sd">            layers (list[str] or None, optional): A list of layer names for which</span>
 <span class="sd">                    gradients should be computed. If `layers` is None, gradients will</span>
 <span class="sd">                    be computed for all layers. Otherwise, they will only be computed</span>
 <span class="sd">                    for the layers specified in `layers`.</span>
@@ -247,7 +248,7 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">        with are not too large, so that there will not be an out-of-memory error.</span>
 
 <span class="sd">        Args:</span>
-<span class="sd">            batches (Tuple, or DataLoader): Either a single tuple of any, or a</span>
+<span class="sd">            batches (tuple or DataLoader): Either a single tuple of any, or a</span>
 <span class="sd">                    `DataLoader`, where each batch yielded is a tuple of any. In</span>
 <span class="sd">                    either case, the tuple represents a single batch, where the last</span>
 <span class="sd">                    element is assumed to be the labels for the batch. That is,</span>
@@ -259,7 +260,7 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">                    more details on the assumed structure of a batch.</span>
 <span class="sd">            show_progress (bool, optional): Computation of self influence scores can</span>
 <span class="sd">                    take a long time if `inputs_dataset` represents many examples. If</span>
-<span class="sd">                    `show_progress`is true, the progress of this computation will be</span>
+<span class="sd">                    `show_progress` is true, the progress of this computation will be</span>
 <span class="sd">                    displayed. In more detail, this computation will iterate over all</span>
 <span class="sd">                    checkpoints (provided as the `checkpoints` initialization argument)</span>
 <span class="sd">                    in an outer loop, and iterate over all batches that</span>
@@ -293,9 +294,10 @@ src="/_sphinx/documentation_options.js"></script>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">KMostInfluentialResults</span><span class="p">:</span>
         <span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        Args:</span>
-<span class="sd">            inputs (Tuple of Any): A tuple that represents a batch of examples. It does</span>
+
+<span class="sd">            inputs (tuple of Any): A tuple that represents a batch of examples. It does</span>
 <span class="sd">                    not represent labels, which are passed as `targets`.</span>
-<span class="sd">            targets (tensor, optional): If computing influence scores on a loss</span>
+<span class="sd">            targets (Tensor, optional): If computing influence scores on a loss</span>
 <span class="sd">                    function, these are the labels corresponding to the batch `inputs`.</span>
 <span class="sd">                    Default: None</span>
 <span class="sd">            k (int, optional): The number of proponents or opponents to return per test</span>
@@ -306,7 +308,7 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">                    Default: True</span>
 <span class="sd">            show_progress (bool, optional): To compute the proponents (or opponents)</span>
 <span class="sd">                    for the batch of examples, we perform computation for each batch in</span>
-<span class="sd">                    training dataset `train_dataset`, If `show_progress`is</span>
+<span class="sd">                    training dataset `train_dataset`, If `show_progress` is</span>
 <span class="sd">                    true, the progress of this computation will be displayed. In</span>
 <span class="sd">                    particular, the number of batches for which the computation has</span>
 <span class="sd">                    been performed will be displayed. It will try to use tqdm if</span>
@@ -341,23 +343,24 @@ src="/_sphinx/documentation_options.js"></script>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tensor</span><span class="p">:</span>
         <span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        Args:</span>
-<span class="sd">            inputs (Tuple of Any): A batch of examples. Does not represent labels,</span>
+
+<span class="sd">            inputs (tuple of Any): A batch of examples. Does not represent labels,</span>
 <span class="sd">                    which are passed as `targets`. The assumption is that</span>
 <span class="sd">                    `model(*inputs)` produces the predictions for the batch.</span>
-<span class="sd">            targets (tensor, optional): If computing influence scores on a loss</span>
+<span class="sd">            targets (Tensor, optional): If computing influence scores on a loss</span>
 <span class="sd">                    function, these are the labels corresponding to the batch</span>
 <span class="sd">                    `inputs`.</span>
 <span class="sd">                    Default: None</span>
 
 <span class="sd">        Returns:</span>
-<span class="sd">            influence_scores (tensor): Influence scores over the entire</span>
+<span class="sd">            influence_scores (Tensor): Influence scores over the entire</span>
 <span class="sd">                    training dataset `train_dataset`. Dimensionality is</span>
 <span class="sd">                    (inputs_batch_size, src_dataset_size). For example:</span>
 <span class="sd">                    influence_scores[i][j] = the influence score for the j-th training</span>
 <span class="sd">                    example to the i-th input example.</span>
 <span class="sd">            show_progress (bool, optional): To compute the influence of examples in</span>
 <span class="sd">                    training dataset `train_dataset`, we compute the influence</span>
-<span class="sd">                    of each batch. If `show_progress`is true, the progress of this</span>
+<span class="sd">                    of each batch. If `show_progress` is true, the progress of this</span>
 <span class="sd">                    computation will be displayed. In particular, the number of batches</span>
 <span class="sd">                    for which influence has been computed will be displayed. It will</span>
 <span class="sd">                    try to use tqdm if available for advanced features (e.g. time</span>
@@ -401,6 +404,7 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">          opponent) on the test example.</span>
 
 <span class="sd">        Args:</span>
+
 <span class="sd">            inputs (Any, optional): If not provided or `None`, the self influence mode</span>
 <span class="sd">                    will be run. Otherwise, `inputs` is the test batch that will be</span>
 <span class="sd">                    used when running in either influence score or k-most influential</span>
@@ -412,7 +416,7 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">                    `inputs` will need to be a tuple. In other words, `inputs` will be</span>
 <span class="sd">                    unpacked as an argument when passing to `model`.</span>
 <span class="sd">                    Default: None</span>
-<span class="sd">            targets (tensor, optional): If computing influence scores on a loss</span>
+<span class="sd">            targets (Tensor, optional): If computing influence scores on a loss</span>
 <span class="sd">                    function, these are the labels corresponding to the batch `inputs`.</span>
 <span class="sd">                    Default: None</span>
 <span class="sd">            k (int, optional): If not provided or `None`, the influence score mode will</span>
@@ -431,7 +435,7 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">            show_progress (bool, optional): For all modes, computation of results</span>
 <span class="sd">                    requires "training dataset computations": computations for each</span>
 <span class="sd">                    batch in the training dataset `train_dataset`, which may</span>
-<span class="sd">                    take a long time. If `show_progress`is true, the progress of</span>
+<span class="sd">                    take a long time. If `show_progress` is true, the progress of</span>
 <span class="sd">                    "training dataset computations" will be displayed. In particular,</span>
 <span class="sd">                    the number of batches for which computations have been performed</span>
 <span class="sd">                    will be displayed. It will try to use tqdm if available for</span>
@@ -533,9 +537,10 @@ src="/_sphinx/documentation_options.js"></script>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        Args:</span>
+
 <span class="sd">            model (torch.nn.Module): An instance of pytorch model. This model should</span>
 <span class="sd">                    define all of its layers as attributes of the model.</span>
-<span class="sd">            train_dataset (torch.utils.data.Dataset or torch.utils.DataLoader):</span>
+<span class="sd">            train_dataset (torch.utils.data.Dataset or torch.utils.data.DataLoader):</span>
 <span class="sd">                    In the `influence` method, we either compute the influence score of</span>
 <span class="sd">                    training examples on examples in a test batch, or self influence</span>
 <span class="sd">                    scores for those training examples, depending on which mode is used.</span>
@@ -559,7 +564,7 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">                    `model` accepts `L-1` arguments, and the last element of `batch` is</span>
 <span class="sd">                    the label. In other words, `model(*batch[:-1])` gives the output of</span>
 <span class="sd">                    `model`, and `batch[-1]` are the labels for the batch.</span>
-<span class="sd">            checkpoints (str or List of str or Iterator): Either the directory of the</span>
+<span class="sd">            checkpoints (str, list[str], or Iterator): Either the directory of the</span>
 <span class="sd">                    path to store and retrieve model checkpoints, a list of</span>
 <span class="sd">                    filepaths with checkpoints from which to load, or an iterator which</span>
 <span class="sd">                    returns objects from which to load checkpoints.</span>
@@ -568,7 +573,7 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">                    learning rate if it is saved. By default uses a utility to load a</span>
 <span class="sd">                    model saved as a state dict.</span>
 <span class="sd">                    Default: _load_flexible_state_dict</span>
-<span class="sd">            layers (List of str or None, optional): A list of layer names for which</span>
+<span class="sd">            layers (list[str] or None, optional): A list of layer names for which</span>
 <span class="sd">                    gradients should be computed. If `layers` is None, gradients will</span>
 <span class="sd">                    be computed for all layers. Otherwise, they will only be computed</span>
 <span class="sd">                    for the layers specified in `layers`.</span>
@@ -730,6 +735,7 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">          opponent) on the test example.</span>
 
 <span class="sd">        Args:</span>
+
 <span class="sd">            inputs (Any, optional): If not provided or `None`, the self influence mode</span>
 <span class="sd">                    will be run. Otherwise, `inputs` is the test batch that will be</span>
 <span class="sd">                    used when running in either influence score or k-most influential</span>
@@ -741,7 +747,7 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">                    `inputs` will need to be a tuple. In other words, `inputs` will be</span>
 <span class="sd">                    unpacked as an argument when passing to `model`.</span>
 <span class="sd">                    Default: None</span>
-<span class="sd">            targets (tensor, optional): If computing influence scores on a loss</span>
+<span class="sd">            targets (Tensor, optional): If computing influence scores on a loss</span>
 <span class="sd">                    function, these are the labels corresponding to the batch `inputs`.</span>
 <span class="sd">                    Default: None</span>
 <span class="sd">            k (int, optional): If not provided or `None`, the influence score mode will</span>
@@ -760,7 +766,7 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">            show_progress (bool, optional): For all modes, computation of results</span>
 <span class="sd">                    requires "training dataset computations": computations for each</span>
 <span class="sd">                    batch in the training dataset `train_dataset`, which may</span>
-<span class="sd">                    take a long time. If `show_progress`is true, the progress of</span>
+<span class="sd">                    take a long time. If `show_progress` is true, the progress of</span>
 <span class="sd">                    "training dataset computations" will be displayed. It will try to</span>
 <span class="sd">                    use tqdm if available for advanced features (e.g. time estimation).</span>
 <span class="sd">                    Otherwise, it will fallback to a simple output of progress.</span>
@@ -859,15 +865,16 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">        output of `self._basic_computation_tracincp`.</span>
 
 <span class="sd">        Args:</span>
-<span class="sd">            inputs (Tuple of Any): A test batch of examples. Does not represent labels,</span>
+
+<span class="sd">            inputs (tuple of Any): A test batch of examples. Does not represent labels,</span>
 <span class="sd">                    which are passed as `targets`. The assumption is that</span>
 <span class="sd">                    `model(*inputs)` produces the predictions for the batch.</span>
-<span class="sd">            targets (tensor, optional): If computing influence scores on a loss</span>
+<span class="sd">            targets (Tensor, optional): If computing influence scores on a loss</span>
 <span class="sd">                    function, these are the labels corresponding to the batch `inputs`.</span>
 <span class="sd">                    Default: None</span>
 <span class="sd">            show_progress (bool, optional): To compute the influence of examples in</span>
 <span class="sd">                    training dataset `train_dataset`, we compute the influence</span>
-<span class="sd">                    of each batch. If `show_progress`is true, the progress of this</span>
+<span class="sd">                    of each batch. If `show_progress` is true, the progress of this</span>
 <span class="sd">                    computation will be displayed. In particular, the number of batches</span>
 <span class="sd">                    for which influence has been computed will be displayed. It will</span>
 <span class="sd">                    try to use tqdm if available for advanced features (e.g. time</span>
@@ -876,7 +883,7 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">                    Default: False</span>
 
 <span class="sd">        Returns:</span>
-<span class="sd">            influence_scores (tensor): Influence scores from the TracInCP method.</span>
+<span class="sd">            influence_scores (Tensor): Influence scores from the TracInCP method.</span>
 <span class="sd">            Its shape is `(input_size, train_dataset_size)`, where `input_size`</span>
 <span class="sd">            is the number of examples in the test batch, and</span>
 <span class="sd">            `train_dataset_size` is the number of examples in</span>
@@ -914,7 +921,8 @@ src="/_sphinx/documentation_options.js"></script>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">KMostInfluentialResults</span><span class="p">:</span>
         <span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        Args:</span>
-<span class="sd">            inputs (Tuple of Any): A tuple that represents a batch of examples. It does</span>
+
+<span class="sd">            inputs (tuple of Any): A tuple that represents a batch of examples. It does</span>
 <span class="sd">                    not represent labels, which are passed as `targets`.</span>
 <span class="sd">            targets (Tensor, optional): If computing influence scores on a loss</span>
 <span class="sd">                    function, these are the labels corresponding to the batch `inputs`.</span>
@@ -927,7 +935,7 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">                    Default: True</span>
 <span class="sd">            show_progress (bool, optional): To compute the proponents (or opponents)</span>
 <span class="sd">                    for the batch of examples, we perform computation for each batch in</span>
-<span class="sd">                    training dataset `train_dataset`, If `show_progress`is</span>
+<span class="sd">                    training dataset `train_dataset`, If `show_progress` is</span>
 <span class="sd">                    true, the progress of this computation will be displayed. In</span>
 <span class="sd">                    particular, the number of batches for which the computation has</span>
 <span class="sd">                    been performed will be displayed. It will try to use tqdm if</span>
@@ -996,7 +1004,7 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">        times.</span>
 
 <span class="sd">        Args:</span>
-<span class="sd">            batches (Tuple, or DataLoader): Either a single tuple of any, or a</span>
+<span class="sd">            batches (tuple or DataLoader): Either a single tuple of any, or a</span>
 <span class="sd">                    `DataLoader`, where each batch yielded is a tuple of any. In</span>
 <span class="sd">                    either case, the tuple represents a single batch, where the last</span>
 <span class="sd">                    element is assumed to be the labels for the batch. That is,</span>
@@ -1008,7 +1016,7 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">                    more details on the assumed structure of a batch.</span>
 <span class="sd">            show_progress (bool, optional): Computation of self influence scores can</span>
 <span class="sd">                    take a long time if `inputs_dataset` represents many examples. If</span>
-<span class="sd">                    `show_progress`is true, the progress of this computation will be</span>
+<span class="sd">                    `show_progress` is true, the progress of this computation will be</span>
 <span class="sd">                    displayed. In more detail, this computation will iterate over all</span>
 <span class="sd">                    checkpoints (provided as the `checkpoints` initialization argument)</span>
 <span class="sd">                    in an outer loop, and iterate over all batches that</span>
@@ -1158,7 +1166,7 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">        for each batch. For large models, loading checkpoints can be time-intensive.</span>
 
 <span class="sd">        Args:</span>
-<span class="sd">            batches (Tuple, or DataLoader): Either a single tuple of any, or a</span>
+<span class="sd">            batches (tuple or DataLoader): Either a single tuple of any, or a</span>
 <span class="sd">                    `DataLoader`, where each batch yielded is a tuple of any. In</span>
 <span class="sd">                    either case, the tuple represents a single batch, where the last</span>
 <span class="sd">                    element is assumed to be the labels for the batch. That is,</span>
@@ -1210,7 +1218,8 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">        and batches.</span>
 
 <span class="sd">        Args:</span>
-<span class="sd">            inputs (Tuple of Any): A batch of examples, which could be a training batch</span>
+
+<span class="sd">            inputs (tuple of Any): A batch of examples, which could be a training batch</span>
 <span class="sd">                    or test batch, depending which method is the caller. Does not</span>
 <span class="sd">                    represent labels, which are passed as `targets`. The assumption is</span>
 <span class="sd">                    that `model(*inputs)` produces the predictions for the batch.</span>

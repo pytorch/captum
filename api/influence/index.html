@@ -69,13 +69,13 @@ implementation of <cite>DataInfluence</cite> abstract class.</p></li>
 <h2>SimilarityInfluence<a class="headerlink" href="#similarityinfluence" title="Permalink to this headline">¶</a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="captum.influence.SimilarityInfluence">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">captum.influence.</span></span><span class="sig-name descname"><span class="pre">SimilarityInfluence</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">module</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">layers</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">influence_src_dataset</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">activation_dir</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_id=''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">similarity_metric=&lt;function</span> <span class="pre">cosine_similarity&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">similarity_direction='max'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_size=1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">**kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/influence/_core/similarity_influence.html#SimilarityInfluence"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum.influence.SimilarityInfluence" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">captum.influence.</span></span><span class="sig-name descname"><span class="pre">SimilarityInfluence</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">module</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">layers</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">influence_src_dataset</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">activation_dir</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_id</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">similarity_metric</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">cosine_similarity</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">similarity_direction</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'max'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/influence/_core/similarity_influence.html#SimilarityInfluence"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum.influence.SimilarityInfluence" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>module</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/generated/torch.nn.Module.html#torch.nn.Module" title="(in PyTorch v1.12)"><em>torch.nn.Module</em></a>) – An instance of pytorch model. This model should
 define all of its layers as attributes of the model.</p></li>
-<li><p><strong>layers</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><em>str</em></a><em> or </em><em>List of str</em>) – The fully qualified layer(s) for which the
+<li><p><strong>layers</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><em>str</em></a><em> or </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.10)"><em>list</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><em>str</em></a><em>]</em>) – The fully qualified layer(s) for which the
 activation vectors are computed.</p></li>
 <li><p><strong>influence_src_dataset</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/data.html#torch.utils.data.Dataset" title="(in PyTorch v1.12)"><em>torch.utils.data.Dataset</em></a>) – PyTorch Dataset that is
 used to create a PyTorch Dataloader to iterate over the dataset and
@@ -127,13 +127,13 @@ implementation of <cite>DataInfluence</cite> abstract class.</p></li>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>inputs</strong> (<em>tensor</em><em> or </em><em>tuple of tensors</em>) – Batch of examples for which influential
+<li><p><strong>inputs</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.12)"><em>Tensor</em></a><em> or </em><em>tuple of ~torch.Tensor</em>) – Batch of examples for which influential
 instances are computed. They are passed to the forward_func. The
 first dimension in <cite>inputs</cite> tensor or tuple of tensors corresponds
 to the batch size. A tuple of tensors is only passed in if this
 is the input form that <cite>module</cite> accepts.</p></li>
 <li><p><strong>top_k</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><em>int</em></a>) – The number of top-matching activations to return</p></li>
-<li><p><strong>additional_forward_args</strong> (<em>optional</em>) – Additional arguments that will be
+<li><p><strong>additional_forward_args</strong> (<em>Any</em><em>, </em><em>optional</em>) – Additional arguments that will be
 passed to forward_func after inputs.</p></li>
 <li><p><strong>load_src_from_disk</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.10)"><em>bool</em></a>) – Loads activations for <cite>influence_src_dataset</cite>
 where possible. Setting to False would force regeneration of
@@ -174,7 +174,7 @@ These tensors will be of shape (inputs.shape[0], top_k).</p>
 <h2>TracInCPBase<a class="headerlink" href="#tracincpbase" title="Permalink to this headline">¶</a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="captum.influence.TracInCPBase">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">captum.influence.</span></span><span class="sig-name descname"><span class="pre">TracInCPBase</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">train_dataset</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">checkpoints</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">checkpoints_load_func=&lt;function</span> <span class="pre">_load_flexible_state_dict&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">loss_fn=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_size=1</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/influence/_core/tracincp.html#TracInCPBase"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum.influence.TracInCPBase" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">captum.influence.</span></span><span class="sig-name descname"><span class="pre">TracInCPBase</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">train_dataset</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">checkpoints</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">checkpoints_load_func</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">_load_flexible_state_dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">loss_fn</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/influence/_core/tracincp.html#TracInCPBase"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum.influence.TracInCPBase" title="Permalink to this definition">¶</a></dt>
 <dd><p>To implement the <cite>influence</cite> method, classes inheriting from <cite>TracInCPBase</cite> will
 separately implement the private <cite>_self_influence</cite>, <cite>_get_k_most_influential</cite>,
 and <cite>_influence</cite> methods. The public <cite>influence</cite> method is a wrapper for these
@@ -184,7 +184,7 @@ private methods.</p>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>model</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/generated/torch.nn.Module.html#torch.nn.Module" title="(in PyTorch v1.12)"><em>torch.nn.Module</em></a>) – An instance of pytorch model. This model should
 define all of its layers as attributes of the model.</p></li>
-<li><p><strong>train_dataset</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/data.html#torch.utils.data.Dataset" title="(in PyTorch v1.12)"><em>torch.utils.data.Dataset</em></a><em> or </em><em>torch.utils.DataLoader</em>) – In the <cite>influence</cite> method, we either compute the influence score of
+<li><p><strong>train_dataset</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/data.html#torch.utils.data.Dataset" title="(in PyTorch v1.12)"><em>torch.utils.data.Dataset</em></a><em> or </em><a class="reference external" href="https://pytorch.org/docs/stable/data.html#torch.utils.data.DataLoader" title="(in PyTorch v1.12)"><em>torch.utils.data.DataLoader</em></a>) – In the <cite>influence</cite> method, we either compute the influence score of
 training examples on examples in a test batch, or self influence
 scores for those training examples, depending on which mode is used.
 This argument represents the training dataset containing those
@@ -207,7 +207,7 @@ yielded, of length <cite>L</cite>, it is assumed that the forward function of
 <cite>model</cite> accepts <cite>L-1</cite> arguments, and the last element of <cite>batch</cite> is
 the label. In other words, <cite>model(*batch[:-1])</cite> gives the output of
 <cite>model</cite>, and <cite>batch[-1]</cite> are the labels for the batch.</p></li>
-<li><p><strong>checkpoints</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><em>str</em></a><em> or </em><em>List of str</em><em> or </em><em>Iterator</em>) – Either the directory of the
+<li><p><strong>checkpoints</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><em>str</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.10)"><em>list</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><em>str</em></a><em>]</em><em>, or </em><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Iterator" title="(in Python v3.10)"><em>Iterator</em></a>) – Either the directory of the
 path to store and retrieve model checkpoints, a list of
 filepaths with checkpoints from which to load, or an iterator which
 returns objects from which to load checkpoints.</p></li>
@@ -216,7 +216,7 @@ checkpoint into a model to update its parameters, and get the
 learning rate if it is saved. By default uses a utility to load a
 model saved as a state dict.
 Default: _load_flexible_state_dict</p></li>
-<li><p><strong>layers</strong> (<em>List of str</em><em> or </em><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.10)"><em>None</em></a><em>, </em><em>optional</em>) – A list of layer names for which
+<li><p><strong>layers</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.10)"><em>list</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><em>str</em></a><em>] or </em><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.10)"><em>None</em></a><em>, </em><em>optional</em>) – A list of layer names for which
 gradients should be computed. If <cite>layers</cite> is None, gradients will
 be computed for all layers. Otherwise, they will only be computed
 for the layers specified in <cite>layers</cite>.
@@ -289,7 +289,7 @@ argument <cite>unpack_inputs</cite> is True, the assumption is that
 <cite>inputs</cite> will need to be a tuple. In other words, <cite>inputs</cite> will be
 unpacked as an argument when passing to <cite>model</cite>.
 Default: None</p></li>
-<li><p><strong>targets</strong> (<em>tensor</em><em>, </em><em>optional</em>) – If computing influence scores on a loss
+<li><p><strong>targets</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.12)"><em>Tensor</em></a><em>, </em><em>optional</em>) – If computing influence scores on a loss
 function, these are the labels corresponding to the batch <cite>inputs</cite>.
 Default: None</p></li>
 <li><p><strong>k</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><em>int</em></a><em>, </em><em>optional</em>) – If not provided or <cite>None</cite>, the influence score mode will
@@ -308,7 +308,7 @@ Default: True</p></li>
 <li><p><strong>show_progress</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.10)"><em>bool</em></a><em>, </em><em>optional</em>) – For all modes, computation of results
 requires “training dataset computations”: computations for each
 batch in the training dataset <cite>train_dataset</cite>, which may
-take a long time. If <a href="#id1"><span class="problematic" id="id2">`</span></a>show_progress`is true, the progress of
+take a long time. If <cite>show_progress</cite> is true, the progress of
 “training dataset computations” will be displayed. In particular,
 the number of batches for which computations have been performed
 will be displayed. It will try to use tqdm if available for
@@ -370,7 +370,7 @@ with are not too large, so that there will not be an out-of-memory error.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>batches</strong> (<em>Tuple</em><em>, or </em><em>DataLoader</em>) – Either a single tuple of any, or a
+<li><p><strong>batches</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.10)"><em>tuple</em></a><em> or </em><em>DataLoader</em>) – Either a single tuple of any, or a
 <cite>DataLoader</cite>, where each batch yielded is a tuple of any. In
 either case, the tuple represents a single batch, where the last
 element is assumed to be the labels for the batch. That is,
@@ -382,9 +382,9 @@ assumption made for each batch yielded by training dataset
 more details on the assumed structure of a batch.</p></li>
 <li><p><strong>show_progress</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.10)"><em>bool</em></a><em>, </em><em>optional</em>) – Computation of self influence scores can
 take a long time if <cite>inputs_dataset</cite> represents many examples. If
-<cite>show_progress`is true, the progress of this computation will be
+<cite>show_progress</cite> is true, the progress of this computation will be
 displayed. In more detail, this computation will iterate over all
-checkpoints (provided as the `checkpoints</cite> initialization argument)
+checkpoints (provided as the <cite>checkpoints</cite> initialization argument)
 in an outer loop, and iterate over all batches that
 <cite>inputs_dataset</cite> represents in an inner loop. Therefore, the
 total number of (checkpoint, batch) combinations that need to be
@@ -418,13 +418,13 @@ batches.</p>
 <h2>TracInCP<a class="headerlink" href="#tracincp" title="Permalink to this headline">¶</a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="captum.influence.TracInCP">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">captum.influence.</span></span><span class="sig-name descname"><span class="pre">TracInCP</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">train_dataset</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">checkpoints</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">checkpoints_load_func=&lt;function</span> <span class="pre">_load_flexible_state_dict&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">layers=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">loss_fn=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_size=1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sample_wise_grads_per_batch=False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/influence/_core/tracincp.html#TracInCP"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum.influence.TracInCP" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">captum.influence.</span></span><span class="sig-name descname"><span class="pre">TracInCP</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">train_dataset</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">checkpoints</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">checkpoints_load_func</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">_load_flexible_state_dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">layers</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">loss_fn</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sample_wise_grads_per_batch</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/influence/_core/tracincp.html#TracInCP"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum.influence.TracInCP" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>model</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/generated/torch.nn.Module.html#torch.nn.Module" title="(in PyTorch v1.12)"><em>torch.nn.Module</em></a>) – An instance of pytorch model. This model should
 define all of its layers as attributes of the model.</p></li>
-<li><p><strong>train_dataset</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/data.html#torch.utils.data.Dataset" title="(in PyTorch v1.12)"><em>torch.utils.data.Dataset</em></a><em> or </em><em>torch.utils.DataLoader</em>) – In the <cite>influence</cite> method, we either compute the influence score of
+<li><p><strong>train_dataset</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/data.html#torch.utils.data.Dataset" title="(in PyTorch v1.12)"><em>torch.utils.data.Dataset</em></a><em> or </em><a class="reference external" href="https://pytorch.org/docs/stable/data.html#torch.utils.data.DataLoader" title="(in PyTorch v1.12)"><em>torch.utils.data.DataLoader</em></a>) – In the <cite>influence</cite> method, we either compute the influence score of
 training examples on examples in a test batch, or self influence
 scores for those training examples, depending on which mode is used.
 This argument represents the training dataset containing those
@@ -447,7 +447,7 @@ yielded, of length <cite>L</cite>, it is assumed that the forward function of
 <cite>model</cite> accepts <cite>L-1</cite> arguments, and the last element of <cite>batch</cite> is
 the label. In other words, <cite>model(*batch[:-1])</cite> gives the output of
 <cite>model</cite>, and <cite>batch[-1]</cite> are the labels for the batch.</p></li>
-<li><p><strong>checkpoints</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><em>str</em></a><em> or </em><em>List of str</em><em> or </em><em>Iterator</em>) – Either the directory of the
+<li><p><strong>checkpoints</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><em>str</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.10)"><em>list</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><em>str</em></a><em>]</em><em>, or </em><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Iterator" title="(in Python v3.10)"><em>Iterator</em></a>) – Either the directory of the
 path to store and retrieve model checkpoints, a list of
 filepaths with checkpoints from which to load, or an iterator which
 returns objects from which to load checkpoints.</p></li>
@@ -456,7 +456,7 @@ checkpoint into a model to update its parameters, and get the
 learning rate if it is saved. By default uses a utility to load a
 model saved as a state dict.
 Default: _load_flexible_state_dict</p></li>
-<li><p><strong>layers</strong> (<em>List of str</em><em> or </em><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.10)"><em>None</em></a><em>, </em><em>optional</em>) – A list of layer names for which
+<li><p><strong>layers</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.10)"><em>list</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><em>str</em></a><em>] or </em><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.10)"><em>None</em></a><em>, </em><em>optional</em>) – A list of layer names for which
 gradients should be computed. If <cite>layers</cite> is None, gradients will
 be computed for all layers. Otherwise, they will only be computed
 for the layers specified in <cite>layers</cite>.
@@ -549,7 +549,7 @@ argument <cite>unpack_inputs</cite> is True, the assumption is that
 <cite>inputs</cite> will need to be a tuple. In other words, <cite>inputs</cite> will be
 unpacked as an argument when passing to <cite>model</cite>.
 Default: None</p></li>
-<li><p><strong>targets</strong> (<em>tensor</em><em>, </em><em>optional</em>) – If computing influence scores on a loss
+<li><p><strong>targets</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.12)"><em>Tensor</em></a><em>, </em><em>optional</em>) – If computing influence scores on a loss
 function, these are the labels corresponding to the batch <cite>inputs</cite>.
 Default: None</p></li>
 <li><p><strong>k</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><em>int</em></a><em>, </em><em>optional</em>) – If not provided or <cite>None</cite>, the influence score mode will
@@ -568,7 +568,7 @@ Default: True</p></li>
 <li><p><strong>show_progress</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.10)"><em>bool</em></a><em>, </em><em>optional</em>) – For all modes, computation of results
 requires “training dataset computations”: computations for each
 batch in the training dataset <cite>train_dataset</cite>, which may
-take a long time. If <a href="#id3"><span class="problematic" id="id4">`</span></a>show_progress`is true, the progress of
+take a long time. If <cite>show_progress</cite> is true, the progress of
 “training dataset computations” will be displayed. It will try to
 use tqdm if available for advanced features (e.g. time estimation).
 Otherwise, it will fallback to a simple output of progress.
@@ -638,7 +638,7 @@ for each batch. For large models, loading checkpoints can be time-intensive.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>batches</strong> (<em>Tuple</em><em>, or </em><em>DataLoader</em>) – Either a single tuple of any, or a
+<li><p><strong>batches</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.10)"><em>tuple</em></a><em> or </em><em>DataLoader</em>) – Either a single tuple of any, or a
 <cite>DataLoader</cite>, where each batch yielded is a tuple of any. In
 either case, the tuple represents a single batch, where the last
 element is assumed to be the labels for the batch. That is,
@@ -682,7 +682,7 @@ Default: False</p></li>
 <h2>TracInCPFast<a class="headerlink" href="#tracincpfast" title="Permalink to this headline">¶</a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="captum.influence.TracInCPFast">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">captum.influence.</span></span><span class="sig-name descname"><span class="pre">TracInCPFast</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">final_fc_layer</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">train_dataset</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">checkpoints</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">checkpoints_load_func=&lt;function</span> <span class="pre">_load_flexible_state_dict&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">loss_fn=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_size=1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vectorize=False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/influence/_core/tracincp_fast_rand_proj.html#TracInCPFast"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum.influence.TracInCPFast" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">captum.influence.</span></span><span class="sig-name descname"><span class="pre">TracInCPFast</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">final_fc_layer</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">train_dataset</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">checkpoints</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">checkpoints_load_func</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">_load_flexible_state_dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">loss_fn</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vectorize</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/influence/_core/tracincp_fast_rand_proj.html#TracInCPFast"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum.influence.TracInCPFast" title="Permalink to this definition">¶</a></dt>
 <dd><p>In Appendix F, Page 14 of the TracIn paper, they show that the calculation
 of the influence score of between a test example x’ and a training example x,
 can be computed much more quickly than naive back-propagation in the special
@@ -690,6 +690,13 @@ case when considering only gradients in the last fully-connected layer. This cla
 computes influence scores for that special case. Note that the computed
 influence scores are exactly the same as when naive back-propagation is used -
 there is no loss in accuracy.</p>
+<p>In more detail regarding the influence score computation: let :math`x`
+and :math`nabla_y f(y)` be the input and output-gradient of the last
+fully-connected layer, respectively, for a training example. Similarly, let
+:math`x’` and :math`nabla_{y’} f(y’)` be the corresponding quantities for
+a test example. Then, the influence score of the training example on the test
+example is the sum of the contribution from each checkpoint. The contribution from
+a given checkpoint is :math`(x^T x’)(nabla_y f(y)^T nabla_{y’} f(y’))`.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -700,7 +707,7 @@ the network for which gradients will be approximated via fast random
 projection method. Can be either the layer module itself, or the
 fully qualified name of the layer if it is a defined attribute of
 the passed <cite>model</cite>.</p></li>
-<li><p><strong>train_dataset</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/data.html#torch.utils.data.Dataset" title="(in PyTorch v1.12)"><em>torch.utils.data.Dataset</em></a><em> or </em><em>torch.utils.DataLoader</em>) – In the <cite>influence</cite> method, we either compute the influence score of
+<li><p><strong>train_dataset</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/data.html#torch.utils.data.Dataset" title="(in PyTorch v1.12)"><em>torch.utils.data.Dataset</em></a><em> or </em><a class="reference external" href="https://pytorch.org/docs/stable/data.html#torch.utils.data.DataLoader" title="(in PyTorch v1.12)"><em>torch.utils.data.DataLoader</em></a>) – In the <cite>influence</cite> method, we either compute the influence score of
 training examples on examples in a test batch, or self influence
 scores for those training examples, depending on which mode is used.
 This argument represents the training dataset containing those
@@ -723,7 +730,7 @@ yielded, of length <cite>L</cite>, it is assumed that the forward function of
 <cite>model</cite> accepts <cite>L-1</cite> arguments, and the last element of <cite>batch</cite> is
 the label. In other words, <cite>model(*batch[:-1])</cite> gives the output of
 <cite>model</cite>, and <cite>batch[-1]</cite> are the labels for the batch.</p></li>
-<li><p><strong>checkpoints</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><em>str</em></a><em> or </em><em>List of str</em><em> or </em><em>Iterator</em>) – Either the directory of the
+<li><p><strong>checkpoints</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><em>str</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.10)"><em>list</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><em>str</em></a><em>]</em><em>, or </em><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Iterator" title="(in Python v3.10)"><em>Iterator</em></a>) – Either the directory of the
 path to store and retrieve model checkpoints, a list of
 filepaths with checkpoints from which to load, or an iterator which
 returns objects from which to load checkpoints.</p></li>
@@ -797,7 +804,7 @@ argument <cite>unpack_inputs</cite> is True, the assumption is that
 <cite>inputs</cite> will need to be a tuple. In other words, <cite>inputs</cite> will be
 unpacked as an argument when passing to <cite>model</cite>.
 Default: None</p></li>
-<li><p><strong>targets</strong> (<em>tensor</em><em>, </em><em>optional</em>) – The labels corresponding to the batch <cite>inputs</cite>.
+<li><p><strong>targets</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.12)"><em>Tensor</em></a><em>, </em><em>optional</em>) – The labels corresponding to the batch <cite>inputs</cite>.
 This method is designed to be applied for a loss function, so
 <cite>targets</cite> is required, unless running in “self influence” mode.
 Default: None</p></li>
@@ -817,7 +824,7 @@ Default: True</p></li>
 <li><p><strong>show_progress</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.10)"><em>bool</em></a><em>, </em><em>optional</em>) – For all modes, computation of results
 requires “training dataset computations”: computations for each
 batch in the training dataset <cite>train_dataset</cite>, which may
-take a long time. If <a href="#id5"><span class="problematic" id="id6">`</span></a>show_progress`is true, the progress of
+take a long time. If <cite>show_progress</cite> is true, the progress of
 “training dataset computations” will be displayed. It will try to
 use tqdm if available for advanced features (e.g. time estimation).
 Otherwise, it will fallback to a simple output of progress.
@@ -835,7 +842,7 @@ tensor of self influence scores over training dataset
 <cite>train_dataset</cite>. The length of this tensor is the number of
 examples in <cite>train_dataset</cite>, regardless of whether it is a
 Dataset or DataLoader.</p></li>
-<li><p>influence score mode: if this mode is run (<cite>inputs is not None, `k</cite> is
+<li><p>influence score mode: if this mode is run (<cite>inputs</cite> is not None, <cite>k</cite> is
 None), returns a 2D tensor <cite>influence_scores</cite> of shape
 <cite>(input_size, train_dataset_size)</cite>, where <cite>input_size</cite> is
 the number of examples in the test batch, and
@@ -887,7 +894,7 @@ for each batch. For large models, loading checkpoints can be time-intensive.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>batches</strong> (<em>Tuple</em><em>, or </em><em>DataLoader</em>) – Either a single tuple of any, or a
+<li><p><strong>batches</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.10)"><em>tuple</em></a><em> or </em><em>DataLoader</em>) – Either a single tuple of any, or a
 <cite>DataLoader</cite>, where each batch yielded is a tuple of any. In
 either case, the tuple represents a single batch, where the last
 element is assumed to be the labels for the batch. That is,
@@ -931,7 +938,7 @@ Default: False</p></li>
 <h2>TracInCPFastRandProj<a class="headerlink" href="#tracincpfastrandproj" title="Permalink to this headline">¶</a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="captum.influence.TracInCPFastRandProj">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">captum.influence.</span></span><span class="sig-name descname"><span class="pre">TracInCPFastRandProj</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">final_fc_layer</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">train_dataset</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">checkpoints</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">checkpoints_load_func=&lt;function</span> <span class="pre">_load_flexible_state_dict&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">loss_fn=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_size=1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vectorize=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nearest_neighbors=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">projection_dim=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed=0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/influence/_core/tracincp_fast_rand_proj.html#TracInCPFastRandProj"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum.influence.TracInCPFastRandProj" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">captum.influence.</span></span><span class="sig-name descname"><span class="pre">TracInCPFastRandProj</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">final_fc_layer</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">train_dataset</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">checkpoints</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">checkpoints_load_func</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">_load_flexible_state_dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">loss_fn</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vectorize</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nearest_neighbors</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">projection_dim</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/influence/_core/tracincp_fast_rand_proj.html#TracInCPFastRandProj"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum.influence.TracInCPFastRandProj" title="Permalink to this definition">¶</a></dt>
 <dd><p>A version of TracInCPFast which is optimized for “interactive” calls to
 <cite>influence</cite> for the purpose of calculating proponents / opponents, or
 influence scores. “Interactive” means there will be multiple calls to
@@ -954,12 +961,31 @@ of the TracIn paper). This class should only be used if calls to <cite>influence
 to obtain proponents / opponents or influence scores will be made in an
 “interactive” manner, and there is sufficient memory to store vectors for the
 entire <cite>train_dataset</cite>. This is because in order to enable interactive
-analysis, this implementation incures overhead in <a href="#id7"><span class="problematic" id="id8">``</span></a>__init__` to setup the
+analysis, this implementation incures overhead in <cite>__init__</cite> to setup the
 nearest-neighbors data structure, which is both time and memory intensive, as
 vectors corresponding to all training examples needed to be stored. To reduce
 memory usage, this implementation enables random projections of those vectors.
 Note that the influence scores computed with random projections are less
 accurate, though correct in expectation.</p>
+<p>In more detail regarding the “embedding” vectors - the influence of a training
+example on a test example, when only considering gradients in the last
+fully-connected layer, the sum of the contribution from each checkpoint. The
+contribution from a given checkpoint is
+:math`(x^T x’)(nabla_y f(y)^T nabla_{y’} f(y’))`, using the notation in the
+description of <cite>TracInCPFast</cite>. As is, this is not a dot-product of 2 vectors.
+However, we can rewrite that contribution as
+:math`(x nabla_y f(y)^T) dot (x’ f(y’)^T)`. Both terms in this
+product are 2D matrices, as they are outer products, and the “product” is actually
+a dot-product, treating both matrices as vectors. Therefore, for a given
+checkpoint, its contribution to the “embedding” of an example is just the
+outer-product :math`(x nabla_y f(y)^T)`, flattened. Furthemore, to reduce the
+dimension of this contribution, we can right-multiply and
+left-multiply the outer-product with two separate projection matrices. These
+transform :math`nabla_y f(y)` and :math`x` to lower dimensional vectors. While
+the dimension of these two lower dimensional vectors do not necessarily need to
+be the same, in our implementation, we let them be the same, both equal to the
+square root of the desired projection dimension. Finally, the embedding of an
+example is the concatenation of the contributions from each checkpoint.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -970,7 +996,7 @@ the network for which gradients will be approximated via fast random
 projection method. Can be either the layer module itself, or the
 fully qualified name of the layer if it is a defined attribute of
 the passed <cite>model</cite>.</p></li>
-<li><p><strong>train_dataset</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/data.html#torch.utils.data.Dataset" title="(in PyTorch v1.12)"><em>torch.utils.data.Dataset</em></a><em> or </em><em>torch.utils.DataLoader</em>) – In the <cite>influence</cite> method, we either compute the influence score of
+<li><p><strong>train_dataset</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/data.html#torch.utils.data.Dataset" title="(in PyTorch v1.12)"><em>torch.utils.data.Dataset</em></a><em> or </em><a class="reference external" href="https://pytorch.org/docs/stable/data.html#torch.utils.data.DataLoader" title="(in PyTorch v1.12)"><em>torch.utils.data.DataLoader</em></a>) – In the <cite>influence</cite> method, we either compute the influence score of
 training examples on examples in a test batch, or self influence
 scores for those training examples, depending on which mode is used.
 This argument represents the training dataset containing those
@@ -993,7 +1019,7 @@ yielded, of length <cite>L</cite>, it is assumed that the forward function of
 <cite>model</cite> accepts <cite>L-1</cite> arguments, and the last element of <cite>batch</cite> is
 the label. In other words, <cite>model(*batch[:-1])</cite> gives the output of
 <cite>model</cite>, and <cite>batch[-1]</cite> are the labels for the batch.</p></li>
-<li><p><strong>checkpoints</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><em>str</em></a><em> or </em><em>List of str</em><em> or </em><em>Iterator</em>) – Either the directory of the
+<li><p><strong>checkpoints</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><em>str</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.10)"><em>list</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><em>str</em></a><em>]</em><em>, or </em><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Iterator" title="(in Python v3.10)"><em>Iterator</em></a>) – Either the directory of the
 path to store and retrieve model checkpoints, a list of
 filepaths with checkpoints from which to load, or an iterator which
 returns objects from which to load checkpoints.</p></li>
@@ -1044,7 +1070,7 @@ the number of checkpoints. Otherwise, <cite>projection_dim</cite> must be an
 int, and random projection will be performed to ensure that the
 vector is of dimension no more than <cite>projection_dim</cite> * C.
 <cite>projection_dim</cite> corresponds to the variable d in the top of page
-15 of the TracIn paper: <a class="reference external" href="https://arxiv.org/pdf/2002.08484.pdf">https://arxiv.org/pdf/2002.08484.pdf</a>.
+15 of the TracIn paper: <a class="reference external" href="https://arxiv.org/abs/2002.08484">https://arxiv.org/abs/2002.08484</a>.
 Default: None</p></li>
 <li><p><strong>seed</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><em>int</em></a><em>, </em><em>optional</em>) – Because this implementation chooses a random
 projection, its output is random. Setting this seed specifies the
@@ -1053,6 +1079,61 @@ Default: 0</p></li>
 </ul>
 </dd>
 </dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="captum.influence.TracInCPFastRandProj.compute_intermediate_quantities">
+<span class="sig-name descname"><span class="pre">compute_intermediate_quantities</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inputs_dataset</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/influence/_core/tracincp_fast_rand_proj.html#TracInCPFastRandProj.compute_intermediate_quantities"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum.influence.TracInCPFastRandProj.compute_intermediate_quantities" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes “embedding” vectors for all examples in a single batch, or a
+<cite>Dataloader</cite> that yields batches. These embedding vectors are constructed so
+that the influence score of a training example on a test example is simply the
+dot-product of their corresponding vectors. Please see the documentation for
+<cite>TracInCPFastRandProj.__init__</cite> for more details. Allowing a <cite>DataLoader</cite>
+yielding batches to be passed in (as opposed to a single batch) gives the
+potential to improve efficiency, because we load each checkpoint only once in
+this method call. Thus if a <cite>DataLoader</cite> yielding batches is passed in, this
+reduces the total number of times each checkpoint is loaded for a dataset,
+compared to if a single batch is passed in. The reason we do not just increase
+the batch size is that for large models, large batches do not fit in memory.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>inputs_dataset</strong> (<em>Tuple</em><em>, or </em><em>DataLoader</em>) – Either a single tuple of any, or a
+<cite>DataLoader</cite>, where each batch yielded is a tuple of any. In
+either case, the tuple represents a single batch, where the last
+element is assumed to be the labels for the batch. That is,
+<cite>model(*batch[0:-1])</cite> produces the output for <cite>model</cite>, and
+and <cite>batch[-1]</cite> are the labels, if any. Here, <cite>model</cite> is model
+provided in initialization. This is the same assumption made for
+each batch yielded by training dataset <cite>train_dataset</cite>. Please see
+documentation for the <cite>train_dataset</cite> argument to
+<cite>TracInCPFastRandProj.__init__</cite> for more details on the assumed
+structure of a batch.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><dl class="simple">
+<dt>A tensor of dimension</dt><dd><p>(N, D * C), where N is total number of examples in
+<cite>inputs_dataset</cite>, C is the number of checkpoints passed as the
+<cite>checkpoints</cite> argument of <cite>TracInCPFastRandProj.__init__</cite>, and each
+row represents the vector for an example. Regarding D: Let I be the
+dimension of the output of the last fully-connected layer times the
+dimension of the input of the last fully-connected layer. If
+<cite>self.projection_dim</cite> is specified in initialization,
+D = min(I * C, <cite>self.projection_dim</cite> * C). Otherwise, D = I * C.
+In summary, if <cite>self.projection_dim</cite> is None, the dimension of each
+vector will be determined by the size of the input and output of
+the last fully-connected layer of <cite>model</cite>. Otherwise,
+<cite>self.projection_dim</cite> must be an int, and random projection will be
+performed to ensure that the vector is of dimension no more than
+<cite>self.projection_dim</cite> * C. <cite>self.projection_dim</cite> corresponds to
+the variable d in the top of page 15 of the TracIn paper:
+<a class="reference external" href="https://arxiv.org/pdf/2002.08484.pdf">https://arxiv.org/pdf/2002.08484.pdf</a>.</p>
+</dd>
+</dl>
+</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>intermediate_quantities (Tensor)</p>
+</dd>
+</dl>
+</dd></dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="captum.influence.TracInCPFastRandProj.influence">
 <span class="sig-name descname"><span class="pre">influence</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inputs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">targets</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">k</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">proponents</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">unpack_inputs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/influence/_core/tracincp_fast_rand_proj.html#TracInCPFastRandProj.influence"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum.influence.TracInCPFastRandProj.influence" title="Permalink to this definition">¶</a></dt>
@@ -1092,7 +1173,7 @@ argument <cite>unpack_inputs</cite> is True, the assumption is that
 <cite>inputs</cite> will need to be a tuple. In other words, <cite>inputs</cite> will be
 unpacked as an argument when passing to <cite>model</cite>.
 Default: None</p></li>
-<li><p><strong>targets</strong> (<em>tensor</em>) – The labels corresponding to the batch <cite>inputs</cite>. This
+<li><p><strong>targets</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.12)"><em>Tensor</em></a>) – The labels corresponding to the batch <cite>inputs</cite>. This
 method is designed to be applied for a loss function, so <cite>targets</cite>
 is required.</p></li>
 <li><p><strong>k</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><em>int</em></a><em>, </em><em>optional</em>) – If not provided or <cite>None</cite>, the influence score mode will
@@ -1116,7 +1197,7 @@ Default: True</p></li>
 <dt class="field-odd">Returns</dt>
 <dd class="field-odd"><p><p>The return value of this method depends on which mode is run.</p>
 <ul class="simple">
-<li><p>influence score mode: if this mode is run (<cite>inputs is not None, `k</cite> is
+<li><p>influence score mode: if this mode is run (<cite>inputs</cite> is not None, <cite>k</cite> is
 None), returns a 2D tensor <cite>influence_scores</cite> of shape
 <cite>(input_size, train_dataset_size)</cite>, where <cite>input_size</cite> is
 the number of examples in the test batch, and
@@ -1159,7 +1240,7 @@ with are not too large, so that there will not be an out-of-memory error.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>batches</strong> (<em>Tuple</em><em>, or </em><em>DataLoader</em>) – Either a single tuple of any, or a
+<li><p><strong>batches</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.10)"><em>tuple</em></a><em> or </em><em>DataLoader</em>) – Either a single tuple of any, or a
 <cite>DataLoader</cite>, where each batch yielded is a tuple of any. In
 either case, the tuple represents a single batch, where the last
 element is assumed to be the labels for the batch. That is,
@@ -1171,9 +1252,9 @@ assumption made for each batch yielded by training dataset
 more details on the assumed structure of a batch.</p></li>
 <li><p><strong>show_progress</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.10)"><em>bool</em></a><em>, </em><em>optional</em>) – Computation of self influence scores can
 take a long time if <cite>inputs_dataset</cite> represents many examples. If
-<cite>show_progress`is true, the progress of this computation will be
+<cite>show_progress</cite> is true, the progress of this computation will be
 displayed. In more detail, this computation will iterate over all
-checkpoints (provided as the `checkpoints</cite> initialization argument)
+checkpoints (provided as the <cite>checkpoints</cite> initialization argument)
 and all batches that <cite>inputs_dataset</cite> represents. Therefore, the
 total number of (checkpoint, batch) combinations that need to be
 iterated over is

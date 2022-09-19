@@ -71,8 +71,8 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        Args:</span>
 
-<span class="sd">            forward_func (callable): The forward function of the model or</span>
-<span class="sd">                        any modification of it</span>
+<span class="sd">            forward_func (Callable): The forward function of the model or</span>
+<span class="sd">                        any modification of it.</span>
 <span class="sd">        """</span>
         <span class="n">FeatureAblation</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">forward_func</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">use_weights</span> <span class="o">=</span> <span class="kc">True</span>
@@ -94,7 +94,7 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        Args:</span>
 
-<span class="sd">                inputs (tensor or tuple of tensors):  Input for which occlusion</span>
+<span class="sd">                inputs (Tensor or tuple of Tensor): Input for which occlusion</span>
 <span class="sd">                            attributions are computed. If forward_func takes a single</span>
 <span class="sd">                            tensor as input, a single input tensor should be provided.</span>
 <span class="sd">                            If forward_func takes multiple tensors as input, a tuple</span>
@@ -103,7 +103,7 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">                            to the number of examples (aka batch size), and if</span>
 <span class="sd">                            multiple input tensors are provided, the examples must</span>
 <span class="sd">                            be aligned appropriately.</span>
-<span class="sd">                sliding_window_shapes (tuple or tuple of tuples): Shape of patch</span>
+<span class="sd">                sliding_window_shapes (tuple or tuple of tuple): Shape of patch</span>
 <span class="sd">                            (hyperrectangle) to occlude each input. For a single</span>
 <span class="sd">                            input tensor, this must be a tuple of length equal to the</span>
 <span class="sd">                            number of dimensions of the input tensor - 1, defining</span>
@@ -112,7 +112,7 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">                            this must be a tuple containing one tuple for each input</span>
 <span class="sd">                            tensor defining the dimensions of the patch for that</span>
 <span class="sd">                            input tensor, as described for the single tensor case.</span>
-<span class="sd">                strides (int or tuple or tuple of ints or tuple of tuples, optional):</span>
+<span class="sd">                strides (int or tuple or tuple of int or tuple of tuple, optional):</span>
 <span class="sd">                            This defines the step by which the occlusion hyperrectangle</span>
 <span class="sd">                            should be shifted by in each direction for each iteration.</span>
 <span class="sd">                            For a single tensor input, this can be either a single</span>
@@ -132,7 +132,7 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">                            If None is provided, a stride of 1 is used for each</span>
 <span class="sd">                            dimension of each input tensor.</span>
 <span class="sd">                            Default: None</span>
-<span class="sd">                baselines (scalar, tensor, tuple of scalars or tensors, optional):</span>
+<span class="sd">                baselines (scalar, Tensor, tuple of scalar, or Tensor, optional):</span>
 <span class="sd">                            Baselines define reference value which replaces each</span>
 <span class="sd">                            feature when occluded.</span>
 <span class="sd">                            Baselines can be provided as:</span>
@@ -156,10 +156,11 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">                              - or a scalar, corresponding to a tensor in the</span>
 <span class="sd">                                inputs' tuple. This scalar value is broadcasted</span>
 <span class="sd">                                for corresponding input tensor.</span>
+
 <span class="sd">                            In the cases when `baselines` is not provided, we internally</span>
 <span class="sd">                            use zero scalar corresponding to each input tensor.</span>
 <span class="sd">                            Default: None</span>
-<span class="sd">                target (int, tuple, tensor or list, optional):  Output indices for</span>
+<span class="sd">                target (int, tuple, Tensor, or list, optional): Output indices for</span>
 <span class="sd">                            which difference is computed (for classification cases,</span>
 <span class="sd">                            this is usually the target class).</span>
 <span class="sd">                            If the network returns a scalar value per example,</span>
@@ -184,7 +185,7 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">                              target for the corresponding example.</span>
 
 <span class="sd">                            Default: None</span>
-<span class="sd">                additional_forward_args (any, optional): If the forward function</span>
+<span class="sd">                additional_forward_args (Any, optional): If the forward function</span>
 <span class="sd">                            requires additional arguments other than the inputs for</span>
 <span class="sd">                            which attributions should not be computed, this argument</span>
 <span class="sd">                            can be provided. It must be either a single additional</span>
@@ -218,8 +219,8 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">                            Default: False</span>
 
 <span class="sd">        Returns:</span>
-<span class="sd">                *tensor* or tuple of *tensors* of **attributions**:</span>
-<span class="sd">                - **attributions** (*tensor* or tuple of *tensors*):</span>
+<span class="sd">                *Tensor* or tuple of *Tensor* of **attributions**:</span>
+<span class="sd">                - **attributions** (*Tensor* or tuple of *Tensor*):</span>
 <span class="sd">                            The attributions with respect to each input feature.</span>
 <span class="sd">                            Attributions will always be</span>
 <span class="sd">                            the same size as the provided inputs, with each value</span>

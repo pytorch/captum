@@ -61,8 +61,8 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        Args:</span>
 
-<span class="sd">            forward_func (callable): The forward function of the model or</span>
-<span class="sd">                        any modification of it</span>
+<span class="sd">            forward_func (Callable): The forward function of the model or</span>
+<span class="sd">                        any modification of it.</span>
 <span class="sd">        """</span>
         <span class="n">Lime</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
             <span class="bp">self</span><span class="p">,</span>
@@ -118,7 +118,7 @@ src="/_sphinx/documentation_options.js"></script>
 
 <span class="sd">        Args:</span>
 
-<span class="sd">            inputs (tensor or tuple of tensors):  Input for which KernelShap</span>
+<span class="sd">            inputs (Tensor or tuple of Tensor): Input for which KernelShap</span>
 <span class="sd">                        is computed. If forward_func takes a single</span>
 <span class="sd">                        tensor as input, a single input tensor should be provided.</span>
 <span class="sd">                        If forward_func takes multiple tensors as input, a tuple</span>
@@ -126,7 +126,7 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">                        that for all given input tensors, dimension 0 corresponds</span>
 <span class="sd">                        to the number of examples, and if multiple input tensors</span>
 <span class="sd">                        are provided, the examples must be aligned appropriately.</span>
-<span class="sd">            baselines (scalar, tensor, tuple of scalars or tensors, optional):</span>
+<span class="sd">            baselines (scalar, Tensor, tuple of scalar, or Tensor, optional):</span>
 <span class="sd">                        Baselines define the reference value which replaces each</span>
 <span class="sd">                        feature when the corresponding interpretable feature</span>
 <span class="sd">                        is set to 0.</span>
@@ -152,10 +152,11 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">                          - or a scalar, corresponding to a tensor in the</span>
 <span class="sd">                            inputs' tuple. This scalar value is broadcasted</span>
 <span class="sd">                            for corresponding input tensor.</span>
+
 <span class="sd">                        In the cases when `baselines` is not provided, we internally</span>
 <span class="sd">                        use zero scalar corresponding to each input tensor.</span>
 <span class="sd">                        Default: None</span>
-<span class="sd">            target (int, tuple, tensor or list, optional):  Output indices for</span>
+<span class="sd">            target (int, tuple, Tensor, or list, optional): Output indices for</span>
 <span class="sd">                        which surrogate model is trained</span>
 <span class="sd">                        (for classification cases,</span>
 <span class="sd">                        this is usually the target class).</span>
@@ -181,7 +182,7 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">                          target for the corresponding example.</span>
 
 <span class="sd">                        Default: None</span>
-<span class="sd">            additional_forward_args (any, optional): If the forward function</span>
+<span class="sd">            additional_forward_args (Any, optional): If the forward function</span>
 <span class="sd">                        requires additional arguments other than the inputs for</span>
 <span class="sd">                        which attributions should not be computed, this argument</span>
 <span class="sd">                        can be provided. It must be either a single additional</span>
@@ -198,7 +199,7 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">                        Note that attributions are not computed with respect</span>
 <span class="sd">                        to these arguments.</span>
 <span class="sd">                        Default: None</span>
-<span class="sd">            feature_mask (tensor or tuple of tensors, optional):</span>
+<span class="sd">            feature_mask (Tensor or tuple of Tensor, optional):</span>
 <span class="sd">                        feature_mask defines a mask for the input, grouping</span>
 <span class="sd">                        features which correspond to the same</span>
 <span class="sd">                        interpretable feature. feature_mask</span>
@@ -216,7 +217,7 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">                        If None, then a feature mask is constructed which assigns</span>
 <span class="sd">                        each scalar within a tensor as a separate feature.</span>
 <span class="sd">                        Default: None</span>
-<span class="sd">            n_samples (int, optional):  The number of samples of the original</span>
+<span class="sd">            n_samples (int, optional): The number of samples of the original</span>
 <span class="sd">                        model used to train the surrogate interpretable model.</span>
 <span class="sd">                        Default: `50` if `n_samples` is not provided.</span>
 <span class="sd">            perturbations_per_eval (int, optional): Allows multiple samples</span>
@@ -251,8 +252,8 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">                        Default: False</span>
 
 <span class="sd">        Returns:</span>
-<span class="sd">            *tensor* or tuple of *tensors* of **attributions**:</span>
-<span class="sd">            - **attributions** (*tensor* or tuple of *tensors*):</span>
+<span class="sd">            *Tensor* or tuple of *Tensor* of **attributions**:</span>
+<span class="sd">            - **attributions** (*Tensor* or tuple of *Tensor*):</span>
 <span class="sd">                        The attributions with respect to each input feature.</span>
 <span class="sd">                        If return_input_shape = True, attributions will be</span>
 <span class="sd">                        the same size as the provided inputs, with each value</span>
@@ -348,7 +349,9 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">        Perturbations are sampled by the following process:</span>
 <span class="sd">         - Choose k (number of selected features), based on the distribution</span>
 <span class="sd">                p(k) = (M - 1) / (k * (M - k))</span>
+
 <span class="sd">            where M is the total number of features in the interpretable space</span>
+
 <span class="sd">         - Randomly select a binary vector with k ones, each sample is equally</span>
 <span class="sd">            likely. This is done by generating a random vector of normal</span>
 <span class="sd">            values and thresholding based on the top k elements.</span>

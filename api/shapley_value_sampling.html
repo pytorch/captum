@@ -54,7 +54,7 @@ the entire feature group.</p>
 <a class="reference external" href="https://pdfs.semanticscholar.org/7715/bb1070691455d1fcfc6346ff458dbca77b2c.pdf">https://pdfs.semanticscholar.org/7715/bb1070691455d1fcfc6346ff458dbca77b2c.pdf</a></p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>forward_func</strong> (<em>callable</em>) – The forward function of the model or
+<dd class="field-odd"><p><strong>forward_func</strong> (<em>Callable</em>) – The forward function of the model or
 any modification of it. The forward function can either
 return a scalar per example, or a single scalar for the
 full batch. If a single scalar is returned for the batch,
@@ -72,7 +72,7 @@ description of the feature_mask argument below for more details.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>inputs</strong> (<em>tensor</em><em> or </em><em>tuple of tensors</em>) – Input for which Shapley value
+<li><p><strong>inputs</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.12)"><em>Tensor</em></a><em> or </em><em>tuple of ~torch.Tensor</em>) – Input for which Shapley value
 sampling attributions are computed. If forward_func takes
 a single tensor as input, a single input tensor should
 be provided.
@@ -82,7 +82,7 @@ that for all given input tensors, dimension 0 corresponds
 to the number of examples (aka batch size), and if
 multiple input tensors are provided, the examples must
 be aligned appropriately.</p></li>
-<li><p><strong>baselines</strong> (<em>scalar</em><em>, </em><em>tensor</em><em>, </em><em>tuple of scalars</em><em> or </em><em>tensors</em><em>, </em><em>optional</em>) – <p>Baselines define reference value which replaces each
+<li><p><strong>baselines</strong> (<em>scalar</em><em>, </em><a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.12)"><em>Tensor</em></a><em>, </em><em>tuple of scalar</em><em>, or </em><a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.12)"><em>Tensor</em></a><em>, </em><em>optional</em>) – <p>Baselines define reference value which replaces each
 feature when ablated.
 Baselines can be provided as:</p>
 <ul>
@@ -110,7 +110,7 @@ for corresponding input tensor.</p></li>
 use zero scalar corresponding to each input tensor.
 Default: None</p>
 </p></li>
-<li><p><strong>target</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><em>int</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.10)"><em>tuple</em></a><em>, </em><em>tensor</em><em> or </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.10)"><em>list</em></a><em>, </em><em>optional</em>) – <p>Output indices for
+<li><p><strong>target</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><em>int</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.10)"><em>tuple</em></a><em>, </em><a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.12)"><em>Tensor</em></a><em>, or </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.10)"><em>list</em></a><em>, </em><em>optional</em>) – <p>Output indices for
 which difference is computed (for classification cases,
 this is usually the target class).
 If the network returns a scalar value per example,
@@ -134,7 +134,7 @@ target for the corresponding example.</p></li>
 </ul>
 <p>Default: None</p>
 </p></li>
-<li><p><strong>additional_forward_args</strong> (<em>any</em><em>, </em><em>optional</em>) – If the forward function
+<li><p><strong>additional_forward_args</strong> (<em>Any</em><em>, </em><em>optional</em>) – If the forward function
 requires additional arguments other than the inputs for
 which attributions should not be computed, this argument
 can be provided. It must be either a single additional
@@ -149,7 +149,7 @@ the given argument is used for all forward evaluations.
 Note that attributions are not computed with respect
 to these arguments.
 Default: None</p></li>
-<li><p><strong>feature_mask</strong> (<em>tensor</em><em> or </em><em>tuple of tensors</em><em>, </em><em>optional</em>) – feature_mask defines a mask for the input, grouping
+<li><p><strong>feature_mask</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.12)"><em>Tensor</em></a><em> or </em><em>tuple of ~torch.Tensor</em><em>, </em><em>optional</em>) – feature_mask defines a mask for the input, grouping
 features which should be added together. feature_mask
 should contain the same number of tensors as inputs.
 Each tensor should
@@ -195,7 +195,7 @@ Default: False</p></li>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p><ul class="simple">
 <li><dl class="simple">
-<dt><strong>attributions</strong> (<em>tensor</em> or tuple of <em>tensors</em>):</dt><dd><p>The attributions with respect to each input feature.
+<dt><strong>attributions</strong> (<em>Tensor</em> or tuple of <em>Tensor</em>):</dt><dd><p>The attributions with respect to each input feature.
 If the forward function returns
 a scalar value per example, attributions will be
 the same size as the provided inputs, with each value
@@ -213,7 +213,7 @@ corresponding sized tensors is returned.</p>
 </p>
 </dd>
 <dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p><em>tensor</em> or tuple of <em>tensors</em> of <strong>attributions</strong></p>
+<dd class="field-odd"><p><em>Tensor</em> or tuple of <em>Tensor</em> of <strong>attributions</strong></p>
 </dd>
 </dl>
 <p>Examples:</p>
@@ -283,7 +283,7 @@ features. Shapley values can alternatively be computed with only 2^n
 evaluations, and we plan to add this approach in the future.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>forward_func</strong> (<em>callable</em>) – The forward function of the model or
+<dd class="field-odd"><p><strong>forward_func</strong> (<em>Callable</em>) – The forward function of the model or
 any modification of it. The forward function can either
 return a scalar per example, or a single scalar for the
 full batch. If a single scalar is returned for the batch,
@@ -301,7 +301,7 @@ description of the feature_mask argument below for more details.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>inputs</strong> (<em>tensor</em><em> or </em><em>tuple of tensors</em>) – Input for which Shapley value
+<li><p><strong>inputs</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.12)"><em>Tensor</em></a><em> or </em><em>tuple of ~torch.Tensor</em>) – Input for which Shapley value
 sampling attributions are computed. If forward_func takes
 a single tensor as input, a single input tensor should
 be provided.
@@ -311,7 +311,7 @@ that for all given input tensors, dimension 0 corresponds
 to the number of examples (aka batch size), and if
 multiple input tensors are provided, the examples must
 be aligned appropriately.</p></li>
-<li><p><strong>baselines</strong> (<em>scalar</em><em>, </em><em>tensor</em><em>, </em><em>tuple of scalars</em><em> or </em><em>tensors</em><em>, </em><em>optional</em>) – <p>Baselines define reference value which replaces each
+<li><p><strong>baselines</strong> (<em>scalar</em><em>, </em><a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.12)"><em>Tensor</em></a><em>, </em><em>tuple of scalar</em><em>, or </em><a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.12)"><em>Tensor</em></a><em>, </em><em>optional</em>) – <p>Baselines define reference value which replaces each
 feature when ablated.
 Baselines can be provided as:</p>
 <ul>
@@ -339,7 +339,7 @@ for corresponding input tensor.</p></li>
 use zero scalar corresponding to each input tensor.
 Default: None</p>
 </p></li>
-<li><p><strong>target</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><em>int</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.10)"><em>tuple</em></a><em>, </em><em>tensor</em><em> or </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.10)"><em>list</em></a><em>, </em><em>optional</em>) – <p>Output indices for
+<li><p><strong>target</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><em>int</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.10)"><em>tuple</em></a><em>, </em><a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.12)"><em>Tensor</em></a><em>, or </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.10)"><em>list</em></a><em>, </em><em>optional</em>) – <p>Output indices for
 which difference is computed (for classification cases,
 this is usually the target class).
 If the network returns a scalar value per example,
@@ -363,7 +363,7 @@ target for the corresponding example.</p></li>
 </ul>
 <p>Default: None</p>
 </p></li>
-<li><p><strong>additional_forward_args</strong> (<em>any</em><em>, </em><em>optional</em>) – If the forward function
+<li><p><strong>additional_forward_args</strong> (<em>Any</em><em>, </em><em>optional</em>) – If the forward function
 requires additional arguments other than the inputs for
 which attributions should not be computed, this argument
 can be provided. It must be either a single additional
@@ -378,7 +378,7 @@ the given argument is used for all forward evaluations.
 Note that attributions are not computed with respect
 to these arguments.
 Default: None</p></li>
-<li><p><strong>feature_mask</strong> (<em>tensor</em><em> or </em><em>tuple of tensors</em><em>, </em><em>optional</em>) – feature_mask defines a mask for the input, grouping
+<li><p><strong>feature_mask</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.12)"><em>Tensor</em></a><em> or </em><em>tuple of ~torch.Tensor</em><em>, </em><em>optional</em>) – feature_mask defines a mask for the input, grouping
 features which should be added together. feature_mask
 should contain the same number of tensors as inputs.
 Each tensor should
@@ -421,7 +421,7 @@ Default: False</p></li>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p><ul class="simple">
 <li><dl class="simple">
-<dt><strong>attributions</strong> (<em>tensor</em> or tuple of <em>tensors</em>):</dt><dd><p>The attributions with respect to each input feature.
+<dt><strong>attributions</strong> (<em>Tensor</em> or tuple of <em>Tensor</em>):</dt><dd><p>The attributions with respect to each input feature.
 If the forward function returns
 a scalar value per example, attributions will be
 the same size as the provided inputs, with each value
@@ -439,7 +439,7 @@ corresponding sized tensors is returned.</p>
 </p>
 </dd>
 <dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p><em>tensor</em> or tuple of <em>tensors</em> of <strong>attributions</strong></p>
+<dd class="field-odd"><p><em>Tensor</em> or tuple of <em>Tensor</em> of <strong>attributions</strong></p>
 </dd>
 </dl>
 <p>Examples:</p>

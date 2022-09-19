@@ -77,7 +77,7 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        Args:</span>
 
-<span class="sd">            model (module): The forward function of the model or any modification of</span>
+<span class="sd">            model (Module): The forward function of the model or any modification of</span>
 <span class="sd">                it. Custom rules for a given layer need to be defined as attribute</span>
 <span class="sd">                `module.rule` and need to be of type PropagationRule. If no rule is</span>
 <span class="sd">                specified for a layer, a pre-defined default rule for the module type</span>
@@ -130,7 +130,8 @@ src="/_sphinx/documentation_options.js"></script>
     <span class="p">]:</span>
         <span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        Args:</span>
-<span class="sd">            inputs (tensor or tuple of tensors):  Input for which relevance is</span>
+
+<span class="sd">            inputs (Tensor or tuple of Tensor): Input for which relevance is</span>
 <span class="sd">                        propagated. If forward_func takes a single</span>
 <span class="sd">                        tensor as input, a single input tensor should be provided.</span>
 <span class="sd">                        If forward_func takes multiple tensors as input, a tuple</span>
@@ -138,12 +139,13 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">                        that for all given input tensors, dimension 0 corresponds</span>
 <span class="sd">                        to the number of examples, and if multiple input tensors</span>
 <span class="sd">                        are provided, the examples must be aligned appropriately.</span>
-<span class="sd">            target (int, tuple, tensor or list, optional):  Output indices for</span>
-<span class="sd">                        which gradients are computed (for classification cases,</span>
-<span class="sd">                        this is usually the target class).</span>
-<span class="sd">                        If the network returns a scalar value per example,</span>
-<span class="sd">                        no target index is necessary.</span>
-<span class="sd">                        For general 2D outputs, targets can be either:</span>
+
+<span class="sd">            target (int, tuple, Tensor, or list, optional): Output indices for</span>
+<span class="sd">                    which gradients are computed (for classification cases,</span>
+<span class="sd">                    this is usually the target class).</span>
+<span class="sd">                    If the network returns a scalar value per example,</span>
+<span class="sd">                    no target index is necessary.</span>
+<span class="sd">                    For general 2D outputs, targets can be either:</span>
 
 <span class="sd">                    - a single integer or a tensor containing a single</span>
 <span class="sd">                        integer, which is applied to all input examples</span>
@@ -185,9 +187,10 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">                    of rules is printed during propagation.</span>
 
 <span class="sd">        Returns:</span>
-<span class="sd">            *tensor* or tuple of *tensors* of **attributions**</span>
-<span class="sd">            or 2-element tuple of **attributions**, **delta**::</span>
-<span class="sd">            - **attributions** (*tensor* or tuple of *tensors*):</span>
+<span class="sd">            *Tensor* or tuple of *Tensor* of **attributions**</span>
+<span class="sd">            or 2-element tuple of **attributions**, **delta**:</span>
+
+<span class="sd">              - **attributions** (*Tensor* or tuple of *Tensor*):</span>
 <span class="sd">                        The propagated relevance values with respect to each</span>
 <span class="sd">                        input feature. The values are normalized by the output score</span>
 <span class="sd">                        value (sum(relevance)=1). To obtain values comparable to other</span>
@@ -200,10 +203,12 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">                        corresponding sized tensors is returned. The sum of attributions</span>
 <span class="sd">                        is one and not corresponding to the prediction score as in other</span>
 <span class="sd">                        implementations.</span>
-<span class="sd">            - **delta** (*tensor*, returned if return_convergence_delta=True):</span>
+
+<span class="sd">              - **delta** (*Tensor*, returned if return_convergence_delta=True):</span>
 <span class="sd">                        Delta is calculated per example, meaning that the number of</span>
 <span class="sd">                        elements in returned delta tensor is equal to the number of</span>
 <span class="sd">                        of examples in the inputs.</span>
+
 <span class="sd">        Examples::</span>
 
 <span class="sd">                &gt;&gt;&gt; # ImageClassifier takes a single input tensor of images Nx3x32x32,</span>
@@ -273,7 +278,7 @@ src="/_sphinx/documentation_options.js"></script>
 
 <span class="sd">        Args:</span>
 
-<span class="sd">            attributions (tensor or tuple of tensors): Attribution scores that</span>
+<span class="sd">            attributions (Tensor or tuple of Tensor): Attribution scores that</span>
 <span class="sd">                        are precomputed by an attribution algorithm.</span>
 <span class="sd">                        Attributions can be provided in form of a single tensor</span>
 <span class="sd">                        or a tuple of those. It is assumed that attribution</span>
@@ -281,12 +286,13 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">                        examples, and if multiple input tensors are provided,</span>
 <span class="sd">                        the examples must be aligned appropriately.</span>
 
-<span class="sd">            output (tensor with single element): The output value with respect to which</span>
+<span class="sd">            output (Tensor): The output value with respect to which</span>
 <span class="sd">                        the attribution values are computed. This value corresponds to</span>
-<span class="sd">                        the target score of a classification model.</span>
+<span class="sd">                        the target score of a classification model. The given tensor</span>
+<span class="sd">                        should only have a single element.</span>
 
 <span class="sd">        Returns:</span>
-<span class="sd">            *tensor*:</span>
+<span class="sd">            *Tensor*:</span>
 <span class="sd">            - **delta** Difference of relevance in output layer and input layer.</span>
 <span class="sd">        """</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">attributions</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">):</span>

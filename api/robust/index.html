@@ -35,29 +35,35 @@ src="/_sphinx/documentation_options.js"></script>
 <h2>FGSM<a class="headerlink" href="#fgsm" title="Permalink to this headline">¶</a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="captum.robust.FGSM">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">captum.robust.</span></span><span class="sig-name descname"><span class="pre">FGSM</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">forward_func</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">loss_func</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lower_bound</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">-</span> <span class="pre">inf</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">upper_bound</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">inf</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/robust/_core/fgsm.html#FGSM"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum.robust.FGSM" title="Permalink to this definition">¶</a></dt>
-<dd><p>Fast Gradient Sign Method is an one-step method that can generate
-adversarial examples. For non-targeted attack, the formulation is
-x’ = x + epsilon * sign(gradient of L(theta, x, y)).
-For targeted attack on t, the formulation is
-x’ = x - epsilon * sign(gradient of L(theta, x, t)).
-L(theta, x, y) is the model’s loss function with respect to model
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">captum.robust.</span></span><span class="sig-name descname"><span class="pre">FGSM</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">forward_func</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">loss_func</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lower_bound</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">float('-inf')</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">upper_bound</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">float('inf')</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/robust/_core/fgsm.html#FGSM"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum.robust.FGSM" title="Permalink to this definition">¶</a></dt>
+<dd><p>Fast Gradient Sign Method is a one-step method that can generate
+adversarial examples.</p>
+<p>For non-targeted attack, the formulation is:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">x</span><span class="s1">' = x + epsilon * sign(gradient of L(theta, x, y))</span>
+</pre></div>
+</div>
+<p>For targeted attack on t, the formulation is:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">x</span><span class="s1">' = x - epsilon * sign(gradient of L(theta, x, t))</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">L(theta,</span> <span class="pre">x,</span> <span class="pre">y)</span></code> is the model’s loss function with respect to model
 parameters, inputs and labels.</p>
 <p>More details on Fast Gradient Sign Method can be found in the original
-paper:
-<a class="reference external" href="https://arxiv.org/pdf/1412.6572.pdf">https://arxiv.org/pdf/1412.6572.pdf</a></p>
+paper: <a class="reference external" href="https://arxiv.org/abs/1412.6572">https://arxiv.org/abs/1412.6572</a></p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>forward_func</strong> (<em>callable</em>) – The pytorch model for which the attack is
+<li><p><strong>forward_func</strong> (<em>Callable</em>) – The pytorch model for which the attack is
 computed.</p></li>
-<li><p><strong>loss_func</strong> (<em>callable</em><em>, </em><em>optional</em>) – Loss function of which the gradient
+<li><p><strong>loss_func</strong> (<em>Callable</em><em>, </em><em>optional</em>) – Loss function of which the gradient
 computed. The loss function should take in outputs of the
 model and labels, and return a loss tensor.
 The default loss function is negative log.</p></li>
-<li><p><strong>lower_bound</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.10)"><em>float</em></a><em>, </em><em>optional</em>) – Lower bound of input values.</p></li>
+<li><p><strong>lower_bound</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.10)"><em>float</em></a><em>, </em><em>optional</em>) – Lower bound of input values.
+Default: <code class="docutils literal notranslate"><span class="pre">float("-inf")</span></code></p></li>
 <li><p><strong>upper_bound</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.10)"><em>float</em></a><em>, </em><em>optional</em>) – Upper bound of input values.
-e.g. image pixels must be in the range 0-255</p></li>
+e.g. image pixels must be in the range 0-255
+Default: <code class="docutils literal notranslate"><span class="pre">float("inf")</span></code></p></li>
 </ul>
 </dd>
 </dl>
@@ -92,13 +98,13 @@ It supports both targeted and non-targeted attacks.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>inputs</strong> (<em>tensor</em><em> or </em><em>tuple of tensors</em>) – Input for which adversarial
+<li><p><strong>inputs</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.12)"><em>Tensor</em></a><em> or </em><em>tuple of ~torch.Tensor</em>) – Input for which adversarial
 attack is computed. It can be provided as a single
 tensor or a tuple of multiple tensors. If multiple
 input tensors are provided, the batch sizes must be
-aligned accross all tensors.</p></li>
+aligned across all tensors.</p></li>
 <li><p><strong>epsilon</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.10)"><em>float</em></a>) – Step size of perturbation.</p></li>
-<li><p><strong>target</strong> (<em>any</em>) – <p>True labels of inputs if non-targeted attack is
+<li><p><strong>target</strong> (<em>Any</em>) – <p>True labels of inputs if non-targeted attack is
 desired. Target class of inputs if targeted attack
 is desired. Target will be passed to the loss function
 to compute loss, so the type needs to match the
@@ -123,7 +129,7 @@ examples in inputs (dim 0), and each tuple containing
 label for the corresponding example.</p></li>
 </ul>
 </p></li>
-<li><p><strong>additional_forward_args</strong> (<em>any</em><em>, </em><em>optional</em>) – If the forward function
+<li><p><strong>additional_forward_args</strong> (<em>Any</em><em>, </em><em>optional</em>) – If the forward function
 requires additional arguments other than the inputs for
 which attributions should not be computed, this argument
 can be provided. These arguments are provided to
@@ -143,7 +149,7 @@ corresponding sized tensors is returned.</p>
 </dd>
 <dt class="field-odd">Return type</dt>
 <dd class="field-odd"><p><ul class="simple">
-<li><p><strong>perturbed inputs</strong> (<em>tensor</em> or tuple of <em>tensors</em>)</p></li>
+<li><p><strong>perturbed inputs</strong> (<em>Tensor</em> or tuple of <em>Tensor</em>)</p></li>
 </ul>
 </p>
 </dd>
@@ -155,7 +161,7 @@ corresponding sized tensors is returned.</p>
 <h2>PGD<a class="headerlink" href="#pgd" title="Permalink to this headline">¶</a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="captum.robust.PGD">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">captum.robust.</span></span><span class="sig-name descname"><span class="pre">PGD</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">forward_func</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">loss_func</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lower_bound</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">-</span> <span class="pre">inf</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">upper_bound</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">inf</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/robust/_core/pgd.html#PGD"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum.robust.PGD" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">captum.robust.</span></span><span class="sig-name descname"><span class="pre">PGD</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">forward_func</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">loss_func</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lower_bound</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">float('-inf')</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">upper_bound</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">float('inf')</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/robust/_core/pgd.html#PGD"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum.robust.PGD" title="Permalink to this definition">¶</a></dt>
 <dd><p>Projected Gradient Descent is an iterative version of the one-step attack
 FGSM that can generate adversarial examples. It takes multiple gradient
 steps to search for an adversarial perturbation within the desired
@@ -175,20 +181,21 @@ In a targeted attack, the formulation is similar:</p>
 </pre></div>
 </div>
 <p>More details on Projected Gradient Descent can be found in the original
-paper:
-<a class="reference external" href="https://arxiv.org/pdf/1706.06083.pdf">https://arxiv.org/pdf/1706.06083.pdf</a></p>
+paper: <a class="reference external" href="https://arxiv.org/abs/1706.06083">https://arxiv.org/abs/1706.06083</a></p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>forward_func</strong> (<em>callable</em>) – The pytorch model for which the attack is
+<li><p><strong>forward_func</strong> (<em>Callable</em>) – The pytorch model for which the attack is
 computed.</p></li>
-<li><p><strong>loss_func</strong> (<em>callable</em><em>, </em><em>optional</em>) – Loss function of which the gradient
+<li><p><strong>loss_func</strong> (<em>Callable</em><em>, </em><em>optional</em>) – Loss function of which the gradient
 computed. The loss function should take in outputs of the
 model and labels, and return the loss for each input tensor.
 The default loss function is negative log.</p></li>
-<li><p><strong>lower_bound</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.10)"><em>float</em></a><em>, </em><em>optional</em>) – Lower bound of input values.</p></li>
+<li><p><strong>lower_bound</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.10)"><em>float</em></a><em>, </em><em>optional</em>) – Lower bound of input values.
+Default: <code class="docutils literal notranslate"><span class="pre">float("-inf")</span></code></p></li>
 <li><p><strong>upper_bound</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.10)"><em>float</em></a><em>, </em><em>optional</em>) – Upper bound of input values.
-e.g. image pixels must be in the range 0-255</p></li>
+e.g. image pixels must be in the range 0-255
+Default: <code class="docutils literal notranslate"><span class="pre">float("inf")</span></code></p></li>
 </ul>
 </dd>
 </dl>
@@ -212,17 +219,17 @@ It supports both targeted and non-targeted attacks.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>inputs</strong> (<em>tensor</em><em> or </em><em>tuple of tensors</em>) – Input for which adversarial
+<li><p><strong>inputs</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.12)"><em>Tensor</em></a><em> or </em><em>tuple of ~torch.Tensor</em>) – Input for which adversarial
 attack is computed. It can be provided as a single
 tensor or a tuple of multiple tensors. If multiple
 input tensors are provided, the batch sizes must be
-aligned accross all tensors.</p></li>
+aligned across all tensors.</p></li>
 <li><p><strong>radius</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.10)"><em>float</em></a>) – Radius of the neighbor ball centered around inputs.
 The perturbation should be within this range.</p></li>
 <li><p><strong>step_size</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.10)"><em>float</em></a>) – Step size of each gradient step.</p></li>
 <li><p><strong>step_num</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><em>int</em></a>) – Step numbers. It usually guarantees that the perturbation
 can reach the border.</p></li>
-<li><p><strong>target</strong> (<em>any</em>) – <p>True labels of inputs if non-targeted attack is
+<li><p><strong>target</strong> (<em>Any</em>) – <p>True labels of inputs if non-targeted attack is
 desired. Target class of inputs if targeted attack
 is desired. Target will be passed to the loss function
 to compute loss, so the type needs to match the
@@ -247,19 +254,19 @@ examples in inputs (dim 0), and each tuple containing
 label for the corresponding example.</p></li>
 </ul>
 </p></li>
-<li><p><strong>additional_forward_args</strong> (<em>any</em><em>, </em><em>optional</em>) – If the forward function
+<li><p><strong>additional_forward_args</strong> (<em>Any</em><em>, </em><em>optional</em>) – If the forward function
 requires additional arguments other than the inputs for
 which attributions should not be computed, this argument
 can be provided. These arguments are provided to
 forward_func in order following the arguments in inputs.
-Default: None.</p></li>
+Default: <code class="docutils literal notranslate"><span class="pre">None</span></code></p></li>
 <li><p><strong>targeted</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.10)"><em>bool</em></a><em>, </em><em>optional</em>) – If attack should be targeted.
-Default: False.</p></li>
+Default: <code class="docutils literal notranslate"><span class="pre">False</span></code></p></li>
 <li><p><strong>random_start</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.10)"><em>bool</em></a><em>, </em><em>optional</em>) – If a random initialization is added to
-inputs. Default: False.</p></li>
+inputs. Default: <code class="docutils literal notranslate"><span class="pre">False</span></code></p></li>
 <li><p><strong>norm</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><em>str</em></a><em>, </em><em>optional</em>) – Specifies the norm to calculate distance from
-original inputs: ‘Linf’|’L2’.
-Default: ‘Linf’.</p></li>
+original inputs: <code class="docutils literal notranslate"><span class="pre">Linf</span></code> | <code class="docutils literal notranslate"><span class="pre">L2</span></code>.
+Default: <code class="docutils literal notranslate"><span class="pre">Linf</span></code></p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -272,7 +279,7 @@ corresponding sized tensors is returned.</p>
 </dd>
 <dt class="field-odd">Return type</dt>
 <dd class="field-odd"><p><ul class="simple">
-<li><p><strong>perturbed inputs</strong> (<em>tensor</em> or tuple of <em>tensors</em>)</p></li>
+<li><p><strong>perturbed inputs</strong> (<em>Tensor</em> or tuple of <em>Tensor</em>)</p></li>
 </ul>
 </p>
 </dd>
@@ -292,10 +299,10 @@ augmentation methods or perturbations such as torchvision transforms.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>forward_func</strong> (<em>callable</em><em> or </em><a class="reference external" href="https://pytorch.org/docs/stable/generated/torch.nn.Module.html#torch.nn.Module" title="(in PyTorch v1.12)"><em>torch.nn.Module</em></a>) – This can either be an instance
+<li><p><strong>forward_func</strong> (<em>Callable</em><em> or </em><a class="reference external" href="https://pytorch.org/docs/stable/generated/torch.nn.Module.html#torch.nn.Module" title="(in PyTorch v1.12)"><em>torch.nn.Module</em></a>) – This can either be an instance
 of pytorch model or any modification of a model’s forward
 function.</p></li>
-<li><p><strong>metric</strong> (<em>callable</em>) – <p>This function is applied to the model output in
+<li><p><strong>metric</strong> (<em>Callable</em>) – <p>This function is applied to the model output in
 order to compute the desired performance metric or metrics.
 This function should have the following signature:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">def</span> <span class="nf">model_metric</span><span class="p">(</span><span class="n">model_out</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span>
@@ -312,9 +319,10 @@ dimension when aggregating multiple batch results.
 If tensor metrics represent results for the full batch, the size of the
 first dimension should be 1.</p>
 </p></li>
-<li><p><strong>preproc_fn</strong> (<em>callable</em><em>, </em><em>optional</em>) – Optional method applied to inputs. Output
+<li><p><strong>preproc_fn</strong> (<em>Callable</em><em>, </em><em>optional</em>) – Optional method applied to inputs. Output
 of preproc_fn is then provided as input to model, in addition to
-additional_forward_args provided to evaluate.</p></li>
+additional_forward_args provided to evaluate.
+Default: <code class="docutils literal notranslate"><span class="pre">None</span></code></p></li>
 </ul>
 </dd>
 </dl>
@@ -325,26 +333,32 @@ additional_forward_args provided to evaluate.</p></li>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>attack</strong> (<em>perturbation</em><em> or </em><em>callable</em>) – This can either be an instance
+<li><p><strong>attack</strong> (<em>Perturbation</em><em> or </em><em>Callable</em>) – This can either be an instance
 of a Captum Perturbation / Attack
 or any other perturbation or attack function such
 as a torchvision transform.</p></li>
 <li><p><strong>name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><em>str</em></a><em>, </em><em>optional</em>) – Name or identifier for attack, used as key for
 attack results. This defaults to attack.__class__.__name__
-if not provided and must be unique for all added attacks.</p></li>
-<li><p><strong>num_attempts</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><em>int</em></a>) – Number of attempts that attack should be
+if not provided and must be unique for all added attacks.
+Default: <code class="docutils literal notranslate"><span class="pre">None</span></code></p></li>
+<li><p><strong>num_attempts</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><em>int</em></a><em>, </em><em>optional</em>) – Number of attempts that attack should be
 repeated. This should only be set to &gt; 1 for non-deterministic
 attacks. The minimum, maximum, and average (best, worst, and
-average case) are tracked for attack attempts.</p></li>
-<li><p><strong>apply_before_preproc</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.10)"><em>bool</em></a>) – Defines whether attack should be applied
-before or after preproc function.</p></li>
-<li><p><strong>attack_kwargs</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.10)"><em>dict</em></a>) – Additional arguments to be provided to given attack.
-This should be provided as a dictionary of keyword arguments.</p></li>
-<li><p><strong>additional_attack_arg_names</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.10)"><em>list</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><em>str</em></a><em>]</em>) – Any additional arguments for the
-attack which are specific to the particular input example or batch.
-An example of this is target, which is necessary for some attacks such
-as FGSM or PGD. These arguments are included if provided as a kwarg
-to evaluate.</p></li>
+average case) are tracked for attack attempts.
+Default: <code class="docutils literal notranslate"><span class="pre">1</span></code></p></li>
+<li><p><strong>apply_before_preproc</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.10)"><em>bool</em></a><em>, </em><em>optional</em>) – Defines whether attack should be
+applied before or after preproc function.
+Default: <code class="docutils literal notranslate"><span class="pre">True</span></code></p></li>
+<li><p><strong>attack_kwargs</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.10)"><em>dict</em></a><em>, </em><em>optional</em>) – Additional arguments to be provided to
+given attack. This should be provided as a dictionary of keyword
+arguments.
+Default: <code class="docutils literal notranslate"><span class="pre">None</span></code></p></li>
+<li><p><strong>additional_attack_arg_names</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.10)"><em>list</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><em>str</em></a><em>]</em><em>, </em><em>optional</em>) – Any additional
+arguments for the attack which are specific to the particular input
+example or batch. An example of this is target, which is necessary
+for some attacks such as FGSM or PGD. These arguments are included
+if provided as a kwarg to evaluate.
+Default: <code class="docutils literal notranslate"><span class="pre">None</span></code></p></li>
 </ul>
 </dd>
 <dt class="field-even">Return type</dt>
@@ -356,16 +370,18 @@ to evaluate.</p></li>
 <dt class="sig sig-object py" id="captum.robust.AttackComparator.evaluate">
 <span class="sig-name descname"><span class="pre">evaluate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inputs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">additional_forward_args</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">perturbations_per_eval</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/robust/_core/metrics/attack_comparator.html#AttackComparator.evaluate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum.robust.AttackComparator.evaluate" title="Permalink to this definition">¶</a></dt>
 <dd><p>Evaluate model and attack performance on provided inputs</p>
-<p>Args:</p>
-<dl class="simple">
-<dt>inputs (any): Input for which attack metrics</dt><dd><p>are computed. It can be provided as a tensor, tuple of tensors,
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>inputs</strong> (<em>Any</em>) – Input for which attack metrics
+are computed. It can be provided as a tensor, tuple of tensors,
 or any raw input type (e.g. PIL image or text string).
 This input is provided directly as input to preproc function as well
 as any attack applied before preprocessing. If no pre-processing
 function is provided, this input is provided directly to the main
-model and all attacks.</p>
-</dd>
-<dt>additional_forward_args (any, optional): If the forward function</dt><dd><p>requires additional arguments other than the preprocessing
+model and all attacks.</p></li>
+<li><p><strong>additional_forward_args</strong> (<em>Any</em><em>, </em><em>optional</em>) – If the forward function
+requires additional arguments other than the preprocessing
 outputs (or inputs if preproc_fn is None), this argument
 can be provided. It must be either a single additional
 argument of a Tensor or arbitrary (non-tuple) type or a
@@ -376,9 +392,9 @@ arguments in inputs.
 For a tensor, the first dimension of the tensor must
 correspond to the number of examples. For all other types,
 the given argument is used for all forward evaluations.
-Default: None</p>
-</dd>
-<dt>perturbations_per_eval (int, optional): Allows perturbations of multiple</dt><dd><p>attacks to be grouped and evaluated in one call of forward_fn
+Default: <code class="docutils literal notranslate"><span class="pre">None</span></code></p></li>
+<li><p><strong>perturbations_per_eval</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><em>int</em></a><em>, </em><em>optional</em>) – Allows perturbations of multiple
+attacks to be grouped and evaluated in one call of forward_fn
 Each forward pass will contain a maximum of
 perturbations_per_eval * #examples samples.
 For DataParallel models, each batch is split among the
@@ -389,9 +405,11 @@ samples.
 In order to apply this functionality, the output of preproc_fn
 (or inputs itself if no preproc_fn is provided) must be a tensor
 or tuple of tensors.
-Default: 1</p>
-</dd>
-<dt>kwargs (any, optional): Additional keyword arguments provided to metric function</dt><dd><p>as well as selected attacks based on chosen additional_args</p>
+Default: <code class="docutils literal notranslate"><span class="pre">1</span></code></p></li>
+<li><p><strong>kwargs</strong> (<em>Any</em><em>, </em><em>optional</em>) – Additional keyword arguments provided to metric
+function as well as selected attacks based on chosen additional_args.
+Default: <code class="docutils literal notranslate"><span class="pre">None</span></code></p></li>
+</ul>
 </dd>
 </dl>
 <p>Returns:</p>
@@ -496,7 +514,7 @@ corresponding perturbed input.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>forward_func</strong> (<em>callable</em><em> or </em><a class="reference external" href="https://pytorch.org/docs/stable/generated/torch.nn.Module.html#torch.nn.Module" title="(in PyTorch v1.12)"><em>torch.nn.Module</em></a>) – This can either be an instance
+<li><p><strong>forward_func</strong> (<em>Callable</em><em> or </em><a class="reference external" href="https://pytorch.org/docs/stable/generated/torch.nn.Module.html#torch.nn.Module" title="(in PyTorch v1.12)"><em>torch.nn.Module</em></a>) – This can either be an instance
 of pytorch model or any modification of a model’s forward
 function.</p></li>
 <li><p><strong>attack</strong> (<em>Perturbation</em><em> or </em><em>Callable</em>) – This can either be an instance
@@ -512,20 +530,20 @@ kwarg of attack. Examples are num_dropout or stdevs</p></li>
 (not included in range)</p></li>
 <li><p><strong>arg_step</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><em>int</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.10)"><em>float</em></a>) – Minimum interval for increase of target variable.</p></li>
 <li><p><strong>mode</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><em>str</em></a><em>, </em><em>optional</em>) – Mode for search of minimum attack value;
-either ‘linear’ for linear search on variable, or ‘binary’ for
+either <code class="docutils literal notranslate"><span class="pre">linear</span></code> for linear search on variable, or <code class="docutils literal notranslate"><span class="pre">binary</span></code> for
 binary search of variable
-Default: ‘linear’</p></li>
+Default: <code class="docutils literal notranslate"><span class="pre">linear</span></code></p></li>
 <li><p><strong>num_attempts</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><em>int</em></a><em>, </em><em>optional</em>) – Number of attempts or trials with
 given variable. This should only be set to &gt; 1 for non-deterministic
 perturbation / attack functions
-Default: 1</p></li>
-<li><p><strong>preproc_fn</strong> (<em>callable</em><em>, </em><em>optional</em>) – Optional method applied to inputs. Output
+Default: <code class="docutils literal notranslate"><span class="pre">1</span></code></p></li>
+<li><p><strong>preproc_fn</strong> (<em>Callable</em><em>, </em><em>optional</em>) – Optional method applied to inputs. Output
 of preproc_fn is then provided as input to model, in addition to
 additional_forward_args provided to evaluate.
-Default: None</p></li>
+Default: <code class="docutils literal notranslate"><span class="pre">None</span></code></p></li>
 <li><p><strong>apply_before_preproc</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.10)"><em>bool</em></a><em>, </em><em>optional</em>) – Defines whether attack should be
 applied before or after preproc function.
-Default: False</p></li>
+Default: <code class="docutils literal notranslate"><span class="pre">False</span></code></p></li>
 <li><p><strong>correct_fn</strong> (<em>Callable</em><em>, </em><em>optional</em>) – <p>This determines whether the perturbed input
 leads to a correct or incorrect prediction. By default, this function
 is set to the standard classification test for correctness
@@ -536,13 +554,14 @@ any custom behavior defining whether the perturbation is successful
 at fooling the model. For non-classification use cases, a custom
 function must be provided which determines correctness.</p>
 <p>The first argument to this function must be the model out;
-any additional arguments should be provided through correct_fn_kwargs.</p>
-<dl class="simple">
-<dt>This function should have the following signature:</dt><dd><p>def correct_fn(model_out: Tensor, <a href="#id1"><span class="problematic" id="id2">**</span></a>kwargs: Any) -&gt; bool</p>
-</dd>
-</dl>
+any additional arguments should be provided through
+<code class="docutils literal notranslate"><span class="pre">correct_fn_kwargs</span></code>.</p>
+<p>This function should have the following signature:</p>
+<blockquote>
+<div><p>def correct_fn(model_out: Tensor, <a href="#id1"><span class="problematic" id="id2">**</span></a>kwargs: Any) -&gt; bool</p>
+</div></blockquote>
 <p>Method should return a boolean if correct (True) and incorrect (False).
-Default: None (applies standard correct_fn for classification)</p>
+Default: <code class="docutils literal notranslate"><span class="pre">None</span></code> (applies standard correct_fn for classification)</p>
 </p></li>
 </ul>
 </dd>
@@ -568,7 +587,7 @@ This input is provided directly as input to preproc function
 as well as any attack applied before preprocessing. If no
 pre-processing function is provided,
 this input is provided directly to the main model and all attacks.</p></li>
-<li><p><strong>additional_forward_args</strong> (<em>any</em><em>, </em><em>optional</em>) – If the forward function
+<li><p><strong>additional_forward_args</strong> (<em>Any</em><em>, </em><em>optional</em>) – If the forward function
 requires additional arguments other than the preprocessing
 outputs (or inputs if preproc_fn is None), this argument
 can be provided. It must be either a single additional
@@ -580,9 +599,9 @@ arguments in inputs.
 For a tensor, the first dimension of the tensor must
 correspond to the number of examples. For all other types,
 the given argument is used for all forward evaluations.
-Default: None</p></li>
+Default: <code class="docutils literal notranslate"><span class="pre">None</span></code></p></li>
 <li><p><strong>target</strong> (<em>TargetType</em>) – Target class for classification. This is required if
-using the default correct_fn</p></li>
+using the default <code class="docutils literal notranslate"><span class="pre">correct_fn</span></code>.</p></li>
 <li><p><strong>perturbations_per_eval</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><em>int</em></a><em>, </em><em>optional</em>) – Allows perturbations of multiple
 attacks to be grouped and evaluated in one call of forward_fn
 Each forward pass will contain a maximum of
@@ -595,10 +614,10 @@ samples.
 In order to apply this functionality, the output of preproc_fn
 (or inputs itself if no preproc_fn is provided) must be a tensor
 or tuple of tensors.
-Default: 1</p></li>
-<li><p><strong>attack_kwargs</strong> (<em>dictionary</em><em>, </em><em>optional</em>) – Optional dictionary of keyword
+Default: <code class="docutils literal notranslate"><span class="pre">1</span></code></p></li>
+<li><p><strong>attack_kwargs</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.10)"><em>dict</em></a><em>, </em><em>optional</em>) – Optional dictionary of keyword
 arguments provided to attack function</p></li>
-<li><p><strong>correct_fn_kwargs</strong> (<em>dictionary</em><em>, </em><em>optional</em>) – Optional dictionary of keyword
+<li><p><strong>correct_fn_kwargs</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.10)"><em>dict</em></a><em>, </em><em>optional</em>) – Optional dictionary of keyword
 arguments provided to correct function</p></li>
 </ul>
 </dd>

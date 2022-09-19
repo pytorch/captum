@@ -31,7 +31,7 @@ src="/_sphinx/documentation_options.js"></script>
 <div class="body" role="main">
 <h1>Source code for captum.robust._core.fgsm</h1><div class="highlight"><pre>
 <span></span><span class="ch">#!/usr/bin/env python3</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Tuple</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Tuple</span>
 
 <span class="kn">import</span> <span class="nn">torch</span>
 <span class="kn">from</span> <span class="nn">captum._utils.common</span> <span class="kn">import</span> <span class="p">(</span>
@@ -53,37 +53,44 @@ src="/_sphinx/documentation_options.js"></script>
 
 <div class="viewcode-block" id="FGSM"><a class="viewcode-back" href="../../../../robust.html#captum.robust.FGSM">[docs]</a><span class="k">class</span> <span class="nc">FGSM</span><span class="p">(</span><span class="n">Perturbation</span><span class="p">):</span>
     <span class="sa">r</span><span class="sd">"""</span>
-<span class="sd">    Fast Gradient Sign Method is an one-step method that can generate</span>
-<span class="sd">    adversarial examples. For non-targeted attack, the formulation is</span>
-<span class="sd">    x' = x + epsilon * sign(gradient of L(theta, x, y)).</span>
-<span class="sd">    For targeted attack on t, the formulation is</span>
-<span class="sd">    x' = x - epsilon * sign(gradient of L(theta, x, t)).</span>
-<span class="sd">    L(theta, x, y) is the model's loss function with respect to model</span>
+<span class="sd">    Fast Gradient Sign Method is a one-step method that can generate</span>
+<span class="sd">    adversarial examples.</span>
+
+<span class="sd">    For non-targeted attack, the formulation is::</span>
+
+<span class="sd">        x' = x + epsilon * sign(gradient of L(theta, x, y))</span>
+
+<span class="sd">    For targeted attack on t, the formulation is::</span>
+
+<span class="sd">        x' = x - epsilon * sign(gradient of L(theta, x, t))</span>
+
+<span class="sd">    ``L(theta, x, y)`` is the model's loss function with respect to model</span>
 <span class="sd">    parameters, inputs and labels.</span>
 
 <span class="sd">    More details on Fast Gradient Sign Method can be found in the original</span>
-<span class="sd">    paper:</span>
-<span class="sd">    https://arxiv.org/pdf/1412.6572.pdf</span>
+<span class="sd">    paper: https://arxiv.org/abs/1412.6572</span>
 <span class="sd">    """</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">forward_func</span><span class="p">:</span> <span class="n">Callable</span><span class="p">,</span>
-        <span class="n">loss_func</span><span class="p">:</span> <span class="n">Callable</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">loss_func</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Callable</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">lower_bound</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="s2">"-inf"</span><span class="p">),</span>
         <span class="n">upper_bound</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="s2">"inf"</span><span class="p">),</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        Args:</span>
-<span class="sd">            forward_func (callable): The pytorch model for which the attack is</span>
+<span class="sd">            forward_func (Callable): The pytorch model for which the attack is</span>
 <span class="sd">                        computed.</span>
-<span class="sd">            loss_func (callable, optional): Loss function of which the gradient</span>
+<span class="sd">            loss_func (Callable, optional): Loss function of which the gradient</span>
 <span class="sd">                        computed. The loss function should take in outputs of the</span>
 <span class="sd">                        model and labels, and return a loss tensor.</span>
 <span class="sd">                        The default loss function is negative log.</span>
 <span class="sd">            lower_bound (float, optional): Lower bound of input values.</span>
+<span class="sd">                        Default: ``float("-inf")``</span>
 <span class="sd">            upper_bound (float, optional): Upper bound of input values.</span>
 <span class="sd">                        e.g. image pixels must be in the range 0-255</span>
+<span class="sd">                        Default: ``float("inf")``</span>
 
 <span class="sd">        Attributes:</span>
 <span class="sd">            bound (Callable): A function that bounds the input values based on</span>
@@ -112,13 +119,13 @@ src="/_sphinx/documentation_options.js"></script>
 
 <span class="sd">        Args:</span>
 
-<span class="sd">            inputs (tensor or tuple of tensors): Input for which adversarial</span>
+<span class="sd">            inputs (Tensor or tuple of Tensor): Input for which adversarial</span>
 <span class="sd">                        attack is computed. It can be provided as a single</span>
 <span class="sd">                        tensor or a tuple of multiple tensors. If multiple</span>
 <span class="sd">                        input tensors are provided, the batch sizes must be</span>
-<span class="sd">                        aligned accross all tensors.</span>
+<span class="sd">                        aligned across all tensors.</span>
 <span class="sd">            epsilon (float): Step size of perturbation.</span>
-<span class="sd">            target (any): True labels of inputs if non-targeted attack is</span>
+<span class="sd">            target (Any): True labels of inputs if non-targeted attack is</span>
 <span class="sd">                        desired. Target class of inputs if targeted attack</span>
 <span class="sd">                        is desired. Target will be passed to the loss function</span>
 <span class="sd">                        to compute loss, so the type needs to match the</span>
@@ -144,7 +151,8 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">                          examples in inputs (dim 0), and each tuple containing</span>
 <span class="sd">                          #output_dims - 1 elements. Each tuple is applied as the</span>
 <span class="sd">                          label for the corresponding example.</span>
-<span class="sd">            additional_forward_args (any, optional): If the forward function</span>
+
+<span class="sd">            additional_forward_args (Any, optional): If the forward function</span>
 <span class="sd">                        requires additional arguments other than the inputs for</span>
 <span class="sd">                        which attributions should not be computed, this argument</span>
 <span class="sd">                        can be provided. These arguments are provided to</span>
@@ -156,7 +164,7 @@ src="/_sphinx/documentation_options.js"></script>
 
 <span class="sd">        Returns:</span>
 
-<span class="sd">            - **perturbed inputs** (*tensor* or tuple of *tensors*):</span>
+<span class="sd">            - **perturbed inputs** (*Tensor* or tuple of *Tensor*):</span>
 <span class="sd">                        Perturbed input for each</span>
 <span class="sd">                        input tensor. The perturbed inputs have the same shape and</span>
 <span class="sd">                        dimensionality as the inputs.</span>
@@ -199,7 +207,7 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        A helper function to calculate the perturbed inputs given original</span>
 <span class="sd">        inputs, gradient of loss function and epsilon. The calculation is</span>
-<span class="sd">        different for targetd v.s. non-targeted as described above.</span>
+<span class="sd">        different for targeted v.s. non-targeted as described above.</span>
 <span class="sd">        """</span>
         <span class="n">multiplier</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span> <span class="k">if</span> <span class="n">targeted</span> <span class="k">else</span> <span class="mi">1</span>
         <span class="n">inputs</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span>

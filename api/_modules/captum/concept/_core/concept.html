@@ -57,7 +57,7 @@ src="/_sphinx/documentation_options.js"></script>
 
         <span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        Args:</span>
-<span class="sd">            id (int):   The unique identifier of the concept.</span>
+<span class="sd">            id (int): The unique identifier of the concept.</span>
 <span class="sd">            name (str): A unique name of the concept.</span>
 <span class="sd">            data_iter (DataLoader): A pytorch DataLoader object that combines a dataset</span>
 <span class="sd">                        and a sampler, and provides an iterable over a given</span>
@@ -67,6 +67,7 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">                        https://pytorch.org/docs/stable/data.html</span>
 
 <span class="sd">        Example::</span>
+
 <span class="sd">            &gt;&gt;&gt; # Creates a Concept object named "striped", with a data_iter</span>
 <span class="sd">            &gt;&gt;&gt; # object to iterate over all files in "./concepts/striped"</span>
 <span class="sd">            &gt;&gt;&gt; concept_name = "striped"</span>
@@ -111,7 +112,7 @@ src="/_sphinx/documentation_options.js"></script>
 
 <span class="sd">    Args:</span>
 
-<span class="sd">        inputs (tensor or tuple of tensors):  Inputs for which concept-based</span>
+<span class="sd">        inputs (Tensor or tuple of Tensor): Inputs for which concept-based</span>
 <span class="sd">                    interpretation scores are computed. It can be provided as</span>
 <span class="sd">                    a single tensor or a tuple of multiple tensors. If multiple</span>
 <span class="sd">                    input tensors are provided, the batch size (the first</span>

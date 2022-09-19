@@ -50,7 +50,7 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">    #deep-learning-example-with-gradientexplainer-tensorflowkeraspytorch-models</span>
 
 <span class="sd">    A Unified Approach to Interpreting Model Predictions</span>
-<span class="sd">    http://papers.nips.cc/paper\</span>
+<span class="sd">    https://papers.nips.cc/paper\</span>
 <span class="sd">    7062-a-unified-approach-to-interpreting-model-predictions</span>
 
 <span class="sd">    GradientShap approximates SHAP values by computing the expectations of</span>
@@ -73,7 +73,7 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">    In some sense it can be viewed as an approximation of integrated gradients</span>
 <span class="sd">    by computing the expectations of gradients for different baselines.</span>
 
-<span class="sd">    Current implementation uses Smoothgrad from `NoiseTunnel` in order to</span>
+<span class="sd">    Current implementation uses Smoothgrad from :class:`.NoiseTunnel` in order to</span>
 <span class="sd">    randomly draw samples from the distribution of baselines, add noise to input</span>
 <span class="sd">    samples and compute the expectation (smoothgrad).</span>
 <span class="sd">    """</span>
@@ -88,17 +88,17 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        Args:</span>
 
-<span class="sd">            forward_func (callable):  The forward function of the model or any</span>
+<span class="sd">            forward_func (Callable): The forward function of the model or any</span>
 <span class="sd">                        modification of it</span>
 <span class="sd">            layer (torch.nn.Module): Layer for which neuron attributions are computed.</span>
 <span class="sd">                        The output size of the attribute method matches the</span>
-<span class="sd">                        dimensions of the inputs or ouputs of the neuron with</span>
+<span class="sd">                        dimensions of the inputs or outputs of the neuron with</span>
 <span class="sd">                        index `neuron_selector` in this layer, depending on whether</span>
 <span class="sd">                        we attribute to the inputs or outputs of the neuron.</span>
 <span class="sd">                        Currently, it is assumed that the inputs or the outputs</span>
 <span class="sd">                        of the neurons in this layer, depending on which one is</span>
 <span class="sd">                        used for attribution, can only be a single tensor.</span>
-<span class="sd">            device_ids (list(int)): Device ID list, necessary only if forward_func</span>
+<span class="sd">            device_ids (list[int]): Device ID list, necessary only if forward_func</span>
 <span class="sd">                        applies a DataParallel model. This allows reconstruction of</span>
 <span class="sd">                        intermediate outputs from batched results across devices.</span>
 <span class="sd">                        If forward_func is given as the DataParallel model itself,</span>
@@ -138,7 +138,7 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        Args:</span>
 
-<span class="sd">            inputs (tensor or tuple of tensors):  Input for which SHAP attribution</span>
+<span class="sd">            inputs (Tensor or tuple of Tensor): Input for which SHAP attribution</span>
 <span class="sd">                        values are computed. If `forward_func` takes a single</span>
 <span class="sd">                        tensor as input, a single input tensor should be provided.</span>
 <span class="sd">                        If `forward_func` takes multiple tensors as input, a tuple</span>
@@ -146,7 +146,7 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">                        that for all given input tensors, dimension 0 corresponds</span>
 <span class="sd">                        to the number of examples, and if multiple input tensors</span>
 <span class="sd">                        are provided, the examples must be aligned appropriately.</span>
-<span class="sd">            neuron_selector (int, callable, or tuple of ints or slices):</span>
+<span class="sd">            neuron_selector (int, Callable, tuple of int, or slice):</span>
 <span class="sd">                        Selector for neuron</span>
 <span class="sd">                        in given layer for which attribution is desired.</span>
 <span class="sd">                        Neuron selector can be provided as:</span>
@@ -167,7 +167,7 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">                          indexed output tensor is used for attribution. Note</span>
 <span class="sd">                          that specifying a slice of a tensor would amount to</span>
 <span class="sd">                          computing the attribution of the sum of the specified</span>
-<span class="sd">                          neurons, and not the individual neurons independantly.</span>
+<span class="sd">                          neurons, and not the individual neurons independently.</span>
 
 <span class="sd">                        - a callable, which should</span>
 <span class="sd">                          take the target layer as input (single tensor or tuple</span>
@@ -179,7 +179,7 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">                          this function returns either a tensor with one element</span>
 <span class="sd">                          or a 1D tensor with length equal to batch_size (one scalar</span>
 <span class="sd">                          per input example)</span>
-<span class="sd">            baselines (tensor, tuple of tensors, callable):</span>
+<span class="sd">            baselines (Tensor, tuple of Tensor, or Callable):</span>
 <span class="sd">                        Baselines define the starting point from which expectation</span>
 <span class="sd">                        is computed and can be provided as:</span>
 
@@ -202,11 +202,11 @@ src="/_sphinx/documentation_options.js"></script>
 
 <span class="sd">                        It is recommended that the number of samples in the baselines'</span>
 <span class="sd">                        tensors is larger than one.</span>
-<span class="sd">            n_samples (int, optional):  The number of randomly generated examples</span>
+<span class="sd">            n_samples (int, optional): The number of randomly generated examples</span>
 <span class="sd">                        per sample in the input batch. Random examples are</span>
 <span class="sd">                        generated by adding gaussian random noise to each sample.</span>
 <span class="sd">                        Default: `5` if `n_samples` is not provided.</span>
-<span class="sd">            stdevs    (float, or a tuple of floats optional): The standard deviation</span>
+<span class="sd">            stdevs    (float or tuple of float, optional): The standard deviation</span>
 <span class="sd">                        of gaussian noise with zero mean that is added to each</span>
 <span class="sd">                        input in the batch. If `stdevs` is a single float value</span>
 <span class="sd">                        then that same value is used for all inputs. If it is</span>
@@ -215,7 +215,7 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">                        corresponds to the input with the same index in the inputs</span>
 <span class="sd">                        tuple.</span>
 <span class="sd">                        Default: 0.0</span>
-<span class="sd">            additional_forward_args (any, optional): If the forward function</span>
+<span class="sd">            additional_forward_args (Any, optional): If the forward function</span>
 <span class="sd">                        requires additional arguments other than the inputs for</span>
 <span class="sd">                        which attributions should not be computed, this argument</span>
 <span class="sd">                        can be provided. It can contain a tuple of ND tensors or</span>
@@ -241,7 +241,7 @@ src="/_sphinx/documentation_options.js"></script>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            **attributions** or 2-element tuple of **attributions**, **delta**:</span>
-<span class="sd">            - **attributions** (*tensor* or tuple of *tensors*):</span>
+<span class="sd">            - **attributions** (*Tensor* or tuple of *Tensor*):</span>
 <span class="sd">                        Attribution score computed based on GradientSHAP with respect</span>
 <span class="sd">                        to each input feature. Attributions will always be</span>
 <span class="sd">                        the same size as the provided inputs, with each value</span>

@@ -47,7 +47,7 @@ original paper:
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>forward_func</strong> (<em>callable</em>) – The forward function of the model or any
+<li><p><strong>forward_func</strong> (<em>Callable</em>) – The forward function of the model or any
 modification of it</p></li>
 <li><p><strong>multiply_by_inputs</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.10)"><em>bool</em></a><em>, </em><em>optional</em>) – <p>Indicates whether to factor
 model inputs’ multiplier in the final attribution scores.
@@ -79,7 +79,7 @@ property of integrated gradients.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>inputs</strong> (<em>tensor</em><em> or </em><em>tuple of tensors</em>) – Input for which integrated
+<li><p><strong>inputs</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.12)"><em>Tensor</em></a><em> or </em><em>tuple of ~torch.Tensor</em>) – Input for which integrated
 gradients are computed. If forward_func takes a single
 tensor as input, a single input tensor should be provided.
 If forward_func takes multiple tensors as input, a tuple
@@ -87,7 +87,7 @@ of the input tensors should be provided. It is assumed
 that for all given input tensors, dimension 0 corresponds
 to the number of examples, and if multiple input tensors
 are provided, the examples must be aligned appropriately.</p></li>
-<li><p><strong>baselines</strong> (<em>scalar</em><em>, </em><em>tensor</em><em>, </em><em>tuple of scalars</em><em> or </em><em>tensors</em><em>, </em><em>optional</em>) – <p>Baselines define the starting point from which integral
+<li><p><strong>baselines</strong> (<em>scalar</em><em>, </em><a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.12)"><em>Tensor</em></a><em>, </em><em>tuple of scalar</em><em>, or </em><a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.12)"><em>Tensor</em></a><em>, </em><em>optional</em>) – <p>Baselines define the starting point from which integral
 is computed and can be provided as:</p>
 <ul>
 <li><p>a single tensor, if inputs is a single tensor, with
@@ -114,7 +114,7 @@ for corresponding input tensor.</p></li>
 use zero scalar corresponding to each input tensor.</p>
 <p>Default: None</p>
 </p></li>
-<li><p><strong>target</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><em>int</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.10)"><em>tuple</em></a><em>, </em><em>tensor</em><em> or </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.10)"><em>list</em></a><em>, </em><em>optional</em>) – <p>Output indices for
+<li><p><strong>target</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><em>int</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.10)"><em>tuple</em></a><em>, </em><a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.12)"><em>Tensor</em></a><em>, or </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.10)"><em>list</em></a><em>, </em><em>optional</em>) – <p>Output indices for
 which gradients are computed (for classification cases,
 this is usually the target class).
 If the network returns a scalar value per example,
@@ -138,7 +138,7 @@ target for the corresponding example.</p></li>
 </ul>
 <p>Default: None</p>
 </p></li>
-<li><p><strong>additional_forward_args</strong> (<em>any</em><em>, </em><em>optional</em>) – If the forward function
+<li><p><strong>additional_forward_args</strong> (<em>Any</em><em>, </em><em>optional</em>) – If the forward function
 requires additional arguments other than the inputs for
 which attributions should not be computed, this argument
 can be provided. It must be either a single additional
@@ -157,7 +157,7 @@ to these arguments.
 Default: None</p></li>
 <li><p><strong>n_steps</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><em>int</em></a><em>, </em><em>optional</em>) – The number of steps used by the approximation
 method. Default: 50.</p></li>
-<li><p><strong>method</strong> (<em>string</em><em>, </em><em>optional</em>) – Method for approximating the integral,
+<li><p><strong>method</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><em>str</em></a><em>, </em><em>optional</em>) – Method for approximating the integral,
 one of <cite>riemann_right</cite>, <cite>riemann_left</cite>, <cite>riemann_middle</cite>,
 <cite>riemann_trapezoid</cite> or <cite>gausslegendre</cite>.
 Default: <cite>gausslegendre</cite> if no method is provided.</p></li>
@@ -182,7 +182,7 @@ Default: False</p></li>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p><ul class="simple">
 <li><dl class="simple">
-<dt><strong>attributions</strong> (<em>tensor</em> or tuple of <em>tensors</em>):</dt><dd><p>Integrated gradients with respect to each input feature.
+<dt><strong>attributions</strong> (<em>Tensor</em> or tuple of <em>Tensor</em>):</dt><dd><p>Integrated gradients with respect to each input feature.
 attributions will always be the same size as the provided
 inputs, with each value providing the attribution of the
 corresponding input index.
@@ -193,14 +193,14 @@ corresponding sized tensors is returned.</p>
 </dl>
 </li>
 <li><dl class="simple">
-<dt><strong>delta</strong> (<em>tensor</em>, returned if return_convergence_delta=True):</dt><dd><p>The difference between the total approximated and true
+<dt><strong>delta</strong> (<em>Tensor</em>, returned if return_convergence_delta=True):</dt><dd><p>The difference between the total approximated and true
 integrated gradients. This is computed using the property
 that the total sum of forward_func(inputs) -
 forward_func(baselines) must equal the total sum of the
 integrated gradient.
 Delta is calculated per example, meaning that the number of
 elements in returned delta tensor is equal to the number of
-of examples in inputs.</p>
+examples in inputs.</p>
 </dd>
 </dl>
 </li>

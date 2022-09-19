@@ -41,7 +41,7 @@ returned output is in the shape of the layer’s output, showing the total
 conductance of each hidden layer neuron.</p>
 <p>The details of the approach can be found here:
 <a class="reference external" href="https://arxiv.org/abs/1805.12233">https://arxiv.org/abs/1805.12233</a>
-<a class="reference external" href="https://arxiv.org/pdf/1807.09946.pdf">https://arxiv.org/pdf/1807.09946.pdf</a></p>
+<a class="reference external" href="https://arxiv.org/abs/1807.09946">https://arxiv.org/abs/1807.09946</a></p>
 <p>Note that this provides the total conductance of each neuron in the
 layer’s output. To obtain the breakdown of a neuron’s conductance by input
 features, utilize NeuronConductance instead, and provide the target
@@ -49,7 +49,7 @@ neuron index.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>forward_func</strong> (<em>callable</em>) – The forward function of the model or any
+<li><p><strong>forward_func</strong> (<em>Callable</em>) – The forward function of the model or any
 modification of it</p></li>
 <li><p><strong>layer</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/generated/torch.nn.Module.html#torch.nn.Module" title="(in PyTorch v1.12)"><em>torch.nn.Module</em></a>) – Layer for which attributions are computed.
 Output size of attribute matches this layer’s input or
@@ -57,7 +57,7 @@ output dimensions, depending on whether we attribute to
 the inputs or outputs of the layer, corresponding to
 attribution of each neuron in the input or output of
 this layer.</p></li>
-<li><p><strong>device_ids</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.10)"><em>list</em></a><em>(</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><em>int</em></a><em>)</em>) – Device ID list, necessary only if forward_func
+<li><p><strong>device_ids</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.10)"><em>list</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><em>int</em></a><em>]</em>) – Device ID list, necessary only if forward_func
 applies a DataParallel model. This allows reconstruction of
 intermediate outputs from batched results across devices.
 If forward_func is given as the DataParallel model itself,
@@ -73,7 +73,7 @@ then it is not necessary to provide this argument.</p></li>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>inputs</strong> (<em>tensor</em><em> or </em><em>tuple of tensors</em>) – Input for which layer
+<li><p><strong>inputs</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.12)"><em>Tensor</em></a><em> or </em><em>tuple of ~torch.Tensor</em>) – Input for which layer
 conductance is computed. If forward_func takes a single
 tensor as input, a single input tensor should be provided.
 If forward_func takes multiple tensors as input, a tuple
@@ -81,7 +81,7 @@ of the input tensors should be provided. It is assumed
 that for all given input tensors, dimension 0 corresponds
 to the number of examples, and if multiple input tensors
 are provided, the examples must be aligned appropriately.</p></li>
-<li><p><strong>baselines</strong> (<em>scalar</em><em>, </em><em>tensor</em><em>, </em><em>tuple of scalars</em><em> or </em><em>tensors</em><em>, </em><em>optional</em>) – <p>Baselines define the starting point from which integral
+<li><p><strong>baselines</strong> (<em>scalar</em><em>, </em><a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.12)"><em>Tensor</em></a><em>, </em><em>tuple of scalar</em><em>, or </em><a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.12)"><em>Tensor</em></a><em>, </em><em>optional</em>) – <p>Baselines define the starting point from which integral
 is computed and can be provided as:</p>
 <ul>
 <li><p>a single tensor, if inputs is a single tensor, with
@@ -108,7 +108,7 @@ for corresponding input tensor.</p></li>
 use zero scalar corresponding to each input tensor.</p>
 <p>Default: None</p>
 </p></li>
-<li><p><strong>target</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><em>int</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.10)"><em>tuple</em></a><em>, </em><em>tensor</em><em> or </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.10)"><em>list</em></a><em>, </em><em>optional</em>) – <p>Output indices for
+<li><p><strong>target</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><em>int</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.10)"><em>tuple</em></a><em>, </em><a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.12)"><em>Tensor</em></a><em>, or </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.10)"><em>list</em></a><em>, </em><em>optional</em>) – <p>Output indices for
 which gradients are computed (for classification cases,
 this is usually the target class).
 If the network returns a scalar value per example,
@@ -132,7 +132,7 @@ target for the corresponding example.</p></li>
 </ul>
 <p>Default: None</p>
 </p></li>
-<li><p><strong>additional_forward_args</strong> (<em>any</em><em>, </em><em>optional</em>) – If the forward function
+<li><p><strong>additional_forward_args</strong> (<em>Any</em><em>, </em><em>optional</em>) – If the forward function
 requires additional arguments other than the inputs for
 which attributions should not be computed, this argument
 can be provided. It must be either a single additional
@@ -151,7 +151,7 @@ to these arguments.
 Default: None</p></li>
 <li><p><strong>n_steps</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><em>int</em></a><em>, </em><em>optional</em>) – The number of steps used by the approximation
 method. Default: 50.</p></li>
-<li><p><strong>method</strong> (<em>string</em><em>, </em><em>optional</em>) – Method for approximating the integral,
+<li><p><strong>method</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><em>str</em></a><em>, </em><em>optional</em>) – Method for approximating the integral,
 one of <cite>riemann_right</cite>, <cite>riemann_left</cite>, <cite>riemann_middle</cite>,
 <cite>riemann_trapezoid</cite> or <cite>gausslegendre</cite>.
 Default: <cite>gausslegendre</cite> if no method is provided.</p></li>
@@ -187,7 +187,7 @@ Default: False</p></li>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p><ul class="simple">
 <li><dl class="simple">
-<dt><strong>attributions</strong> (<em>tensor</em> or tuple of <em>tensors</em>):</dt><dd><p>Conductance of each neuron in given layer input or
+<dt><strong>attributions</strong> (<em>Tensor</em> or tuple of <em>Tensor</em>):</dt><dd><p>Conductance of each neuron in given layer input or
 output. Attributions will always be the same size as
 the input or output of the given layer, depending on
 whether we attribute to the inputs or outputs
@@ -200,14 +200,14 @@ otherwise a single tensor is returned.</p>
 </dl>
 </li>
 <li><dl class="simple">
-<dt><strong>delta</strong> (<em>tensor</em>, returned if return_convergence_delta=True):</dt><dd><p>The difference between the total
+<dt><strong>delta</strong> (<em>Tensor</em>, returned if return_convergence_delta=True):</dt><dd><p>The difference between the total
 approximated and true conductance.
 This is computed using the property that the total sum of
 forward_func(inputs) - forward_func(baselines) must equal
 the total sum of the attributions.
 Delta is calculated per example, meaning that the number of
 elements in returned delta tensor is equal to the number of
-of examples in inputs.</p>
+examples in inputs.</p>
 </dd>
 </dl>
 </li>
@@ -262,9 +262,9 @@ provides a convergence delta (aka approximation error) or not.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>forward_func</strong> (<em>callable</em>) – The forward function of the model or any
+<li><p><strong>forward_func</strong> (<em>Callable</em>) – The forward function of the model or any
 modification of it</p></li>
-<li><p><strong>layer</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/generated/torch.nn.Module.html#torch.nn.Module" title="(in PyTorch v1.12)"><em>torch.nn.Module</em></a><em> or </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.10)"><em>list</em></a><em>(</em><a class="reference external" href="https://pytorch.org/docs/stable/generated/torch.nn.Module.html#torch.nn.Module" title="(in PyTorch v1.12)"><em>torch.nn.Module</em></a><em>)</em>) – Layer or layers
+<li><p><strong>layer</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/generated/torch.nn.Module.html#torch.nn.Module" title="(in PyTorch v1.12)"><em>torch.nn.Module</em></a><em> or </em><em>list of torch.nn.Module</em>) – Layer or layers
 for which attributions are computed.
 Output size of attribute matches this layer’s input or
 output dimensions, depending on whether we attribute to
@@ -273,7 +273,7 @@ attribution of each neuron in the input or output of
 this layer. If multiple layers are provided, attributions
 are returned as a list, each element corresponding to the
 activations of the corresponding layer.</p></li>
-<li><p><strong>device_ids</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.10)"><em>list</em></a><em>(</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><em>int</em></a><em>)</em>) – Device ID list, necessary only if forward_func
+<li><p><strong>device_ids</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.10)"><em>list</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><em>int</em></a><em>]</em>) – Device ID list, necessary only if forward_func
 applies a DataParallel model. This allows reconstruction of
 intermediate outputs from batched results across devices.
 If forward_func is given as the DataParallel model itself,
@@ -287,7 +287,7 @@ then it is not necessary to provide this argument.</p></li>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>inputs</strong> (<em>tensor</em><em> or </em><em>tuple of tensors</em>) – Input for which layer
+<li><p><strong>inputs</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.12)"><em>Tensor</em></a><em> or </em><em>tuple of ~torch.Tensor</em>) – Input for which layer
 activation is computed. If forward_func takes a single
 tensor as input, a single input tensor should be provided.
 If forward_func takes multiple tensors as input, a tuple
@@ -295,7 +295,7 @@ of the input tensors should be provided. It is assumed
 that for all given input tensors, dimension 0 corresponds
 to the number of examples, and if multiple input tensors
 are provided, the examples must be aligned appropriately.</p></li>
-<li><p><strong>additional_forward_args</strong> (<em>any</em><em>, </em><em>optional</em>) – If the forward function
+<li><p><strong>additional_forward_args</strong> (<em>Any</em><em>, </em><em>optional</em>) – If the forward function
 requires additional arguments other than the inputs for
 which attributions should not be computed, this argument
 can be provided. It must be either a single additional
@@ -323,7 +323,7 @@ Default: False</p></li>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p><ul class="simple">
 <li><dl class="simple">
-<dt><strong>attributions</strong> (<em>tensor</em> or tuple of <em>tensors</em> or <em>list</em>):</dt><dd><p>Activation of each neuron in given layer output.
+<dt><strong>attributions</strong> (<em>Tensor</em> or tuple of <em>Tensor</em> or <em>list</em>):</dt><dd><p>Activation of each neuron in given layer output.
 Attributions will always be the same size as the
 output of the given layer.
 Attributions are returned in a tuple if
@@ -339,7 +339,7 @@ activations of the corresponding layer.</p>
 </p>
 </dd>
 <dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p><em>tensor</em> or tuple of <em>tensors</em> or <em>list</em> of <strong>attributions</strong></p>
+<dd class="field-odd"><p><em>Tensor</em> or tuple of <em>Tensor</em> or list of <strong>attributions</strong></p>
 </dd>
 </dl>
 <p>Examples:</p>
@@ -368,14 +368,14 @@ for a particular layer along the path from a baseline input to the
 given input.
 If no baseline is provided, the default baseline is the zero tensor.
 More details on this approach can be found here:
-<a class="reference external" href="https://arxiv.org/pdf/1802.03788.pdf">https://arxiv.org/pdf/1802.03788.pdf</a></p>
+<a class="reference external" href="https://arxiv.org/abs/1802.03788">https://arxiv.org/abs/1802.03788</a></p>
 <p>Note that this method is similar to applying integrated gradients and
 taking the layer as input, integrating the gradient of the layer with
 respect to the output.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>forward_func</strong> (<em>callable</em>) – The forward function of the model or any
+<li><p><strong>forward_func</strong> (<em>Callable</em>) – The forward function of the model or any
 modification of it</p></li>
 <li><p><strong>layer</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/generated/torch.nn.Module.html#torch.nn.Module" title="(in PyTorch v1.12)"><em>torch.nn.Module</em></a>) – Layer for which attributions are computed.
 Output size of attribute matches this layer’s input or
@@ -383,7 +383,7 @@ output dimensions, depending on whether we attribute to
 the inputs or outputs of the layer, corresponding to
 attribution of each neuron in the input or output of
 this layer.</p></li>
-<li><p><strong>device_ids</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.10)"><em>list</em></a><em>(</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><em>int</em></a><em>)</em>) – Device ID list, necessary only if forward_func
+<li><p><strong>device_ids</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.10)"><em>list</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><em>int</em></a><em>]</em>) – Device ID list, necessary only if forward_func
 applies a DataParallel model. This allows reconstruction of
 intermediate outputs from batched results across devices.
 If forward_func is given as the DataParallel model itself,
@@ -397,7 +397,7 @@ then it is not necessary to provide this argument.</p></li>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>inputs</strong> (<em>tensor</em><em> or </em><em>tuple of tensors</em>) – Input for which internal
+<li><p><strong>inputs</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.12)"><em>Tensor</em></a><em> or </em><em>tuple of ~torch.Tensor</em>) – Input for which internal
 influence is computed. If forward_func takes a single
 tensor as input, a single input tensor should be provided.
 If forward_func takes multiple tensors as input, a tuple
@@ -405,7 +405,7 @@ of the input tensors should be provided. It is assumed
 that for all given input tensors, dimension 0 corresponds
 to the number of examples, and if multiple input tensors
 are provided, the examples must be aligned appropriately.</p></li>
-<li><p><strong>scalar</strong> (<em>baselines</em>) – <p>Baselines define a starting point from which integral
+<li><p><strong>baselines</strong> (<em>scalar</em><em>, </em><a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.12)"><em>Tensor</em></a><em>, </em><em>tuple of scalar</em><em>, or </em><a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.12)"><em>Tensor</em></a><em>, </em><em>optional</em>) – <p>Baselines define a starting point from which integral
 is computed and can be provided as:</p>
 <ul>
 <li><p>a single tensor, if inputs is a single tensor, with
@@ -432,88 +432,7 @@ for corresponding input tensor.</p></li>
 use zero scalar corresponding to each input tensor.</p>
 <p>Default: None</p>
 </p></li>
-<li><p><strong>tensor</strong> – <p>Baselines define a starting point from which integral
-is computed and can be provided as:</p>
-<ul>
-<li><p>a single tensor, if inputs is a single tensor, with
-exactly the same dimensions as inputs or the first
-dimension is one and the remaining dimensions match
-with inputs.</p></li>
-<li><p>a single scalar, if inputs is a single tensor, which will
-be broadcasted for each input value in input tensor.</p></li>
-<li><p>a tuple of tensors or scalars, the baseline corresponding
-to each tensor in the inputs’ tuple can be:</p>
-<ul>
-<li><p>either a tensor with matching dimensions to
-corresponding tensor in the inputs’ tuple
-or the first dimension is one and the remaining
-dimensions match with the corresponding
-input tensor.</p></li>
-<li><p>or a scalar, corresponding to a tensor in the
-inputs’ tuple. This scalar value is broadcasted
-for corresponding input tensor.</p></li>
-</ul>
-</li>
-</ul>
-<p>In the cases when <cite>baselines</cite> is not provided, we internally
-use zero scalar corresponding to each input tensor.</p>
-<p>Default: None</p>
-</p></li>
-<li><p><strong>tensors</strong> (<em>tuple of scalars or</em>) – <p>Baselines define a starting point from which integral
-is computed and can be provided as:</p>
-<ul>
-<li><p>a single tensor, if inputs is a single tensor, with
-exactly the same dimensions as inputs or the first
-dimension is one and the remaining dimensions match
-with inputs.</p></li>
-<li><p>a single scalar, if inputs is a single tensor, which will
-be broadcasted for each input value in input tensor.</p></li>
-<li><p>a tuple of tensors or scalars, the baseline corresponding
-to each tensor in the inputs’ tuple can be:</p>
-<ul>
-<li><p>either a tensor with matching dimensions to
-corresponding tensor in the inputs’ tuple
-or the first dimension is one and the remaining
-dimensions match with the corresponding
-input tensor.</p></li>
-<li><p>or a scalar, corresponding to a tensor in the
-inputs’ tuple. This scalar value is broadcasted
-for corresponding input tensor.</p></li>
-</ul>
-</li>
-</ul>
-<p>In the cases when <cite>baselines</cite> is not provided, we internally
-use zero scalar corresponding to each input tensor.</p>
-<p>Default: None</p>
-</p></li>
-<li><p><strong>optional</strong><strong>)</strong> – <p>Baselines define a starting point from which integral
-is computed and can be provided as:</p>
-<ul>
-<li><p>a single tensor, if inputs is a single tensor, with
-exactly the same dimensions as inputs or the first
-dimension is one and the remaining dimensions match
-with inputs.</p></li>
-<li><p>a single scalar, if inputs is a single tensor, which will
-be broadcasted for each input value in input tensor.</p></li>
-<li><p>a tuple of tensors or scalars, the baseline corresponding
-to each tensor in the inputs’ tuple can be:</p>
-<ul>
-<li><p>either a tensor with matching dimensions to
-corresponding tensor in the inputs’ tuple
-or the first dimension is one and the remaining
-dimensions match with the corresponding
-input tensor.</p></li>
-<li><p>or a scalar, corresponding to a tensor in the
-inputs’ tuple. This scalar value is broadcasted
-for corresponding input tensor.</p></li>
-</ul>
-</li>
-</ul>
-<p>In the cases when <cite>baselines</cite> is not provided, we internally
-use zero scalar corresponding to each input tensor.</p>
-<p>Default: None</p>
-</p></li>
-<li><p><strong>target</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><em>int</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.10)"><em>tuple</em></a><em>, </em><em>tensor</em><em> or </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.10)"><em>list</em></a><em>, </em><em>optional</em>) – <p>Output indices for
+<li><p><strong>target</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><em>int</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.10)"><em>tuple</em></a><em>, </em><a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.12)"><em>Tensor</em></a><em>, or </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.10)"><em>list</em></a><em>, </em><em>optional</em>) – <p>Output indices for
 which gradients are computed (for classification cases,
 this is usually the target class).
 If the network returns a scalar value per example,
@@ -537,7 +456,7 @@ target for the corresponding example.</p></li>
 </ul>
 <p>Default: None</p>
 </p></li>
-<li><p><strong>additional_forward_args</strong> (<em>any</em><em>, </em><em>optional</em>) – If the forward function
+<li><p><strong>additional_forward_args</strong> (<em>Any</em><em>, </em><em>optional</em>) – If the forward function
 requires additional arguments other than the inputs for
 which attributions should not be computed, this argument
 can be provided. It must be either a single additional
@@ -556,7 +475,7 @@ to these arguments.
 Default: None</p></li>
 <li><p><strong>n_steps</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><em>int</em></a><em>, </em><em>optional</em>) – The number of steps used by the approximation
 method. Default: 50.</p></li>
-<li><p><strong>method</strong> (<em>string</em><em>, </em><em>optional</em>) – Method for approximating the integral,
+<li><p><strong>method</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><em>str</em></a><em>, </em><em>optional</em>) – Method for approximating the integral,
 one of <cite>riemann_right</cite>, <cite>riemann_left</cite>, <cite>riemann_middle</cite>,
 <cite>riemann_trapezoid</cite> or <cite>gausslegendre</cite>.
 Default: <cite>gausslegendre</cite> if no method is provided.</p></li>
@@ -587,11 +506,11 @@ Default: False</p></li>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p><ul class="simple">
 <li><dl class="simple">
-<dt><strong>attributions</strong> (<em>tensor</em> or tuple of <em>tensors</em>):</dt><dd><p>Internal influence of each neuron in given
+<dt><strong>attributions</strong> (<em>Tensor</em> or tuple of <em>Tensor</em>):</dt><dd><p>Internal influence of each neuron in given
 layer output. Attributions will always be the same size
 as the output or input of the given layer depending on
 whether <cite>attribute_to_layer_input</cite> is set to <cite>False</cite> or
-<a href="#id1"><span class="problematic" id="id2">`</span></a>True`respectively.
+<cite>True</cite> respectively.
 Attributions are returned in a tuple if
 the layer inputs / outputs contain multiple tensors,
 otherwise a single tensor is returned.</p>
@@ -602,7 +521,7 @@ otherwise a single tensor is returned.</p>
 </p>
 </dd>
 <dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p><em>tensor</em> or tuple of <em>tensors</em> of <strong>attributions</strong></p>
+<dd class="field-odd"><p><em>Tensor</em> or tuple of <em>Tensor</em> of <strong>attributions</strong></p>
 </dd>
 </dl>
 <p>Examples:</p>
@@ -631,9 +550,9 @@ layer on given inputs.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>forward_func</strong> (<em>callable</em>) – The forward function of the model or any
+<li><p><strong>forward_func</strong> (<em>Callable</em>) – The forward function of the model or any
 modification of it</p></li>
-<li><p><strong>layer</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/generated/torch.nn.Module.html#torch.nn.Module" title="(in PyTorch v1.12)"><em>torch.nn.Module</em></a><em> or </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.10)"><em>list</em></a><em>(</em><a class="reference external" href="https://pytorch.org/docs/stable/generated/torch.nn.Module.html#torch.nn.Module" title="(in PyTorch v1.12)"><em>torch.nn.Module</em></a><em>)</em>) – Layer or layers
+<li><p><strong>layer</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/generated/torch.nn.Module.html#torch.nn.Module" title="(in PyTorch v1.12)"><em>torch.nn.Module</em></a><em> or </em><em>list of torch.nn.Module</em>) – Layer or layers
 for which attributions are computed.
 Output size of attribute matches this layer’s input or
 output dimensions, depending on whether we attribute to
@@ -642,7 +561,7 @@ attribution of each neuron in the input or output of
 this layer. If multiple layers are provided, attributions
 are returned as a list, each element corresponding to the
 attributions of the corresponding layer.</p></li>
-<li><p><strong>device_ids</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.10)"><em>list</em></a><em>(</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><em>int</em></a><em>)</em>) – Device ID list, necessary only if forward_func
+<li><p><strong>device_ids</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.10)"><em>list</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><em>int</em></a><em>]</em>) – Device ID list, necessary only if forward_func
 applies a DataParallel model. This allows reconstruction of
 intermediate outputs from batched results across devices.
 If forward_func is given as the DataParallel model itself,
@@ -669,7 +588,7 @@ layer activations for inputs.</p>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>inputs</strong> (<em>tensor</em><em> or </em><em>tuple of tensors</em>) – Input for which attributions
+<li><p><strong>inputs</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.12)"><em>Tensor</em></a><em> or </em><em>tuple of ~torch.Tensor</em>) – Input for which attributions
 are computed. If forward_func takes a single
 tensor as input, a single input tensor should be provided.
 If forward_func takes multiple tensors as input, a tuple
@@ -677,7 +596,7 @@ of the input tensors should be provided. It is assumed
 that for all given input tensors, dimension 0 corresponds
 to the number of examples, and if multiple input tensors
 are provided, the examples must be aligned appropriately.</p></li>
-<li><p><strong>target</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><em>int</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.10)"><em>tuple</em></a><em>, </em><em>tensor</em><em> or </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.10)"><em>list</em></a><em>, </em><em>optional</em>) – <p>Output indices for
+<li><p><strong>target</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><em>int</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.10)"><em>tuple</em></a><em>, </em><a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.12)"><em>Tensor</em></a><em>, or </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.10)"><em>list</em></a><em>, </em><em>optional</em>) – <p>Output indices for
 which gradients are computed (for classification cases,
 this is usually the target class).
 If the network returns a scalar value per example,
@@ -701,7 +620,7 @@ target for the corresponding example.</p></li>
 </ul>
 <p>Default: None</p>
 </p></li>
-<li><p><strong>additional_forward_args</strong> (<em>any</em><em>, </em><em>optional</em>) – If the forward function
+<li><p><strong>additional_forward_args</strong> (<em>Any</em><em>, </em><em>optional</em>) – If the forward function
 requires additional arguments other than the inputs for
 which attributions should not be computed, this argument
 can be provided. It must be either a single additional
@@ -725,7 +644,7 @@ Default: False</p></li>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p><ul class="simple">
 <li><dl class="simple">
-<dt><strong>attributions</strong> (<em>tensor</em> or tuple of <em>tensors</em> or <em>list</em>):</dt><dd><p>Product of gradient and activation for each
+<dt><strong>attributions</strong> (<em>Tensor</em> or tuple of <em>Tensor</em> or <em>list</em>):</dt><dd><p>Product of gradient and activation for each
 neuron in given layer output.
 Attributions will always be the same size as the
 output of the given layer.
@@ -742,7 +661,7 @@ activations of the corresponding layer.</p>
 </p>
 </dd>
 <dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p><em>tensor</em> or tuple of <em>tensors</em> or <em>list</em> of <strong>attributions</strong></p>
+<dd class="field-odd"><p><em>Tensor</em> or tuple of <em>Tensor</em> or list of <strong>attributions</strong></p>
 </dd>
 </dl>
 <p>Examples:</p>
@@ -790,17 +709,17 @@ matches the input image spatially. This upsampling can be performed
 using LayerAttribution.interpolate, as shown in the example below.</p>
 <p>More details regarding the GradCAM method can be found in the
 original paper here:
-<a class="reference external" href="https://arxiv.org/pdf/1610.02391.pdf">https://arxiv.org/pdf/1610.02391.pdf</a></p>
+<a class="reference external" href="https://arxiv.org/abs/1610.02391">https://arxiv.org/abs/1610.02391</a></p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>forward_func</strong> (<em>callable</em>) – The forward function of the model or any
+<li><p><strong>forward_func</strong> (<em>Callable</em>) – The forward function of the model or any
 modification of it</p></li>
 <li><p><strong>layer</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/generated/torch.nn.Module.html#torch.nn.Module" title="(in PyTorch v1.12)"><em>torch.nn.Module</em></a>) – Layer for which attributions are computed.
 Output size of attribute matches this layer’s output
 dimensions, except for dimension 2, which will be 1,
 since GradCAM sums over channels.</p></li>
-<li><p><strong>device_ids</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.10)"><em>list</em></a><em>(</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><em>int</em></a><em>)</em>) – Device ID list, necessary only if forward_func
+<li><p><strong>device_ids</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.10)"><em>list</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><em>int</em></a><em>]</em>) – Device ID list, necessary only if forward_func
 applies a DataParallel model. This allows reconstruction of
 intermediate outputs from batched results across devices.
 If forward_func is given as the DataParallel model itself,
@@ -814,7 +733,7 @@ then it is not necessary to provide this argument.</p></li>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>inputs</strong> (<em>tensor</em><em> or </em><em>tuple of tensors</em>) – Input for which attributions
+<li><p><strong>inputs</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.12)"><em>Tensor</em></a><em> or </em><em>tuple of ~torch.Tensor</em>) – Input for which attributions
 are computed. If forward_func takes a single
 tensor as input, a single input tensor should be provided.
 If forward_func takes multiple tensors as input, a tuple
@@ -822,7 +741,7 @@ of the input tensors should be provided. It is assumed
 that for all given input tensors, dimension 0 corresponds
 to the number of examples, and if multiple input tensors
 are provided, the examples must be aligned appropriately.</p></li>
-<li><p><strong>target</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><em>int</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.10)"><em>tuple</em></a><em>, </em><em>tensor</em><em> or </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.10)"><em>list</em></a><em>, </em><em>optional</em>) – <p>Output indices for
+<li><p><strong>target</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><em>int</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.10)"><em>tuple</em></a><em>, </em><a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.12)"><em>Tensor</em></a><em>, or </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.10)"><em>list</em></a><em>, </em><em>optional</em>) – <p>Output indices for
 which gradients are computed (for classification cases,
 this is usually the target class).
 If the network returns a scalar value per example,
@@ -846,7 +765,7 @@ target for the corresponding example.</p></li>
 </ul>
 <p>Default: None</p>
 </p></li>
-<li><p><strong>additional_forward_args</strong> (<em>any</em><em>, </em><em>optional</em>) – If the forward function
+<li><p><strong>additional_forward_args</strong> (<em>Any</em><em>, </em><em>optional</em>) – If the forward function
 requires additional arguments other than the inputs for
 which attributions should not be computed, this argument
 can be provided. It must be either a single additional
@@ -881,7 +800,7 @@ Default: False</p></li>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p><ul class="simple">
 <li><dl class="simple">
-<dt><strong>attributions</strong> (<em>tensor</em> or tuple of <em>tensors</em>):</dt><dd><p>Attributions based on GradCAM method.
+<dt><strong>attributions</strong> (<em>Tensor</em> or tuple of <em>Tensor</em>):</dt><dd><p>Attributions based on GradCAM method.
 Attributions will be the same size as the
 output of the given layer, except for dimension 2,
 which will be 1 due to summing over channels.
@@ -895,7 +814,7 @@ otherwise a single tensor is returned.</p>
 </p>
 </dd>
 <dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p><em>tensor</em> or tuple of <em>tensors</em> of <strong>attributions</strong></p>
+<dd class="field-odd"><p><em>Tensor</em> or tuple of <em>Tensor</em> of <strong>attributions</strong></p>
 </dd>
 </dl>
 <p>Examples:</p>
@@ -987,7 +906,7 @@ set to None.</p>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>inputs</strong> (<em>tensor</em><em> or </em><em>tuple of tensors</em>) – Input for which layer
+<li><p><strong>inputs</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.12)"><em>Tensor</em></a><em> or </em><em>tuple of ~torch.Tensor</em>) – Input for which layer
 attributions are computed. If forward_func takes a
 single tensor as input, a single input tensor should be
 provided. If forward_func takes multiple tensors as input,
@@ -996,7 +915,7 @@ assumed that for all given input tensors, dimension 0
 corresponds to the number of examples (aka batch size),
 and if multiple input tensors are provided, the examples
 must be aligned appropriately.</p></li>
-<li><p><strong>baselines</strong> (<em>scalar</em><em>, </em><em>tensor</em><em>, </em><em>tuple of scalars</em><em> or </em><em>tensors</em><em>, </em><em>optional</em>) – <p>Baselines define reference samples that are compared with
+<li><p><strong>baselines</strong> (<em>scalar</em><em>, </em><a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.12)"><em>Tensor</em></a><em>, </em><em>tuple of scalar</em><em>, or </em><a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.12)"><em>Tensor</em></a><em>, </em><em>optional</em>) – <p>Baselines define reference samples that are compared with
 the inputs. In order to assign attribution scores DeepLift
 computes the differences between the inputs/outputs and
 corresponding references.
@@ -1026,7 +945,7 @@ for corresponding input tensor.</p></li>
 use zero scalar corresponding to each input tensor.</p>
 <p>Default: None</p>
 </p></li>
-<li><p><strong>target</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><em>int</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.10)"><em>tuple</em></a><em>, </em><em>tensor</em><em> or </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.10)"><em>list</em></a><em>, </em><em>optional</em>) – <p>Output indices for
+<li><p><strong>target</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><em>int</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.10)"><em>tuple</em></a><em>, </em><a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.12)"><em>Tensor</em></a><em>, or </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.10)"><em>list</em></a><em>, </em><em>optional</em>) – <p>Output indices for
 which gradients are computed (for classification cases,
 this is usually the target class).
 If the network returns a scalar value per example,
@@ -1050,7 +969,7 @@ target for the corresponding example.</p></li>
 </ul>
 <p>Default: None</p>
 </p></li>
-<li><p><strong>additional_forward_args</strong> (<em>any</em><em>, </em><em>optional</em>) – If the forward function
+<li><p><strong>additional_forward_args</strong> (<em>Any</em><em>, </em><em>optional</em>) – If the forward function
 requires additional arguments other than the inputs for
 which attributions should not be computed, this argument
 can be provided. It must be either a single additional
@@ -1077,7 +996,7 @@ or the output of internal layer, depending on whether we
 attribute to the input or output, is a single tensor.
 Support for multiple tensors will be added later.
 Default: False</p></li>
-<li><p><strong>custom_attribution_func</strong> (<em>callable</em><em>, </em><em>optional</em>) – <p>A custom function for
+<li><p><strong>custom_attribution_func</strong> (<em>Callable</em><em>, </em><em>optional</em>) – <p>A custom function for
 computing final attribution scores. This function can take
 at least one and at most three arguments with the
 following signature:</p>
@@ -1099,7 +1018,7 @@ Default: None</p>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p><ul class="simple">
 <li><dl class="simple">
-<dt><strong>attributions</strong> (<em>tensor</em> or tuple of <em>tensors</em>):</dt><dd><p>Attribution score computed based on DeepLift’s rescale rule with
+<dt><strong>attributions</strong> (<em>Tensor</em> or tuple of <em>Tensor</em>):</dt><dd><p>Attribution score computed based on DeepLift’s rescale rule with
 respect to layer’s inputs or outputs. Attributions will always be the
 same size as the provided layer’s inputs or outputs, depending on
 whether we attribute to the inputs or outputs of the layer.
@@ -1111,13 +1030,13 @@ of tensors is returned.</p>
 </dl>
 </li>
 <li><dl class="simple">
-<dt><strong>delta</strong> (<em>tensor</em>, returned if return_convergence_delta=True):</dt><dd><p>This is computed using the property that the total sum of
+<dt><strong>delta</strong> (<em>Tensor</em>, returned if return_convergence_delta=True):</dt><dd><p>This is computed using the property that the total sum of
 forward_func(inputs) - forward_func(baselines) must equal the
 total sum of the attributions computed based on DeepLift’s
 rescale rule.
 Delta is calculated per example, meaning that the number of
 elements in returned delta tensor is equal to the number of
-of examples in input.
+examples in input.
 Note that the logic described for deltas is guaranteed
 when the default logic for attribution computations is used,
 meaning that the <cite>custom_attribution_func=None</cite>, otherwise
@@ -1161,9 +1080,10 @@ resulting attributions across baselines. Whether to compute the attributions
 with respect to the inputs or outputs of the layer is defined by the
 input flag <cite>attribute_to_layer_input</cite>.
 More details about the algorithm can be found here:</p>
-<p><a class="reference external" href="http://papers.nips.cc/paper/7062-a-unified-approach-to-interpreting-model-predictions.pdf">http://papers.nips.cc/paper/7062-a-unified-approach-to-interpreting-model-predictions.pdf</a></p>
-<dl class="simple">
-<dt>Note that the explanation model:</dt><dd><ol class="arabic simple">
+<p><a class="reference external" href="https://papers.nips.cc/paper/7062-a-unified-approach-to-interpreting-model-predictions.pdf">https://papers.nips.cc/paper/7062-a-unified-approach-to-interpreting-model-predictions.pdf</a></p>
+<p>Note that the explanation model:</p>
+<blockquote>
+<div><ol class="arabic simple">
 <li><p>Assumes that input features are independent of one another</p></li>
 <li><dl class="simple">
 <dt>Is linear, meaning that the explanations are modeled through</dt><dd><p>the additive composition of feature effects.</p>
@@ -1171,8 +1091,7 @@ More details about the algorithm can be found here:</p>
 </dl>
 </li>
 </ol>
-</dd>
-</dl>
+</div></blockquote>
 <p>Although, it assumes a linear model for each explanation, the overall
 model across multiple explanations can be complex and non-linear.</p>
 <dl class="field-list simple">
@@ -1214,7 +1133,7 @@ set to None.</p>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>inputs</strong> (<em>tensor</em><em> or </em><em>tuple of tensors</em>) – Input for which layer
+<li><p><strong>inputs</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.12)"><em>Tensor</em></a><em> or </em><em>tuple of ~torch.Tensor</em>) – Input for which layer
 attributions are computed. If forward_func takes a single
 tensor as input, a single input tensor should be provided.
 If forward_func takes multiple tensors as input, a tuple
@@ -1223,7 +1142,7 @@ that for all given input tensors, dimension 0 corresponds
 to the number of examples (aka batch size), and if
 multiple input tensors are provided, the examples must
 be aligned appropriately.</p></li>
-<li><p><strong>baselines</strong> (<em>tensor</em><em>, </em><em>tuple of tensors</em><em>, </em><em>callable</em>) – <p>Baselines define reference samples that are compared with
+<li><p><strong>baselines</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.12)"><em>Tensor</em></a><em>, </em><em>tuple of ~torch.Tensor</em><em>, or </em><em>Callable</em>) – <p>Baselines define reference samples that are compared with
 the inputs. In order to assign attribution scores DeepLift
 computes the differences between the inputs/outputs and
 corresponding references. Baselines can be provided as:</p>
@@ -1246,7 +1165,7 @@ or a tuple of those.</p></li>
 <p>It is recommended that the number of samples in the baselines’
 tensors is larger than one.</p>
 </p></li>
-<li><p><strong>target</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><em>int</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.10)"><em>tuple</em></a><em>, </em><em>tensor</em><em> or </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.10)"><em>list</em></a><em>, </em><em>optional</em>) – <p>Output indices for
+<li><p><strong>target</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><em>int</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.10)"><em>tuple</em></a><em>, </em><a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.12)"><em>Tensor</em></a><em>, or </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.10)"><em>list</em></a><em>, </em><em>optional</em>) – <p>Output indices for
 which gradients are computed (for classification cases,
 this is usually the target class).
 If the network returns a scalar value per example,
@@ -1270,7 +1189,7 @@ target for the corresponding example.</p></li>
 </ul>
 <p>Default: None</p>
 </p></li>
-<li><p><strong>additional_forward_args</strong> (<em>any</em><em>, </em><em>optional</em>) – If the forward function
+<li><p><strong>additional_forward_args</strong> (<em>Any</em><em>, </em><em>optional</em>) – If the forward function
 requires additional arguments other than the inputs for
 which attributions should not be computed, this argument
 can be provided. It must be either a single additional
@@ -1296,7 +1215,7 @@ Note that currently it assumes that both the inputs and
 outputs of internal layers are single tensors.
 Support for multiple tensors will be added later.
 Default: False</p></li>
-<li><p><strong>custom_attribution_func</strong> (<em>callable</em><em>, </em><em>optional</em>) – <p>A custom function for
+<li><p><strong>custom_attribution_func</strong> (<em>Callable</em><em>, </em><em>optional</em>) – <p>A custom function for
 computing final attribution scores. This function can take
 at least one and at most three arguments with the
 following signature:</p>
@@ -1319,7 +1238,7 @@ Default: None</p>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p><ul class="simple">
 <li><dl class="simple">
-<dt><strong>attributions</strong> (<em>tensor</em> or tuple of <em>tensors</em>):</dt><dd><p>Attribution score computed based on DeepLift’s rescale rule
+<dt><strong>attributions</strong> (<em>Tensor</em> or tuple of <em>Tensor</em>):</dt><dd><p>Attribution score computed based on DeepLift’s rescale rule
 with respect to layer’s inputs or outputs. Attributions
 will always be the same size as the provided layer’s inputs
 or outputs, depending on whether we attribute to the inputs
@@ -1333,7 +1252,7 @@ outputs of a single tensor are not.</p>
 </dl>
 </li>
 <li><dl class="simple">
-<dt><strong>delta</strong> (<em>tensor</em>, returned if return_convergence_delta=True):</dt><dd><p>This is computed using the property that the
+<dt><strong>delta</strong> (<em>Tensor</em>, returned if return_convergence_delta=True):</dt><dd><p>This is computed using the property that the
 total sum of forward_func(inputs) - forward_func(baselines)
 must be very close to the total sum of attributions
 computed based on approximated SHAP values using
@@ -1383,7 +1302,7 @@ it is not guaranteed and depends on the specifics of the
 primary author. For reference, please, view:</p>
 <p><a class="reference external" href="https://github.com/slundberg/shap">https://github.com/slundberg/shap</a>#deep-learning-example-with-gradientexplainer-tensorflowkeraspytorch-models</p>
 <p>A Unified Approach to Interpreting Model Predictions
-<a class="reference external" href="http://papers.nips.cc/paper">http://papers.nips.cc/paper</a>7062-a-unified-approach-to-interpreting-model-predictions</p>
+<a class="reference external" href="https://papers.nips.cc/paper">https://papers.nips.cc/paper</a>7062-a-unified-approach-to-interpreting-model-predictions</p>
 <p>GradientShap approximates SHAP values by computing the expectations of
 gradients by randomly sampling from the distribution of baselines/references.
 It adds white noise to each input sample <cite>n_samples</cite> times, selects a
@@ -1401,13 +1320,13 @@ samples after adding gaussian noise <cite>n_samples</cite> times to each input f
 different baselines/references.</p>
 <p>In some sense it can be viewed as an approximation of integrated gradients
 by computing the expectations of gradients for different baselines.</p>
-<p>Current implementation uses Smoothgrad from <cite>NoiseTunnel</cite> in order to
+<p>Current implementation uses Smoothgrad from <a class="reference internal" href="noise_tunnel.html#captum.attr.NoiseTunnel" title="captum.attr.NoiseTunnel"><code class="xref py py-class docutils literal notranslate"><span class="pre">NoiseTunnel</span></code></a> in order to
 randomly draw samples from the distribution of baselines, add noise to input
 samples and compute the expectation (smoothgrad).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>forward_func</strong> (<em>callable</em>) – The forward function of the model or any
+<li><p><strong>forward_func</strong> (<em>Callable</em>) – The forward function of the model or any
 modification of it</p></li>
 <li><p><strong>layer</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/generated/torch.nn.Module.html#torch.nn.Module" title="(in PyTorch v1.12)"><em>torch.nn.Module</em></a>) – Layer for which attributions are computed.
 Output size of attribute matches this layer’s input or
@@ -1415,7 +1334,7 @@ output dimensions, depending on whether we attribute to
 the inputs or outputs of the layer, corresponding to
 attribution of each neuron in the input or output of
 this layer.</p></li>
-<li><p><strong>device_ids</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.10)"><em>list</em></a><em>(</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><em>int</em></a><em>)</em>) – Device ID list, necessary only if forward_func
+<li><p><strong>device_ids</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.10)"><em>list</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><em>int</em></a><em>]</em>) – Device ID list, necessary only if forward_func
 applies a DataParallel model. This allows reconstruction of
 intermediate outputs from batched results across devices.
 If forward_func is given as the DataParallel model itself,
@@ -1445,7 +1364,7 @@ layer activations for inputs - layer activations for baselines.</p>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>inputs</strong> (<em>tensor</em><em> or </em><em>tuple of tensors</em>) – Input which are used to compute
+<li><p><strong>inputs</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.12)"><em>Tensor</em></a><em> or </em><em>tuple of ~torch.Tensor</em>) – Input which are used to compute
 SHAP attribution values for a given <cite>layer</cite>. If <cite>forward_func</cite>
 takes a single tensor as input, a single input tensor should
 be provided.
@@ -1454,7 +1373,7 @@ of the input tensors should be provided. It is assumed
 that for all given input tensors, dimension 0 corresponds
 to the number of examples, and if multiple input tensors
 are provided, the examples must be aligned appropriately.</p></li>
-<li><p><strong>baselines</strong> (<em>tensor</em><em>, </em><em>tuple of tensors</em><em>, </em><em>callable</em>) – <p>Baselines define the starting point from which expectation
+<li><p><strong>baselines</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.12)"><em>Tensor</em></a><em>, </em><em>tuple of ~torch.Tensor</em><em>, or </em><em>Callable</em>) – <p>Baselines define the starting point from which expectation
 is computed and can be provided as:</p>
 <ul>
 <li><p>a single tensor, if inputs is a single tensor, with
@@ -1479,7 +1398,7 @@ tensors is larger than one.</p>
 per sample in the input batch. Random examples are
 generated by adding gaussian random noise to each sample.
 Default: <cite>5</cite> if <cite>n_samples</cite> is not provided.</p></li>
-<li><p><strong>stdevs</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.10)"><em>float</em></a><em>, or </em><em>a tuple of floats optional</em>) – The standard deviation
+<li><p><strong>stdevs</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.10)"><em>float</em></a><em> or </em><em>tuple of float</em><em>, </em><em>optional</em>) – The standard deviation
 of gaussian noise with zero mean that is added to each
 input in the batch. If <cite>stdevs</cite> is a single float value
 then that same value is used for all inputs. If it is
@@ -1488,7 +1407,7 @@ tuple. In this case, each stdev value in the stdevs tuple
 corresponds to the input with the same index in the inputs
 tuple.
 Default: 0.0</p></li>
-<li><p><strong>target</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><em>int</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.10)"><em>tuple</em></a><em>, </em><em>tensor</em><em> or </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.10)"><em>list</em></a><em>, </em><em>optional</em>) – <p>Output indices for
+<li><p><strong>target</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><em>int</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.10)"><em>tuple</em></a><em>, </em><a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.12)"><em>Tensor</em></a><em>, or </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.10)"><em>list</em></a><em>, </em><em>optional</em>) – <p>Output indices for
 which gradients are computed (for classification cases,
 this is usually the target class).
 If the network returns a scalar value per example,
@@ -1512,7 +1431,7 @@ target for the corresponding example.</p></li>
 </ul>
 <p>Default: None</p>
 </p></li>
-<li><p><strong>additional_forward_args</strong> (<em>any</em><em>, </em><em>optional</em>) – If the forward function
+<li><p><strong>additional_forward_args</strong> (<em>Any</em><em>, </em><em>optional</em>) – If the forward function
 requires additional arguments other than the inputs for
 which attributions should not be computed, this argument
 can be provided. It can contain a tuple of ND tensors or
@@ -1545,7 +1464,7 @@ Default: False</p></li>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p><ul class="simple">
 <li><dl class="simple">
-<dt><strong>attributions</strong> (<em>tensor</em> or tuple of <em>tensors</em>):</dt><dd><p>Attribution score computed based on GradientSHAP with
+<dt><strong>attributions</strong> (<em>Tensor</em> or tuple of <em>Tensor</em>):</dt><dd><p>Attribution score computed based on GradientSHAP with
 respect to layer’s input or output. Attributions will always
 be the same size as the provided layer’s inputs or outputs,
 depending on whether we attribute to the inputs or outputs
@@ -1557,7 +1476,7 @@ otherwise a single tensor is returned.</p>
 </dl>
 </li>
 <li><dl class="simple">
-<dt><strong>delta</strong> (<em>tensor</em>, returned if return_convergence_delta=True):</dt><dd><p>This is computed using the property that the total
+<dt><strong>delta</strong> (<em>Tensor</em>, returned if return_convergence_delta=True):</dt><dd><p>This is computed using the property that the total
 sum of forward_func(inputs) - forward_func(baselines)
 must be very close to the total sum of the attributions
 based on layer gradient SHAP.
@@ -1635,11 +1554,11 @@ original paper:
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>forward_func</strong> (<em>callable</em>) – The forward function of the model or any
+<li><p><strong>forward_func</strong> (<em>Callable</em>) – The forward function of the model or any
 modification of it</p></li>
-<li><p><strong>layer</strong> (<em>ModuleOrModuleList</em>) – <p>Layer or list of layers for which attributions are computed.
-For each layer the output size of the attribute matches
-this layer’s input or output dimensions, depending on
+<li><p><strong>layer</strong> (<em>ModuleOrModuleList</em>) – <p>Layer or list of layers for which attributions
+are computed. For each layer the output size of the attribute
+matches this layer’s input or output dimensions, depending on
 whether we attribute to the inputs or outputs of the
 layer, corresponding to the attribution of each neuron
 in the input or output of this layer.</p>
@@ -1653,7 +1572,7 @@ layers, you cannot pass in another due to the
 dependence, e.g.  if you pass in l2 you cannot pass in
 l1 or l3.</p>
 </p></li>
-<li><p><strong>device_ids</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.10)"><em>list</em></a><em>(</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><em>int</em></a><em>)</em>) – Device ID list, necessary only if forward_func
+<li><p><strong>device_ids</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.10)"><em>list</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><em>int</em></a><em>]</em>) – Device ID list, necessary only if forward_func
 applies a DataParallel model. This allows reconstruction of
 intermediate outputs from batched results across devices.
 If forward_func is given as the DataParallel model itself,
@@ -1692,7 +1611,7 @@ property of integrated gradients.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>inputs</strong> (<em>tensor</em><em> or </em><em>tuple of tensors</em>) – Input for which layer integrated
+<li><p><strong>inputs</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.12)"><em>Tensor</em></a><em> or </em><em>tuple of ~torch.Tensor</em>) – Input for which layer integrated
 gradients are computed. If forward_func takes a single
 tensor as input, a single input tensor should be provided.
 If forward_func takes multiple tensors as input, a tuple
@@ -1700,7 +1619,7 @@ of the input tensors should be provided. It is assumed
 that for all given input tensors, dimension 0 corresponds
 to the number of examples, and if multiple input tensors
 are provided, the examples must be aligned appropriately.</p></li>
-<li><p><strong>baselines</strong> (<em>scalar</em><em>, </em><em>tensor</em><em>, </em><em>tuple of scalars</em><em> or </em><em>tensors</em><em>, </em><em>optional</em>) – <p>Baselines define the starting point from which integral
+<li><p><strong>baselines</strong> (<em>scalar</em><em>, </em><a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.12)"><em>Tensor</em></a><em>, </em><em>tuple of scalar</em><em>, or </em><a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.12)"><em>Tensor</em></a><em>, </em><em>optional</em>) – <p>Baselines define the starting point from which integral
 is computed and can be provided as:</p>
 <ul>
 <li><p>a single tensor, if inputs is a single tensor, with
@@ -1729,7 +1648,7 @@ for corresponding input tensor.</p></li>
 use zero scalar corresponding to each input tensor.</p>
 <p>Default: None</p>
 </p></li>
-<li><p><strong>target</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><em>int</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.10)"><em>tuple</em></a><em>, </em><em>tensor</em><em> or </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.10)"><em>list</em></a><em>, </em><em>optional</em>) – <p>Output indices for
+<li><p><strong>target</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><em>int</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.10)"><em>tuple</em></a><em>, </em><a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.12)"><em>Tensor</em></a><em>, or </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.10)"><em>list</em></a><em>, </em><em>optional</em>) – <p>Output indices for
 which gradients are computed (for classification cases,
 this is usually the target class).
 If the network returns a scalar value per example,
@@ -1753,7 +1672,7 @@ target for the corresponding example.</p></li>
 </ul>
 <p>Default: None</p>
 </p></li>
-<li><p><strong>additional_forward_args</strong> (<em>any</em><em>, </em><em>optional</em>) – If the forward function
+<li><p><strong>additional_forward_args</strong> (<em>Any</em><em>, </em><em>optional</em>) – <p>If the forward function
 requires additional arguments other than the inputs for
 which attributions should not be computed, this argument
 can be provided. It must be either a single additional
@@ -1761,53 +1680,58 @@ argument of a Tensor or arbitrary (non-tuple) type or a
 tuple containing multiple additional arguments including
 tensors or any arbitrary python types. These arguments
 are provided to forward_func in order following the
-arguments in inputs.
-For a tensor, the first dimension of the tensor must
+arguments in inputs.</p>
+<p>For a tensor, the first dimension of the tensor must
 correspond to the number of examples. It will be
 repeated for each of <cite>n_steps</cite> along the integrated
 path. For all other types, the given argument is used
-for all forward evaluations.
-Note that attributions are not computed with respect
+for all forward evaluations.</p>
+<p>Note that attributions are not computed with respect
 to these arguments.
-Default: None</p></li>
+Default: None</p>
+</p></li>
 <li><p><strong>n_steps</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><em>int</em></a><em>, </em><em>optional</em>) – The number of steps used by the approximation
 method. Default: 50.</p></li>
-<li><p><strong>method</strong> (<em>string</em><em>, </em><em>optional</em>) – Method for approximating the integral,
+<li><p><strong>method</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><em>str</em></a><em>, </em><em>optional</em>) – Method for approximating the integral,
 one of <cite>riemann_right</cite>, <cite>riemann_left</cite>, <cite>riemann_middle</cite>,
 <cite>riemann_trapezoid</cite> or <cite>gausslegendre</cite>.
 Default: <cite>gausslegendre</cite> if no method is provided.</p></li>
-<li><p><strong>internal_batch_size</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><em>int</em></a><em>, </em><em>optional</em>) – Divides total #steps * #examples
+<li><p><strong>internal_batch_size</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><em>int</em></a><em>, </em><em>optional</em>) – <p>Divides total #steps * #examples
 data points into chunks of size at most internal_batch_size,
 which are computed (forward / backward passes)
 sequentially. internal_batch_size must be at least equal to
-#examples.
-For DataParallel models, each batch is split among the
+#examples.</p>
+<p>For DataParallel models, each batch is split among the
 available devices, so evaluations on each available
 device contain internal_batch_size / num_devices examples.
 If internal_batch_size is None, then all evaluations are
 processed in one batch.
-Default: None</p></li>
+Default: None</p>
+</p></li>
 <li><p><strong>return_convergence_delta</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.10)"><em>bool</em></a><em>, </em><em>optional</em>) – Indicates whether to return
 convergence delta or not. If <cite>return_convergence_delta</cite>
 is set to True convergence delta will be returned in
 a tuple following attributions.
 Default: False</p></li>
-<li><p><strong>attribute_to_layer_input</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.10)"><em>bool</em></a><em>, </em><em>optional</em>) – Indicates whether to
+<li><p><strong>attribute_to_layer_input</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.10)"><em>bool</em></a><em>, </em><em>optional</em>) – <p>Indicates whether to
 compute the attribution with respect to the layer input
 or output. If <cite>attribute_to_layer_input</cite> is set to True
 then the attributions will be computed with respect to
 layer input, otherwise it will be computed with respect
-to layer output.
-Note that currently it is assumed that either the input
+to layer output.</p>
+<p>Note that currently it is assumed that either the input
 or the output of internal layer, depending on whether we
 attribute to the input or output, is a single tensor.
 Support for multiple tensors will be added later.
-Default: False</p></li>
-<li><p><strong>Returns</strong> – <p><strong>attributions</strong> or 2-element tuple of <strong>attributions</strong>, <strong>delta</strong>:
-- <strong>attributions</strong> (<em>tensor</em>, tuple of <em>tensors</em> or tuple of <em>tensors</em>):</p>
+Default: False</p>
+</p></li>
+<li><p><strong>Returns</strong> – <p><strong>attributions</strong> or 2-element tuple of <strong>attributions</strong>, <strong>delta</strong>:</p>
 <blockquote>
-<div><p>Integrated gradients with respect to <cite>layer</cite>’s inputs or
-outputs. Attributions will always be the same size and
+<div><ul>
+<li><p><strong>attributions</strong> (<em>Tensor</em>, tuple of <em>Tensor</em> or tuple of</p></li>
+</ul>
+<dl>
+<dt><em>Tensor</em>): Integrated gradients with respect to <cite>layer</cite>’s inputs</dt><dd><p>or outputs. Attributions will always be the same size and
 dimensionality as the input or output of the given layer,
 depending on whether we attribute to the inputs or outputs
 of the layer which is decided by the input flag
@@ -1822,21 +1746,23 @@ case that one layer, in the given layers, inputs / outputs
 multiple tensors: the corresponding output element will be
 a tuple of tensors. The ordering of the outputs will be
 the same order as the layers given in the constructor.</p>
-</div></blockquote>
+</dd>
+</dl>
 <ul>
 <li><dl class="simple">
-<dt><strong>delta</strong> (<em>tensor</em>, returned if return_convergence_delta=True):</dt><dd><p>The difference between the total approximated and true
+<dt><strong>delta</strong> (<em>Tensor</em>, returned if return_convergence_delta=True):</dt><dd><p>The difference between the total approximated and true
 integrated gradients. This is computed using the property
 that the total sum of forward_func(inputs) -
 forward_func(baselines) must equal the total sum of the
 integrated gradient.
 Delta is calculated per example, meaning that the number of
 elements in returned delta tensor is equal to the number of
-of examples in inputs.</p>
+examples in inputs.</p>
 </dd>
 </dl>
 </li>
 </ul>
+</div></blockquote>
 </p></li>
 <li><p><strong>Examples::</strong> – <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># ImageClassifier takes a single input tensor of images Nx3x32x32,</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="c1"># and returns an Nx10 tensor of class probabilities.</span>
@@ -1897,7 +1823,7 @@ group.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>forward_func</strong> (<em>callable</em>) – The forward function of the model or any
+<li><p><strong>forward_func</strong> (<em>Callable</em>) – The forward function of the model or any
 modification of it</p></li>
 <li><p><strong>layer</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/generated/torch.nn.Module.html#torch.nn.Module" title="(in PyTorch v1.12)"><em>torch.nn.Module</em></a>) – Layer for which attributions are computed.
 Output size of attribute matches this layer’s input or
@@ -1905,7 +1831,7 @@ output dimensions, depending on whether we attribute to
 the inputs or outputs of the layer, corresponding to
 attribution of each neuron in the input or output of
 this layer.</p></li>
-<li><p><strong>device_ids</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.10)"><em>list</em></a><em>(</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><em>int</em></a><em>)</em>) – Device ID list, necessary only if forward_func
+<li><p><strong>device_ids</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.10)"><em>list</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><em>int</em></a><em>]</em>) – Device ID list, necessary only if forward_func
 applies a DataParallel model. This allows reconstruction of
 intermediate outputs from batched results across devices.
 If forward_func is given as the DataParallel model itself
@@ -1921,7 +1847,7 @@ argument.</p></li>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>inputs</strong> (<em>tensor</em><em> or </em><em>tuple of tensors</em>) – Input for which layer
+<li><p><strong>inputs</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.12)"><em>Tensor</em></a><em> or </em><em>tuple of ~torch.Tensor</em>) – Input for which layer
 attributions are computed. If forward_func takes a single
 tensor as input, a single input tensor should be provided.
 If forward_func takes multiple tensors as input, a tuple
@@ -1929,7 +1855,7 @@ of the input tensors should be provided. It is assumed
 that for all given input tensors, dimension 0 corresponds
 to the number of examples, and if multiple input tensors
 are provided, the examples must be aligned appropriately.</p></li>
-<li><p><strong>layer_baselines</strong> (<em>scalar</em><em>, </em><em>tensor</em><em>, </em><em>tuple of scalars</em><em> or </em><em>tensors</em><em>, </em><em>optional</em>) – Layer baselines define reference values which replace each
+<li><p><strong>layer_baselines</strong> (<em>scalar</em><em>, </em><a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.12)"><em>Tensor</em></a><em>, </em><em>tuple of scalar</em><em>, or </em><a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.12)"><em>Tensor</em></a><em>, </em><em>optional</em>) – Layer baselines define reference values which replace each
 layer input / output value when ablated.
 Layer baselines should be a single tensor with dimensions
 matching the input / output of the target layer (or
@@ -1939,7 +1865,7 @@ of the target layer.
 In the cases when <cite>baselines</cite> is not provided, we internally
 use zero as the baseline for each neuron.
 Default: None</p></li>
-<li><p><strong>target</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><em>int</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.10)"><em>tuple</em></a><em>, </em><em>tensor</em><em> or </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.10)"><em>list</em></a><em>, </em><em>optional</em>) – <p>Output indices for
+<li><p><strong>target</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><em>int</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.10)"><em>tuple</em></a><em>, </em><a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.12)"><em>Tensor</em></a><em>, or </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.10)"><em>list</em></a><em>, </em><em>optional</em>) – <p>Output indices for
 which gradients are computed (for classification cases,
 this is usually the target class).
 If the network returns a scalar value per example,
@@ -1963,7 +1889,7 @@ target for the corresponding example.</p></li>
 </ul>
 <p>Default: None</p>
 </p></li>
-<li><p><strong>additional_forward_args</strong> (<em>any</em><em>, </em><em>optional</em>) – If the forward function
+<li><p><strong>additional_forward_args</strong> (<em>Any</em><em>, </em><em>optional</em>) – If the forward function
 requires additional arguments other than the inputs for
 which attributions should not be computed, this argument
 can be provided. It must be either a single additional
@@ -1975,7 +1901,7 @@ arguments in inputs.
 Note that attributions are not computed with respect
 to these arguments.
 Default: None</p></li>
-<li><p><strong>layer_mask</strong> (<em>tensor</em><em> or </em><em>tuple of tensors</em><em>, </em><em>optional</em>) – layer_mask defines a mask for the layer, grouping
+<li><p><strong>layer_mask</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.12)"><em>Tensor</em></a><em> or </em><em>tuple of ~torch.Tensor</em><em>, </em><em>optional</em>) – layer_mask defines a mask for the layer, grouping
 elements of the layer input / output which should be
 ablated together.
 layer_mask should be a single tensor with dimensions
@@ -2017,7 +1943,7 @@ Default: 1</p></li>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p><ul class="simple">
 <li><dl class="simple">
-<dt><strong>attributions</strong> (<em>tensor</em> or tuple of <em>tensors</em>):</dt><dd><p>Attribution of each neuron in given layer input or
+<dt><strong>attributions</strong> (<em>Tensor</em> or tuple of <em>Tensor</em>):</dt><dd><p>Attribution of each neuron in given layer input or
 output. Attributions will always be the same size as
 the input or output of the given layer, depending on
 whether we attribute to the inputs or outputs
@@ -2033,7 +1959,7 @@ otherwise a single tensor is returned.</p>
 </p>
 </dd>
 <dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p><em>tensor</em> or tuple of <em>tensors</em> of <strong>attributions</strong></p>
+<dd class="field-odd"><p><em>Tensor</em> or tuple of <em>Tensor</em> of <strong>attributions</strong></p>
 </dd>
 </dl>
 <p>Examples:</p>
@@ -2094,14 +2020,14 @@ Ancona et al. [<a class="reference external" href="https://openreview.net/forum?
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>model</strong> (<em>module</em>) – The forward function of the model or
+<li><p><strong>model</strong> (<em>Module</em>) – The forward function of the model or
 any modification of it. Custom rules for a given layer need to
 be defined as attribute
 <cite>module.rule</cite> and need to be of type PropagationRule.
 Model cannot contain any in-place nonlinear submodules;
 these are not supported by the register_full_backward_hook
 PyTorch API starting from PyTorch v1.9.</p></li>
-<li><p><strong>layer</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/generated/torch.nn.Module.html#torch.nn.Module" title="(in PyTorch v1.12)"><em>torch.nn.Module</em></a><em> or </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.10)"><em>list</em></a><em>(</em><a class="reference external" href="https://pytorch.org/docs/stable/generated/torch.nn.Module.html#torch.nn.Module" title="(in PyTorch v1.12)"><em>torch.nn.Module</em></a><em>)</em>) – Layer or layers
+<li><p><strong>layer</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/generated/torch.nn.Module.html#torch.nn.Module" title="(in PyTorch v1.12)"><em>torch.nn.Module</em></a><em> or </em><em>list of torch.nn.Module</em>) – Layer or layers
 for which attributions are computed.
 The size and dimensionality of the attributions
 corresponds to the size and dimensionality of the layer’s
@@ -2119,7 +2045,7 @@ relevance for all layers is returned in attribution.</p></li>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>inputs</strong> (<em>tensor</em><em> or </em><em>tuple of tensors</em>) – Input for which relevance is
+<li><p><strong>inputs</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.12)"><em>Tensor</em></a><em> or </em><em>tuple of ~torch.Tensor</em>) – Input for which relevance is
 propagated.
 If forward_func takes a single
 tensor as input, a single input tensor should be provided.
@@ -2128,14 +2054,12 @@ of the input tensors should be provided. It is assumed
 that for all given input tensors, dimension 0 corresponds
 to the number of examples, and if multiple input tensors
 are provided, the examples must be aligned appropriately.</p></li>
-<li><p><strong>target</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><em>int</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.10)"><em>tuple</em></a><em>, </em><em>tensor</em><em> or </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.10)"><em>list</em></a><em>, </em><em>optional</em>) – <dl class="simple">
-<dt>Output indices for</dt><dd><p>which gradients are computed (for classification cases,
+<li><p><strong>target</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><em>int</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.10)"><em>tuple</em></a><em>, </em><a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.12)"><em>Tensor</em></a><em>, or </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.10)"><em>list</em></a><em>, </em><em>optional</em>) – <p>Output indices for
+which gradients are computed (for classification cases,
 this is usually the target class).
 If the network returns a scalar value per example,
 no target index is necessary.
 For general 2D outputs, targets can be either:</p>
-</dd>
-</dl>
 <ul>
 <li><dl class="simple">
 <dt>a single integer or a tensor containing a single</dt><dd><p>integer, which is applied to all input examples</p>
@@ -2197,13 +2121,12 @@ Default: False</p></li>
 <dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Union" title="(in Python v3.10)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code></a>[<a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tensor</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Tuple" title="(in Python v3.10)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Tuple</span></code></a>[<a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tensor</span></code></a>, …], <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.List" title="(in Python v3.10)"><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Union" title="(in Python v3.10)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code></a>[<a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tensor</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Tuple" title="(in Python v3.10)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Tuple</span></code></a>[<a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tensor</span></code></a>, …]]], <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Tuple" title="(in Python v3.10)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Tuple</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Union" title="(in Python v3.10)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code></a>[<a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tensor</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Tuple" title="(in Python v3.10)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Tuple</span></code></a>[<a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tensor</span></code></a>, …], <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.List" title="(in Python v3.10)"><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Union" title="(in Python v3.10)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code></a>[<a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tensor</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Tuple" title="(in Python v3.10)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Tuple</span></code></a>[<a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tensor</span></code></a>, …]]]], <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Union" title="(in Python v3.10)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code></a>[<a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tensor</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.List" title="(in Python v3.10)"><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code></a>[<a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tensor</span></code></a>]]]]</p>
 </dd>
 <dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p><dl class="simple">
-<dt><em>tensor</em> or tuple of <em>tensors</em> of <strong>attributions</strong> or 2-element tuple of</dt><dd><p><strong>attributions</strong>, <strong>delta</strong> or lists of <strong>attributions</strong> and <strong>delta</strong>:</p>
-</dd>
-</dl>
-<ul>
+<dd class="field-odd"><p><p><em>Tensor</em> or tuple of <em>Tensor</em> of <strong>attributions</strong> or 2-element tuple of
+<strong>attributions</strong>, <strong>delta</strong> or list of <strong>attributions</strong> and <strong>delta</strong>:</p>
+<blockquote>
+<div><ul class="simple">
 <li><dl class="simple">
-<dt><strong>attributions</strong> (<em>tensor</em> or tuple of <em>tensors</em>):</dt><dd><p>The propagated relevance values with respect to each
+<dt><strong>attributions</strong> (<em>Tensor</em> or tuple of <em>Tensor</em>):</dt><dd><p>The propagated relevance values with respect to each
 input feature. Attributions will always
 be the same size as the provided inputs, with each value
 providing the attribution of the corresponding input index.
@@ -2217,13 +2140,11 @@ with entries for each layer.</p>
 </dd>
 </dl>
 </li>
-<li><dl>
-<dt><strong>delta</strong> (<em>tensor</em> or list of <em>tensors</em></dt><dd><blockquote>
-<div><p>returned if return_convergence_delta=True):</p>
-</div></blockquote>
-<p>Delta is calculated per example, meaning that the number of
+<li><dl class="simple">
+<dt><strong>delta</strong> (<em>Tensor</em> or list of <em>Tensor</em></dt><dd><p>returned if return_convergence_delta=True):
+Delta is calculated per example, meaning that the number of
 elements in returned delta tensor is equal to the number of
-of examples in input.
+examples in input.
 If attributions for all layers are returned (layer=None) a list
 of tensors is returned with entries for
 each layer.</p>
@@ -2231,6 +2152,7 @@ each layer.</p>
 </dl>
 </li>
 </ul>
+</div></blockquote>
 </p>
 </dd>
 </dl>
