@@ -580,7 +580,7 @@ def compute_layer_gradients_and_eval(
 
 
     Returns:
-        2-element tuple of **gradients**, **evals**:
+        tuple[**gradients**, **evals**]:
         - **gradients**:
             Gradients of output with respect to target layer output.
         - **evals**:
@@ -720,7 +720,7 @@ def _compute_jacobian_wrt_params(
 
     Args:
         model (torch.nn.Module): The trainable model providing the forward pass
-        inputs (tuple of Any): The minibatch for which the forward pass is computed.
+        inputs (tuple[Any, ...]): The minibatch for which the forward pass is computed.
                 It is unpacked before passing to `model`, so it must be a tuple.  The
                 individual elements of `inputs` can be anything.
         labels (Tensor or None): Labels for input if computing a loss function.
@@ -730,7 +730,7 @@ def _compute_jacobian_wrt_params(
                 but must behave as a library loss function would if `reduction='none'`.
 
     Returns:
-        grads (tuple of Tensor): Returns the Jacobian for the minibatch as a
+        grads (tuple[Tensor, ...]): Returns the Jacobian for the minibatch as a
                 tuple of gradients corresponding to the tuple of trainable parameters
                 returned by `model.parameters()`. Each object grads[i] references to the
                 gradients for the parameters in the i-th trainable layer of the model.
@@ -789,7 +789,7 @@ def _compute_jacobian_wrt_params_with_sample_wise_trick(
 
     Args:
         model (torch.nn.Module): The trainable model providing the forward pass
-        inputs (tuple of Any): The minibatch for which the forward pass is computed.
+        inputs (tuple[Any, ...]): The minibatch for which the forward pass is computed.
                 It is unpacked before passing to `model`, so it must be a tuple.  The
                 individual elements of `inputs` can be anything.
         labels (Tensor or None): Labels for input if computing a loss function.
@@ -804,7 +804,7 @@ def _compute_jacobian_wrt_params_with_sample_wise_trick(
                 Defaults to 'sum'.
 
     Returns:
-        grads (tuple of Tensor): Returns the Jacobian for the minibatch as a
+        grads (tuple[Tensor, ...]): Returns the Jacobian for the minibatch as a
                 tuple of gradients corresponding to the tuple of trainable parameters
                 returned by `model.parameters()`. Each object grads[i] references to the
                 gradients for the parameters in the i-th trainable layer of the model.

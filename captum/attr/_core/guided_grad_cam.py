@@ -80,7 +80,7 @@ class GuidedGradCam(GradientAttribution):
         r"""
         Args:
 
-            inputs (Tensor or tuple of Tensor): Input for which attributions
+            inputs (Tensor or tuple[Tensor, ...]): Input for which attributions
                         are computed. If forward_func takes a single
                         tensor as input, a single input tensor should be provided.
                         If forward_func takes multiple tensors as input, a tuple

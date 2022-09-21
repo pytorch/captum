@@ -96,7 +96,7 @@ class ShapleyValueSampling(PerturbationAttribution):
 
         Args:
 
-                inputs (Tensor or tuple of Tensor): Input for which Shapley value
+                inputs (Tensor or tuple[Tensor, ...]): Input for which Shapley value
                             sampling attributions are computed. If forward_func takes
                             a single tensor as input, a single input tensor should
                             be provided.
@@ -175,7 +175,7 @@ class ShapleyValueSampling(PerturbationAttribution):
                             Note that attributions are not computed with respect
                             to these arguments.
                             Default: None
-                feature_mask (Tensor or tuple of Tensor, optional):
+                feature_mask (Tensor or tuple[Tensor, ...], optional):
                             feature_mask defines a mask for the input, grouping
                             features which should be added together. feature_mask
                             should contain the same number of tensors as inputs.
@@ -219,8 +219,8 @@ class ShapleyValueSampling(PerturbationAttribution):
                             Default: False
 
         Returns:
-                *Tensor* or tuple of *Tensor* of **attributions**:
-                - **attributions** (*Tensor* or tuple of *Tensor*):
+                *Tensor* or *tuple[Tensor, ...]* of **attributions**:
+                - **attributions** (*Tensor* or *tuple[Tensor, ...]*):
                             The attributions with respect to each input feature.
                             If the forward function returns
                             a scalar value per example, attributions will be
@@ -549,7 +549,7 @@ class ShapleyValues(ShapleyValueSampling):
 
         Args:
 
-                inputs (Tensor or tuple of Tensor): Input for which Shapley value
+                inputs (Tensor or tuple[Tensor, ...]): Input for which Shapley value
                             sampling attributions are computed. If forward_func takes
                             a single tensor as input, a single input tensor should
                             be provided.
@@ -628,7 +628,7 @@ class ShapleyValues(ShapleyValueSampling):
                             Note that attributions are not computed with respect
                             to these arguments.
                             Default: None
-                feature_mask (Tensor or tuple of Tensor, optional):
+                feature_mask (Tensor or tuple[Tensor, ...], optional):
                             feature_mask defines a mask for the input, grouping
                             features which should be added together. feature_mask
                             should contain the same number of tensors as inputs.
@@ -668,8 +668,8 @@ class ShapleyValues(ShapleyValueSampling):
                             a simple output of progress.
                             Default: False
         Returns:
-                *Tensor* or tuple of *Tensor* of **attributions**:
-                - **attributions** (*Tensor* or tuple of *Tensor*):
+                *Tensor* or *tuple[Tensor, ...]* of **attributions**:
+                - **attributions** (*Tensor* or *tuple[Tensor, ...]*):
                             The attributions with respect to each input feature.
                             If the forward function returns
                             a scalar value per example, attributions will be

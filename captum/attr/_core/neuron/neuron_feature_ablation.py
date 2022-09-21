@@ -67,7 +67,7 @@ class NeuronFeatureAblation(NeuronAttribution, PerturbationAttribution):
         r"""
         Args:
 
-            inputs (Tensor or tuple of Tensor): Input for which neuron
+            inputs (Tensor or tuple[Tensor, ...]): Input for which neuron
                         attributions are computed. If forward_func takes a single
                         tensor as input, a single input tensor should be provided.
                         If forward_func takes multiple tensors as input, a tuple
@@ -75,7 +75,7 @@ class NeuronFeatureAblation(NeuronAttribution, PerturbationAttribution):
                         that for all given input tensors, dimension 0 corresponds
                         to the number of examples, and if multiple input tensors
                         are provided, the examples must be aligned appropriately.
-            neuron_selector (int, Callable, tuple of int, or slice):
+            neuron_selector (int, Callable, tuple[int], or slice):
                         Selector for neuron
                         in given layer for which attribution is desired.
                         Neuron selector can be provided as:
@@ -149,7 +149,7 @@ class NeuronFeatureAblation(NeuronAttribution, PerturbationAttribution):
                         Note that attributions are not computed with respect
                         to these arguments.
                         Default: None
-            feature_mask (Tensor or tuple of Tensor, optional):
+            feature_mask (Tensor or tuple[Tensor, ...], optional):
                         feature_mask defines a mask for the input, grouping
                         features which should be ablated together. feature_mask
                         should contain the same number of tensors as inputs.
@@ -189,8 +189,8 @@ class NeuronFeatureAblation(NeuronAttribution, PerturbationAttribution):
                         Default: 1
 
         Returns:
-            *Tensor* or tuple of *Tensor* of **attributions**:
-            - **attributions** (*Tensor* or tuple of *Tensor*):
+            *Tensor* or *tuple[Tensor, ...]* of **attributions**:
+            - **attributions** (*Tensor* or *tuple[Tensor, ...]*):
                         Attributions of particular neuron with respect to each input
                         feature. Attributions will always be the same size as the
                         provided inputs, with each value providing the attribution

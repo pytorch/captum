@@ -263,7 +263,7 @@ class TracInCPBase(DataInfluence):
         r"""
         Args:
 
-            inputs (tuple of Any): A tuple that represents a batch of examples. It does
+            inputs (tuple[Any, ...]): A tuple that represents a batch of examples. It does
                     not represent labels, which are passed as `targets`.
             targets (Tensor, optional): If computing influence scores on a loss
                     function, these are the labels corresponding to the batch `inputs`.
@@ -312,7 +312,7 @@ class TracInCPBase(DataInfluence):
         r"""
         Args:
 
-            inputs (tuple of Any): A batch of examples. Does not represent labels,
+            inputs (tuple[Any, ...]): A batch of examples. Does not represent labels,
                     which are passed as `targets`. The assumption is that
                     `model(*inputs)` produces the predictions for the batch.
             targets (Tensor, optional): If computing influence scores on a loss
@@ -834,7 +834,7 @@ class TracInCP(TracInCPBase):
 
         Args:
 
-            inputs (tuple of Any): A test batch of examples. Does not represent labels,
+            inputs (tuple[Any, ...]): A test batch of examples. Does not represent labels,
                     which are passed as `targets`. The assumption is that
                     `model(*inputs)` produces the predictions for the batch.
             targets (Tensor, optional): If computing influence scores on a loss
@@ -890,7 +890,7 @@ class TracInCP(TracInCPBase):
         r"""
         Args:
 
-            inputs (tuple of Any): A tuple that represents a batch of examples. It does
+            inputs (tuple[Any, ...]): A tuple that represents a batch of examples. It does
                     not represent labels, which are passed as `targets`.
             targets (Tensor, optional): If computing influence scores on a loss
                     function, these are the labels corresponding to the batch `inputs`.
@@ -1187,7 +1187,7 @@ class TracInCP(TracInCPBase):
 
         Args:
 
-            inputs (tuple of Any): A batch of examples, which could be a training batch
+            inputs (tuple[Any, ...]): A batch of examples, which could be a training batch
                     or test batch, depending which method is the caller. Does not
                     represent labels, which are passed as `targets`. The assumption is
                     that `model(*inputs)` produces the predictions for the batch.

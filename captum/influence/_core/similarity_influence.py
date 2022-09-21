@@ -166,7 +166,7 @@ class SimilarityInfluence(DataInfluence):
     ) -> Dict:
         r"""
         Args:
-            inputs (Tensor or tuple of Tensor): Batch of examples for which influential
+            inputs (Tensor or tuple[Tensor, ...]): Batch of examples for which influential
                     instances are computed. They are passed to the forward_func. The
                     first dimension in `inputs` tensor or tuple of tensors corresponds
                     to the batch size. A tuple of tensors is only passed in if this

@@ -211,7 +211,7 @@ def infidelity(
                 input examples that are repeated `max_examples_per_batch / batch_size`
                 times within the batch.
 
-        inputs (Tensor or tuple of Tensor): Input for which
+        inputs (Tensor or tuple[Tensor, ...]): Input for which
                 attributions are computed. If forward_func takes a single
                 tensor as input, a single input tensor should be provided.
                 If forward_func takes multiple tensors as input, a tuple
@@ -250,7 +250,7 @@ def infidelity(
 
                 Default: None
 
-        attributions (Tensor or tuple of Tensor):
+        attributions (Tensor or tuple[Tensor, ...]):
                 Attribution scores computed based on an attribution algorithm.
                 This attribution scores can be computed using the implementations
                 provided in the `captum.attr` package. Some of those attribution
