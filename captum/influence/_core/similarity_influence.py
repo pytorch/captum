@@ -82,7 +82,7 @@ class SimilarityInfluence(DataInfluence):
         Args:
             module (torch.nn.Module): An instance of pytorch model. This model should
                     define all of its layers as attributes of the model.
-            layers (str or List of str): The fully qualified layer(s) for which the
+            layers (str or list[str]): The fully qualified layer(s) for which the
                     activation vectors are computed.
             influence_src_dataset (torch.utils.data.Dataset): PyTorch Dataset that is
                     used to create a PyTorch Dataloader to iterate over the dataset and
@@ -166,13 +166,13 @@ class SimilarityInfluence(DataInfluence):
     ) -> Dict:
         r"""
         Args:
-            inputs (tensor or tuple of tensors): Batch of examples for which influential
+            inputs (Tensor or tuple of Tensor): Batch of examples for which influential
                     instances are computed. They are passed to the forward_func. The
                     first dimension in `inputs` tensor or tuple of tensors corresponds
                     to the batch size. A tuple of tensors is only passed in if this
                     is the input form that `module` accepts.
             top_k (int): The number of top-matching activations to return
-            additional_forward_args (optional):  Additional arguments that will be
+            additional_forward_args (Any, optional): Additional arguments that will be
                     passed to forward_func after inputs.
             load_src_from_disk (bool): Loads activations for `influence_src_dataset`
                     where possible. Setting to False would force regeneration of

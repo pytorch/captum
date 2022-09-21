@@ -179,7 +179,7 @@ class TestTracInIntermediateQuantities(BaseTest):
             else:
                 # `test_features` is a tuple, so we unpack it to place in tuple,
                 # along with `test_labels`
-                test_batch = (*test_features, test_labels)
+                test_batch = (*test_features, test_labels)  # type: ignore[assignment]
 
             # the influence score is the dot product of intermediate quantities
             intermediate_quantities_scores = torch.matmul(

@@ -9,7 +9,7 @@ title: FAQ
 * [Are SmoothGrad or VarGrad supported in Captum?](#are-smoothgrad-or-vargrad-supported-in-captum)
 * [How do I use Captum with BERT models?](#how-do-i-use-captum-with-bert-models)
 * [My model inputs or outputs token indices, and when using Captum I see errors relating to gradients, how do I resolve this?](#my-model-inputs-or-outputs-token-indices-and-when-using-captum-i-see-errors-relating-to-gradients-how-do-i-resolve-this)
-* [Can my model using functional non-linearities (E.g. nn.functional.ReLU) or reused modules be used with Captum?](#can-my-model-using-functional-non-linearities-eg-nnfunctionalrelu-or-reused-modules-be-used-with-captum)
+* [Can my model use functional non-linearities (E.g. nn.functional.ReLU) or can reused modules be used with Captum?](#can-my-model-use-functional-non-linearities-eg-nnfunctionalrelu-or-can-reused-modules-be-used-with-captum)
 * [Do JIT models, DataParallel models, or DistributedDataParallel models work with Captum?](#do-jit-models-dataparallel-models-or-distributeddataparallel-models-work-with-captum)
 * [I am working on a new interpretability or attribution method and would like to add it to Captum. How do I proceed?](#i-am-working-on-a-new-interpretability-or-attribution-method-and-would-like-to-add-it-to-captum-how-do-i-proceed)
 * [I am using a gradient-based attribution algorithm such as integrated gradients for a RNN or LSTM network and I see 'cudnn RNN backward can only be called in training mode'. How can I resolve this issue ?](#how-can-I-resolve-cudnn-RNN-backward-error-for-RNN-or-LSTM-network)
@@ -53,7 +53,7 @@ For NLP models that take token indices as inputs, we cannot take gradients with 
 
 If the output of the model is a token index, such as an image captioning cases, it is necessary to attribute with respect to the token score or probability rather than the index. Make sure that the model returns this and use target to choose the appropriate scalar score to attribute with respect to.
 
-### **Can my model using functional non-linearities (E.g. nn.functional.ReLU) or reused modules be used with Captum?**
+### **Can my model use functional non-linearities (E.g. nn.functional.ReLU) or can reused modules be used with Captum?**
 
 Most methods will work fine with functional non-linearities and arbitrary operations. Some methods, which require placing hooks during back-propagation, including DeepLift, DeepLiftShap, Guided Backpropagation, and Deconvolution will not work appropriately with functional non-linearities and must use the corresponding module activation (e.g. torch.nn.ReLU) which should be initialized in the module constructor. For DeepLift, it is important to also not reuse modules in the forward function, since this can cause issues in the propagation of multipliers. Computing layer or neuron attribution with layer modules that are used multiple times generally computes attributions for the last execution of the module. For more information regarding these restrictions, refer to the API documentation for the specific method, including DeepLift, DeepLiftShap, Guided Backpropagation, and Deconvolution.
 
