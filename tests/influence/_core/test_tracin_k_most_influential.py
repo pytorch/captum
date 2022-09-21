@@ -4,10 +4,7 @@ from typing import Callable
 import torch
 import torch.nn as nn
 from captum.influence._core.tracincp import TracInCP
-from captum.influence._core.tracincp_fast_rand_proj import (
-    TracInCPFast,
-    TracInCPFastRandProj,
-)
+
 from parameterized import parameterized
 from tests.helpers.basic import assertTensorAlmostEqual, BaseTest
 from tests.influence._utils.common import (
@@ -31,19 +28,20 @@ class TestTracInGetKMostInfluential(BaseTest):
             for proponents in [True, False]:
                 for use_gpu in use_gpu_list:
                     for reduction, constr in [
-                        ("none", DataInfluenceConstructor(TracInCP)),
                         (
-                            "sum",
+                            "none",
                             DataInfluenceConstructor(
-                                TracInCP,
-                                name="TracInCPFastRandProjTests",
-                                sample_wise_grads_per_batch=True,
+                                TracInCP, name="TracInCP_all_layers"
                             ),
                         ),
-                        ("sum", DataInfluenceConstructor(TracInCPFast)),
-                        ("sum", DataInfluenceConstructor(TracInCPFastRandProj)),
-                        ("mean", DataInfluenceConstructor(TracInCPFast)),
-                        ("mean", DataInfluenceConstructor(TracInCPFastRandProj)),
+                        (
+                            "none",
+                            DataInfluenceConstructor(
+                                TracInCP,
+                                name="linear2",
+                                layers=["module.linear2"] if use_gpu else ["linear2"],
+                            ),
+                        ),
                     ]:
                         if not (
                             "sample_wise_grads_per_batch" in constr.kwargs
@@ -119,7 +117,6 @@ class TestTracInGetKMostInfluential(BaseTest):
                 proponents=proponents,
                 unpack_inputs=unpack_inputs,
             )
-
             for i in range(len(idx)):
                 # check that idx[i] is correct
                 assertTensorAlmostEqual(
