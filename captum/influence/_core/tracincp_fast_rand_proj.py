@@ -438,8 +438,8 @@ class TracInCPFast(TracInCPBase):
         r"""
         Args:
 
-            inputs (tuple[Any, ...]): A tuple that represents a batch of examples. It does
-                    not represent labels, which are passed as `targets`.
+            inputs (tuple[Any, ...]): A tuple that represents a batch of examples. It
+                    does not represent labels, which are passed as `targets`.
             targets (Tensor): The labels corresponding to the batch `inputs`. This
                     method is designed to be applied for a loss function, so labels
                     are required.
@@ -1042,8 +1042,8 @@ class TracInCPFastRandProj(TracInCPFast):
         r"""
         Args:
 
-            inputs (tuple[Any, ...]): A tuple that represents a batch of examples. It does
-                    not represent labels, which are passed as `targets`.
+            inputs (tuple[Any, ...]): A tuple that represents a batch of examples. It
+                    does not represent labels, which are passed as `targets`.
             targets (Tensor): The labels corresponding to the batch `inputs`. This
                     method is designed to be applied for a loss function, so labels
                     are required.
