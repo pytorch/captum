@@ -21,6 +21,7 @@ from captum._utils.common import (
     _reduce_list,
 )
 from captum.attr import Max, Mean, Min, Summarizer
+from captum.log import log_usage
 from captum.robust._core.perturbation import Perturbation
 from torch import Tensor
 
@@ -235,6 +236,7 @@ class AttackComparator(Generic[MetricResultType]):
                 batch_summarizers[key_list[i]].update(out_metric)
                 current_count += batch_size
 
+    @log_usage()
     def evaluate(
         self,
         inputs: Any,
