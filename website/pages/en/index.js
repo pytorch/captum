@@ -267,12 +267,36 @@ Convergence Delta: tensor([2.3842e-07, -4.7684e-07])
       <div>
         <HomeSplash siteConfig={siteConfig} language={language} />
         <div className="landingPage mainContainer">
+          <VideoContainer />
           <Features />
           <QuickStart />
         </div>
       </div>
     );
   }
+}
+
+function VideoContainer() {
+  return (
+    <div className="container text--center margin-bottom--xl margin-top--lg">
+      <div className="row">
+        <div className="col" style={{textAlign: 'center'}}>
+          <h2>Check it out in the intro video</h2>
+          <div>
+            <iframe
+              width="560"
+              height="315"
+              src="https://www.youtube.com/embed/YYatLlT3tPI"
+              title="Explain Like I'm 5: Captum"
+              frameBorder="0"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowFullScreen
+            />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 }
 
 module.exports = Index;
