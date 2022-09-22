@@ -168,7 +168,7 @@ def sensitivity_max(
                 `input batch size * n_perturb_samples`.
 
                 Default: None
-         **kwargs (Any, optional): Contains a list of arguments that are passed
+        **kwargs (Any, optional): Contains a list of arguments that are passed
                 to `explanation_func` explanation function which in some cases
                 could be the `attribute` function of an attribution algorithm.
                 Any additional arguments that need be passed to the explanation
