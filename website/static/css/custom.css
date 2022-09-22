@@ -302,6 +302,10 @@ div.sphinx div.body {
   max-width: 1400px;
 }
 
+div.sphinx div.body h1 {
+  margin-bottom: 1.375rem;
+}
+
 div.sphinx .function dd,
 div.sphinx .attribute dd,
 div.sphinx .class dd {
