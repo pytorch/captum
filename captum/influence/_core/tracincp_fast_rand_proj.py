@@ -380,7 +380,7 @@ class TracInCPFast(TracInCPBase):
 
         Args:
 
-            inputs (tuple of Any): A batch of examples. Does not represent labels,
+            inputs (tuple[Any, ...]): A batch of examples. Does not represent labels,
                     which are passed as `targets`. The assumption is that
                     `model(*inputs)` produces the predictions for the batch.
             targets (Tensor): The labels corresponding to the batch `inputs`. This
@@ -438,8 +438,8 @@ class TracInCPFast(TracInCPBase):
         r"""
         Args:
 
-            inputs (tuple of Any): A tuple that represents a batch of examples. It does
-                    not represent labels, which are passed as `targets`.
+            inputs (tuple[Any, ...]): A tuple that represents a batch of examples. It
+                    does not represent labels, which are passed as `targets`.
             targets (Tensor): The labels corresponding to the batch `inputs`. This
                     method is designed to be applied for a loss function, so labels
                     are required.
@@ -724,7 +724,7 @@ def _basic_computation_tracincp_fast(
                 well as a `reduction_type` attribute, which indicates whether `loss_fn`
                 reduces the per-example losses by using their mean or sum. The
                 `reduction_type` attribute must either be "mean" or "sum".
-        inputs (tuple of Any): A batch of examples, which could be a training batch
+        inputs (tuple[Any, ...]): A batch of examples, which could be a training batch
                 or test batch, depending which method is the caller. Does not
                 represent labels, which are passed as `targets`. The assumption is
                 that `model(*inputs)` produces the predictions for the batch.
@@ -1002,7 +1002,7 @@ class TracInCPFastRandProj(TracInCPFast):
         r"""
         Args:
 
-            inputs (tuple of Any): A batch of examples. Does not represent labels,
+            inputs (tuple[Any, ...]): A batch of examples. Does not represent labels,
                     which are passed as `targets`. The assumption is that
                     `model(*inputs)` produces the predictions for the batch.
             targets (Tensor): The labels corresponding to the batch `inputs`. This
@@ -1042,8 +1042,8 @@ class TracInCPFastRandProj(TracInCPFast):
         r"""
         Args:
 
-            inputs (tuple of Any): A tuple that represents a batch of examples. It does
-                    not represent labels, which are passed as `targets`.
+            inputs (tuple[Any, ...]): A tuple that represents a batch of examples. It
+                    does not represent labels, which are passed as `targets`.
             targets (Tensor): The labels corresponding to the batch `inputs`. This
                     method is designed to be applied for a loss function, so labels
                     are required.

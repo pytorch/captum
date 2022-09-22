@@ -80,7 +80,7 @@ class LayerGradientXActivation(LayerAttribution, GradientAttribution):
         r"""
         Args:
 
-            inputs (Tensor or tuple of Tensor): Input for which attributions
+            inputs (Tensor or tuple[Tensor, ...]): Input for which attributions
                         are computed. If forward_func takes a single
                         tensor as input, a single input tensor should be provided.
                         If forward_func takes multiple tensors as input, a tuple
@@ -134,8 +134,8 @@ class LayerGradientXActivation(LayerAttribution, GradientAttribution):
                         Default: False
 
         Returns:
-            *Tensor* or tuple of *Tensor* or list of **attributions**:
-            - **attributions** (*Tensor* or tuple of *Tensor* or *list*):
+            *Tensor* or *tuple[Tensor, ...]* or list of **attributions**:
+            - **attributions** (*Tensor* or *tuple[Tensor, ...]* or *list*):
                         Product of gradient and activation for each
                         neuron in given layer output.
                         Attributions will always be the same size as the

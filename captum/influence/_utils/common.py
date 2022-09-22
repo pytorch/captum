@@ -204,7 +204,7 @@ def _get_k_most_influential_helper(
         influence_batch_fn (Callable): A callable that will be called via
                 `influence_batch_fn(inputs, targets, batch)`, where `batch` is a batch
                 in the `influence_src_dataloader` argument.
-        inputs (tuple of Any): A batch of examples. Does not represent labels,
+        inputs (tuple[Any, ...]): A batch of examples. Does not represent labels,
                 which are passed as `targets`.
         targets (Tensor, optional): If computing TracIn scores on a loss function,
                 these are the labels corresponding to the batch `inputs`.

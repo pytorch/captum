@@ -127,7 +127,7 @@ class GradientShap(GradientAttribution):
         r"""
         Args:
 
-            inputs (Tensor or tuple of Tensor): Input for which SHAP attribution
+            inputs (Tensor or tuple[Tensor, ...]): Input for which SHAP attribution
                         values are computed. If `forward_func` takes a single
                         tensor as input, a single input tensor should be provided.
                         If `forward_func` takes multiple tensors as input, a tuple
@@ -135,7 +135,7 @@ class GradientShap(GradientAttribution):
                         that for all given input tensors, dimension 0 corresponds
                         to the number of examples, and if multiple input tensors
                         are provided, the examples must be aligned appropriately.
-            baselines (Tensor, tuple of Tensor, or Callable):
+            baselines (Tensor, tuple[Tensor, ...], or Callable):
                         Baselines define the starting point from which expectation
                         is computed and can be provided as:
 
@@ -215,7 +215,7 @@ class GradientShap(GradientAttribution):
                         Default: False
         Returns:
             **attributions** or 2-element tuple of **attributions**, **delta**:
-            - **attributions** (*Tensor* or tuple of *Tensor*):
+            - **attributions** (*Tensor* or *tuple[Tensor, ...]*):
                         Attribution score computed based on GradientSHAP with respect
                         to each input feature. Attributions will always be
                         the same size as the provided inputs, with each value

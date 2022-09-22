@@ -62,7 +62,7 @@ class Occlusion(FeatureAblation):
         r"""
         Args:
 
-                inputs (Tensor or tuple of Tensor): Input for which occlusion
+                inputs (Tensor or tuple[Tensor, ...]): Input for which occlusion
                             attributions are computed. If forward_func takes a single
                             tensor as input, a single input tensor should be provided.
                             If forward_func takes multiple tensors as input, a tuple
@@ -71,7 +71,7 @@ class Occlusion(FeatureAblation):
                             to the number of examples (aka batch size), and if
                             multiple input tensors are provided, the examples must
                             be aligned appropriately.
-                sliding_window_shapes (tuple or tuple of tuple): Shape of patch
+                sliding_window_shapes (tuple or tuple[tuple]): Shape of patch
                             (hyperrectangle) to occlude each input. For a single
                             input tensor, this must be a tuple of length equal to the
                             number of dimensions of the input tensor - 1, defining
@@ -80,7 +80,7 @@ class Occlusion(FeatureAblation):
                             this must be a tuple containing one tuple for each input
                             tensor defining the dimensions of the patch for that
                             input tensor, as described for the single tensor case.
-                strides (int or tuple or tuple of int or tuple of tuple, optional):
+                strides (int or tuple or tuple[int] or tuple[tuple], optional):
                             This defines the step by which the occlusion hyperrectangle
                             should be shifted by in each direction for each iteration.
                             For a single tensor input, this can be either a single
@@ -187,8 +187,8 @@ class Occlusion(FeatureAblation):
                             Default: False
 
         Returns:
-                *Tensor* or tuple of *Tensor* of **attributions**:
-                - **attributions** (*Tensor* or tuple of *Tensor*):
+                *Tensor* or *tuple[Tensor, ...]* of **attributions**:
+                - **attributions** (*Tensor* or *tuple[Tensor, ...]*):
                             The attributions with respect to each input feature.
                             Attributions will always be
                             the same size as the provided inputs, with each value

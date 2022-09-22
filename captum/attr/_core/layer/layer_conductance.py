@@ -120,7 +120,7 @@ class LayerConductance(LayerAttribution, GradientAttribution):
         r"""
         Args:
 
-            inputs (Tensor or tuple of Tensor): Input for which layer
+            inputs (Tensor or tuple[Tensor, ...]): Input for which layer
                         conductance is computed. If forward_func takes a single
                         tensor as input, a single input tensor should be provided.
                         If forward_func takes multiple tensors as input, a tuple
@@ -235,7 +235,7 @@ class LayerConductance(LayerAttribution, GradientAttribution):
 
         Returns:
             **attributions** or 2-element tuple of **attributions**, **delta**:
-            - **attributions** (*Tensor* or tuple of *Tensor*):
+            - **attributions** (*Tensor* or *tuple[Tensor, ...]*):
                         Conductance of each neuron in given layer input or
                         output. Attributions will always be the same size as
                         the input or output of the given layer, depending on

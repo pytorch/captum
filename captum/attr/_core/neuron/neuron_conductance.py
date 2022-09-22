@@ -103,7 +103,7 @@ class NeuronConductance(NeuronAttribution, GradientAttribution):
         r"""
         Args:
 
-            inputs (Tensor or tuple of Tensor): Input for which neuron
+            inputs (Tensor or tuple[Tensor, ...]): Input for which neuron
                         conductance is computed. If forward_func takes a single
                         tensor as input, a single input tensor should be provided.
                         If forward_func takes multiple tensors as input, a tuple
@@ -111,7 +111,7 @@ class NeuronConductance(NeuronAttribution, GradientAttribution):
                         that for all given input tensors, dimension 0 corresponds
                         to the number of examples, and if multiple input tensors
                         are provided, the examples must be aligned appropriately.
-            neuron_selector (int, Callable, tuple of int, or slice):
+            neuron_selector (int, Callable, tuple[int], or slice):
                         Selector for neuron
                         in given layer for which attribution is desired.
                         Neuron selector can be provided as:
@@ -244,8 +244,8 @@ class NeuronConductance(NeuronAttribution, GradientAttribution):
                         Default: False
 
         Returns:
-            *Tensor* or tuple of *Tensor* of **attributions**:
-            - **attributions** (*Tensor* or tuple of *Tensor*):
+            *Tensor* or *tuple[Tensor, ...]* of **attributions**:
+            - **attributions** (*Tensor* or *tuple[Tensor, ...]*):
                         Conductance for
                         particular neuron with respect to each input feature.
                         Attributions will always be the same size as the provided

@@ -83,7 +83,7 @@ class PGD(Perturbation):
 
         Args:
 
-            inputs (Tensor or tuple of Tensor): Input for which adversarial
+            inputs (Tensor or tuple[Tensor, ...]): Input for which adversarial
                         attack is computed. It can be provided as a single
                         tensor or a tuple of multiple tensors. If multiple
                         input tensors are provided, the batch sizes must be
@@ -135,7 +135,7 @@ class PGD(Perturbation):
 
         Returns:
 
-            - **perturbed inputs** (*Tensor* or tuple of *Tensor*):
+            - **perturbed inputs** (*Tensor* or *tuple[Tensor, ...]*):
                         Perturbed input for each
                         input tensor. The perturbed inputs have the same shape and
                         dimensionality as the inputs.

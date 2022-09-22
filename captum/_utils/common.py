@@ -31,7 +31,7 @@ def _parse_version(v: str) -> Tuple[int, ...]:
         v (str): A version string.
 
     Returns:
-        version_tuple (tuple of int): A tuple of integer values to use for version
+        version_tuple (tuple[int]): A tuple of integer values to use for version
             comparison.
     """
     v = [n for n in v.split(".") if n.isdigit()]

@@ -75,7 +75,7 @@ class LayerFeatureAblation(LayerAttribution, PerturbationAttribution):
         r"""
         Args:
 
-            inputs (Tensor or tuple of Tensor): Input for which layer
+            inputs (Tensor or tuple[Tensor, ...]): Input for which layer
                         attributions are computed. If forward_func takes a single
                         tensor as input, a single input tensor should be provided.
                         If forward_func takes multiple tensors as input, a tuple
@@ -131,7 +131,7 @@ class LayerFeatureAblation(LayerAttribution, PerturbationAttribution):
                         Note that attributions are not computed with respect
                         to these arguments.
                         Default: None
-            layer_mask (Tensor or tuple of Tensor, optional):
+            layer_mask (Tensor or tuple[Tensor, ...], optional):
                         layer_mask defines a mask for the layer, grouping
                         elements of the layer input / output which should be
                         ablated together.
@@ -171,8 +171,8 @@ class LayerFeatureAblation(LayerAttribution, PerturbationAttribution):
                         Default: 1
 
         Returns:
-            *Tensor* or tuple of *Tensor* of **attributions**:
-            - **attributions** (*Tensor* or tuple of *Tensor*):
+            *Tensor* or *tuple[Tensor, ...]* of **attributions**:
+            - **attributions** (*Tensor* or *tuple[Tensor, ...]*):
                         Attribution of each neuron in given layer input or
                         output. Attributions will always be the same size as
                         the input or output of the given layer, depending on
