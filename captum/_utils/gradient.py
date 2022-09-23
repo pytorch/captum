@@ -3,7 +3,7 @@ import threading
 import typing
 import warnings
 from collections import defaultdict
-from typing import Any, Callable, cast, Dict, List, Optional, Tuple, Union
+from typing import Any, Callable, cast, Dict, List, Optional, Sequence, Tuple, Union
 
 import torch
 from captum._utils.common import (
@@ -707,11 +707,26 @@ def construct_neuron_grad_fn(
     return grad_fn
 
 
+def _extract_parameters_from_layers(layer_modules):
+    layer_parameters = []
+    if layer_modules is not None:
+        layer_parameters = [
+            parameter
+            for layer_module in layer_modules
+            for parameter in layer_module.parameters()
+        ]
+        assert (
+            len(layer_parameters) > 0
+        ), "No parameters are available for modules for provided input `layers`"
+    return layer_parameters
+
+
 def _compute_jacobian_wrt_params(
     model: Module,
     inputs: Tuple[Any, ...],
     labels: Optional[Tensor] = None,
     loss_fn: Optional[Union[Module, Callable]] = None,
+    layer_modules: List[Module] = None,
 ) -> Tuple[Tensor, ...]:
     r"""
     Computes the Jacobian of a batch of test examples given a model, and optional
@@ -728,7 +743,8 @@ def _compute_jacobian_wrt_params(
                 defined loss function is provided, it would be expected to be a
                 torch.nn.Module. If a custom loss is provided, it can be either type,
                 but must behave as a library loss function would if `reduction='none'`.
-
+        layer_modules (List[torch.nn.Module]): A list of PyTorch modules w.r.t. which
+                jacobian gradients are computed.
     Returns:
         grads (tuple[Tensor, ...]): Returns the Jacobian for the minibatch as a
                 tuple of gradients corresponding to the tuple of trainable parameters
@@ -757,16 +773,20 @@ def _compute_jacobian_wrt_params(
                 assert out.shape[0] == loss.shape[0], msg1
             out = loss
 
+        if layer_modules is not None:
+            layer_parameters = _extract_parameters_from_layers(layer_modules)
         grads_list = [
             torch.autograd.grad(
                 outputs=out[i],
-                inputs=model.parameters(),  # type: ignore
+                inputs=cast(
+                    Union[Tensor, Sequence[Tensor]],
+                    model.parameters() if layer_modules is None else layer_parameters,
+                ),
                 grad_outputs=torch.ones_like(out[i]),
                 retain_graph=True,
             )
             for i in range(out.shape[0])
         ]
-
         grads = tuple([torch.stack(x) for x in zip(*grads_list)])
 
         return tuple(grads)
@@ -778,6 +798,7 @@ def _compute_jacobian_wrt_params_with_sample_wise_trick(
     labels: Optional[Tensor] = None,
     loss_fn: Optional[Union[Module, Callable]] = None,
     reduction_type: Optional[str] = "sum",
+    layer_modules: List[Module] = None,
 ) -> Tuple[Any, ...]:
     r"""
     Computes the Jacobian of a batch of test examples given a model, and optional
@@ -802,6 +823,8 @@ def _compute_jacobian_wrt_params_with_sample_wise_trick(
                 this should match `loss_fn.reduction`. Else if gradients are being
                 computed on direct model outputs (scores), then 'sum' should be used.
                 Defaults to 'sum'.
+        layer_modules (torch.nn.Module): A list of PyTorch modules w.r.t. which
+                jacobian gradients are computed.
 
     Returns:
         grads (tuple[Tensor, ...]): Returns the Jacobian for the minibatch as a
@@ -853,10 +876,13 @@ def _compute_jacobian_wrt_params_with_sample_wise_trick(
             sample_grad_wrapper.compute_param_sample_gradients(
                 out, loss_mode=reduction_type
             )
-
+            if layer_modules is not None:
+                layer_parameters = _extract_parameters_from_layers(layer_modules)
             grads = tuple(
                 param.sample_grad  # type: ignore
-                for param in model.parameters()
+                for param in (
+                    model.parameters() if layer_modules is None else layer_parameters
+                )
                 if hasattr(param, "sample_grad")
             )
         finally:

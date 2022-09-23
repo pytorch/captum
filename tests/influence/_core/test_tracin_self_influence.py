@@ -27,17 +27,48 @@ class TestTracInSelfInfluence(BaseTest):
     for unpack_inputs in [True, False]:
         for use_gpu in use_gpu_list:
             for (reduction, constructor) in [
-                ("none", DataInfluenceConstructor(TracInCP)),
+                (
+                    "none",
+                    DataInfluenceConstructor(TracInCP, name="TracInCP_all_layers"),
+                ),
+                (
+                    "none",
+                    DataInfluenceConstructor(
+                        TracInCP,
+                        name="TracInCP_linear1",
+                        layers=["module.linear1"] if use_gpu else ["linear1"],
+                    ),
+                ),
+                (
+                    "none",
+                    DataInfluenceConstructor(
+                        TracInCP,
+                        name="TracInCP_linear1_linear2",
+                        layers=["module.linear1", "module.linear2"]
+                        if use_gpu
+                        else ["linear1", "linear2"],
+                    ),
+                ),
                 (
                     "sum",
                     DataInfluenceConstructor(
                         TracInCP,
-                        name="TracInCP_sample_wise_grads_per_batch",
+                        name="TracInCP_sample_wise_grads_per_batch_all_layers",
                         sample_wise_grads_per_batch=True,
                     ),
                 ),
-                ("sum", DataInfluenceConstructor(TracInCPFast)),
-                ("mean", DataInfluenceConstructor(TracInCPFast)),
+                (
+                    "sum",
+                    DataInfluenceConstructor(
+                        TracInCPFast, "TracInCPFast_last_fc_layer"
+                    ),
+                ),
+                (
+                    "mean",
+                    DataInfluenceConstructor(
+                        TracInCPFast, "TracInCPFast_last_fc_layer"
+                    ),
+                ),
             ]:
                 if not (
                     "sample_wise_grads_per_batch" in constructor.kwargs
@@ -82,7 +113,6 @@ class TestTracInSelfInfluence(BaseTest):
                 k=None,
                 unpack_inputs=unpack_inputs,
             )
-
             # calculate self_tracin_scores
             self_tracin_scores = tracin.self_influence(
                 DataLoader(train_dataset, batch_size=batch_size),
