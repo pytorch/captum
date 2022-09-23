@@ -724,7 +724,7 @@ def _compute_jacobian_wrt_params(
                 It is unpacked before passing to `model`, so it must be a tuple.  The
                 individual elements of `inputs` can be anything.
         labels (Tensor or None): Labels for input if computing a loss function.
-        loss_fn (torch.nn.Module or Callable or None): The loss function. If a library
+        loss_fn (torch.nn.Module or Callable, optional): The loss function. If a library
                 defined loss function is provided, it would be expected to be a
                 torch.nn.Module. If a custom loss is provided, it can be either type,
                 but must behave as a library loss function would if `reduction='none'`.
@@ -793,7 +793,7 @@ def _compute_jacobian_wrt_params_with_sample_wise_trick(
                 It is unpacked before passing to `model`, so it must be a tuple.  The
                 individual elements of `inputs` can be anything.
         labels (Tensor or None): Labels for input if computing a loss function.
-        loss_fn (torch.nn.Module or Callable or None): The loss function. If a library
+        loss_fn (torch.nn.Module or Callable, optional): The loss function. If a library
                 defined loss function is provided, it would be expected to be a
                 torch.nn.Module. If a custom loss is provided, it can be either type,
                 but must behave as a library loss function would if `reduction='sum'` or
