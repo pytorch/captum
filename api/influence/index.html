@@ -219,11 +219,6 @@ checkpoint into a model to update its parameters, and get the
 learning rate if it is saved. By default uses a utility to load a
 model saved as a state dict.
 Default: _load_flexible_state_dict</p></li>
-<li><p><strong>layers</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.10)"><em>list</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><em>str</em></a><em>] or </em><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.10)"><em>None</em></a><em>, </em><em>optional</em>) – A list of layer names for which
-gradients should be computed. If <cite>layers</cite> is None, gradients will
-be computed for all layers. Otherwise, they will only be computed
-for the layers specified in <cite>layers</cite>.
-Default: None</p></li>
 <li><p><strong>loss_fn</strong> (<em>Callable</em><em>, </em><em>optional</em>) – The loss function applied to model.
 Default: None</p></li>
 <li><p><strong>batch_size</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><em>int</em></a><em> or </em><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.10)"><em>None</em></a><em>, </em><em>optional</em>) – Batch size of the DataLoader created to
