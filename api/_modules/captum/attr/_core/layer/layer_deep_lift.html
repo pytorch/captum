@@ -176,7 +176,7 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        Args:</span>
 
-<span class="sd">            inputs (Tensor or tuple of Tensor): Input for which layer</span>
+<span class="sd">            inputs (Tensor or tuple[Tensor, ...]): Input for which layer</span>
 <span class="sd">                        attributions are computed. If forward_func takes a</span>
 <span class="sd">                        single tensor as input, a single input tensor should be</span>
 <span class="sd">                        provided. If forward_func takes multiple tensors as input,</span>
@@ -288,7 +288,7 @@ src="/_sphinx/documentation_options.js"></script>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            **attributions** or 2-element tuple of **attributions**, **delta**:</span>
-<span class="sd">            - **attributions** (*Tensor* or tuple of *Tensor*):</span>
+<span class="sd">            - **attributions** (*Tensor* or *tuple[Tensor, ...]*):</span>
 <span class="sd">                Attribution score computed based on DeepLift's rescale rule with</span>
 <span class="sd">                respect to layer's inputs or outputs. Attributions will always be the</span>
 <span class="sd">                same size as the provided layer's inputs or outputs, depending on</span>
@@ -514,7 +514,7 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        Args:</span>
 
-<span class="sd">            inputs (Tensor or tuple of Tensor): Input for which layer</span>
+<span class="sd">            inputs (Tensor or tuple[Tensor, ...]): Input for which layer</span>
 <span class="sd">                        attributions are computed. If forward_func takes a single</span>
 <span class="sd">                        tensor as input, a single input tensor should be provided.</span>
 <span class="sd">                        If forward_func takes multiple tensors as input, a tuple</span>
@@ -523,7 +523,7 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">                        to the number of examples (aka batch size), and if</span>
 <span class="sd">                        multiple input tensors are provided, the examples must</span>
 <span class="sd">                        be aligned appropriately.</span>
-<span class="sd">            baselines (Tensor, tuple of Tensor, or Callable):</span>
+<span class="sd">            baselines (Tensor, tuple[Tensor, ...], or Callable):</span>
 <span class="sd">                        Baselines define reference samples that are compared with</span>
 <span class="sd">                        the inputs. In order to assign attribution scores DeepLift</span>
 <span class="sd">                        computes the differences between the inputs/outputs and</span>
@@ -619,7 +619,7 @@ src="/_sphinx/documentation_options.js"></script>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            **attributions** or 2-element tuple of **attributions**, **delta**:</span>
-<span class="sd">            - **attributions** (*Tensor* or tuple of *Tensor*):</span>
+<span class="sd">            - **attributions** (*Tensor* or *tuple[Tensor, ...]*):</span>
 <span class="sd">                        Attribution score computed based on DeepLift's rescale rule</span>
 <span class="sd">                        with respect to layer's inputs or outputs. Attributions</span>
 <span class="sd">                        will always be the same size as the provided layer's inputs</span>

@@ -62,7 +62,7 @@ src="/_sphinx/documentation_options.js"></script>
 
 <span class="sd">    Args:</span>
 
-<span class="sd">        inputs (Tensor or tuple of Tensor): The input tensors that we'd</span>
+<span class="sd">        inputs (Tensor or tuple[Tensor, ...]): The input tensors that we'd</span>
 <span class="sd">                like to perturb by adding a random noise sampled uniformly</span>
 <span class="sd">                random from an L_infinity ball with a radius `perturb_radius`.</span>
 
@@ -71,7 +71,7 @@ src="/_sphinx/documentation_options.js"></script>
 
 <span class="sd">    Returns:</span>
 
-<span class="sd">        perturbed_input (tuple of Tensor): A list of perturbed inputs that</span>
+<span class="sd">        perturbed_input (tuple[Tensor, ...]): A list of perturbed inputs that</span>
 <span class="sd">                are created by adding noise sampled uniformly random</span>
 <span class="sd">                from L_infiniy ball with a radius `perturb_radius` to the</span>
 <span class="sd">                original inputs.</span>
@@ -140,7 +140,7 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">                attribution algorithm or any other explanation method</span>
 <span class="sd">                that returns the explanations.</span>
 
-<span class="sd">        inputs (Tensor or tuple of Tensor): Input for which</span>
+<span class="sd">        inputs (Tensor or tuple[Tensor, ...]): Input for which</span>
 <span class="sd">                explanations are computed. If `explanation_func` takes a</span>
 <span class="sd">                single tensor as input, a single input tensor should</span>
 <span class="sd">                be provided.</span>

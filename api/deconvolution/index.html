@@ -60,7 +60,7 @@ supported by the register_full_backward_hook PyTorch API.</p>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>inputs</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.12)"><em>Tensor</em></a><em> or </em><em>tuple of ~torch.Tensor</em>) – Input for which
+<li><p><strong>inputs</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.12)"><em>Tensor</em></a><em> or </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.10)"><em>tuple</em></a><em>[</em><a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.12)"><em>Tensor</em></a><em>, </em><em>...</em><em>]</em>) – Input for which
 attributions are computed. If forward_func takes a single
 tensor as input, a single input tensor should be provided.
 If forward_func takes multiple tensors as input, a tuple
@@ -109,7 +109,7 @@ Default: None</p></li>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p><ul class="simple">
 <li><dl class="simple">
-<dt><strong>attributions</strong> (<em>Tensor</em> or tuple of <em>Tensor</em>):</dt><dd><p>The deconvolution attributions with respect to each
+<dt><strong>attributions</strong> (<em>Tensor</em> or <em>tuple[Tensor, …]</em>):</dt><dd><p>The deconvolution attributions with respect to each
 input feature. Attributions will always
 be the same size as the provided inputs, with each value
 providing the attribution of the corresponding input index.
@@ -123,7 +123,7 @@ corresponding sized tensors is returned.</p>
 </p>
 </dd>
 <dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p><em>Tensor</em> or tuple of <em>Tensor</em> of <strong>attributions</strong></p>
+<dd class="field-odd"><p><em>Tensor</em> or <em>tuple[Tensor, …]</em> of <strong>attributions</strong></p>
 </dd>
 </dl>
 <p>Examples:</p>

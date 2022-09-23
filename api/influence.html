@@ -127,11 +127,14 @@ implementation of <cite>DataInfluence</cite> abstract class.</p></li>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>inputs</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.12)"><em>Tensor</em></a><em> or </em><em>tuple of ~torch.Tensor</em>) – Batch of examples for which influential
-instances are computed. They are passed to the forward_func. The
-first dimension in <cite>inputs</cite> tensor or tuple of tensors corresponds
-to the batch size. A tuple of tensors is only passed in if this
-is the input form that <cite>module</cite> accepts.</p></li>
+<li><p><strong>inputs</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.12)"><em>Tensor</em></a><em> or </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.10)"><em>tuple</em></a><em>[</em><a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.12)"><em>Tensor</em></a><em>, </em><em>...</em><em>]</em>) – <p>Batch of examples for which
+influential instances are computed. They are passed to the</p>
+<blockquote>
+<div><p>forward_func. The first dimension in <cite>inputs</cite> tensor or tuple</p>
+</div></blockquote>
+<p>of tensors corresponds to the batch size. A tuple of tensors
+is only passed in if thisis the input form that <cite>module</cite> accepts.</p>
+</p></li>
 <li><p><strong>top_k</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><em>int</em></a>) – The number of top-matching activations to return</p></li>
 <li><p><strong>additional_forward_args</strong> (<em>Any</em><em>, </em><em>optional</em>) – Additional arguments that will be
 passed to forward_func after inputs.</p></li>

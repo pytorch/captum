@@ -54,7 +54,7 @@ Deriving classes are responsible for implementing its logic accordingly.</p>
 arguments.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>inputs</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.12)"><em>Tensor</em></a><em> or </em><em>tuple of ~torch.Tensor</em>) – Input for which attribution
+<dd class="field-odd"><p><strong>inputs</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.12)"><em>Tensor</em></a><em> or </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.10)"><em>tuple</em></a><em>[</em><a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.12)"><em>Tensor</em></a><em>, </em><em>...</em><em>]</em>) – Input for which attribution
 is computed. It can be provided as a single tensor or
 a tuple of multiple tensors. If multiple input tensors
 are provided, the batch sizes must be aligned across all
@@ -63,7 +63,7 @@ tensors.</p>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p><ul class="simple">
 <li><dl class="simple">
-<dt><strong>attributions</strong> (<em>Tensor</em> or tuple of <em>Tensor</em>):</dt><dd><p>Attribution values for each
+<dt><strong>attributions</strong> (<em>Tensor</em> or <em>tuple[Tensor, …]</em>):</dt><dd><p>Attribution values for each
 input tensor. The <cite>attributions</cite> have the same shape and
 dimensionality as the inputs.
 If a single tensor is provided as inputs, a single tensor
@@ -76,7 +76,7 @@ corresponding sized tensors is returned.</p>
 </p>
 </dd>
 <dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p><em>Tensor</em> or tuple of <em>Tensor</em> of <strong>attributions</strong></p>
+<dd class="field-odd"><p><em>Tensor</em> or <em>tuple[Tensor, …]</em> of <strong>attributions</strong></p>
 </dd>
 </dl>
 </dd></dl>
@@ -90,7 +90,7 @@ attribution alogrithms.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>attributions</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.12)"><em>Tensor</em></a><em> or </em><em>tuple of ~torch.Tensor</em>) – Attribution scores that
+<li><p><strong>attributions</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.12)"><em>Tensor</em></a><em> or </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.10)"><em>tuple</em></a><em>[</em><a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.12)"><em>Tensor</em></a><em>, </em><em>...</em><em>]</em>) – Attribution scores that
 are precomputed by an attribution algorithm.
 Attributions can be provided in form of a single tensor
 or a tuple of those. It is assumed that attribution
@@ -277,7 +277,7 @@ dimension 0 corresponds to number of examples).</p></li>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p><ul class="simple">
 <li><dl class="simple">
-<dt><strong>attributions</strong> (<em>Tensor</em> or tuple of <em>Tensor</em>):</dt><dd><p>Attribution values for
+<dt><strong>attributions</strong> (<em>Tensor</em> or <em>tuple[Tensor, …]</em>):</dt><dd><p>Attribution values for
 each input vector. The <cite>attributions</cite> have the
 dimensionality of inputs.</p>
 </dd>
@@ -287,7 +287,7 @@ dimensionality of inputs.</p>
 </p>
 </dd>
 <dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p><em>Tensor</em> or tuple of <em>Tensor</em> of <strong>attributions</strong></p>
+<dd class="field-odd"><p><em>Tensor</em> or <em>tuple[Tensor, …]</em> of <strong>attributions</strong></p>
 </dd>
 </dl>
 </dd></dl>
@@ -325,7 +325,7 @@ it is provided in form of a list or a non-singleton tensor.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>attributions</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.12)"><em>Tensor</em></a><em> or </em><em>tuple of ~torch.Tensor</em>) – Precomputed attribution
+<li><p><strong>attributions</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.12)"><em>Tensor</em></a><em> or </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.10)"><em>tuple</em></a><em>[</em><a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.12)"><em>Tensor</em></a><em>, </em><em>...</em><em>]</em>) – Precomputed attribution
 scores. The user can compute those using any attribution
 algorithm. It is assumed the shape and the
 dimensionality of attributions must match the shape and
@@ -334,12 +334,12 @@ It also assumes that the attribution tensor’s
 dimension 0 corresponds to the number of
 examples, and if multiple input tensors are provided,
 the examples must be aligned appropriately.</p></li>
-<li><p><strong>start_point</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.12)"><em>Tensor</em></a><em> or </em><em>tuple of ~torch.Tensor</em><em>, </em><em>optional</em>) – <cite>start_point</cite>
+<li><p><strong>start_point</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.12)"><em>Tensor</em></a><em> or </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.10)"><em>tuple</em></a><em>[</em><a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.12)"><em>Tensor</em></a><em>, </em><em>...</em><em>]</em><em>, </em><em>optional</em>) – <cite>start_point</cite>
 is passed as an input to model’s forward function. It
 is the starting point of attributions’ approximation.
 It is assumed that both <cite>start_point</cite> and <cite>end_point</cite>
 have the same shape and dimensionality.</p></li>
-<li><p><strong>end_point</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.12)"><em>Tensor</em></a><em> or </em><em>tuple of ~torch.Tensor</em>) – <cite>end_point</cite>
+<li><p><strong>end_point</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.12)"><em>Tensor</em></a><em> or </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.10)"><em>tuple</em></a><em>[</em><a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.12)"><em>Tensor</em></a><em>, </em><em>...</em><em>]</em>) – <cite>end_point</cite>
 is passed as an input to model’s forward function. It
 is the end point of attributions’ approximation.
 It is assumed that both <cite>start_point</cite> and <cite>end_point</cite>

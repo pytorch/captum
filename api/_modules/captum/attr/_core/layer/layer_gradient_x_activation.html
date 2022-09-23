@@ -112,7 +112,7 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        Args:</span>
 
-<span class="sd">            inputs (Tensor or tuple of Tensor): Input for which attributions</span>
+<span class="sd">            inputs (Tensor or tuple[Tensor, ...]): Input for which attributions</span>
 <span class="sd">                        are computed. If forward_func takes a single</span>
 <span class="sd">                        tensor as input, a single input tensor should be provided.</span>
 <span class="sd">                        If forward_func takes multiple tensors as input, a tuple</span>
@@ -166,8 +166,8 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">                        Default: False</span>
 
 <span class="sd">        Returns:</span>
-<span class="sd">            *Tensor* or tuple of *Tensor* or list of **attributions**:</span>
-<span class="sd">            - **attributions** (*Tensor* or tuple of *Tensor* or *list*):</span>
+<span class="sd">            *Tensor* or *tuple[Tensor, ...]* or list of **attributions**:</span>
+<span class="sd">            - **attributions** (*Tensor* or *tuple[Tensor, ...]* or *list*):</span>
 <span class="sd">                        Product of gradient and activation for each</span>
 <span class="sd">                        neuron in given layer output.</span>
 <span class="sd">                        Attributions will always be the same size as the</span>

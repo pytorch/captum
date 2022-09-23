@@ -412,7 +412,7 @@ src="/_sphinx/documentation_options.js"></script>
 
 <span class="sd">        Args:</span>
 
-<span class="sd">            inputs (tuple of Any): A batch of examples. Does not represent labels,</span>
+<span class="sd">            inputs (tuple[Any, ...]): A batch of examples. Does not represent labels,</span>
 <span class="sd">                    which are passed as `targets`. The assumption is that</span>
 <span class="sd">                    `model(*inputs)` produces the predictions for the batch.</span>
 <span class="sd">            targets (Tensor): The labels corresponding to the batch `inputs`. This</span>
@@ -470,8 +470,8 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        Args:</span>
 
-<span class="sd">            inputs (tuple of Any): A tuple that represents a batch of examples. It does</span>
-<span class="sd">                    not represent labels, which are passed as `targets`.</span>
+<span class="sd">            inputs (tuple[Any, ...]): A tuple that represents a batch of examples. It</span>
+<span class="sd">                    does not represent labels, which are passed as `targets`.</span>
 <span class="sd">            targets (Tensor): The labels corresponding to the batch `inputs`. This</span>
 <span class="sd">                    method is designed to be applied for a loss function, so labels</span>
 <span class="sd">                    are required.</span>
@@ -756,7 +756,7 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">                well as a `reduction_type` attribute, which indicates whether `loss_fn`</span>
 <span class="sd">                reduces the per-example losses by using their mean or sum. The</span>
 <span class="sd">                `reduction_type` attribute must either be "mean" or "sum".</span>
-<span class="sd">        inputs (tuple of Any): A batch of examples, which could be a training batch</span>
+<span class="sd">        inputs (tuple[Any, ...]): A batch of examples, which could be a training batch</span>
 <span class="sd">                or test batch, depending which method is the caller. Does not</span>
 <span class="sd">                represent labels, which are passed as `targets`. The assumption is</span>
 <span class="sd">                that `model(*inputs)` produces the predictions for the batch.</span>
@@ -1034,7 +1034,7 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        Args:</span>
 
-<span class="sd">            inputs (tuple of Any): A batch of examples. Does not represent labels,</span>
+<span class="sd">            inputs (tuple[Any, ...]): A batch of examples. Does not represent labels,</span>
 <span class="sd">                    which are passed as `targets`. The assumption is that</span>
 <span class="sd">                    `model(*inputs)` produces the predictions for the batch.</span>
 <span class="sd">            targets (Tensor): The labels corresponding to the batch `inputs`. This</span>
@@ -1074,8 +1074,8 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        Args:</span>
 
-<span class="sd">            inputs (tuple of Any): A tuple that represents a batch of examples. It does</span>
-<span class="sd">                    not represent labels, which are passed as `targets`.</span>
+<span class="sd">            inputs (tuple[Any, ...]): A tuple that represents a batch of examples. It</span>
+<span class="sd">                    does not represent labels, which are passed as `targets`.</span>
 <span class="sd">            targets (Tensor): The labels corresponding to the batch `inputs`. This</span>
 <span class="sd">                    method is designed to be applied for a loss function, so labels</span>
 <span class="sd">                    are required.</span>

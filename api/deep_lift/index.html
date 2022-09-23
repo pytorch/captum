@@ -96,7 +96,7 @@ Default: 1e-10</p></li>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>inputs</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.12)"><em>Tensor</em></a><em> or </em><em>tuple of ~torch.Tensor</em>) – Input for which
+<li><p><strong>inputs</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.12)"><em>Tensor</em></a><em> or </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.10)"><em>tuple</em></a><em>[</em><a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.12)"><em>Tensor</em></a><em>, </em><em>...</em><em>]</em>) – Input for which
 attributions are computed. If forward_func takes a single
 tensor as input, a single input tensor should be provided.
 If forward_func takes multiple tensors as input, a tuple
@@ -198,7 +198,7 @@ attribution tensors that have the same length as the
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p><ul class="simple">
 <li><dl class="simple">
-<dt><strong>attributions</strong> (<em>Tensor</em> or tuple of <em>Tensor</em>):</dt><dd><p>Attribution score computed based on DeepLift rescale rule with respect
+<dt><strong>attributions</strong> (<em>Tensor</em> or <em>tuple[Tensor, …]</em>):</dt><dd><p>Attribution score computed based on DeepLift rescale rule with respect
 to each input feature. Attributions will always be
 the same size as the provided inputs, with each value
 providing the attribution of the corresponding input index.

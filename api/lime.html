@@ -91,8 +91,8 @@ determined based on similarity to the original input.
 The original paper refers to this as a similarity kernel.</p>
 <p>The expected signature of this callable is:</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">similarity_func</span><span class="p">(</span>
-<span class="gp">&gt;&gt;&gt; </span>   <span class="n">original_input</span><span class="p">:</span> <span class="n">Tensor</span> <span class="ow">or</span> <span class="nb">tuple</span> <span class="n">of</span> <span class="n">Tensors</span><span class="p">,</span>
-<span class="gp">&gt;&gt;&gt; </span>   <span class="n">perturbed_input</span><span class="p">:</span> <span class="n">Tensor</span> <span class="ow">or</span> <span class="nb">tuple</span> <span class="n">of</span> <span class="n">Tensors</span><span class="p">,</span>
+<span class="gp">&gt;&gt;&gt; </span>   <span class="n">original_input</span><span class="p">:</span> <span class="n">Tensor</span> <span class="ow">or</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span>
+<span class="gp">&gt;&gt;&gt; </span>   <span class="n">perturbed_input</span><span class="p">:</span> <span class="n">Tensor</span> <span class="ow">or</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span>
 <span class="gp">&gt;&gt;&gt; </span>   <span class="n">perturbed_interpretable_input</span><span class="p">:</span>
 <span class="gp">&gt;&gt;&gt; </span>       <span class="n">Tensor</span> <span class="p">[</span><span class="mi">2</span><span class="n">D</span> <span class="mi">1</span> <span class="n">x</span> <span class="n">num_interp_features</span><span class="p">],</span>
 <span class="gp">&gt;&gt;&gt; </span>   <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span>
@@ -120,10 +120,10 @@ model, and n_samples perturbations will be sampled
 from this generator.</p>
 <p>The expected signature of this callable is:</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">perturb_func</span><span class="p">(</span>
-<span class="gp">&gt;&gt;&gt; </span>   <span class="n">original_input</span><span class="p">:</span> <span class="n">Tensor</span> <span class="ow">or</span> <span class="nb">tuple</span> <span class="n">of</span> <span class="n">Tensors</span><span class="p">,</span>
+<span class="gp">&gt;&gt;&gt; </span>   <span class="n">original_input</span><span class="p">:</span> <span class="n">Tensor</span> <span class="ow">or</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span>
 <span class="gp">&gt;&gt;&gt; </span>   <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tensor</span> <span class="ow">or</span> <span class="nb">tuple</span> <span class="n">of</span> <span class="n">Tensors</span> <span class="ow">or</span>
-<span class="gp">&gt;&gt;&gt; </span>   <span class="n">generator</span> <span class="n">yielding</span> <span class="n">tensor</span> <span class="ow">or</span> <span class="nb">tuple</span> <span class="n">of</span> <span class="n">Tensors</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tensor</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span> <span class="ow">or</span>
+<span class="gp">&gt;&gt;&gt; </span>   <span class="n">generator</span> <span class="n">yielding</span> <span class="n">tensor</span> <span class="ow">or</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span>
 </pre></div>
 </div>
 <p>All kwargs passed to the attribute method are
@@ -157,7 +157,7 @@ is True, otherwise None can be provided for this argument.</p>
 <span class="gp">&gt;&gt;&gt; </span>   <span class="n">curr_sample</span><span class="p">:</span> <span class="n">Tensor</span> <span class="p">[</span><span class="mi">2</span><span class="n">D</span> <span class="mi">1</span> <span class="n">x</span> <span class="n">num_interp_features</span><span class="p">]</span>
 <span class="gp">&gt;&gt;&gt; </span>   <span class="n">original_input</span><span class="p">:</span> <span class="n">Tensor</span> <span class="ow">or</span> <span class="n">Tuple</span> <span class="n">of</span> <span class="n">Tensors</span><span class="p">,</span>
 <span class="gp">&gt;&gt;&gt; </span>   <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tensor</span> <span class="ow">or</span> <span class="nb">tuple</span> <span class="n">of</span> <span class="n">Tensors</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tensor</span> <span class="ow">or</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span>
 </pre></div>
 </div>
 <p>Returned sampled input should match the type of original_input
@@ -208,7 +208,7 @@ must be set to 1.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>inputs</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.12)"><em>Tensor</em></a><em> or </em><em>tuple of ~torch.Tensor</em>) – Input for which LIME
+<li><p><strong>inputs</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.12)"><em>Tensor</em></a><em> or </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.10)"><em>tuple</em></a><em>[</em><a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.12)"><em>Tensor</em></a><em>, </em><em>...</em><em>]</em>) – Input for which LIME
 is computed. If forward_func takes a single
 tensor as input, a single input tensor should be provided.
 If forward_func takes multiple tensors as input, a tuple
@@ -459,8 +459,8 @@ captum.attr._core.lime.</p>
 <p>Alternately, a custom callable can also be provided.
 The expected signature of this callable is:</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">def</span> <span class="nf">similarity_func</span><span class="p">(</span>
-<span class="gp">&gt;&gt;&gt; </span>   <span class="n">original_input</span><span class="p">:</span> <span class="n">Tensor</span> <span class="ow">or</span> <span class="nb">tuple</span> <span class="n">of</span> <span class="n">Tensors</span><span class="p">,</span>
-<span class="gp">&gt;&gt;&gt; </span>   <span class="n">perturbed_input</span><span class="p">:</span> <span class="n">Tensor</span> <span class="ow">or</span> <span class="nb">tuple</span> <span class="n">of</span> <span class="n">Tensors</span><span class="p">,</span>
+<span class="gp">&gt;&gt;&gt; </span>   <span class="n">original_input</span><span class="p">:</span> <span class="n">Tensor</span> <span class="ow">or</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span>
+<span class="gp">&gt;&gt;&gt; </span>   <span class="n">perturbed_input</span><span class="p">:</span> <span class="n">Tensor</span> <span class="ow">or</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span>
 <span class="gp">&gt;&gt;&gt; </span>   <span class="n">perturbed_interpretable_input</span><span class="p">:</span>
 <span class="gp">&gt;&gt;&gt; </span>       <span class="n">Tensor</span> <span class="p">[</span><span class="mi">2</span><span class="n">D</span> <span class="mi">1</span> <span class="n">x</span> <span class="n">num_interp_features</span><span class="p">],</span>
 <span class="gp">&gt;&gt;&gt; </span>   <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span>
@@ -483,7 +483,7 @@ logic for selecting sampled binary vectors can
 be implemented by providing a function with the
 following expected signature:</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">perturb_func</span><span class="p">(</span>
-<span class="gp">&gt;&gt;&gt; </span>   <span class="n">original_input</span><span class="p">:</span> <span class="n">Tensor</span> <span class="ow">or</span> <span class="nb">tuple</span> <span class="n">of</span> <span class="n">Tensors</span><span class="p">,</span>
+<span class="gp">&gt;&gt;&gt; </span>   <span class="n">original_input</span><span class="p">:</span> <span class="n">Tensor</span> <span class="ow">or</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span>
 <span class="gp">&gt;&gt;&gt; </span>   <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tensor</span> <span class="p">[</span><span class="n">Binary</span> <span class="mi">2</span><span class="n">D</span> <span class="n">Tensor</span> <span class="mi">1</span> <span class="n">x</span> <span class="n">num_interp_features</span><span class="p">]</span>
 <span class="gp">&gt;&gt;&gt; </span> <span class="ow">or</span> <span class="n">generator</span> <span class="n">yielding</span> <span class="n">such</span> <span class="n">tensors</span>
@@ -526,7 +526,7 @@ superpixels in images).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>inputs</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.12)"><em>Tensor</em></a><em> or </em><em>tuple of ~torch.Tensor</em>) – Input for which LIME
+<li><p><strong>inputs</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.12)"><em>Tensor</em></a><em> or </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.10)"><em>tuple</em></a><em>[</em><a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.12)"><em>Tensor</em></a><em>, </em><em>...</em><em>]</em>) – Input for which LIME
 is computed. If forward_func takes a single
 tensor as input, a single input tensor should be provided.
 If forward_func takes multiple tensors as input, a tuple
@@ -605,7 +605,7 @@ for all forward evaluations.
 Note that attributions are not computed with respect
 to these arguments.
 Default: None</p></li>
-<li><p><strong>feature_mask</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.12)"><em>Tensor</em></a><em> or </em><em>tuple of ~torch.Tensor</em><em>, </em><em>optional</em>) – feature_mask defines a mask for the input, grouping
+<li><p><strong>feature_mask</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.12)"><em>Tensor</em></a><em> or </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.10)"><em>tuple</em></a><em>[</em><a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.12)"><em>Tensor</em></a><em>, </em><em>...</em><em>]</em><em>, </em><em>optional</em>) – feature_mask defines a mask for the input, grouping
 features which correspond to the same
 interpretable feature. feature_mask
 should contain the same number of tensors as inputs.
@@ -660,7 +660,7 @@ Default: False</p></li>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p><ul class="simple">
 <li><dl class="simple">
-<dt><strong>attributions</strong> (<em>Tensor</em> or tuple of <em>Tensor</em>):</dt><dd><p>The attributions with respect to each input feature.
+<dt><strong>attributions</strong> (<em>Tensor</em> or <em>tuple[Tensor, …]</em>):</dt><dd><p>The attributions with respect to each input feature.
 If return_input_shape = True, attributions will be
 the same size as the provided inputs, with each value
 providing the coefficient of the corresponding
@@ -676,7 +676,7 @@ num_interp_features.</p>
 </p>
 </dd>
 <dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p><em>Tensor</em> or tuple of <em>Tensor</em> of <strong>attributions</strong></p>
+<dd class="field-odd"><p><em>Tensor</em> or <em>tuple[Tensor, …]</em> of <strong>attributions</strong></p>
 </dd>
 </dl>
 <p>Examples:</p>

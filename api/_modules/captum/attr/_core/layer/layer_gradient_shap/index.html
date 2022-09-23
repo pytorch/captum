@@ -178,7 +178,7 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        Args:</span>
 
-<span class="sd">            inputs (Tensor or tuple of Tensor): Input which are used to compute</span>
+<span class="sd">            inputs (Tensor or tuple[Tensor, ...]): Input which are used to compute</span>
 <span class="sd">                        SHAP attribution values for a given `layer`. If `forward_func`</span>
 <span class="sd">                        takes a single tensor as input, a single input tensor should</span>
 <span class="sd">                        be provided.</span>
@@ -187,7 +187,7 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">                        that for all given input tensors, dimension 0 corresponds</span>
 <span class="sd">                        to the number of examples, and if multiple input tensors</span>
 <span class="sd">                        are provided, the examples must be aligned appropriately.</span>
-<span class="sd">            baselines (Tensor, tuple of Tensor, or Callable):</span>
+<span class="sd">            baselines (Tensor, tuple[Tensor, ...], or Callable):</span>
 <span class="sd">                        Baselines define the starting point from which expectation</span>
 <span class="sd">                        is computed and can be provided as:</span>
 
@@ -278,7 +278,7 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">                        Default: False</span>
 <span class="sd">        Returns:</span>
 <span class="sd">            **attributions** or 2-element tuple of **attributions**, **delta**:</span>
-<span class="sd">            - **attributions** (*Tensor* or tuple of *Tensor*):</span>
+<span class="sd">            - **attributions** (*Tensor* or *tuple[Tensor, ...]*):</span>
 <span class="sd">                        Attribution score computed based on GradientSHAP with</span>
 <span class="sd">                        respect to layer's input or output. Attributions will always</span>
 <span class="sd">                        be the same size as the provided layer's inputs or outputs,</span>

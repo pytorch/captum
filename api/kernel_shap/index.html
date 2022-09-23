@@ -79,7 +79,7 @@ superpixels in images).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>inputs</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.12)"><em>Tensor</em></a><em> or </em><em>tuple of ~torch.Tensor</em>) – Input for which KernelShap
+<li><p><strong>inputs</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.12)"><em>Tensor</em></a><em> or </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.10)"><em>tuple</em></a><em>[</em><a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.12)"><em>Tensor</em></a><em>, </em><em>...</em><em>]</em>) – Input for which KernelShap
 is computed. If forward_func takes a single
 tensor as input, a single input tensor should be provided.
 If forward_func takes multiple tensors as input, a tuple
@@ -158,7 +158,7 @@ for all forward evaluations.
 Note that attributions are not computed with respect
 to these arguments.
 Default: None</p></li>
-<li><p><strong>feature_mask</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.12)"><em>Tensor</em></a><em> or </em><em>tuple of ~torch.Tensor</em><em>, </em><em>optional</em>) – feature_mask defines a mask for the input, grouping
+<li><p><strong>feature_mask</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.12)"><em>Tensor</em></a><em> or </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.10)"><em>tuple</em></a><em>[</em><a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.12)"><em>Tensor</em></a><em>, </em><em>...</em><em>]</em><em>, </em><em>optional</em>) – feature_mask defines a mask for the input, grouping
 features which correspond to the same
 interpretable feature. feature_mask
 should contain the same number of tensors as inputs.
@@ -213,7 +213,7 @@ Default: False</p></li>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p><ul class="simple">
 <li><dl class="simple">
-<dt><strong>attributions</strong> (<em>Tensor</em> or tuple of <em>Tensor</em>):</dt><dd><p>The attributions with respect to each input feature.
+<dt><strong>attributions</strong> (<em>Tensor</em> or <em>tuple[Tensor, …]</em>):</dt><dd><p>The attributions with respect to each input feature.
 If return_input_shape = True, attributions will be
 the same size as the provided inputs, with each value
 providing the coefficient of the corresponding
@@ -229,7 +229,7 @@ num_interp_features.</p>
 </p>
 </dd>
 <dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p><em>Tensor</em> or tuple of <em>Tensor</em> of <strong>attributions</strong></p>
+<dd class="field-odd"><p><em>Tensor</em> or <em>tuple[Tensor, …]</em> of <strong>attributions</strong></p>
 </dd>
 </dl>
 <dl>

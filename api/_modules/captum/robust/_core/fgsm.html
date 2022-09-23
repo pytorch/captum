@@ -119,7 +119,7 @@ src="/_sphinx/documentation_options.js"></script>
 
 <span class="sd">        Args:</span>
 
-<span class="sd">            inputs (Tensor or tuple of Tensor): Input for which adversarial</span>
+<span class="sd">            inputs (Tensor or tuple[Tensor, ...]): Input for which adversarial</span>
 <span class="sd">                        attack is computed. It can be provided as a single</span>
 <span class="sd">                        tensor or a tuple of multiple tensors. If multiple</span>
 <span class="sd">                        input tensors are provided, the batch sizes must be</span>
@@ -164,7 +164,7 @@ src="/_sphinx/documentation_options.js"></script>
 
 <span class="sd">        Returns:</span>
 
-<span class="sd">            - **perturbed inputs** (*Tensor* or tuple of *Tensor*):</span>
+<span class="sd">            - **perturbed inputs** (*Tensor* or *tuple[Tensor, ...]*):</span>
 <span class="sd">                        Perturbed input for each</span>
 <span class="sd">                        input tensor. The perturbed inputs have the same shape and</span>
 <span class="sd">                        dimensionality as the inputs.</span>

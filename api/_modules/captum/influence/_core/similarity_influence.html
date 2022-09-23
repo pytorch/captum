@@ -198,11 +198,11 @@ src="/_sphinx/documentation_options.js"></script>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">:</span>
         <span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        Args:</span>
-<span class="sd">            inputs (Tensor or tuple of Tensor): Batch of examples for which influential</span>
-<span class="sd">                    instances are computed. They are passed to the forward_func. The</span>
-<span class="sd">                    first dimension in `inputs` tensor or tuple of tensors corresponds</span>
-<span class="sd">                    to the batch size. A tuple of tensors is only passed in if this</span>
-<span class="sd">                    is the input form that `module` accepts.</span>
+<span class="sd">            inputs (Tensor or tuple[Tensor, ...]): Batch of examples for which</span>
+<span class="sd">                    influential instances are computed. They are passed to the</span>
+<span class="sd">                     forward_func. The first dimension in `inputs` tensor or tuple</span>
+<span class="sd">                    of tensors corresponds to the batch size. A tuple of tensors</span>
+<span class="sd">                    is only passed in if thisis the input form that `module` accepts.</span>
 <span class="sd">            top_k (int): The number of top-matching activations to return</span>
 <span class="sd">            additional_forward_args (Any, optional): Additional arguments that will be</span>
 <span class="sd">                    passed to forward_func after inputs.</span>

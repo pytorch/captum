@@ -148,8 +148,8 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">                    The expected signature of this callable is:</span>
 
 <span class="sd">                    &gt;&gt;&gt; similarity_func(</span>
-<span class="sd">                    &gt;&gt;&gt;    original_input: Tensor or tuple of Tensors,</span>
-<span class="sd">                    &gt;&gt;&gt;    perturbed_input: Tensor or tuple of Tensors,</span>
+<span class="sd">                    &gt;&gt;&gt;    original_input: Tensor or tuple[Tensor, ...],</span>
+<span class="sd">                    &gt;&gt;&gt;    perturbed_input: Tensor or tuple[Tensor, ...],</span>
 <span class="sd">                    &gt;&gt;&gt;    perturbed_interpretable_input:</span>
 <span class="sd">                    &gt;&gt;&gt;        Tensor [2D 1 x num_interp_features],</span>
 <span class="sd">                    &gt;&gt;&gt;    **kwargs: Any</span>
@@ -178,10 +178,10 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">                    The expected signature of this callable is:</span>
 
 <span class="sd">                    &gt;&gt;&gt; perturb_func(</span>
-<span class="sd">                    &gt;&gt;&gt;    original_input: Tensor or tuple of Tensors,</span>
+<span class="sd">                    &gt;&gt;&gt;    original_input: Tensor or tuple[Tensor, ...],</span>
 <span class="sd">                    &gt;&gt;&gt;    **kwargs: Any</span>
-<span class="sd">                    &gt;&gt;&gt; ) -&gt; Tensor or tuple of Tensors or</span>
-<span class="sd">                    &gt;&gt;&gt;    generator yielding tensor or tuple of Tensors</span>
+<span class="sd">                    &gt;&gt;&gt; ) -&gt; Tensor, tuple[Tensor, ...], or</span>
+<span class="sd">                    &gt;&gt;&gt;    generator yielding tensor or tuple[Tensor, ...]</span>
 
 <span class="sd">                    All kwargs passed to the attribute method are</span>
 <span class="sd">                    provided as keyword arguments (kwargs) to this callable.</span>
@@ -218,7 +218,7 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">                    &gt;&gt;&gt;    curr_sample: Tensor [2D 1 x num_interp_features]</span>
 <span class="sd">                    &gt;&gt;&gt;    original_input: Tensor or Tuple of Tensors,</span>
 <span class="sd">                    &gt;&gt;&gt;    **kwargs: Any</span>
-<span class="sd">                    &gt;&gt;&gt; ) -&gt; Tensor or tuple of Tensors</span>
+<span class="sd">                    &gt;&gt;&gt; ) -&gt; Tensor or tuple[Tensor, ...]</span>
 
 <span class="sd">                    Returned sampled input should match the type of original_input</span>
 <span class="sd">                    and corresponding tensor shapes.</span>
@@ -298,7 +298,7 @@ src="/_sphinx/documentation_options.js"></script>
 
 <span class="sd">        Args:</span>
 
-<span class="sd">            inputs (Tensor or tuple of Tensor): Input for which LIME</span>
+<span class="sd">            inputs (Tensor or tuple[Tensor, ...]): Input for which LIME</span>
 <span class="sd">                        is computed. If forward_func takes a single</span>
 <span class="sd">                        tensor as input, a single input tensor should be provided.</span>
 <span class="sd">                        If forward_func takes multiple tensors as input, a tuple</span>
@@ -812,8 +812,8 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">                    The expected signature of this callable is:</span>
 
 <span class="sd">                    &gt;&gt;&gt; def similarity_func(</span>
-<span class="sd">                    &gt;&gt;&gt;    original_input: Tensor or tuple of Tensors,</span>
-<span class="sd">                    &gt;&gt;&gt;    perturbed_input: Tensor or tuple of Tensors,</span>
+<span class="sd">                    &gt;&gt;&gt;    original_input: Tensor or tuple[Tensor, ...],</span>
+<span class="sd">                    &gt;&gt;&gt;    perturbed_input: Tensor or tuple[Tensor, ...],</span>
 <span class="sd">                    &gt;&gt;&gt;    perturbed_interpretable_input:</span>
 <span class="sd">                    &gt;&gt;&gt;        Tensor [2D 1 x num_interp_features],</span>
 <span class="sd">                    &gt;&gt;&gt;    **kwargs: Any</span>
@@ -837,7 +837,7 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">                    following expected signature:</span>
 
 <span class="sd">                    &gt;&gt;&gt; perturb_func(</span>
-<span class="sd">                    &gt;&gt;&gt;    original_input: Tensor or tuple of Tensors,</span>
+<span class="sd">                    &gt;&gt;&gt;    original_input: Tensor or tuple[Tensor, ...],</span>
 <span class="sd">                    &gt;&gt;&gt;    **kwargs: Any</span>
 <span class="sd">                    &gt;&gt;&gt; ) -&gt; Tensor [Binary 2D Tensor 1 x num_interp_features]</span>
 <span class="sd">                    &gt;&gt;&gt;  or generator yielding such tensors</span>
@@ -911,7 +911,7 @@ src="/_sphinx/documentation_options.js"></script>
 
 <span class="sd">        Args:</span>
 
-<span class="sd">            inputs (Tensor or tuple of Tensor): Input for which LIME</span>
+<span class="sd">            inputs (Tensor or tuple[Tensor, ...]): Input for which LIME</span>
 <span class="sd">                        is computed. If forward_func takes a single</span>
 <span class="sd">                        tensor as input, a single input tensor should be provided.</span>
 <span class="sd">                        If forward_func takes multiple tensors as input, a tuple</span>
@@ -992,7 +992,7 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">                        Note that attributions are not computed with respect</span>
 <span class="sd">                        to these arguments.</span>
 <span class="sd">                        Default: None</span>
-<span class="sd">            feature_mask (Tensor or tuple of Tensor, optional):</span>
+<span class="sd">            feature_mask (Tensor or tuple[Tensor, ...], optional):</span>
 <span class="sd">                        feature_mask defines a mask for the input, grouping</span>
 <span class="sd">                        features which correspond to the same</span>
 <span class="sd">                        interpretable feature. feature_mask</span>
@@ -1045,8 +1045,8 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">                        Default: False</span>
 
 <span class="sd">        Returns:</span>
-<span class="sd">            *Tensor* or tuple of *Tensor* of **attributions**:</span>
-<span class="sd">            - **attributions** (*Tensor* or tuple of *Tensor*):</span>
+<span class="sd">            *Tensor* or *tuple[Tensor, ...]* of **attributions**:</span>
+<span class="sd">            - **attributions** (*Tensor* or *tuple[Tensor, ...]*):</span>
 <span class="sd">                        The attributions with respect to each input feature.</span>
 <span class="sd">                        If return_input_shape = True, attributions will be</span>
 <span class="sd">                        the same size as the provided inputs, with each value</span>

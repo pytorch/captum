@@ -162,7 +162,7 @@ src="/_sphinx/documentation_options.js"></script>
 
 <span class="sd">        Args:</span>
 
-<span class="sd">            inputs (Tensor or tuple of Tensor): Input for which integrated</span>
+<span class="sd">            inputs (Tensor or tuple[Tensor, ...]): Input for which integrated</span>
 <span class="sd">                        gradients are computed. If forward_func takes a single</span>
 <span class="sd">                        tensor as input, a single input tensor should be provided.</span>
 <span class="sd">                        If forward_func takes multiple tensors as input, a tuple</span>
@@ -265,7 +265,7 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">                    Default: False</span>
 <span class="sd">        Returns:</span>
 <span class="sd">            **attributions** or 2-element tuple of **attributions**, **delta**:</span>
-<span class="sd">            - **attributions** (*Tensor* or tuple of *Tensor*):</span>
+<span class="sd">            - **attributions** (*Tensor* or *tuple[Tensor, ...]*):</span>
 <span class="sd">                    Integrated gradients with respect to each input feature.</span>
 <span class="sd">                    attributions will always be the same size as the provided</span>
 <span class="sd">                    inputs, with each value providing the attribution of the</span>

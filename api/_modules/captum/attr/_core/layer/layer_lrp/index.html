@@ -143,7 +143,7 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        Args:</span>
 
-<span class="sd">            inputs (Tensor or tuple of Tensor): Input for which relevance is</span>
+<span class="sd">            inputs (Tensor or tuple[Tensor, ...]): Input for which relevance is</span>
 <span class="sd">                        propagated.</span>
 <span class="sd">                        If forward_func takes a single</span>
 <span class="sd">                        tensor as input, a single input tensor should be provided.</span>
@@ -207,10 +207,10 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">                    Default: False</span>
 
 <span class="sd">        Returns:</span>
-<span class="sd">            *Tensor* or tuple of *Tensor* of **attributions** or 2-element tuple of</span>
+<span class="sd">            *Tensor* or *tuple[Tensor, ...]* of **attributions** or 2-element tuple of</span>
 <span class="sd">            **attributions**, **delta** or list of **attributions** and **delta**:</span>
 
-<span class="sd">              - **attributions** (*Tensor* or tuple of *Tensor*):</span>
+<span class="sd">              - **attributions** (*Tensor* or *tuple[Tensor, ...]*):</span>
 <span class="sd">                        The propagated relevance values with respect to each</span>
 <span class="sd">                        input feature. Attributions will always</span>
 <span class="sd">                        be the same size as the provided inputs, with each value</span>

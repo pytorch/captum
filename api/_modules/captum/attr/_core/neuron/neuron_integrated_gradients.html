@@ -116,7 +116,7 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        Args:</span>
 
-<span class="sd">            inputs (Tensor or tuple of Tensor): Input for which neuron integrated</span>
+<span class="sd">            inputs (Tensor or tuple[Tensor, ...]): Input for which neuron integrated</span>
 <span class="sd">                        gradients are computed. If forward_func takes a single</span>
 <span class="sd">                        tensor as input, a single input tensor should be provided.</span>
 <span class="sd">                        If forward_func takes multiple tensors as input, a tuple</span>
@@ -124,7 +124,7 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">                        that for all given input tensors, dimension 0 corresponds</span>
 <span class="sd">                        to the number of examples, and if multiple input tensors</span>
 <span class="sd">                        are provided, the examples must be aligned appropriately.</span>
-<span class="sd">            neuron_selector (int, Callable, tuple of int, or slice):</span>
+<span class="sd">            neuron_selector (int, Callable, tuple[int], or slice):</span>
 <span class="sd">                        Selector for neuron</span>
 <span class="sd">                        in given layer for which attribution is desired.</span>
 <span class="sd">                        Neuron selector can be provided as:</span>
@@ -234,8 +234,8 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">                        Default: False</span>
 
 <span class="sd">        Returns:</span>
-<span class="sd">            *Tensor* or tuple of *Tensor* of **attributions**:</span>
-<span class="sd">            - **attributions** (*Tensor* or tuple of *Tensor*):</span>
+<span class="sd">            *Tensor* or *tuple[Tensor, ...]* of **attributions**:</span>
+<span class="sd">            - **attributions** (*Tensor* or *tuple[Tensor, ...]*):</span>
 <span class="sd">                        Integrated gradients for particular neuron with</span>
 <span class="sd">                        respect to each input feature.</span>
 <span class="sd">                        Attributions will always be the same size as the provided</span>

@@ -138,7 +138,7 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        Args:</span>
 
-<span class="sd">            inputs (Tensor or tuple of Tensor): Input for which SHAP attribution</span>
+<span class="sd">            inputs (Tensor or tuple[Tensor, ...]): Input for which SHAP attribution</span>
 <span class="sd">                        values are computed. If `forward_func` takes a single</span>
 <span class="sd">                        tensor as input, a single input tensor should be provided.</span>
 <span class="sd">                        If `forward_func` takes multiple tensors as input, a tuple</span>
@@ -146,7 +146,7 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">                        that for all given input tensors, dimension 0 corresponds</span>
 <span class="sd">                        to the number of examples, and if multiple input tensors</span>
 <span class="sd">                        are provided, the examples must be aligned appropriately.</span>
-<span class="sd">            neuron_selector (int, Callable, tuple of int, or slice):</span>
+<span class="sd">            neuron_selector (int, Callable, tuple[int], or slice):</span>
 <span class="sd">                        Selector for neuron</span>
 <span class="sd">                        in given layer for which attribution is desired.</span>
 <span class="sd">                        Neuron selector can be provided as:</span>
@@ -179,7 +179,7 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">                          this function returns either a tensor with one element</span>
 <span class="sd">                          or a 1D tensor with length equal to batch_size (one scalar</span>
 <span class="sd">                          per input example)</span>
-<span class="sd">            baselines (Tensor, tuple of Tensor, or Callable):</span>
+<span class="sd">            baselines (Tensor, tuple[Tensor, ...], or Callable):</span>
 <span class="sd">                        Baselines define the starting point from which expectation</span>
 <span class="sd">                        is computed and can be provided as:</span>
 
@@ -241,7 +241,7 @@ src="/_sphinx/documentation_options.js"></script>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            **attributions** or 2-element tuple of **attributions**, **delta**:</span>
-<span class="sd">            - **attributions** (*Tensor* or tuple of *Tensor*):</span>
+<span class="sd">            - **attributions** (*Tensor* or *tuple[Tensor, ...]*):</span>
 <span class="sd">                        Attribution score computed based on GradientSHAP with respect</span>
 <span class="sd">                        to each input feature. Attributions will always be</span>
 <span class="sd">                        the same size as the provided inputs, with each value</span>

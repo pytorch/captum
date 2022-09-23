@@ -295,8 +295,8 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        Args:</span>
 
-<span class="sd">            inputs (tuple of Any): A tuple that represents a batch of examples. It does</span>
-<span class="sd">                    not represent labels, which are passed as `targets`.</span>
+<span class="sd">            inputs (tuple[Any, ...]): A tuple that represents a batch of examples. It</span>
+<span class="sd">                    does not represent labels, which are passed as `targets`.</span>
 <span class="sd">            targets (Tensor, optional): If computing influence scores on a loss</span>
 <span class="sd">                    function, these are the labels corresponding to the batch `inputs`.</span>
 <span class="sd">                    Default: None</span>
@@ -344,7 +344,7 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        Args:</span>
 
-<span class="sd">            inputs (tuple of Any): A batch of examples. Does not represent labels,</span>
+<span class="sd">            inputs (tuple[Any, ...]): A batch of examples. Does not represent labels,</span>
 <span class="sd">                    which are passed as `targets`. The assumption is that</span>
 <span class="sd">                    `model(*inputs)` produces the predictions for the batch.</span>
 <span class="sd">            targets (Tensor, optional): If computing influence scores on a loss</span>
@@ -866,8 +866,8 @@ src="/_sphinx/documentation_options.js"></script>
 
 <span class="sd">        Args:</span>
 
-<span class="sd">            inputs (tuple of Any): A test batch of examples. Does not represent labels,</span>
-<span class="sd">                    which are passed as `targets`. The assumption is that</span>
+<span class="sd">            inputs (tuple[Any, ...]): A test batch of examples. Does not represent</span>
+<span class="sd">                    labels, which are passed as `targets`. The assumption is that</span>
 <span class="sd">                    `model(*inputs)` produces the predictions for the batch.</span>
 <span class="sd">            targets (Tensor, optional): If computing influence scores on a loss</span>
 <span class="sd">                    function, these are the labels corresponding to the batch `inputs`.</span>
@@ -922,8 +922,8 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        Args:</span>
 
-<span class="sd">            inputs (tuple of Any): A tuple that represents a batch of examples. It does</span>
-<span class="sd">                    not represent labels, which are passed as `targets`.</span>
+<span class="sd">            inputs (tuple[Any, ...]): A tuple that represents a batch of examples. It</span>
+<span class="sd">                    does not represent labels, which are passed as `targets`.</span>
 <span class="sd">            targets (Tensor, optional): If computing influence scores on a loss</span>
 <span class="sd">                    function, these are the labels corresponding to the batch `inputs`.</span>
 <span class="sd">                    Default: None</span>
@@ -1219,8 +1219,8 @@ src="/_sphinx/documentation_options.js"></script>
 
 <span class="sd">        Args:</span>
 
-<span class="sd">            inputs (tuple of Any): A batch of examples, which could be a training batch</span>
-<span class="sd">                    or test batch, depending which method is the caller. Does not</span>
+<span class="sd">            inputs (tuple[Any, ...]): A batch of examples, which could be a training</span>
+<span class="sd">                    batch or test batch, depending which method is the caller. Does not</span>
 <span class="sd">                    represent labels, which are passed as `targets`. The assumption is</span>
 <span class="sd">                    that `model(*inputs)` produces the predictions for the batch.</span>
 <span class="sd">            targets (tensor or None): If computing influence scores on a loss function,</span>

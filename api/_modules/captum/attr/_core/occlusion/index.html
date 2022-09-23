@@ -94,7 +94,7 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        Args:</span>
 
-<span class="sd">                inputs (Tensor or tuple of Tensor): Input for which occlusion</span>
+<span class="sd">                inputs (Tensor or tuple[Tensor, ...]): Input for which occlusion</span>
 <span class="sd">                            attributions are computed. If forward_func takes a single</span>
 <span class="sd">                            tensor as input, a single input tensor should be provided.</span>
 <span class="sd">                            If forward_func takes multiple tensors as input, a tuple</span>
@@ -103,7 +103,7 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">                            to the number of examples (aka batch size), and if</span>
 <span class="sd">                            multiple input tensors are provided, the examples must</span>
 <span class="sd">                            be aligned appropriately.</span>
-<span class="sd">                sliding_window_shapes (tuple or tuple of tuple): Shape of patch</span>
+<span class="sd">                sliding_window_shapes (tuple or tuple[tuple]): Shape of patch</span>
 <span class="sd">                            (hyperrectangle) to occlude each input. For a single</span>
 <span class="sd">                            input tensor, this must be a tuple of length equal to the</span>
 <span class="sd">                            number of dimensions of the input tensor - 1, defining</span>
@@ -112,7 +112,7 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">                            this must be a tuple containing one tuple for each input</span>
 <span class="sd">                            tensor defining the dimensions of the patch for that</span>
 <span class="sd">                            input tensor, as described for the single tensor case.</span>
-<span class="sd">                strides (int or tuple or tuple of int or tuple of tuple, optional):</span>
+<span class="sd">                strides (int or tuple or tuple[int] or tuple[tuple], optional):</span>
 <span class="sd">                            This defines the step by which the occlusion hyperrectangle</span>
 <span class="sd">                            should be shifted by in each direction for each iteration.</span>
 <span class="sd">                            For a single tensor input, this can be either a single</span>
@@ -219,8 +219,8 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">                            Default: False</span>
 
 <span class="sd">        Returns:</span>
-<span class="sd">                *Tensor* or tuple of *Tensor* of **attributions**:</span>
-<span class="sd">                - **attributions** (*Tensor* or tuple of *Tensor*):</span>
+<span class="sd">                *Tensor* or *tuple[Tensor, ...]* of **attributions**:</span>
+<span class="sd">                - **attributions** (*Tensor* or *tuple[Tensor, ...]*):</span>
 <span class="sd">                            The attributions with respect to each input feature.</span>
 <span class="sd">                            Attributions will always be</span>
 <span class="sd">                            the same size as the provided inputs, with each value</span>

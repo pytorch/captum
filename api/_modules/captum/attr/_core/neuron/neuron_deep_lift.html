@@ -122,7 +122,7 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        Args:</span>
 
-<span class="sd">            inputs (Tensor or tuple of Tensor): Input for which layer</span>
+<span class="sd">            inputs (Tensor or tuple[Tensor, ...]): Input for which layer</span>
 <span class="sd">                        attributions are computed. If forward_func takes a</span>
 <span class="sd">                        single tensor as input, a single input tensor should be</span>
 <span class="sd">                        provided. If forward_func takes multiple tensors as input,</span>
@@ -131,7 +131,7 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">                        corresponds to the number of examples (aka batch size),</span>
 <span class="sd">                        and if multiple input tensors are provided, the examples</span>
 <span class="sd">                        must be aligned appropriately.</span>
-<span class="sd">            neuron_selector (int, Callable, tuple of int, or slice):</span>
+<span class="sd">            neuron_selector (int, Callable, tuple[int], or slice):</span>
 <span class="sd">                        Selector for neuron</span>
 <span class="sd">                        in given layer for which attribution is desired.</span>
 <span class="sd">                        Neuron selector can be provided as:</span>
@@ -239,7 +239,7 @@ src="/_sphinx/documentation_options.js"></script>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            **attributions** or 2-element tuple of **attributions**, **delta**:</span>
-<span class="sd">            - **attributions** (*Tensor* or tuple of *Tensor*):</span>
+<span class="sd">            - **attributions** (*Tensor* or *tuple[Tensor, ...]*):</span>
 <span class="sd">                Computes attributions using Deeplift's rescale rule for</span>
 <span class="sd">                particular neuron with respect to each input feature.</span>
 <span class="sd">                Attributions will always be the same size as the provided</span>
@@ -367,7 +367,7 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        Args:</span>
 
-<span class="sd">            inputs (Tensor or tuple of Tensor): Input for which layer</span>
+<span class="sd">            inputs (Tensor or tuple[Tensor, ...]): Input for which layer</span>
 <span class="sd">                        attributions are computed. If forward_func takes a</span>
 <span class="sd">                        single tensor as input, a single input tensor should be</span>
 <span class="sd">                        provided. If forward_func takes multiple tensors as input,</span>
@@ -376,7 +376,7 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">                        corresponds to the number of examples (aka batch size),</span>
 <span class="sd">                        and if multiple input tensors are provided, the examples</span>
 <span class="sd">                        must be aligned appropriately.</span>
-<span class="sd">            neuron_selector (int, Callable, tuple of int, or slice):</span>
+<span class="sd">            neuron_selector (int, Callable, tuple[int], or slice):</span>
 <span class="sd">                        Selector for neuron</span>
 <span class="sd">                        in given layer for which attribution is desired.</span>
 <span class="sd">                        Neuron selector can be provided as:</span>
@@ -410,7 +410,7 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">                          or a 1D tensor with length equal to batch_size (one scalar</span>
 <span class="sd">                          per input example)</span>
 
-<span class="sd">            baselines (Tensor, tuple of Tensor, or Callable):</span>
+<span class="sd">            baselines (Tensor, tuple[Tensor, ...], or Callable):</span>
 <span class="sd">                        Baselines define reference samples that are compared with</span>
 <span class="sd">                        the inputs. In order to assign attribution scores DeepLift</span>
 <span class="sd">                        computes the differences between the inputs/outputs and</span>
@@ -477,7 +477,7 @@ src="/_sphinx/documentation_options.js"></script>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            **attributions** or 2-element tuple of **attributions**, **delta**:</span>
-<span class="sd">            - **attributions** (*Tensor* or tuple of *Tensor*):</span>
+<span class="sd">            - **attributions** (*Tensor* or *tuple[Tensor, ...]*):</span>
 <span class="sd">                        Computes attributions using Deeplift's rescale rule for</span>
 <span class="sd">                        particular neuron with respect to each input feature.</span>
 <span class="sd">                        Attributions will always be the same size as the provided</span>
