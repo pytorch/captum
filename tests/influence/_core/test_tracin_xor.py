@@ -167,26 +167,54 @@ class TestTracInXOR(BaseTest):
     parametrized_list = [
         (
             "none",
-            DataInfluenceConstructor(TracInCP),
+            DataInfluenceConstructor(
+                TracInCP, name="TracInCP_linear1", layers=["linear1"]
+            ),
+            "check_idx",
+            False,
+        ),
+        (
+            "none",
+            DataInfluenceConstructor(TracInCP, name="TracInCP_all_layers"),
             "check_idx",
             False,
         ),
         (
             None,
-            DataInfluenceConstructor(TracInCP),
+            DataInfluenceConstructor(TracInCP, name="TracInCP_all_layers"),
+            "sample_wise_trick",
+            False,
+        ),
+        (
+            None,
+            DataInfluenceConstructor(
+                TracInCP, name="TracInCP_linear1_linear2", layers=["linear1", "linear2"]
+            ),
             "sample_wise_trick",
             False,
         ),
     ]
 
     if torch.cuda.is_available() and torch.cuda.device_count() != 0:
-        parametrized_list.append(
-            (
-                "none",
-                DataInfluenceConstructor(TracInCP),
-                "check_idx",
-                True,
-            )
+        parametrized_list.extend(
+            [
+                (
+                    "none",
+                    DataInfluenceConstructor(TracInCP, name="TracInCP_all_layers"),
+                    "check_idx",
+                    True,
+                ),
+                (
+                    "none",
+                    DataInfluenceConstructor(
+                        TracInCP,
+                        name="TracInCP_linear1_linear2",
+                        layers=["module.linear1", "module.linear2"],
+                    ),
+                    "check_idx",
+                    True,
+                ),
+            ],
         )
 
     @parameterized.expand(
@@ -201,8 +229,6 @@ class TestTracInXOR(BaseTest):
         use_gpu: bool,
     ) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
-            # net = BasicLinearNet(2, 2, 1)
-            # net = wrap_model_in_dataparallel(net) if use_gpu else net
             batch_size = 4
 
             net, dataset = self._test_tracin_xor_setup(tmpdir, use_gpu)

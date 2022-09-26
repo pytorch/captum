@@ -18,7 +18,7 @@ from typing import (
 
 import torch
 from captum._utils.av import AV
-from captum._utils.common import _format_inputs
+from captum._utils.common import _format_inputs, _get_module_from_name
 from captum._utils.gradient import (
     _compute_jacobian_wrt_params,
     _compute_jacobian_wrt_params_with_sample_wise_trick,
@@ -141,11 +141,6 @@ class TracInCPBase(DataInfluence):
                     learning rate if it is saved. By default uses a utility to load a
                     model saved as a state dict.
                     Default: _load_flexible_state_dict
-            layers (list[str] or None, optional): A list of layer names for which
-                    gradients should be computed. If `layers` is None, gradients will
-                    be computed for all layers. Otherwise, they will only be computed
-                    for the layers specified in `layers`.
-                    Default: None
             loss_fn (Callable, optional): The loss function applied to model.
                     Default: None
             batch_size (int or None, optional): Batch size of the DataLoader created to
@@ -653,21 +648,25 @@ class TracInCP(TracInCPBase):
         within influence to restore after every influence call)? or make a copy so that
         changes to grad_requires aren't persistent after using TracIn.
         """
+        self.layer_modules = None
         if layers is not None:
             assert isinstance(layers, List), "`layers` should be a list!"
             assert len(layers) > 0, "`layers` cannot be empty!"
             assert isinstance(
                 layers[0], str
             ), "`layers` should contain str layer names."
-            layerstr = " ".join(layers)
-            gradset = False
-            for layer in layers:
-                for name, param in model.named_parameters():
-                    param.requires_grad = False
-                    if name in layerstr or layer in name:
+            self.layer_modules = [
+                _get_module_from_name(self.model, layer) for layer in layers
+            ]
+            for layer, layer_module in zip(layers, self.layer_modules):
+                for name, param in layer_module.named_parameters():
+                    if not param.requires_grad:
+                        warnings.warn(
+                            "Setting required grads for layer: {}, name: {}".format(
+                                ".".join(layer), name
+                            )
+                        )
                         param.requires_grad = True
-                        gradset = True
-            assert gradset, "At least one parameter of network must require gradient."
 
     @log_usage()
     def influence(  # type: ignore[override]
@@ -803,7 +802,6 @@ class TracInCP(TracInCPBase):
                 inputs,
                 targets,
             )
-
             return (
                 _gradient_dot_product(
                     input_jacobians,
@@ -1201,10 +1199,12 @@ class TracInCP(TracInCPBase):
                 targets,
                 self.loss_fn,
                 self.reduction_type,
+                self.layer_modules,
             )
         return _compute_jacobian_wrt_params(
             self.model,
             inputs,
             targets,
             self.loss_fn,
+            self.layer_modules,
         )
