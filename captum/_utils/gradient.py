@@ -813,17 +813,17 @@ def _compute_jacobian_wrt_params_with_sample_wise_trick(
         inputs (tuple[Any, ...]): The minibatch for which the forward pass is computed.
                 It is unpacked before passing to `model`, so it must be a tuple.  The
                 individual elements of `inputs` can be anything.
-        labels (Tensor or None): Labels for input if computing a loss function.
+        labels (Tensor, optional): Labels for input if computing a loss function.
         loss_fn (torch.nn.Module or Callable, optional): The loss function. If a library
                 defined loss function is provided, it would be expected to be a
                 torch.nn.Module. If a custom loss is provided, it can be either type,
                 but must behave as a library loss function would if `reduction='sum'` or
                 `reduction='mean'`.
-        reduction_type (str): The type of reduction applied. If a loss_fn is passed,
+        reduction_type (str, optional): The type of reduction applied. If a loss_fn is passed,
                 this should match `loss_fn.reduction`. Else if gradients are being
                 computed on direct model outputs (scores), then 'sum' should be used.
                 Defaults to 'sum'.
-        layer_modules (torch.nn.Module): A list of PyTorch modules w.r.t. which
+        layer_modules (torch.nn.Module, optional): A list of PyTorch modules w.r.t. which
                 jacobian gradients are computed.
 
     Returns:
