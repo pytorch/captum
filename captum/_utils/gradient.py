@@ -738,12 +738,12 @@ def _compute_jacobian_wrt_params(
         inputs (tuple[Any, ...]): The minibatch for which the forward pass is computed.
                 It is unpacked before passing to `model`, so it must be a tuple.  The
                 individual elements of `inputs` can be anything.
-        labels (Tensor or None): Labels for input if computing a loss function.
+        labels (Tensor, optional): Labels for input if computing a loss function.
         loss_fn (torch.nn.Module or Callable, optional): The loss function. If a library
                 defined loss function is provided, it would be expected to be a
                 torch.nn.Module. If a custom loss is provided, it can be either type,
                 but must behave as a library loss function would if `reduction='none'`.
-        layer_modules (List[torch.nn.Module]): A list of PyTorch modules w.r.t. which
+        layer_modules (List[torch.nn.Module], optional): A list of PyTorch modules w.r.t. which
                 jacobian gradients are computed.
     Returns:
         grads (tuple[Tensor, ...]): Returns the Jacobian for the minibatch as a
