@@ -191,7 +191,7 @@ class LayerIntegratedGradients(LayerAttribution, GradientAttribution):
 
         Args:
 
-            inputs (Tensor or tuple of Tensor): Input for which layer integrated
+            inputs (Tensor or tuple[Tensor, ...]): Input for which layer integrated
                         gradients are computed. If forward_func takes a single
                         tensor as input, a single input tensor should be provided.
                         If forward_func takes multiple tensors as input, a tuple
@@ -309,8 +309,8 @@ class LayerIntegratedGradients(LayerAttribution, GradientAttribution):
 
         Returns:
             **attributions** or 2-element tuple of **attributions**, **delta**:
-            - **attributions** (*Tensor*, tuple of *Tensor* or tuple of
-                *Tensor*): Integrated gradients with respect to `layer`'s inputs
+            - **attributions** (*Tensor* or *tuple[Tensor, ...]*):
+                Integrated gradients with respect to `layer`'s inputs
                 or outputs. Attributions will always be the same size and
                 dimensionality as the input or output of the given layer,
                 depending on whether we attribute to the inputs or outputs

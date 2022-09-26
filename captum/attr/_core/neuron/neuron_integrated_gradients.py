@@ -84,7 +84,7 @@ class NeuronIntegratedGradients(NeuronAttribution, GradientAttribution):
         r"""
         Args:
 
-            inputs (Tensor or tuple of Tensor): Input for which neuron integrated
+            inputs (Tensor or tuple[Tensor, ...]): Input for which neuron integrated
                         gradients are computed. If forward_func takes a single
                         tensor as input, a single input tensor should be provided.
                         If forward_func takes multiple tensors as input, a tuple
@@ -92,7 +92,7 @@ class NeuronIntegratedGradients(NeuronAttribution, GradientAttribution):
                         that for all given input tensors, dimension 0 corresponds
                         to the number of examples, and if multiple input tensors
                         are provided, the examples must be aligned appropriately.
-            neuron_selector (int, Callable, tuple of int, or slice):
+            neuron_selector (int, Callable, tuple[int], or slice):
                         Selector for neuron
                         in given layer for which attribution is desired.
                         Neuron selector can be provided as:
@@ -202,8 +202,8 @@ class NeuronIntegratedGradients(NeuronAttribution, GradientAttribution):
                         Default: False
 
         Returns:
-            *Tensor* or tuple of *Tensor* of **attributions**:
-            - **attributions** (*Tensor* or tuple of *Tensor*):
+            *Tensor* or *tuple[Tensor, ...]* of **attributions**:
+            - **attributions** (*Tensor* or *tuple[Tensor, ...]*):
                         Integrated gradients for particular neuron with
                         respect to each input feature.
                         Attributions will always be the same size as the provided

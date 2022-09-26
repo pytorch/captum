@@ -108,7 +108,7 @@ class Batch:
 
         Args:
 
-            inputs (Tensor or tuple of Tensor): Batch of inputs for a model.
+            inputs (Tensor or tuple[Tensor, ...]): Batch of inputs for a model.
                         These may be either a Tensor or tuple of tensors. Each tensor
                         must correspond to a feature for AttributionVisualizer, and
                         the corresponding input transform function of the feature

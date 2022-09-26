@@ -116,8 +116,8 @@ class LimeBase(PerturbationAttribution):
                     The expected signature of this callable is:
 
                     >>> similarity_func(
-                    >>>    original_input: Tensor or tuple of Tensors,
-                    >>>    perturbed_input: Tensor or tuple of Tensors,
+                    >>>    original_input: Tensor or tuple[Tensor, ...],
+                    >>>    perturbed_input: Tensor or tuple[Tensor, ...],
                     >>>    perturbed_interpretable_input:
                     >>>        Tensor [2D 1 x num_interp_features],
                     >>>    **kwargs: Any
@@ -146,10 +146,10 @@ class LimeBase(PerturbationAttribution):
                     The expected signature of this callable is:
 
                     >>> perturb_func(
-                    >>>    original_input: Tensor or tuple of Tensors,
+                    >>>    original_input: Tensor or tuple[Tensor, ...],
                     >>>    **kwargs: Any
-                    >>> ) -> Tensor or tuple of Tensors or
-                    >>>    generator yielding tensor or tuple of Tensors
+                    >>> ) -> Tensor, tuple[Tensor, ...], or
+                    >>>    generator yielding tensor or tuple[Tensor, ...]
 
                     All kwargs passed to the attribute method are
                     provided as keyword arguments (kwargs) to this callable.
@@ -186,7 +186,7 @@ class LimeBase(PerturbationAttribution):
                     >>>    curr_sample: Tensor [2D 1 x num_interp_features]
                     >>>    original_input: Tensor or Tuple of Tensors,
                     >>>    **kwargs: Any
-                    >>> ) -> Tensor or tuple of Tensors
+                    >>> ) -> Tensor or tuple[Tensor, ...]
 
                     Returned sampled input should match the type of original_input
                     and corresponding tensor shapes.
@@ -266,7 +266,7 @@ class LimeBase(PerturbationAttribution):
 
         Args:
 
-            inputs (Tensor or tuple of Tensor): Input for which LIME
+            inputs (Tensor or tuple[Tensor, ...]): Input for which LIME
                         is computed. If forward_func takes a single
                         tensor as input, a single input tensor should be provided.
                         If forward_func takes multiple tensors as input, a tuple
@@ -780,8 +780,8 @@ class Lime(LimeBase):
                     The expected signature of this callable is:
 
                     >>> def similarity_func(
-                    >>>    original_input: Tensor or tuple of Tensors,
-                    >>>    perturbed_input: Tensor or tuple of Tensors,
+                    >>>    original_input: Tensor or tuple[Tensor, ...],
+                    >>>    perturbed_input: Tensor or tuple[Tensor, ...],
                     >>>    perturbed_interpretable_input:
                     >>>        Tensor [2D 1 x num_interp_features],
                     >>>    **kwargs: Any
@@ -805,7 +805,7 @@ class Lime(LimeBase):
                     following expected signature:
 
                     >>> perturb_func(
-                    >>>    original_input: Tensor or tuple of Tensors,
+                    >>>    original_input: Tensor or tuple[Tensor, ...],
                     >>>    **kwargs: Any
                     >>> ) -> Tensor [Binary 2D Tensor 1 x num_interp_features]
                     >>>  or generator yielding such tensors
@@ -879,7 +879,7 @@ class Lime(LimeBase):
 
         Args:
 
-            inputs (Tensor or tuple of Tensor): Input for which LIME
+            inputs (Tensor or tuple[Tensor, ...]): Input for which LIME
                         is computed. If forward_func takes a single
                         tensor as input, a single input tensor should be provided.
                         If forward_func takes multiple tensors as input, a tuple
@@ -960,7 +960,7 @@ class Lime(LimeBase):
                         Note that attributions are not computed with respect
                         to these arguments.
                         Default: None
-            feature_mask (Tensor or tuple of Tensor, optional):
+            feature_mask (Tensor or tuple[Tensor, ...], optional):
                         feature_mask defines a mask for the input, grouping
                         features which correspond to the same
                         interpretable feature. feature_mask
@@ -1013,8 +1013,8 @@ class Lime(LimeBase):
                         Default: False
 
         Returns:
-            *Tensor* or tuple of *Tensor* of **attributions**:
-            - **attributions** (*Tensor* or tuple of *Tensor*):
+            *Tensor* or *tuple[Tensor, ...]* of **attributions**:
+            - **attributions** (*Tensor* or *tuple[Tensor, ...]*):
                         The attributions with respect to each input feature.
                         If return_input_shape = True, attributions will be
                         the same size as the provided inputs, with each value

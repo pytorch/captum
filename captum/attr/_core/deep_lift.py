@@ -185,7 +185,7 @@ class DeepLift(GradientAttribution):
         r"""
         Args:
 
-            inputs (Tensor or tuple of Tensor): Input for which
+            inputs (Tensor or tuple[Tensor, ...]): Input for which
                         attributions are computed. If forward_func takes a single
                         tensor as input, a single input tensor should be provided.
                         If forward_func takes multiple tensors as input, a tuple
@@ -288,7 +288,7 @@ class DeepLift(GradientAttribution):
 
         Returns:
             **attributions** or 2-element tuple of **attributions**, **delta**:
-            - **attributions** (*Tensor* or tuple of *Tensor*):
+            - **attributions** (*Tensor* or *tuple[Tensor, ...]*):
                 Attribution score computed based on DeepLift rescale rule with respect
                 to each input feature. Attributions will always be
                 the same size as the provided inputs, with each value
@@ -696,7 +696,7 @@ class DeepLiftShap(DeepLift):
         r"""
         Args:
 
-            inputs (Tensor or tuple of Tensor): Input for which
+            inputs (Tensor or tuple[Tensor, ...]): Input for which
                         attributions are computed. If forward_func takes a single
                         tensor as input, a single input tensor should be provided.
                         If forward_func takes multiple tensors as input, a tuple
@@ -705,7 +705,7 @@ class DeepLiftShap(DeepLift):
                         to the number of examples (aka batch size), and if
                         multiple input tensors are provided, the examples must
                         be aligned appropriately.
-            baselines (Tensor, tuple of Tensor, or Callable):
+            baselines (Tensor, tuple[Tensor, ...], or Callable):
                         Baselines define reference samples that are compared with
                         the inputs. In order to assign attribution scores DeepLift
                         computes the differences between the inputs/outputs and
@@ -791,7 +791,7 @@ class DeepLiftShap(DeepLift):
 
         Returns:
             **attributions** or 2-element tuple of **attributions**, **delta**:
-            - **attributions** (*Tensor* or tuple of *Tensor*):
+            - **attributions** (*Tensor* or *tuple[Tensor, ...]*):
                         Attribution score computed based on DeepLift rescale rule with
                         respect to each input feature. Attributions will always be
                         the same size as the provided inputs, with each value

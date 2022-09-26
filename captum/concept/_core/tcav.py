@@ -578,7 +578,7 @@ class TCAV(ConceptInterpreter):
 
         Args:
 
-            inputs (Tensor or tuple of Tensor): Inputs for which predictions
+            inputs (Tensor or tuple[Tensor, ...]): Inputs for which predictions
                     are performed and attributions are computed.
                     If model takes a single tensor as
                     input, a single input tensor should be provided.

@@ -54,7 +54,7 @@ class LayerActivation(LayerAttribution):
         r"""
         Args:
 
-            inputs (Tensor or tuple of Tensor): Input for which layer
+            inputs (Tensor or tuple[Tensor, ...]): Input for which layer
                         activation is computed. If forward_func takes a single
                         tensor as input, a single input tensor should be provided.
                         If forward_func takes multiple tensors as input, a tuple
@@ -87,8 +87,8 @@ class LayerActivation(LayerAttribution):
                         Default: False
 
         Returns:
-            *Tensor* or tuple of *Tensor* or list of **attributions**:
-            - **attributions** (*Tensor* or tuple of *Tensor* or *list*):
+            *Tensor* or *tuple[Tensor, ...]* or list of **attributions**:
+            - **attributions** (*Tensor* or *tuple[Tensor, ...]* or *list*):
                         Activation of each neuron in given layer output.
                         Attributions will always be the same size as the
                         output of the given layer.

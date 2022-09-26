@@ -86,7 +86,7 @@ class KernelShap(Lime):
 
         Args:
 
-            inputs (Tensor or tuple of Tensor): Input for which KernelShap
+            inputs (Tensor or tuple[Tensor, ...]): Input for which KernelShap
                         is computed. If forward_func takes a single
                         tensor as input, a single input tensor should be provided.
                         If forward_func takes multiple tensors as input, a tuple
@@ -167,7 +167,7 @@ class KernelShap(Lime):
                         Note that attributions are not computed with respect
                         to these arguments.
                         Default: None
-            feature_mask (Tensor or tuple of Tensor, optional):
+            feature_mask (Tensor or tuple[Tensor, ...], optional):
                         feature_mask defines a mask for the input, grouping
                         features which correspond to the same
                         interpretable feature. feature_mask
@@ -220,8 +220,8 @@ class KernelShap(Lime):
                         Default: False
 
         Returns:
-            *Tensor* or tuple of *Tensor* of **attributions**:
-            - **attributions** (*Tensor* or tuple of *Tensor*):
+            *Tensor* or *tuple[Tensor, ...]* of **attributions**:
+            - **attributions** (*Tensor* or *tuple[Tensor, ...]*):
                         The attributions with respect to each input feature.
                         If return_input_shape = True, attributions will be
                         the same size as the provided inputs, with each value
