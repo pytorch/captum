@@ -15,6 +15,7 @@ from captum._utils.gradient import (
     undo_gradient_requirements,
 )
 from captum._utils.typing import TensorOrTupleOfTensorsGeneric
+from captum.log import log_usage
 from captum.robust._core.perturbation import Perturbation
 from torch import Tensor
 
@@ -73,6 +74,7 @@ class FGSM(Perturbation):
         self.bound = lambda x: torch.clamp(x, min=lower_bound, max=upper_bound)
         self.zero_thresh = 10**-6
 
+    @log_usage()
     def perturb(
         self,
         inputs: TensorOrTupleOfTensorsGeneric,
