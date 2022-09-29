@@ -37,6 +37,7 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="kn">import</span> <span class="nn">torch.nn.functional</span> <span class="k">as</span> <span class="nn">F</span>
 <span class="kn">from</span> <span class="nn">captum._utils.common</span> <span class="kn">import</span> <span class="n">_format_output</span><span class="p">,</span> <span class="n">_format_tensor_into_tuples</span><span class="p">,</span> <span class="n">_is_tuple</span>
 <span class="kn">from</span> <span class="nn">captum._utils.typing</span> <span class="kn">import</span> <span class="n">TensorOrTupleOfTensorsGeneric</span>
+<span class="kn">from</span> <span class="nn">captum.log</span> <span class="kn">import</span> <span class="n">log_usage</span>
 <span class="kn">from</span> <span class="nn">captum.robust._core.fgsm</span> <span class="kn">import</span> <span class="n">FGSM</span>
 <span class="kn">from</span> <span class="nn">captum.robust._core.perturbation</span> <span class="kn">import</span> <span class="n">Perturbation</span>
 <span class="kn">from</span> <span class="nn">torch</span> <span class="kn">import</span> <span class="n">Tensor</span>
@@ -97,7 +98,8 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="bp">self</span><span class="o">.</span><span class="n">fgsm</span> <span class="o">=</span> <span class="n">FGSM</span><span class="p">(</span><span class="n">forward_func</span><span class="p">,</span> <span class="n">loss_func</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">bound</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">clamp</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="nb">min</span><span class="o">=</span><span class="n">lower_bound</span><span class="p">,</span> <span class="nb">max</span><span class="o">=</span><span class="n">upper_bound</span><span class="p">)</span>
 
-<div class="viewcode-block" id="PGD.perturb"><a class="viewcode-back" href="../../../../robust.html#captum.robust.PGD.perturb">[docs]</a>    <span class="k">def</span> <span class="nf">perturb</span><span class="p">(</span>
+<div class="viewcode-block" id="PGD.perturb"><a class="viewcode-back" href="../../../../robust.html#captum.robust.PGD.perturb">[docs]</a>    <span class="nd">@log_usage</span><span class="p">()</span>
+    <span class="k">def</span> <span class="nf">perturb</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">inputs</span><span class="p">:</span> <span class="n">TensorOrTupleOfTensorsGeneric</span><span class="p">,</span>
         <span class="n">radius</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>

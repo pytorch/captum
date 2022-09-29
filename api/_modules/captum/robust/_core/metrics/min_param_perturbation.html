@@ -42,6 +42,7 @@ src="/_sphinx/documentation_options.js"></script>
     <span class="n">_reduce_list</span><span class="p">,</span>
 <span class="p">)</span>
 <span class="kn">from</span> <span class="nn">captum._utils.typing</span> <span class="kn">import</span> <span class="n">TargetType</span>
+<span class="kn">from</span> <span class="nn">captum.log</span> <span class="kn">import</span> <span class="n">log_usage</span>
 <span class="kn">from</span> <span class="nn">captum.robust._core.perturbation</span> <span class="kn">import</span> <span class="n">Perturbation</span>
 <span class="kn">from</span> <span class="nn">torch</span> <span class="kn">import</span> <span class="n">Tensor</span>
 
@@ -367,7 +368,8 @@ src="/_sphinx/documentation_options.js"></script>
 
         <span class="k">return</span> <span class="n">min_input</span><span class="p">,</span> <span class="n">min_so_far</span>
 
-<div class="viewcode-block" id="MinParamPerturbation.evaluate"><a class="viewcode-back" href="../../../../../robust.html#captum.robust.MinParamPerturbation.evaluate">[docs]</a>    <span class="k">def</span> <span class="nf">evaluate</span><span class="p">(</span>
+<div class="viewcode-block" id="MinParamPerturbation.evaluate"><a class="viewcode-back" href="../../../../../robust.html#captum.robust.MinParamPerturbation.evaluate">[docs]</a>    <span class="nd">@log_usage</span><span class="p">()</span>
+    <span class="k">def</span> <span class="nf">evaluate</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">inputs</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
         <span class="n">additional_forward_args</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Tuple</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
