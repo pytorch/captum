@@ -820,8 +820,9 @@ def _compute_jacobian_wrt_params_with_sample_wise_trick(
                 but must behave as a library loss function would if `reduction='sum'` or
                 `reduction='mean'`.
         reduction_type (str, optional): The type of reduction applied. If a loss_fn is
-                 passed, this should match `loss_fn.reduction`. Else if gradients are being
-                computed on direct model outputs (scores), then 'sum' should be used.
+                passed, this should match `loss_fn.reduction`. Else if gradients are
+                being computed on direct model outputs (scores), then 'sum' should be
+                used.
                 Defaults to 'sum'.
         layer_modules (torch.nn.Module, optional): A list of PyTorch modules w.r.t.
                  which jacobian gradients are computed.
