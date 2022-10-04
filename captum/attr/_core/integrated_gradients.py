@@ -83,7 +83,7 @@ class IntegratedGradients(GradientAttribution):
         baselines: BaselineType = None,
         target: TargetType = None,
         additional_forward_args: Any = None,
-        n_steps: int = 30,
+        n_steps: int = 50,
         method: str = "gausslegendre",
         internal_batch_size: Union[None, int] = None,
         return_convergence_delta: Literal[False] = False,
