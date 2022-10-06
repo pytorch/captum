@@ -10,6 +10,44 @@ from tests.helpers.basic import BaseTest
 
 class Test(BaseTest):
     @unittest.mock.patch("sys.stderr", new_callable=io.StringIO)
+    def test_nested_progress_tqdm(self, mock_stderr) -> None:
+        try:
+            import tqdm  # noqa: F401
+        except ImportError:
+            raise unittest.SkipTest("Skipping tqdm test, tqdm not available.")
+
+        parent_data = ["x", "y", "z"]
+        test_data = [1, 2, 3]
+        with progress(parent_data, desc="parent progress") as parent:
+            for item in parent:
+                for _ in progress(test_data, desc=f"test progress {item}"):
+                    pass
+        output = mock_stderr.getvalue()
+        self.assertIn("parent progress:", output)
+        for item in parent_data:
+            self.assertIn(f"test progress {item}:", output)
+
+    @unittest.mock.patch("sys.stderr", new_callable=io.StringIO)
+    def test_nested_simple_progress(self, mock_stderr) -> None:
+        parent_data = ["x", "y", "z"]
+        test_data = [1, 2, 3]
+        with progress(
+            parent_data, desc="parent progress", use_tqdm=False, mininterval=0.0
+        ) as parent:
+            for item in parent:
+                for _ in progress(
+                    test_data, desc=f"test progress {item}", use_tqdm=False
+                ):
+                    pass
+
+        output = mock_stderr.getvalue()
+        self.assertEqual(
+            output.count("parent progress:"), 4, "4 'parent' progress bar expected"
+        )
+        for item in parent_data:
+            self.assertIn(f"test progress {item}:", output)
+
+    @unittest.mock.patch("sys.stderr", new_callable=io.StringIO)
     def test_progress_tqdm(self, mock_stderr) -> None:
         try:
             import tqdm  # noqa: F401

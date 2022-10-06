@@ -54,7 +54,6 @@ class SimpleProgress:
         Same as tqdm, output to stderr channel
         """
         self.cur = 0
-
         self.iterable = iterable
         self.total = total
         if total is None and hasattr(iterable, "__len__"):
@@ -69,6 +68,15 @@ class SimpleProgress:
         self.mininterval = mininterval
         self.last_print_t = 0.0
         self.closed = False
+        self._is_parent = False
+
+    def __enter__(self):
+        self._is_parent = True
+        return self
+
+    def __exit__(self, exc_type, exc_value, exc_traceback):
+        self.close()
+        return False
 
     def __iter__(self):
         if self.closed or not self.iterable:
@@ -87,8 +95,8 @@ class SimpleProgress:
         else:
             # e.g., progress: .....
             progress_str += "." * self.cur
-
-        print("\r" + progress_str, end="", file=self.file)
+        end = "\n" if self._is_parent else ""
+        print("\r" + progress_str, end=end, file=self.file)
 
     def update(self, amount: int = 1):
         if self.closed:
@@ -101,7 +109,7 @@ class SimpleProgress:
             self.last_print_t = cur_t
 
     def close(self):
-        if not self.closed:
+        if not self.closed and not self._is_parent:
             self._refresh()
             print(file=self.file)  # end with new line
             self.closed = True
