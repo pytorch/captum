@@ -15,6 +15,7 @@ from captum._utils.gradient import (
     undo_gradient_requirements,
 )
 from captum._utils.typing import TensorOrTupleOfTensorsGeneric
+from captum.log import log_usage
 from captum.robust._core.perturbation import Perturbation
 from torch import Tensor
 
@@ -73,6 +74,7 @@ class FGSM(Perturbation):
         self.bound = lambda x: torch.clamp(x, min=lower_bound, max=upper_bound)
         self.zero_thresh = 10**-6
 
+    @log_usage()
     def perturb(
         self,
         inputs: TensorOrTupleOfTensorsGeneric,
@@ -87,7 +89,7 @@ class FGSM(Perturbation):
 
         Args:
 
-            inputs (Tensor or tuple of Tensor): Input for which adversarial
+            inputs (Tensor or tuple[Tensor, ...]): Input for which adversarial
                         attack is computed. It can be provided as a single
                         tensor or a tuple of multiple tensors. If multiple
                         input tensors are provided, the batch sizes must be
@@ -132,7 +134,7 @@ class FGSM(Perturbation):
 
         Returns:
 
-            - **perturbed inputs** (*Tensor* or tuple of *Tensor*):
+            - **perturbed inputs** (*Tensor* or *tuple[Tensor, ...]*):
                         Perturbed input for each
                         input tensor. The perturbed inputs have the same shape and
                         dimensionality as the inputs.

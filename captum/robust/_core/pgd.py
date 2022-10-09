@@ -5,6 +5,7 @@ import torch
 import torch.nn.functional as F
 from captum._utils.common import _format_output, _format_tensor_into_tuples, _is_tuple
 from captum._utils.typing import TensorOrTupleOfTensorsGeneric
+from captum.log import log_usage
 from captum.robust._core.fgsm import FGSM
 from captum.robust._core.perturbation import Perturbation
 from torch import Tensor
@@ -65,6 +66,7 @@ class PGD(Perturbation):
         self.fgsm = FGSM(forward_func, loss_func)
         self.bound = lambda x: torch.clamp(x, min=lower_bound, max=upper_bound)
 
+    @log_usage()
     def perturb(
         self,
         inputs: TensorOrTupleOfTensorsGeneric,
@@ -83,7 +85,7 @@ class PGD(Perturbation):
 
         Args:
 
-            inputs (Tensor or tuple of Tensor): Input for which adversarial
+            inputs (Tensor or tuple[Tensor, ...]): Input for which adversarial
                         attack is computed. It can be provided as a single
                         tensor or a tuple of multiple tensors. If multiple
                         input tensors are provided, the batch sizes must be
@@ -135,7 +137,7 @@ class PGD(Perturbation):
 
         Returns:
 
-            - **perturbed inputs** (*Tensor* or tuple of *Tensor*):
+            - **perturbed inputs** (*Tensor* or *tuple[Tensor, ...]*):
                         Perturbed input for each
                         input tensor. The perturbed inputs have the same shape and
                         dimensionality as the inputs.

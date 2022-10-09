@@ -130,7 +130,7 @@ class IntegratedGradients(GradientAttribution):
 
         Args:
 
-            inputs (Tensor or tuple of Tensor): Input for which integrated
+            inputs (Tensor or tuple[Tensor, ...]): Input for which integrated
                         gradients are computed. If forward_func takes a single
                         tensor as input, a single input tensor should be provided.
                         If forward_func takes multiple tensors as input, a tuple
@@ -233,7 +233,7 @@ class IntegratedGradients(GradientAttribution):
                     Default: False
         Returns:
             **attributions** or 2-element tuple of **attributions**, **delta**:
-            - **attributions** (*Tensor* or tuple of *Tensor*):
+            - **attributions** (*Tensor* or *tuple[Tensor, ...]*):
                     Integrated gradients with respect to each input feature.
                     attributions will always be the same size as the provided
                     inputs, with each value providing the attribution of the

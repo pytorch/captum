@@ -111,7 +111,7 @@ class LayerLRP(LRP, LayerAttribution):
         r"""
         Args:
 
-            inputs (Tensor or tuple of Tensor): Input for which relevance is
+            inputs (Tensor or tuple[Tensor, ...]): Input for which relevance is
                         propagated.
                         If forward_func takes a single
                         tensor as input, a single input tensor should be provided.
@@ -175,10 +175,10 @@ class LayerLRP(LRP, LayerAttribution):
                     Default: False
 
         Returns:
-            *Tensor* or tuple of *Tensor* of **attributions** or 2-element tuple of
+            *Tensor* or *tuple[Tensor, ...]* of **attributions** or 2-element tuple of
             **attributions**, **delta** or list of **attributions** and **delta**:
 
-              - **attributions** (*Tensor* or tuple of *Tensor*):
+              - **attributions** (*Tensor* or *tuple[Tensor, ...]*):
                         The propagated relevance values with respect to each
                         input feature. Attributions will always
                         be the same size as the provided inputs, with each value

@@ -99,7 +99,7 @@ class LRP(GradientAttribution):
         r"""
         Args:
 
-            inputs (Tensor or tuple of Tensor): Input for which relevance is
+            inputs (Tensor or tuple[Tensor, ...]): Input for which relevance is
                         propagated. If forward_func takes a single
                         tensor as input, a single input tensor should be provided.
                         If forward_func takes multiple tensors as input, a tuple
@@ -155,10 +155,10 @@ class LRP(GradientAttribution):
                     of rules is printed during propagation.
 
         Returns:
-            *Tensor* or tuple of *Tensor* of **attributions**
+            *Tensor* or *tuple[Tensor, ...]* of **attributions**
             or 2-element tuple of **attributions**, **delta**:
 
-              - **attributions** (*Tensor* or tuple of *Tensor*):
+              - **attributions** (*Tensor* or *tuple[Tensor, ...]*):
                         The propagated relevance values with respect to each
                         input feature. The values are normalized by the output score
                         value (sum(relevance)=1). To obtain values comparable to other
@@ -246,7 +246,7 @@ class LRP(GradientAttribution):
 
         Args:
 
-            attributions (Tensor or tuple of Tensor): Attribution scores that
+            attributions (Tensor or tuple[Tensor, ...]): Attribution scores that
                         are precomputed by an attribution algorithm.
                         Attributions can be provided in form of a single tensor
                         or a tuple of those. It is assumed that attribution
