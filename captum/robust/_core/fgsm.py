@@ -82,6 +82,7 @@ class FGSM(Perturbation):
         target: Any,
         additional_forward_args: Any = None,
         targeted: bool = False,
+        mask: Optional[TensorOrTupleOfTensorsGeneric] = None,
     ) -> TensorOrTupleOfTensorsGeneric:
         r"""
         This method computes and returns the perturbed input for each input tensor.
@@ -130,6 +131,11 @@ class FGSM(Perturbation):
                         Default: None.
             targeted (bool, optional): If attack should be targeted.
                         Default: False.
+            mask (Tensor or tuple[Tensor, ...], optional): mask of zeroes and ones
+                        that defines which pixels within the image are perturbed.
+                        This mask must have the same shape and dimensionality as
+                        the inputs.
+                        Default: None.
 
 
         Returns:
@@ -144,6 +150,7 @@ class FGSM(Perturbation):
         """
         is_inputs_tuple = _is_tuple(inputs)
         inputs: Tuple[Tensor, ...] = _format_tensor_into_tuples(inputs)
+        masks: Tuple[Tensor, ...] = _format_tensor_into_tuples(mask) if mask else None
         gradient_mask = apply_gradient_requirements(inputs)
 
         def _forward_with_loss() -> Tensor:
@@ -161,7 +168,7 @@ class FGSM(Perturbation):
 
         grads = compute_gradients(_forward_with_loss, inputs)
         undo_gradient_requirements(inputs, gradient_mask)
-        perturbed_inputs = self._perturb(inputs, grads, epsilon, targeted)
+        perturbed_inputs = self._perturb(inputs, grads, epsilon, targeted, masks)
         perturbed_inputs = tuple(
             self.bound(perturbed_inputs[i]) for i in range(len(perturbed_inputs))
         )
@@ -173,6 +180,7 @@ class FGSM(Perturbation):
         grads: Tuple,
         epsilon: float,
         targeted: bool,
+        masks: Optional[Tuple],
     ) -> Tuple:
         r"""
         A helper function to calculate the perturbed inputs given original
@@ -180,12 +188,13 @@ class FGSM(Perturbation):
         different for targeted v.s. non-targeted as described above.
         """
         multiplier = -1 if targeted else 1
+        masks = (1,) * len(inputs) if not masks else masks
         inputs = tuple(
             torch.where(
                 torch.abs(grad) > self.zero_thresh,
-                inp + multiplier * epsilon * torch.sign(grad),
+                inp + multiplier * epsilon * torch.sign(grad) * mask,
                 inp,
             )
-            for grad, inp in zip(grads, inputs)
+            for grad, inp, mask in zip(grads, inputs, masks)
         )
         return inputs
