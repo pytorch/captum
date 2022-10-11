@@ -126,8 +126,7 @@ class ImageFeature(BaseFeature):
         # [N, C, H, W] if C==1,  its assumed to be a greyscale image
         if data.shape[:-2][-1] == 1:
             data_t, attribution_t = [
-                t.detach().squeeze().cpu().numpy()
-                for t in (data, attribution)
+                t.detach().squeeze().cpu().numpy() for t in (data, attribution)
             ]
             data_t = data_t.reshape(28, 28, 1)
             attribution_t = attribution_t.reshape(28, 28, 1)
