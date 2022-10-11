@@ -118,11 +118,20 @@ class ImageFeature(BaseFeature):
         if self.visualization_transform:
             data = self.visualization_transform(data)
 
-        data_t, attribution_t = [
-            t.detach().squeeze().permute((1, 2, 0)).cpu().numpy()
-            for t in (data, attribution)
-        ]
+        if data.shape[:-2][-1] == 3:  # [N, C, H, W] if C==3,  its expected to be in RGB format
+            data_t, attribution_t = [
+                t.detach().squeeze().permute((1, 2, 0)).cpu().numpy()
+                for t in (data, attribution)
+            ] 
 
+        if data.shape[:-2][-1] == 1:  # [N, C, H, W] if C==1,  its assumed to be a greyscale image
+            data_t, attribution_t = [
+                t.detach().squeeze().cpu().numpy()
+                for t in (data, attribution)
+            ]
+            data_t = data_t.reshape(28,28,1)
+            attribution_t = attribution_t.reshape(28,28,1)
+            
         orig_fig, _ = viz.visualize_image_attr(
             attribution_t, data_t, method="original_image", use_pyplot=False
         )
