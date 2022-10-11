@@ -135,6 +135,11 @@ class PGD(Perturbation):
             norm (str, optional): Specifies the norm to calculate distance from
                         original inputs: ``Linf`` | ``L2``.
                         Default: ``Linf``
+            mask (Tensor or tuple[Tensor, ...], optional): mask of zeroes and ones
+                        that defines which pixels within the image are perturbed.
+                        This mask must have the same shape and dimensionality as
+                        the inputs.
+                        Default: None.
 
         Returns:
 
