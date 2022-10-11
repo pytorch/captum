@@ -4,11 +4,23 @@ import io
 import unittest
 import unittest.mock
 
-from captum._utils.progress import progress
+from captum._utils.progress import progress, NullProgress
 from tests.helpers.basic import BaseTest
 
 
 class Test(BaseTest):
+    @unittest.mock.patch("sys.stderr", new_callable=io.StringIO)
+    def test_nullprogress(self, mock_stderr) -> None:
+        count = 0
+        with NullProgress(["x", "y", "z"]) as np:
+            for _ in np:
+                for _ in NullProgress([1, 2, 3]):
+                    count += 1
+
+        self.assertEqual(count, 9)
+        output = mock_stderr.getvalue()
+        self.assertEqual(output, "")
+
     @unittest.mock.patch("sys.stderr", new_callable=io.StringIO)
     def test_nested_progress_tqdm(self, mock_stderr) -> None:
         try:

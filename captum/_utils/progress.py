@@ -40,6 +40,36 @@ class DisableErrorIOWrapper(object):
         return self._wrapped_run(self._wrapped.flush, *args, **kwargs)
 
 
+class NullProgress:
+    """Passthrough class that implements the progress API.
+
+    This class can be use when you are not showing progress to simplify
+    the referencing code.
+    """
+
+    def __init__(self, iterable: Iterable = None, *args, **kwargs):
+        del args, kwargs
+        self.iterable = iterable
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_value, exc_traceback) -> bool:
+        return False
+
+    def __iter__(self):
+        if not self.iterable:
+            return
+        for it in self.iterable:
+            yield it
+
+    def update(self, amount: int = 1):
+        pass
+
+    def close(self):
+        pass
+
+
 class SimpleProgress:
     def __init__(
         self,
@@ -74,7 +104,7 @@ class SimpleProgress:
         self._is_parent = True
         return self
 
-    def __exit__(self, exc_type, exc_value, exc_traceback):
+    def __exit__(self, exc_type, exc_value, exc_traceback) -> bool:
         self.close()
         return False
 
