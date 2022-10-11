@@ -151,6 +151,37 @@ class Test(BaseTest):
             mask=(mask1, mask2),
         )
 
+    def test_attack_masked_loss_defined(self) -> None:
+        model = BasicModel_MultiLayer()
+        add_input = torch.tensor([[-1.0, 2.0, 2.0]])
+        input = torch.tensor([[1.0, 6.0, -3.0]])
+        labels = torch.tensor([0])
+        mask = torch.tensor([[0, 0, 1]])
+        loss_func = CrossEntropyLoss(reduction="none")
+        adv = FGSM(model, loss_func)
+        perturbed_input = adv.perturb(
+            input, 0.2, labels, additional_forward_args=(add_input,), mask=mask
+        )
+        assertTensorAlmostEqual(
+            self, perturbed_input, [[1.0, 6.0, -3.0]], delta=0.01, mode="max"
+        )
+
+    def test_attack_masked_bound(self) -> None:
+        model = BasicModel()
+        input = torch.tensor([[9.0, 10.0, -6.0, -1.0]])
+        mask = torch.tensor([[1, 0, 1, 0]])
+        self._FGSM_assert(
+            model,
+            input,
+            3,
+            0.2,
+            [[5.0, 5.0, -5.0, -1.0]],
+            targeted=True,
+            lower_bound=-5.0,
+            upper_bound=5.0,
+            mask=mask,
+        )
+
     def _FGSM_assert(
         self,
         model: Callable,
