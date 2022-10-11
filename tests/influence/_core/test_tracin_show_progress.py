@@ -49,9 +49,11 @@ class TestTracInShowProgress(BaseTest):
         output = mock_stderr.getvalue()
         actual_msg_multiplicity = output.count(msg)
         assert isinstance(actual_msg_multiplicity, int)
-        error_msg = f"Error in progress of batches with output: {repr(output)}"
+        error_msg = f"Error in progress of batches with output looking for '{msg}' at least {msg_multiplicity} times (found {actual_msg_multiplicity}) in {repr(output)}"
         if greater_than:
-            self.assertTrue(actual_msg_multiplicity - msg_multiplicity >= 0, error_msg)
+            self.assertGreaterEqual(
+                actual_msg_multiplicity, msg_multiplicity, error_msg
+            )
         else:
             self.assertEqual(
                 actual_msg_multiplicity,
@@ -124,23 +126,6 @@ class TestTracInShowProgress(BaseTest):
                     # `outer_loop_by_checkpoints` is True. In this case, we should see a
                     # single outer progress bar over checkpoints, and for every
                     # checkpoints, a separate progress bar over batches
-
-                    # In this case, displaying progress involves nested progress
-                    # bars, which are not currently supported by the backup
-                    # `SimpleProgress` that is used if `tqdm` is not installed.
-                    # Therefore, we skip the test in this case.
-                    # TODO: support nested progress bars for `SimpleProgress`
-                    try:
-                        import tqdm  # noqa
-                    except ModuleNotFoundError:
-                        raise unittest.SkipTest(
-                            (
-                                "Skipping self influence progress bar tests for "
-                                f"{tracin.get_name()}, because proper displaying "
-                                "requires the tqdm module, which is not installed."
-                            )
-                        )
-
                     tracin.self_influence(
                         DataLoader(train_dataset, batch_size=batch_size),
                         show_progress=True,
