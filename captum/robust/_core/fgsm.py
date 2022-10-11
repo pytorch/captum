@@ -150,7 +150,9 @@ class FGSM(Perturbation):
         """
         is_inputs_tuple = _is_tuple(inputs)
         inputs: Tuple[Tensor, ...] = _format_tensor_into_tuples(inputs)
-        masks: Tuple[Tensor, ...] = _format_tensor_into_tuples(mask) if mask else None
+        masks: Tuple[Tensor, ...] = (
+            _format_tensor_into_tuples(mask) if (mask is not None) else None
+        )
         gradient_mask = apply_gradient_requirements(inputs)
 
         def _forward_with_loss() -> Tensor:
@@ -188,7 +190,7 @@ class FGSM(Perturbation):
         different for targeted v.s. non-targeted as described above.
         """
         multiplier = -1 if targeted else 1
-        masks = (1,) * len(inputs) if not masks else masks
+        masks = (1,) * len(inputs) if (masks is None) else masks
         inputs = tuple(
             torch.where(
                 torch.abs(grad) > self.zero_thresh,
