@@ -117,14 +117,16 @@ class ImageFeature(BaseFeature):
     def visualize(self, attribution, data, contribution_frac) -> FeatureOutput:
         if self.visualization_transform:
             data = self.visualization_transform(data)
-
-        if data.shape[:-2][-1] == 3:  # [N, C, H, W] if C==3,  its expected to be in RGB format
+            
+        # [N, C, H, W] if C==3,  its expected to be in RGB format
+        if data.shape[:-2][-1] == 3: 
             data_t, attribution_t = [
                 t.detach().squeeze().permute((1, 2, 0)).cpu().numpy()
                 for t in (data, attribution)
-            ] 
-
-        if data.shape[:-2][-1] == 1:  # [N, C, H, W] if C==1,  its assumed to be a greyscale image
+            ]
+            
+        # [N, C, H, W] if C==1,  its assumed to be a greyscale image
+        if data.shape[:-2][-1] == 1:  
             data_t, attribution_t = [
                 t.detach().squeeze().cpu().numpy()
                 for t in (data, attribution)
