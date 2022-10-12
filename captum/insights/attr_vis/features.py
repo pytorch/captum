@@ -128,8 +128,8 @@ class ImageFeature(BaseFeature):
             data_t, attribution_t = [
                 t.detach().squeeze().cpu().numpy() for t in (data, attribution)
             ]
-            data_t = data_t.reshape(28, 28, 1)
-            attribution_t = attribution_t.reshape(28, 28, 1)
+            data_t = np.expand_dims(data_t, axis=-1)
+            attribution_t = np.expand_dims(attribution_t, axis=-1)
         orig_fig, _ = viz.visualize_image_attr(
             attribution_t, data_t, method="original_image", use_pyplot=False
         )
