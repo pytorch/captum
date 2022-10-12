@@ -4,7 +4,7 @@ import warnings
 from collections import namedtuple
 from io import BytesIO
 from typing import Callable, List, Optional, Union
-
+import numpy as np
 from captum._utils.common import safe_div
 from captum.attr._utils import visualization as viz
 from captum.insights.attr_vis._utils.transforms import format_transforms
