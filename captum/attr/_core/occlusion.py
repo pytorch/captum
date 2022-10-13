@@ -80,7 +80,7 @@ class Occlusion(FeatureAblation):
                             this must be a tuple containing one tuple for each input
                             tensor defining the dimensions of the patch for that
                             input tensor, as described for the single tensor case.
-                strides (int or tuple or tuple[int] or tuple[tuple], optional):
+                strides (int, tuple, tuple[int], or tuple[tuple], optional):
                             This defines the step by which the occlusion hyperrectangle
                             should be shifted by in each direction for each iteration.
                             For a single tensor input, this can be either a single
