@@ -4,6 +4,7 @@ import sys
 import warnings
 from time import time
 from typing import cast, Iterable, Sized, TextIO
+from captum._utils.typing import Literal
 
 try:
     from tqdm.auto import tqdm
@@ -54,7 +55,7 @@ class NullProgress:
     def __enter__(self):
         return self
 
-    def __exit__(self, exc_type, exc_value, exc_traceback) -> bool:
+    def __exit__(self, exc_type, exc_value, exc_traceback) -> Literal[False]:
         return False
 
     def __iter__(self):
@@ -104,7 +105,7 @@ class SimpleProgress:
         self._is_parent = True
         return self
 
-    def __exit__(self, exc_type, exc_value, exc_traceback) -> bool:
+    def __exit__(self, exc_type, exc_value, exc_traceback) -> Literal[False]:
         self.close()
         return False
 
