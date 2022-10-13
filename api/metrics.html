@@ -378,8 +378,8 @@ number in the range of [-inf, inf] (including float(“-inf”) &amp;
 float(“inf”)).</p>
 <p>Default: ‘fro’</p>
 </p></li>
-<li><p><strong>max_examples_per_batch</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><em>int</em></a><em>, </em><em>optional</em>) – <dl>
-<dt>The number of maximum input</dt><dd><p>examples that are processed together. In case the number of
+<li><p><strong>max_examples_per_batch</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><em>int</em></a><em>, </em><em>optional</em>) – <p>The number of maximum input
+examples that are processed together. In case the number of
 examples (<cite>input batch size * n_perturb_samples</cite>) exceeds
 <cite>max_examples_per_batch</cite>, they will be sliced
 into batches of <cite>max_examples_per_batch</cite> examples and processed
@@ -388,16 +388,14 @@ examples are processed together. <cite>max_examples_per_batch</cite> should
 at least be equal <cite>input batch size</cite> and at most
 <cite>input batch size * n_perturb_samples</cite>.</p>
 <p>Default: None</p>
-</dd>
-<dt><a href="#id1"><span class="problematic" id="id2">**</span></a>kwargs (Any, optional): Contains a list of arguments that are passed</dt><dd><p>to <cite>explanation_func</cite> explanation function which in some cases
+</p></li>
+<li><p><strong>**kwargs</strong> (<em>Any</em><em>, </em><em>optional</em>) – Contains a list of arguments that are passed
+to <cite>explanation_func</cite> explanation function which in some cases
 could be the <cite>attribute</cite> function of an attribution algorithm.
 Any additional arguments that need be passed to the explanation
 function should be included here.
 For instance, such arguments include:
-<cite>additional_forward_args</cite>, <cite>baselines</cite> and <cite>target</cite>.</p>
-</dd>
-</dl>
-</p></li>
+<cite>additional_forward_args</cite>, <cite>baselines</cite> and <cite>target</cite>.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>

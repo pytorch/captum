@@ -1725,13 +1725,13 @@ attribute to the input or output, is a single tensor.
 Support for multiple tensors will be added later.
 Default: False</p>
 </p></li>
-<li><p><strong>Returns</strong> – <p><strong>attributions</strong> or 2-element tuple of <strong>attributions</strong>, <strong>delta</strong>:</p>
-<blockquote>
-<div><ul>
-<li><p><strong>attributions</strong> (<em>Tensor</em>, <em>tuple[Tensor, …]</em> or tuple of</p></li>
 </ul>
-<dl>
-<dt><em>Tensor</em>): Integrated gradients with respect to <cite>layer</cite>’s inputs</dt><dd><p>or outputs. Attributions will always be the same size and
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><ul>
+<li><dl>
+<dt><strong>attributions</strong> (<em>Tensor</em> or <em>tuple[Tensor, …]</em>):</dt><dd><p>Integrated gradients with respect to <cite>layer</cite>’s inputs
+or outputs. Attributions will always be the same size and
 dimensionality as the input or output of the given layer,
 depending on whether we attribute to the inputs or outputs
 of the layer which is decided by the input flag
@@ -1748,7 +1748,7 @@ a tuple of tensors. The ordering of the outputs will be
 the same order as the layers given in the constructor.</p>
 </dd>
 </dl>
-<ul>
+</li>
 <li><dl class="simple">
 <dt><strong>delta</strong> (<em>Tensor</em>, returned if return_convergence_delta=True):</dt><dd><p>The difference between the total approximated and true
 integrated gradients. This is computed using the property
@@ -1762,9 +1762,14 @@ examples in inputs.</p>
 </dl>
 </li>
 </ul>
-</div></blockquote>
-</p></li>
-<li><p><strong>Examples::</strong> – <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># ImageClassifier takes a single input tensor of images Nx3x32x32,</span>
+</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><strong>attributions</strong> or 2-element tuple of <strong>attributions</strong>, <strong>delta</strong></p>
+</dd>
+</dl>
+<p>Examples:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># ImageClassifier takes a single input tensor of images Nx3x32x32,</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="c1"># and returns an Nx10 tensor of class probabilities.</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="c1"># It contains an attribute conv1, which is an instance of nn.conv2d,</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="c1"># and the output of this layer has dimensions Nx12x32x32.</span>
@@ -1776,13 +1781,6 @@ examples in inputs.</p>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">attribution</span> <span class="o">=</span> <span class="n">lig</span><span class="o">.</span><span class="n">attribute</span><span class="p">(</span><span class="nb">input</span><span class="p">,</span> <span class="n">target</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
 </pre></div>
 </div>
-</p></li>
-</ul>
-</dd>
-<dt class="field-even">Return type</dt>
-<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Union" title="(in Python v3.10)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code></a>[<a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tensor</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Tuple" title="(in Python v3.10)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Tuple</span></code></a>[<a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tensor</span></code></a>, …], <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.List" title="(in Python v3.10)"><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Union" title="(in Python v3.10)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code></a>[<a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tensor</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Tuple" title="(in Python v3.10)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Tuple</span></code></a>[<a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tensor</span></code></a>, …]]], <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Tuple" title="(in Python v3.10)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Tuple</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Union" title="(in Python v3.10)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code></a>[<a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tensor</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Tuple" title="(in Python v3.10)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Tuple</span></code></a>[<a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tensor</span></code></a>, …], <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.List" title="(in Python v3.10)"><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Union" title="(in Python v3.10)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code></a>[<a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tensor</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Tuple" title="(in Python v3.10)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Tuple</span></code></a>[<a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tensor</span></code></a>, …]]]], <a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tensor</span></code></a>]]</p>
-</dd>
-</dl>
 </dd></dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="captum.attr.LayerIntegratedGradients.has_convergence_delta">

@@ -557,9 +557,9 @@ function must be provided which determines correctness.</p>
 any additional arguments should be provided through
 <code class="docutils literal notranslate"><span class="pre">correct_fn_kwargs</span></code>.</p>
 <p>This function should have the following signature:</p>
-<blockquote>
-<div><p>def correct_fn(model_out: Tensor, <a href="#id1"><span class="problematic" id="id2">**</span></a>kwargs: Any) -&gt; bool</p>
-</div></blockquote>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">correct_fn</span><span class="p">(</span><span class="n">model_out</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span>
+</pre></div>
+</div>
 <p>Method should return a boolean if correct (True) and incorrect (False).
 Default: <code class="docutils literal notranslate"><span class="pre">None</span></code> (applies standard correct_fn for classification)</p>
 </p></li>

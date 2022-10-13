@@ -339,51 +339,50 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">                        Support for multiple tensors will be added later.</span>
 <span class="sd">                        Default: False</span>
 
-<span class="sd">            Returns:</span>
-<span class="sd">                **attributions** or 2-element tuple of **attributions**, **delta**:</span>
+<span class="sd">        Returns:</span>
+<span class="sd">            **attributions** or 2-element tuple of **attributions**, **delta**:</span>
+<span class="sd">            - **attributions** (*Tensor* or *tuple[Tensor, ...]*):</span>
+<span class="sd">                Integrated gradients with respect to `layer`'s inputs</span>
+<span class="sd">                or outputs. Attributions will always be the same size and</span>
+<span class="sd">                dimensionality as the input or output of the given layer,</span>
+<span class="sd">                depending on whether we attribute to the inputs or outputs</span>
+<span class="sd">                of the layer which is decided by the input flag</span>
+<span class="sd">                `attribute_to_layer_input`.</span>
 
-<span class="sd">                  - **attributions** (*Tensor*, *tuple[Tensor, ...]* or tuple of</span>
-<span class="sd">                  *Tensor*): Integrated gradients with respect to `layer`'s inputs</span>
-<span class="sd">                        or outputs. Attributions will always be the same size and</span>
-<span class="sd">                        dimensionality as the input or output of the given layer,</span>
-<span class="sd">                        depending on whether we attribute to the inputs or outputs</span>
-<span class="sd">                        of the layer which is decided by the input flag</span>
-<span class="sd">                        `attribute_to_layer_input`.</span>
+<span class="sd">                For a single layer, attributions are returned in a tuple if</span>
+<span class="sd">                the layer inputs / outputs contain multiple tensors,</span>
+<span class="sd">                otherwise a single tensor is returned.</span>
 
-<span class="sd">                        For a single layer, attributions are returned in a tuple if</span>
-<span class="sd">                        the layer inputs / outputs contain multiple tensors,</span>
-<span class="sd">                        otherwise a single tensor is returned.</span>
+<span class="sd">                For multiple layers, attributions will always be</span>
+<span class="sd">                returned as a list. Each element in this list will be</span>
+<span class="sd">                equivalent to that of a single layer output, i.e. in the</span>
+<span class="sd">                case that one layer, in the given layers, inputs / outputs</span>
+<span class="sd">                multiple tensors: the corresponding output element will be</span>
+<span class="sd">                a tuple of tensors. The ordering of the outputs will be</span>
+<span class="sd">                the same order as the layers given in the constructor.</span>
 
-<span class="sd">                        For multiple layers, attributions will always be</span>
-<span class="sd">                        returned as a list. Each element in this list will be</span>
-<span class="sd">                        equivalent to that of a single layer output, i.e. in the</span>
-<span class="sd">                        case that one layer, in the given layers, inputs / outputs</span>
-<span class="sd">                        multiple tensors: the corresponding output element will be</span>
-<span class="sd">                        a tuple of tensors. The ordering of the outputs will be</span>
-<span class="sd">                        the same order as the layers given in the constructor.</span>
+<span class="sd">            - **delta** (*Tensor*, returned if return_convergence_delta=True):</span>
+<span class="sd">                The difference between the total approximated and true</span>
+<span class="sd">                integrated gradients. This is computed using the property</span>
+<span class="sd">                that the total sum of forward_func(inputs) -</span>
+<span class="sd">                forward_func(baselines) must equal the total sum of the</span>
+<span class="sd">                integrated gradient.</span>
+<span class="sd">                Delta is calculated per example, meaning that the number of</span>
+<span class="sd">                elements in returned delta tensor is equal to the number of</span>
+<span class="sd">                examples in inputs.</span>
 
-<span class="sd">                  - **delta** (*Tensor*, returned if return_convergence_delta=True):</span>
-<span class="sd">                        The difference between the total approximated and true</span>
-<span class="sd">                        integrated gradients. This is computed using the property</span>
-<span class="sd">                        that the total sum of forward_func(inputs) -</span>
-<span class="sd">                        forward_func(baselines) must equal the total sum of the</span>
-<span class="sd">                        integrated gradient.</span>
-<span class="sd">                        Delta is calculated per example, meaning that the number of</span>
-<span class="sd">                        elements in returned delta tensor is equal to the number of</span>
-<span class="sd">                        examples in inputs.</span>
+<span class="sd">        Examples::</span>
 
-<span class="sd">            Examples::</span>
-
-<span class="sd">                &gt;&gt;&gt; # ImageClassifier takes a single input tensor of images Nx3x32x32,</span>
-<span class="sd">                &gt;&gt;&gt; # and returns an Nx10 tensor of class probabilities.</span>
-<span class="sd">                &gt;&gt;&gt; # It contains an attribute conv1, which is an instance of nn.conv2d,</span>
-<span class="sd">                &gt;&gt;&gt; # and the output of this layer has dimensions Nx12x32x32.</span>
-<span class="sd">                &gt;&gt;&gt; net = ImageClassifier()</span>
-<span class="sd">                &gt;&gt;&gt; lig = LayerIntegratedGradients(net, net.conv1)</span>
-<span class="sd">                &gt;&gt;&gt; input = torch.randn(2, 3, 32, 32, requires_grad=True)</span>
-<span class="sd">                &gt;&gt;&gt; # Computes layer integrated gradients for class 3.</span>
-<span class="sd">                &gt;&gt;&gt; # attribution size matches layer output, Nx12x32x32</span>
-<span class="sd">                &gt;&gt;&gt; attribution = lig.attribute(input, target=3)</span>
+<span class="sd">            &gt;&gt;&gt; # ImageClassifier takes a single input tensor of images Nx3x32x32,</span>
+<span class="sd">            &gt;&gt;&gt; # and returns an Nx10 tensor of class probabilities.</span>
+<span class="sd">            &gt;&gt;&gt; # It contains an attribute conv1, which is an instance of nn.conv2d,</span>
+<span class="sd">            &gt;&gt;&gt; # and the output of this layer has dimensions Nx12x32x32.</span>
+<span class="sd">            &gt;&gt;&gt; net = ImageClassifier()</span>
+<span class="sd">            &gt;&gt;&gt; lig = LayerIntegratedGradients(net, net.conv1)</span>
+<span class="sd">            &gt;&gt;&gt; input = torch.randn(2, 3, 32, 32, requires_grad=True)</span>
+<span class="sd">            &gt;&gt;&gt; # Computes layer integrated gradients for class 3.</span>
+<span class="sd">            &gt;&gt;&gt; # attribution size matches layer output, Nx12x32x32</span>
+<span class="sd">            &gt;&gt;&gt; attribution = lig.attribute(input, target=3)</span>
 <span class="sd">        """</span>
         <span class="n">inps</span><span class="p">,</span> <span class="n">baselines</span> <span class="o">=</span> <span class="n">_format_input_baseline</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">baselines</span><span class="p">)</span>
         <span class="n">_validate_input</span><span class="p">(</span><span class="n">inps</span><span class="p">,</span> <span class="n">baselines</span><span class="p">,</span> <span class="n">n_steps</span><span class="p">,</span> <span class="n">method</span><span class="p">)</span>

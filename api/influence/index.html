@@ -127,14 +127,11 @@ implementation of <cite>DataInfluence</cite> abstract class.</p></li>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>inputs</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.12)"><em>Tensor</em></a><em> or </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.10)"><em>tuple</em></a><em>[</em><a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.12)"><em>Tensor</em></a><em>, </em><em>...</em><em>]</em>) – <p>Batch of examples for which
-influential instances are computed. They are passed to the</p>
-<blockquote>
-<div><p>forward_func. The first dimension in <cite>inputs</cite> tensor or tuple</p>
-</div></blockquote>
-<p>of tensors corresponds to the batch size. A tuple of tensors
-is only passed in if thisis the input form that <cite>module</cite> accepts.</p>
-</p></li>
+<li><p><strong>inputs</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.12)"><em>Tensor</em></a><em> or </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.10)"><em>tuple</em></a><em>[</em><a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.12)"><em>Tensor</em></a><em>, </em><em>...</em><em>]</em>) – Batch of examples for which
+influential instances are computed. They are passed to the
+forward_func. The first dimension in <cite>inputs</cite> tensor or tuple
+of tensors corresponds to the batch size. A tuple of tensors
+is only passed in if thisis the input form that <cite>module</cite> accepts.</p></li>
 <li><p><strong>top_k</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><em>int</em></a>) – The number of top-matching activations to return</p></li>
 <li><p><strong>additional_forward_args</strong> (<em>Any</em><em>, </em><em>optional</em>) – Additional arguments that will be
 passed to forward_func after inputs.</p></li>
@@ -153,8 +150,8 @@ implementation of <cite>DataInfluence</cite> abstract class.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p>Returns the influential instances retrieved from
-<cite>influence_src_dataset</cite> for each test example represented through a
+<dd class="field-even"><p><dl class="simple">
+<dt>Returns the influential instances retrieved from</dt><dd><p><cite>influence_src_dataset</cite> for each test example represented through a
 tensor or a tuple of tensor in <cite>inputs</cite>. Returned influential
 examples are represented as dict, with keys corresponding to
 the layer names passed in <cite>layers</cite>. Each value in the dict is a
@@ -165,6 +162,9 @@ most similar examples, and the second value is the similarity score.
 The batch dimension corresponds to the batch dimension of <cite>inputs</cite>.
 If inputs.shape[0] == 5, then dict[<cite>layer_name</cite>][0].shape[0] == 5.
 These tensors will be of shape (inputs.shape[0], top_k).</p>
+</dd>
+</dl>
+</p>
 </dd>
 <dt class="field-odd">Return type</dt>
 <dd class="field-odd"><p>influences (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.10)">dict</a>)</p>
