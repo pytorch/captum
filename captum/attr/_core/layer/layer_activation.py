@@ -88,7 +88,7 @@ class LayerActivation(LayerAttribution):
 
         Returns:
             *Tensor* or *tuple[Tensor, ...]* or list of **attributions**:
-            - **attributions** (*Tensor* or *tuple[Tensor, ...]* or *list*):
+            - **attributions** (*Tensor*, *tuple[Tensor, ...]*, or *list*):
                         Activation of each neuron in given layer output.
                         Attributions will always be the same size as the
                         output of the given layer.
