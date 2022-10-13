@@ -342,7 +342,7 @@ class LimeBase(PerturbationAttribution):
 
         Returns:
             **interpretable model representation**:
-            - **interpretable model representation* (*Any*):
+            - **interpretable model representation** (*Any*):
                     A representation of the interpretable model trained. The return
                     type matches the return type of train_interpretable_model_func.
                     For example, this could contain coefficients of a

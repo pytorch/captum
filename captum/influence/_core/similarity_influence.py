@@ -92,8 +92,8 @@ class SimilarityInfluence(DataInfluence):
                     and retrieve activation computations. Best practice would be to use
                     an absolute path.
             model_id (str): The name/version of the model for which layer
-                        activations are being computed. Activations will be stored and
-                        loaded under the subdirectory with this name if provided.
+                    activations are being computed. Activations will be stored and
+                    loaded under the subdirectory with this name if provided.
             similarity_metric (Callable): This is a callable function that computes a
                     similarity metric between two representations. For example, the
                     representations pair could be from the training and test sets.
@@ -168,7 +168,7 @@ class SimilarityInfluence(DataInfluence):
         Args:
             inputs (Tensor or tuple[Tensor, ...]): Batch of examples for which
                     influential instances are computed. They are passed to the
-                     forward_func. The first dimension in `inputs` tensor or tuple
+                    forward_func. The first dimension in `inputs` tensor or tuple
                     of tensors corresponds to the batch size. A tuple of tensors
                     is only passed in if thisis the input form that `module` accepts.
             top_k (int): The number of top-matching activations to return
@@ -191,17 +191,17 @@ class SimilarityInfluence(DataInfluence):
         Returns:
 
             influences (dict): Returns the influential instances retrieved from
-            `influence_src_dataset` for each test example represented through a
-            tensor or a tuple of tensor in `inputs`. Returned influential
-            examples are represented as dict, with keys corresponding to
-            the layer names passed in `layers`. Each value in the dict is a
-            tuple containing the indices and values for the top k similarities
-            from `influence_src_dataset` by the chosen metric. The first value
-            in the tuple corresponds to the indices corresponding to the top k
-            most similar examples, and the second value is the similarity score.
-            The batch dimension corresponds to the batch dimension of `inputs`.
-            If inputs.shape[0] == 5, then dict[`layer_name`][0].shape[0] == 5.
-            These tensors will be of shape (inputs.shape[0], top_k).
+                    `influence_src_dataset` for each test example represented through a
+                    tensor or a tuple of tensor in `inputs`. Returned influential
+                    examples are represented as dict, with keys corresponding to
+                    the layer names passed in `layers`. Each value in the dict is a
+                    tuple containing the indices and values for the top k similarities
+                    from `influence_src_dataset` by the chosen metric. The first value
+                    in the tuple corresponds to the indices corresponding to the top k
+                    most similar examples, and the second value is the similarity score.
+                    The batch dimension corresponds to the batch dimension of `inputs`.
+                    If inputs.shape[0] == 5, then dict[`layer_name`][0].shape[0] == 5.
+                    These tensors will be of shape (inputs.shape[0], top_k).
         """
         inputs_batch_size = (
             inputs[0].shape[0] if isinstance(inputs, tuple) else inputs.shape[0]
