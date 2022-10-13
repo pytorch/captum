@@ -49,7 +49,11 @@ class TestTracInShowProgress(BaseTest):
         output = mock_stderr.getvalue()
         actual_msg_multiplicity = output.count(msg)
         assert isinstance(actual_msg_multiplicity, int)
-        error_msg = f"Error in progress of batches with output looking for '{msg}' at least {msg_multiplicity} times (found {actual_msg_multiplicity}) in {repr(output)}"
+        error_msg = (
+            f"Error in progress of batches with output looking for '{msg}'"
+            f" at least {msg_multiplicity} times"
+            f"(found {actual_msg_multiplicity}) in {repr(output)}"
+        )
         if greater_than:
             self.assertGreaterEqual(
                 actual_msg_multiplicity, msg_multiplicity, error_msg

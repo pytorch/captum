@@ -1092,12 +1092,14 @@ class TracInCP(TracInCPBase):
                     "influence. Processing checkpoint"
                 ),
                 total=len(self.checkpoints),
-                mininterval=0.0
+                mininterval=0.0,
             )
         else:
             checkpoints_progress = NullProgress()
         with checkpoints_progress:
-            batches_self_tracin_scores = get_checkpoint_contribution(self.checkpoints[0])
+            batches_self_tracin_scores = get_checkpoint_contribution(
+                self.checkpoints[0]
+            )
             checkpoints_progress.update()
             # The self influence score for all examples is the sum of contributions from
             # each checkpoint
