@@ -8,7 +8,7 @@ from typing import Any, Callable, cast, Dict, Iterator, List, Optional, Tuple, U
 import torch
 from captum._utils.common import _format_inputs, _get_module_from_name, _sort_key_list
 from captum._utils.gradient import _gather_distributed_tensors
-from captum._utils.progress import progress, NullProgress
+from captum._utils.progress import NullProgress, progress
 
 from captum.influence._core.tracincp import (
     _influence_route_to_helpers,

@@ -23,7 +23,7 @@ from captum._utils.gradient import (
     _compute_jacobian_wrt_params,
     _compute_jacobian_wrt_params_with_sample_wise_trick,
 )
-from captum._utils.progress import progress, NullProgress
+from captum._utils.progress import NullProgress, progress
 from captum.influence._core.influence import DataInfluence
 from captum.influence._utils.common import (
     _format_inputs_dataset,

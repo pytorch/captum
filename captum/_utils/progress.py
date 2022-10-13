@@ -4,6 +4,7 @@ import sys
 import warnings
 from time import time
 from typing import cast, Iterable, Sized, TextIO
+
 from captum._utils.typing import Literal
 
 try:
