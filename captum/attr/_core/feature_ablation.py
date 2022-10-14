@@ -299,10 +299,7 @@ class FeatureAblation(PerturbationAttribution):
             )
 
             if not agg_output_mode:
-                assert (
-                    isinstance(initial_eval, Tensor)
-                    and n_outputs == num_examples
-                ), (
+                assert isinstance(initial_eval, Tensor) and n_outputs == num_examples, (
                     "expected output of `forward_func` to have "
                     + "`batch_size` elements for perturbations_per_eval > 1 "
                     + "and all feature_mask.shape[0] > 1"
