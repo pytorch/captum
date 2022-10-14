@@ -160,8 +160,8 @@ if __name__ == "__main__":
             (
                 "share/jupyter/nbextensions/jupyter-captum-insights",
                 [
-                    "captum/insights/attr_vis/widget/static/extension.js",
-                    "captum/insights/attr_vis/widget/static/index.js",
+                    "captum/insights/attr_vis/frontend/widget/src/extension.js",
+                    "captum/insights/attr_vis/frontend/widget/src/index.js",
                 ],
             ),
             (
