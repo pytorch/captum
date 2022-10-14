@@ -319,7 +319,7 @@ class FeatureAblation(PerturbationAttribution):
             total_attrib = [
                 # attribute w.r.t each output element
                 torch.zeros(
-                    (n_outputs, *input.shape[1:]),
+                    (n_outputs,) + input.shape[1:],
                     dtype=attrib_type,
                     device=input.device,
                 )
@@ -330,7 +330,7 @@ class FeatureAblation(PerturbationAttribution):
             if self.use_weights:
                 weights = [
                     torch.zeros(
-                        (n_outputs, *input.shape[1:]), device=input.device
+                        (n_outputs,) + input.shape[1:], device=input.device
                     ).float()
                     for input in inputs
                 ]
