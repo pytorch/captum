@@ -53,7 +53,7 @@ class IntegratedGradients(GradientAttribution):
         r"""
         Args:
 
-            forward_func (callable):  The forward function of the model or any
+            forward_func (Callable): The forward function of the model or any
                     modification of it
             multiply_by_inputs (bool, optional): Indicates whether to factor
                     model inputs' multiplier in the final attribution scores.
@@ -130,7 +130,7 @@ class IntegratedGradients(GradientAttribution):
 
         Args:
 
-            inputs (tensor or tuple of tensors):  Input for which integrated
+            inputs (Tensor or tuple[Tensor, ...]): Input for which integrated
                         gradients are computed. If forward_func takes a single
                         tensor as input, a single input tensor should be provided.
                         If forward_func takes multiple tensors as input, a tuple
@@ -138,7 +138,7 @@ class IntegratedGradients(GradientAttribution):
                         that for all given input tensors, dimension 0 corresponds
                         to the number of examples, and if multiple input tensors
                         are provided, the examples must be aligned appropriately.
-            baselines (scalar, tensor, tuple of scalars or tensors, optional):
+            baselines (scalar, Tensor, tuple of scalar, or Tensor, optional):
                         Baselines define the starting point from which integral
                         is computed and can be provided as:
 
@@ -162,11 +162,12 @@ class IntegratedGradients(GradientAttribution):
                           - or a scalar, corresponding to a tensor in the
                             inputs' tuple. This scalar value is broadcasted
                             for corresponding input tensor.
+
                         In the cases when `baselines` is not provided, we internally
                         use zero scalar corresponding to each input tensor.
 
                         Default: None
-            target (int, tuple, tensor or list, optional):  Output indices for
+            target (int, tuple, Tensor, or list, optional): Output indices for
                         which gradients are computed (for classification cases,
                         this is usually the target class).
                         If the network returns a scalar value per example,
@@ -191,7 +192,7 @@ class IntegratedGradients(GradientAttribution):
                           target for the corresponding example.
 
                         Default: None
-            additional_forward_args (any, optional): If the forward function
+            additional_forward_args (Any, optional): If the forward function
                         requires additional arguments other than the inputs for
                         which attributions should not be computed, this argument
                         can be provided. It must be either a single additional
@@ -210,7 +211,7 @@ class IntegratedGradients(GradientAttribution):
                         Default: None
             n_steps (int, optional): The number of steps used by the approximation
                         method. Default: 50.
-            method (string, optional): Method for approximating the integral,
+            method (str, optional): Method for approximating the integral,
                         one of `riemann_right`, `riemann_left`, `riemann_middle`,
                         `riemann_trapezoid` or `gausslegendre`.
                         Default: `gausslegendre` if no method is provided.
@@ -232,7 +233,7 @@ class IntegratedGradients(GradientAttribution):
                     Default: False
         Returns:
             **attributions** or 2-element tuple of **attributions**, **delta**:
-            - **attributions** (*tensor* or tuple of *tensors*):
+            - **attributions** (*Tensor* or *tuple[Tensor, ...]*):
                     Integrated gradients with respect to each input feature.
                     attributions will always be the same size as the provided
                     inputs, with each value providing the attribution of the
@@ -240,7 +241,7 @@ class IntegratedGradients(GradientAttribution):
                     If a single tensor is provided as inputs, a single tensor is
                     returned. If a tuple is provided for inputs, a tuple of
                     corresponding sized tensors is returned.
-            - **delta** (*tensor*, returned if return_convergence_delta=True):
+            - **delta** (*Tensor*, returned if return_convergence_delta=True):
                     The difference between the total approximated and true
                     integrated gradients. This is computed using the property
                     that the total sum of forward_func(inputs) -
@@ -248,7 +249,7 @@ class IntegratedGradients(GradientAttribution):
                     integrated gradient.
                     Delta is calculated per example, meaning that the number of
                     elements in returned delta tensor is equal to the number of
-                    of examples in inputs.
+                    examples in inputs.
 
         Examples::
 

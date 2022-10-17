@@ -5,7 +5,7 @@ from tests.helpers.basic import BaseTest
 
 
 class Test(BaseTest):
-    def test_single_input(self):
+    def test_single_input(self) -> None:
         size = (2, 3)
         summarizer = Summarizer(stats=CommonStats())
         for _ in range(10):
@@ -19,7 +19,7 @@ class Test(BaseTest):
         for k in summ:
             self.assertTrue(summ[k].size() == size)
 
-    def test_multi_input(self):
+    def test_multi_input(self) -> None:
         size1 = (10, 5, 5)
         size2 = (3, 5)
 

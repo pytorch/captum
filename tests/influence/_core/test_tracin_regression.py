@@ -51,22 +51,62 @@ class TestTracInRegression(BaseTest):
     )
 
     param_list = []
-
     for use_gpu in use_gpu_list:
         for dim in [1, 20]:
             for (mode, reduction, constructor) in [
-                ("check_idx", "none", DataInfluenceConstructor(TracInCP)),
-                ("sample_wise_trick", None, DataInfluenceConstructor(TracInCP)),
-                ("check_idx", "sum", DataInfluenceConstructor(TracInCPFast)),
-                ("check_idx", "sum", DataInfluenceConstructor(TracInCPFastRandProj)),
-                ("check_idx", "mean", DataInfluenceConstructor(TracInCPFast)),
-                ("check_idx", "mean", DataInfluenceConstructor(TracInCPFastRandProj)),
+                (
+                    "check_idx",
+                    "none",
+                    DataInfluenceConstructor(TracInCP, name="TracInCP_all_layers"),
+                ),
+                (
+                    "check_idx",
+                    "none",
+                    DataInfluenceConstructor(
+                        TracInCP,
+                        name="TracInCP_fc1",
+                        layers=["module.fc1"] if use_gpu else ["fc1"],
+                    ),
+                ),
+                (
+                    "sample_wise_trick",
+                    None,
+                    DataInfluenceConstructor(TracInCP, name="TracInCP_fc1"),
+                ),
+                (
+                    "check_idx",
+                    "sum",
+                    DataInfluenceConstructor(
+                        TracInCPFast, name="TracInCPFast_last_fc_layer"
+                    ),
+                ),
+                (
+                    "check_idx",
+                    "sum",
+                    DataInfluenceConstructor(
+                        TracInCPFastRandProj, name="TracInCPFast_last_fc_layer"
+                    ),
+                ),
+                (
+                    "check_idx",
+                    "mean",
+                    DataInfluenceConstructor(
+                        TracInCPFast, name="TracInCPFast_last_fc_layer"
+                    ),
+                ),
+                (
+                    "check_idx",
+                    "mean",
+                    DataInfluenceConstructor(
+                        TracInCPFastRandProj, name="TracInCPFastRandProj_last_fc_layer"
+                    ),
+                ),
                 (
                     "check_idx",
                     "sum",
                     DataInfluenceConstructor(
                         TracInCPFastRandProj,
-                        name="TracInCPFastRandProj1DimensionalProjection",
+                        name="TracInCPFastRandProj1DimensionalProjection_last_fc_layer",
                         projection_dim=1,
                     ),
                 ),
@@ -271,7 +311,13 @@ class TestTracInRegression(BaseTest):
     @parameterized.expand(
         [
             ("check_idx", "none", DataInfluenceConstructor(TracInCP)),
+            ("check_idx", "none", DataInfluenceConstructor(TracInCP, layers=["fc1"])),
             ("sample_wise_trick", None, DataInfluenceConstructor(TracInCP)),
+            (
+                "sample_wise_trick",
+                None,
+                DataInfluenceConstructor(TracInCP, layers=["fc1"]),
+            ),
             ("check_idx", "sum", DataInfluenceConstructor(TracInCPFast)),
             ("check_idx", "sum", DataInfluenceConstructor(TracInCPFastRandProj)),
             ("check_idx", "mean", DataInfluenceConstructor(TracInCPFast)),

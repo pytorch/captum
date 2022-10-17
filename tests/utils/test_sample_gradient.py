@@ -4,7 +4,11 @@ import unittest
 from typing import Callable, Tuple
 
 import torch
-from captum._utils.sample_gradient import SampleGradientWrapper, SUPPORTED_MODULES
+from captum._utils.sample_gradient import (
+    _reset_sample_grads,
+    SampleGradientWrapper,
+    SUPPORTED_MODULES,
+)
 from packaging import version
 from tests.helpers.basic import assertTensorAlmostEqual, BaseTest
 from tests.helpers.basic_models import (
@@ -93,3 +97,45 @@ class Test(BaseTest):
                         layer.bias.sample_grad[i],  # type: ignore
                         mode="max",
                     )
+
+    def test_sample_grads_layer_modules(self):
+        """
+        tests that if `layer_modules` argument is specified for `SampleGradientWrapper`
+        that only per-sample gradients for the specified layers are calculated
+        """
+        model = BasicModel_ConvNet_One_Conv()
+        inp = (20 * torch.randn(6, 1, 4, 4), 9 * torch.randn(6, 1, 4, 4))
+
+        # possible candidates for `layer_modules`, which are the modules whose
+        # parameters we want to compute sample grads for
+        layer_moduless = [[model.conv1], [model.fc1], [model.conv1, model.fc1]]
+        # hard coded all modules we want to check
+        all_modules = [model.conv1, model.fc1]
+
+        for layer_modules in layer_moduless:
+            # we will call the wrapper multiple times, so should reset each time
+            for module in all_modules:
+                _reset_sample_grads(module)
+
+            # compute sample grads
+            wrapper = SampleGradientWrapper(model, layer_modules)
+            wrapper.add_hooks()
+            out = model(*inp)
+            wrapper.compute_param_sample_gradients(torch.sum(out), "sum")
+
+            for module in all_modules:
+                if module in layer_modules:
+                    # If we calculated the sample grads for the layer, none
+                    # of its parameters' `sample_grad` attributes` would be an int,
+                    # since even though they were all set to 0 in beginning of loop
+                    # computing sample grads would override that 0.
+                    # So, check that we did calculate sample grads for the desired
+                    # layers via the above checking approach.
+                    for parameter in module.parameters():
+                        assert not isinstance(parameter.sample_grad, int)
+                else:
+                    # For the layers we do not want sample grads for, their
+                    # `sample_grad` should still be 0, since they should not have been
+                    # over-written.
+                    for parameter in module.parameters():
+                        assert parameter.sample_grad == 0

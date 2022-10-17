@@ -294,8 +294,61 @@ div.sphinx div.document {
   width: auto;
 }
 
+div.sphinx div.body {
+  max-width: 950px;
+}
+
 .wrapper {
   max-width: 1400px;
+}
+
+div.sphinx div.body h1 {
+  margin-bottom: 1.375rem;
+}
+
+div.sphinx .function dd,
+div.sphinx .attribute dd,
+div.sphinx .class dd {
+  margin-left: 3.75rem;
+}
+
+div.sphinx .function > dt,
+div.sphinx .function .field-list > dt,
+div.sphinx .method > dt,
+div.sphinx .method .field-list > dt,
+div.sphinx .attribute > dt,
+div.sphinx .attribute .field-list > dt,
+div.sphinx .class > dt,
+div.sphinx .class .field-list > dt {
+  position: relative;
+  background: #f3f4f7;
+  padding: 0.5rem;
+  padding-right: 100px;
+  line-height: 1.5rem;
+}
+
+div.sphinx .class > dt em.property {
+  position: absolute;
+  left: 0.5rem;
+  font-size: 18px;
+}
+
+div.sphinx .class > dt,
+div.sphinx .class .field-list > dt {
+  border-left: none;
+  border-top: 3px solid #ee4c2c;
+  padding-left: 4rem;
+}
+
+div.sphinx .function > dt,
+div.sphinx .function .field-list > dt,
+div.sphinx .method > dt,
+div.sphinx .method .field-list > dt,
+div.sphinx .attribute > dt,
+div.sphinx .attribute .field-list > dt {
+  border-left: 3px solid #ee4c2c;
+  border-top: none;
+  padding-left: 0.5rem;
 }
 
 @media only screen and (min-device-width: 360px) and (max-device-width: 736px) {
@@ -311,26 +364,4 @@ div.sphinx div.document {
 }
 
 @media only screen and (min-width: 1500px) {
-}
-
-/* Social Banner */
-
-.SocialBannerWrapper {
-	padding: 0 0;
-	background-color: black;
-}
-  
-.SocialBanner {
-	font-weight: bold;
-	font-size: 20px;
-	padding: 20px;
-	max-width: 768px;
-	margin: 0 auto;
-	color: white;
-	text-align: center;
-}
-  
-.SocialBanner a {
-	text-decoration: underline;
-	color: white;
 }

@@ -47,8 +47,8 @@ class FeatureAblation(PerturbationAttribution):
         r"""
         Args:
 
-            forward_func (callable): The forward function of the model or
-                        any modification of it
+            forward_func (Callable): The forward function of the model or
+                        any modification of it.
         """
         PerturbationAttribution.__init__(self, forward_func)
         self.use_weights = False
@@ -68,7 +68,7 @@ class FeatureAblation(PerturbationAttribution):
         r"""
         Args:
 
-            inputs (tensor or tuple of tensors):  Input for which ablation
+            inputs (Tensor or tuple[Tensor, ...]): Input for which ablation
                         attributions are computed. If forward_func takes a single
                         tensor as input, a single input tensor should be provided.
                         If forward_func takes multiple tensors as input, a tuple
@@ -77,7 +77,7 @@ class FeatureAblation(PerturbationAttribution):
                         to the number of examples (aka batch size), and if
                         multiple input tensors are provided, the examples must
                         be aligned appropriately.
-            baselines (scalar, tensor, tuple of scalars or tensors, optional):
+            baselines (scalar, Tensor, tuple of scalar, or Tensor, optional):
                         Baselines define reference value which replaces each
                         feature when ablated.
                         Baselines can be provided as:
@@ -101,10 +101,11 @@ class FeatureAblation(PerturbationAttribution):
                           - or a scalar, corresponding to a tensor in the
                             inputs' tuple. This scalar value is broadcasted
                             for corresponding input tensor.
+
                         In the cases when `baselines` is not provided, we internally
                         use zero scalar corresponding to each input tensor.
                         Default: None
-            target (int, tuple, tensor or list, optional):  Output indices for
+            target (int, tuple, Tensor, or list, optional): Output indices for
                         which gradients are computed (for classification cases,
                         this is usually the target class).
                         If the network returns a scalar value per example,
@@ -129,7 +130,7 @@ class FeatureAblation(PerturbationAttribution):
                           target for the corresponding example.
 
                         Default: None
-            additional_forward_args (any, optional): If the forward function
+            additional_forward_args (Any, optional): If the forward function
                         requires additional arguments other than the inputs for
                         which attributions should not be computed, this argument
                         can be provided. It must be either a single additional
@@ -144,7 +145,7 @@ class FeatureAblation(PerturbationAttribution):
                         Note that attributions are not computed with respect
                         to these arguments.
                         Default: None
-            feature_mask (tensor or tuple of tensors, optional):
+            feature_mask (Tensor or tuple[Tensor, ...], optional):
                         feature_mask defines a mask for the input, grouping
                         features which should be ablated together. feature_mask
                         should contain the same number of tensors as inputs.
@@ -193,8 +194,8 @@ class FeatureAblation(PerturbationAttribution):
                         Default: None
 
         Returns:
-            *tensor* or tuple of *tensors* of **attributions**:
-            - **attributions** (*tensor* or tuple of *tensors*):
+            *Tensor* or *tuple[Tensor, ...]* of **attributions**:
+            - **attributions** (*Tensor* or *tuple[Tensor, ...]*):
                         The attributions with respect to each input feature.
                         If the forward function returns
                         a scalar value per example, attributions will be
@@ -414,10 +415,10 @@ class FeatureAblation(PerturbationAttribution):
         **kwargs,
     ):
         """
-        This method return an generator of ablation perturbations of the i-th input
+        This method returns a generator of ablation perturbations of the i-th input
 
         Returns:
-            ablation_iter (generator): yields each perturbation to be evaluated
+            ablation_iter (Generator): yields each perturbation to be evaluated
                         as a tuple (inputs, additional_forward_args, targets, mask).
         """
         extra_args = {}
