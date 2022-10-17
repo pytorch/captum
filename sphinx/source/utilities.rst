@@ -8,6 +8,8 @@ Visualization
 
 .. autofunction:: captum.attr.visualization.visualize_image_attr_multiple
 
+.. autofunction:: captum.attr.visualization.visualize_timeseries_attr
+
 
 Interpretable Embeddings
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -16,6 +18,7 @@ Interpretable Embeddings
     :members:
 
 .. autofunction:: captum.attr.configure_interpretable_embedding_layer
+
 .. autofunction:: captum.attr.remove_interpretable_embedding_layer
 
 

@@ -46,7 +46,7 @@ class ExplicitDataset(Dataset):
             )
             self.labels = self.labels.cuda()
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self.samples)
 
     def __getitem__(self, idx):
@@ -64,7 +64,7 @@ class UnpackDataset(Dataset):
             )
             self.labels = self.labels.cuda()
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self.samples[0])
 
     def __getitem__(self, idx):
@@ -254,7 +254,7 @@ class DataInfluenceConstructor:
         self.name = name if name else data_influence_class.__name__
         self.kwargs = kwargs
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return self.name
 
     def __call__(

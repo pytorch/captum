@@ -3,6 +3,7 @@ Lime
 
 .. autoclass:: captum.attr.LimeBase
     :members:
+    :exclude-members: compute_convergence_delta
 .. autoclass:: captum.attr.Lime
     :members:
 

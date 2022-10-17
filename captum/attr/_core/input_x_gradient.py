@@ -22,7 +22,7 @@ class InputXGradient(GradientAttribution):
         r"""
         Args:
 
-            forward_func (callable):  The forward function of the model or any
+            forward_func (Callable): The forward function of the model or any
                           modification of it
         """
         GradientAttribution.__init__(self, forward_func)
@@ -37,7 +37,7 @@ class InputXGradient(GradientAttribution):
         r"""
         Args:
 
-            inputs (tensor or tuple of tensors):  Input for which
+            inputs (Tensor or tuple[Tensor, ...]): Input for which
                         attributions are computed. If forward_func takes a single
                         tensor as input, a single input tensor should be provided.
                         If forward_func takes multiple tensors as input, a tuple
@@ -46,7 +46,7 @@ class InputXGradient(GradientAttribution):
                         to the number of examples (aka batch size), and if
                         multiple input tensors are provided, the examples must
                         be aligned appropriately.
-            target (int, tuple, tensor or list, optional):  Output indices for
+            target (int, tuple, Tensor, or list, optional): Output indices for
                         which gradients are computed (for classification cases,
                         this is usually the target class).
                         If the network returns a scalar value per example,
@@ -71,7 +71,7 @@ class InputXGradient(GradientAttribution):
                           target for the corresponding example.
 
                         Default: None
-            additional_forward_args (any, optional): If the forward function
+            additional_forward_args (Any, optional): If the forward function
                         requires additional arguments other than the inputs for
                         which attributions should not be computed, this argument
                         can be provided. It must be either a single additional
@@ -84,8 +84,8 @@ class InputXGradient(GradientAttribution):
                         Default: None
 
         Returns:
-                *tensor* or tuple of *tensors* of **attributions**:
-                - **attributions** (*tensor* or tuple of *tensors*):
+                *Tensor* or *tuple[Tensor, ...]* of **attributions**:
+                - **attributions** (*Tensor* or *tuple[Tensor, ...]*):
                             The input x gradient with
                             respect to each input feature. Attributions will always be
                             the same size as the provided inputs, with each value

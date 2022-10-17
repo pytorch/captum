@@ -25,9 +25,9 @@ class LayerActivation(LayerAttribution):
         r"""
         Args:
 
-            forward_func (callable):  The forward function of the model or any
+            forward_func (Callable): The forward function of the model or any
                           modification of it
-            layer (torch.nn.Module or list(torch.nn.Module)): Layer or layers
+            layer (torch.nn.Module or list of torch.nn.Module): Layer or layers
                           for which attributions are computed.
                           Output size of attribute matches this layer's input or
                           output dimensions, depending on whether we attribute to
@@ -36,7 +36,7 @@ class LayerActivation(LayerAttribution):
                           this layer. If multiple layers are provided, attributions
                           are returned as a list, each element corresponding to the
                           activations of the corresponding layer.
-            device_ids (list(int)): Device ID list, necessary only if forward_func
+            device_ids (list[int]): Device ID list, necessary only if forward_func
                           applies a DataParallel model. This allows reconstruction of
                           intermediate outputs from batched results across devices.
                           If forward_func is given as the DataParallel model itself,
@@ -54,7 +54,7 @@ class LayerActivation(LayerAttribution):
         r"""
         Args:
 
-            inputs (tensor or tuple of tensors):  Input for which layer
+            inputs (Tensor or tuple[Tensor, ...]): Input for which layer
                         activation is computed. If forward_func takes a single
                         tensor as input, a single input tensor should be provided.
                         If forward_func takes multiple tensors as input, a tuple
@@ -62,7 +62,7 @@ class LayerActivation(LayerAttribution):
                         that for all given input tensors, dimension 0 corresponds
                         to the number of examples, and if multiple input tensors
                         are provided, the examples must be aligned appropriately.
-            additional_forward_args (any, optional): If the forward function
+            additional_forward_args (Any, optional): If the forward function
                         requires additional arguments other than the inputs for
                         which attributions should not be computed, this argument
                         can be provided. It must be either a single additional
@@ -87,8 +87,8 @@ class LayerActivation(LayerAttribution):
                         Default: False
 
         Returns:
-            *tensor* or tuple of *tensors* or *list* of **attributions**:
-            - **attributions** (*tensor* or tuple of *tensors* or *list*):
+            *Tensor* or *tuple[Tensor, ...]* or list of **attributions**:
+            - **attributions** (*Tensor*, *tuple[Tensor, ...]*, or *list*):
                         Activation of each neuron in given layer output.
                         Attributions will always be the same size as the
                         output of the given layer.

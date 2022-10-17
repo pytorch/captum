@@ -28,7 +28,7 @@ def approximation_parameters(
     r"""Retrieves parameters for the input approximation `method`
 
     Args:
-        method: The name of the approximation method. Currently only `riemann`
+        method (str): The name of the approximation method. Currently only `riemann`
                 and gauss legendre are
     """
     if method in SUPPORTED_RIEMANN_METHODS:
@@ -45,17 +45,16 @@ def riemann_builders(
 
     Args:
 
-         n: The number of integration steps
-         method: `left`, `right`, `middle` and `trapezoid` riemann
+         method (Riemann): `left`, `right`, `middle` and `trapezoid` riemann
 
     Returns:
         2-element tuple of **step_sizes**, **alphas**:
-        - **step_sizes** (*callable*):
+        - **step_sizes** (*Callable*):
                     `step_sizes` takes the number of steps as an
                     input argument and returns an array of steps sizes which
                     sum is smaller than or equal to one.
 
-        - **alphas** (*callable*):
+        - **alphas** (*Callable*):
                     `alphas` takes the number of steps as an input argument
                     and returns the multipliers/coefficients for the inputs
                     of integrand in the range of [0, 1]
@@ -104,18 +103,14 @@ def gauss_legendre_builders() -> Tuple[
     proposed by [Xue Feng and her intern Hauroun Habeeb]
     (https://research.fb.com/people/feng-xue/).
 
-    Args:
-
-        n (int): The number of integration steps
-
     Returns:
         2-element tuple of **step_sizes**, **alphas**:
-        - **step_sizes** (*callable*):
+        - **step_sizes** (*Callable*):
                     `step_sizes` takes the number of steps as an
                     input argument and returns an array of steps sizes which
                     sum is smaller than or equal to one.
 
-        - **alphas** (*callable*):
+        - **alphas** (*Callable*):
                     `alphas` takes the number of steps as an input argument
                     and returns the multipliers/coefficients for the inputs
                     of integrand in the range of [0, 1]

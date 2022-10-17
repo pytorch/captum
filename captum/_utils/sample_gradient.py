@@ -1,6 +1,6 @@
 from collections import defaultdict
 from enum import Enum
-from typing import cast, DefaultDict, Iterable, List, Tuple, Union
+from typing import cast, DefaultDict, Iterable, List, Optional, Tuple, Union
 
 import torch
 from captum._utils.common import _format_tensor_into_tuples, _register_backward_hook
@@ -100,20 +100,23 @@ class SampleGradientWrapper:
     - https://github.com/pytorch/opacus/tree/main/opacus/grad_sample
     """
 
-    def __init__(self, model) -> None:
+    def __init__(self, model, layer_modules=None) -> None:
         self.model = model
         self.hooks_added = False
         self.activation_dict: DefaultDict[Module, List[Tensor]] = defaultdict(list)
         self.gradient_dict: DefaultDict[Module, List[Tensor]] = defaultdict(list)
         self.forward_hooks: List[torch.utils.hooks.RemovableHandle] = []
         self.backward_hooks: List[torch.utils.hooks.RemovableHandle] = []
+        self.layer_modules: Optional[List[Module]] = layer_modules
 
     def add_hooks(self) -> None:
         self.hooks_added = True
         self.model.apply(self._register_module_hooks)
 
     def _register_module_hooks(self, module: torch.nn.Module) -> None:
-        if isinstance(module, tuple(SUPPORTED_MODULES.keys())):
+        if (self.layer_modules is None or module in self.layer_modules) and isinstance(
+            module, tuple(SUPPORTED_MODULES.keys())
+        ):
             self.forward_hooks.append(
                 module.register_forward_hook(self._forward_hook_fn)
             )
