@@ -118,7 +118,7 @@ class MinParamPerturbation:
                 any additional arguments should be provided through
                 ``correct_fn_kwargs``.
 
-                This function should have the following signature:
+                This function should have the following signature::
 
                     def correct_fn(model_out: Tensor, **kwargs: Any) -> bool
 

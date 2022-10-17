@@ -86,7 +86,7 @@ def _jacobian_loss_wrt_inputs(
     batch).
 
     Args:
-        loss_fn (torch.nn.Module or Callable or None): The loss function. If a library
+        loss_fn (torch.nn.Module, Callable, or None): The loss function. If a library
                 defined loss function is provided, it would be expected to be a
                 torch.nn.Module. If a custom loss is provided, it can be either type,
                 but must behave as a library loss function would if `reduction='sum'`

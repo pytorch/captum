@@ -307,51 +307,50 @@ class LayerIntegratedGradients(LayerAttribution, GradientAttribution):
                         Support for multiple tensors will be added later.
                         Default: False
 
-            Returns:
-                **attributions** or 2-element tuple of **attributions**, **delta**:
+        Returns:
+            **attributions** or 2-element tuple of **attributions**, **delta**:
+            - **attributions** (*Tensor* or *tuple[Tensor, ...]*):
+                Integrated gradients with respect to `layer`'s inputs
+                or outputs. Attributions will always be the same size and
+                dimensionality as the input or output of the given layer,
+                depending on whether we attribute to the inputs or outputs
+                of the layer which is decided by the input flag
+                `attribute_to_layer_input`.
 
-                  - **attributions** (*Tensor*, *tuple[Tensor, ...]* or tuple of
-                  *Tensor*): Integrated gradients with respect to `layer`'s inputs
-                        or outputs. Attributions will always be the same size and
-                        dimensionality as the input or output of the given layer,
-                        depending on whether we attribute to the inputs or outputs
-                        of the layer which is decided by the input flag
-                        `attribute_to_layer_input`.
+                For a single layer, attributions are returned in a tuple if
+                the layer inputs / outputs contain multiple tensors,
+                otherwise a single tensor is returned.
 
-                        For a single layer, attributions are returned in a tuple if
-                        the layer inputs / outputs contain multiple tensors,
-                        otherwise a single tensor is returned.
+                For multiple layers, attributions will always be
+                returned as a list. Each element in this list will be
+                equivalent to that of a single layer output, i.e. in the
+                case that one layer, in the given layers, inputs / outputs
+                multiple tensors: the corresponding output element will be
+                a tuple of tensors. The ordering of the outputs will be
+                the same order as the layers given in the constructor.
 
-                        For multiple layers, attributions will always be
-                        returned as a list. Each element in this list will be
-                        equivalent to that of a single layer output, i.e. in the
-                        case that one layer, in the given layers, inputs / outputs
-                        multiple tensors: the corresponding output element will be
-                        a tuple of tensors. The ordering of the outputs will be
-                        the same order as the layers given in the constructor.
+            - **delta** (*Tensor*, returned if return_convergence_delta=True):
+                The difference between the total approximated and true
+                integrated gradients. This is computed using the property
+                that the total sum of forward_func(inputs) -
+                forward_func(baselines) must equal the total sum of the
+                integrated gradient.
+                Delta is calculated per example, meaning that the number of
+                elements in returned delta tensor is equal to the number of
+                examples in inputs.
 
-                  - **delta** (*Tensor*, returned if return_convergence_delta=True):
-                        The difference between the total approximated and true
-                        integrated gradients. This is computed using the property
-                        that the total sum of forward_func(inputs) -
-                        forward_func(baselines) must equal the total sum of the
-                        integrated gradient.
-                        Delta is calculated per example, meaning that the number of
-                        elements in returned delta tensor is equal to the number of
-                        examples in inputs.
+        Examples::
 
-            Examples::
-
-                >>> # ImageClassifier takes a single input tensor of images Nx3x32x32,
-                >>> # and returns an Nx10 tensor of class probabilities.
-                >>> # It contains an attribute conv1, which is an instance of nn.conv2d,
-                >>> # and the output of this layer has dimensions Nx12x32x32.
-                >>> net = ImageClassifier()
-                >>> lig = LayerIntegratedGradients(net, net.conv1)
-                >>> input = torch.randn(2, 3, 32, 32, requires_grad=True)
-                >>> # Computes layer integrated gradients for class 3.
-                >>> # attribution size matches layer output, Nx12x32x32
-                >>> attribution = lig.attribute(input, target=3)
+            >>> # ImageClassifier takes a single input tensor of images Nx3x32x32,
+            >>> # and returns an Nx10 tensor of class probabilities.
+            >>> # It contains an attribute conv1, which is an instance of nn.conv2d,
+            >>> # and the output of this layer has dimensions Nx12x32x32.
+            >>> net = ImageClassifier()
+            >>> lig = LayerIntegratedGradients(net, net.conv1)
+            >>> input = torch.randn(2, 3, 32, 32, requires_grad=True)
+            >>> # Computes layer integrated gradients for class 3.
+            >>> # attribution size matches layer output, Nx12x32x32
+            >>> attribution = lig.attribute(input, target=3)
         """
         inps, baselines = _format_input_baseline(inputs, baselines)
         _validate_input(inps, baselines, n_steps, method)
