@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-from typing import Any, Callable, Optional, Union
+from typing import Any, Callable, Optional, Tuple, Union
 
 import torch
 import torch.nn.functional as F
@@ -136,9 +136,10 @@ class PGD(Perturbation):
                         original inputs: ``Linf`` | ``L2``.
                         Default: ``Linf``
             mask (Tensor or tuple[Tensor, ...], optional): mask of zeroes and ones
-                        that defines which pixels within the image are perturbed.
-                        This mask must have the same shape and dimensionality as
-                        the inputs.
+                        that defines which elements within the input tensor(s) are
+                        perturbed. This mask must have the same shape and
+                        dimensionality as the inputs. If this argument is not
+                        provided, all elements are perturbed.
                         Default: None.
 
         Returns:
@@ -163,7 +164,7 @@ class PGD(Perturbation):
 
         is_inputs_tuple = _is_tuple(inputs)
         formatted_inputs = _format_tensor_into_tuples(inputs)
-        formatted_masks = (
+        formatted_masks: Union[Tuple[int, ...], Tuple[Tensor, ...]] = (
             _format_tensor_into_tuples(mask)
             if (mask is not None)
             else (1,) * len(formatted_inputs)

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-from typing import Any, Callable, Optional, Tuple
+from typing import Any, Callable, Optional, Tuple, Union
 
 import torch
 from captum._utils.common import (
@@ -132,9 +132,10 @@ class FGSM(Perturbation):
             targeted (bool, optional): If attack should be targeted.
                         Default: False.
             mask (Tensor or tuple[Tensor, ...], optional): mask of zeroes and ones
-                        that defines which pixels within the image are perturbed.
-                        This mask must have the same shape and dimensionality as
-                        the inputs.
+                        that defines which elements within the input tensor(s) are
+                        perturbed. This mask must have the same shape and
+                        dimensionality as the inputs. If this argument is not
+                        provided, all elements will be perturbed.
                         Default: None.
 
 
@@ -150,8 +151,10 @@ class FGSM(Perturbation):
         """
         is_inputs_tuple = _is_tuple(inputs)
         inputs: Tuple[Tensor, ...] = _format_tensor_into_tuples(inputs)
-        masks: Tuple[Tensor, ...] = (
-            _format_tensor_into_tuples(mask) if (mask is not None) else None
+        masks: Union[Tuple[int, ...], Tuple[Tensor, ...]] = (
+            _format_tensor_into_tuples(mask)
+            if (mask is not None)
+            else (1,) * len(inputs)
         )
         gradient_mask = apply_gradient_requirements(inputs)
 
@@ -182,7 +185,7 @@ class FGSM(Perturbation):
         grads: Tuple,
         epsilon: float,
         targeted: bool,
-        masks: Optional[Tuple],
+        masks: Tuple,
     ) -> Tuple:
         r"""
         A helper function to calculate the perturbed inputs given original
@@ -190,7 +193,6 @@ class FGSM(Perturbation):
         different for targeted v.s. non-targeted as described above.
         """
         multiplier = -1 if targeted else 1
-        masks = (1,) * len(inputs) if (masks is None) else masks
         inputs = tuple(
             torch.where(
                 torch.abs(grad) > self.zero_thresh,
