@@ -289,7 +289,7 @@ class FeatureAblation(PerturbationAttribution):
             # number of elements in the output of forward_func
             n_outputs = initial_eval.numel() if isinstance(initial_eval, Tensor) else 1
 
-            # flattent eval outputs into 1D (n_outputs)
+            # flatten eval outputs into 1D (n_outputs)
             # add the leading dim for n_feature_perturbed
             if isinstance(initial_eval, Tensor):
                 initial_eval = initial_eval.reshape(1, -1)
