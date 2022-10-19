@@ -57,7 +57,7 @@ commands:
     steps:
       - run:
           name: "Run sphinx"
-          command: sphinx-build -T --keep-going sphinx/source sphinx/build
+          command: sphinx-build -WT --keep-going sphinx/source sphinx/build
 
   configure_github_bot:
     description: "Configure Docusaurus GitHub bot"
@@ -99,6 +99,15 @@ commands:
             python -m pip install --upgrade pip
             python -m pip install -e .[dev]
 
+  build_package:
+    description: "Build the source and wheel packages"
+    steps:
+      - run:
+          name: "Build captum"
+          command: |
+            python -m pip install build
+            python -m build
+
   py_3_7_setup:
     description: "Set python version to 3.7 and install pip and pytest"
     steps:
@@ -115,13 +124,13 @@ commands:
       - run:
           name: "Install CUDA"
           command: |
+            sudo dpkg --configure -a
             wget https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004/x86_64/cuda-ubuntu2004.pin
             sudo mv cuda-ubuntu2004.pin /etc/apt/preferences.d/cuda-repository-pin-600
             wget https://developer.download.nvidia.com/compute/cuda/11.4.2/local_installers/cuda-repo-ubuntu2004-11-4-local_11.4.2-470.57.02-1_amd64.deb
             sudo dpkg -i cuda-repo-ubuntu2004-11-4-local_11.4.2-470.57.02-1_amd64.deb
             sudo apt-key add /var/cuda-repo-ubuntu2004-11-4-local/7fa2af80.pub
             sudo apt-get update
-            sudo dpkg --configure -a
             sudo apt-get --yes --force-yes install cuda
 
 jobs:
@@ -211,6 +220,7 @@ jobs:
       - install_cuda
       - py_3_7_setup
       - simple_pip_install
+      - build_package
       - unit_tests
 
   auto_deploy_site:
