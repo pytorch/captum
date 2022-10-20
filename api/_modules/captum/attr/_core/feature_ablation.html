@@ -318,22 +318,20 @@ src="/_sphinx/documentation_options.js"></script>
             <span class="k">if</span> <span class="n">show_progress</span><span class="p">:</span>
                 <span class="n">attr_progress</span><span class="o">.</span><span class="n">update</span><span class="p">()</span>
 
+            <span class="c1"># number of elements in the output of forward_func</span>
+            <span class="n">n_outputs</span> <span class="o">=</span> <span class="n">initial_eval</span><span class="o">.</span><span class="n">numel</span><span class="p">()</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">initial_eval</span><span class="p">,</span> <span class="n">Tensor</span><span class="p">)</span> <span class="k">else</span> <span class="mi">1</span>
+
+            <span class="c1"># flatten eval outputs into 1D (n_outputs)</span>
+            <span class="c1"># add the leading dim for n_feature_perturbed</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">initial_eval</span><span class="p">,</span> <span class="n">Tensor</span><span class="p">):</span>
+                <span class="n">initial_eval</span> <span class="o">=</span> <span class="n">initial_eval</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+
             <span class="n">agg_output_mode</span> <span class="o">=</span> <span class="n">FeatureAblation</span><span class="o">.</span><span class="n">_find_output_mode</span><span class="p">(</span>
                 <span class="n">perturbations_per_eval</span><span class="p">,</span> <span class="n">feature_mask</span>
             <span class="p">)</span>
 
-            <span class="c1"># get as a 2D tensor (if it is not a scalar)</span>
-            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">initial_eval</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">):</span>
-                <span class="n">initial_eval</span> <span class="o">=</span> <span class="n">initial_eval</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
-                <span class="n">num_outputs</span> <span class="o">=</span> <span class="n">initial_eval</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="n">num_outputs</span> <span class="o">=</span> <span class="mi">1</span>
-
             <span class="k">if</span> <span class="ow">not</span> <span class="n">agg_output_mode</span><span class="p">:</span>
-                <span class="k">assert</span> <span class="p">(</span>
-                    <span class="nb">isinstance</span><span class="p">(</span><span class="n">initial_eval</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">)</span>
-                    <span class="ow">and</span> <span class="n">num_outputs</span> <span class="o">==</span> <span class="n">num_examples</span>
-                <span class="p">),</span> <span class="p">(</span>
+                <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">initial_eval</span><span class="p">,</span> <span class="n">Tensor</span><span class="p">)</span> <span class="ow">and</span> <span class="n">n_outputs</span> <span class="o">==</span> <span class="n">num_examples</span><span class="p">,</span> <span class="p">(</span>
                     <span class="s2">"expected output of `forward_func` to have "</span>
                     <span class="o">+</span> <span class="s2">"`batch_size` elements for perturbations_per_eval &gt; 1 "</span>
                     <span class="o">+</span> <span class="s2">"and all feature_mask.shape[0] &gt; 1"</span>
@@ -348,8 +346,9 @@ src="/_sphinx/documentation_options.js"></script>
             <span class="p">)</span>
 
             <span class="n">total_attrib</span> <span class="o">=</span> <span class="p">[</span>
+                <span class="c1"># attribute w.r.t each output element</span>
                 <span class="n">torch</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span>
-                    <span class="p">(</span><span class="n">num_outputs</span><span class="p">,)</span> <span class="o">+</span> <span class="nb">input</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">:],</span>
+                    <span class="p">(</span><span class="n">n_outputs</span><span class="p">,)</span> <span class="o">+</span> <span class="nb">input</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">:],</span>
                     <span class="n">dtype</span><span class="o">=</span><span class="n">attrib_type</span><span class="p">,</span>
                     <span class="n">device</span><span class="o">=</span><span class="nb">input</span><span class="o">.</span><span class="n">device</span><span class="p">,</span>
                 <span class="p">)</span>
@@ -360,7 +359,7 @@ src="/_sphinx/documentation_options.js"></script>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">use_weights</span><span class="p">:</span>
                 <span class="n">weights</span> <span class="o">=</span> <span class="p">[</span>
                     <span class="n">torch</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span>
-                        <span class="p">(</span><span class="n">num_outputs</span><span class="p">,)</span> <span class="o">+</span> <span class="nb">input</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">:],</span> <span class="n">device</span><span class="o">=</span><span class="nb">input</span><span class="o">.</span><span class="n">device</span>
+                        <span class="p">(</span><span class="n">n_outputs</span><span class="p">,)</span> <span class="o">+</span> <span class="nb">input</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">:],</span> <span class="n">device</span><span class="o">=</span><span class="nb">input</span><span class="o">.</span><span class="n">device</span>
                     <span class="p">)</span><span class="o">.</span><span class="n">float</span><span class="p">()</span>
                     <span class="k">for</span> <span class="nb">input</span> <span class="ow">in</span> <span class="n">inputs</span>
                 <span class="p">]</span>
@@ -386,8 +385,11 @@ src="/_sphinx/documentation_options.js"></script>
                     <span class="n">perturbations_per_eval</span><span class="p">,</span>
                     <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
                 <span class="p">):</span>
-                    <span class="c1"># modified_eval dimensions: 1D tensor with length</span>
-                    <span class="c1"># equal to #num_examples * #features in batch</span>
+                    <span class="c1"># modified_eval has (n_feature_perturbed * n_outputs) elements</span>
+                    <span class="c1"># shape:</span>
+                    <span class="c1">#   agg mode: (*initial_eval.shape)</span>
+                    <span class="c1">#   non-agg mode:</span>
+                    <span class="c1">#     (feature_perturbed * batch_size, *initial_eval.shape[1:])</span>
                     <span class="n">modified_eval</span> <span class="o">=</span> <span class="n">_run_forward</span><span class="p">(</span>
                         <span class="bp">self</span><span class="o">.</span><span class="n">forward_func</span><span class="p">,</span>
                         <span class="n">current_inputs</span><span class="p">,</span>
@@ -398,25 +400,34 @@ src="/_sphinx/documentation_options.js"></script>
                     <span class="k">if</span> <span class="n">show_progress</span><span class="p">:</span>
                         <span class="n">attr_progress</span><span class="o">.</span><span class="n">update</span><span class="p">()</span>
 
-                    <span class="c1"># (contains 1 more dimension than inputs). This adds extra</span>
-                    <span class="c1"># dimensions of 1 to make the tensor broadcastable with the inputs</span>
-                    <span class="c1"># tensor.</span>
                     <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">modified_eval</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">):</span>
                         <span class="n">eval_diff</span> <span class="o">=</span> <span class="n">initial_eval</span> <span class="o">-</span> <span class="n">modified_eval</span>
                     <span class="k">else</span><span class="p">:</span>
                         <span class="k">if</span> <span class="ow">not</span> <span class="n">agg_output_mode</span><span class="p">:</span>
+                            <span class="c1"># current_batch_size is not n_examples</span>
+                            <span class="c1"># it may get expanded by n_feature_perturbed</span>
+                            <span class="n">current_batch_size</span> <span class="o">=</span> <span class="n">current_inputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
                             <span class="k">assert</span> <span class="p">(</span>
-                                <span class="n">modified_eval</span><span class="o">.</span><span class="n">numel</span><span class="p">()</span> <span class="o">==</span> <span class="n">current_inputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                                <span class="n">modified_eval</span><span class="o">.</span><span class="n">numel</span><span class="p">()</span> <span class="o">==</span> <span class="n">current_batch_size</span>
                             <span class="p">),</span> <span class="s2">"""expected output of forward_func to grow with</span>
 <span class="s2">                            batch_size. If this is not the case for your model</span>
 <span class="s2">                            please set perturbations_per_eval = 1"""</span>
 
-                        <span class="n">eval_diff</span> <span class="o">=</span> <span class="p">(</span>
-                            <span class="n">initial_eval</span> <span class="o">-</span> <span class="n">modified_eval</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">num_outputs</span><span class="p">))</span>
-                        <span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">num_outputs</span><span class="p">)</span> <span class="o">+</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">inputs</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span><span class="p">,))</span>
+                        <span class="c1"># reshape the leading dim for n_feature_perturbed</span>
+                        <span class="c1"># flatten each feature's eval outputs into 1D of (n_outputs)</span>
+                        <span class="n">modified_eval</span> <span class="o">=</span> <span class="n">modified_eval</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">n_outputs</span><span class="p">)</span>
+                        <span class="c1"># eval_diff in shape (n_feature_perturbed, n_outputs)</span>
+                        <span class="n">eval_diff</span> <span class="o">=</span> <span class="n">initial_eval</span> <span class="o">-</span> <span class="n">modified_eval</span>
+
+                        <span class="c1"># append the shape of one input example</span>
+                        <span class="c1"># to make it broadcastable to mask</span>
+                        <span class="n">eval_diff</span> <span class="o">=</span> <span class="n">eval_diff</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span>
+                            <span class="n">eval_diff</span><span class="o">.</span><span class="n">shape</span> <span class="o">+</span> <span class="p">(</span><span class="n">inputs</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">dim</span><span class="p">()</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span><span class="p">,)</span>
+                        <span class="p">)</span>
                         <span class="n">eval_diff</span> <span class="o">=</span> <span class="n">eval_diff</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">total_attrib</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
                     <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">use_weights</span><span class="p">:</span>
                         <span class="n">weights</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">+=</span> <span class="n">current_mask</span><span class="o">.</span><span class="n">float</span><span class="p">()</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">dim</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+
                     <span class="n">total_attrib</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">+=</span> <span class="p">(</span><span class="n">eval_diff</span> <span class="o">*</span> <span class="n">current_mask</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">attrib_type</span><span class="p">))</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span>
                         <span class="n">dim</span><span class="o">=</span><span class="mi">0</span>
                     <span class="p">)</span>
