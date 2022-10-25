@@ -521,9 +521,11 @@ def _select_targets(output: Tensor, target: TargetType) -> Tensor:
                 ]
             )
         else:
-            raise AssertionError("Target element type in list is not valid.")
+            raise AssertionError(
+                f"Target element type {type(target[0])} in list is not valid."
+            )
     else:
-        raise AssertionError("Target type %r is not valid." % target)
+        raise AssertionError(f"Target type {type(target)} is not valid.")
 
 
 def _contains_slice(target: Union[int, Tuple[Union[int, slice], ...]]) -> bool:
