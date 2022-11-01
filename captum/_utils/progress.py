@@ -45,8 +45,10 @@ class DisableErrorIOWrapper(object):
 class NullProgress:
     """Passthrough class that implements the progress API.
 
-    This class can be use when you are not showing progress to simplify
-    the referencing code.
+    This class implements the tqdm and SimpleProgressBar api but
+    does nothing. This class can be used as a stand-in for an
+    optional progressbar, most commonly in the case of nested
+    progress bars.
     """
 
     def __init__(self, iterable: Iterable = None, *args, **kwargs):
@@ -83,7 +85,11 @@ class SimpleProgress:
     ) -> None:
         """
         Simple progress output used when tqdm is unavailable.
-        Same as tqdm, output to stderr channel
+        Same as tqdm, output to stderr channel.
+        If you want to do nested Progressbars with simple progress
+        the parent progress bar should be used as a context
+        (i.e. with statement) and the nested progress bar should be
+        created inside this context.
         """
         self.cur = 0
         self.iterable = iterable
@@ -104,6 +110,7 @@ class SimpleProgress:
 
     def __enter__(self):
         self._is_parent = True
+        self._refresh()
         return self
 
     def __exit__(self, exc_type, exc_value, exc_traceback) -> Literal[False]:

@@ -54,7 +54,7 @@ class Test(BaseTest):
 
         output = mock_stderr.getvalue()
         self.assertEqual(
-            output.count("parent progress:"), 4, "4 'parent' progress bar expected"
+            output.count("parent progress:"), 5, "5 'parent' progress bar expected"
         )
         for item in parent_data:
             self.assertIn(f"test progress {item}:", output)
