@@ -8,7 +8,7 @@ from typing import Any, Callable, cast, Dict, Iterator, List, Optional, Tuple, U
 import torch
 from captum._utils.common import _format_inputs, _get_module_from_name, _sort_key_list
 from captum._utils.gradient import _gather_distributed_tensors
-from captum._utils.progress import progress
+from captum._utils.progress import NullProgress, progress
 
 from captum.influence._core.tracincp import (
     _influence_route_to_helpers,
@@ -556,13 +556,6 @@ class TracInCPFast(TracInCPBase):
         # If `show_progress` is true, create an outer progress bar that keeps track of
         # how many checkpoints have been processed
         if show_progress:
-            checkpoints_progress = progress(
-                desc=(
-                    f"Using {self.get_name()} to compute self "
-                    "influence. Processing checkpoint"
-                ),
-                total=len(self.checkpoints),
-            )
             # Try to determine length of inner progress bar if possible, with a default
             # of `None`.
             inputs_dataset_len = None
@@ -621,20 +614,31 @@ class TracInCPFast(TracInCPBase):
 
             # We concatenate the contributions from each batch into a single 1D tensor,
             # which represents the contributions for all batches in `inputs_dataset`
-
-            if show_progress:
-                checkpoints_progress.update()
-
             return torch.cat(checkpoint_contribution, dim=0)
 
-        batches_self_tracin_scores = get_checkpoint_contribution(self.checkpoints[0])
+        if show_progress:
+            checkpoints_progress = progress(
+                desc=(
+                    f"Using {self.get_name()} to compute self "
+                    "influence. Processing checkpoint"
+                ),
+                total=len(self.checkpoints),
+                mininterval=0.0,
+            )
+        else:
+            checkpoints_progress = NullProgress()
 
-        # The self influence score for all examples is the sum of contributions from
-        # each checkpoint
-        for checkpoint in self.checkpoints[1:]:
-            batches_self_tracin_scores += get_checkpoint_contribution(checkpoint)
-
-        return batches_self_tracin_scores
+        with checkpoints_progress:
+            batches_self_tracin_scores = get_checkpoint_contribution(
+                self.checkpoints[0]
+            )
+            checkpoints_progress.update()
+            # The self influence score for all examples is the sum of contributions from
+            # each checkpoint
+            for checkpoint in self.checkpoints[1:]:
+                batches_self_tracin_scores += get_checkpoint_contribution(checkpoint)
+                checkpoints_progress.update()
+            return batches_self_tracin_scores
 
     def self_influence(
         self,
