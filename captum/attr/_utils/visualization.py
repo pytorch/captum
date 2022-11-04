@@ -236,12 +236,11 @@ def visualize_image_attr(
     if original_image is not None:
         if np.max(original_image) <= 1.0:
             original_image = _prepare_image(original_image * 255)
-    else:
-        if ImageVisualizationMethod[method] != ImageVisualizationMethod.heat_map:
-            raise ValueError(
-                "Original Image must be provided for"
-                "any visualization other than heatmap."
-            )
+    elif ImageVisualizationMethod[method] != ImageVisualizationMethod.heat_map:
+        raise ValueError(
+            "Original Image must be provided for"
+            "any visualization other than heatmap."
+        )
 
     # Remove ticks and tick labels from plot.
     plt_axis.xaxis.set_ticks_position("none")
