@@ -156,8 +156,9 @@ class Test(BaseTest):
         _assert_attribution_delta(self, (inputs,), (attributions,), n_samples, delta)
 
         with self.assertRaises(AssertionError):
-            attributions, delta = gradient_shap.attribute(
+            attributions, delta = gradient_shap.attribute(  # type: ignore
                 inputs,
+                # Intentionally passing wrong type.
                 baselines=generate_baselines_returns_array,
                 target=torch.tensor(1),
                 n_samples=n_samples,
