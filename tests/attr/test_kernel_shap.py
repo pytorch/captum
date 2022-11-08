@@ -12,6 +12,7 @@ from tests.helpers.basic import (
     assertTensorAlmostEqual,
     assertTensorTuplesAlmostEqual,
     BaseTest,
+    set_all_random_seeds,
 )
 from tests.helpers.basic_models import (
     BasicLinearModel,
@@ -370,6 +371,7 @@ class Test(BaseTest):
     ) -> None:
         for batch_size in perturbations_per_eval:
             kernel_shap = KernelShap(model)
+            set_all_random_seeds(1234)
             attributions = kernel_shap.attribute(
                 test_input,
                 target=target,
@@ -386,6 +388,7 @@ class Test(BaseTest):
             )
 
             if expected_coefs is not None:
+                set_all_random_seeds(1234)
                 # Test with return_input_shape = False
                 attributions = kernel_shap.attribute(
                     test_input,
