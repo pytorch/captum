@@ -3,8 +3,8 @@
 import glob
 import os
 import tempfile
-from collections import defaultdict, OrderedDict
 import unittest
+from collections import defaultdict, OrderedDict
 from typing import (
     Any,
     Callable,
