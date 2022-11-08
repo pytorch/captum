@@ -371,7 +371,6 @@ class Test(BaseTest):
     ) -> None:
         for batch_size in perturbations_per_eval:
             kernel_shap = KernelShap(model)
-            set_all_random_seeds(1234)
             attributions = kernel_shap.attribute(
                 test_input,
                 target=target,
