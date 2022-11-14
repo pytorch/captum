@@ -279,7 +279,7 @@ class FeatureAblation(PerturbationAttribution):
 
             # Computes initial evaluation with all features, which is compared
             # to each ablated result.
-            initial_eval = self._run_forward(
+            initial_eval = self._strict_run_forward(
                 self.forward_func, inputs, target, additional_forward_args
             )
 
@@ -352,7 +352,7 @@ class FeatureAblation(PerturbationAttribution):
                     #   agg mode: (*initial_eval.shape)
                     #   non-agg mode:
                     #     (feature_perturbed * batch_size, *initial_eval.shape[1:])
-                    modified_eval = self._run_forward(
+                    modified_eval = self._strict_run_forward(
                         self.forward_func,
                         current_inputs,
                         current_target,
@@ -594,7 +594,12 @@ class FeatureAblation(PerturbationAttribution):
             or all(len(sm.shape) == 0 or sm.shape[0] == 1 for sm in feature_mask)
         )
 
-    def _run_forward(self, *args, **kwargs) -> Tensor:
+    def _strict_run_forward(self, *args, **kwargs) -> Tensor:
+        """
+        A temp wrapper for global _run_forward util to force forward output
+        type assertion & conversion.
+        Remove after the strict logic is supported by all attr classes
+        """
         forward_output = _run_forward(*args, **kwargs)
         if isinstance(forward_output, Tensor):
             return forward_output
@@ -605,8 +610,7 @@ class FeatureAblation(PerturbationAttribution):
             f" received: {forward_output}"
         )
 
-        # using python type as torch dtype is not a documented behavior
-        # our tests expect int -> torch.int64, float -> torch.float64
-        # but this may actually depend on the machine
-        # ref: https://docs.python.org/3.10/library/stdtypes.html#typesnumeric
+        # using python built-in type as torch dtype
+        # int -> torch.int64, float -> torch.float64
+        # ref: https://github.com/pytorch/pytorch/pull/21215
         return torch.tensor(forward_output, dtype=output_type)
