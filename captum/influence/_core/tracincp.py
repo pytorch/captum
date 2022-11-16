@@ -200,10 +200,11 @@ class TracInCPBase(DataInfluence):
         show_progress: bool = False,
     ) -> Tensor:
         """
-        If inputs_dataset is not specified calculated the self_influence for the
-        training set. Otherwise, computes self influence scores for the examples
-        in `inputs_dataset`, which is either a single batch or a Pytorch
-        `DataLoader` that yields batches. Therefore, the computed self influence scores
+        If `inputs_dataset` is not specified calculates the self influence
+        scores for the training dataset `train_dataset`. Otherwise, computes
+        self influence scores for the examples in `inputs_dataset`,
+        which is either a single batch or a Pytorch `DataLoader` that yields
+        batches. Therefore, in this case, the computed self influence scores
         are *not* for the examples in training dataset `train_dataset`.
         Note that if `inputs_dataset` is a single batch, this
         will call `model` on that single batch, and if `inputs_dataset` yields
@@ -212,8 +213,8 @@ class TracInCPBase(DataInfluence):
         with are not too large, so that there will not be an out-of-memory error.
 
         Args:
-            inputs_dataset (tuple or DataLoader, optional): If not provided or `None`
-                    `train_dataset` will be used as the `inputs_dataset`.
+            inputs_dataset (tuple or DataLoader, optional): This specifies the
+                    dataset for which self influence scores will be computed.
                     Either a single tuple of any, or a `DataLoader`, where each
                     batch yielded is a tuple of type any. In either case, the tuple
                     represents a single batch, where the last element is assumed to
@@ -222,7 +223,11 @@ class TracInCPBase(DataInfluence):
                     if any. This is the same assumption made for each batch yielded
                     by training dataset `train_dataset`. Please see documentation for
                     the `train_dataset` argument to `TracInCP.__init__` for
-                    more details on the assumed structure of a batch.
+                    more details on the assumed structure of a batch. If not provided
+                    or `None`, self influence scores will be computed for training
+                    dataset `train_dataset`, which yields batches satisfying the
+                    above assumptions.
+                    Default: None.
             show_progress (bool, optional): Computation of self influence scores can
                     take a long time if `inputs_dataset` represents many examples. If
                     `show_progress` is true, the progress of this computation will be
@@ -456,7 +461,7 @@ def _influence_route_to_helpers(
     """
     This is a helper function called by `TracInCP.influence` and
     `TracInCPFast.influence`. Those methods share a common logic in that they assume
-    an instance of their respective classes implement 3 private methods
+    an instance of their respective classes implement 2 private methods
     (``_influence`, `_get_k_most_influential`), and the logic of
     which private method to call is common, as described in the documentation of the
     `influence` method. The arguments and return values of this function are the exact
@@ -1099,11 +1104,12 @@ class TracInCP(TracInCPBase):
         Computes self influence scores for the examples in `inputs_dataset`, which is
         either a single batch or a Pytorch `DataLoader` that yields batches.
         If `inputs_dataset` is not specified or `None` calculates self influence
-        against the `train_dataset`. Note that if `inputs_dataset` is a single batch,
-        this will call `model` on that single batch, and if `inputs_dataset` yields
-        batches, this will call `model` on each batch that is yielded. Therefore,
-        please ensure that for both cases, the batch(es) that `model` is called
-        with are not too large, so that there will not be an out-of-memory error.
+        score for the training dataset `train_dataset`. Note that if `inputs_dataset`
+        is a single batch, this will call `model` on that single batch, and if
+        `inputs_dataset` yields batches, this will call `model` on each batch that is
+        yielded. Therefore, please ensure that for both cases, the batch(es) that
+        `model` is called with are not too large, so that there will not be an
+        out-of-memory error.
         Internally, this computation requires iterating both over the batches in
         `inputs_dataset`, as well as different model checkpoints. There are two ways
         this iteration can be done. If `outer_loop_by_checkpoints` is False, the outer
@@ -1116,8 +1122,8 @@ class TracInCP(TracInCPBase):
         for each batch. For large models, loading checkpoints can be time-intensive.
 
         Args:
-            inputs_dataset (tuple or DataLoader, optional): If not provided or `None`
-                    `train_dataset` will be used as the `inputs_dataset`.
+            inputs_dataset (tuple or DataLoader, optional): This specifies the
+                    dataset for which self influence scores will be computed.
                     Either a single tuple of any, or a `DataLoader`, where each
                     batch yielded is a tuple of type any. In either case, the tuple
                     represents a single batch, where the last element is assumed to
@@ -1126,7 +1132,11 @@ class TracInCP(TracInCPBase):
                     if any. This is the same assumption made for each batch yielded
                     by training dataset `train_dataset`. Please see documentation for
                     the `train_dataset` argument to `TracInCP.__init__` for
-                    more details on the assumed structure of a batch.
+                    more details on the assumed structure of a batch. If not provided
+                    or `None`, self influence scores will be computed for training
+                    dataset `train_dataset`, which yields batches satisfying the
+                    above assumptions.
+                    Default: None.
             show_progress (bool, optional): Computation of self influence scores can
                     take a long time if `inputs_dataset` represents many examples. If
                     `show_progress`is true, the progress of this computation will be
