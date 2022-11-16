@@ -103,12 +103,13 @@ class GaussianStochasticGates(StochasticGatesBase):
 
     def _get_gate_values(self) -> Tensor:
         """
-        Get the gate values derived from learned mu after model is trained
+        Get the raw gate values, which are the means of the underneath gate
+        distributions, the learned mu
 
         Returns:
             gate_values (Tensor): value of each gate after model is trained
         """
-        return torch.clamp(self.mu, min=0, max=1)
+        return self.mu
 
     def _get_gate_active_probs(self) -> Tensor:
         """
