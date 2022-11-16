@@ -110,16 +110,27 @@ class StochasticGatesBase(Module, ABC):
 
         return gated_input, l0_reg
 
-    def get_gate_values(self) -> Tensor:
+    def get_gate_values(self, clamp: bool = True) -> Tensor:
         """
-        Get the gate values after model is trained. These values are derived from
-        the learned distribution parameters used during reparameterization.
+        Get the gate values, which are the means of the underneath gate distributions,
+        optionally clamped within 0 and 1.
 
         Returns:
-            gate_values (Tensor): value of each gate after model is trained
-                in shape(n_gates)
+            gate_values (Tensor): value of each gate in shape(n_gates)
+
+            clamp (bool): if clamp the gate values. As smoothed Bernoulli
+                variables, gate values are clamped withn 0 and 1 by defautl.
+                Turn this off to get the raw means of the underneath
+                distribution (e.g., conrete, gaussian), which can be useful to
+                differentiate the gates' importance when multiple gate
+                values are beyond 0 or 1.
+                Default: True
         """
-        return self._get_gate_values().detach()
+        gate_values = self._get_gate_values()
+        if clamp:
+            gate_values = torch.clamp(gate_values, min=0, max=1)
+
+        return gate_values.detach()
 
     def get_gate_active_probs(self) -> Tensor:
         """
@@ -135,8 +146,8 @@ class StochasticGatesBase(Module, ABC):
     def _get_gate_values(self) -> Tensor:
         """
         Protected method to be override in the child depending on the chosen
-        distribution. Get the gate values derived from the learned parameters of
-        the according distribution.
+        distribution. Get the raw gate values derived from the learned parameters of
+        the according distribution without clamping.
 
         Returns:
             gate_values (Tensor): gate value tensor of shape(n_gates)

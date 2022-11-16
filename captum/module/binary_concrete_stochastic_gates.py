@@ -166,7 +166,8 @@ class BinaryConcreteStochasticGates(StochasticGatesBase):
 
     def _get_gate_values(self) -> Tensor:
         """
-        Get the gate values derived from learned log_alpha_param after model is trained
+        Get the raw gate values, which are the means of the underneath gate
+        distributions, derived from learned log_alpha_param
 
         Returns:
             gate_values (Tensor): value of each gate after model is trained
@@ -175,7 +176,7 @@ class BinaryConcreteStochasticGates(StochasticGatesBase):
             torch.sigmoid(self.log_alpha_param) * (self.upper_bound - self.lower_bound)
             + self.lower_bound
         )
-        return torch.clamp(gate_values, min=0, max=1)
+        return gate_values
 
     def _get_gate_active_probs(self) -> Tensor:
         """

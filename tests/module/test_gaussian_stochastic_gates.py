@@ -284,6 +284,23 @@ class TestGaussianStochasticGates(BaseTest):
         expected_gate_values = [0.5005, 0.5040, 0.4899]
         assertTensorAlmostEqual(self, gate_values, expected_gate_values, mode="max")
 
+    def test_get_gate_values_clamp(self) -> None:
+        dim = 3
+
+        gstg = GaussianStochasticGates(dim).to(self.testing_device)
+        mocked_mu = torch.tensor([2.0, -2.0, 2.0])
+        gstg.load_state_dict({"mu": mocked_mu})
+
+        clamped_gate_values = gstg.get_gate_values().cpu().tolist()
+        assert clamped_gate_values == [1.0, 0.0, 1.0]
+
+        unclamped_gate_values = gstg.get_gate_values(clamp=False).cpu().tolist()
+        assert (
+            unclamped_gate_values[0] > 1
+            and unclamped_gate_values[1] < 0
+            and unclamped_gate_values[2] > 1
+        )
+
     def test_get_gate_active_probs_1d_input(self) -> None:
 
         dim = 3

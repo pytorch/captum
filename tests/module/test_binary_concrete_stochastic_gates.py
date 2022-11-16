@@ -260,6 +260,25 @@ class TestBinaryConcreteStochasticGates(BaseTest):
 
         assertTensorAlmostEqual(self, gate_values, expected_gate_values, mode="max")
 
+    def test_get_gate_values_clamp(self) -> None:
+        dim = 3
+        # enlarge the bounds & extremify log_alpha to mock gate  values beyond 0 & 1
+        bcstg = BinaryConcreteStochasticGates(dim, lower_bound=-2, upper_bound=2).to(
+            self.testing_device
+        )
+        mocked_log_alpha = torch.tensor([10.0, -10.0, 10.0])
+        bcstg.load_state_dict({"log_alpha_param": mocked_log_alpha})
+
+        clamped_gate_values = bcstg.get_gate_values().cpu().tolist()
+        assert clamped_gate_values == [1.0, 0.0, 1.0]
+
+        unclamped_gate_values = bcstg.get_gate_values(clamp=False).cpu().tolist()
+        assert (
+            unclamped_gate_values[0] > 1
+            and unclamped_gate_values[1] < 0
+            and unclamped_gate_values[2] > 1
+        )
+
     def test_get_gate_values_2d_input_with_mask(self) -> None:
 
         dim = 3
