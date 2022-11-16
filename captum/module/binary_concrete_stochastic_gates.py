@@ -188,3 +188,54 @@ class BinaryConcreteStochasticGates(StochasticGatesBase):
                 in shape(n_gates)
         """
         return torch.sigmoid(self.log_alpha_param - self.active_prob_offset)
+
+    @classmethod
+    def _from_pretrained(cls, log_alpha_param: Tensor, *args, **kwargs):
+        """
+        Private factory method to create an instance with pretrained parameters
+
+        Args:
+            log_alpha_param (Tensor): FloatTensor containing weights for
+                the pretrained log_alpha
+
+            mask (Optional[Tensor]): If provided, this allows grouping multiple
+                input tensor elements to share the same stochastic gate.
+                This tensor should be broadcastable to match the input shape
+                and contain integers in the range 0 to n_gates - 1.
+                Indices grouped to the same stochastic gate should have the same value.
+                If not provided, each element in the input tensor
+                (on dimensions other than dim 0 - batch dim) is gated separately.
+                Default: None
+
+            reg_weight (Optional[float]): rescaling weight for L0 regularization term.
+                Default: 1.0
+
+            temperature (float): temperature of the concrete distribution, controls
+                the degree of approximation, as 0 means the original Bernoulli
+                without relaxation. The value should be between 0 and 1.
+                Default: 2/3
+
+            lower_bound (float): the lower bound to "stretch" the binary concrete
+                distribution
+                Default: -0.1
+
+            upper_bound (float): the upper bound to "stretch" the binary concrete
+                distribution
+                Default: 1.1
+
+            eps (float): term to improve numerical stability in binary concerete
+                sampling
+                Default: 1e-8
+
+        Returns:
+            stg (BinaryConcreteStochasticGates): StochasticGates instance
+        """
+        assert (
+            log_alpha_param.dim() == 1
+        ), "log_alpha_param is expected to be 1-dimensional"
+
+        n_gates = log_alpha_param.numel()
+        stg = cls(n_gates, *args, **kwargs)
+        stg.load_state_dict({"log_alpha_param": log_alpha_param}, strict=False)
+
+        return stg
