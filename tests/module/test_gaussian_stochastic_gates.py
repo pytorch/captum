@@ -285,11 +285,9 @@ class TestGaussianStochasticGates(BaseTest):
         assertTensorAlmostEqual(self, gate_values, expected_gate_values, mode="max")
 
     def test_get_gate_values_clamp(self) -> None:
-        dim = 3
-
-        gstg = GaussianStochasticGates(dim).to(self.testing_device)
-        mocked_mu = torch.tensor([2.0, -2.0, 2.0])
-        gstg.load_state_dict({"mu": mocked_mu})
+        gstg = GaussianStochasticGates._from_pretrained(
+            torch.tensor([2.0, -2.0, 2.0])
+        ).to(self.testing_device)
 
         clamped_gate_values = gstg.get_gate_values().cpu().tolist()
         assert clamped_gate_values == [1.0, 0.0, 1.0]
@@ -406,3 +404,19 @@ class TestGaussianStochasticGates(BaseTest):
         assertTensorAlmostEqual(
             self, gate_active_probs, expected_gate_active_probs, mode="max"
         )
+
+    def test_from_pretrained(self) -> None:
+        mu = torch.tensor([0.1, 0.2, 0.3, 0.4])
+        kwargs = {
+            "mask": torch.tensor([0, 1, 1, 0, 2, 3]),
+            "reg_weight": 0.1,
+            "std": 0.01,
+        }
+        stg = GaussianStochasticGates._from_pretrained(mu, **kwargs)
+
+        for key, expected_val in kwargs.items():
+            val = getattr(stg, key)
+            if isinstance(expected_val, torch.Tensor):
+                assertTensorAlmostEqual(self, val, expected_val, mode="max")
+            else:
+                assert val == expected_val
