@@ -122,3 +122,35 @@ class GaussianStochasticGates(StochasticGatesBase):
         """
         x = self.mu / self.std
         return 0.5 * (1 + torch.erf(x / math.sqrt(2)))
+
+    @classmethod
+    def _from_pretrained(cls, mu: Tensor, *args, **kwargs):
+        """
+        Private factory method to create an instance with pretrained parameters
+
+        Args:
+            mu (Tensor): FloatTensor containing weights for the pretrained mu
+
+            mask (Optional[Tensor]): If provided, this allows grouping multiple
+                input tensor elements to share the same stochastic gate.
+                This tensor should be broadcastable to match the input shape
+                and contain integers in the range 0 to n_gates - 1.
+                Indices grouped to the same stochastic gate should have the same value.
+                If not provided, each element in the input tensor
+                (on dimensions other than dim 0 - batch dim) is gated separately.
+                Default: None
+
+            reg_weight (Optional[float]): rescaling weight for L0 regularization term.
+                Default: 1.0
+
+            std (Optional[float]): standard deviation that will be fixed throughout.
+                Default: 0.5 (by paper reference)
+
+        Returns:
+            stg (GaussianStochasticGates): StochasticGates instance
+        """
+        n_gates = mu.numel()
+        stg = cls(n_gates, *args, **kwargs)
+        stg.load_state_dict({"mu": mu}, strict=False)
+
+        return stg
