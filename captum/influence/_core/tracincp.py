@@ -754,7 +754,11 @@ class TracInCP(TracInCPBase):
               `targets`.
         """
 
-        assert inputs is not None, "`inputs` argument is required."
+        assert inputs is not None, (
+            "`inputs` argument is required."
+            "If you wish to calculate self influence scores,"
+            " please use the `self_influence` method instead."
+        )
         return _influence_route_to_helpers(
             self,
             inputs,
