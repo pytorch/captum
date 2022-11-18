@@ -115,7 +115,6 @@ class TestTracInSelfInfluence(BaseTest):
             )
             # calculate self_tracin_scores
             self_tracin_scores = tracin.self_influence(
-                DataLoader(train_dataset, batch_size=batch_size),
                 outer_loop_by_checkpoints=False,
             )
 
