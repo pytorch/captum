@@ -264,7 +264,7 @@ class LatentShift(GradientAttribution):
             verbose: True to print debug text
             extra_loops: The video does one loop by default. This will repeat
                 those loops to make it easier to watch.
-            cmap: The cmap value passed to matplotlib. e.g. 'gray' for a 
+            cmap: The cmap value passed to matplotlib. e.g. 'gray' for a
                 grayscale image.
 
         Returns:
@@ -283,7 +283,7 @@ class LatentShift(GradientAttribution):
         # Add reversed so we have an animation cycle
         towrite = list(reversed(imgs)) + list(imgs)
         ys = list(reversed(params["preds"])) + list(params["preds"])
-        
+
         for n in range(extra_loops):
             towrite += towrite
             ys += ys
