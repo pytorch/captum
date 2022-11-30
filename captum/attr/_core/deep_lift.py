@@ -559,13 +559,7 @@ class DeepLiftShap(DeepLift):
         r"""
         Args:
 
-<<<<<<< HEAD
             model (nn.Module):  The reference to PyTorch model instance.
-=======
-            model (nn.Module): The reference to PyTorch model instance. Model cannot
-                        contain any in-place nonlinear submodules; these are not
-                        supported by the register_full_backward_hook PyTorch API.
->>>>>>> c076410b23352de14043222bad7e6865047925b4
             multiply_by_inputs (bool, optional): Indicates whether to factor
                         model inputs' multiplier in the final attribution scores.
                         In the literature this is also known as local vs global

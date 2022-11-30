@@ -3,7 +3,7 @@ import typing
 from enum import Enum
 from functools import reduce
 from inspect import signature
-from typing import Any, Callable, cast, Dict, List, overload, Tuple, Union
+from typing import Any, Callable, cast, Dict, List, NoReturn, overload, Tuple, Union
 
 import numpy as np
 import torch
@@ -684,7 +684,7 @@ def _get_module_from_name(model: Module, layer_name: str) -> Any:
 def _register_backward_hook(
     module: Module, hook: Callable, attr_obj: Any
 ) -> List[torch.utils.hooks.RemovableHandle]:
-    grad_out = {}
+    grad_out: Dict[device, Tensor] = {}
 
     def forward_hook(
         module: Module,
@@ -706,7 +706,7 @@ def _register_backward_hook(
             out.register_hook(output_tensor_hook)
 
     def pre_hook(module, inp):
-        def input_tensor_hook(input_grad: Tensor) -> Tensor:
+        def input_tensor_hook(input_grad: Tensor):
             if len(grad_out) == 0:
                 return
             hook_out = hook(module, input_grad, grad_out[input_grad.device])

@@ -275,14 +275,7 @@ class NeuronDeepLiftShap(NeuronAttribution, GradientAttribution):
         r"""
         Args:
 
-<<<<<<< HEAD
             model (nn.Module):  The reference to PyTorch model instance.
-=======
-            model (nn.Module): The reference to PyTorch model instance. Model cannot
-                        contain any in-place nonlinear submodules; these are not
-                        supported by the register_full_backward_hook PyTorch API
-                        starting from PyTorch v1.9.
->>>>>>> c076410b23352de14043222bad7e6865047925b4
             layer (torch.nn.Module): Layer for which neuron attributions are computed.
                         Attributions for a particular neuron for the input or output
                         of this layer are computed using the argument neuron_selector

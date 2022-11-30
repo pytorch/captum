@@ -5,7 +5,11 @@ from typing import Callable, Tuple
 
 import torch
 from captum._utils.gradient import apply_gradient_requirements
-from captum._utils.sample_gradient import _reset_sample_grads, SampleGradientWrapper, SUPPORTED_MODULES
+from captum._utils.sample_gradient import (
+    _reset_sample_grads,
+    SampleGradientWrapper,
+    SUPPORTED_MODULES,
+)
 from packaging import version
 from tests.helpers.basic import assertTensorAlmostEqual, BaseTest
 from tests.helpers.basic_models import (
