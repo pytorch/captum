@@ -82,6 +82,7 @@ class LayerGradCam(LayerAttribution, GradientAttribution):
         additional_forward_args: Any = None,
         attribute_to_layer_input: bool = False,
         relu_attributions: bool = False,
+        split_channels: bool = False,
     ) -> Union[Tensor, Tuple[Tensor, ...]]:
         r"""
         Args:
@@ -149,6 +150,10 @@ class LayerGradCam(LayerAttribution, GradientAttribution):
                         otherwise, by default, both positive and negative
                         attributions are returned.
                         Default: False
+            split_channels (bool, optional): Indicates whether to
+                        keep attributions split per channel.
+                        The default (False) means to sum per channels.
+                        Default: False
 
         Returns:
             *Tensor* or *tuple[Tensor, ...]* of **attributions**:
@@ -208,10 +213,16 @@ class LayerGradCam(LayerAttribution, GradientAttribution):
             for layer_grad in layer_gradients
         )
 
-        scaled_acts = tuple(
-            torch.sum(summed_grad * layer_eval, dim=1, keepdim=True)
-            for summed_grad, layer_eval in zip(summed_grads, layer_evals)
-        )
+        if split_channels:
+            scaled_acts = tuple(
+                summed_grad * layer_eval
+                for summed_grad, layer_eval in zip(summed_grads, layer_evals)
+            )
+        else:
+            scaled_acts = tuple(
+                torch.sum(summed_grad * layer_eval, dim=1, keepdim=True)
+                for summed_grad, layer_eval in zip(summed_grads, layer_evals)
+            )
         if relu_attributions:
             scaled_acts = tuple(F.relu(scaled_act) for scaled_act in scaled_acts)
         return _format_output(len(scaled_acts) > 1, scaled_acts)
