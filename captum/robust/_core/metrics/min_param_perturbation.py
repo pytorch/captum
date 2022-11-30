@@ -10,6 +10,7 @@ from captum._utils.common import (
     _reduce_list,
 )
 from captum._utils.typing import TargetType
+from captum.log import log_usage
 from captum.robust._core.perturbation import Perturbation
 from torch import Tensor
 
@@ -51,7 +52,7 @@ class MinParamPerturbation:
         preproc_fn: Optional[Callable] = None,
         apply_before_preproc: bool = False,
         correct_fn: Optional[Callable] = None,
-    ):
+    ) -> None:
         r"""
         Identifies minimal perturbation based on target variable which causes
         misclassification (or other incorrect prediction) of target input.
@@ -63,7 +64,7 @@ class MinParamPerturbation:
         corresponding perturbed input.
 
         Args:
-            forward_func (callable or torch.nn.Module): This can either be an instance
+            forward_func (Callable or torch.nn.Module): This can either be an instance
                 of pytorch model or any modification of a model's forward
                 function.
 
@@ -85,23 +86,23 @@ class MinParamPerturbation:
             arg_step (int, float): Minimum interval for increase of target variable.
 
             mode (str, optional): Mode for search of minimum attack value;
-                either 'linear' for linear search on variable, or 'binary' for
+                either ``linear`` for linear search on variable, or ``binary`` for
                 binary search of variable
-                Default: 'linear'
+                Default: ``linear``
 
             num_attempts (int, optional): Number of attempts or trials with
                 given variable. This should only be set to > 1 for non-deterministic
                 perturbation / attack functions
-                Default: 1
+                Default: ``1``
 
-            preproc_fn (callable, optional): Optional method applied to inputs. Output
+            preproc_fn (Callable, optional): Optional method applied to inputs. Output
                 of preproc_fn is then provided as input to model, in addition to
                 additional_forward_args provided to evaluate.
-                Default: None
+                Default: ``None``
 
             apply_before_preproc (bool, optional): Defines whether attack should be
                 applied before or after preproc function.
-                Default: False
+                Default: ``False``
 
             correct_fn (Callable, optional): This determines whether the perturbed input
                 leads to a correct or incorrect prediction. By default, this function
@@ -114,13 +115,15 @@ class MinParamPerturbation:
                 function must be provided which determines correctness.
 
                 The first argument to this function must be the model out;
-                any additional arguments should be provided through correct_fn_kwargs.
+                any additional arguments should be provided through
+                ``correct_fn_kwargs``.
 
-                This function should have the following signature:
+                This function should have the following signature::
+
                     def correct_fn(model_out: Tensor, **kwargs: Any) -> bool
 
                 Method should return a boolean if correct (True) and incorrect (False).
-                Default: None (applies standard correct_fn for classification)
+                Default: ``None`` (applies standard correct_fn for classification)
         """
         self.forward_func = forward_func
         self.attack = attack
@@ -333,6 +336,7 @@ class MinParamPerturbation:
 
         return min_input, min_so_far
 
+    @log_usage()
     def evaluate(
         self,
         inputs: Any,
@@ -363,7 +367,7 @@ class MinParamPerturbation:
                     pre-processing function is provided,
                     this input is provided directly to the main model and all attacks.
 
-            additional_forward_args (any, optional): If the forward function
+            additional_forward_args (Any, optional): If the forward function
                     requires additional arguments other than the preprocessing
                     outputs (or inputs if preproc_fn is None), this argument
                     can be provided. It must be either a single additional
@@ -375,9 +379,9 @@ class MinParamPerturbation:
                     For a tensor, the first dimension of the tensor must
                     correspond to the number of examples. For all other types,
                     the given argument is used for all forward evaluations.
-                    Default: None
+                    Default: ``None``
             target (TargetType): Target class for classification. This is required if
-                using the default correct_fn
+                using the default ``correct_fn``.
 
             perturbations_per_eval (int, optional): Allows perturbations of multiple
                     attacks to be grouped and evaluated in one call of forward_fn
@@ -391,10 +395,10 @@ class MinParamPerturbation:
                     In order to apply this functionality, the output of preproc_fn
                     (or inputs itself if no preproc_fn is provided) must be a tensor
                     or tuple of tensors.
-                    Default: 1
-            attack_kwargs (dictionary, optional): Optional dictionary of keyword
+                    Default: ``1``
+            attack_kwargs (dict, optional): Optional dictionary of keyword
                     arguments provided to attack function
-            correct_fn_kwargs (dictionary, optional): Optional dictionary of keyword
+            correct_fn_kwargs (dict, optional): Optional dictionary of keyword
                     arguments provided to correct function
 
         Returns:

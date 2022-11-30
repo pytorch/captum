@@ -13,14 +13,14 @@ DEFAULT_IDENTIFIER = "default_identifier"
 
 
 class RangeDataset(Dataset):
-    def __init__(self, low, high, num_features):
+    def __init__(self, low, high, num_features) -> None:
         self.samples = (
             torch.arange(start=low, end=high, dtype=torch.float)
             .repeat(num_features, 1)
             .transpose(1, 0)
         )
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self.samples)
 
     def __getitem__(self, idx):

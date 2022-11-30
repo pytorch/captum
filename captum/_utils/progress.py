@@ -5,14 +5,16 @@ import warnings
 from time import time
 from typing import cast, Iterable, Sized, TextIO
 
+from captum._utils.typing import Literal
+
 try:
-    from tqdm import tqdm
+    from tqdm.auto import tqdm
 except ImportError:
     tqdm = None
 
 
 class DisableErrorIOWrapper(object):
-    def __init__(self, wrapped: TextIO):
+    def __init__(self, wrapped: TextIO) -> None:
         """
         The wrapper around a TextIO object to ignore write errors like tqdm
         https://github.com/tqdm/tqdm/blob/bcce20f771a16cb8e4ac5cc5b2307374a2c0e535/tqdm/utils.py#L131
@@ -40,6 +42,38 @@ class DisableErrorIOWrapper(object):
         return self._wrapped_run(self._wrapped.flush, *args, **kwargs)
 
 
+class NullProgress:
+    """Passthrough class that implements the progress API.
+
+    This class implements the tqdm and SimpleProgressBar api but
+    does nothing. This class can be used as a stand-in for an
+    optional progressbar, most commonly in the case of nested
+    progress bars.
+    """
+
+    def __init__(self, iterable: Iterable = None, *args, **kwargs):
+        del args, kwargs
+        self.iterable = iterable
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_value, exc_traceback) -> Literal[False]:
+        return False
+
+    def __iter__(self):
+        if not self.iterable:
+            return
+        for it in self.iterable:
+            yield it
+
+    def update(self, amount: int = 1):
+        pass
+
+    def close(self):
+        pass
+
+
 class SimpleProgress:
     def __init__(
         self,
@@ -48,13 +82,16 @@ class SimpleProgress:
         total: int = None,
         file: TextIO = None,
         mininterval: float = 0.5,
-    ):
+    ) -> None:
         """
         Simple progress output used when tqdm is unavailable.
-        Same as tqdm, output to stderr channel
+        Same as tqdm, output to stderr channel.
+        If you want to do nested Progressbars with simple progress
+        the parent progress bar should be used as a context
+        (i.e. with statement) and the nested progress bar should be
+        created inside this context.
         """
         self.cur = 0
-
         self.iterable = iterable
         self.total = total
         if total is None and hasattr(iterable, "__len__"):
@@ -69,6 +106,16 @@ class SimpleProgress:
         self.mininterval = mininterval
         self.last_print_t = 0.0
         self.closed = False
+        self._is_parent = False
+
+    def __enter__(self):
+        self._is_parent = True
+        self._refresh()
+        return self
+
+    def __exit__(self, exc_type, exc_value, exc_traceback) -> Literal[False]:
+        self.close()
+        return False
 
     def __iter__(self):
         if self.closed or not self.iterable:
@@ -87,8 +134,8 @@ class SimpleProgress:
         else:
             # e.g., progress: .....
             progress_str += "." * self.cur
-
-        print("\r" + progress_str, end="", file=self.file)
+        end = "\n" if self._is_parent else ""
+        print("\r" + progress_str, end=end, file=self.file)
 
     def update(self, amount: int = 1):
         if self.closed:
@@ -101,7 +148,7 @@ class SimpleProgress:
             self.last_print_t = cur_t
 
     def close(self):
-        if not self.closed:
+        if not self.closed and not self._is_parent:
             self._refresh()
             print(file=self.file)  # end with new line
             self.closed = True

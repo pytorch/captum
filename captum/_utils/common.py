@@ -18,6 +18,27 @@ from torch import device, Tensor
 from torch.nn import Module
 
 
+def _parse_version(v: str) -> Tuple[int, ...]:
+    """
+    Parse version strings into tuples for comparison.
+
+    Versions should be in the form of "<major>.<minor>.<patch>", "<major>.<minor>",
+    or "<major>". The "dev", "post" and other letter portions of the given version will
+    be ignored.
+
+    Args:
+
+        v (str): A version string.
+
+    Returns:
+        version_tuple (tuple[int]): A tuple of integer values to use for version
+            comparison.
+    """
+    v = [n for n in v.split(".") if n.isdigit()]
+    assert v != []
+    return tuple(map(int, v))
+
+
 class ExpansionTypes(Enum):
     repeat = 1
     repeat_interleave = 2
@@ -500,9 +521,11 @@ def _select_targets(output: Tensor, target: TargetType) -> Tensor:
                 ]
             )
         else:
-            raise AssertionError("Target element type in list is not valid.")
+            raise AssertionError(
+                f"Target element type {type(target[0])} in list is not valid."
+            )
     else:
-        raise AssertionError("Target type %r is not valid." % target)
+        raise AssertionError(f"Target type {type(target)} is not valid.")
 
 
 def _contains_slice(target: Union[int, Tuple[Union[int, slice], ...]]) -> bool:
@@ -661,10 +684,6 @@ def _get_module_from_name(model: Module, layer_name: str) -> Any:
 def _register_backward_hook(
     module: Module, hook: Callable, attr_obj: Any
 ) -> List[torch.utils.hooks.RemovableHandle]:
-    # Special case for supporting output attributions for neuron methods
-    # This can be removed after deprecation of neuron output attributions
-    # for NeuronDeepLift, NeuronDeconvolution, and NeuronGuidedBackprop
-    # in v0.6.0
     grad_out = {}
 
     def forward_hook(

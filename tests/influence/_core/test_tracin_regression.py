@@ -12,20 +12,23 @@ from captum.influence._core.tracincp_fast_rand_proj import (
 from parameterized import parameterized
 from tests.helpers.basic import assertTensorAlmostEqual, BaseTest
 from tests.influence._utils.common import (
+    _isSorted,
+    _wrap_model_in_dataparallel,
     build_test_name_func,
     CoefficientNet,
     DataInfluenceConstructor,
     IdentityDataset,
-    isSorted,
     RangeDataset,
 )
 
 
 class TestTracInRegression(BaseTest):
-    def _test_tracin_regression_setup(self, tmpdir: str, features: int):
+    def _test_tracin_regression_setup(
+        self, tmpdir: str, features: int, use_gpu: bool = False
+    ):
         low = 1
         high = 17
-        dataset = RangeDataset(low, high, features)
+        dataset = RangeDataset(low, high, features, use_gpu)
         net = CoefficientNet(in_features=features)
 
         checkpoint_name = "-".join(["checkpoint-reg", "0" + ".pt"])
@@ -35,33 +38,84 @@ class TestTracInRegression(BaseTest):
 
         for i, weight in enumerate(weights):
             net.fc1.weight.data.fill_(weight)
+            net_adjusted = _wrap_model_in_dataparallel(net) if use_gpu else net
             checkpoint_name = "-".join(["checkpoint-reg", str(i + 1) + ".pt"])
-            torch.save(net.state_dict(), os.path.join(tmpdir, checkpoint_name))
+            torch.save(net_adjusted.state_dict(), os.path.join(tmpdir, checkpoint_name))
 
-        return dataset, net
+        return dataset, net_adjusted
 
-    @parameterized.expand(
-        [
-            (reduction, constructor, mode, dim)
-            for dim in [1, 20]
+    use_gpu_list = (
+        [True, False]
+        if torch.cuda.is_available() and torch.cuda.device_count() != 0
+        else [False]
+    )
+
+    param_list = []
+    for use_gpu in use_gpu_list:
+        for dim in [1, 20]:
             for (mode, reduction, constructor) in [
-                ("check_idx", "none", DataInfluenceConstructor(TracInCP)),
-                ("sample_wise_trick", None, DataInfluenceConstructor(TracInCP)),
-                ("check_idx", "sum", DataInfluenceConstructor(TracInCPFast)),
-                ("check_idx", "sum", DataInfluenceConstructor(TracInCPFastRandProj)),
-                ("check_idx", "mean", DataInfluenceConstructor(TracInCPFast)),
-                ("check_idx", "mean", DataInfluenceConstructor(TracInCPFastRandProj)),
+                (
+                    "check_idx",
+                    "none",
+                    DataInfluenceConstructor(TracInCP, name="TracInCP_all_layers"),
+                ),
+                (
+                    "check_idx",
+                    "none",
+                    DataInfluenceConstructor(
+                        TracInCP,
+                        name="TracInCP_fc1",
+                        layers=["module.fc1"] if use_gpu else ["fc1"],
+                    ),
+                ),
+                (
+                    "sample_wise_trick",
+                    None,
+                    DataInfluenceConstructor(TracInCP, name="TracInCP_fc1"),
+                ),
+                (
+                    "check_idx",
+                    "sum",
+                    DataInfluenceConstructor(
+                        TracInCPFast, name="TracInCPFast_last_fc_layer"
+                    ),
+                ),
+                (
+                    "check_idx",
+                    "sum",
+                    DataInfluenceConstructor(
+                        TracInCPFastRandProj, name="TracInCPFast_last_fc_layer"
+                    ),
+                ),
+                (
+                    "check_idx",
+                    "mean",
+                    DataInfluenceConstructor(
+                        TracInCPFast, name="TracInCPFast_last_fc_layer"
+                    ),
+                ),
+                (
+                    "check_idx",
+                    "mean",
+                    DataInfluenceConstructor(
+                        TracInCPFastRandProj, name="TracInCPFastRandProj_last_fc_layer"
+                    ),
+                ),
                 (
                     "check_idx",
                     "sum",
                     DataInfluenceConstructor(
                         TracInCPFastRandProj,
-                        name="TracInCPFastRandProj1DimensionalProjection",
+                        name="TracInCPFastRandProj1DimensionalProjection_last_fc_layer",
                         projection_dim=1,
                     ),
                 ),
-            ]
-        ],
+            ]:
+                if not (mode == "sample_wise_trick" and use_gpu):
+                    param_list.append((reduction, constructor, mode, dim, use_gpu))
+
+    @parameterized.expand(
+        param_list,
         name_func=build_test_name_func(args_to_skip=["reduction"]),
     )
     def test_tracin_regression(
@@ -70,12 +124,17 @@ class TestTracInRegression(BaseTest):
         tracin_constructor: Callable,
         mode: str,
         features: int,
+        use_gpu: bool,
     ) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
 
             batch_size = 4
 
-            dataset, net = self._test_tracin_regression_setup(tmpdir, features)
+            dataset, net = self._test_tracin_regression_setup(
+                tmpdir,
+                features,
+                use_gpu,
+            )  # and not mode == 'sample_wise_trick'
 
             # check influence scores of training data
 
@@ -85,6 +144,10 @@ class TestTracInRegression(BaseTest):
             test_inputs = (
                 torch.arange(17, 33, dtype=torch.float).unsqueeze(1).repeat(1, features)
             )
+
+            if use_gpu:
+                test_inputs = test_inputs.cuda()
+
             test_labels = test_inputs
 
             self.assertTrue(callable(tracin_constructor))
@@ -119,7 +182,7 @@ class TestTracInRegression(BaseTest):
                 # check that top influence is one with maximal value
                 # (and hence gradient)
                 for i in range(len(idx)):
-                    self.assertTrue(isSorted(idx[i]))
+                    self.assertTrue(_isSorted(idx[i]))
 
             if mode == "sample_wise_trick":
 
@@ -248,7 +311,13 @@ class TestTracInRegression(BaseTest):
     @parameterized.expand(
         [
             ("check_idx", "none", DataInfluenceConstructor(TracInCP)),
+            ("check_idx", "none", DataInfluenceConstructor(TracInCP, layers=["fc1"])),
             ("sample_wise_trick", None, DataInfluenceConstructor(TracInCP)),
+            (
+                "sample_wise_trick",
+                None,
+                DataInfluenceConstructor(TracInCP, layers=["fc1"]),
+            ),
             ("check_idx", "sum", DataInfluenceConstructor(TracInCPFast)),
             ("check_idx", "sum", DataInfluenceConstructor(TracInCPFastRandProj)),
             ("check_idx", "mean", DataInfluenceConstructor(TracInCPFast)),

@@ -18,18 +18,35 @@ from torch.nn import Module
 from torch.utils.data import DataLoader, Dataset
 
 
-def isSorted(x, key=lambda x: x, descending=True):
+def _isSorted(x, key=lambda x: x, descending=True):
     if descending:
         return all([key(x[i]) >= key(x[i + 1]) for i in range(len(x) - 1)])
     else:
         return all([key(x[i]) <= key(x[i + 1]) for i in range(len(x) - 1)])
 
 
-class ExplicitDataset(Dataset):
-    def __init__(self, samples, labels):
-        self.samples, self.labels = samples, labels
+def _wrap_model_in_dataparallel(net):
+    alt_device_ids = [0] + [x for x in range(torch.cuda.device_count() - 1, 0, -1)]
+    net = net.cuda()
+    return torch.nn.DataParallel(net, device_ids=alt_device_ids)
 
-    def __len__(self):
+
+def _move_sample_to_cuda(samples):
+    return [s.cuda() for s in samples]
+
+
+class ExplicitDataset(Dataset):
+    def __init__(self, samples, labels, use_gpu=False) -> None:
+        self.samples, self.labels = samples, labels
+        if use_gpu:
+            self.samples = (
+                _move_sample_to_cuda(self.samples)
+                if isinstance(self.samples, list)
+                else self.samples.cuda()
+            )
+            self.labels = self.labels.cuda()
+
+    def __len__(self) -> int:
         return len(self.samples)
 
     def __getitem__(self, idx):
@@ -37,10 +54,17 @@ class ExplicitDataset(Dataset):
 
 
 class UnpackDataset(Dataset):
-    def __init__(self, samples, labels):
+    def __init__(self, samples, labels, use_gpu=False) -> None:
         self.samples, self.labels = samples, labels
+        if use_gpu:
+            self.samples = (
+                _move_sample_to_cuda(self.samples)
+                if isinstance(self.samples, list)
+                else self.samples.cuda()
+            )
+            self.labels = self.labels.cuda()
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self.samples[0])
 
     def __getitem__(self, idx):
@@ -52,23 +76,29 @@ class UnpackDataset(Dataset):
 
 
 class IdentityDataset(ExplicitDataset):
-    def __init__(self, num_features):
+    def __init__(self, num_features, use_gpu=False) -> None:
         self.samples = torch.diag(torch.ones(num_features))
         self.labels = torch.zeros(num_features).unsqueeze(1)
+        if use_gpu:
+            self.samples = self.samples.cuda()
+            self.labels = self.labels.cuda()
 
 
 class RangeDataset(ExplicitDataset):
-    def __init__(self, low, high, num_features):
+    def __init__(self, low, high, num_features, use_gpu=False) -> None:
         self.samples = (
             torch.arange(start=low, end=high, dtype=torch.float)
             .repeat(num_features, 1)
             .transpose(1, 0)
         )
         self.labels = torch.arange(start=low, end=high, dtype=torch.float).unsqueeze(1)
+        if use_gpu:
+            self.samples = self.samples.cuda()
+            self.labels = self.labels.cuda()
 
 
 class BinaryDataset(ExplicitDataset):
-    def __init__(self):
+    def __init__(self, use_gpu=False) -> None:
         self.samples = F.normalize(
             torch.stack(
                 (
@@ -105,10 +135,11 @@ class BinaryDataset(ExplicitDataset):
                 torch.Tensor([-1]).repeat(12, 1),
             )
         )
+        super().__init__(self.samples, self.labels, use_gpu)
 
 
 class CoefficientNet(nn.Module):
-    def __init__(self, in_features=1):
+    def __init__(self, in_features=1) -> None:
         super().__init__()
         self.fc1 = nn.Linear(in_features, 1, bias=False)
         self.fc1.weight.data.fill_(0.01)
@@ -119,7 +150,7 @@ class CoefficientNet(nn.Module):
 
 
 class BasicLinearNet(nn.Module):
-    def __init__(self, in_features, hidden_nodes, out_features):
+    def __init__(self, in_features, hidden_nodes, out_features) -> None:
         super().__init__()
         self.linear1 = nn.Linear(in_features, hidden_nodes)
         self.linear2 = nn.Linear(hidden_nodes, out_features)
@@ -130,7 +161,7 @@ class BasicLinearNet(nn.Module):
 
 
 class MultLinearNet(nn.Module):
-    def __init__(self, in_features, hidden_nodes, out_features, num_inputs):
+    def __init__(self, in_features, hidden_nodes, out_features, num_inputs) -> None:
         super().__init__()
         self.pre = nn.Linear(in_features * num_inputs, in_features)
         self.linear1 = nn.Linear(in_features, hidden_nodes)
@@ -148,7 +179,9 @@ class MultLinearNet(nn.Module):
         return torch.tanh(self.linear2(x))
 
 
-def get_random_model_and_data(tmpdir, unpack_inputs, return_test_data=True):
+def get_random_model_and_data(
+    tmpdir, unpack_inputs, return_test_data=True, use_gpu=False
+):
 
     in_features, hidden_nodes, out_features = 5, 4, 3
     num_inputs = 2
@@ -169,7 +202,8 @@ def get_random_model_and_data(tmpdir, unpack_inputs, return_test_data=True):
                 3, 4, (in_features, in_features * num_inputs)
             )
         checkpoint_name = "-".join(["checkpoint-reg", str(i + 1) + ".pt"])
-        torch.save(net.state_dict(), os.path.join(tmpdir, checkpoint_name))
+        net_adjusted = _wrap_model_in_dataparallel(net) if use_gpu else net
+        torch.save(net_adjusted.state_dict(), os.path.join(tmpdir, checkpoint_name))
 
     num_samples = 50
     num_train = 32
@@ -189,15 +223,24 @@ def get_random_model_and_data(tmpdir, unpack_inputs, return_test_data=True):
         test_samples = all_samples[num_train:]
 
     dataset = (
-        ExplicitDataset(train_samples, train_labels)
+        ExplicitDataset(train_samples, train_labels, use_gpu)
         if not unpack_inputs
-        else UnpackDataset(train_samples, train_labels)
+        else UnpackDataset(train_samples, train_labels, use_gpu)
     )
 
     if return_test_data:
-        return net, dataset, test_samples, test_labels
+        return (
+            _wrap_model_in_dataparallel(net) if use_gpu else net,
+            dataset,
+            _move_sample_to_cuda(test_samples)
+            if isinstance(test_samples, list) and use_gpu
+            else test_samples.cuda()
+            if use_gpu
+            else test_samples,
+            test_labels.cuda() if use_gpu else test_labels,
+        )
     else:
-        return net, dataset
+        return _wrap_model_in_dataparallel(net) if use_gpu else net, dataset
 
 
 class DataInfluenceConstructor:
@@ -206,12 +249,12 @@ class DataInfluenceConstructor:
 
     def __init__(
         self, data_influence_class: type, name: Optional[str] = None, **kwargs
-    ):
+    ) -> None:
         self.data_influence_class = data_influence_class
         self.name = name if name else data_influence_class.__name__
         self.kwargs = kwargs
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return self.name
 
     def __call__(

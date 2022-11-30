@@ -86,7 +86,7 @@ class NeuronDeepLift(NeuronAttribution, GradientAttribution):
         r"""
         Args:
 
-            inputs (tensor or tuple of tensors):  Input for which layer
+            inputs (Tensor or tuple[Tensor, ...]): Input for which layer
                         attributions are computed. If forward_func takes a
                         single tensor as input, a single input tensor should be
                         provided. If forward_func takes multiple tensors as input,
@@ -95,7 +95,7 @@ class NeuronDeepLift(NeuronAttribution, GradientAttribution):
                         corresponds to the number of examples (aka batch size),
                         and if multiple input tensors are provided, the examples
                         must be aligned appropriately.
-            neuron_selector (int, callable, or tuple of ints or slices):
+            neuron_selector (int, Callable, tuple[int], or slice):
                         Selector for neuron
                         in given layer for which attribution is desired.
                         Neuron selector can be provided as:
@@ -116,7 +116,7 @@ class NeuronDeepLift(NeuronAttribution, GradientAttribution):
                           indexed output tensor is used for attribution. Note
                           that specifying a slice of a tensor would amount to
                           computing the attribution of the sum of the specified
-                          neurons, and not the individual neurons independantly.
+                          neurons, and not the individual neurons independently.
 
                         - a callable, which should
                           take the target layer as input (single tensor or tuple
@@ -129,7 +129,7 @@ class NeuronDeepLift(NeuronAttribution, GradientAttribution):
                           or a 1D tensor with length equal to batch_size (one scalar
                           per input example)
 
-            baselines (scalar, tensor, tuple of scalars or tensors, optional):
+            baselines (scalar, Tensor, tuple of scalar, or Tensor, optional):
                         Baselines define reference samples that are compared with
                         the inputs. In order to assign attribution scores DeepLift
                         computes the differences between the inputs/outputs and
@@ -161,7 +161,7 @@ class NeuronDeepLift(NeuronAttribution, GradientAttribution):
                         use zero scalar corresponding to each input tensor.
 
                         Default: None
-            additional_forward_args (any, optional): If the forward function
+            additional_forward_args (Any, optional): If the forward function
                         requires additional arguments other than the inputs for
                         which attributions should not be computed, this argument
                         can be provided. It must be either a single additional
@@ -183,7 +183,7 @@ class NeuronDeepLift(NeuronAttribution, GradientAttribution):
                         attribute to the input or output, is a single tensor.
                         Support for multiple tensors will be added later.
                         Default: False
-            custom_attribution_func (callable, optional): A custom function for
+            custom_attribution_func (Callable, optional): A custom function for
                         computing final attribution scores. This function can take
                         at least one and at most three arguments with the
                         following signature:
@@ -203,7 +203,7 @@ class NeuronDeepLift(NeuronAttribution, GradientAttribution):
 
         Returns:
             **attributions** or 2-element tuple of **attributions**, **delta**:
-            - **attributions** (*tensor* or tuple of *tensors*):
+            - **attributions** (*Tensor* or *tuple[Tensor, ...]*):
                 Computes attributions using Deeplift's rescale rule for
                 particular neuron with respect to each input feature.
                 Attributions will always be the same size as the provided
@@ -258,12 +258,13 @@ class NeuronDeepLiftShap(NeuronAttribution, GradientAttribution):
     by the input flag `attribute_to_layer_input`.
     More details about the algorithm can be found here:
 
-    http://papers.nips.cc/paper/7062-a-unified-approach-to-interpreting-model-predictions.pdf
+    https://papers.nips.cc/paper/7062-a-unified-approach-to-interpreting-model-predictions.pdf
 
     Note that the explanation model:
         1. Assumes that input features are independent of one another
         2. Is linear, meaning that the explanations are modeled through
             the additive composition of feature effects.
+
     Although, it assumes a linear model for each explanation, the overall
     model across multiple explanations can be complex and non-linear.
     """
@@ -274,7 +275,14 @@ class NeuronDeepLiftShap(NeuronAttribution, GradientAttribution):
         r"""
         Args:
 
+<<<<<<< HEAD
             model (nn.Module):  The reference to PyTorch model instance.
+=======
+            model (nn.Module): The reference to PyTorch model instance. Model cannot
+                        contain any in-place nonlinear submodules; these are not
+                        supported by the register_full_backward_hook PyTorch API
+                        starting from PyTorch v1.9.
+>>>>>>> c076410b23352de14043222bad7e6865047925b4
             layer (torch.nn.Module): Layer for which neuron attributions are computed.
                         Attributions for a particular neuron for the input or output
                         of this layer are computed using the argument neuron_selector
@@ -316,7 +324,7 @@ class NeuronDeepLiftShap(NeuronAttribution, GradientAttribution):
         r"""
         Args:
 
-            inputs (tensor or tuple of tensors):  Input for which layer
+            inputs (Tensor or tuple[Tensor, ...]): Input for which layer
                         attributions are computed. If forward_func takes a
                         single tensor as input, a single input tensor should be
                         provided. If forward_func takes multiple tensors as input,
@@ -325,7 +333,7 @@ class NeuronDeepLiftShap(NeuronAttribution, GradientAttribution):
                         corresponds to the number of examples (aka batch size),
                         and if multiple input tensors are provided, the examples
                         must be aligned appropriately.
-            neuron_selector (int, callable, or tuple of ints or slices):
+            neuron_selector (int, Callable, tuple[int], or slice):
                         Selector for neuron
                         in given layer for which attribution is desired.
                         Neuron selector can be provided as:
@@ -346,7 +354,7 @@ class NeuronDeepLiftShap(NeuronAttribution, GradientAttribution):
                           indexed output tensor is used for attribution. Note
                           that specifying a slice of a tensor would amount to
                           computing the attribution of the sum of the specified
-                          neurons, and not the individual neurons independantly.
+                          neurons, and not the individual neurons independently.
 
                         - a callable, which should
                           take the target layer as input (single tensor or tuple
@@ -358,7 +366,8 @@ class NeuronDeepLiftShap(NeuronAttribution, GradientAttribution):
                           this function returns either a tensor with one element
                           or a 1D tensor with length equal to batch_size (one scalar
                           per input example)
-            baselines (tensor, tuple of tensors, callable):
+
+            baselines (Tensor, tuple[Tensor, ...], or Callable):
                         Baselines define reference samples that are compared with
                         the inputs. In order to assign attribution scores DeepLift
                         computes the differences between the inputs/outputs and
@@ -383,7 +392,7 @@ class NeuronDeepLiftShap(NeuronAttribution, GradientAttribution):
 
                         It is recommended that the number of samples in the baselines'
                         tensors is larger than one.
-            additional_forward_args (any, optional): If the forward function
+            additional_forward_args (Any, optional): If the forward function
                         requires additional arguments other than the inputs for
                         which attributions should not be computed, this argument
                         can be provided. It must be either a single additional
@@ -405,7 +414,7 @@ class NeuronDeepLiftShap(NeuronAttribution, GradientAttribution):
                         attribute to the input or output, is a single tensor.
                         Support for multiple tensors will be added later.
                         Default: False
-            custom_attribution_func (callable, optional): A custom function for
+            custom_attribution_func (Callable, optional): A custom function for
                         computing final attribution scores. This function can take
                         at least one and at most three arguments with the
                         following signature:
@@ -425,7 +434,7 @@ class NeuronDeepLiftShap(NeuronAttribution, GradientAttribution):
 
         Returns:
             **attributions** or 2-element tuple of **attributions**, **delta**:
-            - **attributions** (*tensor* or tuple of *tensors*):
+            - **attributions** (*Tensor* or *tuple[Tensor, ...]*):
                         Computes attributions using Deeplift's rescale rule for
                         particular neuron with respect to each input feature.
                         Attributions will always be the same size as the provided

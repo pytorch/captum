@@ -154,7 +154,7 @@ class DeepLift(GradientAttribution):
         r"""
         Args:
 
-            inputs (tensor or tuple of tensors):  Input for which
+            inputs (Tensor or tuple[Tensor, ...]): Input for which
                         attributions are computed. If forward_func takes a single
                         tensor as input, a single input tensor should be provided.
                         If forward_func takes multiple tensors as input, a tuple
@@ -163,7 +163,7 @@ class DeepLift(GradientAttribution):
                         to the number of examples (aka batch size), and if
                         multiple input tensors are provided, the examples must
                         be aligned appropriately.
-            baselines (scalar, tensor, tuple of scalars or tensors, optional):
+            baselines (scalar, Tensor, tuple of scalar, or Tensor, optional):
                         Baselines define reference samples that are compared with
                         the inputs. In order to assign attribution scores DeepLift
                         computes the differences between the inputs/outputs and
@@ -195,7 +195,7 @@ class DeepLift(GradientAttribution):
                         use zero scalar corresponding to each input tensor.
 
                         Default: None
-            target (int, tuple, tensor or list, optional):  Output indices for
+            target (int, tuple, Tensor, or list, optional): Output indices for
                         which gradients are computed (for classification cases,
                         this is usually the target class).
                         If the network returns a scalar value per example,
@@ -220,7 +220,7 @@ class DeepLift(GradientAttribution):
                           target for the corresponding example.
 
                         Default: None
-            additional_forward_args (any, optional): If the forward function
+            additional_forward_args (Any, optional): If the forward function
                         requires additional arguments other than the inputs for
                         which attributions should not be computed, this argument
                         can be provided. It must be either a single additional
@@ -236,7 +236,7 @@ class DeepLift(GradientAttribution):
                         is set to True convergence delta will be returned in
                         a tuple following attributions.
                         Default: False
-            custom_attribution_func (callable, optional): A custom function for
+            custom_attribution_func (Callable, optional): A custom function for
                         computing final attribution scores. This function can take
                         at least one and at most three arguments with the
                         following signature:
@@ -257,7 +257,7 @@ class DeepLift(GradientAttribution):
 
         Returns:
             **attributions** or 2-element tuple of **attributions**, **delta**:
-            - **attributions** (*tensor* or tuple of *tensors*):
+            - **attributions** (*Tensor* or *tuple[Tensor, ...]*):
                 Attribution score computed based on DeepLift rescale rule with respect
                 to each input feature. Attributions will always be
                 the same size as the provided inputs, with each value
@@ -265,14 +265,14 @@ class DeepLift(GradientAttribution):
                 If a single tensor is provided as inputs, a single tensor is
                 returned. If a tuple is provided for inputs, a tuple of
                 corresponding sized tensors is returned.
-            - **delta** (*tensor*, returned if return_convergence_delta=True):
+            - **delta** (*Tensor*, returned if return_convergence_delta=True):
                 This is computed using the property that
                 the total sum of forward_func(inputs) - forward_func(baselines)
                 must equal the total sum of the attributions computed
                 based on DeepLift's rescale rule.
                 Delta is calculated per example, meaning that the number of
                 elements in returned delta tensor is equal to the number of
-                of examples in input.
+                examples in input.
                 Note that the logic described for deltas is guaranteed when the
                 default logic for attribution computations is used, meaning that the
                 `custom_attribution_func=None`, otherwise it is not guaranteed and
@@ -543,12 +543,14 @@ class DeepLiftShap(DeepLift):
     each baseline and averages resulting attributions.
     More details about the algorithm can be found here:
 
-    http://papers.nips.cc/paper/7062-a-unified-approach-to-interpreting-model-predictions.pdf
+    https://papers.nips.cc/paper/7062-a-unified-approach-to-interpreting-model-predictions.pdf
 
     Note that the explanation model:
+
         1. Assumes that input features are independent of one another
         2. Is linear, meaning that the explanations are modeled through
             the additive composition of feature effects.
+
     Although, it assumes a linear model for each explanation, the overall
     model across multiple explanations can be complex and non-linear.
     """
@@ -557,7 +559,13 @@ class DeepLiftShap(DeepLift):
         r"""
         Args:
 
+<<<<<<< HEAD
             model (nn.Module):  The reference to PyTorch model instance.
+=======
+            model (nn.Module): The reference to PyTorch model instance. Model cannot
+                        contain any in-place nonlinear submodules; these are not
+                        supported by the register_full_backward_hook PyTorch API.
+>>>>>>> c076410b23352de14043222bad7e6865047925b4
             multiply_by_inputs (bool, optional): Indicates whether to factor
                         model inputs' multiplier in the final attribution scores.
                         In the literature this is also known as local vs global
@@ -624,7 +632,7 @@ class DeepLiftShap(DeepLift):
         r"""
         Args:
 
-            inputs (tensor or tuple of tensors):  Input for which
+            inputs (Tensor or tuple[Tensor, ...]): Input for which
                         attributions are computed. If forward_func takes a single
                         tensor as input, a single input tensor should be provided.
                         If forward_func takes multiple tensors as input, a tuple
@@ -633,7 +641,7 @@ class DeepLiftShap(DeepLift):
                         to the number of examples (aka batch size), and if
                         multiple input tensors are provided, the examples must
                         be aligned appropriately.
-            baselines (tensor, tuple of tensors, callable):
+            baselines (Tensor, tuple[Tensor, ...], or Callable):
                         Baselines define reference samples that are compared with
                         the inputs. In order to assign attribution scores DeepLift
                         computes the differences between the inputs/outputs and
@@ -658,7 +666,7 @@ class DeepLiftShap(DeepLift):
 
                         It is recommended that the number of samples in the baselines'
                         tensors is larger than one.
-            target (int, tuple, tensor or list, optional):  Output indices for
+            target (int, tuple, Tensor, or list, optional): Output indices for
                         which gradients are computed (for classification cases,
                         this is usually the target class).
                         If the network returns a scalar value per example,
@@ -683,7 +691,7 @@ class DeepLiftShap(DeepLift):
                           target for the corresponding example.
 
                         Default: None
-            additional_forward_args (any, optional): If the forward function
+            additional_forward_args (Any, optional): If the forward function
                         requires additional arguments other than the inputs for
                         which attributions should not be computed, this argument
                         can be provided. It must be either a single additional
@@ -699,7 +707,7 @@ class DeepLiftShap(DeepLift):
                         is set to True convergence delta will be returned in
                         a tuple following attributions.
                         Default: False
-            custom_attribution_func (callable, optional): A custom function for
+            custom_attribution_func (Callable, optional): A custom function for
                         computing final attribution scores. This function can take
                         at least one and at most three arguments with the
                         following signature:
@@ -719,7 +727,7 @@ class DeepLiftShap(DeepLift):
 
         Returns:
             **attributions** or 2-element tuple of **attributions**, **delta**:
-            - **attributions** (*tensor* or tuple of *tensors*):
+            - **attributions** (*Tensor* or *tuple[Tensor, ...]*):
                         Attribution score computed based on DeepLift rescale rule with
                         respect to each input feature. Attributions will always be
                         the same size as the provided inputs, with each value
@@ -727,7 +735,7 @@ class DeepLiftShap(DeepLift):
                         If a single tensor is provided as inputs, a single tensor is
                         returned. If a tuple is provided for inputs, a tuple of
                         corresponding sized tensors is returned.
-            - **delta** (*tensor*, returned if return_convergence_delta=True):
+            - **delta** (*Tensor*, returned if return_convergence_delta=True):
                         This is computed using the property that the
                         total sum of forward_func(inputs) - forward_func(baselines)
                         must be very close to the total sum of attributions

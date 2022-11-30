@@ -1,5 +1,5 @@
 ---
-id: algorithms
+id: attribution_algorithms
 title: Algorithm Descriptions
 ---
 
@@ -37,7 +37,7 @@ To learn more about GradientSHAP, visit the following resources:
 - [Original Implementation](https://github.com/slundberg/shap/#deep-learning-example-with-gradientexplainer-tensorflowkeraspytorch-models)
 
 ### DeepLIFT
-DeepLIFT is a back-propagation based approach that attributes a change to inputs based on the differences between the inputs and corresponding references (or baselines) for non-linear activations.  As such, DeepLIFT seeks to explain the difference in the output from reference in terms of the difference in inputs from reference.  DeepLIFT uses the concept of multipliers to "blame" specific neurons for the difference in output.  The definition of a multiplier is as follows (from [original paper](https://arxiv.org/pdf/1704.02685.pdf)):
+DeepLIFT is a back-propagation based approach that attributes a change to inputs based on the differences between the inputs and corresponding references (or baselines) for non-linear activations.  As such, DeepLIFT seeks to explain the difference in the output from reference in terms of the difference in inputs from reference.  DeepLIFT uses the concept of multipliers to "blame" specific neurons for the difference in output.  The definition of a multiplier is as follows (from [original paper](https://arxiv.org/abs/1704.02685)):
 ![deepLIFT_eq1](/img/deepLIFT_multipliers_eq1.png)
 *x is the input neuron with a difference from reference Δx, and t is the target neuron with a difference from reference Δt. C is then the contribution of Δx to Δt.*
 
@@ -62,7 +62,7 @@ To learn more about DeepLIFT SHAP, visit the following resources:
 Saliency is a simple approach for computing input attribution, returning the gradient of the output with respect to the input. This approach can be understood as taking a first-order Taylor expansion of the network at the input, and the gradients are simply the coefficients of each feature in the linear representation of the model. The absolute value of these coefficients can be taken to represent feature importance.
 
 To learn more about Saliency, visit the following resources:
-- [Original paper](https://arxiv.org/pdf/1312.6034.pdf)
+- [Original paper](https://arxiv.org/abs/1312.6034)
 
 ### Input X Gradient
 Input X Gradient is an extension of the saliency approach, taking the gradients of the output with respect to the input and multiplying by the input feature values. One intuition for this approach considers a linear model; the gradients are simply the coefficients of each input, and the product of the input with a coefficient corresponds to the total contribution of the feature to the linear model's output.
@@ -141,17 +141,17 @@ Conductance combines the neuron activation with the partial derivatives of both 
 Conductance builds on Integrated Gradients (IG) by looking at the flow of IG attribution which occurs through the hidden neuron.  The formal definition of total conductance of a hidden neuron *y* (from the [original paper](https://arxiv.org/abs/1805.12233)) is as follows:
 ![conductance_eq1](/img/conductance_eq_1.png)
 
-For more efficient computation of layer conductance, we use the idea presented in this [paper](https://arxiv.org/pdf/1807.09946.pdf) to avoid computing the gradient of each neuron with respect to the input.
+For more efficient computation of layer conductance, we use the idea presented in this [paper](https://arxiv.org/abs/1807.09946) to avoid computing the gradient of each neuron with respect to the input.
 
 To learn more about Conductance, visit the following resources:
 - [Original Paper](https://arxiv.org/abs/1805.12233)
-- [Computationally Efficient Measures of Internal Neuron Importance](https://arxiv.org/pdf/1807.09946.pdf)
+- [Computationally Efficient Measures of Internal Neuron Importance](https://arxiv.org/abs/1807.09946)
 
 ### Internal Influence
 Internal Influence approximates the integral of gradients with respect to a particular layer along the path from a baseline input to the given input. This method is similar to applying integrated gradients, integrating the gradient with respect to the layer (rather than the input).
 
 To learn more about Internal Influence, visit the following resources:
-- [Original Paper](https://arxiv.org/pdf/1802.03788.pdf)
+- [Original Paper](https://arxiv.org/abs/1802.03788)
 
 ### Layer Activation
 Layer Activation is a simple approach for computing layer attribution, returning the activation of each neuron in the identified layer.
@@ -208,7 +208,7 @@ Note that based on this definition, summing the neuron conductance (over all inp
 
 To learn more about Conductance, visit the following resources:
 - [Original Paper](https://arxiv.org/abs/1805.12233)
-- [Computationally Efficient Measures of Internal Neuron Importance](https://arxiv.org/pdf/1807.09946.pdf)
+- [Computationally Efficient Measures of Internal Neuron Importance](https://arxiv.org/abs/1807.09946)
 
 ### Neuron Gradient
 Neuron gradient is the analog of the saliency method for a particular neuron in a network. It simply computes the gradient of the neuron output with respect to the model input. Like Saliency, this approach can be understood as taking a first-order Taylor expansion of the neuron's output at the given input, and the gradients correspond to the coefficients of each feature in the linear representation of the model.
@@ -259,9 +259,9 @@ To learn more about Noise Tunnel methods, visit the following resources:
 Infidelity measures the mean squared error between model explanations in the magnitudes of input perturbations and predictor function's changes to those input perturbtaions. Infidelity is defined as follows:
 ![infidelity_eq](/img/infidelity_eq.png)
 It is derived from the completeness property of well-known attribution algorithms, such as Integrated Gradients, and is a computationally more efficient and generalized notion of Sensitivy-n. The latter measures correlations between the sum of the attributions and the differences of the predictor function at its input and fixed baseline. More details about the Sensitivity-n can be found here:
-https://arxiv.org/pdf/1711.06104.pdfs
+https://arxiv.org/abs/1711.06104
 More details about infidelity measure can be found here:
-- [Original paper](https://arxiv.org/pdf/1901.09392.pdf)
+- [Original paper](https://arxiv.org/abs/1901.09392)
 
 ### Sensitivity
 Sensitivity measures the degree of explanation changes to subtle input perturbations using Monte Carlo sampling-based approximation and is defined
@@ -270,4 +270,4 @@ as follows:
 In order to approximate sensitivity measure, by default, we sample from a sub-space of an L-Infinity ball with a default radius.
 The users can modify both the radius of the ball and the sampling function.
 More details about sensitivity measure can be found here:
-- [Original paper](https://arxiv.org/pdf/1901.09392.pdf)
+- [Original paper](https://arxiv.org/abs/1901.09392)

@@ -571,7 +571,7 @@ class Test(BaseTest):
         self._ablation_test_assert(
             ablation_algo,
             inp,
-            torch.tensor([[82.0, 82.0, 24.0]], dtype=dtype),
+            torch.tensor([[82.0, 82.0, 24.0]], dtype=torch.float32).to(dtype),
             feature_mask=mask,
             perturbations_per_eval=(1,),
             target=None,
@@ -588,7 +588,7 @@ class Test(BaseTest):
         self._ablation_test_assert(
             ablation_algo,
             inp,
-            torch.tensor([[642.0, 642.0, 264.0]], dtype=dtype),
+            torch.tensor([[642.0, 642.0, 264.0]], dtype=torch.float32).to(dtype),
             feature_mask=mask,
             perturbations_per_eval=(1,),
             target=None,

@@ -39,8 +39,8 @@ class Occlusion(FeatureAblation):
         r"""
         Args:
 
-            forward_func (callable): The forward function of the model or
-                        any modification of it
+            forward_func (Callable): The forward function of the model or
+                        any modification of it.
         """
         FeatureAblation.__init__(self, forward_func)
         self.use_weights = True
@@ -62,7 +62,7 @@ class Occlusion(FeatureAblation):
         r"""
         Args:
 
-                inputs (tensor or tuple of tensors):  Input for which occlusion
+                inputs (Tensor or tuple[Tensor, ...]): Input for which occlusion
                             attributions are computed. If forward_func takes a single
                             tensor as input, a single input tensor should be provided.
                             If forward_func takes multiple tensors as input, a tuple
@@ -71,7 +71,7 @@ class Occlusion(FeatureAblation):
                             to the number of examples (aka batch size), and if
                             multiple input tensors are provided, the examples must
                             be aligned appropriately.
-                sliding_window_shapes (tuple or tuple of tuples): Shape of patch
+                sliding_window_shapes (tuple or tuple[tuple]): Shape of patch
                             (hyperrectangle) to occlude each input. For a single
                             input tensor, this must be a tuple of length equal to the
                             number of dimensions of the input tensor - 1, defining
@@ -80,7 +80,7 @@ class Occlusion(FeatureAblation):
                             this must be a tuple containing one tuple for each input
                             tensor defining the dimensions of the patch for that
                             input tensor, as described for the single tensor case.
-                strides (int or tuple or tuple of ints or tuple of tuples, optional):
+                strides (int, tuple, tuple[int], or tuple[tuple], optional):
                             This defines the step by which the occlusion hyperrectangle
                             should be shifted by in each direction for each iteration.
                             For a single tensor input, this can be either a single
@@ -100,7 +100,7 @@ class Occlusion(FeatureAblation):
                             If None is provided, a stride of 1 is used for each
                             dimension of each input tensor.
                             Default: None
-                baselines (scalar, tensor, tuple of scalars or tensors, optional):
+                baselines (scalar, Tensor, tuple of scalar, or Tensor, optional):
                             Baselines define reference value which replaces each
                             feature when occluded.
                             Baselines can be provided as:
@@ -124,10 +124,11 @@ class Occlusion(FeatureAblation):
                               - or a scalar, corresponding to a tensor in the
                                 inputs' tuple. This scalar value is broadcasted
                                 for corresponding input tensor.
+
                             In the cases when `baselines` is not provided, we internally
                             use zero scalar corresponding to each input tensor.
                             Default: None
-                target (int, tuple, tensor or list, optional):  Output indices for
+                target (int, tuple, Tensor, or list, optional): Output indices for
                             which difference is computed (for classification cases,
                             this is usually the target class).
                             If the network returns a scalar value per example,
@@ -152,7 +153,7 @@ class Occlusion(FeatureAblation):
                               target for the corresponding example.
 
                             Default: None
-                additional_forward_args (any, optional): If the forward function
+                additional_forward_args (Any, optional): If the forward function
                             requires additional arguments other than the inputs for
                             which attributions should not be computed, this argument
                             can be provided. It must be either a single additional
@@ -186,8 +187,8 @@ class Occlusion(FeatureAblation):
                             Default: False
 
         Returns:
-                *tensor* or tuple of *tensors* of **attributions**:
-                - **attributions** (*tensor* or tuple of *tensors*):
+                *Tensor* or *tuple[Tensor, ...]* of **attributions**:
+                - **attributions** (*Tensor* or *tuple[Tensor, ...]*):
                             The attributions with respect to each input feature.
                             Attributions will always be
                             the same size as the provided inputs, with each value

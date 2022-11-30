@@ -76,7 +76,7 @@ class InterpretableEmbeddingBase(Module):
 
         Args:
 
-            *input (Any, Optional): This can be a tensor(s) of input indices or any
+            *input (Any, optional): This can be a tensor(s) of input indices or any
                     other variable necessary to comput the embeddings. A typical
                     example of input indices are word or token indices.
             **kwargs (Any, optional): Similar to `input` this can be any sequence
@@ -99,10 +99,10 @@ class TokenReferenceBase:
     `TokenReferenceBase` class.
     """
 
-    def __init__(self, reference_token_idx=0) -> None:
+    def __init__(self, reference_token_idx: int = 0) -> None:
         self.reference_token_idx = reference_token_idx
 
-    def generate_reference(self, sequence_length, device):
+    def generate_reference(self, sequence_length, device: torch.device) -> torch.Tensor:
         r"""
         Generated reference tensor of given `sequence_length` using
         `reference_token_idx`.
@@ -137,22 +137,25 @@ def _set_deep_layer_value(obj, layer_names, value):
     setattr(reduce(getattr, layer_names[:-1], obj), layer_names[-1], value)
 
 
-def configure_interpretable_embedding_layer(model, embedding_layer_name="embedding"):
+def configure_interpretable_embedding_layer(
+    model: Module, embedding_layer_name: str = "embedding"
+) -> InterpretableEmbeddingBase:
     r"""
-    This method wraps model's embedding layer with an interpretable embedding
+    This method wraps a model's embedding layer with an interpretable embedding
     layer that allows us to access the embeddings through their indices.
 
     Args:
 
-        model (torch.nn.Model): An instance of PyTorch model that contains embeddings.
+        model (torch.nn.Module): An instance of PyTorch model that contains embeddings.
         embedding_layer_name (str, optional): The name of the embedding layer
                     in the `model` that we would like to make interpretable.
 
     Returns:
 
-        interpretable_emb (tensor): An instance of `InterpretableEmbeddingBase`
-                    embedding layer that wraps model's embedding layer that is being
-                    accessed through `embedding_layer_name`.
+        interpretable_emb (InterpretableEmbeddingBase): An instance of
+                    `InterpretableEmbeddingBase` embedding layer that wraps model's
+                    embedding layer that is being accessed through
+                    `embedding_layer_name`.
 
     Examples::
 
@@ -202,7 +205,9 @@ def configure_interpretable_embedding_layer(model, embedding_layer_name="embeddi
     return interpretable_emb
 
 
-def remove_interpretable_embedding_layer(model, interpretable_emb):
+def remove_interpretable_embedding_layer(
+    model: Module, interpretable_emb: InterpretableEmbeddingBase
+) -> None:
     r"""
     Removes interpretable embedding layer and sets back original
     embedding layer in the model.
@@ -210,8 +215,8 @@ def remove_interpretable_embedding_layer(model, interpretable_emb):
     Args:
 
         model (torch.nn.Module): An instance of PyTorch model that contains embeddings
-        interpretable_emb (tensor): An instance of `InterpretableEmbeddingBase`
-                    that was originally created in
+        interpretable_emb (InterpretableEmbeddingBase): An instance of
+                    `InterpretableEmbeddingBase` that was originally created in
                     `configure_interpretable_embedding_layer` function and has
                     to be removed after interpretation is finished.
 

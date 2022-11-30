@@ -4,7 +4,7 @@ title: The Captum Contribution Process
 ---
 
 The Captum development process involves a healthy amount of open discussions between the core development team and the community.
-Captum operates similar to most open source projects on GitHub. However, if you've never contributed to an open source project before, here is the basic process.
+Captum operates similarly to most open source projects on GitHub. However, if you've never contributed to an open source project before, here is the basic process.
 
 
 1. **Figure out what you're going to work on.**
@@ -59,7 +59,7 @@ https://captum.ai/tutorials/Bert_SQUAD_Interpret
 https://captum.ai/tutorials/IMDB_TorchText_Interpret
 
 **Vision**
-- We provide a sample toy model for CIFAR dataset and examples with ResNet model.
+- We provide a sample toy model for the CIFAR dataset and examples with a ResNet model.
 https://captum.ai/tutorials/CIFAR_TorchVision_Interpret
 https://captum.ai/tutorials/Resnet_TorchVision_Interpret
 These would be great starting points for benchmarking.
@@ -77,3 +77,20 @@ https://captum.ai/tutorials/House_Prices_Regression_Interpret
 **Multimodal**
 - You can use VQA model and dataset described here:
 https://captum.ai/tutorials/Multimodal_VQA_Captum_Insights
+
+
+## Docstring style
+
+Docstring is required for all public APIs to provide users the details of the arguments and returns. [Our API documentation](https://captum.ai/api/) is generated from the docstring. Captum adopts a customized docstring format modified on top of [Google style](https://www.sphinx-doc.org/en/master/usage/extensions/example_google.html). Specifically, each argument should be listed as `arg_name (type): description` in the `Args:` section. The argument typing convention:
+- primitive types: `int`, `str`, `float`, `bool`
+- common collection types: `list`, `tuple`, `dict`
+    - [PEP 585](https://peps.python.org/pep-0585/#implementation) has deprecated the duplicate types: `List`, `Tuple`, `Dict`
+    - element types: `list[int]`, `dict[int, str]`
+- other foundamental types: `Any`, `Callable`, `Iterable`
+- class types: `MyClass`, `external_lib.SomeClass`
+- omit `torch` for common Pytorch types: `Tensor`, `nn.Module`
+- use `or` and `,` for union types: `type1 or type2`, `type1, tyep2, or type3`
+    - [PEP 604](https://peps.python.org/pep-0604/) proposes to use `|` to connect types: `type1 | type2`. We may consider migration later.
+- append `optional` for argument with default value: `int, optional`
+    - append default value to the end of the description: `Default: None`
+    - Notice this is different with python's type hint `Optional[...]`, which indicate if the argument can be `None`

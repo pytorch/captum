@@ -16,11 +16,11 @@ from tests.helpers.basic import BaseTest
 class TestTextFeature(BaseTest):
     FEATURE_NAME = "question"
 
-    def test_text_feature_returns_text_as_visualization_type(self):
+    def test_text_feature_returns_text_as_visualization_type(self) -> None:
         feature = TextFeature(self.FEATURE_NAME, None, None, None)
         self.assertEqual(feature.visualization_type(), "text")
 
-    def test_text_feature_uses_visualization_transform_if_provided(self):
+    def test_text_feature_uses_visualization_transform_if_provided(self) -> None:
         input_data = torch.rand(2, 2)
         transformed_data = torch.rand(1, 1)
 
@@ -55,7 +55,7 @@ class TestTextFeature(BaseTest):
         # has original data
         self.assertIs(feature_output.base, input_data)
 
-    def test_text_feature_generates_correct_visualization_output(self):
+    def test_text_feature_generates_correct_visualization_output(self) -> None:
         attribution = torch.tensor([0.1, 0.2, 0.3, 0.4])
         input_data = torch.rand(1, 2)
         expected_modified = [100 * x for x in (attribution / attribution.max())]
@@ -81,7 +81,7 @@ class TestTextFeature(BaseTest):
 
 
 class TestEmptyFeature(BaseTest):
-    def test_empty_feature_should_generate_fixed_output(self):
+    def test_empty_feature_should_generate_fixed_output(self) -> None:
         feature = EmptyFeature()
         contribution = torch.rand(1).item()
         expected_output = FeatureOutput(
@@ -96,7 +96,7 @@ class TestEmptyFeature(BaseTest):
 
 
 class TestImageFeature(BaseTest):
-    def test_image_feature_generates_correct_ouput(self):
+    def test_image_feature_generates_correct_ouput(self) -> None:
         attribution = torch.zeros(1, 3, 4, 4)
         data = torch.ones(1, 3, 4, 4)
         contribution = 1.0
@@ -134,7 +134,7 @@ class TestImageFeature(BaseTest):
 
 
 class TestGeneralFeature(BaseTest):
-    def test_general_feature_generates_correct_output(self):
+    def test_general_feature_generates_correct_output(self) -> None:
         name = "general_feature"
         categories = ["cat1", "cat2", "cat3", "cat4"]
         attribution = torch.Tensor(1, 4)
