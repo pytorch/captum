@@ -83,6 +83,7 @@ class Test(BaseTest):
         for i in range(batch_size):
             model.zero_grad()
             single_inp = tuple(inp[i : i + 1] for inp in inputs)
+            apply_gradient_requirements(single_inp)
             out = model(*single_inp)
             loss_fn(out).backward()
             for layer in model.modules():
