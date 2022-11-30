@@ -83,7 +83,6 @@ class Test(BaseTest):
         for i in range(batch_size):
             model.zero_grad()
             single_inp = tuple(inp[i : i + 1] for inp in inputs)
-            apply_gradient_requirements(single_inp)
             out = model(*single_inp)
             loss_fn(out).backward()
             for layer in model.modules():
@@ -123,6 +122,7 @@ class Test(BaseTest):
             # compute sample grads
             wrapper = SampleGradientWrapper(model, layer_modules)
             wrapper.add_hooks()
+            apply_gradient_requirements(inp)
             out = model(*inp)
             wrapper.compute_param_sample_gradients(torch.sum(out), "sum")
 
