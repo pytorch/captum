@@ -3,7 +3,7 @@ import typing
 from enum import Enum
 from functools import reduce
 from inspect import signature
-from typing import Any, Callable, cast, Dict, List, NoReturn, overload, Tuple, Union
+from typing import Any, Callable, cast, Dict, List, overload, Tuple, Union
 
 import numpy as np
 import torch
