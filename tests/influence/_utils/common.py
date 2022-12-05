@@ -195,13 +195,17 @@ def get_random_model_and_data(
     num_checkpoints = 5
 
     for i in range(num_checkpoints):
-        net.linear1.weight.data = torch.normal(3, 4, (hidden_nodes, in_features)).double()
-        net.linear2.weight.data = torch.normal(5, 6, (out_features, hidden_nodes)).double()
+        net.linear1.weight.data = torch.normal(
+            3, 4, (hidden_nodes, in_features)
+        ).double()
+        net.linear2.weight.data = torch.normal(
+            5, 6, (out_features, hidden_nodes)
+        ).double()
         if unpack_inputs:
             net.pre.weight.data = torch.normal(
                 3, 4, (in_features, in_features * num_inputs)
             )
-        if hasattr(net, 'pre'):
+        if hasattr(net, "pre"):
             net.pre.weight.data = net.pre.weight.data.double()
         checkpoint_name = "-".join(["checkpoint-reg", str(i + 1) + ".pt"])
         net_adjusted = _wrap_model_in_dataparallel(net) if use_gpu else net
@@ -215,7 +219,8 @@ def get_random_model_and_data(
 
     if unpack_inputs:
         all_samples = [
-            torch.normal(0, 1, (num_samples, in_features)).double() for _ in range(num_inputs)
+            torch.normal(0, 1, (num_samples, in_features)).double()
+            for _ in range(num_inputs)
         ]
         train_samples = [ts[:num_train] for ts in all_samples]
         test_samples = [ts[num_train:] for ts in all_samples]

@@ -31,7 +31,7 @@ class TestTracInSelfInfluence(BaseTest):
                     "none",
                     DataInfluenceConstructor(TracInCP, name="TracInCP_all_layers"),
                 ),
-		(
+                (
                     "none",
                     DataInfluenceConstructor(
                         TracInCP,
@@ -68,7 +68,7 @@ class TestTracInSelfInfluence(BaseTest):
                     DataInfluenceConstructor(
                         TracInCPFast, "TracInCPFast_last_fc_layer"
                     ),
-		),
+                ),
             ]:
                 if not (
                     "sample_wise_grads_per_batch" in constructor.kwargs
