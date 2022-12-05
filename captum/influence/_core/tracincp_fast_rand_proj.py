@@ -1410,7 +1410,7 @@ class TracInCPFastRandProj(TracInCPFast):
                 )
 
                 projection_quantities = jacobian_projection.to(
-                    device
+                    device=device, dtype=dtype
                 ), layer_input_projection.to(device=device, dtype=dtype)
 
         return projection_quantities
