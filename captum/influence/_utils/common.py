@@ -36,9 +36,9 @@ def _tensor_batch_dot(t1: Tensor, t2: Tensor) -> Tensor:
     )
     assert torch.numel(t1) / t1.shape[0] == torch.numel(t2) / t2.shape[0], msg
 
-    return torch.mm(
+    return torch.einsum("id,jd -> ij",
         t1.view(t1.shape[0], -1),
-        t2.view(t2.shape[0], -1).T,
+        t2.view(t2.shape[0], -1),
     )
 
 
