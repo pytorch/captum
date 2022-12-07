@@ -24,7 +24,7 @@ from torch.nn import Module
 
 
 def apply_gradient_requirements(
-    inputs: Tuple[Tensor, ...], warn: bool = True, skip_non_tensor: bool = False
+    inputs: Tuple[Tensor, ...], warn: bool = True
 ) -> List[bool]:
     """
     Iterates through tuple on input tensors and sets requires_grad to be true on
@@ -37,10 +37,6 @@ def apply_gradient_requirements(
     ), "Inputs should be wrapped in a tuple prior to preparing for gradients"
     grad_required = []
     for index, input in enumerate(inputs):
-        if skip_non_tensor and not isinstance(input, torch.Tensor):
-            grad_required.append(None)
-            continue
-
         assert isinstance(input, torch.Tensor), "Given input is not a torch.Tensor"
         grad_required.append(input.requires_grad)
         inputs_dtype = input.dtype
@@ -842,7 +838,7 @@ def _compute_jacobian_wrt_params_with_sample_wise_trick(
     """
     with torch.autograd.set_grad_enabled(True):
         inputs = tuple(inp.clone() for inp in inputs)
-        apply_gradient_requirements(inputs, skip_non_tensor=True)
+        apply_gradient_requirements(inputs)
         sample_grad_wrapper = SampleGradientWrapper(model, layer_modules)
         try:
             sample_grad_wrapper.add_hooks()
