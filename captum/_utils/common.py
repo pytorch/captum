@@ -175,9 +175,10 @@ def _format_tensor_into_tuples(
     if inputs is None:
         return None
     if not isinstance(inputs, tuple):
-        assert isinstance(
-            inputs, torch.Tensor
-        ), "`inputs` must have type " "torch.Tensor but {} found: ".format(type(inputs))
+        assert isinstance(inputs, torch.Tensor), (
+            "`inputs` must be a torch.Tensor or a tuple[torch.Tensor] "
+            f"but found: {type(inputs)}"
+        )
         inputs = (inputs,)
     return inputs
 
