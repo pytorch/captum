@@ -1,12 +1,14 @@
 #!/usr/bin/env python3
-
 import warnings
-from typing import Any, Callable, List, Optional, Tuple, Union
+from typing import Any, Callable, List, Optional, Tuple, TYPE_CHECKING, Union
 
 import torch
 import torch.nn as nn
 from captum._utils.common import _parse_version
 from captum._utils.progress import progress
+
+if TYPE_CHECKING:
+    from captum.influence._core.tracincp import TracInCPBase
 
 from torch import Tensor
 from torch.nn import Module
@@ -419,3 +421,89 @@ def _self_influence_by_batches_helper(
             for batch in inputs_dataset
         ]
     )
+
+
+def _check_loss_fn(
+    influence_instance: "TracInCPBase",
+    loss_fn: Optional[Union[Module, Callable]],
+    loss_fn_name: str,
+    sample_wise_grads_per_batch: Optional[bool] = None,
+) -> str:
+    """
+    This checks whether `loss_fn` satisfies the requirements assumed of all
+    implementations of `TracInCPBase`. It works regardless of whether the
+    implementation has the `sample_wise_grads_per_batch` attribute.
+    It returns the reduction type of the loss_fn. If `sample_wise_grads_per_batch`
+    if not provided, we assume the implementation does not have that attribute.
+    """
+    # if `loss_fn` is `None`, there is nothing to check. then, the reduction type is
+    # only used by `_compute_jacobian_wrt_params_with_sample_wise_trick`, where
+    # reduction type should be "sum" if `loss_fn` is `None`.
+    if loss_fn is None:
+        return "sum"
+
+    # perhaps since `Module` is an implementation of `Callable`, this has redundancy
+    assert isinstance(loss_fn, Module) or callable(loss_fn)
+
+    reduction_type = "none"
+
+    # If we are able to access the reduction used by `loss_fn`, we check whether
+    # the reduction is compatible with `sample_wise_grads_per_batch`, if it has the
+    # attribute.
+    if hasattr(loss_fn, "reduction"):
+        reduction = loss_fn.reduction  # type: ignore
+        if sample_wise_grads_per_batch is None:
+            assert reduction in [
+                "sum",
+                "mean",
+            ], 'reduction for `loss_fn` must be "sum" or "mean"'
+            reduction_type = str(reduction)
+        elif sample_wise_grads_per_batch:
+            assert reduction in ["sum", "mean"], (
+                'reduction for `loss_fn` must be "sum" or "mean" when '
+                "`sample_wise_grads_per_batch` is True"
+            )
+            reduction_type = str(reduction)
+        else:
+            assert reduction == "none", (
+                'reduction for `loss_fn` must be "none" when '
+                "`sample_wise_grads_per_batch` is False"
+            )
+    else:
+        # if we are unable to access the reduction used by `loss_fn`, we warn
+        # the user about the assumptions we are making regarding the reduction
+        # used by `loss_fn`
+        if sample_wise_grads_per_batch is None:
+            warnings.warn(
+                f'Since `{loss_fn_name}` has no "reduction" attribute, the '
+                f'implementation  assumes that `{loss_fn_name}` is a "reduction" loss '
+                "function that reduces the per-example losses by taking their *sum*. "
+                f"If `{loss_fn_name}` instead reduces the per-example losses by "
+                f"taking their mean, please set the reduction attribute of "
+                f'`{loss_fn_name}` to "mean", i.e. '
+                f'`{loss_fn_name}.reduction = "mean"`.'
+            )
+            reduction_type = "sum"
+        elif sample_wise_grads_per_batch:
+            warnings.warn(
+                f"Since `{loss_fn_name}`` has no 'reduction' attribute, and "
+                "`sample_wise_grads_per_batch` is True, the implementation assumes "
+                f"that `{loss_fn_name}` is a 'reduction' loss function that reduces "
+                f"the per-example losses by taking their *sum*. If `{loss_fn_name}` "
+                "instead reduces the per-example losses by taking their mean, "
+                f'please set the reduction attribute of `{loss_fn_name}` to "mean", '
+                f'i.e. `{loss_fn_name}.reduction = "mean"`. Note that if '
+                "`sample_wise_grads_per_batch` is True, the implementation "
+                "assumes the reduction is either a sum or mean reduction."
+            )
+            reduction_type = "sum"
+        else:
+            warnings.warn(
+                f'Since `{loss_fn_name}` has no "reduction" attribute, and '
+                "`sample_wise_grads_per_batch` is False, the implementation "
+                f'assumes that `{loss_fn_name}` is a "per-example" loss function (see '
+                f"documentation for `{loss_fn_name}` for details).  Please ensure "
+                "that this is the case."
+            )
+
+    return reduction_type

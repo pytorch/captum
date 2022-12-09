@@ -248,10 +248,19 @@ class DataInfluenceConstructor:
     data_influence_class: type
 
     def __init__(
-        self, data_influence_class: type, name: Optional[str] = None, **kwargs
+        self,
+        data_influence_class: type,
+        name: Optional[str] = None,
+        duplicate_loss_fn: bool = False,
+        **kwargs,
     ) -> None:
+        """
+        if `duplicate_loss_fn` is True, will explicitly pass the provided `loss_fn` as
+        the `test_loss_fn` when constructing the TracInCPBase instance
+        """
         self.data_influence_class = data_influence_class
         self.name = name if name else data_influence_class.__name__
+        self.duplicate_loss_fn = duplicate_loss_fn
         self.kwargs = kwargs
 
     def __repr__(self) -> str:
@@ -266,8 +275,14 @@ class DataInfluenceConstructor:
         loss_fn: Optional[Union[Module, Callable]],
         **kwargs,
     ) -> DataInfluence:
-        constuctor_kwargs = self.kwargs.copy()
-        constuctor_kwargs.update(kwargs)
+        constructor_kwargs = self.kwargs.copy()
+        constructor_kwargs.update(kwargs)
+        # if `self.duplicate_loss_fn`, explicitly pass in `loss_fn` as `test_loss_fn`
+        # when constructing the instance. Doing so should not affect the behavior of
+        # the returned tracincp instance, since if `test_loss_fn` is not passed in,
+        # the constructor sets `test_loss_fn` to be the same as `loss_fn`
+        if self.duplicate_loss_fn:
+            constructor_kwargs["test_loss_fn"] = loss_fn
         if self.data_influence_class is TracInCPFastRandProj:
             self.check_annoy()
         if self.data_influence_class in [TracInCPFast, TracInCPFastRandProj]:
@@ -278,7 +293,7 @@ class DataInfluenceConstructor:
                 tmpdir,
                 loss_fn=loss_fn,
                 batch_size=batch_size,
-                **constuctor_kwargs,
+                **constructor_kwargs,
             )
         else:
             return self.data_influence_class(
@@ -287,7 +302,7 @@ class DataInfluenceConstructor:
                 tmpdir,
                 batch_size=batch_size,
                 loss_fn=loss_fn,
-                **constuctor_kwargs,
+                **constructor_kwargs,
             )
 
     def check_annoy(self) -> None:

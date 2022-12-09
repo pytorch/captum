@@ -110,6 +110,24 @@ class TestTracInRegression(BaseTest):
                         projection_dim=1,
                     ),
                 ),
+                (
+                    "check_idx",
+                    "mean",
+                    DataInfluenceConstructor(
+                        TracInCPFast,
+                        name="TracInCPFastDuplicateLossFn",
+                        duplicate_loss_fn=True,
+                    ),
+                ),  # add a test where `duplicate_loss_fn` is True
+                (
+                    "check_idx",
+                    "mean",
+                    DataInfluenceConstructor(
+                        TracInCPFastRandProj,
+                        name="TracInCPFastRandProjDuplicateLossFn",
+                        duplicate_loss_fn=True,
+                    ),  # add a test where `duplicate_loss_fn` is True
+                ),
             ]:
                 if not (mode == "sample_wise_trick" and use_gpu):
                     param_list.append((reduction, constructor, mode, dim, use_gpu))
@@ -404,3 +422,79 @@ class TestTracInRegression(BaseTest):
                 assertTensorAlmostEqual(
                     self, train_scores, train_scores_tracin_sample_wise_trick
                 )
+
+    @parameterized.expand(
+        [
+            ("none", "none", DataInfluenceConstructor(TracInCP)),
+            (
+                "mean",
+                "mean",
+                DataInfluenceConstructor(TracInCP, sample_wise_grads_per_batch=True),
+            ),
+            ("sum", "sum", DataInfluenceConstructor(TracInCPFast)),
+            ("mean", "mean", DataInfluenceConstructor(TracInCPFast)),
+            ("sum", "sum", DataInfluenceConstructor(TracInCPFastRandProj)),
+            ("mean", "mean", DataInfluenceConstructor(TracInCPFastRandProj)),
+        ],
+        name_func=build_test_name_func(),
+    )
+    def test_tracin_constant_test_loss_fn(
+        self,
+        reduction: Optional[str],
+        test_reduction: Optional[str],
+        tracin_constructor: Callable,
+    ) -> None:
+        """
+        All implementations of `TracInCPBase` can accept `test_loss_fn` in
+        initialization, which sets the loss function applied to test examples, which
+        can thus be different from the loss function applied to training examples.
+        This test passes `test_loss_fn` to be a constant function. Then, the influence
+        scores should all be 0, because gradients w.r.t. `test_loss_fn` will all be 0.
+        It re-uses the dataset and model from `test_tracin_identity_regression`.
+
+        The reduction for `loss_fn` and `test_loss_fn` initialization arguments is
+        the same for all parameterized tests, for simplicity, and also because for
+        `TracInCP`, both loss functions must both be reduction loss functions (i.e.
+        reduction is "mean" or "sum"), or both be per-example loss functions (i.e.
+        reduction is "none"). Recall that for `TracInCP`, the
+        `sample_wise_grads_per_batch` initialization argument determines which of
+        those cases holds.
+        """
+        with tempfile.TemporaryDirectory() as tmpdir:
+
+            batch_size = 4
+
+            dataset, net = self._test_tracin_identity_regression_setup(tmpdir)
+
+            train_inputs = dataset.samples
+            train_labels = dataset.labels
+
+            self.assertTrue(callable(tracin_constructor))
+
+            self.assertTrue(isinstance(reduction, str))
+            criterion = nn.MSELoss(reduction=cast(str, reduction))
+
+            # the output of `net`, i.e. `input` for the loss functions below, is a
+            # batch_size x 1 2D tensor
+            if test_reduction == "none":
+                # loss function returns 1D tensor of all 0's, so is constant
+                def test_loss_fn(input, target):
+                    return input.squeeze() * 0.0
+
+            elif test_reduction in ["sum", "mean"]:
+                # loss function returns scalar tensor of all 0's, so is constant
+                def test_loss_fn(input, target):
+                    return input.mean() * 0.0
+
+            tracin = tracin_constructor(
+                net,
+                dataset,
+                tmpdir,
+                batch_size,
+                criterion,
+                test_loss_fn=test_loss_fn,
+            )
+
+            # check influence scores of training data. they should all be 0
+            train_scores = tracin.influence(train_inputs, train_labels, k=None)
+            assertTensorAlmostEqual(self, train_scores, torch.zeros(train_scores.shape))
