@@ -18,7 +18,7 @@ from typing import (
 
 import torch
 from captum._utils.av import AV
-from captum._utils.common import _format_inputs, _get_module_from_name
+from captum._utils.common import _format_inputs, _get_module_from_name, _parse_version
 from captum._utils.gradient import (
     _compute_jacobian_wrt_params,
     _compute_jacobian_wrt_params_with_sample_wise_trick,
@@ -1009,6 +1009,19 @@ class TracInCP(TracInCPBase):
                     "nor any time estimates."
                 )
 
+        def calculate_via_vector_norm(layer_jacobian):
+            # Helper to efficiently calculate vector norm if pytorch version permits.
+            return (
+                torch.linalg.vector_norm(
+                    layer_jacobian,
+                    dim=list(range(1, len(layer_jacobian.shape))),
+                )
+                ** 2
+            )
+
+        def calculate_via_flatten(layer_jacobian):
+            return torch.sum(layer_jacobian.flatten(start_dim=1) ** 2, dim=1)
+
         def get_checkpoint_contribution(checkpoint):
             # This function returns a 1D tensor representing the contribution to the
             # self influence score for the given checkpoint, for all batches in
@@ -1052,14 +1065,18 @@ class TracInCP(TracInCPBase):
                 # `layer_jacobian` is of shape (batch_size, *). For each layer, we need
                 # the squared jacobian for each example. So we square the jacobian and
                 # sum over all dimensions except the 0-th (the batch dimension). We then
-                # sum the contribution over all layers.
+                # sum the contribution over all layers.  For Pytorch > 1.10 we use the
+                # optimized torch.linalg.vector_norm as opposed to the explicit flatten.
+
+                calculate_fn = calculate_via_flatten
+                if _parse_version(torch.__version__) >= (1, 10, 0):
+                    calculate_fn = calculate_via_vector_norm
+
                 checkpoint_contribution.append(
                     torch.sum(
                         torch.stack(
                             [
-                                torch.sum(
-                                    layer_jacobian.flatten(start_dim=1) ** 2, dim=1
-                                )
+                                calculate_fn(layer_jacobian)
                                 for layer_jacobian in layer_jacobians
                             ],
                             dim=0,
