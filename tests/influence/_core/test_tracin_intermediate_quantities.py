@@ -4,6 +4,7 @@ from typing import Callable
 import torch
 
 import torch.nn as nn
+from captum.influence._core.tracincp import TracInCP
 from captum.influence._core.tracincp_fast_rand_proj import (
     TracInCPFast,
     TracInCPFastRandProj,
@@ -24,7 +25,63 @@ class TestTracInIntermediateQuantities(BaseTest):
             (reduction, constructor, unpack_inputs)
             for unpack_inputs in [True, False]
             for (reduction, constructor) in [
+                ("none", DataInfluenceConstructor(TracInCP)),
+            ]
+        ],
+        name_func=build_test_name_func(),
+    )
+    def test_tracin_intermediate_quantities_aggregate(
+        self, reduction: str, tracin_constructor: Callable, unpack_inputs: bool
+    ) -> None:
+        """
+        tests that calling `compute_intermediate_quantities` with `aggregate=True`
+        does give the same result as calling it with `aggregate=False`, and then
+        summing
+        """
+        with tempfile.TemporaryDirectory() as tmpdir:
+            (net, train_dataset,) = get_random_model_and_data(
+                tmpdir,
+                unpack_inputs,
+                return_test_data=False,
+            )
+
+            # create a dataloader that yields batches from the dataset
+            train_dataset = DataLoader(train_dataset, batch_size=5)
+
+            # create tracin instance
+            criterion = nn.MSELoss(reduction=reduction)
+            batch_size = 5
+
+            tracin = tracin_constructor(
+                net,
+                train_dataset,
+                tmpdir,
+                batch_size,
+                criterion,
+            )
+
+            intermediate_quantities = tracin.compute_intermediate_quantities(
+                train_dataset, aggregate=False
+            )
+            aggregated_intermediate_quantities = tracin.compute_intermediate_quantities(
+                train_dataset, aggregate=True
+            )
+
+            assertTensorAlmostEqual(
+                self,
+                torch.sum(intermediate_quantities, dim=0, keepdim=True),
+                aggregated_intermediate_quantities,
+                delta=1e-4,  # due to numerical issues, we can't set this to 0.0
+                mode="max",
+            )
+
+    @parameterized.expand(
+        [
+            (reduction, constructor, unpack_inputs)
+            for unpack_inputs in [True, False]
+            for (reduction, constructor) in [
                 ("sum", DataInfluenceConstructor(TracInCPFastRandProj)),
+                ("none", DataInfluenceConstructor(TracInCP)),
             ]
         ],
         name_func=build_test_name_func(),
@@ -102,6 +159,11 @@ class TestTracInIntermediateQuantities(BaseTest):
                     "sum",
                     DataInfluenceConstructor(TracInCPFast),
                     DataInfluenceConstructor(TracInCPFastRandProj),
+                ),
+                (
+                    "none",
+                    DataInfluenceConstructor(TracInCP),
+                    DataInfluenceConstructor(TracInCP),
                 ),
             ]
         ],

@@ -777,6 +777,162 @@ class TracInCP(TracInCPBase):
             show_progress,
         )
 
+    def _sum_jacobians(
+        self,
+        inputs_dataset: DataLoader,
+        loss_fn: Optional[Union[Module, Callable]] = None,
+        reduction_type: Optional[str] = None,
+    ):
+        """
+        sums the jacobians of all examples in `inputs_dataset`. result is of the
+        same format as layer_jacobians, but the batch dimension has size 1
+        """
+        inputs_dataset_iter = iter(inputs_dataset)
+
+        inputs_batch = next(inputs_dataset_iter)
+
+        def get_batch_contribution(inputs_batch):
+            _input_jacobians = self._basic_computation_tracincp(
+                inputs_batch[0:-1],
+                inputs_batch[-1],
+                loss_fn,
+                reduction_type,
+            )
+
+            return tuple(
+                torch.sum(jacobian, dim=0).unsqueeze(0) for jacobian in _input_jacobians
+            )
+
+        inputs_jacobians = get_batch_contribution(inputs_batch)
+
+        for inputs_batch in inputs_dataset_iter:
+            inputs_batch_jacobians = get_batch_contribution(inputs_batch)
+            inputs_jacobians = tuple(
+                [
+                    inputs_jacobian + inputs_batch_jacobian
+                    for (inputs_jacobian, inputs_batch_jacobian) in zip(
+                        inputs_jacobians, inputs_batch_jacobians
+                    )
+                ]
+            )
+
+        return inputs_jacobians
+
+    def _concat_jacobians(
+        self,
+        inputs_dataset: DataLoader,
+        loss_fn: Optional[Union[Module, Callable]] = None,
+        reduction_type: Optional[str] = None,
+    ):
+        all_inputs_batch_jacobians = [
+            self._basic_computation_tracincp(
+                inputs_batch[0:-1],
+                inputs_batch[-1],
+                loss_fn,
+                reduction_type,
+            )
+            for inputs_batch in inputs_dataset
+        ]
+
+        return tuple(
+            torch.cat(all_inputs_batch_jacobian, dim=0)
+            for all_inputs_batch_jacobian in zip(*all_inputs_batch_jacobians)
+        )
+
+    @log_usage()
+    def compute_intermediate_quantities(
+        self,
+        inputs_dataset: Union[Tuple[Any, ...], DataLoader],
+        aggregate: bool = False,
+    ) -> Tensor:
+        """
+        Computes "embedding" vectors for all examples in a single batch, or a
+        `Dataloader` that yields batches. These embedding vectors are constructed so
+        that the influence score of a training example on a test example is simply the
+        dot-product of their corresponding vectors. Allowing a `DataLoader`
+        yielding batches to be passed in (as opposed to a single batch) gives the
+        potential to improve efficiency, because we load each checkpoint only once in
+        this method call. Thus if a `DataLoader` yielding batches is passed in, this
+        reduces the total number of times each checkpoint is loaded for a dataset,
+        compared to if a single batch is passed in. The reason we do not just increase
+        the batch size is that for large models, large batches do not fit in memory.
+
+        If `aggregate` is True, the *sum* of the vectors for all examples is returned,
+        instead of the vectors for each example. This can be useful for computing the
+        influence of a given training example on the total loss over a validation
+        dataset, because due to properties of the dot-product, this influence is the
+        dot-product of the training example's vector with the sum of the vectors in the
+        validation dataset. Also, by doing the sum aggregation within this method as
+        opposed to outside of it (by computing all vectors for the validation dataset,
+        then taking the sum) allows memory usage to be reduced.
+
+        Args:
+            inputs_dataset (Tuple, or DataLoader): Either a single tuple of any, or a
+                    `DataLoader`, where each batch yielded is a tuple of any. In
+                    either case, the tuple represents a single batch, where the last
+                    element is assumed to be the labels for the batch. That is,
+                    `model(*batch[0:-1])` produces the output for `model`, and
+                    and `batch[-1]` are the labels, if any. Here, `model` is model
+                    provided in initialization. This is the same assumption made for
+                    each batch yielded by training dataset `train_dataset`.
+            aggregate (bool): Whether to return the sum of the vectors for all
+                    examples, as opposed to vectors for each example.
+
+        Returns:
+            intermediate_quantities (Tensor): A tensor of dimension
+                    (N, D * C). Here, N is the total number of examples in
+                    `inputs_dataset` if `aggregate` is False, and 1, otherwise (so that
+                    a 2D tensor is always returned). C is the number of checkpoints
+                    passed as the `checkpoints` argument of `TracInCP.__init__`, and
+                    each row represents the vector for an example. Regarding D: Let I
+                    be the dimension of the output of the last fully-connected layer
+                    times the dimension of the input of the last fully-connected layer.
+                    If `self.projection_dim` is specified in initialization,
+                    D = min(I * C, `self.projection_dim` * C). Otherwise, D = I * C.
+                    In summary, if `self.projection_dim` is None, the dimension of each
+                    vector will be determined by the size of the input and output of
+                    the last fully-connected layer of `model`. Otherwise,
+                    `self.projection_dim` must be an int, and random projection will be
+                    performed to ensure that the vector is of dimension no more than
+                    `self.projection_dim` * C. `self.projection_dim` corresponds to
+                    the variable d in the top of page 15 of the TracIn paper:
+                    https://arxiv.org/pdf/2002.08484.pdf.
+        """
+        # If `inputs_dataset` is not a `DataLoader`, turn it into one.
+        inputs_dataset = _format_inputs_dataset(inputs_dataset)
+
+        def get_checkpoint_contribution(checkpoint):
+            assert (
+                checkpoint is not None
+            ), "None returned from `checkpoints`, cannot load."
+
+            learning_rate = self.checkpoints_load_func(self.model, checkpoint)
+            # get jacobians as tuple of tensors
+            if aggregate:
+                inputs_jacobians = self._sum_jacobians(
+                    inputs_dataset, self.loss_fn, self.reduction_type
+                )
+            else:
+                inputs_jacobians = self._concat_jacobians(
+                    inputs_dataset, self.loss_fn, self.reduction_type
+                )
+            # flatten into single tensor
+            return learning_rate * torch.cat(
+                [
+                    input_jacobian.flatten(start_dim=1)
+                    for input_jacobian in inputs_jacobians
+                ],
+                dim=1,
+            )
+
+        return torch.cat(
+            [
+                get_checkpoint_contribution(checkpoint)
+                for checkpoint in self.checkpoints
+            ],
+            dim=1,
+        )
+
     def _influence_batch_tracincp(
         self,
         inputs: Tuple[Any, ...],
@@ -1130,6 +1286,7 @@ class TracInCP(TracInCPBase):
 
         return batches_self_tracin_scores
 
+    @log_usage()
     def self_influence(
         self,
         inputs_dataset: Optional[Union[Tuple[Any, ...], DataLoader]] = None,

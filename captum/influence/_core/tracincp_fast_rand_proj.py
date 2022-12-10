@@ -652,6 +652,7 @@ class TracInCPFast(TracInCPBase):
                 checkpoints_progress.update()
             return batches_self_tracin_scores
 
+    @log_usage()
     def self_influence(
         self,
         inputs_dataset: Optional[Union[Tuple[Any, ...], DataLoader]] = None,
@@ -1142,6 +1143,7 @@ class TracInCPFastRandProj(TracInCPFast):
 
         return KMostInfluentialResults(indices, distances)
 
+    @log_usage()
     def self_influence(
         self,
         inputs_dataset: Optional[Union[Tuple[Any, ...], DataLoader]] = None,
@@ -1589,6 +1591,7 @@ class TracInCPFastRandProj(TracInCPFast):
         # each row in this result is the "embedding" vector for an example in `batch`
         return torch.cat(checkpoint_contributions, dim=1)  # type: ignore
 
+    @log_usage()
     def compute_intermediate_quantities(
         self,
         inputs_dataset: Union[Tuple[Any, ...], DataLoader],
