@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 
-import copy
 import unittest
 from typing import Any, List, Tuple, Union
 
@@ -151,8 +150,7 @@ class Test(BaseTest):
         test_input: TensorOrTupleOfTensorsGeneric,
     ):
         out = model(test_input)
-        model_copy = copy.deepcopy(model)
-        attrib = GuidedBackprop(model_copy)
+        attrib = GuidedBackprop(model)
         self.assertFalse(attrib.multiplies_by_inputs)
         neuron_attrib = NeuronGuidedBackprop(model, output_layer)
         for i in range(out.shape[1]):

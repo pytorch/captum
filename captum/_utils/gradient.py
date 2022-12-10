@@ -837,6 +837,8 @@ def _compute_jacobian_wrt_params_with_sample_wise_trick(
                 parameters of the i-th layer, for the j-th member of the minibatch.
     """
     with torch.autograd.set_grad_enabled(True):
+        inputs = tuple(inp.clone() for inp in inputs)
+        apply_gradient_requirements(inputs)
         sample_grad_wrapper = SampleGradientWrapper(model, layer_modules)
         try:
             sample_grad_wrapper.add_hooks()

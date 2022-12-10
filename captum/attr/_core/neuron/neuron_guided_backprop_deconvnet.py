@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-import warnings
 from typing import Any, Callable, List, Tuple, Union
 
 from captum._utils.gradient import construct_neuron_grad_fn
@@ -35,10 +34,7 @@ class NeuronDeconvolution(NeuronAttribution, GradientAttribution):
         r"""
         Args:
 
-            model (nn.Module): The reference to PyTorch model instance. Model cannot
-                          contain any in-place ReLU submodules; these are not
-                          supported by the register_full_backward_hook PyTorch API
-                          starting from PyTorch v1.9.
+            model (nn.Module):  The reference to PyTorch model instance.
             layer (Module): Layer for which attributions are computed.
                           Output size of attribute matches this layer's input or
                           output dimensions, depending on whether we attribute to
@@ -163,18 +159,6 @@ class NeuronDeconvolution(NeuronAttribution, GradientAttribution):
             >>> # index (4,1,2).
             >>> attribution = neuron_deconv.attribute(input, (4,1,2))
         """
-        if not attribute_to_neuron_input:
-            warnings.warn(
-                "Attribution to neuron output is no longer supported for"
-                " NeuronDeconvolution and will be deprecated in Captum"
-                " 0.6.0 due to changes in PyTorch's full backward hook"
-                " behavior. To obtain attributions for a neuron's"
-                " output, please attribute with respect to the next layer's input"
-            )
-            self.deconv.skip_new_hook_layer = self.layer  # type: ignore
-        else:
-            self.deconv.skip_new_hook_layer = None  # type: ignore
-
         self.deconv.gradient_func = construct_neuron_grad_fn(
             self.layer, neuron_selector, self.device_ids, attribute_to_neuron_input
         )
@@ -207,10 +191,7 @@ class NeuronGuidedBackprop(NeuronAttribution, GradientAttribution):
         r"""
         Args:
 
-            model (nn.Module): The reference to PyTorch model instance. Model cannot
-                          contain any in-place ReLU submodules; these are not
-                          supported by the register_full_backward_hook PyTorch API
-                          starting from PyTorch v1.9.
+            model (nn.Module):  The reference to PyTorch model instance.
             layer (Module): Layer for which neuron attributions are computed.
                           Attributions for a particular neuron in the output of
                           this layer are computed using the argument neuron_selector
@@ -332,18 +313,6 @@ class NeuronGuidedBackprop(NeuronAttribution, GradientAttribution):
             >>> # index (4,1,2).
             >>> attribution = neuron_gb.attribute(input, (4,1,2))
         """
-        if not attribute_to_neuron_input:
-            warnings.warn(
-                "Attribution to neuron output is no longer supported for"
-                " NeuronGuidedBackprop and will be deprecated in Captum"
-                " 0.6.0 due to changes in PyTorch's full backward hook"
-                " behavior. To obtain attributions for a neuron's"
-                " output, please attribute with respect to the next layer's input"
-            )
-            self.guided_backprop.skip_new_hook_layer = self.layer  # type: ignore
-        else:
-            self.guided_backprop.skip_new_hook_layer = None  # type: ignore
-
         self.guided_backprop.gradient_func = construct_neuron_grad_fn(
             self.layer, neuron_selector, self.device_ids, attribute_to_neuron_input
         )
