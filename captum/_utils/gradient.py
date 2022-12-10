@@ -851,18 +851,21 @@ def _compute_jacobian_wrt_params_with_sample_wise_trick(
             if labels is not None and loss_fn is not None:
                 loss = loss_fn(out, labels)
                 # TODO: allow loss_fn to be Callable
-                if isinstance(loss_fn, Module) and hasattr(loss_fn, "reduction"):
+                if (isinstance(loss_fn, Module) or callable(loss_fn)) and hasattr(
+                    loss_fn, "reduction"
+                ):
+                    reduction = loss_fn.reduction  # type: ignore
                     msg0 = (
                         "Please ensure that loss_fn.reduction is set to `sum` or `mean`"
                     )
 
-                    assert loss_fn.reduction != "none", msg0
+                    assert reduction != "none", msg0
                     msg1 = (
-                        f"loss_fn.reduction ({loss_fn.reduction}) does not match"
+                        f"loss_fn.reduction ({reduction}) does not match"
                         f"reduction type ({reduction_type}). Please ensure they are"
                         " matching."
                     )
-                    assert loss_fn.reduction == reduction_type, msg1
+                    assert reduction == reduction_type, msg1
                 msg2 = (
                     "Please ensure custom loss function is applying either a "
                     "sum or mean reduction."
