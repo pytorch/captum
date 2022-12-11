@@ -1243,7 +1243,6 @@ class TracInCP(TracInCPBase):
                 if _parse_version(torch.__version__) >= (1, 10, 0):
                     calculate_fn = calculate_via_vector_norm
 
-                # sum the contribution over all layers.
                 checkpoint_contribution.append(
                     torch.sum(
                         torch.stack(
