@@ -95,6 +95,7 @@ class TestTracInSelfInfluence(BaseTest):
                 False,
                 use_gpu,
             )
+
             # compute tracin_scores of training data on training data
             criterion = nn.MSELoss(reduction=reduction)
             batch_size = 5
