@@ -60,6 +60,7 @@ class BinaryConcreteStochasticGates(StochasticGatesBase):
         lower_bound: float = -0.1,
         upper_bound: float = 1.1,
         eps: float = 1e-8,
+        reg_reduction: str = "sum",
     ):
         """
         Args:
@@ -93,8 +94,18 @@ class BinaryConcreteStochasticGates(StochasticGatesBase):
             eps (float): term to improve numerical stability in binary concerete
                 sampling
                 Default: 1e-8
+
+            reg_reduction (str, optional): the reduction to apply to
+                the regularization: 'none'|'mean'|'sum'. 'none': no reduction will be
+                applied and it will be the same as the return of get_active_probs,
+                'mean': the sum of the gates non-zero probabilities will be divided by
+                the number of gates, 'sum': the gates non-zero probabilities will
+                be summed.
+                Default: 'sum'
         """
-        super().__init__(n_gates, mask=mask, reg_weight=reg_weight)
+        super().__init__(
+            n_gates, mask=mask, reg_weight=reg_weight, reg_reduction=reg_reduction
+        )
 
         # avoid changing the tensor's variable name
         # when the module is used after compilation,

@@ -32,7 +32,7 @@ class TestBinaryConcreteStochasticGates(BaseTest):
         ).to(self.testing_device)
 
         gated_input, reg = bcstg(input_tensor)
-        expected_reg = 0.8316
+        expected_reg = 2.4947
 
         if self.testing_device == "cpu":
             expected_gated_input = [[0.0000, 0.0212, 0.1892], [0.1839, 0.3753, 0.4937]]
@@ -41,6 +41,30 @@ class TestBinaryConcreteStochasticGates(BaseTest):
 
         assertTensorAlmostEqual(self, gated_input, expected_gated_input, mode="max")
         assertTensorAlmostEqual(self, reg, expected_reg)
+
+    def test_bcstg_1d_input_with_reg_reduction(self) -> None:
+
+        dim = 3
+        mean_bcstg = BinaryConcreteStochasticGates(dim, reg_reduction="mean").to(
+            self.testing_device
+        )
+        none_bcstg = BinaryConcreteStochasticGates(dim, reg_reduction="none").to(
+            self.testing_device
+        )
+        input_tensor = torch.tensor(
+            [
+                [0.0, 0.1, 0.2],
+                [0.3, 0.4, 0.5],
+            ]
+        ).to(self.testing_device)
+
+        mean_gated_input, mean_reg = mean_bcstg(input_tensor)
+        none_gated_input, none_reg = none_bcstg(input_tensor)
+        expected_mean_reg = 0.8316
+        expected_none_reg = torch.tensor([0.8321, 0.8310, 0.8325])
+
+        assertTensorAlmostEqual(self, mean_reg, expected_mean_reg)
+        assertTensorAlmostEqual(self, none_reg, expected_none_reg)
 
     def test_bcstg_1d_input_with_n_gates_error(self) -> None:
 
@@ -85,7 +109,7 @@ class TestBinaryConcreteStochasticGates(BaseTest):
         ).to(self.testing_device)
 
         gated_input, reg = bcstg(input_tensor)
-        expected_reg = 0.8321
+        expected_reg = 1.6643
 
         if self.testing_device == "cpu":
             expected_gated_input = [[0.0000, 0.0000, 0.1679], [0.0000, 0.0000, 0.2223]]
@@ -118,7 +142,7 @@ class TestBinaryConcreteStochasticGates(BaseTest):
 
         gated_input, reg = bcstg(input_tensor)
 
-        expected_reg = 0.8317
+        expected_reg = 4.9903
         if self.testing_device == "cpu":
             expected_gated_input = [
                 [[0.0000, 0.0990], [0.0261, 0.2431], [0.0551, 0.3863]],
@@ -179,7 +203,7 @@ class TestBinaryConcreteStochasticGates(BaseTest):
         ).to(self.testing_device)
 
         gated_input, reg = bcstg(input_tensor)
-        expected_reg = 0.8316
+        expected_reg = 2.4947
 
         if self.testing_device == "cpu":
             expected_gated_input = [
