@@ -59,7 +59,7 @@ class FeatureAblation(PerturbationAttribution):
         # If it's False, we will check with an additional run where
         # perturbations_per_eval = 1 to see if the output shape is expected;
         # but it turns to True, we will assume the model's hehavior stays
-        # consistant and no longer check again
+        # consistent and no longer check again
         self._is_output_shape_valid = False
 
     @log_usage()
