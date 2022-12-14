@@ -25,6 +25,7 @@ class TestGaussianStochasticGates(BaseTest):
 
         dim = 3
         gstg = GaussianStochasticGates(dim).to(self.testing_device)
+
         input_tensor = torch.tensor(
             [
                 [0.0, 0.1, 0.2],
@@ -33,7 +34,7 @@ class TestGaussianStochasticGates(BaseTest):
         ).to(self.testing_device)
 
         gated_input, reg = gstg(input_tensor)
-        expected_reg = 0.8404
+        expected_reg = 2.5213
 
         if self.testing_device == "cpu":
             expected_gated_input = [[0.0000, 0.0198, 0.1483], [0.1848, 0.3402, 0.1782]]
@@ -42,6 +43,30 @@ class TestGaussianStochasticGates(BaseTest):
 
         assertTensorAlmostEqual(self, gated_input, expected_gated_input, mode="max")
         assertTensorAlmostEqual(self, reg, expected_reg)
+
+    def test_gstg_1d_input_with_reg_reduction(self) -> None:
+        dim = 3
+        mean_gstg = GaussianStochasticGates(dim, reg_reduction="mean").to(
+            self.testing_device
+        )
+        none_gstg = GaussianStochasticGates(dim, reg_reduction="none").to(
+            self.testing_device
+        )
+
+        input_tensor = torch.tensor(
+            [
+                [0.0, 0.1, 0.2],
+                [0.3, 0.4, 0.5],
+            ]
+        ).to(self.testing_device)
+
+        _, mean_reg = mean_gstg(input_tensor)
+        _, none_reg = none_gstg(input_tensor)
+        expected_mean_reg = 0.8404
+        expected_none_reg = torch.tensor([0.8424, 0.8384, 0.8438])
+
+        assertTensorAlmostEqual(self, mean_reg, expected_mean_reg)
+        assertTensorAlmostEqual(self, none_reg, expected_none_reg)
 
     def test_gstg_1d_input_with_n_gates_error(self) -> None:
 
@@ -65,7 +90,7 @@ class TestGaussianStochasticGates(BaseTest):
         ).to(self.testing_device)
 
         gated_input, reg = gstg(input_tensor)
-        expected_reg = 0.8424
+        expected_reg = 1.6849
 
         if self.testing_device == "cpu":
             expected_gated_input = [[0.0000, 0.0000, 0.1225], [0.0583, 0.0777, 0.3779]]
@@ -111,7 +136,7 @@ class TestGaussianStochasticGates(BaseTest):
         ).to(self.testing_device)
 
         gated_input, reg = gstg(input_tensor)
-        expected_reg = 0.8410
+        expected_reg = 5.0458
 
         if self.testing_device == "cpu":
             expected_gated_input = [
@@ -173,7 +198,7 @@ class TestGaussianStochasticGates(BaseTest):
         ).to(self.testing_device)
 
         gated_input, reg = gstg(input_tensor)
-        expected_reg = 0.8404
+        expected_reg = 2.5213
 
         if self.testing_device == "cpu":
             expected_gated_input = [

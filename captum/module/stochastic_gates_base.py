@@ -29,7 +29,11 @@ class StochasticGatesBase(Module, ABC):
     """
 
     def __init__(
-        self, n_gates: int, mask: Optional[Tensor] = None, reg_weight: float = 1.0
+        self,
+        n_gates: int,
+        mask: Optional[Tensor] = None,
+        reg_weight: float = 1.0,
+        reg_reduction: str = "sum",
     ):
         """
         Args:
@@ -46,6 +50,14 @@ class StochasticGatesBase(Module, ABC):
 
             reg_weight (Optional[float]): rescaling weight for L0 regularization term.
                 Default: 1.0
+
+            reg_reduction (str, optional): the reduction to apply to
+                the regularization: 'none'|'mean'|'sum'. 'none': no reduction will be
+                applied and it will be the same as the return of get_active_probs,
+                'mean': the sum of the gates non-zero probabilities will be divided by
+                the number of gates, 'sum': the gates non-zero probabilities will
+                be summed.
+                Default: 'sum'
         """
         super().__init__()
 
@@ -56,6 +68,12 @@ class StochasticGatesBase(Module, ABC):
                 f" the number of gates - 1 (received {n_gates}) since each mask"
                 " should correspond to a gate"
             )
+
+        valid_reg_reduction = ["none", "mean", "sum"]
+        assert (
+            reg_reduction in valid_reg_reduction
+        ), f"reg_reduction must be one of [none, mean, sum], received: {reg_reduction}"
+        self.reg_reduction = reg_reduction
 
         self.n_gates = n_gates
         self.register_buffer(
@@ -106,7 +124,14 @@ class StochasticGatesBase(Module, ABC):
         gated_input = input_tensor * gate_values
 
         prob_density = self._get_gate_active_probs()
-        l0_reg = self.reg_weight * prob_density.mean()
+        if self.reg_reduction == "sum":
+            l0_reg = prob_density.sum()
+        elif self.reg_reduction == "mean":
+            l0_reg = prob_density.mean()
+        else:
+            l0_reg = prob_density
+
+        l0_reg *= self.reg_weight
 
         return gated_input, l0_reg
 
