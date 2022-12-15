@@ -78,11 +78,8 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">                        any modification of it. Custom rules for a given layer need to</span>
 <span class="sd">                        be defined as attribute</span>
 <span class="sd">                        `module.rule` and need to be of type PropagationRule.</span>
-<span class="sd">                        Model cannot contain any in-place nonlinear submodules;</span>
-<span class="sd">                        these are not supported by the register_full_backward_hook</span>
-<span class="sd">                        PyTorch API starting from PyTorch v1.9.</span>
 
-<span class="sd">            layer (torch.nn.Module or list of torch.nn.Module): Layer or layers</span>
+<span class="sd">            layer (torch.nn.Module or list(torch.nn.Module)): Layer or layers</span>
 <span class="sd">                          for which attributions are computed.</span>
 <span class="sd">                          The size and dimensionality of the attributions</span>
 <span class="sd">                          corresponds to the size and dimensionality of the layer's</span>

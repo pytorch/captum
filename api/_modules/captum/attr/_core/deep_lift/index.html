@@ -75,34 +75,6 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="kn">from</span> <span class="nn">torch.utils.hooks</span> <span class="kn">import</span> <span class="n">RemovableHandle</span>
 
 
-<span class="c1"># Check if module backward hook can safely be used for the module that produced</span>
-<span class="c1"># this inputs / outputs mapping</span>
-<span class="k">def</span> <span class="nf">_check_valid_module</span><span class="p">(</span><span class="n">inputs_grad_fn</span><span class="p">,</span> <span class="n">outputs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-    <span class="k">def</span> <span class="nf">is_output_cloned</span><span class="p">(</span><span class="n">output_fn</span><span class="p">,</span> <span class="n">input_grad_fn</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-        <span class="sd">"""</span>
-<span class="sd">        Checks if the output has been cloned. This happens especially in case of</span>
-<span class="sd">        layer deeplift.</span>
-<span class="sd">        """</span>
-        <span class="k">return</span> <span class="p">(</span>
-            <span class="n">output_fn</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">next_functions</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
-            <span class="ow">and</span> <span class="n">output_fn</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">next_functions</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="n">input_grad_fn</span>
-        <span class="p">)</span>
-
-    <span class="n">curr_fn</span> <span class="o">=</span> <span class="n">outputs</span><span class="o">.</span><span class="n">grad_fn</span>
-    <span class="n">first_next</span> <span class="o">=</span> <span class="n">curr_fn</span><span class="o">.</span><span class="n">next_functions</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-    <span class="k">try</span><span class="p">:</span>
-        <span class="c1"># if `inputs` in the input to the network then the grad_fn is None and</span>
-        <span class="c1"># for that input backward_hook isn't computed. That's the reason why we</span>
-        <span class="c1"># need to check on `inputs_grad_fns[first_next[1]]` being None.</span>
-        <span class="k">return</span> <span class="p">(</span>
-            <span class="n">inputs_grad_fn</span> <span class="ow">is</span> <span class="kc">None</span>
-            <span class="ow">or</span> <span class="n">first_next</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="n">inputs_grad_fn</span>
-            <span class="ow">or</span> <span class="n">is_output_cloned</span><span class="p">(</span><span class="n">first_next</span><span class="p">,</span> <span class="n">inputs_grad_fn</span><span class="p">)</span>
-        <span class="p">)</span>
-    <span class="k">except</span> <span class="ne">IndexError</span><span class="p">:</span>
-        <span class="k">return</span> <span class="kc">False</span>
-
-
 <div class="viewcode-block" id="DeepLift"><a class="viewcode-back" href="../../../../deep_lift.html#captum.attr.DeepLift">[docs]</a><span class="k">class</span> <span class="nc">DeepLift</span><span class="p">(</span><span class="n">GradientAttribution</span><span class="p">):</span>
     <span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">    Implements DeepLIFT algorithm based on the following paper:</span>
@@ -144,10 +116,7 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        Args:</span>
 
-<span class="sd">            model (nn.Module): The reference to PyTorch model instance. Model cannot</span>
-<span class="sd">                        contain any in-place nonlinear submodules; these are not</span>
-<span class="sd">                        supported by the register_full_backward_hook PyTorch API</span>
-<span class="sd">                        starting from PyTorch v1.9.</span>
+<span class="sd">            model (nn.Module):  The reference to PyTorch model instance.</span>
 <span class="sd">            multiply_by_inputs (bool, optional): Indicates whether to factor</span>
 <span class="sd">                        model inputs' multiplier in the final attribution scores.</span>
 <span class="sd">                        In the literature this is also known as local vs global</span>
@@ -462,25 +431,6 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">        """</span>
         <span class="n">inputs</span> <span class="o">=</span> <span class="n">_format_tensor_into_tuples</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span>
         <span class="n">module</span><span class="o">.</span><span class="n">input</span> <span class="o">=</span> <span class="n">inputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">clone</span><span class="p">()</span><span class="o">.</span><span class="n">detach</span><span class="p">()</span>
-        <span class="n">module</span><span class="o">.</span><span class="n">input_grad_fns</span> <span class="o">=</span> <span class="n">inputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">grad_fn</span>  <span class="c1"># type: ignore</span>
-
-        <span class="k">def</span> <span class="nf">tensor_backward_hook</span><span class="p">(</span><span class="n">grad</span><span class="p">):</span>
-            <span class="k">if</span> <span class="n">module</span><span class="o">.</span><span class="n">saved_grad</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
-                    <span class="sd">"""Module {} was detected as not supporting correctly module</span>
-<span class="sd">                        backward hook. You should modify your hook to ignore the given</span>
-<span class="sd">                        grad_inputs (recompute them by hand if needed) and save the</span>
-<span class="sd">                        newly computed grad_inputs in module.saved_grad. See MaxPool1d</span>
-<span class="sd">                        as an example."""</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
-                        <span class="n">module</span>
-                    <span class="p">)</span>
-                <span class="p">)</span>
-            <span class="k">return</span> <span class="n">module</span><span class="o">.</span><span class="n">saved_grad</span>
-
-        <span class="c1"># the hook is set by default but it will be used only for</span>
-        <span class="c1"># failure cases and will be removed otherwise</span>
-        <span class="n">handle</span> <span class="o">=</span> <span class="n">inputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">register_hook</span><span class="p">(</span><span class="n">tensor_backward_hook</span><span class="p">)</span>
-        <span class="n">module</span><span class="o">.</span><span class="n">input_hook</span> <span class="o">=</span> <span class="n">handle</span>
 
     <span class="k">def</span> <span class="nf">_forward_hook</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
@@ -494,30 +444,13 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">        """</span>
         <span class="n">outputs</span> <span class="o">=</span> <span class="n">_format_tensor_into_tuples</span><span class="p">(</span><span class="n">outputs</span><span class="p">)</span>
         <span class="n">module</span><span class="o">.</span><span class="n">output</span> <span class="o">=</span> <span class="n">outputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">clone</span><span class="p">()</span><span class="o">.</span><span class="n">detach</span><span class="p">()</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">_check_valid_module</span><span class="p">(</span><span class="n">module</span><span class="o">.</span><span class="n">input_grad_fns</span><span class="p">,</span> <span class="n">outputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
-            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
-                <span class="sd">"""An invalid module {} is detected. Saved gradients will</span>
-<span class="sd">                be used as the gradients of the module's input tensor.</span>
-<span class="sd">                See MaxPool1d as an example."""</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
-                    <span class="n">module</span>
-                <span class="p">)</span>
-            <span class="p">)</span>
-            <span class="n">module</span><span class="o">.</span><span class="n">is_invalid</span> <span class="o">=</span> <span class="kc">True</span>  <span class="c1"># type: ignore</span>
-            <span class="n">module</span><span class="o">.</span><span class="n">saved_grad</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1"># type: ignore</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">forward_handles</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">cast</span><span class="p">(</span><span class="n">RemovableHandle</span><span class="p">,</span> <span class="n">module</span><span class="o">.</span><span class="n">input_hook</span><span class="p">))</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">module</span><span class="o">.</span><span class="n">is_invalid</span> <span class="o">=</span> <span class="kc">False</span>  <span class="c1"># type: ignore</span>
-            <span class="c1"># removing the hook if there is no failure case</span>
-            <span class="n">cast</span><span class="p">(</span><span class="n">RemovableHandle</span><span class="p">,</span> <span class="n">module</span><span class="o">.</span><span class="n">input_hook</span><span class="p">)</span><span class="o">.</span><span class="n">remove</span><span class="p">()</span>
-        <span class="k">del</span> <span class="n">module</span><span class="o">.</span><span class="n">input_hook</span>
-        <span class="k">del</span> <span class="n">module</span><span class="o">.</span><span class="n">input_grad_fns</span>
 
     <span class="k">def</span> <span class="nf">_backward_hook</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">module</span><span class="p">:</span> <span class="n">Module</span><span class="p">,</span>
-        <span class="n">grad_input</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">]],</span>
-        <span class="n">grad_output</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">]],</span>
-    <span class="p">):</span>
+        <span class="n">grad_input</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">,</span>
+        <span class="n">grad_output</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tensor</span><span class="p">:</span>
         <span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        `grad_input` is the gradient of the neuron with respect to its input</span>
 <span class="sd">        `grad_output` is the gradient of the neuron with respect to its output</span>
@@ -538,15 +471,14 @@ src="/_sphinx/documentation_options.js"></script>
                 <span class="s2">"Please, ensure that module is being used only once in the "</span>
                 <span class="s2">"network."</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">module</span><span class="p">)</span>
             <span class="p">)</span>
-        <span class="n">multipliers</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span>
-            <span class="n">SUPPORTED_NON_LINEAR</span><span class="p">[</span><span class="nb">type</span><span class="p">(</span><span class="n">module</span><span class="p">)](</span>
-                <span class="n">module</span><span class="p">,</span>
-                <span class="n">module</span><span class="o">.</span><span class="n">input</span><span class="p">,</span>
-                <span class="n">module</span><span class="o">.</span><span class="n">output</span><span class="p">,</span>
-                <span class="n">grad_input</span><span class="p">,</span>
-                <span class="n">grad_output</span><span class="p">,</span>
-                <span class="n">eps</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">eps</span><span class="p">,</span>
-            <span class="p">)</span>
+
+        <span class="n">multipliers</span> <span class="o">=</span> <span class="n">SUPPORTED_NON_LINEAR</span><span class="p">[</span><span class="nb">type</span><span class="p">(</span><span class="n">module</span><span class="p">)](</span>
+            <span class="n">module</span><span class="p">,</span>
+            <span class="n">module</span><span class="o">.</span><span class="n">input</span><span class="p">,</span>
+            <span class="n">module</span><span class="o">.</span><span class="n">output</span><span class="p">,</span>
+            <span class="n">grad_input</span><span class="p">,</span>
+            <span class="n">grad_output</span><span class="p">,</span>
+            <span class="n">eps</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">eps</span><span class="p">,</span>
         <span class="p">)</span>
         <span class="c1"># remove all the properies that we set for the inputs and output</span>
         <span class="k">del</span> <span class="n">module</span><span class="o">.</span><span class="n">input</span>
@@ -577,10 +509,10 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="c1"># adds forward hook to leaf nodes that are non-linear</span>
         <span class="n">forward_handle</span> <span class="o">=</span> <span class="n">module</span><span class="o">.</span><span class="n">register_forward_hook</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_forward_hook</span><span class="p">)</span>
         <span class="n">pre_forward_handle</span> <span class="o">=</span> <span class="n">module</span><span class="o">.</span><span class="n">register_forward_pre_hook</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_forward_pre_hook</span><span class="p">)</span>
-        <span class="n">backward_handle</span> <span class="o">=</span> <span class="n">_register_backward_hook</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_backward_hook</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span>
+        <span class="n">backward_handles</span> <span class="o">=</span> <span class="n">_register_backward_hook</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_backward_hook</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">forward_handles</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">forward_handle</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">forward_handles</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">pre_forward_handle</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">backward_handles</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">backward_handle</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">backward_handles</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">backward_handles</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_remove_hooks</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">extra_hooks_to_remove</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">RemovableHandle</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">for</span> <span class="n">handle</span> <span class="ow">in</span> <span class="n">extra_hooks_to_remove</span><span class="p">:</span>
@@ -659,9 +591,7 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        Args:</span>
 
-<span class="sd">            model (nn.Module): The reference to PyTorch model instance. Model cannot</span>
-<span class="sd">                        contain any in-place nonlinear submodules; these are not</span>
-<span class="sd">                        supported by the register_full_backward_hook PyTorch API.</span>
+<span class="sd">            model (nn.Module):  The reference to PyTorch model instance.</span>
 <span class="sd">            multiply_by_inputs (bool, optional): Indicates whether to factor</span>
 <span class="sd">                        model inputs' multiplier in the final attribution scores.</span>
 <span class="sd">                        In the literature this is also known as local vs global</span>
@@ -973,7 +903,7 @@ src="/_sphinx/documentation_options.js"></script>
     <span class="n">grad_input</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">,</span>
     <span class="n">grad_output</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">,</span>
     <span class="n">eps</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1e-10</span><span class="p">,</span>
-<span class="p">):</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tensor</span><span class="p">:</span>
     <span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">    grad_input: (dLoss / dprev_layer_out, dLoss / wij, dLoss / bij)</span>
 <span class="sd">    grad_output: (dLoss / dlayer_out)</span>
@@ -981,18 +911,10 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">    """</span>
     <span class="n">delta_in</span><span class="p">,</span> <span class="n">delta_out</span> <span class="o">=</span> <span class="n">_compute_diffs</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">outputs</span><span class="p">)</span>
 
-    <span class="n">new_grad_inp</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">grad_input</span><span class="p">)</span>
-
-    <span class="c1"># supported non-linear modules take only single tensor as input hence accessing</span>
-    <span class="c1"># only the first element in `grad_input` and `grad_output`</span>
-    <span class="n">new_grad_inp</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">where</span><span class="p">(</span>
-        <span class="nb">abs</span><span class="p">(</span><span class="n">delta_in</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">eps</span><span class="p">,</span> <span class="n">new_grad_inp</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">grad_output</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">delta_out</span> <span class="o">/</span> <span class="n">delta_in</span>
+    <span class="n">new_grad_inp</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">where</span><span class="p">(</span>
+        <span class="nb">abs</span><span class="p">(</span><span class="n">delta_in</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">eps</span><span class="p">,</span> <span class="n">grad_input</span><span class="p">,</span> <span class="n">grad_output</span> <span class="o">*</span> <span class="n">delta_out</span> <span class="o">/</span> <span class="n">delta_in</span>
     <span class="p">)</span>
 
-    <span class="c1"># If the module is invalid, save the newly computed gradients</span>
-    <span class="c1"># The original_grad_input will be overridden later in the Tensor hook</span>
-    <span class="k">if</span> <span class="n">module</span><span class="o">.</span><span class="n">is_invalid</span><span class="p">:</span>
-        <span class="n">module</span><span class="o">.</span><span class="n">saved_grad</span> <span class="o">=</span> <span class="n">new_grad_inp</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
     <span class="k">return</span> <span class="n">new_grad_inp</span>
 
 
@@ -1006,15 +928,14 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="p">):</span>
     <span class="n">delta_in</span><span class="p">,</span> <span class="n">delta_out</span> <span class="o">=</span> <span class="n">_compute_diffs</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">outputs</span><span class="p">)</span>
 
-    <span class="n">new_grad_inp</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">grad_input</span><span class="p">)</span>
     <span class="n">grad_input_unnorm</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">where</span><span class="p">(</span>
-        <span class="nb">abs</span><span class="p">(</span><span class="n">delta_in</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">eps</span><span class="p">,</span> <span class="n">new_grad_inp</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">grad_output</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">delta_out</span> <span class="o">/</span> <span class="n">delta_in</span>
+        <span class="nb">abs</span><span class="p">(</span><span class="n">delta_in</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">eps</span><span class="p">,</span> <span class="n">grad_input</span><span class="p">,</span> <span class="n">grad_output</span> <span class="o">*</span> <span class="n">delta_out</span> <span class="o">/</span> <span class="n">delta_in</span>
     <span class="p">)</span>
     <span class="c1"># normalizing</span>
-    <span class="n">n</span> <span class="o">=</span> <span class="n">grad_input</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">numel</span><span class="p">()</span>
+    <span class="n">n</span> <span class="o">=</span> <span class="n">grad_input</span><span class="o">.</span><span class="n">numel</span><span class="p">()</span>
 
     <span class="c1"># updating only the first half</span>
-    <span class="n">new_grad_inp</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">grad_input_unnorm</span> <span class="o">-</span> <span class="n">grad_input_unnorm</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span> <span class="o">*</span> <span class="mi">1</span> <span class="o">/</span> <span class="n">n</span>
+    <span class="n">new_grad_inp</span> <span class="o">=</span> <span class="n">grad_input_unnorm</span> <span class="o">-</span> <span class="n">grad_input_unnorm</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span> <span class="o">*</span> <span class="mi">1</span> <span class="o">/</span> <span class="n">n</span>
     <span class="k">return</span> <span class="n">new_grad_inp</span>
 
 
@@ -1105,7 +1026,7 @@ src="/_sphinx/documentation_options.js"></script>
             <span class="n">module</span><span class="o">.</span><span class="n">ceil_mode</span><span class="p">,</span>
             <span class="kc">True</span><span class="p">,</span>
         <span class="p">)</span>
-        <span class="n">grad_output_updated</span> <span class="o">=</span> <span class="n">grad_output</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">grad_output_updated</span> <span class="o">=</span> <span class="n">grad_output</span>
         <span class="n">unpool_grad_out_delta</span><span class="p">,</span> <span class="n">unpool_grad_out_ref_delta</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">chunk</span><span class="p">(</span>
             <span class="n">unpool_func</span><span class="p">(</span>
                 <span class="n">grad_output_updated</span> <span class="o">*</span> <span class="n">delta_out</span><span class="p">,</span>
@@ -1121,20 +1042,7 @@ src="/_sphinx/documentation_options.js"></script>
     <span class="n">unpool_grad_out_delta</span> <span class="o">=</span> <span class="n">unpool_grad_out_delta</span> <span class="o">+</span> <span class="n">unpool_grad_out_ref_delta</span>
     <span class="n">unpool_grad_out_delta</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="p">[</span><span class="n">unpool_grad_out_delta</span><span class="p">])</span>
 
-    <span class="c1"># If the module is invalid, we need to recompute the grad_input</span>
-    <span class="k">if</span> <span class="n">module</span><span class="o">.</span><span class="n">is_invalid</span><span class="p">:</span>
-        <span class="n">original_grad_input</span> <span class="o">=</span> <span class="n">grad_input</span>
-        <span class="n">grad_input</span> <span class="o">=</span> <span class="p">(</span>
-            <span class="n">unpool_func</span><span class="p">(</span>
-                <span class="n">grad_output_updated</span><span class="p">,</span>
-                <span class="n">indices</span><span class="p">,</span>
-                <span class="n">module</span><span class="o">.</span><span class="n">kernel_size</span><span class="p">,</span>
-                <span class="n">module</span><span class="o">.</span><span class="n">stride</span><span class="p">,</span>
-                <span class="n">module</span><span class="o">.</span><span class="n">padding</span><span class="p">,</span>
-                <span class="nb">list</span><span class="p">(</span><span class="n">cast</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">Size</span><span class="p">,</span> <span class="n">module</span><span class="o">.</span><span class="n">input</span><span class="o">.</span><span class="n">shape</span><span class="p">)),</span>
-            <span class="p">),</span>
-        <span class="p">)</span>
-    <span class="k">if</span> <span class="n">grad_input</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span> <span class="o">!=</span> <span class="n">inputs</span><span class="o">.</span><span class="n">shape</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">grad_input</span><span class="o">.</span><span class="n">shape</span> <span class="o">!=</span> <span class="n">inputs</span><span class="o">.</span><span class="n">shape</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">AssertionError</span><span class="p">(</span>
             <span class="s2">"A problem occurred during maxpool modul's backward pass. "</span>
             <span class="s2">"The gradients with respect to inputs include only a "</span>
@@ -1150,13 +1058,7 @@ src="/_sphinx/documentation_options.js"></script>
     <span class="n">new_grad_inp</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">where</span><span class="p">(</span>
         <span class="nb">abs</span><span class="p">(</span><span class="n">delta_in</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">eps</span><span class="p">,</span> <span class="n">grad_input</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">unpool_grad_out_delta</span> <span class="o">/</span> <span class="n">delta_in</span>
     <span class="p">)</span>
-    <span class="c1"># If the module is invalid, save the newly computed gradients</span>
-    <span class="c1"># The original_grad_input will be overridden later in the Tensor hook</span>
-    <span class="k">if</span> <span class="n">module</span><span class="o">.</span><span class="n">is_invalid</span><span class="p">:</span>
-        <span class="n">module</span><span class="o">.</span><span class="n">saved_grad</span> <span class="o">=</span> <span class="n">new_grad_inp</span>
-        <span class="k">return</span> <span class="n">original_grad_input</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="k">return</span> <span class="p">(</span><span class="n">new_grad_inp</span><span class="p">,)</span>
+    <span class="k">return</span> <span class="n">new_grad_inp</span>
 
 
 <span class="k">def</span> <span class="nf">_compute_diffs</span><span class="p">(</span><span class="n">inputs</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">,</span> <span class="n">outputs</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">Tensor</span><span class="p">]:</span>

@@ -1,14 +1,14 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# # Interpret regression models using Boston House Prices Dataset
+# # Interpret regression models using California Housing Prices Dataset
 
-# This notebook demonstrates how to apply `Captum` library on a regression model and understand important features, layers / neurons that contribute to the prediction. It compares a number of attribution algorithms from `Captum` library for a simple DNN model trained on a sub-sample of a well-known Boston house prices dataset.
+# This notebook demonstrates how to apply `Captum` library on a regression model and understand important features, layers / neurons that contribute to the prediction. It compares a number of attribution algorithms from `Captum` library for a simple DNN model trained on a sub-sample of a well-known California house prices dataset.
 # 
 # Note that in order to be able to run this notebook successfully you need to install scikit-learn package in advance.
 # 
 
-# In[1]:
+# In[85]:
 
 
 import numpy as np
@@ -20,7 +20,8 @@ import matplotlib.pyplot as plt
 
 #scikit-learn related imports
 import sklearn
-from sklearn.datasets import load_boston
+from sklearn.datasets import fetch_california_housing
+from sklearn.datasets import fetch_openml
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import mean_squared_error
 
@@ -36,23 +37,44 @@ from captum.attr import IntegratedGradients, DeepLift, GradientShap, NoiseTunnel
 
 # ## Data loading and pre-processing
 
-# Let's load boston house prices dataset and corresponding labels from scikit-learn library. 
+# Let's load california house prices dataset and corresponding labels from scikit-learn library. 
 
-# In[2]:
+# In[86]:
 
 
-boston = load_boston()
+california = fetch_california_housing()
 
-# feature_names -> ['CRIM', 'ZN', 'INDUS', 'CHAS', 'NOX', 'RM', 'AGE', 'DIS', 'RAD', 'TAX', 'PTRATIO', 'B', 'LSTAT']
-feature_names = boston.feature_names
 
-X = boston.data
-y = boston.target
+# https://scikit-learn.org/stable/datasets/real_world.html#california-housing-dataset
+feature_names = california.feature_names
+"""
+Features:
+MedInc median income in block group
+HouseAge median house age in block group
+AveRooms average number of rooms per household
+AveBedrms average number of bedrooms per household
+Population block group population
+AveOccup average number of household members
+Latitude block group latitude
+Longitude block group longitude
+ 
+The target variable is the median house value for California districts, 
+expressed in hundreds of thousands of dollars ($100,000).
+
+This dataset was derived from the 1990 U.S. census, using one row per census block group. 
+A block group is the smallest geographical unit for which the U.S. Census Bureau publishes sample data 
+(a block group typically has a population of 600 to 3,000 people).
+"""
+
+#take first n examples for speed up
+n = 600
+X = california.data[:n]
+y = california.target[:n]
 
 
 # In order to retain deterministic results, let's fix the seeds.
 
-# In[3]:
+# In[87]:
 
 
 torch.manual_seed(1234)
@@ -61,7 +83,7 @@ np.random.seed(1234)
 
 # Let's use 70% of our data for training and the remaining 30% for testing.
 
-# In[4]:
+# In[88]:
 
 
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=0)
@@ -71,11 +93,11 @@ X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_
 
 # Let's visualize dependent variable vs each independent variable in a separate plot. Apart from that we will also perform a simple regression analysis and plot the fitted line in dashed, red color.
 
-# In[5]:
+# In[89]:
 
 
-fig, axs = plt.subplots(nrows = 3, ncols=5, figsize=(30, 20))
-for i, (ax, col) in enumerate(zip(axs.flat, feature_names)):
+fig, axs = plt.subplots(nrows = 3, ncols=3, figsize=(30, 20))
+for i, (ax, col) in enumerate(zip(axs.flat, feature_names)):    
     x = X[:,i]
     pf = np.polyfit(x, y, 1)
     p = np.poly1d(pf)
@@ -83,27 +105,23 @@ for i, (ax, col) in enumerate(zip(axs.flat, feature_names)):
     ax.plot(x, y, 'o')
     ax.plot(x, p(x),"r--")
 
-    ax.set_title(col + ' vs Prices')
+    ax.set_title(col + ' vs Median House Value')
     ax.set_xlabel(col)
-    ax.set_ylabel('Prices')
+    ax.set_ylabel('Median House Value')
 
 
-# From the diagram above we can tell that some of the most influential features that are correlated with the output price are:   
-#    - RM, the average numbers of rooms in the houses of the neighborhood.
-#      If RM increases the house price increases too.
-#    - LSTAT, the percentage of the house-owners in the neighborhood (lower class).
-#      This variable is negatively correlated with the price. The lower the class the less likely is that the person will be able to afford an expensive house.
-#    - PTRATIO, the pupil-teacher ratio by town.
-#      If the pupil-teacher ratio increases then the house price decreases, resulting in a negative correlation between ptratio and house price.
-#      
-# These features are being identified as important also from others and can be found by an online search.
+# From the diagram above we can tell that some of the most influential features that are correlated with the output average house value are:   
+#    - MedInc, median income in block group
+#      If MedInc increases the house value increases too.
+#    - AveRooms, average number of rooms per household.
+#      This variable is positively correlated with the house value. The higher the average number of rooms per household the higher the average value of the house.     
 
 # # Tensorizing inputs and creating batches
 
 # Below we tensorize input features and corresponding labels.
 # 
 
-# In[6]:
+# In[90]:
 
 
 X_train = torch.tensor(X_train).float()
@@ -119,7 +137,7 @@ train_iter = torch.utils.data.DataLoader(datasets, batch_size=10, shuffle=True)
 # Defining default hyper parameters for the model.
 # 
 
-# In[7]:
+# In[91]:
 
 
 batch_size = 50
@@ -133,13 +151,13 @@ size_hidden4 = 1
 
 # We define a four layer neural network containing ReLUs between each linear layer. This network is slightly more complex than the standard linear regression model and results in a slightly better accuracy.
 
-# In[8]:
+# In[92]:
 
 
-class BostonModel(nn.Module):
+class CaliforniaModel(nn.Module):
     def __init__(self):
         super().__init__()
-        self.lin1 = nn.Linear(13, size_hidden1)
+        self.lin1 = nn.Linear(8, size_hidden1)
         self.relu1 = nn.ReLU()
         self.lin2 = nn.Linear(size_hidden1, size_hidden2)
         self.relu2 = nn.ReLU()
@@ -151,18 +169,18 @@ class BostonModel(nn.Module):
         return self.lin4(self.relu3(self.lin3(self.relu2(self.lin2(self.relu1(self.lin1(input)))))))
 
 
-# In[9]:
+# In[93]:
 
 
-model = BostonModel()
+model = CaliforniaModel()
 model.train()
 
 
-# ## Train Boston Model
+# ## Train California Model
 
 # Defining the loss function that will be used for optimization.
 
-# In[10]:
+# In[94]:
 
 
 criterion = nn.MSELoss(reduction='sum')
@@ -170,7 +188,7 @@ criterion = nn.MSELoss(reduction='sum')
 
 # Defining the training function that contains the training loop and uses RMSprop and given input hyper-parameters to train the model defined in the cell above.
 
-# In[11]:
+# In[95]:
 
 
 def train(model_inp, num_epochs = num_epochs):
@@ -200,7 +218,7 @@ def train(model_inp, num_epochs = num_epochs):
 # 
 # Models can found here: https://github.com/pytorch/captum/tree/master/tutorials/models
 
-# In[12]:
+# In[96]:
 
 
 def train_load_save_model(model_obj, model_path):
@@ -215,16 +233,16 @@ def train_load_save_model(model_obj, model_path):
         torch.save(model_obj.state_dict(), model_path)
 
 
-# In[13]:
+# In[98]:
 
 
-SAVED_MODEL_PATH = 'models/boston_model.pt'
+SAVED_MODEL_PATH = 'models/california_model.pt'
 train_load_save_model(model, SAVED_MODEL_PATH)
 
 
 # Let's perform a simple sanity check and compute the performance of the model using Root Squared Mean Error (RSME) metric.
 
-# In[14]:
+# In[99]:
 
 
 model.eval()
@@ -242,7 +260,7 @@ print('model err: ', err)
 # 
 # Note: Please, be patient! The execution of the cell below takes half a minute.
 
-# In[15]:
+# In[101]:
 
 
 ig = IntegratedGradients(model)
@@ -262,7 +280,7 @@ fa_attr_test = fa.attribute(X_test)
 # 
 # It is important to note the we aggregate the attributions across the entire test dataset in order to retain a global view of feature importance. This, however, is not ideal since the attributions can cancel out each other when we aggregate then across multiple samples.
 
-# In[16]:
+# In[102]:
 
 
 # prepare attributions for visualization
@@ -319,15 +337,17 @@ plt.legend(legends, loc=3)
 plt.show()
 
 
-# The magnitudes of learned model weights tell us about the correlations between the dependent variable `Price` and each independent variable. Zero weight means no correlation whereas positive weights indicate positive correlations and negatives the opposite. Since the network has more than one layer these weights might not be directly correlated with the price.
+# The magnitudes of learned model weights tell us about the correlations between the dependent variable `Avg House Value` and each independent variable. Zero weight means no correlation whereas positive weights indicate positive correlations and negatives the opposite. Since the network has more than one layer these weights might not be directly correlated with the price.
 # 
-# From the plot above we can see that attribution algorithms sometimes disagree on assigning importance scores and that they are not always aligned with weights. However, we can still observe that the top important three features: `LSTAT`, `RM` and `PTRATIO` are also considered to be important based on both most attribution algorithms and the weight scores.
+# From the plot above we can see that attribution algorithms sometimes disagree on assigning importance scores and that they are not always aligned with weights. However, we can still observe that two of the top important features: `MedInc`, and `AveRooms` are also considered to be important based on both most attribution algorithms and the weight scores.
 # 
-# It is interesting to observe that the feature `B` has high positive attribution score based on some of the attribution algorithms. This can be related, for example, to the choice of the baseline. In this tutorial we use zero-valued baselines for all features, however if we were to choose those values more carefully for each feature the picture will change. Similar arguments apply also when the signs of the weights and attributions mismatches or when one algorithm assigns higher or lower attribution scores compare to the others.
+# It is interesting to observe that the feature `Population` has high positive attribution score based on some of the attribution algorithms. This can be related, for example, to the choice of the baseline. In this tutorial we use zero-valued baselines for all features, however if we were to choose those values more carefully for each feature the picture will change. Similar arguments apply also when the signs of the weights and attributions mismatches or when one algorithm assigns higher or lower attribution scores compare to the others.
 # 
-# In terms of least important features, we observe that `CHAS` and `RAD` are voted to be least important both based on most attribution algorithms and learned coefficients.
+# In terms of least important features, we observe that `AveBedrms` and `AveOccup` are voted to be least important both based on most attribution algorithms and learned coefficients.
 # 
 # Another interesting observation is that both Integrated Gradients and DeepLift return similar attribution scores across all features. This is associated with the fact that although we have non-linearities in our model, their effects aren't significant and DeepLift is close to `(input - baselines) * gradients`. And because the gradients do not change significantly along the straight line from baseline to input, we observe similar situation with Integrated Gradients as well.
+# 
+# We also note that GradientShap behaves differently than the other methods for this data and model.  Whereas the other methods in this tutorial are calculated on test inputs and a reference baseline of zero, GradientShap is calculated with a baseline of the training distribution which might be the cause of the behavior observed.
 
 # ## Attributing to the layers and comparing with model weights
 
@@ -335,7 +355,7 @@ plt.show()
 # 
 # In the cell below we will attribute to the inputs of the second linear layer of our model. Similar to the previous case, the attribution is performed on the test dataset.
 
-# In[21]:
+# In[103]:
 
 
 # Compute the attributions of the output with respect to the inputs of the fourth linear layer
@@ -352,7 +372,7 @@ lin4_weight = model.lin4.weight
 # In the cell below we normalize and visualize the attributions and learned model weights for all 10 neurons in the fourth hidden layer. 
 # The weights represent the weight matrix of the fourth linear layer. The attributions are computed with respect to the inputs of the fourth linear layer.
 
-# In[22]:
+# In[104]:
 
 
 plt.figure(figsize=(15, 8))
@@ -384,6 +404,12 @@ ax.set_xticklabels(x_axis_labels)
 plt.show()
 
 
-# It is interesting to observe that the weights and attribution scores are well aligned for all 10 neurons in the last layer. Meaning that the neurons with negative weights also have negative attribution scores and we can observe the same for the positive weights and attributions. 
+# It is interesting to observe that the attribution scores for the 10 neurons in the last layer are spread between half of the weights and all have positive attribution scores.
 # 
-# We also observe that the neurons five and nine have very small attributions but relatively larger weights. Another interesting thing to observe is that the weights do not fluctuate much whereas attributions do fluctuate more relative to that and spike in Layer 4.
+# We also observe that the neurons five and six have very small attributions but relatively larger weights. Another interesting thing to observe is that the weights do not fluctuate much whereas attributions do fluctuate more relative to that and spike in Neuron 0.
+
+# In[ ]:
+
+
+
+
