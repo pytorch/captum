@@ -1380,6 +1380,7 @@ class TracInCPFastRandProj(TracInCPFast):
                 1
             ]  # this is the dimension of the input of the last fully-connected layer
             device = batch_jacobians.device
+            dtype = batch_jacobians.dtype
 
             # choose projection if needed
             # without projection, the dimension of the intermediate quantities returned
@@ -1409,8 +1410,8 @@ class TracInCPFastRandProj(TracInCPFast):
                 )
 
                 projection_quantities = jacobian_projection.to(
-                    device
-                ), layer_input_projection.to(device)
+                    device=device, dtype=dtype
+                ), layer_input_projection.to(device=device, dtype=dtype)
 
         return projection_quantities
 
