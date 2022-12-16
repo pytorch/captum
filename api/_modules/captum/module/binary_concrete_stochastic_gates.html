@@ -1,0 +1,363 @@
+<!DOCTYPE html><html lang="en"><head><meta charSet="utf-8"/><meta http-equiv="X-UA-Compatible" content="IE=edge"/><title>Captum · Model Interpretability for PyTorch</title><meta name="viewport" content="width=device-width"/><meta name="generator" content="Docusaurus"/><meta name="description" content="Model Interpretability for PyTorch"/><meta name="docsearch:language" content="en"/><meta property="og:title" content="Captum · Model Interpretability for PyTorch"/><meta property="og:type" content="website"/><meta property="og:url" content="https://captum.ai/"/><meta property="og:description" content="Model Interpretability for PyTorch"/><meta property="og:image" content="https://captum.ai/img/captum-icon.png"/><meta name="twitter:card" content="summary"/><meta name="twitter:image" content="https://captum.ai/img/captum.png"/><link rel="shortcut icon" href="/img/captum.ico"/><link rel="stylesheet" href="https://cdn.jsdelivr.net/docsearch.js/1/docsearch.min.css"/><link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/default.min.css"/><script>
+              (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+              (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+              m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+              })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+              ga('create', 'UA-44373548-48', 'auto');
+              ga('send', 'pageview');
+            </script><script type="text/javascript" src="https://buttons.github.io/buttons.js"></script><script type="text/javascript" src="/js/code_block_buttons.js"></script><script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.0/clipboard.min.js"></script><script src="https://unpkg.com/vanilla-back-to-top@7.1.14/dist/vanilla-back-to-top.min.js"></script><script>
+        document.addEventListener('DOMContentLoaded', function() {
+          addBackToTop(
+            {"zIndex":100}
+          )
+        });
+        </script><script src="/js/scrollSpy.js"></script><link rel="stylesheet" href="/css/main.css"/><script src="/js/codetabs.js"></script></head><body><div class="fixedHeaderContainer"><div class="headerWrapper wrapper"><header><a href="/"><img class="logo" src="/img/captum_logo.svg" alt="Captum"/></a><div class="navigationWrapper navigationSlider"><nav class="slidingNav"><ul class="nav-site nav-site-internal"><li class=""><a href="/docs/introduction" target="_self">Docs</a></li><li class=""><a href="/tutorials/" target="_self">Tutorials</a></li><li class=""><a href="/api/" target="_self">API Reference</a></li><li class=""><a href="https://github.com/pytorch/captum" target="_self">GitHub</a></li><li class="navSearchWrapper reactNavSearchWrapper"><input type="text" id="search_input_react" placeholder="Search" title="Search"/></li></ul></nav></div></header></div></div><div class="navPusher"><div>
+<script type="text/javascript" id="documentation_options" data-url_root="./"
+src="/_sphinx/documentation_options.js"></script>
+<script type="text/javascript" src="/_sphinx/jquery.js"></script>
+<script type="text/javascript" src="/_sphinx/underscore.js"></script>
+<script type="text/javascript" src="/_sphinx/doctools.js"></script>
+<script type="text/javascript" src="/_sphinx/language_data.js"></script>
+<script type="text/javascript" src="/_sphinx/searchtools.js"></script>
+
+<script src="https://cdn.jsdelivr.net/npm/katex@0.13.11/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.13.11/dist/contrib/auto-render.min.js"></script>
+<script src="/_sphinx/katex_autorenderer.js"></script>
+<link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/katex@0.13.11/dist/katex.min.css" />
+<div class="sphinx wrapper"><div class="document">
+<div class="documentwrapper">
+<div class="bodywrapper">
+<div class="body" role="main">
+<h1>Source code for captum.module.binary_concrete_stochastic_gates</h1><div class="highlight"><pre>
+<span></span><span class="ch">#!/usr/bin/env python3</span>
+<span class="kn">import</span> <span class="nn">math</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Optional</span>
+
+<span class="kn">import</span> <span class="nn">torch</span>
+<span class="kn">from</span> <span class="nn">captum.module.stochastic_gates_base</span> <span class="kn">import</span> <span class="n">StochasticGatesBase</span>
+<span class="kn">from</span> <span class="nn">torch</span> <span class="kn">import</span> <span class="n">nn</span><span class="p">,</span> <span class="n">Tensor</span>
+
+
+<span class="k">def</span> <span class="nf">_torch_empty</span><span class="p">(</span><span class="n">batch_size</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">n_gates</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">device</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">device</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tensor</span><span class="p">:</span>
+    <span class="k">return</span> <span class="n">torch</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="n">batch_size</span><span class="p">,</span> <span class="n">n_gates</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">device</span><span class="p">)</span>
+
+
+<span class="c1"># torch.fx is introduced in 1.8.0</span>
+<span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">torch</span><span class="p">,</span> <span class="s2">"fx"</span><span class="p">):</span>
+    <span class="n">torch</span><span class="o">.</span><span class="n">fx</span><span class="o">.</span><span class="n">wrap</span><span class="p">(</span><span class="n">_torch_empty</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">_logit</span><span class="p">(</span><span class="n">inp</span><span class="p">):</span>
+    <span class="c1"># torch.logit is introduced in 1.7.0</span>
+    <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">torch</span><span class="p">,</span> <span class="s2">"logit"</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">torch</span><span class="o">.</span><span class="n">logit</span><span class="p">(</span><span class="n">inp</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">torch</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">inp</span><span class="p">)</span> <span class="o">-</span> <span class="n">torch</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">inp</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="BinaryConcreteStochasticGates"><a class="viewcode-back" href="../../../binary_concrete_stg.html#captum.module.BinaryConcreteStochasticGates">[docs]</a><span class="k">class</span> <span class="nc">BinaryConcreteStochasticGates</span><span class="p">(</span><span class="n">StochasticGatesBase</span><span class="p">):</span>
+    <span class="sd">"""</span>
+<span class="sd">    Stochastic Gates with binary concrete distribution.</span>
+
+<span class="sd">    Stochastic Gates is a practical solution to add L0 norm regularization for neural</span>
+<span class="sd">    networks. L0 regularization, which explicitly penalizes any present (non-zero)</span>
+<span class="sd">    parameters, can help network pruning and feature selection, but directly optimizing</span>
+<span class="sd">    L0 is a non-differentiable combinatorial problem. To surrogate L0, Stochastic Gate</span>
+<span class="sd">    uses certain continuous probability distributions (e.g., Concrete, Gaussian) with</span>
+<span class="sd">    hard-sigmoid rectification as a continuous smoothed Bernoulli distribution</span>
+<span class="sd">    determining the weight of a parameter, i.e., gate. Then L0 is equal to the gates's</span>
+<span class="sd">    non-zero probability represented by the parameters of the continuous probability</span>
+<span class="sd">    distribution. The gate value can also be reparameterized to the distribution</span>
+<span class="sd">    parameters with a noise. So the expected L0 can be optimized through learning</span>
+<span class="sd">    the distribution parameters via stochastic gradients.</span>
+
+<span class="sd">    BinaryConcreteStochasticGates adopts a "stretched" binary concrete distribution as</span>
+<span class="sd">    the smoothed Bernoulli distribution of gate. The binary concrete distribution does</span>
+<span class="sd">    not include its lower and upper boundaries, 0 and 1, which are required by a</span>
+<span class="sd">    Bernoulli distribution, so it needs to be linearly stretched beyond both boundaries.</span>
+<span class="sd">    Then use hard-sigmoid rectification to "fold" the parts smaller than 0 or larger</span>
+<span class="sd">    than 1 back to 0 and 1.</span>
+
+<span class="sd">    More details can be found in the</span>
+<span class="sd">    `original paper &lt;https://arxiv.org/abs/1712.01312&gt;`.</span>
+<span class="sd">    """</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">n_gates</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">mask</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Tensor</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">reg_weight</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">,</span>
+        <span class="n">temperature</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">2.0</span> <span class="o">/</span> <span class="mi">3</span><span class="p">,</span>
+        <span class="n">lower_bound</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="o">-</span><span class="mf">0.1</span><span class="p">,</span>
+        <span class="n">upper_bound</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.1</span><span class="p">,</span>
+        <span class="n">eps</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1e-8</span><span class="p">,</span>
+        <span class="n">reg_reduction</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"sum"</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="sd">"""</span>
+<span class="sd">        Args:</span>
+<span class="sd">            n_gates (int): number of gates.</span>
+
+<span class="sd">            mask (Optional[Tensor]): If provided, this allows grouping multiple</span>
+<span class="sd">                input tensor elements to share the same stochastic gate.</span>
+<span class="sd">                This tensor should be broadcastable to match the input shape</span>
+<span class="sd">                and contain integers in the range 0 to n_gates - 1.</span>
+<span class="sd">                Indices grouped to the same stochastic gate should have the same value.</span>
+<span class="sd">                If not provided, each element in the input tensor</span>
+<span class="sd">                (on dimensions other than dim 0 - batch dim) is gated separately.</span>
+<span class="sd">                Default: None</span>
+
+<span class="sd">            reg_weight (Optional[float]): rescaling weight for L0 regularization term.</span>
+<span class="sd">                Default: 1.0</span>
+
+<span class="sd">            temperature (float): temperature of the concrete distribution, controls</span>
+<span class="sd">                the degree of approximation, as 0 means the original Bernoulli</span>
+<span class="sd">                without relaxation. The value should be between 0 and 1.</span>
+<span class="sd">                Default: 2/3</span>
+
+<span class="sd">            lower_bound (float): the lower bound to "stretch" the binary concrete</span>
+<span class="sd">                distribution</span>
+<span class="sd">                Default: -0.1</span>
+
+<span class="sd">            upper_bound (float): the upper bound to "stretch" the binary concrete</span>
+<span class="sd">                distribution</span>
+<span class="sd">                Default: 1.1</span>
+
+<span class="sd">            eps (float): term to improve numerical stability in binary concerete</span>
+<span class="sd">                sampling</span>
+<span class="sd">                Default: 1e-8</span>
+
+<span class="sd">            reg_reduction (str, optional): the reduction to apply to</span>
+<span class="sd">                the regularization: 'none'|'mean'|'sum'. 'none': no reduction will be</span>
+<span class="sd">                applied and it will be the same as the return of get_active_probs,</span>
+<span class="sd">                'mean': the sum of the gates non-zero probabilities will be divided by</span>
+<span class="sd">                the number of gates, 'sum': the gates non-zero probabilities will</span>
+<span class="sd">                be summed.</span>
+<span class="sd">                Default: 'sum'</span>
+<span class="sd">        """</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
+            <span class="n">n_gates</span><span class="p">,</span> <span class="n">mask</span><span class="o">=</span><span class="n">mask</span><span class="p">,</span> <span class="n">reg_weight</span><span class="o">=</span><span class="n">reg_weight</span><span class="p">,</span> <span class="n">reg_reduction</span><span class="o">=</span><span class="n">reg_reduction</span>
+        <span class="p">)</span>
+
+        <span class="c1"># avoid changing the tensor's variable name</span>
+        <span class="c1"># when the module is used after compilation,</span>
+        <span class="c1"># users may directly access this tensor by name</span>
+        <span class="n">log_alpha_param</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="n">n_gates</span><span class="p">)</span>
+        <span class="n">nn</span><span class="o">.</span><span class="n">init</span><span class="o">.</span><span class="n">normal_</span><span class="p">(</span><span class="n">log_alpha_param</span><span class="p">,</span> <span class="n">mean</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">std</span><span class="o">=</span><span class="mf">0.01</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">log_alpha_param</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Parameter</span><span class="p">(</span><span class="n">log_alpha_param</span><span class="p">)</span>
+
+        <span class="k">assert</span> <span class="p">(</span>
+            <span class="mi">0</span> <span class="o">&lt;</span> <span class="n">temperature</span> <span class="o">&lt;</span> <span class="mi">1</span>
+        <span class="p">),</span> <span class="sa">f</span><span class="s2">"the temperature should be bwteen 0 and 1, received </span><span class="si">{</span><span class="n">temperature</span><span class="si">}</span><span class="s2">"</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">temperature</span> <span class="o">=</span> <span class="n">temperature</span>
+
+        <span class="k">assert</span> <span class="p">(</span>
+            <span class="n">lower_bound</span> <span class="o">&lt;</span> <span class="mi">0</span>
+        <span class="p">),</span> <span class="sa">f</span><span class="s2">"the stretch lower bound should smaller than 0, received </span><span class="si">{</span><span class="n">lower_bound</span><span class="si">}</span><span class="s2">"</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lower_bound</span> <span class="o">=</span> <span class="n">lower_bound</span>
+        <span class="k">assert</span> <span class="p">(</span>
+            <span class="n">upper_bound</span> <span class="o">&gt;</span> <span class="mi">1</span>
+        <span class="p">),</span> <span class="sa">f</span><span class="s2">"the stretch upper bound should larger than 1, received </span><span class="si">{</span><span class="n">upper_bound</span><span class="si">}</span><span class="s2">"</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">upper_bound</span> <span class="o">=</span> <span class="n">upper_bound</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">eps</span> <span class="o">=</span> <span class="n">eps</span>
+
+        <span class="c1"># pre-calculate the fixed term used in active prob</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">active_prob_offset</span> <span class="o">=</span> <span class="n">temperature</span> <span class="o">*</span> <span class="n">math</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="o">-</span><span class="n">lower_bound</span> <span class="o">/</span> <span class="n">upper_bound</span><span class="p">)</span>
+
+<div class="viewcode-block" id="BinaryConcreteStochasticGates.forward"><a class="viewcode-back" href="../../../binary_concrete_stg.html#captum.module.BinaryConcreteStochasticGates.forward">[docs]</a>    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">"""</span>
+<span class="sd">        Args:</span>
+<span class="sd">            input_tensor (Tensor): Tensor to be gated with stochastic gates</span>
+
+
+<span class="sd">        Outputs:</span>
+<span class="sd">            gated_input (Tensor): Tensor of the same shape weighted by the sampled</span>
+<span class="sd">                gate values</span>
+
+<span class="sd">            l0_reg (Tensor): L0 regularization term to be optimized together with</span>
+<span class="sd">                model loss,</span>
+<span class="sd">                e.g. loss(model_out, target) + l0_reg</span>
+<span class="sd">        """</span>
+        <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">forward</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="nf">_sample_gate_values</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">batch_size</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tensor</span><span class="p">:</span>
+        <span class="sd">"""</span>
+<span class="sd">        Sample gate values for each example in the batch from the binary concrete</span>
+<span class="sd">        distributions</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            batch_size (int): input batch size</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            gate_values (Tensor): gate value tensor of shape(batch_size, n_gates)</span>
+<span class="sd">        """</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">training</span><span class="p">:</span>
+            <span class="n">u</span> <span class="o">=</span> <span class="n">_torch_empty</span><span class="p">(</span>
+                <span class="n">batch_size</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_gates</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">log_alpha_param</span><span class="o">.</span><span class="n">device</span>
+            <span class="p">)</span>
+            <span class="n">u</span><span class="o">.</span><span class="n">uniform_</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">eps</span><span class="p">,</span> <span class="mi">1</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">eps</span><span class="p">)</span>
+            <span class="n">s</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">sigmoid</span><span class="p">((</span><span class="n">_logit</span><span class="p">(</span><span class="n">u</span><span class="p">)</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">log_alpha_param</span><span class="p">)</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">temperature</span><span class="p">)</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">s</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">sigmoid</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">log_alpha_param</span><span class="p">)</span>
+            <span class="n">s</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">expand</span><span class="p">(</span><span class="n">batch_size</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_gates</span><span class="p">)</span>
+
+        <span class="n">s_bar</span> <span class="o">=</span> <span class="n">s</span> <span class="o">*</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">upper_bound</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">lower_bound</span><span class="p">)</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">lower_bound</span>
+
+        <span class="k">return</span> <span class="n">s_bar</span>
+
+    <span class="k">def</span> <span class="nf">_get_gate_values</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tensor</span><span class="p">:</span>
+        <span class="sd">"""</span>
+<span class="sd">        Get the raw gate values, which are the means of the underneath gate</span>
+<span class="sd">        distributions, derived from learned log_alpha_param</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            gate_values (Tensor): value of each gate after model is trained</span>
+<span class="sd">        """</span>
+        <span class="n">gate_values</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">torch</span><span class="o">.</span><span class="n">sigmoid</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">log_alpha_param</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">upper_bound</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">lower_bound</span><span class="p">)</span>
+            <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">lower_bound</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">gate_values</span>
+
+    <span class="k">def</span> <span class="nf">_get_gate_active_probs</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tensor</span><span class="p">:</span>
+        <span class="sd">"""</span>
+<span class="sd">        Get the active probability of each gate, i.e, gate value &gt; 0, in the binary</span>
+<span class="sd">        concrete distributions</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            probs (Tensor): probabilities tensor of the gates are active</span>
+<span class="sd">                in shape(n_gates)</span>
+<span class="sd">        """</span>
+        <span class="k">return</span> <span class="n">torch</span><span class="o">.</span><span class="n">sigmoid</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">log_alpha_param</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">active_prob_offset</span><span class="p">)</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_from_pretrained</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">log_alpha_param</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">"""</span>
+<span class="sd">        Private factory method to create an instance with pretrained parameters</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            log_alpha_param (Tensor): FloatTensor containing weights for</span>
+<span class="sd">                the pretrained log_alpha</span>
+
+<span class="sd">            mask (Optional[Tensor]): If provided, this allows grouping multiple</span>
+<span class="sd">                input tensor elements to share the same stochastic gate.</span>
+<span class="sd">                This tensor should be broadcastable to match the input shape</span>
+<span class="sd">                and contain integers in the range 0 to n_gates - 1.</span>
+<span class="sd">                Indices grouped to the same stochastic gate should have the same value.</span>
+<span class="sd">                If not provided, each element in the input tensor</span>
+<span class="sd">                (on dimensions other than dim 0 - batch dim) is gated separately.</span>
+<span class="sd">                Default: None</span>
+
+<span class="sd">            reg_weight (Optional[float]): rescaling weight for L0 regularization term.</span>
+<span class="sd">                Default: 1.0</span>
+
+<span class="sd">            temperature (float): temperature of the concrete distribution, controls</span>
+<span class="sd">                the degree of approximation, as 0 means the original Bernoulli</span>
+<span class="sd">                without relaxation. The value should be between 0 and 1.</span>
+<span class="sd">                Default: 2/3</span>
+
+<span class="sd">            lower_bound (float): the lower bound to "stretch" the binary concrete</span>
+<span class="sd">                distribution</span>
+<span class="sd">                Default: -0.1</span>
+
+<span class="sd">            upper_bound (float): the upper bound to "stretch" the binary concrete</span>
+<span class="sd">                distribution</span>
+<span class="sd">                Default: 1.1</span>
+
+<span class="sd">            eps (float): term to improve numerical stability in binary concerete</span>
+<span class="sd">                sampling</span>
+<span class="sd">                Default: 1e-8</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            stg (BinaryConcreteStochasticGates): StochasticGates instance</span>
+<span class="sd">        """</span>
+        <span class="k">assert</span> <span class="p">(</span>
+            <span class="n">log_alpha_param</span><span class="o">.</span><span class="n">dim</span><span class="p">()</span> <span class="o">==</span> <span class="mi">1</span>
+        <span class="p">),</span> <span class="s2">"log_alpha_param is expected to be 1-dimensional"</span>
+
+        <span class="n">n_gates</span> <span class="o">=</span> <span class="n">log_alpha_param</span><span class="o">.</span><span class="n">numel</span><span class="p">()</span>
+        <span class="n">stg</span> <span class="o">=</span> <span class="bp">cls</span><span class="p">(</span><span class="n">n_gates</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="n">stg</span><span class="o">.</span><span class="n">load_state_dict</span><span class="p">({</span><span class="s2">"log_alpha_param"</span><span class="p">:</span> <span class="n">log_alpha_param</span><span class="p">},</span> <span class="n">strict</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">stg</span></div>
+</pre></div>
+</div>
+</div>
+</div>
+<div aria-label="main navigation" class="sphinxsidebar" role="navigation">
+<div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../index.html">Captum</a></h1>
+<h3>Navigation</h3>
+<p class="caption" role="heading"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../attribution.html">Attribution</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../noise_tunnel.html">NoiseTunnel</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../layer.html">Layer Attribution</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../neuron.html">Neuron Attribution</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../metrics.html">Metrics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../robust.html">Robustness</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../concept.html">Concept-based Interpretability</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../influence.html">Influential Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module.html">Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../utilities.html">Utilities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../base_classes.html">Base Classes</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Insights API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../insights.html">Insights</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../insights.html#features">Features</a></li>
+</ul>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+<li><a href="../../../index.html">Documentation overview</a><ul>
+<li><a href="../../index.html">Module code</a><ul>
+</ul></li>
+</ul></li>
+</ul>
+</div>
+<div id="searchbox" role="search" style="display: none">
+<h3 id="searchlabel">Quick search</h3>
+<div class="searchformwrapper">
+<form action="../../../search.html" class="search" method="get">
+<input aria-labelledby="searchlabel" autocapitalize="off" autocomplete="off" autocorrect="off" name="q" spellcheck="false" type="text"/>
+<input type="submit" value="Go"/>
+</form>
+</div>
+</div>
+<script>$('#searchbox').show(0);</script>
+</div>
+</div>
+<div class="clearer"></div>
+</div></div></div><footer class="nav-footer" id="footer"><section class="sitemap"><div class="footerSection"><h5>Docs</h5><a href="/docs/introduction">Introduction</a><a href="/docs/getting_started">Getting Started</a><a href="/tutorials/">Tutorials</a><a href="/api/">API Reference</a></div><div class="footerSection"><h5>Legal</h5><a href="https://opensource.facebook.com/legal/privacy/" target="_blank" rel="noreferrer noopener">Privacy</a><a href="https://opensource.facebook.com/legal/terms/" target="_blank" rel="noreferrer noopener">Terms</a></div><div class="footerSection"><h5>Social</h5><div class="social"><a class="github-button" href="https://github.com/pytorch/captum" data-count-href="https://github.com/pytorch/captum/stargazers" data-show-count="true" data-count-aria-label="# stargazers on GitHub" aria-label="Star Captum on GitHub">captum</a></div></div></section><a href="https://opensource.facebook.com/" target="_blank" rel="noreferrer noopener" class="fbOpenSource"><img src="/img/oss_logo.png" alt="Facebook Open Source" width="170" height="45"/></a><section class="copyright"> Copyright © 2022 Facebook Inc.</section><script>
+            (function() {
+              var BAD_BASE = '/captum/';
+              if (window.location.origin !== 'https://captum.ai') {
+                var pathname = window.location.pathname;
+                var newPathname = pathname.slice(pathname.indexOf(BAD_BASE) === 0 ? BAD_BASE.length : 1);
+                var newLocation = 'https://captum.ai/' + newPathname;
+                console.log('redirecting to ' + newLocation);
+                window.location.href = newLocation;
+              }
+            })();
+          </script></footer></div><script type="text/javascript" src="https://cdn.jsdelivr.net/docsearch.js/1/docsearch.min.js"></script><script>
+                document.addEventListener('keyup', function(e) {
+                  if (e.target !== document.body) {
+                    return;
+                  }
+                  // keyCode for '/' (slash)
+                  if (e.keyCode === 191) {
+                    const search = document.getElementById('search_input_react');
+                    search && search.focus();
+                  }
+                });
+              </script><script>
+              var search = docsearch({
+                
+                apiKey: '207c27d819f967749142d8611de7cb19',
+                indexName: 'captum',
+                inputSelector: '#search_input_react'
+              });
+            </script></body></html>
