@@ -19,6 +19,7 @@ Captum API Reference
    robust
    concept
    influence
+   module
    utilities
    base_classes
 
