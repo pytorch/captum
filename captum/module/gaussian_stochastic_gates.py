@@ -78,7 +78,7 @@ class GaussianStochasticGates(StochasticGatesBase):
         assert 0 < std, f"the standard deviation should be positive, received {std}"
         self.std = std
 
-    def forward(self, *args, **kwargs):
+    def forward(self, input_tensor: Tensor) -> Tuple[Tensor, Tensor]:
         """
         Args:
             input_tensor (Tensor): Tensor to be gated with stochastic gates
@@ -91,7 +91,35 @@ class GaussianStochasticGates(StochasticGatesBase):
                 model loss,
                 e.g. loss(model_out, target) + l0_reg
         """
-        return super().forward(*args, **kwargs)
+        return super().forward(input_tensor)
+
+    def get_gate_values(self, clamp: bool = True) -> Tensor:
+        """
+        Get the gate values, which are the means of the underneath gate distributions,
+        optionally clamped within 0 and 1.
+
+        Returns:
+            gate_values (Tensor): value of each gate in shape(n_gates)
+
+            clamp (bool): if clamp the gate values. As smoothed Bernoulli
+                variables, gate values are clamped withn 0 and 1 by defautl.
+                Turn this off to get the raw means of the underneath
+                distribution (e.g., conrete, gaussian), which can be useful to
+                differentiate the gates' importance when multiple gate
+                values are beyond 0 or 1.
+                Default: True
+        """
+        return super().get_gate_values(clamp)
+
+    def get_gate_active_probs(self) -> Tensor:
+        """
+        Get the active probability of each gate, i.e, gate value > 0
+
+        Returns:
+            probs (Tensor): probabilities tensor of the gates are active
+                in shape(n_gates)
+        """
+        return super().get_gate_active_probs()
 
     def _sample_gate_values(self, batch_size: int) -> Tensor:
         """
