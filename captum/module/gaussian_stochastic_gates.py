@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 import math
-from typing import Optional
+from typing import Optional, Tuple
 
 import torch
 from captum.module.stochastic_gates_base import StochasticGatesBase

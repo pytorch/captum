@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 import math
-from typing import Optional
+from typing import Optional, Tuple
 
 import torch
 from captum.module.stochastic_gates_base import StochasticGatesBase
@@ -175,7 +175,6 @@ class BinaryConcreteStochasticGates(StochasticGatesBase):
                 in shape(n_gates)
         """
         return super().get_gate_active_probs()
-
 
     def _sample_gate_values(self, batch_size: int) -> Tensor:
         """
