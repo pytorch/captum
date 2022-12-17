@@ -87,11 +87,13 @@ class StochasticGatesBase(Module, ABC):
             input_tensor (Tensor): Tensor to be gated with stochastic gates
 
 
-        Outputs:
-            gated_input (Tensor): Tensor of the same shape weighted by the sampled
+        Returns:
+            tuple[Tensor, Tensor]:
+
+            - gated_input (Tensor): Tensor of the same shape weighted by the sampled
                 gate values
 
-            l0_reg (Tensor): L0 regularization term to be optimized together with
+            - l0_reg (Tensor): L0 regularization term to be optimized together with
                 model loss,
                 e.g. loss(model_out, target) + l0_reg
         """
@@ -140,9 +142,7 @@ class StochasticGatesBase(Module, ABC):
         Get the gate values, which are the means of the underneath gate distributions,
         optionally clamped within 0 and 1.
 
-        Returns:
-            gate_values (Tensor): value of each gate in shape(n_gates)
-
+        Args:
             clamp (bool): if clamp the gate values. As smoothed Bernoulli
                 variables, gate values are clamped withn 0 and 1 by defautl.
                 Turn this off to get the raw means of the underneath
@@ -150,6 +150,10 @@ class StochasticGatesBase(Module, ABC):
                 differentiate the gates' importance when multiple gate
                 values are beyond 0 or 1.
                 Default: True
+
+        Returns:
+            Tensor:
+            - gate_values (Tensor): value of each gate in shape(n_gates)
         """
         gate_values = self._get_gate_values()
         if clamp:
@@ -162,7 +166,8 @@ class StochasticGatesBase(Module, ABC):
         Get the active probability of each gate, i.e, gate value > 0
 
         Returns:
-            probs (Tensor): probabilities tensor of the gates are active
+            Tensor:
+            - probs (Tensor): probabilities tensor of the gates are active
                 in shape(n_gates)
         """
         return self._get_gate_active_probs().detach()
