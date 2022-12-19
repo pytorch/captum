@@ -183,9 +183,9 @@ class TestTracInRegression(BaseTest):
                     criterion,
                 )
 
-                train_scores = tracin.influence(train_inputs, train_labels)
+                train_scores = tracin.influence((train_inputs, train_labels))
                 idx, _ = tracin.influence(
-                    train_inputs, train_labels, k=len(dataset), proponents=True
+                    (train_inputs, train_labels), k=len(dataset), proponents=True
                 )
                 # check that top influence is one with maximal value
                 # (and hence gradient)
@@ -193,9 +193,9 @@ class TestTracInRegression(BaseTest):
                     self.assertEqual(idx[i][0], 15)
 
                 # check influence scores of test data
-                test_scores = tracin.influence(test_inputs, test_labels)
+                test_scores = tracin.influence((test_inputs, test_labels))
                 idx, _ = tracin.influence(
-                    test_inputs, test_labels, k=len(test_inputs), proponents=True
+                    (test_inputs, test_labels), k=len(test_inputs), proponents=True
                 )
                 # check that top influence is one with maximal value
                 # (and hence gradient)
@@ -226,17 +226,17 @@ class TestTracInRegression(BaseTest):
                     sample_wise_grads_per_batch=True,
                 )
 
-                train_scores = tracin.influence(train_inputs, train_labels)
+                train_scores = tracin.influence((train_inputs, train_labels))
                 train_scores_sample_wise_trick = tracin_sample_wise_trick.influence(
-                    train_inputs, train_labels
+                    (train_inputs, train_labels)
                 )
                 assertTensorAlmostEqual(
                     self, train_scores, train_scores_sample_wise_trick
                 )
 
-                test_scores = tracin.influence(test_inputs, test_labels)
+                test_scores = tracin.influence((test_inputs, test_labels))
                 test_scores_sample_wise_trick = tracin_sample_wise_trick.influence(
-                    test_inputs, test_labels
+                    (test_inputs, test_labels)
                 )
                 assertTensorAlmostEqual(
                     self, test_scores, test_scores_sample_wise_trick
@@ -288,7 +288,7 @@ class TestTracInRegression(BaseTest):
                 criterion,
             )
 
-            train_scores = tracin.influence(train_inputs, train_labels, k=None)
+            train_scores = tracin.influence((train_inputs, train_labels), k=None)
 
             r"""
             Derivation for gradient / resulting TracIn score:
@@ -382,9 +382,9 @@ class TestTracInRegression(BaseTest):
 
                 # check influence scores of training data
 
-                train_scores = tracin.influence(train_inputs, train_labels)
+                train_scores = tracin.influence((train_inputs, train_labels))
                 idx, _ = tracin.influence(
-                    train_inputs, train_labels, k=len(dataset), proponents=True
+                    (train_inputs, train_labels), k=len(dataset), proponents=True
                 )
 
                 # check that top influence for an instance is itself
@@ -415,9 +415,9 @@ class TestTracInRegression(BaseTest):
                     sample_wise_grads_per_batch=True,
                 )
 
-                train_scores = tracin.influence(train_inputs, train_labels)
+                train_scores = tracin.influence((train_inputs, train_labels))
                 train_scores_tracin_sample_wise_trick = (
-                    tracin_sample_wise_trick.influence(train_inputs, train_labels)
+                    tracin_sample_wise_trick.influence((train_inputs, train_labels))
                 )
                 assertTensorAlmostEqual(
                     self, train_scores, train_scores_tracin_sample_wise_trick
@@ -496,5 +496,5 @@ class TestTracInRegression(BaseTest):
             )
 
             # check influence scores of training data. they should all be 0
-            train_scores = tracin.influence(train_inputs, train_labels, k=None)
+            train_scores = tracin.influence((train_inputs, train_labels), k=None)
             assertTensorAlmostEqual(self, train_scores, torch.zeros(train_scores.shape))

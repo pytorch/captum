@@ -189,7 +189,6 @@ def _get_k_most_influential_helper(
     influence_src_dataloader: DataLoader,
     influence_batch_fn: Callable,
     inputs: Tuple[Any, ...],
-    targets: Optional[Tensor],
     k: int = 5,
     proponents: bool = True,
     show_progress: bool = False,
@@ -204,13 +203,12 @@ def _get_k_most_influential_helper(
         influence_src_dataloader (DataLoader): The DataLoader, representing training
                 data, for which we want to compute proponents / opponents.
         influence_batch_fn (Callable): A callable that will be called via
-                `influence_batch_fn(inputs, targets, batch)`, where `batch` is a batch
+                `influence_batch_fn(inputs, batch)`, where `batch` is a batch
                 in the `influence_src_dataloader` argument.
-        inputs (tuple[Any, ...]): A batch of examples. Does not represent labels,
-                which are passed as `targets`.
-        targets (Tensor, optional): If computing TracIn scores on a loss function,
-                these are the labels corresponding to the batch `inputs`.
-                Default: None
+        inputs (tuple[Any, ...]): This argument represents the test batch, and is a
+                single tuple of any, where the last element is assumed to be the labels
+                for the batch. That is, `model(*batch[0:-1])` produces the output for
+                `model`, and `batch[-1]` are the labels, if any.
         k (int, optional): The number of proponents or opponents to return per test
                 instance.
                 Default: 5
@@ -272,7 +270,7 @@ def _get_k_most_influential_helper(
     for batch in influence_src_dataloader:
 
         # calculate tracin_scores for the batch
-        batch_tracin_scores = influence_batch_fn(inputs, targets, batch)
+        batch_tracin_scores = influence_batch_fn(inputs, batch)
         batch_tracin_scores *= multiplier
 
         # get the top-k indices and tracin_scores for the batch

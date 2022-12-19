@@ -2,7 +2,7 @@ import inspect
 import os
 import unittest
 from functools import partial
-from typing import Callable, Iterator, List, Optional, Union
+from typing import Callable, Iterator, List, Optional, Tuple, Union
 
 import torch
 import torch.nn as nn
@@ -14,6 +14,7 @@ from captum.influence._core.tracincp_fast_rand_proj import (
 )
 from parameterized import parameterized
 from parameterized.parameterized import param
+from torch import Tensor
 from torch.nn import Module
 from torch.utils.data import DataLoader, Dataset
 
@@ -366,3 +367,12 @@ def build_test_name_func(args_to_skip: Optional[List[str]] = None):
     """
 
     return partial(generate_test_name, args_to_skip=args_to_skip)
+
+
+def _format_batch_into_tuple(
+    inputs: Union[Tuple, Tensor], targets: Tensor, unpack_inputs: bool
+):
+    if unpack_inputs:
+        return (*inputs, targets)
+    else:
+        return (inputs, targets)
