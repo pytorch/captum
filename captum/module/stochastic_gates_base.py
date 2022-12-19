@@ -143,10 +143,10 @@ class StochasticGatesBase(Module, ABC):
         optionally clamped within 0 and 1.
 
         Args:
-            clamp (bool): if clamp the gate values. As smoothed Bernoulli
-                variables, gate values are clamped withn 0 and 1 by defautl.
+            clamp (bool): whether to clamp the gate values or not. As smoothed Bernoulli
+                variables, gate values are clamped within 0 and 1 by default.
                 Turn this off to get the raw means of the underneath
-                distribution (e.g., conrete, gaussian), which can be useful to
+                distribution (e.g., concrete, gaussian), which can be useful to
                 differentiate the gates' importance when multiple gate
                 values are beyond 0 or 1.
                 Default: True
