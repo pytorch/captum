@@ -12,6 +12,7 @@ from captum.influence._core.tracincp_fast_rand_proj import (
 from parameterized import parameterized
 from tests.helpers.basic import assertTensorAlmostEqual, BaseTest
 from tests.influence._utils.common import (
+    _format_batch_into_tuple,
     build_test_name_func,
     DataInfluenceConstructor,
     get_random_model_and_data,
@@ -224,24 +225,12 @@ class TestTracInIntermediateQuantities(BaseTest):
             )
 
             # compute influence scores without using `compute_intermediate_quantities`
-            scores = tracin.influence(
-                test_features, test_labels, unpack_inputs=unpack_inputs
+            test_batch = _format_batch_into_tuple(
+                test_features, test_labels, unpack_inputs
             )
-
-            # compute influence scores using `compute_intermediate_quantities`
-            # we combine `test_features` and `test_labels` into a single tuple
-            # `test_batch` to pass to the model, with the assumption that
-            # `model(test_batch[0:-1]` produces the predictions, and `test_batch[-1]`
-            # are the labels.  We do this due to the assumptions made by the
-            # `compute_intermediate_quantities` method. Therefore, how we
-            # form `test_batch` depends on whether `unpack_inputs` is True or False
-            if not unpack_inputs:
-                # `test_features` is a Tensor
-                test_batch = (test_features, test_labels)
-            else:
-                # `test_features` is a tuple, so we unpack it to place in tuple,
-                # along with `test_labels`
-                test_batch = (*test_features, test_labels)  # type: ignore[assignment]
+            scores = tracin.influence(
+                test_batch,
+            )
 
             # the influence score is the dot product of intermediate quantities
             intermediate_quantities_scores = torch.matmul(

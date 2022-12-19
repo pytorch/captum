@@ -8,6 +8,7 @@ from captum.influence._core.tracincp import TracInCP
 from parameterized import parameterized
 from tests.helpers.basic import assertTensorAlmostEqual, BaseTest
 from tests.influence._utils.common import (
+    _format_batch_into_tuple,
     build_test_name_func,
     DataInfluenceConstructor,
     get_random_model_and_data,
@@ -107,15 +108,14 @@ class TestTracInGetKMostInfluential(BaseTest):
             )
 
             train_scores = tracin.influence(
-                test_samples, test_labels, k=None, unpack_inputs=unpack_inputs
+                _format_batch_into_tuple(test_samples, test_labels, unpack_inputs),
+                k=None,
             )
             sort_idx = torch.argsort(train_scores, dim=1, descending=proponents)[:, 0:k]
             idx, _train_scores = tracin.influence(
-                test_samples,
-                test_labels,
+                _format_batch_into_tuple(test_samples, test_labels, unpack_inputs),
                 k=k,
                 proponents=proponents,
-                unpack_inputs=unpack_inputs,
             )
             for i in range(len(idx)):
                 # check that idx[i] is correct
