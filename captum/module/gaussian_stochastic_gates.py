@@ -78,21 +78,6 @@ class GaussianStochasticGates(StochasticGatesBase):
         assert 0 < std, f"the standard deviation should be positive, received {std}"
         self.std = std
 
-    def forward(self, *args, **kwargs):
-        """
-        Args:
-            input_tensor (Tensor): Tensor to be gated with stochastic gates
-
-        Outputs:
-            gated_input (Tensor): Tensor of the same shape weighted by the sampled
-                gate values
-
-            l0_reg (Tensor): L0 regularization term to be optimized together with
-                model loss,
-                e.g. loss(model_out, target) + l0_reg
-        """
-        return super().forward(*args, **kwargs)
-
     def _sample_gate_values(self, batch_size: int) -> Tensor:
         """
         Sample gate values for each example in the batch from the Gaussian distribution
