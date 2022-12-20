@@ -53,13 +53,14 @@ class FeatureAblation(PerturbationAttribution):
         PerturbationAttribution.__init__(self, forward_func)
         self.use_weights = False
 
-        # only used when perturbations_per_eval > 1, where the 1st dim of forward's
-        # output grow as the input batch. If forward's output is aggregated,
-        # we cannot expand the batch size to include more perturbations in one call.
-        # If it's False, we will check with an additional run where
-        # perturbations_per_eval = 1 to see if the output shape is expected;
-        # but it turns to True, we will assume the model's hehavior stays
-        # consistent and no longer check again
+        # only used when perturbations_per_eval > 1, where the 1st dim of forward_func's
+        # output must grow as the input batch size. If forward's output is aggregated,
+        # we cannot expand the input to include more perturbations in one call.
+        # If it's False, we will force the validation by comparing the outpus of
+        # the original input and the modified input whose batch size expanded based on
+        # perturbations_per_eval. Set the flag to True if the output of the modified
+        # input grow as expected. Once it turns to True, we will assume the model's
+        # behavior stays consistent and no longer check again
         self._is_output_shape_valid = False
 
     @log_usage()
