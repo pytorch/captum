@@ -53,4 +53,4 @@ conda install -y -c conda-forge yarn
 conda install -y --no-channel-priority -c conda-forge nodejs=14
 
 # build insights and install captum
-BUILD_INSIGHTS=1 python setup.py develop
+# BUILD_INSIGHTS=1 python setup.py develop
