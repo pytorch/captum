@@ -39,18 +39,8 @@ else
 fi
 
 # install other deps
-# conda install -y numpy sphinx pytest flake8 ipywidgets ipython scikit-learn parameterized
-# conda install -y -c conda-forge matplotlib pytest-cov sphinx-autodoc-typehints mypy flask flask-compress
-conda install -y pytest flake8 ipywidgets ipython scikit-learn parameterized
-conda install -y -c conda-forge matplotlib pytest-cov mypy flask flask-compress
-
-# deps not available in conda
-# pip install sphinxcontrib-katex
-
-# install node/yarn for insights build
-# conda install -y -c conda-forge yarn
-# nodejs should be last, otherwise other conda packages will downgrade node
-# conda install -y --no-channel-priority -c conda-forge nodejs=14
+conda install -y pytest ipywidgets ipython scikit-learn parameterized
+conda install -y -c conda-forge matplotlib pytest-cov flask flask-compress
 
 # build insights and install captum
-# BUILD_INSIGHTS=1 python setup.py develop
+python setup.py develop
