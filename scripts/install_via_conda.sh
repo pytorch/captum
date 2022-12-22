@@ -40,7 +40,7 @@ fi
 
 # install other deps
 conda install -y pytest ipywidgets ipython scikit-learn parameterized
-conda install -y -c conda-forge matplotlib pytest-cov flask flask-compress
+conda install -y -c conda-forge matplotlib pytest-cov
 
-# build insights and install captum
+# install captum
 python setup.py develop
