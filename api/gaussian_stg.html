@@ -80,20 +80,75 @@ Default: ‘sum’</p></li>
 </dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="captum.module.GaussianStochasticGates.forward">
-<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/module/gaussian_stochastic_gates.html#GaussianStochasticGates.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum.module.GaussianStochasticGates.forward" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_tensor</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#captum.module.GaussianStochasticGates.forward" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><p><strong>input_tensor</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.13)"><em>Tensor</em></a>) – Tensor to be gated with stochastic gates</p>
 </dd>
-</dl>
-<dl class="simple">
-<dt>Outputs:</dt><dd><dl class="simple">
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><ul class="simple">
+<li><dl class="simple">
 <dt>gated_input (Tensor): Tensor of the same shape weighted by the sampled</dt><dd><p>gate values</p>
 </dd>
+</dl>
+</li>
+<li><dl class="simple">
 <dt>l0_reg (Tensor): L0 regularization term to be optimized together with</dt><dd><p>model loss,
 e.g. loss(model_out, target) + l0_reg</p>
 </dd>
 </dl>
+</li>
+</ul>
+</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.11)">tuple</a>[Tensor, Tensor]</p>
+</dd>
+</dl>
+</dd></dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="captum.module.GaussianStochasticGates.get_gate_active_probs">
+<span class="sig-name descname"><span class="pre">get_gate_active_probs</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#captum.module.GaussianStochasticGates.get_gate_active_probs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the active probability of each gate, i.e, gate value &gt; 0</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><ul class="simple">
+<li><dl class="simple">
+<dt>probs (Tensor): probabilities tensor of the gates are active</dt><dd><p>in shape(n_gates)</p>
+</dd>
+</dl>
+</li>
+</ul>
+</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>Tensor</p>
+</dd>
+</dl>
+</dd></dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="captum.module.GaussianStochasticGates.get_gate_values">
+<span class="sig-name descname"><span class="pre">get_gate_values</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">clamp</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#captum.module.GaussianStochasticGates.get_gate_values" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the gate values, which are the means of the underneath gate distributions,
+optionally clamped within 0 and 1.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>clamp</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.11)"><em>bool</em></a>) – whether to clamp the gate values or not. As smoothed Bernoulli
+variables, gate values are clamped within 0 and 1 by default.
+Turn this off to get the raw means of the underneath
+distribution (e.g., concrete, gaussian), which can be useful to
+differentiate the gates’ importance when multiple gate
+values are beyond 0 or 1.
+Default: True</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p>gate_values (Tensor): value of each gate in shape(n_gates)</p></li>
+</ul>
+</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>Tensor</p>
 </dd>
 </dl>
 </dd></dl>

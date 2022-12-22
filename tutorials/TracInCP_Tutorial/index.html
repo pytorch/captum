@@ -104,9 +104,8 @@
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h2 id="Overview-of-different-implementations-of-the-TracInCP-method">Overview of different implementations of the TracInCP method<a class="anchor-link" href="#Overview-of-different-implementations-of-the-TracInCP-method">¶</a></h2><p>Currently, Captum offers 3 implementations, all of which implement the same API.  More specifically, they define an <code>influence</code> method, which can be used in 3 different modes:</p>
+<h2 id="Overview-of-different-implementations-of-the-TracInCP-method">Overview of different implementations of the TracInCP method<a class="anchor-link" href="#Overview-of-different-implementations-of-the-TracInCP-method">¶</a></h2><p>Currently, Captum offers 3 implementations, all of which implement the same API.  More specifically, they define an <code>influence</code> method, which can be used in 2 different modes:</p>
 <ul>
-<li>self influence mode: calculates the self influence scores for all examples in the training dataset.</li>
 <li>influence score mode: given a batch of test examples, calculates the influence score of every example in the training dataset on every test example.</li>
 <li>top-k most influential mode: given a batch of test examples, calculates either the proponents or opponents of every test example, as well as their corresponding influence scores.</li>
 </ul>
@@ -263,7 +262,7 @@
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In [5]:</div>
+<div class="prompt input_prompt">In [6]:</div>
 <div class="inner_cell">
 <div class="input_area">
 <div class="highlight hl-ipython3"><pre><span></span><span class="n">correct_dataset_path</span> <span class="o">=</span> <span class="s2">"data/cifar_10"</span>
@@ -428,7 +427,7 @@ For this tutorial, we have saved the checkpoints from this training on AWS S3, a
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In [9]:</div>
+<div class="prompt input_prompt">In [10]:</div>
 <div class="inner_cell">
 <div class="input_area">
 <div class="highlight hl-ipython3"><pre><span></span><span class="n">num_epochs</span> <span class="o">=</span> <span class="mi">26</span>
@@ -519,7 +518,7 @@ For this tutorial, we have saved the checkpoints from this training on AWS S3, a
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>Now, we define <code>test_examples_batch</code>, the batch of test examples to identify influential examples for, and also store the correct as well as predicted labels.</p>
+<p>Now, we define <code>test_examples_features</code>, the features for a batch of test examples to identify influential examples for, and also store the correct as well as predicted labels.</p>
 </div>
 </div>
 </div>
@@ -529,8 +528,8 @@ For this tutorial, we have saved the checkpoints from this training on AWS S3, a
 <div class="inner_cell">
 <div class="input_area">
 <div class="highlight hl-ipython3"><pre><span></span><span class="n">test_examples_indices</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">]</span>
-<span class="n">test_examples_batch</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">stack</span><span class="p">([</span><span class="n">test_dataset</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">test_examples_indices</span><span class="p">])</span>
-<span class="n">test_examples_predicted_probs</span><span class="p">,</span> <span class="n">test_examples_predicted_labels</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">F</span><span class="o">.</span><span class="n">softmax</span><span class="p">(</span><span class="n">net</span><span class="p">(</span><span class="n">test_examples_batch</span><span class="p">),</span> <span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">),</span> <span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">test_examples_features</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">stack</span><span class="p">([</span><span class="n">test_dataset</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">test_examples_indices</span><span class="p">])</span>
+<span class="n">test_examples_predicted_probs</span><span class="p">,</span> <span class="n">test_examples_predicted_labels</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">F</span><span class="o">.</span><span class="n">softmax</span><span class="p">(</span><span class="n">net</span><span class="p">(</span><span class="n">test_examples_features</span><span class="p">),</span> <span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">),</span> <span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
 <span class="n">test_examples_true_labels</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">([</span><span class="n">test_dataset</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">test_examples_indices</span><span class="p">])</span><span class="o">.</span><span class="n">long</span><span class="p">()</span>
 </pre></div>
 </div>
@@ -595,23 +594,24 @@ For this tutorial, we have saved the checkpoints from this training on AWS S3, a
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h4 id="Compute-the-proponents-/-opponents-using-TracInCPFast">Compute the proponents / opponents using <code>TracInCPFast</code><a class="anchor-link" href="#Compute-the-proponents-/-opponents-using-TracInCPFast">¶</a></h4><p>Now, we call the <code>influence</code> method of <code>tracin_cp_fast</code> to compute the influential examples of the test examples in <code>test_examples_batch</code>.  We need to specify whether we want proponents or opponents via the <code>proponents</code> boolean argument, and how many influential examples to return per test example via the <code>k</code> argument.  Note that <code>k</code> must be specified.  Otherwise, the "influence score" mode will be run.  This call should take &lt; 2 minutes.</p>
+<h4 id="Compute-the-proponents-/-opponents-using-TracInCPFast">Compute the proponents / opponents using <code>TracInCPFast</code><a class="anchor-link" href="#Compute-the-proponents-/-opponents-using-TracInCPFast">¶</a></h4><p>Now, we call the <code>influence</code> method of <code>tracin_cp_fast</code> to compute the influential examples of the test examples represented by <code>test_examples_features</code> and <code>test_examples_true_labels</code>.  We need to specify whether we want proponents or opponents via the <code>proponents</code> boolean argument, and how many influential examples to return per test example via the <code>k</code> argument.  Note that <code>k</code> must be specified.  Otherwise, the "influence score" mode will be run.  This call should take &lt; 2 minutes.</p>
+<p>Note that we pass the test examples as a <em>single</em> tuple. This is because for all implementations, when we pass a single batch, <code>batch</code> to the <code>influence</code> method, we assume that <code>batch[-1]</code> has the labels for the batch, and <code>model(*(batch[0:-1]))</code> produces the predictions for the batch, so that <code>batch[0:-1]</code> contains the features for the batch. This convention is was introduced in a recent API change.</p>
 <p>This call returns a <code>namedtuple</code> with ordered elements <code>(indices, influence_scores)</code>.  <code>indices</code> is a 2D tensor of shape <code>(test_batch_size, k)</code>, where <code>test_batch_size</code> is the number of test examples in <code>test_examples_batch</code>.  <code>influence_scores</code> is of the same shape, but stores the influence scores of the proponents / opponents for each test example in sorted order.  For example, if <code>proponents</code> is <code>True</code>, <code>influence_scores[i][j]</code> is the influence score of the training example with the <code>j</code>-th most positive influence score on test example <code>i</code>.</p>
 </div>
 </div>
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In [15]:</div>
+<div class="prompt input_prompt">In [16]:</div>
 <div class="inner_cell">
 <div class="input_area">
 <div class="highlight hl-ipython3"><pre><span></span><span class="n">k</span> <span class="o">=</span> <span class="mi">10</span>
 <span class="n">start_time</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span>
 <span class="n">proponents_indices</span><span class="p">,</span> <span class="n">proponents_influence_scores</span> <span class="o">=</span> <span class="n">tracin_cp_fast</span><span class="o">.</span><span class="n">influence</span><span class="p">(</span>
-    <span class="n">test_examples_batch</span><span class="p">,</span> <span class="n">test_examples_true_labels</span><span class="p">,</span> <span class="n">k</span><span class="o">=</span><span class="n">k</span><span class="p">,</span> <span class="n">proponents</span><span class="o">=</span><span class="kc">True</span>
+    <span class="p">(</span><span class="n">test_examples_features</span><span class="p">,</span> <span class="n">test_examples_true_labels</span><span class="p">),</span> <span class="n">k</span><span class="o">=</span><span class="n">k</span><span class="p">,</span> <span class="n">proponents</span><span class="o">=</span><span class="kc">True</span>
 <span class="p">)</span>
 <span class="n">opponents_indices</span><span class="p">,</span> <span class="n">opponents_influence_scores</span> <span class="o">=</span> <span class="n">tracin_cp_fast</span><span class="o">.</span><span class="n">influence</span><span class="p">(</span>
-    <span class="n">test_examples_batch</span><span class="p">,</span> <span class="n">test_examples_true_labels</span><span class="p">,</span> <span class="n">k</span><span class="o">=</span><span class="n">k</span><span class="p">,</span> <span class="n">proponents</span><span class="o">=</span><span class="kc">False</span>
+    <span class="p">(</span><span class="n">test_examples_features</span><span class="p">,</span> <span class="n">test_examples_true_labels</span><span class="p">),</span> <span class="n">k</span><span class="o">=</span><span class="n">k</span><span class="p">,</span> <span class="n">proponents</span><span class="o">=</span><span class="kc">False</span>
 <span class="p">)</span>
 <span class="n">total_minutes</span> <span class="o">=</span> <span class="p">(</span><span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span> <span class="o">-</span> <span class="n">start_time</span><span class="p">)</span><span class="o">.</span><span class="n">total_seconds</span><span class="p">()</span> <span class="o">/</span> <span class="mf">60.0</span>
 <span class="nb">print</span><span class="p">(</span>
@@ -627,7 +627,7 @@ For this tutorial, we have saved the checkpoints from this training on AWS S3, a
 <div class="output_area">
 <div class="prompt"></div>
 <div class="output_subarea output_stream output_stdout output_text">
-<pre>Computed proponents / opponents over a dataset of 50000 examples in 0.88 minutes
+<pre>Computed proponents / opponents over a dataset of 50000 examples in 1.11 minutes
 </pre>
 </div>
 </div>
@@ -727,7 +727,7 @@ For this tutorial, we have saved the checkpoints from this training on AWS S3, a
 <div class="inner_cell">
 <div class="input_area">
 <div class="highlight hl-ipython3"><pre><span></span><span class="n">display_proponents_and_opponents</span><span class="p">(</span>
-    <span class="n">test_examples_batch</span><span class="p">,</span>
+    <span class="n">test_examples_features</span><span class="p">,</span>
     <span class="n">proponents_indices</span><span class="p">,</span>
     <span class="n">opponents_indices</span><span class="p">,</span>
     <span class="n">test_examples_true_labels</span><span class="p">,</span>
@@ -945,7 +945,7 @@ Note that <code>__init__</code> has 2 new arguments, due to the fact <code>TracI
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In [18]:</div>
+<div class="prompt input_prompt">In [19]:</div>
 <div class="inner_cell">
 <div class="input_area">
 <div class="highlight hl-ipython3"><pre><span></span><span class="kn">from</span> <span class="nn">captum.influence._utils.nearest_neighbors</span> <span class="kn">import</span> <span class="n">AnnoyNearestNeighbors</span>
@@ -975,7 +975,7 @@ Note that <code>__init__</code> has 2 new arguments, due to the fact <code>TracI
 <div class="output_area">
 <div class="prompt"></div>
 <div class="output_subarea output_stream output_stdout output_text">
-<pre>Performed pre-processing of a dataset of 50000 examples in 5.92 minutes
+<pre>Performed pre-processing of a dataset of 50000 examples in 4.98 minutes
 </pre>
 </div>
 </div>
@@ -991,16 +991,16 @@ Note that <code>__init__</code> has 2 new arguments, due to the fact <code>TracI
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In [19]:</div>
+<div class="prompt input_prompt">In [20]:</div>
 <div class="inner_cell">
 <div class="input_area">
 <div class="highlight hl-ipython3"><pre><span></span><span class="n">k</span> <span class="o">=</span> <span class="mi">10</span>
 <span class="n">start_time</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span>
 <span class="n">proponents_indices</span><span class="p">,</span> <span class="n">proponents_influence_scores</span> <span class="o">=</span> <span class="n">tracin_cp_fast_rand_proj</span><span class="o">.</span><span class="n">influence</span><span class="p">(</span>
-    <span class="n">test_examples_batch</span><span class="p">,</span> <span class="n">test_examples_true_labels</span><span class="p">,</span> <span class="n">k</span><span class="o">=</span><span class="n">k</span><span class="p">,</span> <span class="n">proponents</span><span class="o">=</span><span class="kc">True</span>
+    <span class="p">(</span><span class="n">test_examples_features</span><span class="p">,</span> <span class="n">test_examples_true_labels</span><span class="p">),</span> <span class="n">k</span><span class="o">=</span><span class="n">k</span><span class="p">,</span> <span class="n">proponents</span><span class="o">=</span><span class="kc">True</span>
 <span class="p">)</span>
 <span class="n">opponents_indices</span><span class="p">,</span> <span class="n">opponents_influence_scores</span> <span class="o">=</span> <span class="n">tracin_cp_fast_rand_proj</span><span class="o">.</span><span class="n">influence</span><span class="p">(</span>
-    <span class="n">test_examples_batch</span><span class="p">,</span> <span class="n">test_examples_true_labels</span><span class="p">,</span> <span class="n">k</span><span class="o">=</span><span class="n">k</span><span class="p">,</span> <span class="n">proponents</span><span class="o">=</span><span class="kc">False</span>
+    <span class="p">(</span><span class="n">test_examples_features</span><span class="p">,</span> <span class="n">test_examples_true_labels</span><span class="p">),</span> <span class="n">k</span><span class="o">=</span><span class="n">k</span><span class="p">,</span> <span class="n">proponents</span><span class="o">=</span><span class="kc">False</span>
 <span class="p">)</span>
 <span class="n">total_minutes</span> <span class="o">=</span> <span class="p">(</span><span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span> <span class="o">-</span> <span class="n">start_time</span><span class="p">)</span><span class="o">.</span><span class="n">total_seconds</span><span class="p">()</span> <span class="o">/</span> <span class="mf">60.0</span>
 <span class="nb">print</span><span class="p">(</span>
@@ -1016,7 +1016,7 @@ Note that <code>__init__</code> has 2 new arguments, due to the fact <code>TracI
 <div class="output_area">
 <div class="prompt"></div>
 <div class="output_subarea output_stream output_stdout output_text">
-<pre>Computed proponents / opponents over a dataset of 50000 examples in 0.00 minutes
+<pre>Computed proponents / opponents over a dataset of 50000 examples in 0.01 minutes
 </pre>
 </div>
 </div>
@@ -1036,7 +1036,7 @@ Note that <code>__init__</code> has 2 new arguments, due to the fact <code>TracI
 <div class="inner_cell">
 <div class="input_area">
 <div class="highlight hl-ipython3"><pre><span></span><span class="n">display_proponents_and_opponents</span><span class="p">(</span>
-    <span class="n">test_examples_batch</span><span class="p">,</span>
+    <span class="n">test_examples_features</span><span class="p">,</span>
     <span class="n">proponents_indices</span><span class="p">,</span>
     <span class="n">opponents_indices</span><span class="p">,</span>
     <span class="n">test_examples_true_labels</span><span class="p">,</span>
@@ -1316,7 +1316,7 @@ predicted_prob tensor(0.6398, grad_fn=&lt;UnbindBackward0&gt;)
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In [23]:</div>
+<div class="prompt input_prompt">In [24]:</div>
 <div class="inner_cell">
 <div class="input_area">
 <div class="highlight hl-ipython3"><pre><span></span><span class="n">start_time</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span>
@@ -1347,7 +1347,7 @@ predicted_prob tensor(0.6398, grad_fn=&lt;UnbindBackward0&gt;)
 <div class="output_area">
 <div class="prompt"></div>
 <div class="output_subarea output_stream output_stdout output_text">
-<pre>Generated incorrect labels in 0.36 minutes
+<pre>Generated incorrect labels in 0.42 minutes
 </pre>
 </div>
 </div>
@@ -1469,7 +1469,7 @@ For this tutorial, we have saved the checkpoints from this training on AWS S3, a
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In [28]:</div>
+<div class="prompt input_prompt">In [29]:</div>
 <div class="inner_cell">
 <div class="input_area">
 <div class="highlight hl-ipython3"><pre><span></span><span class="n">num_epochs</span> <span class="o">=</span> <span class="mi">101</span>
@@ -1593,7 +1593,7 @@ Archive:  checkpoints/cifar_10_mislabelled_dataset.zip
 <div class="output_area">
 <div class="prompt"></div>
 <div class="output_subarea output_stream output_stdout output_text">
-<pre>computed self influence scores for 50000 examples in 0.48 minutes
+<pre>computed self influence scores for 50000 examples in 0.50 minutes
 </pre>
 </div>
 </div>

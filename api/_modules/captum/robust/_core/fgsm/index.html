@@ -31,7 +31,7 @@ src="/_sphinx/documentation_options.js"></script>
 <div class="body" role="main">
 <h1>Source code for captum.robust._core.fgsm</h1><div class="highlight"><pre>
 <span></span><span class="ch">#!/usr/bin/env python3</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Tuple</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Union</span>
 
 <span class="kn">import</span> <span class="nn">torch</span>
 <span class="kn">from</span> <span class="nn">captum._utils.common</span> <span class="kn">import</span> <span class="p">(</span>
@@ -114,6 +114,7 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="n">target</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
         <span class="n">additional_forward_args</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">targeted</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="n">mask</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">TensorOrTupleOfTensorsGeneric</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TensorOrTupleOfTensorsGeneric</span><span class="p">:</span>
         <span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        This method computes and returns the perturbed input for each input tensor.</span>
@@ -162,6 +163,12 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">                        Default: None.</span>
 <span class="sd">            targeted (bool, optional): If attack should be targeted.</span>
 <span class="sd">                        Default: False.</span>
+<span class="sd">            mask (Tensor or tuple[Tensor, ...], optional): mask of zeroes and ones</span>
+<span class="sd">                        that defines which elements within the input tensor(s) are</span>
+<span class="sd">                        perturbed. This mask must have the same shape and</span>
+<span class="sd">                        dimensionality as the inputs. If this argument is not</span>
+<span class="sd">                        provided, all elements will be perturbed.</span>
+<span class="sd">                        Default: None.</span>
 
 
 <span class="sd">        Returns:</span>
@@ -176,6 +183,11 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">        """</span>
         <span class="n">is_inputs_tuple</span> <span class="o">=</span> <span class="n">_is_tuple</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span>
         <span class="n">inputs</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="n">_format_tensor_into_tuples</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span>
+        <span class="n">masks</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">]]</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">_format_tensor_into_tuples</span><span class="p">(</span><span class="n">mask</span><span class="p">)</span>
+            <span class="k">if</span> <span class="p">(</span><span class="n">mask</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">)</span>
+            <span class="k">else</span> <span class="p">(</span><span class="mi">1</span><span class="p">,)</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span>
+        <span class="p">)</span>
         <span class="n">gradient_mask</span> <span class="o">=</span> <span class="n">apply_gradient_requirements</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span>
 
         <span class="k">def</span> <span class="nf">_forward_with_loss</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">Tensor</span><span class="p">:</span>
@@ -193,7 +205,7 @@ src="/_sphinx/documentation_options.js"></script>
 
         <span class="n">grads</span> <span class="o">=</span> <span class="n">compute_gradients</span><span class="p">(</span><span class="n">_forward_with_loss</span><span class="p">,</span> <span class="n">inputs</span><span class="p">)</span>
         <span class="n">undo_gradient_requirements</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">gradient_mask</span><span class="p">)</span>
-        <span class="n">perturbed_inputs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_perturb</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">grads</span><span class="p">,</span> <span class="n">epsilon</span><span class="p">,</span> <span class="n">targeted</span><span class="p">)</span>
+        <span class="n">perturbed_inputs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_perturb</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">grads</span><span class="p">,</span> <span class="n">epsilon</span><span class="p">,</span> <span class="n">targeted</span><span class="p">,</span> <span class="n">masks</span><span class="p">)</span>
         <span class="n">perturbed_inputs</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">bound</span><span class="p">(</span><span class="n">perturbed_inputs</span><span class="p">[</span><span class="n">i</span><span class="p">])</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">perturbed_inputs</span><span class="p">))</span>
         <span class="p">)</span>
@@ -205,6 +217,7 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="n">grads</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">,</span>
         <span class="n">epsilon</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
         <span class="n">targeted</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span>
+        <span class="n">masks</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">:</span>
         <span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        A helper function to calculate the perturbed inputs given original</span>
@@ -215,10 +228,10 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="n">inputs</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span>
             <span class="n">torch</span><span class="o">.</span><span class="n">where</span><span class="p">(</span>
                 <span class="n">torch</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">grad</span><span class="p">)</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">zero_thresh</span><span class="p">,</span>
-                <span class="n">inp</span> <span class="o">+</span> <span class="n">multiplier</span> <span class="o">*</span> <span class="n">epsilon</span> <span class="o">*</span> <span class="n">torch</span><span class="o">.</span><span class="n">sign</span><span class="p">(</span><span class="n">grad</span><span class="p">),</span>
+                <span class="n">inp</span> <span class="o">+</span> <span class="n">multiplier</span> <span class="o">*</span> <span class="n">epsilon</span> <span class="o">*</span> <span class="n">torch</span><span class="o">.</span><span class="n">sign</span><span class="p">(</span><span class="n">grad</span><span class="p">)</span> <span class="o">*</span> <span class="n">mask</span><span class="p">,</span>
                 <span class="n">inp</span><span class="p">,</span>
             <span class="p">)</span>
-            <span class="k">for</span> <span class="n">grad</span><span class="p">,</span> <span class="n">inp</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">grads</span><span class="p">,</span> <span class="n">inputs</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">grad</span><span class="p">,</span> <span class="n">inp</span><span class="p">,</span> <span class="n">mask</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">grads</span><span class="p">,</span> <span class="n">inputs</span><span class="p">,</span> <span class="n">masks</span><span class="p">)</span>
         <span class="p">)</span>
         <span class="k">return</span> <span class="n">inputs</span></div>
 </pre></div>

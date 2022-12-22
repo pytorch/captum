@@ -17,8 +17,7 @@
 #   - install the [Annoy](https://github.com/spotify/annoy) Python module.
 
 # ## Overview of different implementations of the TracInCP method
-# Currently, Captum offers 3 implementations, all of which implement the same API.  More specifically, they define an `influence` method, which can be used in 3 different modes:
-# - self influence mode: calculates the self influence scores for all examples in the training dataset.
+# Currently, Captum offers 3 implementations, all of which implement the same API.  More specifically, they define an `influence` method, which can be used in 2 different modes:
 # - influence score mode: given a batch of test examples, calculates the influence score of every example in the training dataset on every test example.
 # - top-k most influential mode: given a batch of test examples, calculates either the proponents or opponents of every test example, as well as their corresponding influence scores.
 # 
@@ -119,7 +118,7 @@ inverse_normalize = transforms.Compose([
 
 # #### Define `correct_dataset`
 
-# In[5]:
+# In[6]:
 
 
 correct_dataset_path = "data/cifar_10"
@@ -220,7 +219,7 @@ correct_dataset_checkpoints_dir = os.path.join("checkpoints", "cifar_10_correct_
 # Finally, we train the model, converting `correct_dataset` and `test_dataset` into `DataLoader`s, and saving every 5-th checkpoint.
 # For this tutorial, we have saved the checkpoints from this training on AWS S3, and you can just download those checkpoints instead of doing time-intensive training.  If you want to do training yourself, please set the `do_training` flag in the next cell to `True`.
 
-# In[9]:
+# In[10]:
 
 
 num_epochs = 26
@@ -265,14 +264,14 @@ correct_dataset_final_checkpoint = os.path.join(correct_dataset_checkpoints_dir,
 checkpoints_load_func(net, correct_dataset_final_checkpoint)
 
 
-# Now, we define `test_examples_batch`, the batch of test examples to identify influential examples for, and also store the correct as well as predicted labels.
+# Now, we define `test_examples_features`, the features for a batch of test examples to identify influential examples for, and also store the correct as well as predicted labels.
 
 # In[13]:
 
 
 test_examples_indices = [0,1,2,3]
-test_examples_batch = torch.stack([test_dataset[i][0] for i in test_examples_indices])
-test_examples_predicted_probs, test_examples_predicted_labels = torch.max(F.softmax(net(test_examples_batch), dim=1), dim=1)
+test_examples_features = torch.stack([test_dataset[i][0] for i in test_examples_indices])
+test_examples_predicted_probs, test_examples_predicted_labels = torch.max(F.softmax(net(test_examples_features), dim=1), dim=1)
 test_examples_true_labels = torch.Tensor([test_dataset[i][1] for i in test_examples_indices]).long()
 
 
@@ -308,20 +307,22 @@ tracin_cp_fast = TracInCPFast(
 
 
 # #### Compute the proponents / opponents using `TracInCPFast`
-# Now, we call the `influence` method of `tracin_cp_fast` to compute the influential examples of the test examples in `test_examples_batch`.  We need to specify whether we want proponents or opponents via the `proponents` boolean argument, and how many influential examples to return per test example via the `k` argument.  Note that `k` must be specified.  Otherwise, the "influence score" mode will be run.  This call should take < 2 minutes.
+# Now, we call the `influence` method of `tracin_cp_fast` to compute the influential examples of the test examples represented by `test_examples_features` and `test_examples_true_labels`.  We need to specify whether we want proponents or opponents via the `proponents` boolean argument, and how many influential examples to return per test example via the `k` argument.  Note that `k` must be specified.  Otherwise, the "influence score" mode will be run.  This call should take < 2 minutes.
+# 
+# Note that we pass the test examples as a *single* tuple. This is because for all implementations, when we pass a single batch, `batch` to the `influence` method, we assume that `batch[-1]` has the labels for the batch, and `model(*(batch[0:-1]))` produces the predictions for the batch, so that `batch[0:-1]` contains the features for the batch. This convention is was introduced in a recent API change.
 # 
 # This call returns a `namedtuple` with ordered elements `(indices, influence_scores)`.  `indices` is a 2D tensor of shape `(test_batch_size, k)`, where `test_batch_size` is the number of test examples in `test_examples_batch`.  `influence_scores` is of the same shape, but stores the influence scores of the proponents / opponents for each test example in sorted order.  For example, if `proponents` is `True`, `influence_scores[i][j]` is the influence score of the training example with the `j`-th most positive influence score on test example `i`.
 
-# In[15]:
+# In[16]:
 
 
 k = 10
 start_time = datetime.datetime.now()
 proponents_indices, proponents_influence_scores = tracin_cp_fast.influence(
-    test_examples_batch, test_examples_true_labels, k=k, proponents=True
+    (test_examples_features, test_examples_true_labels), k=k, proponents=True
 )
 opponents_indices, opponents_influence_scores = tracin_cp_fast.influence(
-    test_examples_batch, test_examples_true_labels, k=k, proponents=False
+    (test_examples_features, test_examples_true_labels), k=k, proponents=False
 )
 total_minutes = (datetime.datetime.now() - start_time).total_seconds() / 60.0
 print(
@@ -408,7 +409,7 @@ def display_proponents_and_opponents(test_examples_batch, proponents_indices, op
 
 
 display_proponents_and_opponents(
-    test_examples_batch,
+    test_examples_features,
     proponents_indices,
     opponents_indices,
     test_examples_true_labels,
@@ -427,7 +428,7 @@ display_proponents_and_opponents(
 # 
 # ***Note***: initialization will take ~10 minutes, so feel free to skip the tutorial parts related to `TracInCPFastRandProj`
 
-# In[18]:
+# In[19]:
 
 
 from captum.influence._utils.nearest_neighbors import AnnoyNearestNeighbors
@@ -453,16 +454,16 @@ print(
 # #### Compute the proponents / opponents using `TracInCPFastRandProj`
 # As before, we can compute the proponents / opponents using the `influence` method of this `TracInCPFastRandProj` instance.  Unlike the `TracInCPFast` instance, this computation should be very fast, due to the preprocessing done during initialization.
 
-# In[19]:
+# In[20]:
 
 
 k = 10
 start_time = datetime.datetime.now()
 proponents_indices, proponents_influence_scores = tracin_cp_fast_rand_proj.influence(
-    test_examples_batch, test_examples_true_labels, k=k, proponents=True
+    (test_examples_features, test_examples_true_labels), k=k, proponents=True
 )
 opponents_indices, opponents_influence_scores = tracin_cp_fast_rand_proj.influence(
-    test_examples_batch, test_examples_true_labels, k=k, proponents=False
+    (test_examples_features, test_examples_true_labels), k=k, proponents=False
 )
 total_minutes = (datetime.datetime.now() - start_time).total_seconds() / 60.0
 print(
@@ -478,7 +479,7 @@ print(
 
 
 display_proponents_and_opponents(
-    test_examples_batch,
+    test_examples_features,
     proponents_indices,
     opponents_indices,
     test_examples_true_labels,
@@ -522,7 +523,7 @@ checkpoints_load_func(correct_dataset_net, correct_dataset_final_checkpoint)
 
 # Then, we generate both incorrect labels and extract correct labels for every example in `correct_dataset`.  We need the correct labels since some of the examples in `incorrect_dataset` will still be correctly labelled.  This should take < 10 minutes.
 
-# In[23]:
+# In[24]:
 
 
 start_time = datetime.datetime.now()
@@ -599,7 +600,7 @@ mislabelled_dataset_checkpoints_dir = os.path.join("checkpoints", "cifar_10_misl
 # Finally, we train the model, converting `mislabelled_dataset` and `test_dataset` into `DataLoader`s, and saving every 20-th checkpoint.
 # For this tutorial, we have saved the checkpoints from this training on AWS S3, and you can just download those checkpoints instead of doing time-intensive training.  If you want to do training yourself, please set the `do_training` flag in the next cell to `True`.
 
-# In[28]:
+# In[29]:
 
 
 num_epochs = 101

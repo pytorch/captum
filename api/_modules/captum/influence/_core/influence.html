@@ -44,13 +44,11 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">    An abstract class to define model data influence skeleton.</span>
 <span class="sd">    """</span>
 
-    <span class="k">def</span> <span class="nf">__init_</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span> <span class="n">model</span><span class="p">:</span> <span class="n">Module</span><span class="p">,</span> <span class="n">influence_src_dataset</span><span class="p">:</span> <span class="n">Dataset</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span> <span class="nf">__init_</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model</span><span class="p">:</span> <span class="n">Module</span><span class="p">,</span> <span class="n">train_dataset</span><span class="p">:</span> <span class="n">Dataset</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        Args:</span>
 <span class="sd">            model (torch.nn.Module): An instance of pytorch model.</span>
-<span class="sd">            influence_src_dataset (torch.utils.data.Dataset): PyTorch Dataset that is</span>
+<span class="sd">            train_dataset (torch.utils.data.Dataset): PyTorch Dataset that is</span>
 <span class="sd">                    used to create a PyTorch Dataloader to iterate over the dataset and</span>
 <span class="sd">                    its labels. This is the dataset for which we will be seeking for</span>
 <span class="sd">                    influential instances. In most cases this is the training dataset.</span>
@@ -58,7 +56,7 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">                    implementation of `DataInfluence` abstract class.</span>
 <span class="sd">        """</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">model</span> <span class="o">=</span> <span class="n">model</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">influence_src_dataset</span> <span class="o">=</span> <span class="n">influence_src_dataset</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">train_dataset</span> <span class="o">=</span> <span class="n">train_dataset</span>
 
 <div class="viewcode-block" id="DataInfluence.influence"><a class="viewcode-back" href="../../../../influence.html#captum.influence.DataInfluence.influence">[docs]</a>    <span class="nd">@abstractmethod</span>
     <span class="k">def</span> <span class="nf">influence</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
