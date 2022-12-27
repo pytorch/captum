@@ -47,7 +47,7 @@ class Test(BaseTest):
             net.conv1,
             inp,
             expected_activation=expected_result,
-            split_channels=True,
+            attr_dim_summation=False,
         )
 
     def test_simple_input_conv_no_grad(self) -> None:
@@ -117,7 +117,7 @@ class Test(BaseTest):
         additional_input: Any = None,
         attribute_to_layer_input: bool = False,
         relu_attributions: bool = False,
-        split_channels: bool = False,
+        attr_dim_summation: bool = True,
     ):
         layer_gc = LayerGradCam(model, target_layer)
         self.assertFalse(layer_gc.multiplies_by_inputs)
@@ -127,7 +127,7 @@ class Test(BaseTest):
             additional_forward_args=additional_input,
             attribute_to_layer_input=attribute_to_layer_input,
             relu_attributions=relu_attributions,
-            split_channels=split_channels,
+            attr_dim_summation=attr_dim_summation,
         )
         assertTensorTuplesAlmostEqual(
             self, attributions, expected_activation, delta=0.01
