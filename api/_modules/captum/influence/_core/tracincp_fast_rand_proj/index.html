@@ -92,7 +92,7 @@ src="/_sphinx/documentation_options.js"></script>
 
 
 <div class="viewcode-block" id="TracInCPFast"><a class="viewcode-back" href="../../../../influence.html#captum.influence.TracInCPFast">[docs]</a><span class="k">class</span> <span class="nc">TracInCPFast</span><span class="p">(</span><span class="n">TracInCPBase</span><span class="p">):</span>
-    <span class="sa">r</span><span class="sd">"""</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">    In Appendix F, Page 14 of the TracIn paper, they show that the calculation</span>
 <span class="sd">    of the influence score of between a test example x' and a training example x,</span>
 <span class="sd">    can be computed much more quickly than naive back-propagation in the special</span>
@@ -123,7 +123,7 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="n">test_loss_fn</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">Module</span><span class="p">,</span> <span class="n">Callable</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">vectorize</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="sa">r</span><span class="sd">"""</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        Args:</span>
 
 <span class="sd">            model (torch.nn.Module): An instance of pytorch model. This model should</span>
@@ -243,7 +243,7 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="n">proponents</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
         <span class="n">show_progress</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">KMostInfluentialResults</span><span class="p">]:</span>
-        <span class="sa">r</span><span class="sd">"""</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        This is the key method of this class, and can be run in 2 different modes,</span>
 <span class="sd">        where the mode that is run depends on the arguments passed to this method:</span>
 
@@ -330,7 +330,7 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="n">test_batch</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span>
         <span class="n">train_batch</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span>
     <span class="p">):</span>
-        <span class="sd">"""</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        computes influence scores for a single training batch, when only considering</span>
 <span class="sd">        gradients in the last fully-connected layer, using the computation trick</span>
 <span class="sd">        described in the `TracInCPFast` class description.</span>
@@ -384,7 +384,7 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="n">inputs</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span>
         <span class="n">show_progress</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tensor</span><span class="p">:</span>
-        <span class="sa">r</span><span class="sd">"""</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        Computes the influence of examples in training dataset `train_dataset`</span>
 <span class="sd">        on the examples in the test batch represented by `inputs`.</span>
 <span class="sd">        This implementation does not require knowing the number of training examples</span>
@@ -447,7 +447,7 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="n">proponents</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
         <span class="n">show_progress</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">KMostInfluentialResults</span><span class="p">:</span>
-        <span class="sa">r</span><span class="sd">"""</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        Args:</span>
 
 <span class="sd">            inputs (tuple): `inputs` is the test batch and is a tuple of</span>
@@ -494,7 +494,7 @@ src="/_sphinx/documentation_options.js"></script>
             <span class="k">else</span> <span class="p">(</span>
                 <span class="p">(</span>
                     <span class="sa">f</span><span class="s2">"Using </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">get_name</span><span class="p">()</span><span class="si">}</span><span class="s2"> to perform computation for "</span>
-                    <span class="sa">f</span><span class="s1">'getting </span><span class="si">{</span><span class="s2">"proponents"</span> <span class="k">if</span> <span class="n">proponents</span> <span class="k">else</span> <span class="s2">"opponents"</span><span class="si">}</span><span class="s1">. '</span>
+                    <span class="sa">f</span><span class="s1">'getting </span><span class="si">{</span><span class="s2">"proponents"</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="n">proponents</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="s2">"opponents"</span><span class="si">}</span><span class="s1">. '</span>
                     <span class="s2">"Processing training batches"</span>
                 <span class="p">)</span>
             <span class="p">)</span>
@@ -516,7 +516,7 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="n">inputs</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span> <span class="n">DataLoader</span><span class="p">],</span>
         <span class="n">show_progress</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tensor</span><span class="p">:</span>
-        <span class="sd">"""</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Computes self influence scores for the examples in `inputs`, which is</span>
 <span class="sd">        either a single batch or a Pytorch `DataLoader` that yields batches. Therefore,</span>
 <span class="sd">        the computed self influence scores are *not* for the examples in training</span>
@@ -663,7 +663,7 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="n">show_progress</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
         <span class="n">outer_loop_by_checkpoints</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tensor</span><span class="p">:</span>
-        <span class="sd">"""</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Computes self influence scores for the examples in `inputs`, which is</span>
 <span class="sd">        either a single batch or a Pytorch `DataLoader` that yields batches.</span>
 <span class="sd">        If `inputs` is not specified or `None` calculates self influence</span>
@@ -740,7 +740,7 @@ src="/_sphinx/documentation_options.js"></script>
     <span class="n">loss_fn</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">Module</span><span class="p">,</span> <span class="n">Callable</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">reduction_type</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 <span class="p">):</span>
-    <span class="sd">"""</span>
+<span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    For instances of TracInCPFast and children classes, computation of influence scores</span>
 <span class="sd">    or self influence scores repeatedly calls this function for different checkpoints</span>
 <span class="sd">    and batches. These computations involve a loss function. If `test` is True, the</span>
@@ -783,7 +783,7 @@ src="/_sphinx/documentation_options.js"></script>
 
     <span class="k">def</span> <span class="nf">hook_wrapper</span><span class="p">(</span><span class="n">original_module</span><span class="p">):</span>
         <span class="k">def</span> <span class="nf">_capture_inputs</span><span class="p">(</span><span class="n">layer</span><span class="p">,</span> <span class="nb">input</span><span class="p">,</span> <span class="n">output</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="sa">r</span><span class="sd">"""Save activations into layer_inputs in forward pass"""</span>
+<span class="w">            </span><span class="sa">r</span><span class="sd">"""Save activations into layer_inputs in forward pass"""</span>
             <span class="k">with</span> <span class="n">lock</span><span class="p">:</span>
                 <span class="n">is_eval_tuple</span> <span class="o">=</span> <span class="nb">isinstance</span><span class="p">(</span><span class="nb">input</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)</span>
                 <span class="k">if</span> <span class="n">is_eval_tuple</span><span class="p">:</span>
@@ -830,7 +830,7 @@ src="/_sphinx/documentation_options.js"></script>
 
 
 <div class="viewcode-block" id="TracInCPFastRandProj"><a class="viewcode-back" href="../../../../influence.html#captum.influence.TracInCPFastRandProj">[docs]</a><span class="k">class</span> <span class="nc">TracInCPFastRandProj</span><span class="p">(</span><span class="n">TracInCPFast</span><span class="p">):</span>
-    <span class="sa">r</span><span class="sd">"""</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">    A version of TracInCPFast which is optimized for "interactive" calls to</span>
 <span class="sd">    `influence` for the purpose of calculating proponents / opponents, or</span>
 <span class="sd">    influence scores. "Interactive" means there will be multiple calls to</span>
@@ -896,7 +896,7 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="n">projection_dim</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">seed</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="sa">r</span><span class="sd">"""</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        Args:</span>
 
 <span class="sd">            model (torch.nn.Module): An instance of pytorch model. This model should</span>
@@ -1051,7 +1051,7 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">inputs</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tensor</span><span class="p">:</span>
-        <span class="sa">r</span><span class="sd">"""</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        Args:</span>
 
 <span class="sd">            inputs (tuple): `inputs` is the test batch and is a tuple of</span>
@@ -1089,7 +1089,7 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="n">k</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">5</span><span class="p">,</span>
         <span class="n">proponents</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">KMostInfluentialResults</span><span class="p">:</span>
-        <span class="sa">r</span><span class="sd">"""</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        Args:</span>
 
 <span class="sd">            inputs (tuple): `inputs` is the test batch and is a tuple of</span>
@@ -1145,7 +1145,7 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="n">show_progress</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
         <span class="n">outer_loop_by_checkpoints</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tensor</span><span class="p">:</span>
-        <span class="sd">"""</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        NOT IMPLEMENTED - no need to implement `TracInCPFastRandProj.self_influence`,</span>
 <span class="sd">        as `TracInCPFast.self_influence` is sufficient - the latter does not benefit</span>
 <span class="sd">        from random projections, since no quantities associated with a training</span>
@@ -1217,7 +1217,7 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="n">k</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">5</span><span class="p">,</span>
         <span class="n">proponents</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">KMostInfluentialResults</span><span class="p">]:</span>
-        <span class="sa">r</span><span class="sd">"""</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        This is the key method of this class, and can be run in 2 different modes,</span>
 <span class="sd">        where the mode that is run depends on the arguments passed to this method:</span>
 
@@ -1292,7 +1292,7 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">dataloader</span><span class="p">:</span> <span class="n">DataLoader</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">]]:</span>
-        <span class="sd">"""</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        returns the variables `jacobian_projection` and `layer_input_projection`</span>
 <span class="sd">        if needed, based on `self.projection_dim`. The two variables are</span>
 <span class="sd">        used by `self._get_intermediate_quantities_fast_rand_proj`. They are both None</span>
@@ -1383,7 +1383,7 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">src_intermediate_quantities</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span>
     <span class="p">):</span>
-        <span class="sd">"""</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Assumes `self._get_intermediate_quantities_tracin_fast_rand_proj` returns</span>
 <span class="sd">        vector representations for each example, and that influence between a</span>
 <span class="sd">        training and test example is obtained by taking the dot product of their</span>
@@ -1410,7 +1410,7 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="n">projection_quantities</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">]],</span>
         <span class="n">test</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
-        <span class="sa">r</span><span class="sd">"""</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        This method computes vectors that can be used to compute influence. (see</span>
 <span class="sd">        Appendix F, page 15). Crucially, the influence score between a test example</span>
 <span class="sd">        and a training example is simply the dot product of their respective</span>
@@ -1561,7 +1561,7 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">inputs</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span> <span class="n">DataLoader</span><span class="p">],</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tensor</span><span class="p">:</span>
-        <span class="sd">"""</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Computes "embedding" vectors for all examples in a single batch, or a</span>
 <span class="sd">        `Dataloader` that yields batches. These embedding vectors are constructed so</span>
 <span class="sd">        that the influence score of a training example on a test example is simply the</span>
@@ -1658,7 +1658,7 @@ src="/_sphinx/documentation_options.js"></script>
 </div>
 </div>
 <div class="clearer"></div>
-</div></div></div><footer class="nav-footer" id="footer"><section class="sitemap"><div class="footerSection"><h5>Docs</h5><a href="/docs/introduction">Introduction</a><a href="/docs/getting_started">Getting Started</a><a href="/tutorials/">Tutorials</a><a href="/api/">API Reference</a></div><div class="footerSection"><h5>Legal</h5><a href="https://opensource.facebook.com/legal/privacy/" target="_blank" rel="noreferrer noopener">Privacy</a><a href="https://opensource.facebook.com/legal/terms/" target="_blank" rel="noreferrer noopener">Terms</a></div><div class="footerSection"><h5>Social</h5><div class="social"><a class="github-button" href="https://github.com/pytorch/captum" data-count-href="https://github.com/pytorch/captum/stargazers" data-show-count="true" data-count-aria-label="# stargazers on GitHub" aria-label="Star Captum on GitHub">captum</a></div></div></section><a href="https://opensource.facebook.com/" target="_blank" rel="noreferrer noopener" class="fbOpenSource"><img src="/img/oss_logo.png" alt="Facebook Open Source" width="170" height="45"/></a><section class="copyright"> Copyright © 2022 Facebook Inc.</section><script>
+</div></div></div><footer class="nav-footer" id="footer"><section class="sitemap"><div class="footerSection"><h5>Docs</h5><a href="/docs/introduction">Introduction</a><a href="/docs/getting_started">Getting Started</a><a href="/tutorials/">Tutorials</a><a href="/api/">API Reference</a></div><div class="footerSection"><h5>Legal</h5><a href="https://opensource.facebook.com/legal/privacy/" target="_blank" rel="noreferrer noopener">Privacy</a><a href="https://opensource.facebook.com/legal/terms/" target="_blank" rel="noreferrer noopener">Terms</a></div><div class="footerSection"><h5>Social</h5><div class="social"><a class="github-button" href="https://github.com/pytorch/captum" data-count-href="https://github.com/pytorch/captum/stargazers" data-show-count="true" data-count-aria-label="# stargazers on GitHub" aria-label="Star Captum on GitHub">captum</a></div></div></section><a href="https://opensource.facebook.com/" target="_blank" rel="noreferrer noopener" class="fbOpenSource"><img src="/img/oss_logo.png" alt="Facebook Open Source" width="170" height="45"/></a><section class="copyright"> Copyright © 2023 Facebook Inc.</section><script>
             (function() {
               var BAD_BASE = '/captum/';
               if (window.location.origin !== 'https://captum.ai') {

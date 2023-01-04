@@ -44,7 +44,7 @@ src="/_sphinx/documentation_options.js"></script>
 
 
 <div class="viewcode-block" id="Classifier"><a class="viewcode-back" href="../../../../concept.html#captum.concept.Classifier">[docs]</a><span class="k">class</span> <span class="nc">Classifier</span><span class="p">(</span><span class="n">ABC</span><span class="p">):</span>
-    <span class="sa">r</span><span class="sd">"""</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">    An abstract class definition of any classifier that allows to train a model</span>
 <span class="sd">    and access trained weights of that model.</span>
 
@@ -98,7 +98,7 @@ src="/_sphinx/documentation_options.js"></script>
     <span class="k">def</span> <span class="nf">train_and_eval</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">dataloader</span><span class="p">:</span> <span class="n">DataLoader</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">Dict</span><span class="p">,</span> <span class="kc">None</span><span class="p">]:</span>
-        <span class="sa">r</span><span class="sd">"""</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        This method is responsible for training a classifier using the data</span>
 <span class="sd">        provided through `dataloader` input arguments. Based on the specific</span>
 <span class="sd">        implementation, it may or may not return a statistics about model</span>
@@ -122,7 +122,7 @@ src="/_sphinx/documentation_options.js"></script>
 
 <div class="viewcode-block" id="Classifier.weights"><a class="viewcode-back" href="../../../../concept.html#captum.concept.Classifier.weights">[docs]</a>    <span class="nd">@abstractmethod</span>
     <span class="k">def</span> <span class="nf">weights</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tensor</span><span class="p">:</span>
-        <span class="sa">r</span><span class="sd">"""</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        This function returns a C x F tensor weights, where</span>
 <span class="sd">        C is the number of classes and F is the number of features.</span>
 
@@ -134,7 +134,7 @@ src="/_sphinx/documentation_options.js"></script>
 
 <div class="viewcode-block" id="Classifier.classes"><a class="viewcode-back" href="../../../../concept.html#captum.concept.Classifier.classes">[docs]</a>    <span class="nd">@abstractmethod</span>
     <span class="k">def</span> <span class="nf">classes</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]:</span>
-        <span class="sa">r</span><span class="sd">"""</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        This function returns the list of all classes that are used by the</span>
 <span class="sd">        classifier to train the model in the `train_and_eval` method.</span>
 <span class="sd">        The order of returned classes has to match the same order used in</span>
@@ -148,7 +148,7 @@ src="/_sphinx/documentation_options.js"></script>
 
 
 <span class="k">class</span> <span class="nc">DefaultClassifier</span><span class="p">(</span><span class="n">Classifier</span><span class="p">):</span>
-    <span class="sa">r</span><span class="sd">"""</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">    A default Linear Classifier based on sklearn's SGDClassifier for</span>
 <span class="sd">    learning decision boundaries between concepts.</span>
 <span class="sd">    Note that default implementation slices input dataset into train and test</span>
@@ -171,7 +171,7 @@ src="/_sphinx/documentation_options.js"></script>
     <span class="k">def</span> <span class="nf">train_and_eval</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">dataloader</span><span class="p">:</span> <span class="n">DataLoader</span><span class="p">,</span> <span class="n">test_split_ratio</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.33</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">Dict</span><span class="p">,</span> <span class="kc">None</span><span class="p">]:</span>
-        <span class="sa">r</span><span class="sd">"""</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">         Implements Classifier::train_and_eval abstract method for small concept</span>
 <span class="sd">         datsets provided by `dataloader`.</span>
 <span class="sd">         It is assumed that when iterating over `dataloader` we can still</span>
@@ -218,7 +218,7 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="k">return</span> <span class="p">{</span><span class="s2">"accs"</span><span class="p">:</span> <span class="n">accs</span><span class="p">}</span>
 
     <span class="k">def</span> <span class="nf">weights</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tensor</span><span class="p">:</span>
-        <span class="sa">r</span><span class="sd">"""</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        This function returns a C x F tensor weights, where</span>
 <span class="sd">        C is the number of classes and F is the number of features.</span>
 <span class="sd">        In case of binary classification, C = 2 otherwise it is &gt; 2.</span>
@@ -239,7 +239,7 @@ src="/_sphinx/documentation_options.js"></script>
             <span class="k">return</span> <span class="n">weights</span>
 
     <span class="k">def</span> <span class="nf">classes</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]:</span>
-        <span class="sa">r</span><span class="sd">"""</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        This function returns the list of all classes that are used by the</span>
 <span class="sd">        classifier to train the model in the `train_and_eval` method.</span>
 <span class="sd">        The order of returned classes has to match the same order used in</span>
@@ -318,7 +318,7 @@ src="/_sphinx/documentation_options.js"></script>
 </div>
 </div>
 <div class="clearer"></div>
-</div></div></div><footer class="nav-footer" id="footer"><section class="sitemap"><div class="footerSection"><h5>Docs</h5><a href="/docs/introduction">Introduction</a><a href="/docs/getting_started">Getting Started</a><a href="/tutorials/">Tutorials</a><a href="/api/">API Reference</a></div><div class="footerSection"><h5>Legal</h5><a href="https://opensource.facebook.com/legal/privacy/" target="_blank" rel="noreferrer noopener">Privacy</a><a href="https://opensource.facebook.com/legal/terms/" target="_blank" rel="noreferrer noopener">Terms</a></div><div class="footerSection"><h5>Social</h5><div class="social"><a class="github-button" href="https://github.com/pytorch/captum" data-count-href="https://github.com/pytorch/captum/stargazers" data-show-count="true" data-count-aria-label="# stargazers on GitHub" aria-label="Star Captum on GitHub">captum</a></div></div></section><a href="https://opensource.facebook.com/" target="_blank" rel="noreferrer noopener" class="fbOpenSource"><img src="/img/oss_logo.png" alt="Facebook Open Source" width="170" height="45"/></a><section class="copyright"> Copyright © 2022 Facebook Inc.</section><script>
+</div></div></div><footer class="nav-footer" id="footer"><section class="sitemap"><div class="footerSection"><h5>Docs</h5><a href="/docs/introduction">Introduction</a><a href="/docs/getting_started">Getting Started</a><a href="/tutorials/">Tutorials</a><a href="/api/">API Reference</a></div><div class="footerSection"><h5>Legal</h5><a href="https://opensource.facebook.com/legal/privacy/" target="_blank" rel="noreferrer noopener">Privacy</a><a href="https://opensource.facebook.com/legal/terms/" target="_blank" rel="noreferrer noopener">Terms</a></div><div class="footerSection"><h5>Social</h5><div class="social"><a class="github-button" href="https://github.com/pytorch/captum" data-count-href="https://github.com/pytorch/captum/stargazers" data-show-count="true" data-count-aria-label="# stargazers on GitHub" aria-label="Star Captum on GitHub">captum</a></div></div></section><a href="https://opensource.facebook.com/" target="_blank" rel="noreferrer noopener" class="fbOpenSource"><img src="/img/oss_logo.png" alt="Facebook Open Source" width="170" height="45"/></a><section class="copyright"> Copyright © 2023 Facebook Inc.</section><script>
             (function() {
               var BAD_BASE = '/captum/';
               if (window.location.origin !== 'https://captum.ai') {

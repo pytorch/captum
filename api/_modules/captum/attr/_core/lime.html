@@ -70,7 +70,7 @@ src="/_sphinx/documentation_options.js"></script>
 
 
 <div class="viewcode-block" id="LimeBase"><a class="viewcode-back" href="../../../../lime.html#captum.attr.LimeBase">[docs]</a><span class="k">class</span> <span class="nc">LimeBase</span><span class="p">(</span><span class="n">PerturbationAttribution</span><span class="p">):</span>
-    <span class="sa">r</span><span class="sd">"""</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">    Lime is an interpretability method that trains an interpretable surrogate model</span>
 <span class="sd">    by sampling points around a specified input example and using model evaluations</span>
 <span class="sd">    at these points to train a simpler interpretable 'surrogate' model, such as a</span>
@@ -109,7 +109,7 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="n">from_interp_rep_transform</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Callable</span><span class="p">],</span>
         <span class="n">to_interp_rep_transform</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Callable</span><span class="p">],</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="sa">r</span><span class="sd">"""</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">"""</span>
 
 <span class="sd">        Args:</span>
 
@@ -277,7 +277,7 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="n">show_progress</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
         <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tensor</span><span class="p">:</span>
-        <span class="sa">r</span><span class="sd">"""</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        This method attributes the output of the model with given target index</span>
 <span class="sd">        (in case it is provided, otherwise it assumes that output is a</span>
 <span class="sd">        scalar) to the inputs of the model using the approach described above.</span>
@@ -623,7 +623,7 @@ src="/_sphinx/documentation_options.js"></script>
 <div class="viewcode-block" id="get_exp_kernel_similarity_function"><a class="viewcode-back" href="../../../../lime.html#captum.attr.get_exp_kernel_similarity_function">[docs]</a><span class="k">def</span> <span class="nf">get_exp_kernel_similarity_function</span><span class="p">(</span>
     <span class="n">distance_mode</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"cosine"</span><span class="p">,</span> <span class="n">kernel_width</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">:</span>
-    <span class="sa">r</span><span class="sd">"""</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">    This method constructs an appropriate similarity function to compute</span>
 <span class="sd">    weights for perturbed sample in LIME. Distance between the original</span>
 <span class="sd">    and perturbed inputs is computed based on the provided distance mode,</span>
@@ -717,7 +717,7 @@ src="/_sphinx/documentation_options.js"></script>
 
 
 <div class="viewcode-block" id="Lime"><a class="viewcode-back" href="../../../../lime.html#captum.attr.Lime">[docs]</a><span class="k">class</span> <span class="nc">Lime</span><span class="p">(</span><span class="n">LimeBase</span><span class="p">):</span>
-    <span class="sa">r</span><span class="sd">"""</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">    Lime is an interpretability method that trains an interpretable surrogate model</span>
 <span class="sd">    by sampling points around a specified input example and using model evaluations</span>
 <span class="sd">    at these points to train a simpler interpretable 'surrogate' model, such as a</span>
@@ -759,7 +759,7 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="n">similarity_func</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Callable</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">perturb_func</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Callable</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="sa">r</span><span class="sd">"""</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">"""</span>
 
 <span class="sd">        Args:</span>
 
@@ -879,7 +879,7 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="n">return_input_shape</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
         <span class="n">show_progress</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TensorOrTupleOfTensorsGeneric</span><span class="p">:</span>
-        <span class="sa">r</span><span class="sd">"""</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        This method attributes the output of the model with given target index</span>
 <span class="sd">        (in case it is provided, otherwise it assumes that output is a</span>
 <span class="sd">        scalar) to the inputs of the model using the approach described above,</span>
@@ -1322,7 +1322,7 @@ src="/_sphinx/documentation_options.js"></script>
 </div>
 </div>
 <div class="clearer"></div>
-</div></div></div><footer class="nav-footer" id="footer"><section class="sitemap"><div class="footerSection"><h5>Docs</h5><a href="/docs/introduction">Introduction</a><a href="/docs/getting_started">Getting Started</a><a href="/tutorials/">Tutorials</a><a href="/api/">API Reference</a></div><div class="footerSection"><h5>Legal</h5><a href="https://opensource.facebook.com/legal/privacy/" target="_blank" rel="noreferrer noopener">Privacy</a><a href="https://opensource.facebook.com/legal/terms/" target="_blank" rel="noreferrer noopener">Terms</a></div><div class="footerSection"><h5>Social</h5><div class="social"><a class="github-button" href="https://github.com/pytorch/captum" data-count-href="https://github.com/pytorch/captum/stargazers" data-show-count="true" data-count-aria-label="# stargazers on GitHub" aria-label="Star Captum on GitHub">captum</a></div></div></section><a href="https://opensource.facebook.com/" target="_blank" rel="noreferrer noopener" class="fbOpenSource"><img src="/img/oss_logo.png" alt="Facebook Open Source" width="170" height="45"/></a><section class="copyright"> Copyright © 2022 Facebook Inc.</section><script>
+</div></div></div><footer class="nav-footer" id="footer"><section class="sitemap"><div class="footerSection"><h5>Docs</h5><a href="/docs/introduction">Introduction</a><a href="/docs/getting_started">Getting Started</a><a href="/tutorials/">Tutorials</a><a href="/api/">API Reference</a></div><div class="footerSection"><h5>Legal</h5><a href="https://opensource.facebook.com/legal/privacy/" target="_blank" rel="noreferrer noopener">Privacy</a><a href="https://opensource.facebook.com/legal/terms/" target="_blank" rel="noreferrer noopener">Terms</a></div><div class="footerSection"><h5>Social</h5><div class="social"><a class="github-button" href="https://github.com/pytorch/captum" data-count-href="https://github.com/pytorch/captum/stargazers" data-show-count="true" data-count-aria-label="# stargazers on GitHub" aria-label="Star Captum on GitHub">captum</a></div></div></section><a href="https://opensource.facebook.com/" target="_blank" rel="noreferrer noopener" class="fbOpenSource"><img src="/img/oss_logo.png" alt="Facebook Open Source" width="170" height="45"/></a><section class="copyright"> Copyright © 2023 Facebook Inc.</section><script>
             (function() {
               var BAD_BASE = '/captum/';
               if (window.location.origin !== 'https://captum.ai') {

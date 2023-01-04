@@ -49,7 +49,7 @@ src="/_sphinx/documentation_options.js"></script>
 
 
 <div class="viewcode-block" id="LayerGradCam"><a class="viewcode-back" href="../../../../../layer.html#captum.attr.LayerGradCam">[docs]</a><span class="k">class</span> <span class="nc">LayerGradCam</span><span class="p">(</span><span class="n">LayerAttribution</span><span class="p">,</span> <span class="n">GradientAttribution</span><span class="p">):</span>
-    <span class="sa">r</span><span class="sd">"""</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">    Computes GradCAM attribution for chosen layer. GradCAM is designed for</span>
 <span class="sd">    convolutional neural networks, and is usually applied to the last</span>
 <span class="sd">    convolutional layer.</span>
@@ -88,7 +88,7 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="n">layer</span><span class="p">:</span> <span class="n">Module</span><span class="p">,</span>
         <span class="n">device_ids</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="sa">r</span><span class="sd">"""</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        Args:</span>
 
 <span class="sd">            forward_func (Callable): The forward function of the model or any</span>
@@ -114,8 +114,9 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="n">additional_forward_args</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">attribute_to_layer_input</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
         <span class="n">relu_attributions</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="n">attr_dim_summation</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">]]:</span>
-        <span class="sa">r</span><span class="sd">"""</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        Args:</span>
 
 <span class="sd">            inputs (Tensor or tuple[Tensor, ...]): Input for which attributions</span>
@@ -181,6 +182,10 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">                        otherwise, by default, both positive and negative</span>
 <span class="sd">                        attributions are returned.</span>
 <span class="sd">                        Default: False</span>
+<span class="sd">            attr_dim_summation (bool, optional): Indicates whether to</span>
+<span class="sd">                        sum attributions along dimension 1 (usually channel).</span>
+<span class="sd">                        The default (True) means to sum along dimension 1.</span>
+<span class="sd">                        Default: True</span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            *Tensor* or *tuple[Tensor, ...]* of **attributions**:</span>
@@ -240,10 +245,17 @@ src="/_sphinx/documentation_options.js"></script>
             <span class="k">for</span> <span class="n">layer_grad</span> <span class="ow">in</span> <span class="n">layer_gradients</span>
         <span class="p">)</span>
 
-        <span class="n">scaled_acts</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span>
-            <span class="n">torch</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">summed_grad</span> <span class="o">*</span> <span class="n">layer_eval</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">keepdim</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-            <span class="k">for</span> <span class="n">summed_grad</span><span class="p">,</span> <span class="n">layer_eval</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">summed_grads</span><span class="p">,</span> <span class="n">layer_evals</span><span class="p">)</span>
-        <span class="p">)</span>
+        <span class="k">if</span> <span class="n">attr_dim_summation</span><span class="p">:</span>
+            <span class="n">scaled_acts</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span>
+                <span class="n">torch</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">summed_grad</span> <span class="o">*</span> <span class="n">layer_eval</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">keepdim</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">summed_grad</span><span class="p">,</span> <span class="n">layer_eval</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">summed_grads</span><span class="p">,</span> <span class="n">layer_evals</span><span class="p">)</span>
+            <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">scaled_acts</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span>
+                <span class="n">summed_grad</span> <span class="o">*</span> <span class="n">layer_eval</span>
+                <span class="k">for</span> <span class="n">summed_grad</span><span class="p">,</span> <span class="n">layer_eval</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">summed_grads</span><span class="p">,</span> <span class="n">layer_evals</span><span class="p">)</span>
+            <span class="p">)</span>
+
         <span class="k">if</span> <span class="n">relu_attributions</span><span class="p">:</span>
             <span class="n">scaled_acts</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">F</span><span class="o">.</span><span class="n">relu</span><span class="p">(</span><span class="n">scaled_act</span><span class="p">)</span> <span class="k">for</span> <span class="n">scaled_act</span> <span class="ow">in</span> <span class="n">scaled_acts</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">_format_output</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">scaled_acts</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">,</span> <span class="n">scaled_acts</span><span class="p">)</span></div></div>
@@ -296,7 +308,7 @@ src="/_sphinx/documentation_options.js"></script>
 </div>
 </div>
 <div class="clearer"></div>
-</div></div></div><footer class="nav-footer" id="footer"><section class="sitemap"><div class="footerSection"><h5>Docs</h5><a href="/docs/introduction">Introduction</a><a href="/docs/getting_started">Getting Started</a><a href="/tutorials/">Tutorials</a><a href="/api/">API Reference</a></div><div class="footerSection"><h5>Legal</h5><a href="https://opensource.facebook.com/legal/privacy/" target="_blank" rel="noreferrer noopener">Privacy</a><a href="https://opensource.facebook.com/legal/terms/" target="_blank" rel="noreferrer noopener">Terms</a></div><div class="footerSection"><h5>Social</h5><div class="social"><a class="github-button" href="https://github.com/pytorch/captum" data-count-href="https://github.com/pytorch/captum/stargazers" data-show-count="true" data-count-aria-label="# stargazers on GitHub" aria-label="Star Captum on GitHub">captum</a></div></div></section><a href="https://opensource.facebook.com/" target="_blank" rel="noreferrer noopener" class="fbOpenSource"><img src="/img/oss_logo.png" alt="Facebook Open Source" width="170" height="45"/></a><section class="copyright"> Copyright © 2022 Facebook Inc.</section><script>
+</div></div></div><footer class="nav-footer" id="footer"><section class="sitemap"><div class="footerSection"><h5>Docs</h5><a href="/docs/introduction">Introduction</a><a href="/docs/getting_started">Getting Started</a><a href="/tutorials/">Tutorials</a><a href="/api/">API Reference</a></div><div class="footerSection"><h5>Legal</h5><a href="https://opensource.facebook.com/legal/privacy/" target="_blank" rel="noreferrer noopener">Privacy</a><a href="https://opensource.facebook.com/legal/terms/" target="_blank" rel="noreferrer noopener">Terms</a></div><div class="footerSection"><h5>Social</h5><div class="social"><a class="github-button" href="https://github.com/pytorch/captum" data-count-href="https://github.com/pytorch/captum/stargazers" data-show-count="true" data-count-aria-label="# stargazers on GitHub" aria-label="Star Captum on GitHub">captum</a></div></div></section><a href="https://opensource.facebook.com/" target="_blank" rel="noreferrer noopener" class="fbOpenSource"><img src="/img/oss_logo.png" alt="Facebook Open Source" width="170" height="45"/></a><section class="copyright"> Copyright © 2023 Facebook Inc.</section><script>
             (function() {
               var BAD_BASE = '/captum/';
               if (window.location.origin !== 'https://captum.ai') {

@@ -42,7 +42,7 @@ src="/_sphinx/documentation_options.js"></script>
     <span class="n">SUPPORTED_NORMS</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="s2">"batch_norm"</span><span class="p">,</span> <span class="s2">"layer_norm"</span><span class="p">]</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">train_fn</span><span class="p">:</span> <span class="n">Callable</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="sa">r</span><span class="sd">"""</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        Constructs a linear model with a training function and additional</span>
 <span class="sd">        construction arguments that will be sent to</span>
 <span class="sd">        `self._construct_model_params` after a `self.fit` is called. Please note</span>
@@ -80,7 +80,7 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="n">bias_value</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Tensor</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">classes</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Tensor</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">):</span>
-        <span class="sa">r</span><span class="sd">"""</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        Lazily initializes a linear model. This will be called for you in a</span>
 <span class="sd">        train method.</span>
 
@@ -149,7 +149,7 @@ src="/_sphinx/documentation_options.js"></script>
             <span class="bp">self</span><span class="o">.</span><span class="n">linear</span><span class="o">.</span><span class="n">classes</span> <span class="o">=</span> <span class="n">classes</span>
 
     <span class="k">def</span> <span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">train_data</span><span class="p">:</span> <span class="n">DataLoader</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="sa">r</span><span class="sd">"""</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        Calls `self.train_fn`</span>
 <span class="sd">        """</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">train_fn</span><span class="p">(</span>
@@ -166,7 +166,7 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">linear</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">representation</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tensor</span><span class="p">:</span>
-        <span class="sa">r</span><span class="sd">"""</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        Returns a tensor which describes the hyper-plane input space. This does</span>
 <span class="sd">        not include the bias. For bias/intercept, please use `self.bias`</span>
 <span class="sd">        """</span>
@@ -174,7 +174,7 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">linear</span><span class="o">.</span><span class="n">weight</span><span class="o">.</span><span class="n">detach</span><span class="p">()</span>
 
     <span class="k">def</span> <span class="nf">bias</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Tensor</span><span class="p">]:</span>
-        <span class="sa">r</span><span class="sd">"""</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        Returns the bias of the linear model</span>
 <span class="sd">        """</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">linear</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">linear</span><span class="o">.</span><span class="n">bias</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
@@ -189,7 +189,7 @@ src="/_sphinx/documentation_options.js"></script>
 
 <div class="viewcode-block" id="SGDLinearModel"><a class="viewcode-back" href="../../../../../utilities.html#captum._utils.models.linear_model.SGDLinearModel">[docs]</a><span class="k">class</span> <span class="nc">SGDLinearModel</span><span class="p">(</span><span class="n">LinearModel</span><span class="p">):</span>
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="sa">r</span><span class="sd">"""</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        Factory class. Construct a a `LinearModel` with the</span>
 <span class="sd">        `sgd_train_linear_model` as the train method</span>
 
@@ -207,7 +207,7 @@ src="/_sphinx/documentation_options.js"></script>
 
 <div class="viewcode-block" id="SGDLasso"><a class="viewcode-back" href="../../../../../utilities.html#captum._utils.models.linear_model.SGDLasso">[docs]</a><span class="k">class</span> <span class="nc">SGDLasso</span><span class="p">(</span><span class="n">SGDLinearModel</span><span class="p">):</span>
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="sa">r</span><span class="sd">"""</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        Factory class to train a `LinearModel` with SGD</span>
 <span class="sd">        (`sgd_train_linear_model`) whilst setting appropriate parameters to</span>
 <span class="sd">        optimize for ridge regression loss. This optimizes L2 loss + alpha * L1</span>
@@ -227,7 +227,7 @@ src="/_sphinx/documentation_options.js"></script>
 
 <div class="viewcode-block" id="SGDRidge"><a class="viewcode-back" href="../../../../../utilities.html#captum._utils.models.linear_model.SGDRidge">[docs]</a><span class="k">class</span> <span class="nc">SGDRidge</span><span class="p">(</span><span class="n">SGDLinearModel</span><span class="p">):</span>
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="sa">r</span><span class="sd">"""</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        Factory class to train a `LinearModel` with SGD</span>
 <span class="sd">        (`sgd_train_linear_model`) whilst setting appropriate parameters to</span>
 <span class="sd">        optimize for ridge regression loss. This optimizes L2 loss + alpha *</span>
@@ -244,7 +244,7 @@ src="/_sphinx/documentation_options.js"></script>
 
 <span class="k">class</span> <span class="nc">SGDLinearRegression</span><span class="p">(</span><span class="n">SGDLinearModel</span><span class="p">):</span>
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="sa">r</span><span class="sd">"""</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        Factory class to train a `LinearModel` with SGD</span>
 <span class="sd">        (`sgd_train_linear_model`). For linear regression this assigns the loss</span>
 <span class="sd">        to L2 and no regularization.</span>
@@ -262,7 +262,7 @@ src="/_sphinx/documentation_options.js"></script>
 
 <div class="viewcode-block" id="SkLearnLinearModel"><a class="viewcode-back" href="../../../../../utilities.html#captum._utils.models.linear_model.SkLearnLinearModel">[docs]</a><span class="k">class</span> <span class="nc">SkLearnLinearModel</span><span class="p">(</span><span class="n">LinearModel</span><span class="p">):</span>
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sklearn_module</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="sa">r</span><span class="sd">"""</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        Factory class to construct a `LinearModel` with sklearn training method.</span>
 
 <span class="sd">        Please note that this assumes:</span>
@@ -292,7 +292,7 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="bp">self</span><span class="o">.</span><span class="n">sklearn_module</span> <span class="o">=</span> <span class="n">sklearn_module</span>
 
 <div class="viewcode-block" id="SkLearnLinearModel.fit"><a class="viewcode-back" href="../../../../../utilities.html#captum._utils.models.linear_model.SkLearnLinearModel.fit">[docs]</a>    <span class="k">def</span> <span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">train_data</span><span class="p">:</span> <span class="n">DataLoader</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="sa">r</span><span class="sd">"""</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        Args:</span>
 <span class="sd">            train_data</span>
 <span class="sd">                Train data to use</span>
@@ -306,7 +306,7 @@ src="/_sphinx/documentation_options.js"></script>
 
 <div class="viewcode-block" id="SkLearnLasso"><a class="viewcode-back" href="../../../../../utilities.html#captum._utils.models.linear_model.SkLearnLasso">[docs]</a><span class="k">class</span> <span class="nc">SkLearnLasso</span><span class="p">(</span><span class="n">SkLearnLinearModel</span><span class="p">):</span>
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="sa">r</span><span class="sd">"""</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        Factory class. Trains a `LinearModel` model with</span>
 <span class="sd">        `sklearn.linear_model.Lasso`. You will need sklearn version &gt;= 0.23 to</span>
 <span class="sd">        support sample weights.</span>
@@ -319,7 +319,7 @@ src="/_sphinx/documentation_options.js"></script>
 
 <div class="viewcode-block" id="SkLearnRidge"><a class="viewcode-back" href="../../../../../utilities.html#captum._utils.models.linear_model.SkLearnRidge">[docs]</a><span class="k">class</span> <span class="nc">SkLearnRidge</span><span class="p">(</span><span class="n">SkLearnLinearModel</span><span class="p">):</span>
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="sa">r</span><span class="sd">"""</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        Factory class. Trains a model with `sklearn.linear_model.Ridge`.</span>
 
 <span class="sd">        Any arguments provided to the sklearn constructor can be provided</span>
@@ -333,7 +333,7 @@ src="/_sphinx/documentation_options.js"></script>
 
 <div class="viewcode-block" id="SkLearnLinearRegression"><a class="viewcode-back" href="../../../../../utilities.html#captum._utils.models.linear_model.SkLearnLinearRegression">[docs]</a><span class="k">class</span> <span class="nc">SkLearnLinearRegression</span><span class="p">(</span><span class="n">SkLearnLinearModel</span><span class="p">):</span>
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="sa">r</span><span class="sd">"""</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        Factory class. Trains a model with `sklearn.linear_model.LinearRegression`.</span>
 
 <span class="sd">        Any arguments provided to the sklearn constructor can be provided</span>
@@ -347,7 +347,7 @@ src="/_sphinx/documentation_options.js"></script>
 
 <span class="k">class</span> <span class="nc">SkLearnLogisticRegression</span><span class="p">(</span><span class="n">SkLearnLinearModel</span><span class="p">):</span>
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="sa">r</span><span class="sd">"""</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        Factory class. Trains a model with `sklearn.linear_model.LogisticRegression`.</span>
 
 <span class="sd">        Any arguments provided to the sklearn constructor can be provided</span>
@@ -361,7 +361,7 @@ src="/_sphinx/documentation_options.js"></script>
 
 <span class="k">class</span> <span class="nc">SkLearnSGDClassifier</span><span class="p">(</span><span class="n">SkLearnLinearModel</span><span class="p">):</span>
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="sa">r</span><span class="sd">"""</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        Factory class. Trains a model with `sklearn.linear_model.SGDClassifier(`.</span>
 
 <span class="sd">        Any arguments provided to the sklearn constructor can be provided</span>
@@ -420,7 +420,7 @@ src="/_sphinx/documentation_options.js"></script>
 </div>
 </div>
 <div class="clearer"></div>
-</div></div></div><footer class="nav-footer" id="footer"><section class="sitemap"><div class="footerSection"><h5>Docs</h5><a href="/docs/introduction">Introduction</a><a href="/docs/getting_started">Getting Started</a><a href="/tutorials/">Tutorials</a><a href="/api/">API Reference</a></div><div class="footerSection"><h5>Legal</h5><a href="https://opensource.facebook.com/legal/privacy/" target="_blank" rel="noreferrer noopener">Privacy</a><a href="https://opensource.facebook.com/legal/terms/" target="_blank" rel="noreferrer noopener">Terms</a></div><div class="footerSection"><h5>Social</h5><div class="social"><a class="github-button" href="https://github.com/pytorch/captum" data-count-href="https://github.com/pytorch/captum/stargazers" data-show-count="true" data-count-aria-label="# stargazers on GitHub" aria-label="Star Captum on GitHub">captum</a></div></div></section><a href="https://opensource.facebook.com/" target="_blank" rel="noreferrer noopener" class="fbOpenSource"><img src="/img/oss_logo.png" alt="Facebook Open Source" width="170" height="45"/></a><section class="copyright"> Copyright © 2022 Facebook Inc.</section><script>
+</div></div></div><footer class="nav-footer" id="footer"><section class="sitemap"><div class="footerSection"><h5>Docs</h5><a href="/docs/introduction">Introduction</a><a href="/docs/getting_started">Getting Started</a><a href="/tutorials/">Tutorials</a><a href="/api/">API Reference</a></div><div class="footerSection"><h5>Legal</h5><a href="https://opensource.facebook.com/legal/privacy/" target="_blank" rel="noreferrer noopener">Privacy</a><a href="https://opensource.facebook.com/legal/terms/" target="_blank" rel="noreferrer noopener">Terms</a></div><div class="footerSection"><h5>Social</h5><div class="social"><a class="github-button" href="https://github.com/pytorch/captum" data-count-href="https://github.com/pytorch/captum/stargazers" data-show-count="true" data-count-aria-label="# stargazers on GitHub" aria-label="Star Captum on GitHub">captum</a></div></div></section><a href="https://opensource.facebook.com/" target="_blank" rel="noreferrer noopener" class="fbOpenSource"><img src="/img/oss_logo.png" alt="Facebook Open Source" width="170" height="45"/></a><section class="copyright"> Copyright © 2023 Facebook Inc.</section><script>
             (function() {
               var BAD_BASE = '/captum/';
               if (window.location.origin !== 'https://captum.ai') {

@@ -55,13 +55,13 @@ src="/_sphinx/documentation_options.js"></script>
 
 
 <div class="viewcode-block" id="Attribution"><a class="viewcode-back" href="../../../../base_classes.html#captum.attr.Attribution">[docs]</a><span class="k">class</span> <span class="nc">Attribution</span><span class="p">:</span>
-    <span class="sa">r</span><span class="sd">"""</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">    All attribution algorithms extend this class. It enforces its child classes</span>
 <span class="sd">    to extend and override core `attribute` method.</span>
 <span class="sd">    """</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">forward_func</span><span class="p">:</span> <span class="n">Callable</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="sa">r</span><span class="sd">"""</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        Args:</span>
 <span class="sd">            forward_func (Callable or torch.nn.Module): This can either be an instance</span>
 <span class="sd">                        of pytorch model or any modification of model's forward</span>
@@ -70,7 +70,7 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="bp">self</span><span class="o">.</span><span class="n">forward_func</span> <span class="o">=</span> <span class="n">forward_func</span>
 
     <span class="n">attribute</span><span class="p">:</span> <span class="n">Callable</span>
-    <span class="sa">r</span><span class="sd">"""</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">    This method computes and returns the attribution values for each input tensor.</span>
 <span class="sd">    Deriving classes are responsible for implementing its logic accordingly.</span>
 
@@ -104,7 +104,7 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="k">return</span> <span class="kc">False</span>
 
 <div class="viewcode-block" id="Attribution.has_convergence_delta"><a class="viewcode-back" href="../../../../base_classes.html#captum.attr.Attribution.has_convergence_delta">[docs]</a>    <span class="k">def</span> <span class="nf">has_convergence_delta</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-        <span class="sa">r</span><span class="sd">"""</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        This method informs the user whether the attribution algorithm provides</span>
 <span class="sd">        a convergence delta (aka an approximation error) or not. Convergence</span>
 <span class="sd">        delta may serve as a proxy of correctness of attribution algorithm's</span>
@@ -121,7 +121,7 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="k">return</span> <span class="kc">False</span></div>
 
     <span class="n">compute_convergence_delta</span><span class="p">:</span> <span class="n">Callable</span>
-    <span class="sa">r</span><span class="sd">"""</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">    The attribution algorithms which derive `Attribution` class and provide</span>
 <span class="sd">    convergence delta (aka approximation error) should implement this method.</span>
 <span class="sd">    Convergence delta can be computed based on certain properties of the</span>
@@ -153,7 +153,7 @@ src="/_sphinx/documentation_options.js"></script>
 
 <div class="viewcode-block" id="Attribution.get_name"><a class="viewcode-back" href="../../../../base_classes.html#captum.attr.Attribution.get_name">[docs]</a>    <span class="nd">@classmethod</span>
     <span class="k">def</span> <span class="nf">get_name</span><span class="p">(</span><span class="bp">cls</span><span class="p">:</span> <span class="n">Type</span><span class="p">[</span><span class="s2">"Attribution"</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-        <span class="sa">r</span><span class="sd">"""</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        Create readable class name by inserting a space before any capital</span>
 <span class="sd">        characters besides the very first.</span>
 
@@ -172,14 +172,14 @@ src="/_sphinx/documentation_options.js"></script>
 
 
 <div class="viewcode-block" id="GradientAttribution"><a class="viewcode-back" href="../../../../base_classes.html#captum.attr.GradientAttribution">[docs]</a><span class="k">class</span> <span class="nc">GradientAttribution</span><span class="p">(</span><span class="n">Attribution</span><span class="p">):</span>
-    <span class="sa">r</span><span class="sd">"""</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">    All gradient based attribution algorithms extend this class. It requires a</span>
 <span class="sd">    forward function, which most commonly is the forward function of the model</span>
 <span class="sd">    that we want to interpret or the model itself.</span>
 <span class="sd">    """</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">forward_func</span><span class="p">:</span> <span class="n">Callable</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="sa">r</span><span class="sd">"""</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        Args:</span>
 
 <span class="sd">            forward_func (Callable or torch.nn.Module): This can either be an instance</span>
@@ -200,7 +200,7 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="n">target</span><span class="p">:</span> <span class="n">TargetType</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">additional_forward_args</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tensor</span><span class="p">:</span>
-        <span class="sa">r</span><span class="sd">"""</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        Here we provide a specific implementation for `compute_convergence_delta`</span>
 <span class="sd">        which is based on a common property among gradient-based attribution algorithms.</span>
 <span class="sd">        In the literature sometimes it is also called completeness axiom. Completeness</span>
@@ -328,14 +328,14 @@ src="/_sphinx/documentation_options.js"></script>
 
 
 <div class="viewcode-block" id="PerturbationAttribution"><a class="viewcode-back" href="../../../../base_classes.html#captum.attr.PerturbationAttribution">[docs]</a><span class="k">class</span> <span class="nc">PerturbationAttribution</span><span class="p">(</span><span class="n">Attribution</span><span class="p">):</span>
-    <span class="sa">r</span><span class="sd">"""</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">    All perturbation based attribution algorithms extend this class. It requires a</span>
 <span class="sd">    forward function, which most commonly is the forward function of the model</span>
 <span class="sd">    that we want to interpret or the model itself.</span>
 <span class="sd">    """</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">forward_func</span><span class="p">:</span> <span class="n">Callable</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="sa">r</span><span class="sd">"""</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        Args:</span>
 
 <span class="sd">            forward_func (Callable or torch.nn.Module): This can either be an instance</span>
@@ -350,7 +350,7 @@ src="/_sphinx/documentation_options.js"></script>
 
 
 <span class="k">class</span> <span class="nc">InternalAttribution</span><span class="p">(</span><span class="n">Attribution</span><span class="p">,</span> <span class="n">Generic</span><span class="p">[</span><span class="n">ModuleOrModuleList</span><span class="p">]):</span>
-    <span class="sa">r</span><span class="sd">"""</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">    Shared base class for LayerAttrubution and NeuronAttribution,</span>
 <span class="sd">    attribution types that require a model and a particular layer.</span>
 <span class="sd">    """</span>
@@ -363,7 +363,7 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="n">layer</span><span class="p">:</span> <span class="n">ModuleOrModuleList</span><span class="p">,</span>
         <span class="n">device_ids</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="sa">r</span><span class="sd">"""</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        Args:</span>
 
 <span class="sd">            forward_func (Callable or torch.nn.Module): This can either be an instance</span>
@@ -383,7 +383,7 @@ src="/_sphinx/documentation_options.js"></script>
 
 
 <div class="viewcode-block" id="LayerAttribution"><a class="viewcode-back" href="../../../../base_classes.html#captum.attr.LayerAttribution">[docs]</a><span class="k">class</span> <span class="nc">LayerAttribution</span><span class="p">(</span><span class="n">InternalAttribution</span><span class="p">):</span>
-    <span class="sa">r</span><span class="sd">"""</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">    Layer attribution provides attribution values for the given layer, quantifying</span>
 <span class="sd">    the importance of each neuron within the given layer's output. The output</span>
 <span class="sd">    attribution of calling attribute on a LayerAttribution object always matches</span>
@@ -396,7 +396,7 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="n">layer</span><span class="p">:</span> <span class="n">ModuleOrModuleList</span><span class="p">,</span>
         <span class="n">device_ids</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="sa">r</span><span class="sd">"""</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        Args:</span>
 
 <span class="sd">            forward_func (Callable or torch.nn.Module): This can either be an instance</span>
@@ -418,7 +418,7 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="n">interpolate_dims</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">]],</span>
         <span class="n">interpolate_mode</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"nearest"</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tensor</span><span class="p">:</span>
-        <span class="sa">r</span><span class="sd">"""</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        Interpolates given 3D, 4D or 5D layer attribution to given dimensions.</span>
 <span class="sd">        This is often utilized to upsample the attribution of a convolutional layer</span>
 <span class="sd">        to the size of an input, which allows visualizing in the input space.</span>
@@ -450,7 +450,7 @@ src="/_sphinx/documentation_options.js"></script>
 
 
 <div class="viewcode-block" id="NeuronAttribution"><a class="viewcode-back" href="../../../../base_classes.html#captum.attr.NeuronAttribution">[docs]</a><span class="k">class</span> <span class="nc">NeuronAttribution</span><span class="p">(</span><span class="n">InternalAttribution</span><span class="p">):</span>
-    <span class="sa">r</span><span class="sd">"""</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">    Neuron attribution provides input attribution for a given neuron, quantifying</span>
 <span class="sd">    the importance of each input feature in the activation of a particular neuron.</span>
 <span class="sd">    Calling attribute on a NeuronAttribution object requires also providing</span>
@@ -466,7 +466,7 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="n">layer</span><span class="p">:</span> <span class="n">Module</span><span class="p">,</span>
         <span class="n">device_ids</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="sa">r</span><span class="sd">"""</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        Args:</span>
 
 <span class="sd">            forward_func (Callable or torch.nn.Module): This can either be an instance</span>
@@ -483,7 +483,7 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="n">InternalAttribution</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">forward_func</span><span class="p">,</span> <span class="n">layer</span><span class="p">,</span> <span class="n">device_ids</span><span class="p">)</span>
 
     <span class="n">attribute</span><span class="p">:</span> <span class="n">Callable</span>
-    <span class="sa">r</span><span class="sd">"""</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">    This method computes and returns the neuron attribution values for each</span>
 <span class="sd">    input tensor. Deriving classes are responsible for implementing</span>
 <span class="sd">    its logic accordingly.</span>
@@ -557,7 +557,7 @@ src="/_sphinx/documentation_options.js"></script>
 </div>
 </div>
 <div class="clearer"></div>
-</div></div></div><footer class="nav-footer" id="footer"><section class="sitemap"><div class="footerSection"><h5>Docs</h5><a href="/docs/introduction">Introduction</a><a href="/docs/getting_started">Getting Started</a><a href="/tutorials/">Tutorials</a><a href="/api/">API Reference</a></div><div class="footerSection"><h5>Legal</h5><a href="https://opensource.facebook.com/legal/privacy/" target="_blank" rel="noreferrer noopener">Privacy</a><a href="https://opensource.facebook.com/legal/terms/" target="_blank" rel="noreferrer noopener">Terms</a></div><div class="footerSection"><h5>Social</h5><div class="social"><a class="github-button" href="https://github.com/pytorch/captum" data-count-href="https://github.com/pytorch/captum/stargazers" data-show-count="true" data-count-aria-label="# stargazers on GitHub" aria-label="Star Captum on GitHub">captum</a></div></div></section><a href="https://opensource.facebook.com/" target="_blank" rel="noreferrer noopener" class="fbOpenSource"><img src="/img/oss_logo.png" alt="Facebook Open Source" width="170" height="45"/></a><section class="copyright"> Copyright © 2022 Facebook Inc.</section><script>
+</div></div></div><footer class="nav-footer" id="footer"><section class="sitemap"><div class="footerSection"><h5>Docs</h5><a href="/docs/introduction">Introduction</a><a href="/docs/getting_started">Getting Started</a><a href="/tutorials/">Tutorials</a><a href="/api/">API Reference</a></div><div class="footerSection"><h5>Legal</h5><a href="https://opensource.facebook.com/legal/privacy/" target="_blank" rel="noreferrer noopener">Privacy</a><a href="https://opensource.facebook.com/legal/terms/" target="_blank" rel="noreferrer noopener">Terms</a></div><div class="footerSection"><h5>Social</h5><div class="social"><a class="github-button" href="https://github.com/pytorch/captum" data-count-href="https://github.com/pytorch/captum/stargazers" data-show-count="true" data-count-aria-label="# stargazers on GitHub" aria-label="Star Captum on GitHub">captum</a></div></div></section><a href="https://opensource.facebook.com/" target="_blank" rel="noreferrer noopener" class="fbOpenSource"><img src="/img/oss_logo.png" alt="Facebook Open Source" width="170" height="45"/></a><section class="copyright"> Copyright © 2023 Facebook Inc.</section><script>
             (function() {
               var BAD_BASE = '/captum/';
               if (window.location.origin !== 'https://captum.ai') {

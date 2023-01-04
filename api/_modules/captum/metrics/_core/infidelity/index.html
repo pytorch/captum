@@ -52,7 +52,7 @@ src="/_sphinx/documentation_options.js"></script>
 
 
 <span class="k">def</span> <span class="nf">infidelity_perturb_func_decorator</span><span class="p">(</span><span class="n">multipy_by_inputs</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">:</span>
-    <span class="sa">r</span><span class="sd">"""An auxiliary, decorator function that helps with computing</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">"""An auxiliary, decorator function that helps with computing</span>
 <span class="sd">    perturbations given perturbed inputs. It can be useful for cases</span>
 <span class="sd">    when `pertub_func` returns only perturbed inputs and we</span>
 <span class="sd">    internally compute the perturbations as</span>
@@ -73,7 +73,7 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">    """</span>
 
     <span class="k">def</span> <span class="nf">sub_infidelity_perturb_func_decorator</span><span class="p">(</span><span class="n">pertub_func</span><span class="p">:</span> <span class="n">Callable</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">:</span>
-        <span class="sa">r</span><span class="sd">"""</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        Args:</span>
 
 <span class="sd">            pertub_func(Callable): Input perturbation function that takes inputs</span>
@@ -99,7 +99,7 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="k">def</span> <span class="nf">default_perturb_func</span><span class="p">(</span>
             <span class="n">inputs</span><span class="p">:</span> <span class="n">TensorOrTupleOfTensorsGeneric</span><span class="p">,</span> <span class="n">baselines</span><span class="p">:</span> <span class="n">BaselineType</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="p">):</span>
-            <span class="sa">r</span><span class="sd">""" """</span>
+<span class="w">            </span><span class="sa">r</span><span class="sd">""" """</span>
             <span class="n">inputs_perturbed</span> <span class="o">=</span> <span class="p">(</span>
                 <span class="n">pertub_func</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">baselines</span><span class="p">)</span>
                 <span class="k">if</span> <span class="n">baselines</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
@@ -152,7 +152,7 @@ src="/_sphinx/documentation_options.js"></script>
     <span class="n">max_examples_per_batch</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">normalize</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tensor</span><span class="p">:</span>
-    <span class="sa">r</span><span class="sd">"""</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">    Explanation infidelity represents the expected mean-squared error</span>
 <span class="sd">    between the explanation multiplied by a meaningful input perturbation</span>
 <span class="sd">    and the differences between the predictor function at its input</span>
@@ -422,7 +422,7 @@ src="/_sphinx/documentation_options.js"></script>
     <span class="k">def</span> <span class="nf">_generate_perturbations</span><span class="p">(</span>
         <span class="n">current_n_perturb_samples</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">TensorOrTupleOfTensorsGeneric</span><span class="p">,</span> <span class="n">TensorOrTupleOfTensorsGeneric</span><span class="p">]:</span>
-        <span class="sa">r</span><span class="sd">"""</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        The perturbations are generated for each example</span>
 <span class="sd">        `current_n_perturb_samples` times.</span>
 
@@ -432,7 +432,7 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">        """</span>
 
         <span class="k">def</span> <span class="nf">call_perturb_func</span><span class="p">():</span>
-            <span class="sa">r</span><span class="sd">""" """</span>
+<span class="w">            </span><span class="sa">r</span><span class="sd">""" """</span>
             <span class="n">baselines_pert</span> <span class="o">=</span> <span class="kc">None</span>
             <span class="n">inputs_pert</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">]]</span>
             <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">inputs_expanded</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
@@ -473,7 +473,7 @@ src="/_sphinx/documentation_options.js"></script>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="c1"># asserts the sizes of the perturbations and inputs</span>
         <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">perturbations</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">inputs</span><span class="p">),</span> <span class="p">(</span>
-            <span class="sd">"""The number of perturbed</span>
+<span class="w">            </span><span class="sd">"""The number of perturbed</span>
 <span class="sd">            inputs and corresponding perturbations must have the same number of</span>
 <span class="sd">            elements. Found number of inputs is: {} and perturbations:</span>
 <span class="sd">            {}"""</span>
@@ -482,7 +482,7 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="c1"># asserts the shapes of the perturbations and perturbed inputs</span>
         <span class="k">for</span> <span class="n">perturb</span><span class="p">,</span> <span class="n">input_perturbed</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">perturbations</span><span class="p">,</span> <span class="n">inputs_perturbed</span><span class="p">):</span>
             <span class="k">assert</span> <span class="n">perturb</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span> <span class="o">==</span> <span class="n">input_perturbed</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="p">(</span>
-                <span class="sd">"""Perturbed input</span>
+<span class="w">                </span><span class="sd">"""Perturbed input</span>
 <span class="sd">                and corresponding perturbation must have the same shape and</span>
 <span class="sd">                dimensionality. Found perturbation shape is: {} and the input shape</span>
 <span class="sd">                is: {}"""</span>
@@ -573,13 +573,13 @@ src="/_sphinx/documentation_options.js"></script>
 
     <span class="c1"># Make sure that inputs and corresponding attributions have matching sizes.</span>
     <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">attributions</span><span class="p">),</span> <span class="p">(</span>
-        <span class="sd">"""The number of tensors in the inputs and</span>
+<span class="w">        </span><span class="sd">"""The number of tensors in the inputs and</span>
 <span class="sd">        attributions must match. Found number of tensors in the inputs is: {} and in the</span>
 <span class="sd">        attributions: {}"""</span>
     <span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">inputs</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">attributions</span><span class="p">))</span>
     <span class="k">for</span> <span class="n">inp</span><span class="p">,</span> <span class="n">attr</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">attributions</span><span class="p">):</span>
         <span class="k">assert</span> <span class="n">inp</span><span class="o">.</span><span class="n">shape</span> <span class="o">==</span> <span class="n">attr</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="p">(</span>
-            <span class="sd">"""Inputs and attributions must have</span>
+<span class="w">            </span><span class="sd">"""Inputs and attributions must have</span>
 <span class="sd">        matching shapes. One of the input tensor's shape is {} and the</span>
 <span class="sd">        attribution tensor's shape is: {}"""</span>
         <span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">inp</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">attr</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
@@ -660,7 +660,7 @@ src="/_sphinx/documentation_options.js"></script>
 </div>
 </div>
 <div class="clearer"></div>
-</div></div></div><footer class="nav-footer" id="footer"><section class="sitemap"><div class="footerSection"><h5>Docs</h5><a href="/docs/introduction">Introduction</a><a href="/docs/getting_started">Getting Started</a><a href="/tutorials/">Tutorials</a><a href="/api/">API Reference</a></div><div class="footerSection"><h5>Legal</h5><a href="https://opensource.facebook.com/legal/privacy/" target="_blank" rel="noreferrer noopener">Privacy</a><a href="https://opensource.facebook.com/legal/terms/" target="_blank" rel="noreferrer noopener">Terms</a></div><div class="footerSection"><h5>Social</h5><div class="social"><a class="github-button" href="https://github.com/pytorch/captum" data-count-href="https://github.com/pytorch/captum/stargazers" data-show-count="true" data-count-aria-label="# stargazers on GitHub" aria-label="Star Captum on GitHub">captum</a></div></div></section><a href="https://opensource.facebook.com/" target="_blank" rel="noreferrer noopener" class="fbOpenSource"><img src="/img/oss_logo.png" alt="Facebook Open Source" width="170" height="45"/></a><section class="copyright"> Copyright © 2022 Facebook Inc.</section><script>
+</div></div></div><footer class="nav-footer" id="footer"><section class="sitemap"><div class="footerSection"><h5>Docs</h5><a href="/docs/introduction">Introduction</a><a href="/docs/getting_started">Getting Started</a><a href="/tutorials/">Tutorials</a><a href="/api/">API Reference</a></div><div class="footerSection"><h5>Legal</h5><a href="https://opensource.facebook.com/legal/privacy/" target="_blank" rel="noreferrer noopener">Privacy</a><a href="https://opensource.facebook.com/legal/terms/" target="_blank" rel="noreferrer noopener">Terms</a></div><div class="footerSection"><h5>Social</h5><div class="social"><a class="github-button" href="https://github.com/pytorch/captum" data-count-href="https://github.com/pytorch/captum/stargazers" data-show-count="true" data-count-aria-label="# stargazers on GitHub" aria-label="Star Captum on GitHub">captum</a></div></div></section><a href="https://opensource.facebook.com/" target="_blank" rel="noreferrer noopener" class="fbOpenSource"><img src="/img/oss_logo.png" alt="Facebook Open Source" width="170" height="45"/></a><section class="copyright"> Copyright © 2023 Facebook Inc.</section><script>
             (function() {
               var BAD_BASE = '/captum/';
               if (window.location.origin !== 'https://captum.ai') {
