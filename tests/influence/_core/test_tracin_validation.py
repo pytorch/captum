@@ -63,4 +63,4 @@ class TestTracinValidator(BaseTest):
                 batch_size=1,
             )
             with self.assertRaisesRegex(AssertionError, "required."):
-                tracin.influence(None, test_labels, k=None, unpack_inputs=False)
+                tracin.influence(None, k=None)

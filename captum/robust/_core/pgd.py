@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-from typing import Any, Callable
+from typing import Any, Callable, Optional, Tuple, Union
 
 import torch
 import torch.nn.functional as F
@@ -78,6 +78,7 @@ class PGD(Perturbation):
         targeted: bool = False,
         random_start: bool = False,
         norm: str = "Linf",
+        mask: Optional[TensorOrTupleOfTensorsGeneric] = None,
     ) -> TensorOrTupleOfTensorsGeneric:
         r"""
         This method computes and returns the perturbed input for each input tensor.
@@ -134,6 +135,12 @@ class PGD(Perturbation):
             norm (str, optional): Specifies the norm to calculate distance from
                         original inputs: ``Linf`` | ``L2``.
                         Default: ``Linf``
+            mask (Tensor or tuple[Tensor, ...], optional): mask of zeroes and ones
+                        that defines which elements within the input tensor(s) are
+                        perturbed. This mask must have the same shape and
+                        dimensionality as the inputs. If this argument is not
+                        provided, all elements are perturbed.
+                        Default: None.
 
         Returns:
 
@@ -157,15 +164,29 @@ class PGD(Perturbation):
 
         is_inputs_tuple = _is_tuple(inputs)
         formatted_inputs = _format_tensor_into_tuples(inputs)
+        formatted_masks: Union[Tuple[int, ...], Tuple[Tensor, ...]] = (
+            _format_tensor_into_tuples(mask)
+            if (mask is not None)
+            else (1,) * len(formatted_inputs)
+        )
         perturbed_inputs = formatted_inputs
         if random_start:
             perturbed_inputs = tuple(
-                self.bound(self._random_point(formatted_inputs[i], radius, norm))
+                self.bound(
+                    self._random_point(
+                        formatted_inputs[i], radius, norm, formatted_masks[i]
+                    )
+                )
                 for i in range(len(formatted_inputs))
             )
         for _i in range(step_num):
             perturbed_inputs = self.fgsm.perturb(
-                perturbed_inputs, step_size, target, additional_forward_args, targeted
+                perturbed_inputs,
+                step_size,
+                target,
+                additional_forward_args,
+                targeted,
+                formatted_masks,
             )
             perturbed_inputs = tuple(
                 _clip(formatted_inputs[j], perturbed_inputs[j])
@@ -178,7 +199,9 @@ class PGD(Perturbation):
             )
         return _format_output(is_inputs_tuple, perturbed_inputs)
 
-    def _random_point(self, center: Tensor, radius: float, norm: str) -> Tensor:
+    def _random_point(
+        self, center: Tensor, radius: float, norm: str, mask: Union[Tensor, int]
+    ) -> Tensor:
         r"""
         A helper function that returns a uniform random point within the ball
         with the given center and radius. Norm should be either L2 or Linf.
@@ -190,9 +213,9 @@ class PGD(Perturbation):
             r = (torch.rand(u.size(0)) ** (1.0 / d)) * radius
             r = r[(...,) + (None,) * (r.dim() - 1)]
             x = r * unit_u
-            return center + x
+            return center + (x * mask)
         elif norm == "Linf":
             x = torch.rand_like(center) * radius * 2 - radius
-            return center + x
+            return center + (x * mask)
         else:
             raise AssertionError("Norm constraint must be L2 or Linf.")

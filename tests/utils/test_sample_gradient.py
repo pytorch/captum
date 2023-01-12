@@ -4,6 +4,7 @@ import unittest
 from typing import Callable, Tuple
 
 import torch
+from captum._utils.gradient import apply_gradient_requirements
 from captum._utils.sample_gradient import (
     _reset_sample_grads,
     SampleGradientWrapper,
@@ -74,6 +75,7 @@ class Test(BaseTest):
     ):
         wrapper = SampleGradientWrapper(model)
         wrapper.add_hooks()
+        apply_gradient_requirements(inputs)
         out = model(*inputs)
         wrapper.compute_param_sample_gradients(loss_fn(out), loss_type)
 
@@ -120,6 +122,7 @@ class Test(BaseTest):
             # compute sample grads
             wrapper = SampleGradientWrapper(model, layer_modules)
             wrapper.add_hooks()
+            apply_gradient_requirements(inp)
             out = model(*inp)
             wrapper.compute_param_sample_gradients(torch.sum(out), "sum")
 

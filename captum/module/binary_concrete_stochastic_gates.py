@@ -60,6 +60,7 @@ class BinaryConcreteStochasticGates(StochasticGatesBase):
         lower_bound: float = -0.1,
         upper_bound: float = 1.1,
         eps: float = 1e-8,
+        reg_reduction: str = "sum",
     ):
         """
         Args:
@@ -93,8 +94,18 @@ class BinaryConcreteStochasticGates(StochasticGatesBase):
             eps (float): term to improve numerical stability in binary concerete
                 sampling
                 Default: 1e-8
+
+            reg_reduction (str, optional): the reduction to apply to
+                the regularization: 'none'|'mean'|'sum'. 'none': no reduction will be
+                applied and it will be the same as the return of get_active_probs,
+                'mean': the sum of the gates non-zero probabilities will be divided by
+                the number of gates, 'sum': the gates non-zero probabilities will
+                be summed.
+                Default: 'sum'
         """
-        super().__init__(n_gates, mask=mask, reg_weight=reg_weight)
+        super().__init__(
+            n_gates, mask=mask, reg_weight=reg_weight, reg_reduction=reg_reduction
+        )
 
         # avoid changing the tensor's variable name
         # when the module is used after compilation,
@@ -121,22 +132,6 @@ class BinaryConcreteStochasticGates(StochasticGatesBase):
 
         # pre-calculate the fixed term used in active prob
         self.active_prob_offset = temperature * math.log(-lower_bound / upper_bound)
-
-    def forward(self, *args, **kwargs):
-        """
-        Args:
-            input_tensor (Tensor): Tensor to be gated with stochastic gates
-
-
-        Outputs:
-            gated_input (Tensor): Tensor of the same shape weighted by the sampled
-                gate values
-
-            l0_reg (Tensor): L0 regularization term to be optimized together with
-                model loss,
-                e.g. loss(model_out, target) + l0_reg
-        """
-        return super().forward(*args, **kwargs)
 
     def _sample_gate_values(self, batch_size: int) -> Tensor:
         """

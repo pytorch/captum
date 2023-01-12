@@ -38,6 +38,7 @@ class GaussianStochasticGates(StochasticGatesBase):
         mask: Optional[Tensor] = None,
         reg_weight: Optional[float] = 1.0,
         std: Optional[float] = 0.5,
+        reg_reduction: str = "sum",
     ):
         """
         Args:
@@ -58,8 +59,17 @@ class GaussianStochasticGates(StochasticGatesBase):
             std (Optional[float]): standard deviation that will be fixed throughout.
                 Default: 0.5 (by paper reference)
 
+            reg_reduction (str, optional): the reduction to apply to
+                the regularization: 'none'|'mean'|'sum'. 'none': no reduction will be
+                applied and it will be the same as the return of get_active_probs,
+                'mean': the sum of the gates non-zero probabilities will be divided by
+                the number of gates, 'sum': the gates non-zero probabilities will
+                be summed.
+                Default: 'sum'
         """
-        super().__init__(n_gates, mask=mask, reg_weight=reg_weight)
+        super().__init__(
+            n_gates, mask=mask, reg_weight=reg_weight, reg_reduction=reg_reduction
+        )
 
         mu = torch.empty(n_gates)
         nn.init.normal_(mu, mean=0.5, std=0.01)
@@ -67,21 +77,6 @@ class GaussianStochasticGates(StochasticGatesBase):
 
         assert 0 < std, f"the standard deviation should be positive, received {std}"
         self.std = std
-
-    def forward(self, *args, **kwargs):
-        """
-        Args:
-            input_tensor (Tensor): Tensor to be gated with stochastic gates
-
-        Outputs:
-            gated_input (Tensor): Tensor of the same shape weighted by the sampled
-                gate values
-
-            l0_reg (Tensor): L0 regularization term to be optimized together with
-                model loss,
-                e.g. loss(model_out, target) + l0_reg
-        """
-        return super().forward(*args, **kwargs)
 
     def _sample_gate_values(self, batch_size: int) -> Tensor:
         """
