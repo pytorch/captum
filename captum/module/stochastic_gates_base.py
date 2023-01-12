@@ -39,7 +39,7 @@ class StochasticGatesBase(Module, ABC):
         Args:
             n_gates (int): number of gates.
 
-            mask (Optional[Tensor]): If provided, this allows grouping multiple
+            mask (Tensor, optional): If provided, this allows grouping multiple
                 input tensor elements to share the same stochastic gate.
                 This tensor should be broadcastable to match the input shape
                 and contain integers in the range 0 to n_gates - 1.
@@ -48,16 +48,16 @@ class StochasticGatesBase(Module, ABC):
                 (on dimensions other than dim 0 - batch dim) is gated separately.
                 Default: None
 
-            reg_weight (Optional[float]): rescaling weight for L0 regularization term.
+            reg_weight (float, optional): rescaling weight for L0 regularization term.
                 Default: 1.0
 
-            reg_reduction (str, optional): the reduction to apply to
-                the regularization: 'none'|'mean'|'sum'. 'none': no reduction will be
-                applied and it will be the same as the return of get_active_probs,
-                'mean': the sum of the gates non-zero probabilities will be divided by
-                the number of gates, 'sum': the gates non-zero probabilities will
+            reg_reduction (str, optional): the reduction to apply to the regularization:
+                ``'none'`` | ``'mean'`` | ``'sum'``. ``'none'``: no reduction will be
+                applied and it will be the same as the return of ``get_active_probs``,
+                ``'mean'``: the sum of the gates non-zero probabilities will be divided
+                by the number of gates, ``'sum'``: the gates non-zero probabilities will
                 be summed.
-                Default: 'sum'
+                Default: ``'sum'``
         """
         super().__init__()
 
@@ -143,13 +143,13 @@ class StochasticGatesBase(Module, ABC):
         optionally clamped within 0 and 1.
 
         Args:
-            clamp (bool): whether to clamp the gate values or not. As smoothed Bernoulli
-                variables, gate values are clamped within 0 and 1 by default.
+            clamp (bool, optional): whether to clamp the gate values or not. As smoothed
+                Bernoulli variables, gate values are clamped within 0 and 1 by default.
                 Turn this off to get the raw means of the underneath
                 distribution (e.g., concrete, gaussian), which can be useful to
                 differentiate the gates' importance when multiple gate
                 values are beyond 0 or 1.
-                Default: True
+                Default: ``True``
 
         Returns:
             Tensor:
