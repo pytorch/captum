@@ -83,7 +83,7 @@ class Classifier(ABC):
             stats (dict): a dictionary of statistics about the performance of the model.
                     For example the accuracy of the model on the test and/or
                     train dataset(s). The user may decide to return None or an
-                    empty dictionary if she/he decides to not return any performance
+                    empty dictionary if they decide to not return any performance
                     statistics.
         """
         pass
