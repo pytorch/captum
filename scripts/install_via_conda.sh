@@ -22,8 +22,8 @@ conda update -q --all --yes
 conda install -qy conda-build
 
 # Use faster conda solver
-conda install -q -n base conda-libmamba-solver
-conda config --set solver libmamba
+# conda install -q -n base conda-libmamba-solver
+# conda config --set solver libmamba
 
 # install other frameworks if asked for and make sure this is before pytorch
 if [[ $FRAMEWORKS == true ]]; then
