@@ -19,7 +19,7 @@ while getopts 'nf' flag; do
 conda update -q --all --yes
 
 # required to use conda develop
-conda install -qy conda-build
+conda install -q -y conda-build
 
 # install other frameworks if asked for and make sure this is before pytorch
 if [[ $FRAMEWORKS == true ]]; then
