@@ -243,6 +243,7 @@ class LatentShift(GradientAttribution):
         params: dict,
         target_filename: str,
         watermark: bool = True,
+        show_pred: bool = True,
         ffmpeg_path: str = "ffmpeg",
         temp_path: str = "/tmp/gifsplanation",
         show: bool = True,
@@ -289,38 +290,8 @@ class LatentShift(GradientAttribution):
             ys += ys
 
         for idx, img in enumerate(towrite):
-
-            px = 1 / plt.rcParams["figure.dpi"]
-            full_frame(img[0].shape[0] * px, img[0].shape[1] * px)
-            plt.imshow(img[0], interpolation="none", cmap=cmap)
-
-            if watermark:
-                # Write prob output in upper left
-                plt.text(
-                    0.05,
-                    0.95,
-                    f"{float(ys[idx]):1.1f}",
-                    ha="left",
-                    va="top",
-                    transform=plt.gca().transAxes,
-                )
-                # Write method name in lower right
-                plt.text(
-                    0.96,
-                    0.1,
-                    "gifsplanation",
-                    ha="right",
-                    va="bottom",
-                    transform=plt.gca().transAxes,
-                )
-
-            plt.savefig(
-                f"{temp_path}/image-{idx}.png",
-                bbox_inches="tight",
-                pad_inches=0,
-                transparent=False,
-            )
-            plt.close()
+            path = f"{temp_path}/image-{idx}.png"
+            write_frame(img, path=path, pred=ys[idx] if show_pred else None, cmap=cmap, watermark=watermark)
 
         # Command for ffmpeg to generate an mp4
         cmd = (
@@ -363,3 +334,53 @@ def full_frame(width=None, height=None):
     ax.get_xaxis().set_visible(False)
     ax.get_yaxis().set_visible(False)
     plt.autoscale(tight=True)
+
+    
+def write_frame(img, path, text=None, pred=None, cmap=None, watermark=True):
+
+    px = 1 / plt.rcParams["figure.dpi"]
+    full_frame(img[0].shape[0] * px, img[0].shape[1] * px)
+    plt.imshow(img[0], interpolation="none", cmap=cmap)
+
+    if pred:
+        # Show pred as bar in upper left
+        plt.text(
+            0.05,
+            0.95,
+            f"{float(pred):1.2f} " + "█"*int(pred*100),
+            ha="left",
+            va="top",
+            transform=plt.gca().transAxes,
+            size="small",
+            backgroundcolor="white",
+        )
+    
+    if text:
+        # Write prob output in upper left
+        plt.text(
+            0.05,
+            0.95,
+            f"{float(text):1.1f}",
+            ha="left",
+            va="top",
+            transform=plt.gca().transAxes,
+        )
+    
+    if watermark:
+        # Write method name in lower right
+        plt.text(
+            0.96,
+            0.1,
+            "gifsplanation",
+            ha="right",
+            va="bottom",
+            transform=plt.gca().transAxes,
+        )
+
+    plt.savefig(
+        path,
+        bbox_inches="tight",
+        pad_inches=0,
+        transparent=False,
+    )
+    plt.close()
