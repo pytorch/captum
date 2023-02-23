@@ -589,10 +589,19 @@ def _extract_device(
             )
         )
     if hook_inputs is not None and len(hook_inputs) > 0:
-        return hook_inputs[0].device
+        if isinstance(hook_inputs[0], Tensor):
+            return hook_inputs[0].device
+        elif isinstance(hook_inputs[0], dict):
+            return list(hook_inputs[0].values())[0].device
+        else:
+            return None
     if hook_outputs is not None and len(hook_outputs) > 0:
-        return hook_outputs[0].device
-
+        if isinstance(hook_outputs[0], Tensor):
+            return hook_outputs[0].device
+        elif isinstance(hook_outputs[0], dict):
+            return list(hook_outputs[0].values())[0].device
+        else:
+            return None
     return params[0].device
 
 
@@ -616,6 +625,9 @@ def _reduce_list(
         return red_func([elem.to(first_device) for elem in val_list])
     elif isinstance(val_list[0], bool):
         return any(val_list)
+    elif isinstance(val_list[0], dict):
+        first_device = list(val_list[0].values())[0].device
+        return {key: red_func([elem[key].to(first_device) for elem in val_list]) for key in val_list[0].keys()}
     elif isinstance(val_list[0], tuple):
         final_out = []
         for i in range(len(val_list[0])):
@@ -624,7 +636,7 @@ def _reduce_list(
             )
     else:
         raise AssertionError(
-            "Elements to be reduced can only be"
+            "Elements to be reduced can only be "
             "either Tensors or tuples containing Tensors."
         )
     return tuple(final_out)

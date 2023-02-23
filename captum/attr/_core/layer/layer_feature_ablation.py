@@ -224,7 +224,7 @@ class LayerFeatureAblation(LayerAttribution, PerturbationAttribution):
         def layer_forward_func(*args):
             layer_length = args[-1]
             layer_input = args[:layer_length]
-            original_inputs = args[layer_length:-1]
+            original_inputs = args[2 * layer_length:-1]
 
             device_ids = self.device_ids
             if device_ids is None:
@@ -245,6 +245,7 @@ class LayerFeatureAblation(LayerAttribution, PerturbationAttribution):
                     if out is not None
                     else isinstance(inp, tuple)
                 )
+                print('all_layer_inputs: ', all_layer_inputs)
                 if device not in all_layer_inputs:
                     raise AssertionError(
                         "Layer input not placed on appropriate "
@@ -262,6 +263,7 @@ class LayerFeatureAblation(LayerAttribution, PerturbationAttribution):
                     hook = self.layer.register_forward_pre_hook(forward_hook)
                 else:
                     hook = self.layer.register_forward_hook(forward_hook)
+                print('original_inputs: ', original_inputs)
                 eval = _run_forward(self.forward_func, original_inputs, target=target)
             finally:
                 if hook is not None:
@@ -283,16 +285,16 @@ class LayerFeatureAblation(LayerAttribution, PerturbationAttribution):
             )
             layer_eval_len = (len(layer_eval),)
             all_inputs = (
-                (inputs + additional_forward_args + layer_eval_len)
+                (layer_eval + inputs + additional_forward_args + layer_eval_len)
                 if additional_forward_args is not None
-                else inputs + layer_eval_len
+                else layer_eval+ inputs + layer_eval_len
             )
 
             ablator = FeatureAblation(layer_forward_func)
-
+            print('layer_eval v: ', layer_eval, layer_baselines)
             layer_attribs = ablator.attribute.__wrapped__(
                 ablator,  # self
-                layer_eval,
+                tuple([value for key, value in layer_eval[0].items()]) if isinstance(layer_eval[0], dict) else layer_eval 
                 baselines=layer_baselines,
                 additional_forward_args=all_inputs,
                 feature_mask=layer_mask,

@@ -252,6 +252,20 @@ def _forward_layer_distributed_eval(
     # For DataParallel models, each partition adds entry to dictionary
     # with key as device and value as corresponding Tensor.
     def hook_wrapper(original_module):
+        def retrieve_device_return(eval_tsr):
+            if isinstance(eval_tsr, Tensor):
+                return eval_tsr.device
+            elif isinstance(eval_tsr, dict):
+                return list(eval_tsr.values())[0].device
+            return None
+
+        def clone_return(eval_tsr):
+            if isinstance(eval_tsr, Tensor):
+                return eval_tsr.clone()
+            elif isinstance(eval_tsr, dict):
+                return eval_tsr.copy() 
+            return eval_tsr
+    
         def forward_hook(module, inp, out=None):
             eval_tsrs = inp if attribute_to_layer_input else out
             is_eval_tuple = isinstance(eval_tsrs, tuple)
@@ -266,16 +280,16 @@ def _forward_layer_distributed_eval(
                 # when `forward_hook_with_return` is set to True. This is because
                 # otherwise `backward()` on the last output layer won't execute.
                 if forward_hook_with_return:
-                    saved_layer[original_module][eval_tsrs[0].device] = eval_tsrs
+                    saved_layer[original_module][retrieve_device_return(eval_tsrs)] = eval_tsrs
                     eval_tsrs_to_return = tuple(
-                        eval_tsr.clone() for eval_tsr in eval_tsrs
+                        clone_return(eval_tsr) for eval_tsr in eval_tsrs
                     )
                     if not is_eval_tuple:
                         eval_tsrs_to_return = eval_tsrs_to_return[0]
                     return eval_tsrs_to_return
                 else:
-                    saved_layer[original_module][eval_tsrs[0].device] = tuple(
-                        eval_tsr.clone() for eval_tsr in eval_tsrs
+                    saved_layer[original_module][retrieve_device_return(eval_tsrs)] = tuple(
+                        clone_return(eval_tsr) for eval_tsr in eval_tsrs
                     )
 
         return forward_hook
@@ -301,6 +315,7 @@ def _forward_layer_distributed_eval(
         for hook in all_hooks:
             hook.remove()
 
+    print('saved_layer: ', saved_layer)
     if len(saved_layer) == 0:
         raise AssertionError("Forward hook did not obtain any outputs for given layer")
 
