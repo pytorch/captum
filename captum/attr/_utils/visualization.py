@@ -236,10 +236,11 @@ def visualize_image_attr(
     if original_image is not None:
         if np.max(original_image) <= 1.0:
             original_image = _prepare_image(original_image * 255)
-    else:
-        assert (
-            ImageVisualizationMethod[method] == ImageVisualizationMethod.heat_map
-        ), "Original Image must be provided for any visualization other than heatmap."
+    elif ImageVisualizationMethod[method] != ImageVisualizationMethod.heat_map:
+        raise ValueError(
+            "Original Image must be provided for"
+            "any visualization other than heatmap."
+        )
 
     # Remove ticks and tick labels from plot.
     plt_axis.xaxis.set_ticks_position("none")
@@ -251,6 +252,9 @@ def visualize_image_attr(
     heat_map = None
     # Show original image
     if ImageVisualizationMethod[method] == ImageVisualizationMethod.original_image:
+        assert (
+            original_image is not None
+        ), "Original image expected for original_image method."
         if len(original_image.shape) > 2 and original_image.shape[2] == 1:
             original_image = np.squeeze(original_image, axis=2)
         plt_axis.imshow(original_image)
@@ -284,6 +288,9 @@ def visualize_image_attr(
             ImageVisualizationMethod[method]
             == ImageVisualizationMethod.blended_heat_map
         ):
+            assert (
+                original_image is not None
+            ), "Original Image expected for blended_heat_map method."
             plt_axis.imshow(np.mean(original_image, axis=2), cmap="gray")
             heat_map = plt_axis.imshow(
                 norm_attr, cmap=cmap, vmin=vmin, vmax=vmax, alpha=alpha_overlay
@@ -684,10 +691,7 @@ def visualize_timeseries_attr(
         plt_axis[0].set_prop_cycle(cycler)
 
         for chan in range(num_channels):
-            if channel_labels is not None:
-                label = channel_labels[chan]
-            else:
-                label = None
+            label = channel_labels[chan] if channel_labels else None
             plt_axis[0].plot(x_values, data[chan, :], label=label, **pyplot_kwargs)
 
         _plot_attrs_as_axvspan(norm_attr, x_values, plt_axis[0])

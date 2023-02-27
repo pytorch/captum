@@ -79,8 +79,8 @@ class ModifiedReluGradientAttribution(GradientAttribution):
 
     def _register_hooks(self, module: Module):
         if isinstance(module, torch.nn.ReLU):
-            hook = _register_backward_hook(module, self._backward_hook, self)
-            self.backward_hooks.append(hook)
+            hooks = _register_backward_hook(module, self._backward_hook, self)
+            self.backward_hooks.extend(hooks)
 
     def _backward_hook(
         self,
@@ -121,9 +121,7 @@ class GuidedBackprop(ModifiedReluGradientAttribution):
         r"""
         Args:
 
-            model (nn.Module): The reference to PyTorch model instance. Model cannot
-                        contain any in-place ReLU submodules; these are not
-                        supported by the register_full_backward_hook PyTorch API.
+            model (nn.Module):  The reference to PyTorch model instance.
         """
         ModifiedReluGradientAttribution.__init__(
             self, model, use_relu_grad_output=False
@@ -234,9 +232,7 @@ class Deconvolution(ModifiedReluGradientAttribution):
         r"""
         Args:
 
-            model (nn.Module): The reference to PyTorch model instance. Model cannot
-                        contain any in-place ReLU submodules; these are not
-                        supported by the register_full_backward_hook PyTorch API.
+            model (nn.Module):  The reference to PyTorch model instance.
         """
         ModifiedReluGradientAttribution.__init__(self, model, use_relu_grad_output=True)
 

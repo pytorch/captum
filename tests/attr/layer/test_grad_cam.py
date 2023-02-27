@@ -33,6 +33,23 @@ class Test(BaseTest):
             net, net.conv1, inp, [[[[11.25, 13.5], [20.25, 22.5]]]]
         )
 
+    def test_simple_input_conv_split_channels(self) -> None:
+        net = BasicModel_ConvNet_One_Conv()
+        inp = torch.arange(16).view(1, 1, 4, 4).float()
+        expected_result = [
+            [
+                [[-3.7500, 3.0000], [23.2500, 30.0000]],
+                [[15.0000, 10.5000], [-3.0000, -7.5000]],
+            ]
+        ]
+        self._grad_cam_test_assert(
+            net,
+            net.conv1,
+            inp,
+            expected_activation=expected_result,
+            attr_dim_summation=False,
+        )
+
     def test_simple_input_conv_no_grad(self) -> None:
         net = BasicModel_ConvNet_One_Conv()
 
@@ -100,6 +117,7 @@ class Test(BaseTest):
         additional_input: Any = None,
         attribute_to_layer_input: bool = False,
         relu_attributions: bool = False,
+        attr_dim_summation: bool = True,
     ):
         layer_gc = LayerGradCam(model, target_layer)
         self.assertFalse(layer_gc.multiplies_by_inputs)
@@ -109,6 +127,7 @@ class Test(BaseTest):
             additional_forward_args=additional_input,
             attribute_to_layer_input=attribute_to_layer_input,
             relu_attributions=relu_attributions,
+            attr_dim_summation=attr_dim_summation,
         )
         assertTensorTuplesAlmostEqual(
             self, attributions, expected_activation, delta=0.01

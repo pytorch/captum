@@ -141,8 +141,8 @@ jobs:
     steps:
       - checkout
       - pip_install
-      - lint_flake8
       - ufmt_check
+      - lint_flake8
       - sphinx
 
   test_py36_pip:

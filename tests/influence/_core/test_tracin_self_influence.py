@@ -8,6 +8,7 @@ from captum.influence._core.tracincp_fast_rand_proj import TracInCPFast
 from parameterized import parameterized
 from tests.helpers.basic import assertTensorAlmostEqual, BaseTest
 from tests.influence._utils.common import (
+    _format_batch_into_tuple,
     build_test_name_func,
     DataInfluenceConstructor,
     get_random_model_and_data,
@@ -108,14 +109,13 @@ class TestTracInSelfInfluence(BaseTest):
                 criterion,
             )
             train_scores = tracin.influence(
-                train_dataset.samples,
-                train_dataset.labels,
+                _format_batch_into_tuple(
+                    train_dataset.samples, train_dataset.labels, unpack_inputs
+                ),
                 k=None,
-                unpack_inputs=unpack_inputs,
             )
             # calculate self_tracin_scores
             self_tracin_scores = tracin.self_influence(
-                DataLoader(train_dataset, batch_size=batch_size),
                 outer_loop_by_checkpoints=False,
             )
 
