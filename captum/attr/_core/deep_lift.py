@@ -155,9 +155,9 @@ class DeepLift(GradientAttribution):
         Args:
 
             inputs (Tensor or tuple[Tensor, ...]): Input for which
-                        attributions are computed. If forward_func takes a single
+                        attributions are computed. If model takes a single
                         tensor as input, a single input tensor should be provided.
-                        If forward_func takes multiple tensors as input, a tuple
+                        If model takes multiple tensors as input, a tuple
                         of the input tensors should be provided. It is assumed
                         that for all given input tensors, dimension 0 corresponds
                         to the number of examples (aka batch size), and if
@@ -227,7 +227,7 @@ class DeepLift(GradientAttribution):
                         argument of a Tensor or arbitrary (non-tuple) type or a tuple
                         containing multiple additional arguments including tensors
                         or any arbitrary python types. These arguments are provided to
-                        forward_func in order, following the arguments in inputs.
+                        model in order, following the arguments in inputs.
                         Note that attributions are not computed with respect
                         to these arguments.
                         Default: None
@@ -267,7 +267,7 @@ class DeepLift(GradientAttribution):
                 corresponding sized tensors is returned.
             - **delta** (*Tensor*, returned if return_convergence_delta=True):
                 This is computed using the property that
-                the total sum of forward_func(inputs) - forward_func(baselines)
+                the total sum of model(inputs) - model(baselines)
                 must equal the total sum of the attributions computed
                 based on DeepLift's rescale rule.
                 Delta is calculated per example, meaning that the number of
@@ -627,9 +627,9 @@ class DeepLiftShap(DeepLift):
         Args:
 
             inputs (Tensor or tuple[Tensor, ...]): Input for which
-                        attributions are computed. If forward_func takes a single
+                        attributions are computed. If model takes a single
                         tensor as input, a single input tensor should be provided.
-                        If forward_func takes multiple tensors as input, a tuple
+                        If model takes multiple tensors as input, a tuple
                         of the input tensors should be provided. It is assumed
                         that for all given input tensors, dimension 0 corresponds
                         to the number of examples (aka batch size), and if
@@ -692,7 +692,7 @@ class DeepLiftShap(DeepLift):
                         argument of a Tensor or arbitrary (non-tuple) type or a tuple
                         containing multiple additional arguments including tensors
                         or any arbitrary python types. These arguments are provided to
-                        forward_func in order, following the arguments in inputs.
+                        model in order, following the arguments in inputs.
                         Note that attributions are not computed with respect
                         to these arguments.
                         Default: None
@@ -731,7 +731,7 @@ class DeepLiftShap(DeepLift):
                         corresponding sized tensors is returned.
             - **delta** (*Tensor*, returned if return_convergence_delta=True):
                         This is computed using the property that the
-                        total sum of forward_func(inputs) - forward_func(baselines)
+                        total sum of model(inputs) - model(baselines)
                         must be very close to the total sum of attributions
                         computed based on approximated SHAP values using
                         Deeplift's rescale rule.

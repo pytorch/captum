@@ -87,9 +87,9 @@ class NeuronDeepLift(NeuronAttribution, GradientAttribution):
         Args:
 
             inputs (Tensor or tuple[Tensor, ...]): Input for which layer
-                        attributions are computed. If forward_func takes a
+                        attributions are computed. If model takes a
                         single tensor as input, a single input tensor should be
-                        provided. If forward_func takes multiple tensors as input,
+                        provided. If model takes multiple tensors as input,
                         a tuple of the input tensors should be provided. It is
                         assumed that for all given input tensors, dimension 0
                         corresponds to the number of examples (aka batch size),
@@ -168,7 +168,7 @@ class NeuronDeepLift(NeuronAttribution, GradientAttribution):
                         argument of a Tensor or arbitrary (non-tuple) type or a tuple
                         containing multiple additional arguments including tensors
                         or any arbitrary python types. These arguments are provided
-                        to forward_func in order, following the arguments in inputs.
+                        to model in order, following the arguments in inputs.
                         Note that attributions are not computed with respect
                         to these arguments.
                         Default: None
@@ -318,9 +318,9 @@ class NeuronDeepLiftShap(NeuronAttribution, GradientAttribution):
         Args:
 
             inputs (Tensor or tuple[Tensor, ...]): Input for which layer
-                        attributions are computed. If forward_func takes a
+                        attributions are computed. If model takes a
                         single tensor as input, a single input tensor should be
-                        provided. If forward_func takes multiple tensors as input,
+                        provided. If model takes multiple tensors as input,
                         a tuple of the input tensors should be provided. It is
                         assumed that for all given input tensors, dimension 0
                         corresponds to the number of examples (aka batch size),
@@ -392,7 +392,7 @@ class NeuronDeepLiftShap(NeuronAttribution, GradientAttribution):
                         argument of a Tensor or arbitrary (non-tuple) type or a tuple
                         containing multiple additional arguments including tensors
                         or any arbitrary python types. These arguments are provided
-                        to forward_func in order, following the arguments in inputs.
+                        to model in order, following the arguments in inputs.
                         Note that attributions are not computed with respect
                         to these arguments.
                         Default: None

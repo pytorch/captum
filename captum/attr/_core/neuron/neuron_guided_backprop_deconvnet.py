@@ -44,10 +44,10 @@ class NeuronDeconvolution(NeuronAttribution, GradientAttribution):
                           Currently, it is assumed that the inputs or the outputs
                           of the layer, depending on which one is used for
                           attribution, can only be a single tensor.
-            device_ids (list[int]): Device ID list, necessary only if forward_func
+            device_ids (list[int]): Device ID list, necessary only if model
                           applies a DataParallel model. This allows reconstruction of
                           intermediate outputs from batched results across devices.
-                          If forward_func is given as the DataParallel model itself,
+                          If model is given as the DataParallel model itself,
                           then it is not necessary to provide this argument.
         """
         NeuronAttribution.__init__(self, model, layer, device_ids)
@@ -66,9 +66,9 @@ class NeuronDeconvolution(NeuronAttribution, GradientAttribution):
         Args:
 
             inputs (Tensor or tuple[Tensor, ...]): Input for which
-                        attributions are computed. If forward_func takes a single
+                        attributions are computed. If model takes a single
                         tensor as input, a single input tensor should be provided.
-                        If forward_func takes multiple tensors as input, a tuple
+                        If model takes multiple tensors as input, a tuple
                         of the input tensors should be provided. It is assumed
                         that for all given input tensors, dimension 0 corresponds
                         to the number of examples (aka batch size), and if
@@ -114,7 +114,7 @@ class NeuronDeconvolution(NeuronAttribution, GradientAttribution):
                         argument of a Tensor or arbitrary (non-tuple) type or a tuple
                         containing multiple additional arguments including tensors
                         or any arbitrary python types. These arguments are provided to
-                        forward_func in order, following the arguments in inputs.
+                        model in order, following the arguments in inputs.
                         Note that attributions are not computed with respect
                         to these arguments.
                         Default: None
@@ -198,10 +198,10 @@ class NeuronGuidedBackprop(NeuronAttribution, GradientAttribution):
                           in the attribute method.
                           Currently, only layers with a single tensor output are
                           supported.
-            device_ids (list[int]): Device ID list, necessary only if forward_func
+            device_ids (list[int]): Device ID list, necessary only if model
                           applies a DataParallel model. This allows reconstruction of
                           intermediate outputs from batched results across devices.
-                          If forward_func is given as the DataParallel model itself,
+                          If model is given as the DataParallel model itself,
                           then it is not necessary to provide this argument.
         """
         NeuronAttribution.__init__(self, model, layer, device_ids)
@@ -220,9 +220,9 @@ class NeuronGuidedBackprop(NeuronAttribution, GradientAttribution):
         Args:
 
             inputs (Tensor or tuple[Tensor, ...]): Input for which
-                        attributions are computed. If forward_func takes a single
+                        attributions are computed. If model takes a single
                         tensor as input, a single input tensor should be provided.
-                        If forward_func takes multiple tensors as input, a tuple
+                        If model takes multiple tensors as input, a tuple
                         of the input tensors should be provided. It is assumed
                         that for all given input tensors, dimension 0 corresponds
                         to the number of examples (aka batch size), and if
@@ -268,7 +268,7 @@ class NeuronGuidedBackprop(NeuronAttribution, GradientAttribution):
                         argument of a Tensor or arbitrary (non-tuple) type or a tuple
                         containing multiple additional arguments including tensors
                         or any arbitrary python types. These arguments are provided to
-                        forward_func in order, following the arguments in inputs.
+                        model in order, following the arguments in inputs.
                         Note that attributions are not computed with respect
                         to these arguments.
                         Default: None
