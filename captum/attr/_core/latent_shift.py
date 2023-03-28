@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-from typing import Callable, Tuple
+from typing import Any, Callable, Dict, List, Tuple, Union
 
 import numpy as np
 import torch
@@ -48,7 +48,7 @@ class LatentShift(GradientAttribution):
         self,
         inputs: Tensor,
         target: int,
-        fix_range: Tuple = None,
+        fix_range: Union[Tuple, None] = None,
         search_pred_diff: float = 0.8,
         search_step_size: float = 10.0,
         search_max_steps: int = 3000,
@@ -57,7 +57,7 @@ class LatentShift(GradientAttribution):
         heatmap_method: str = "int",
         verbose: bool = True,
         return_dicts: bool = False,
-    ) -> dict:
+    ) -> Union[Tensor, List[Dict[str, Any]]]:
         r"""
         This method performs a search in order to determine the correct lambda
         values to generate the shift. The search starts by stepping by
@@ -252,4 +252,4 @@ class LatentShift(GradientAttribution):
         if return_dicts:
             return results
         else:
-            return np.array([result["heatmap"] for result in results])
+            return torch.tensor([result["heatmap"] for result in results])
