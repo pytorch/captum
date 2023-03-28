@@ -137,9 +137,9 @@ class LatentShift(GradientAttribution):
             >>> output = attr.attribute(x, target=3)
 
         """
-        
-        assert lambda_sweep_steps > 1, 'lambda_sweep_steps must be at least 2' 
-        
+
+        assert lambda_sweep_steps > 1, 'lambda_sweep_steps must be at least 2'
+
         results = []
         # cheap batching
         for idx in range(inputs.shape[0]):
@@ -170,7 +170,7 @@ class LatentShift(GradientAttribution):
                 # Left range
                 lbound = 0
                 last_pred = initial_pred
-                pixel_sum = x_lambda0.abs().sum() # Used for pixel diff 
+                pixel_sum = x_lambda0.abs().sum()  # Used for pixel diff
                 while True:
                     x_lambdax, cur_pred = compute_shift(lbound)
                     pixel_diff = torch.abs(x_lambda0 - x_lambdax).sum().detach().cpu()
@@ -248,7 +248,7 @@ class LatentShift(GradientAttribution):
 
             params["heatmap"] = heatmap
             results.append(params)
-        
+
         if return_dicts:
             return results
         else:
