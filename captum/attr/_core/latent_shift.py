@@ -171,9 +171,13 @@ class LatentShift(GradientAttribution):
                     x_lambdax, cur_pred = compute_shift(lbound)
                     pixel_diff = torch.abs(x_lambda0 - x_lambdax).sum().detach().cpu()
                     if verbose:
-                        print(
-                            f"Shift: {lbound} , Prediction: {float(cur_pred)}, pixel_diff {float(pixel_diff)}, {pixel_sum * search_max_pixel_diff_pct}"
-                        )
+                        toprint = [
+                            f"Shift: {lbound}",
+                            f"Pred: {float(cur_pred)}",
+                            f"pixel_diff: {float(pixel_diff)}",
+                            f"sum*diff_pct: {pixel_sum * search_max_pixel_diff_pct}",
+                        ]
+                        print(", ".join(toprint))
 
                     # If we stop decreasing the prediction
                     if last_pred < cur_pred:
