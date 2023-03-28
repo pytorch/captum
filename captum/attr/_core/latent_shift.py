@@ -1,12 +1,7 @@
 #!/usr/bin/env python3
 
-import os
-import shutil
-import subprocess
 from typing import Callable, Tuple
 
-import matplotlib
-import matplotlib.pyplot as plt
 import numpy as np
 import torch
 from captum.attr._utils.attribution import GradientAttribution
@@ -105,11 +100,12 @@ class LatentShift(GradientAttribution):
                         between first and last frames. 'max': Max difference
                         from lambda 0 frame
             verbose: True to print debug text
-            return_dicts (bool): Return a list of dicts containing information from each
-                        image processed. Default False
+            return_dicts (bool): Return a list of dicts containing information
+                        from each image processed. Default False
 
         Returns:
-            attributions or (if return_dict=True) a list of dicts containing the follow keys:
+            attributions or (if return_dict=True) a list of dicts containing the
+                follow keys:
                 generated_images: A list of images generated at each step along
                     the dydz vector from the smallest lambda to the largest. By
                     default the smallest lambda represents the counterfactual
@@ -125,7 +121,7 @@ class LatentShift(GradientAttribution):
 
             >>> # Load classifier and autoencoder
             >>> model = classifiers.FaceAttribute()
-            >>> ae = autoencoders.Transformer(weights="faceshq")
+            >>> ae = autoencoders.VQGAN(weights="faceshq")
             >>>
             >>> # Load image
             >>> x = torch.randn(1, 3, 1024, 1024)
