@@ -57,10 +57,11 @@ class LatentShift(GradientAttribution):
         search_pred_diff: float = 0.8,
         search_step_size: float = 10.0,
         search_max_steps: int = 3000,
-        search_max_pixel_diff: float = 5000.0,
+        search_max_pixel_diff_pct: float = 0.05,
         lambda_sweep_steps: int = 10,
         heatmap_method: str = "int",
         verbose: bool = True,
+        return_dicts: bool = False,
     ) -> dict:
         r"""
         This method performs a search in order to determine the correct lambda
@@ -93,10 +94,10 @@ class LatentShift(GradientAttribution):
                         Sometimes steps make a tiny improvement and can go on
                         forever. This just bounds the time and gives up the
                         search.
-            search_max_pixel_diff (float): When searching stop of the pixel
+            search_max_pixel_diff_pct (float): When searching, stop if the pixel
                         difference is larger than this amount. This will
                         prevent large  artifacts being introduced into the
-                        image.
+                        image. |img0 - imgx| > |img0|*pct
             lambda_sweep_steps (int): How many frames to generate for the video.
             heatmap_method:  Default: 'int'. Possible methods: 'int': Average
                         per frame differences. 'mean' : Average difference
@@ -104,9 +105,11 @@ class LatentShift(GradientAttribution):
                         between first and last frames. 'max': Max difference
                         from lambda 0 frame
             verbose: True to print debug text
+            return_dicts (bool): Return a list of dicts containing information from each
+                        image processed. Default False
 
         Returns:
-            dict containing the follow keys:
+            attributions or (if return_dict=True) a list of dicts containing the follow keys:
                 generated_images: A list of images generated at each step along
                     the dydz vector from the smallest lambda to the largest. By
                     default the smallest lambda represents the counterfactual
@@ -134,253 +137,119 @@ class LatentShift(GradientAttribution):
             >>> output = attr.attribute(x, target=3)
 
         """
-        z = self.ae.encode(inputs).detach()
-        z.requires_grad = True
-        x_lambda0 = self.ae.decode(z)
-        pred = torch.sigmoid(self.forward_func(x_lambda0))[:, target]
-        dzdxp = torch.autograd.grad(pred, z)[0]
+        
+        assert lambda_sweep_steps > 1, 'lambda_sweep_steps must be at least 2' 
+        
+        results = []
+        # cheap batching
+        for idx in range(inputs.shape[0]):
+            inp = inputs[idx].unsqueeze(0)
+            z = self.ae.encode(inp).detach()
+            z.requires_grad = True
+            x_lambda0 = self.ae.decode(z)
+            pred = torch.sigmoid(self.forward_func(x_lambda0))[:, target]
+            dzdxp = torch.autograd.grad(pred, z)[0]
 
-        # Cache so we can reuse at sweep stage
-        cache = {}
+            # Cache so we can reuse at sweep stage
+            cache = {}
 
-        def compute_shift(lambdax):
-            """Compute the shift for a specific lambda"""
-            if lambdax not in cache:
-                x_lambdax = self.ae.decode(z + dzdxp * lambdax).detach()
-                pred1 = torch.sigmoid(self.forward_func(x_lambdax))[:, target]
-                pred1 = pred1.detach().cpu().numpy()
-                cache[lambdax] = x_lambdax, pred1
-                if verbose:
-                    print(f"Shift: {lambdax} , Prediction: {pred1}")
-            return cache[lambdax]
+            def compute_shift(lambdax):
+                """Compute the shift for a specific lambda"""
+                if lambdax not in cache:
+                    x_lambdax = self.ae.decode(z + dzdxp * lambdax).detach()
+                    pred1 = torch.sigmoid(self.forward_func(x_lambdax))[:, target]
+                    pred1 = pred1.detach().cpu().numpy()
+                    cache[lambdax] = x_lambdax, pred1
+                return cache[lambdax]
 
-        _, initial_pred = compute_shift(0)
+            _, initial_pred = compute_shift(0)
 
-        if fix_range:
-            lbound, rbound = fix_range
+            if fix_range:
+                lbound, rbound = fix_range
+            else:
+                # Left range
+                lbound = 0
+                last_pred = initial_pred
+                pixel_sum = x_lambda0.abs().sum() # Used for pixel diff 
+                while True:
+                    x_lambdax, cur_pred = compute_shift(lbound)
+                    pixel_diff = torch.abs(x_lambda0 - x_lambdax).sum().detach().cpu()
+                    if verbose:
+                        print(f"Shift: {lbound} , Prediction: {float(cur_pred)}, pixel_diff {float(pixel_diff)}, {pixel_sum * search_max_pixel_diff_pct}")
+
+                    # If we stop decreasing the prediction
+                    if last_pred < cur_pred:
+                        break
+                    # If the prediction becomes very low
+                    if cur_pred < 0.05:
+                        break
+                    # If we have decreased the prediction by pred_diff
+                    if initial_pred - search_pred_diff > cur_pred:
+                        break
+                    # If we are moving in the latent space too much
+                    if lbound <= -search_max_steps:
+                        break
+                    # If we move too far we will distort the image
+                    if pixel_diff > (pixel_sum * search_max_pixel_diff_pct):
+                        break
+
+                    last_pred = cur_pred
+                    lbound = lbound - search_step_size + lbound // 10
+
+                # Right range search not implemented
+                rbound = 0
+
+            if verbose:
+                print("Selected bounds: ", lbound, rbound)
+
+            # Sweep over the range of lambda values to create a sequence
+            lambdas = np.linspace(lbound, rbound, lambda_sweep_steps)
+            assert lambda_sweep_steps == len(lambdas), "Inconsistent number of lambda steps"
+
+            if verbose:
+                print("Lambdas to compute: ", lambdas)
+
+            preds = []
+            generated_images = []
+
+            for lam in lambdas:
+                x_lambdax, pred = compute_shift(lam)
+                generated_images.append(x_lambdax.cpu().numpy()[0])
+                preds.append(float(pred))
+
+            params = {}
+            params["generated_images"] = np.array(generated_images)
+            params["lambdas"] = lambdas
+            params["preds"] = preds
+
+            x_lambda0 = x_lambda0.detach().cpu().numpy()
+            if heatmap_method == "max":
+                # Max difference from lambda 0 frame
+                heatmap = np.max(np.abs(x_lambda0 - generated_images), 0)
+
+            elif heatmap_method == "mean":
+                # Average difference between 0 and other lambda frames
+                heatmap = np.mean(np.abs(x_lambda0 - generated_images), 0)
+
+            elif heatmap_method == "mm":
+                # Difference between first and last frames
+                heatmap = np.abs(generated_images[0] - generated_images[-1])
+
+            elif heatmap_method == "int":
+                # Average per frame differences
+                image_changes = []
+                for i in range(len(generated_images) - 1):
+                    image_changes.append(
+                        np.abs(generated_images[i] - generated_images[i + 1])
+                    )
+                heatmap = np.mean(image_changes, 0)
+            else:
+                raise Exception("Unknown heatmap_method for 2d image")
+
+            params["heatmap"] = heatmap
+            results.append(params)
+        
+        if return_dicts:
+            return results
         else:
-            # Left range
-            lbound = 0
-            last_pred = initial_pred
-            while True:
-                x_lambdax, cur_pred = compute_shift(lbound)
-                pixel_diff = torch.abs(x_lambda0 - x_lambdax).sum().detach()
-
-                # If we stop decreasing the prediction
-                if last_pred < cur_pred:
-                    break
-                # If the prediction becomes very low
-                if cur_pred < 0.05:
-                    break
-                # If we have decreased the prediction by pred_diff
-                if initial_pred - search_pred_diff > cur_pred:
-                    break
-                # If we are moving in the latent space too much
-                if lbound <= -search_max_steps:
-                    break
-                # If we move too far we will distort the image
-                if pixel_diff > search_max_pixel_diff:
-                    break
-
-                last_pred = cur_pred
-                lbound = lbound - search_step_size + lbound // 10
-
-            # Right range search not implemented
-            rbound = 0
-
-        if verbose:
-            print("Selected bounds: ", lbound, rbound)
-
-        # Sweep over the range of lambda values to create a sequence
-        lambdas = np.arange(
-            lbound, rbound, np.abs((lbound - rbound) / lambda_sweep_steps)
-        ).tolist()
-
-        preds = []
-        generated_images = []
-
-        for lam in lambdas:
-            x_lambdax, pred = compute_shift(lam)
-            generated_images.append(x_lambdax.cpu().numpy())
-            preds.append(float(pred))
-
-        params = {}
-        params["generated_images"] = generated_images
-        params["lambdas"] = lambdas
-        params["preds"] = preds
-
-        x_lambda0 = x_lambda0.detach().cpu().numpy()
-        if heatmap_method == "max":
-            # Max difference from lambda 0 frame
-            heatmap = np.max(np.abs(x_lambda0[0][0] - generated_images[0][0]), 0)
-
-        elif heatmap_method == "mean":
-            # Average difference between 0 and other lambda frames
-            heatmap = np.mean(np.abs(x_lambda0[0][0] - generated_images[0][0]), 0)
-
-        elif heatmap_method == "mm":
-            # Difference between first and last frames
-            heatmap = np.abs(generated_images[0][0][0] - generated_images[-1][0][0])
-
-        elif heatmap_method == "int":
-            # Average per frame differences
-            image_changes = []
-            for i in range(len(generated_images) - 1):
-                image_changes.append(
-                    np.abs(generated_images[i][0][0] - generated_images[i + 1][0][0])
-                )
-            heatmap = np.mean(image_changes, 0)
-        else:
-            raise Exception("Unknown heatmap_method for 2d image")
-
-        params["heatmap"] = heatmap
-
-        return params
-
-    @log_usage()
-    def generate_video(
-        self,
-        params: dict,
-        target_filename: str,
-        watermark: bool = True,
-        show_pred: bool = True,
-        ffmpeg_path: str = "ffmpeg",
-        temp_path: str = "/tmp/gifsplanation",
-        show: bool = True,
-        verbose: bool = True,
-        extra_loops: int = 0,
-        cmap: str = None,
-    ):
-        """Generate a video from the generated images.
-
-        Args:
-            params: The dict returned from the call to `attribute`.
-            target_filename: The filename to write the video to. `.mp4` will
-                be added to the end of the string.
-            watermark: To add the probability output and the name of the
-                method.
-            ffmpeg_path: The path to call `ffmpeg`
-            temp_path: A temp path to write images.
-            show: To try and show the video in a jupyter notebook.
-            verbose: True to print debug text
-            extra_loops: The video does one loop by default. This will repeat
-                those loops to make it easier to watch.
-            cmap: The cmap value passed to matplotlib. e.g. 'gray' for a
-                grayscale image.
-
-        Returns:
-            The filename of the video if show=False, otherwise it will
-            return a video to show in a jupyter notebook.
-        """
-
-        if os.path.exists(target_filename + ".mp4"):
-            os.remove(target_filename + ".mp4")
-
-        shutil.rmtree(temp_path, ignore_errors=True)
-        os.mkdir(temp_path)
-
-        imgs = [h.transpose(0, 2, 3, 1) for h in params["generated_images"]]
-
-        # Add reversed so we have an animation cycle
-        towrite = list(reversed(imgs)) + list(imgs)
-        ys = list(reversed(params["preds"])) + list(params["preds"])
-
-        for n in range(extra_loops):
-            towrite += towrite
-            ys += ys
-
-        for idx, img in enumerate(towrite):
-            path = f"{temp_path}/image-{idx}.png"
-            write_frame(img, path=path, pred=ys[idx] if show_pred else None, cmap=cmap, watermark=watermark)
-
-        # Command for ffmpeg to generate an mp4
-        cmd = (
-            f"{ffmpeg_path} -loglevel quiet -stats -y "
-            f"-i {temp_path}/image-%d.png "
-            f"-c:v libx264 -vf scale=-2:{imgs[0][0].shape[0]} "
-            f"-profile:v baseline -level 3.0 -pix_fmt yuv420p "
-            f"'{target_filename}.mp4'"
-        )
-
-        if verbose:
-            print(cmd)
-        output = subprocess.check_output(cmd, shell=True)
-        if verbose:
-            print(output)
-
-        if show:
-            # If we in a jupyter notebook then show the video.
-            from IPython.core.display import Video
-
-            try:
-                return Video(
-                    target_filename + ".mp4",
-                    html_attributes="controls loop autoplay muted",
-                    embed=True,
-                )
-            except TypeError:
-                return Video(target_filename + ".mp4", embed=True)
-        else:
-            return target_filename + ".mp4"
-
-
-def full_frame(width=None, height=None):
-    """Setup matplotlib so we can write to the entire canvas"""
-
-    matplotlib.rcParams["savefig.pad_inches"] = 0
-    figsize = None if width is None else (width, height)
-    plt.figure(figsize=figsize)
-    ax = plt.axes([0, 0, 1, 1], frameon=False)
-    ax.get_xaxis().set_visible(False)
-    ax.get_yaxis().set_visible(False)
-    plt.autoscale(tight=True)
-
-    
-def write_frame(img, path, text=None, pred=None, cmap=None, watermark=True):
-
-    px = 1 / plt.rcParams["figure.dpi"]
-    full_frame(img[0].shape[0] * px, img[0].shape[1] * px)
-    plt.imshow(img[0], interpolation="none", cmap=cmap)
-
-    if pred:
-        # Show pred as bar in upper left
-        plt.text(
-            0.05,
-            0.95,
-            f"{float(pred):1.2f} " + "█"*int(pred*100),
-            ha="left",
-            va="top",
-            transform=plt.gca().transAxes,
-            size="small",
-            backgroundcolor="white",
-        )
-    
-    if text:
-        # Write prob output in upper left
-        plt.text(
-            0.05,
-            0.95,
-            f"{float(text):1.1f}",
-            ha="left",
-            va="top",
-            transform=plt.gca().transAxes,
-        )
-    
-    if watermark:
-        # Write method name in lower right
-        plt.text(
-            0.96,
-            0.1,
-            "gifsplanation",
-            ha="right",
-            va="bottom",
-            transform=plt.gca().transAxes,
-        )
-
-    plt.savefig(
-        path,
-        bbox_inches="tight",
-        pad_inches=0,
-        transparent=False,
-    )
-    plt.close()
+            return np.array([result["heatmap"] for result in results])
