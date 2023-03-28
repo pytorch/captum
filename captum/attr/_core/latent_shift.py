@@ -138,7 +138,7 @@ class LatentShift(GradientAttribution):
 
         """
 
-        assert lambda_sweep_steps > 1, 'lambda_sweep_steps must be at least 2'
+        assert lambda_sweep_steps > 1, "lambda_sweep_steps must be at least 2"
 
         results = []
         # cheap batching
@@ -175,7 +175,9 @@ class LatentShift(GradientAttribution):
                     x_lambdax, cur_pred = compute_shift(lbound)
                     pixel_diff = torch.abs(x_lambda0 - x_lambdax).sum().detach().cpu()
                     if verbose:
-                        print(f"Shift: {lbound} , Prediction: {float(cur_pred)}, pixel_diff {float(pixel_diff)}, {pixel_sum * search_max_pixel_diff_pct}")
+                        print(
+                            f"Shift: {lbound} , Prediction: {float(cur_pred)}, pixel_diff {float(pixel_diff)}, {pixel_sum * search_max_pixel_diff_pct}"
+                        )
 
                     # If we stop decreasing the prediction
                     if last_pred < cur_pred:
@@ -204,7 +206,9 @@ class LatentShift(GradientAttribution):
 
             # Sweep over the range of lambda values to create a sequence
             lambdas = np.linspace(lbound, rbound, lambda_sweep_steps)
-            assert lambda_sweep_steps == len(lambdas), "Inconsistent number of lambda steps"
+            assert lambda_sweep_steps == len(
+                lambdas
+            ), "Inconsistent number of lambda steps"
 
             if verbose:
                 print("Lambdas to compute: ", lambdas)

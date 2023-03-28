@@ -72,7 +72,6 @@ class ConvAE(torch.nn.Module):
 
 class TestBasic(BaseTest):
     def test_basic_setup(self):
-
         model = TinyModel()
         ae = TinyAE()
         x = torch.randn(1, 100)
@@ -91,11 +90,10 @@ class TestBasic(BaseTest):
         outputs = attr.attribute(x, target=3, lambda_sweep_steps=10, return_dicts=True)
         assert batch_size == len(outputs)
         for output in outputs:
-            assert (100, ) == output["heatmap"].shape
+            assert (100,) == output["heatmap"].shape
             assert (10, 100) == output["generated_images"].shape
 
     def test_batches(self):
-
         model = TinyModel()
         ae = TinyAE()
 
@@ -113,13 +111,12 @@ class TestBasic(BaseTest):
         outputs = attr.attribute(x, target=3, lambda_sweep_steps=10, return_dicts=True)
         assert batch_size == len(outputs)
         for output in outputs:
-            assert (100, ) == output["heatmap"].shape
+            assert (100,) == output["heatmap"].shape
             assert (10, 100) == output["generated_images"].shape
 
 
 class TestConv(BaseTest):
     def test_basic_setup(self):
-
         model = torchvision.models.resnet50(weights=None)
         ae = ConvAE()
 
@@ -144,7 +141,6 @@ class TestConv(BaseTest):
             assert (10, 3, 200, 200) == output["generated_images"].shape
 
     def test_batches(self):
-
         model = torchvision.models.resnet50(weights=None)
         ae = ConvAE()
 
