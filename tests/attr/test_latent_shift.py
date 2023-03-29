@@ -2,7 +2,6 @@
 
 import captum
 import torch
-import torchvision
 from tests.helpers.basic import BaseTest
 
 
@@ -40,6 +39,24 @@ class TinyAE(torch.nn.Module):
 
     def forward(self, x):
         return self.decode(self.encode(x))
+
+
+class ConvModel(torch.nn.Module):
+    def __init__(self):
+        super(ConvModel, self).__init__()
+
+        self.conv1 = torch.nn.Conv2d(3, 4, 3)
+        self.activation = torch.nn.ReLU()
+        self.linear2 = torch.nn.Linear(1296, 10)
+        self.sigmoid = torch.nn.Sigmoid()
+
+    def forward(self, x):
+        x = self.conv1(x)
+        x = self.activation(x)
+        x = x.flatten(1)
+        x = self.linear2(x)
+        x = self.sigmoid(x)
+        return x
 
 
 class ConvAE(torch.nn.Module):
@@ -117,49 +134,49 @@ class TestBasic(BaseTest):
 
 class TestConv(BaseTest):
     def test_basic_setup(self):
-        model = torchvision.models.resnet50(weights=None)
+        model = ConvModel()
         ae = ConvAE()
 
         # Defining Latent Shift module
         attr = captum.attr.LatentShift(model, ae)
 
         batch_size = 1
-        x = torch.randn(batch_size, 3, 200, 200)
+        x = torch.randn(batch_size, 3, 20, 20)
 
         # Defining Latent Shift module
         attr = captum.attr.LatentShift(model, ae)
 
         # Computes counterfactual heatmap for class 3.
         outputs = attr.attribute(x, target=3, lambda_sweep_steps=10)
-        assert (batch_size, 3, 200, 200) == outputs.shape
+        assert (batch_size, 3, 20, 20) == outputs.shape
 
         # Computes counterfactual for class 3 and return counterfactuals.
         outputs = attr.attribute(x, target=3, lambda_sweep_steps=10, return_dicts=True)
         assert batch_size == len(outputs)
         for output in outputs:
-            assert (3, 200, 200) == output["heatmap"].shape
-            assert (10, 3, 200, 200) == output["generated_images"].shape
+            assert (3, 20, 20) == output["heatmap"].shape
+            assert (10, 3, 20, 20) == output["generated_images"].shape
 
     def test_batches(self):
-        model = torchvision.models.resnet50(weights=None)
+        model = ConvModel()
         ae = ConvAE()
 
         # Defining Latent Shift module
         attr = captum.attr.LatentShift(model, ae)
 
         batch_size = 2
-        x = torch.randn(batch_size, 3, 200, 200)
+        x = torch.randn(batch_size, 3, 20, 20)
 
         # Defining Latent Shift module
         attr = captum.attr.LatentShift(model, ae)
 
         # Computes counterfactual heatmap for class 3.
         outputs = attr.attribute(x, target=3, lambda_sweep_steps=10)
-        assert (batch_size, 3, 200, 200) == outputs.shape
+        assert (batch_size, 3, 20, 20) == outputs.shape
 
         # Computes counterfactual for class 3 and return counterfactuals.
         outputs = attr.attribute(x, target=3, lambda_sweep_steps=10, return_dicts=True)
         assert batch_size == len(outputs)
         for output in outputs:
-            assert (3, 200, 200) == output["heatmap"].shape
-            assert (10, 3, 200, 200) == output["generated_images"].shape
+            assert (3, 20, 20) == output["heatmap"].shape
+            assert (10, 3, 20, 20) == output["generated_images"].shape
