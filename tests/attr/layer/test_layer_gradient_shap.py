@@ -162,7 +162,9 @@ class Test(BaseTest):
         )
         assertTensorTuplesAlmostEqual(self, attrs, expected, delta=0.005)
         if expected_delta is None:
-            _assert_attribution_delta(self, inputs, attrs, n_samples, delta, True)
+            _assert_attribution_delta(
+                self, inputs, attrs, n_samples, delta, is_layer=True
+            )
         else:
             for delta_i, expected_delta_i in zip(delta, expected_delta):
                 assertTensorAlmostEqual(self, delta_i, expected_delta_i, delta=0.01)
