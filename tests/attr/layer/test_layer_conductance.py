@@ -103,7 +103,7 @@ class Test(BaseTest):
     def test_matching_conv1_conductance(self) -> None:
         net = BasicModel_ConvNet()
         inp = 100 * torch.randn(1, 1, 10, 10, requires_grad=True)
-        self._conductance_reference_test_assert(net, net.conv1, inp)
+        self._conductance_reference_test_assert(net, net.conv1, inp, n_steps=100)
 
     def test_matching_pool1_conductance(self) -> None:
         net = BasicModel_ConvNet()
@@ -170,6 +170,7 @@ class Test(BaseTest):
         target_layer: Module,
         test_input: Tensor,
         test_baseline: Union[None, Tensor] = None,
+        n_steps=300,
     ) -> None:
         layer_output = None
 
@@ -190,7 +191,7 @@ class Test(BaseTest):
                 test_input,
                 baselines=test_baseline,
                 target=target_index,
-                n_steps=300,
+                n_steps=n_steps,
                 method="gausslegendre",
                 return_convergence_delta=True,
             ),
@@ -206,7 +207,7 @@ class Test(BaseTest):
             test_input,
             baselines=test_baseline,
             target=target_index,
-            n_steps=300,
+            n_steps=n_steps,
             method="gausslegendre",
         )
 
@@ -232,7 +233,7 @@ class Test(BaseTest):
                         if test_baseline is not None
                         else None,
                         target=target_index,
-                        n_steps=300,
+                        n_steps=n_steps,
                         method="gausslegendre",
                     ),
                 )

@@ -69,10 +69,7 @@ class LayerDeepLift(LayerAttribution, DeepLift):
         r"""
         Args:
 
-            model (nn.Module): The reference to PyTorch model instance. Model cannot
-                        contain any in-place nonlinear submodules; these are not
-                        supported by the register_full_backward_hook PyTorch API
-                        starting from PyTorch v1.9.
+            model (nn.Module):  The reference to PyTorch model instance.
             layer (torch.nn.Module): Layer for which attributions are computed.
                         The size and dimensionality of the attributions
                         corresponds to the size and dimensionality of the layer's
@@ -403,10 +400,7 @@ class LayerDeepLiftShap(LayerDeepLift, DeepLiftShap):
         r"""
         Args:
 
-            model (nn.Module): The reference to PyTorch model instance. Model cannot
-                        contain any in-place nonlinear submodules; these are not
-                        supported by the register_full_backward_hook PyTorch API
-                        starting from PyTorch v1.9.
+            model (nn.Module):  The reference to PyTorch model instance.
             layer (torch.nn.Module): Layer for which attributions are computed.
                         The size and dimensionality of the attributions
                         corresponds to the size and dimensionality of the layer's

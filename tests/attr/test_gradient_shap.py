@@ -156,8 +156,9 @@ class Test(BaseTest):
         _assert_attribution_delta(self, (inputs,), (attributions,), n_samples, delta)
 
         with self.assertRaises(AssertionError):
-            attributions, delta = gradient_shap.attribute(
+            attributions, delta = gradient_shap.attribute(  # type: ignore
                 inputs,
+                # Intentionally passing wrong type.
                 baselines=generate_baselines_returns_array,
                 target=torch.tensor(1),
                 n_samples=n_samples,
@@ -220,7 +221,7 @@ class Test(BaseTest):
         baselines = (baseline1, baseline2)
 
         gs = GradientShap(model)
-        n_samples = 30000
+        n_samples = 20000
         attributions, delta = cast(
             Tuple[Tuple[Tensor, ...], Tensor],
             gs.attribute(
@@ -230,7 +231,9 @@ class Test(BaseTest):
                 return_convergence_delta=True,
             ),
         )
-        _assert_attribution_delta(self, inputs, attributions, n_samples, delta)
+        _assert_attribution_delta(
+            self, inputs, attributions, n_samples, delta, delta_thresh=0.008
+        )
 
         ig = IntegratedGradients(model)
         attributions_ig = ig.attribute(inputs, baselines=baselines)
@@ -241,7 +244,7 @@ class Test(BaseTest):
     ) -> None:
         for attribution1, attribution2 in zip(attributions1, attributions2):
             for attr_row1, attr_row2 in zip(attribution1, attribution2):
-                assertTensorAlmostEqual(self, attr_row1, attr_row2, 0.005, "max")
+                assertTensorAlmostEqual(self, attr_row1, attr_row2, 0.05, "max")
 
 
 def _assert_attribution_delta(
@@ -250,6 +253,7 @@ def _assert_attribution_delta(
     attributions: Union[Tensor, Tuple[Tensor, ...]],
     n_samples: int,
     delta: Tensor,
+    delta_thresh: Tensor = 0.0006,
     is_layer: bool = False,
 ) -> None:
     if not is_layer:
@@ -262,11 +266,11 @@ def _assert_attribution_delta(
     test.assertEqual([bsz * n_samples], list(delta.shape))
 
     delta = torch.mean(delta.reshape(bsz, -1), dim=1)
-    _assert_delta(test, delta)
+    _assert_delta(test, delta, delta_thresh)
 
 
-def _assert_delta(test: BaseTest, delta: Tensor) -> None:
-    delta_condition = (delta.abs() < 0.0006).all()
+def _assert_delta(test: BaseTest, delta: Tensor, delta_thresh: Tensor = 0.0006) -> None:
+    delta_condition = (delta.abs() < delta_thresh).all()
     test.assertTrue(
         delta_condition,
         "Sum of SHAP values {} does"

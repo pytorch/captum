@@ -258,7 +258,7 @@ class TestTracInXOR(BaseTest):
                     batch_size,
                     criterion,
                 )
-                test_scores = tracin.influence(testset, testlabels)
+                test_scores = tracin.influence((testset, testlabels))
                 idx = torch.argsort(test_scores, dim=1, descending=True)
                 # check that top 5 influences have matching binary classification
                 for i in range(len(idx)):
@@ -288,9 +288,9 @@ class TestTracInXOR(BaseTest):
                     criterion,
                     sample_wise_grads_per_batch=True,
                 )
-                test_scores = tracin.influence(testset, testlabels)
+                test_scores = tracin.influence((testset, testlabels))
                 test_scores_sample_wise_trick = tracin_sample_wise_trick.influence(
-                    testset, testlabels
+                    (testset, testlabels)
                 )
                 assertTensorAlmostEqual(
                     self, test_scores, test_scores_sample_wise_trick

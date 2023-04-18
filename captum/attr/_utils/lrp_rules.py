@@ -33,16 +33,12 @@ class PropagationRule(ABC):
     @staticmethod
     def backward_hook_activation(module, grad_input, grad_output):
         """Backward hook to propagate relevance over non-linear activations."""
-        if (
-            isinstance(grad_input, tuple)
-            and isinstance(grad_output, tuple)
-            and len(grad_input) > len(grad_output)
-        ):
-            # Adds any additional elements of grad_input if applicable
-            # This occurs when registering a backward hook on nn.Dropout
-            # modules, which has an additional element of None in
-            # grad_input
-            return grad_output + grad_input[len(grad_output) :]
+        # replace_out is set in _backward_hook_input, this is necessary
+        # due to 2 tensor hooks on the same tensor
+        if hasattr(grad_output, "replace_out"):
+            hook_out = grad_output.replace_out
+            del grad_output.replace_out
+            return hook_out
         return grad_output
 
     def _create_backward_hook_input(self, inputs):
@@ -53,6 +49,10 @@ class PropagationRule(ABC):
                 self.relevance_input[device] = relevance.data
             else:
                 self.relevance_input[device].append(relevance.data)
+
+            # replace_out is needed since two hooks are set on the same tensor
+            # The output of this hook is needed in backward_hook_activation
+            grad.replace_out = relevance
             return relevance
 
         return _backward_hook_input

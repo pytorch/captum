@@ -738,13 +738,13 @@ def _compute_jacobian_wrt_params(
         inputs (tuple[Any, ...]): The minibatch for which the forward pass is computed.
                 It is unpacked before passing to `model`, so it must be a tuple.  The
                 individual elements of `inputs` can be anything.
-        labels (Tensor or None): Labels for input if computing a loss function.
-        loss_fn (torch.nn.Module or Callable or None): The loss function. If a library
+        labels (Tensor, optional): Labels for input if computing a loss function.
+        loss_fn (torch.nn.Module or Callable, optional): The loss function. If a library
                 defined loss function is provided, it would be expected to be a
                 torch.nn.Module. If a custom loss is provided, it can be either type,
                 but must behave as a library loss function would if `reduction='none'`.
-        layer_modules (List[torch.nn.Module]): A list of PyTorch modules w.r.t. which
-                jacobian gradients are computed.
+        layer_modules (List[torch.nn.Module], optional): A list of PyTorch modules
+                 w.r.t. which jacobian gradients are computed.
     Returns:
         grads (tuple[Tensor, ...]): Returns the Jacobian for the minibatch as a
                 tuple of gradients corresponding to the tuple of trainable parameters
@@ -813,18 +813,19 @@ def _compute_jacobian_wrt_params_with_sample_wise_trick(
         inputs (tuple[Any, ...]): The minibatch for which the forward pass is computed.
                 It is unpacked before passing to `model`, so it must be a tuple.  The
                 individual elements of `inputs` can be anything.
-        labels (Tensor or None): Labels for input if computing a loss function.
-        loss_fn (torch.nn.Module or Callable or None): The loss function. If a library
+        labels (Tensor, optional): Labels for input if computing a loss function.
+        loss_fn (torch.nn.Module or Callable, optional): The loss function. If a library
                 defined loss function is provided, it would be expected to be a
                 torch.nn.Module. If a custom loss is provided, it can be either type,
                 but must behave as a library loss function would if `reduction='sum'` or
                 `reduction='mean'`.
-        reduction_type (str): The type of reduction applied. If a loss_fn is passed,
-                this should match `loss_fn.reduction`. Else if gradients are being
-                computed on direct model outputs (scores), then 'sum' should be used.
+        reduction_type (str, optional): The type of reduction applied. If a loss_fn is
+                passed, this should match `loss_fn.reduction`. Else if gradients are
+                being computed on direct model outputs (scores), then 'sum' should be
+                used.
                 Defaults to 'sum'.
-        layer_modules (torch.nn.Module): A list of PyTorch modules w.r.t. which
-                jacobian gradients are computed.
+        layer_modules (torch.nn.Module, optional): A list of PyTorch modules w.r.t.
+                 which jacobian gradients are computed.
 
     Returns:
         grads (tuple[Tensor, ...]): Returns the Jacobian for the minibatch as a
@@ -836,6 +837,8 @@ def _compute_jacobian_wrt_params_with_sample_wise_trick(
                 parameters of the i-th layer, for the j-th member of the minibatch.
     """
     with torch.autograd.set_grad_enabled(True):
+        inputs = tuple(inp.clone() for inp in inputs)
+        apply_gradient_requirements(inputs)
         sample_grad_wrapper = SampleGradientWrapper(model, layer_modules)
         try:
             sample_grad_wrapper.add_hooks()
@@ -848,18 +851,21 @@ def _compute_jacobian_wrt_params_with_sample_wise_trick(
             if labels is not None and loss_fn is not None:
                 loss = loss_fn(out, labels)
                 # TODO: allow loss_fn to be Callable
-                if isinstance(loss_fn, Module) and hasattr(loss_fn, "reduction"):
+                if (isinstance(loss_fn, Module) or callable(loss_fn)) and hasattr(
+                    loss_fn, "reduction"
+                ):
+                    reduction = loss_fn.reduction  # type: ignore
                     msg0 = (
                         "Please ensure that loss_fn.reduction is set to `sum` or `mean`"
                     )
 
-                    assert loss_fn.reduction != "none", msg0
+                    assert reduction != "none", msg0
                     msg1 = (
-                        f"loss_fn.reduction ({loss_fn.reduction}) does not match"
+                        f"loss_fn.reduction ({reduction}) does not match"
                         f"reduction type ({reduction_type}). Please ensure they are"
                         " matching."
                     )
-                    assert loss_fn.reduction == reduction_type, msg1
+                    assert reduction == reduction_type, msg1
                 msg2 = (
                     "Please ensure custom loss function is applying either a "
                     "sum or mean reduction."

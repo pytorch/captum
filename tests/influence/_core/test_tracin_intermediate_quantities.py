@@ -4,6 +4,7 @@ from typing import Callable
 import torch
 
 import torch.nn as nn
+from captum.influence._core.tracincp import TracInCP
 from captum.influence._core.tracincp_fast_rand_proj import (
     TracInCPFast,
     TracInCPFastRandProj,
@@ -11,6 +12,7 @@ from captum.influence._core.tracincp_fast_rand_proj import (
 from parameterized import parameterized
 from tests.helpers.basic import assertTensorAlmostEqual, BaseTest
 from tests.influence._utils.common import (
+    _format_batch_into_tuple,
     build_test_name_func,
     DataInfluenceConstructor,
     get_random_model_and_data,
@@ -24,7 +26,63 @@ class TestTracInIntermediateQuantities(BaseTest):
             (reduction, constructor, unpack_inputs)
             for unpack_inputs in [True, False]
             for (reduction, constructor) in [
+                ("none", DataInfluenceConstructor(TracInCP)),
+            ]
+        ],
+        name_func=build_test_name_func(),
+    )
+    def test_tracin_intermediate_quantities_aggregate(
+        self, reduction: str, tracin_constructor: Callable, unpack_inputs: bool
+    ) -> None:
+        """
+        tests that calling `compute_intermediate_quantities` with `aggregate=True`
+        does give the same result as calling it with `aggregate=False`, and then
+        summing
+        """
+        with tempfile.TemporaryDirectory() as tmpdir:
+            (net, train_dataset,) = get_random_model_and_data(
+                tmpdir,
+                unpack_inputs,
+                return_test_data=False,
+            )
+
+            # create a dataloader that yields batches from the dataset
+            train_dataset = DataLoader(train_dataset, batch_size=5)
+
+            # create tracin instance
+            criterion = nn.MSELoss(reduction=reduction)
+            batch_size = 5
+
+            tracin = tracin_constructor(
+                net,
+                train_dataset,
+                tmpdir,
+                batch_size,
+                criterion,
+            )
+
+            intermediate_quantities = tracin.compute_intermediate_quantities(
+                train_dataset, aggregate=False
+            )
+            aggregated_intermediate_quantities = tracin.compute_intermediate_quantities(
+                train_dataset, aggregate=True
+            )
+
+            assertTensorAlmostEqual(
+                self,
+                torch.sum(intermediate_quantities, dim=0, keepdim=True),
+                aggregated_intermediate_quantities,
+                delta=1e-4,  # due to numerical issues, we can't set this to 0.0
+                mode="max",
+            )
+
+    @parameterized.expand(
+        [
+            (reduction, constructor, unpack_inputs)
+            for unpack_inputs in [True, False]
+            for (reduction, constructor) in [
                 ("sum", DataInfluenceConstructor(TracInCPFastRandProj)),
+                ("none", DataInfluenceConstructor(TracInCP)),
             ]
         ],
         name_func=build_test_name_func(),
@@ -103,6 +161,11 @@ class TestTracInIntermediateQuantities(BaseTest):
                     DataInfluenceConstructor(TracInCPFast),
                     DataInfluenceConstructor(TracInCPFastRandProj),
                 ),
+                (
+                    "none",
+                    DataInfluenceConstructor(TracInCP),
+                    DataInfluenceConstructor(TracInCP),
+                ),
             ]
         ],
         name_func=build_test_name_func(),
@@ -162,24 +225,12 @@ class TestTracInIntermediateQuantities(BaseTest):
             )
 
             # compute influence scores without using `compute_intermediate_quantities`
-            scores = tracin.influence(
-                test_features, test_labels, unpack_inputs=unpack_inputs
+            test_batch = _format_batch_into_tuple(
+                test_features, test_labels, unpack_inputs
             )
-
-            # compute influence scores using `compute_intermediate_quantities`
-            # we combine `test_features` and `test_labels` into a single tuple
-            # `test_batch` to pass to the model, with the assumption that
-            # `model(test_batch[0:-1]` produces the predictions, and `test_batch[-1]`
-            # are the labels.  We do this due to the assumptions made by the
-            # `compute_intermediate_quantities` method. Therefore, how we
-            # form `test_batch` depends on whether `unpack_inputs` is True or False
-            if not unpack_inputs:
-                # `test_features` is a Tensor
-                test_batch = (test_features, test_labels)
-            else:
-                # `test_features` is a tuple, so we unpack it to place in tuple,
-                # along with `test_labels`
-                test_batch = (*test_features, test_labels)  # type: ignore[assignment]
+            scores = tracin.influence(
+                test_batch,
+            )
 
             # the influence score is the dot product of intermediate quantities
             intermediate_quantities_scores = torch.matmul(
