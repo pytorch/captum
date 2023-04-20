@@ -112,7 +112,7 @@ class LayerActivation(LayerAttribution):
             >>> input = torch.randn(2, 3, 32, 32, requires_grad=True)
             >>> # Computes layer activation.
             >>> # attribution is layer output, with size Nx12x32x32
-            >>> attribution = layer_cond.attribute(input)
+            >>> attribution = layer_act.attribute(input)
         """
         with torch.no_grad():
             layer_eval = _forward_layer_eval(
