@@ -15,8 +15,8 @@
       "title": "Intepreting vision with CIFAR"
     },
     {
-      "id": "Resnet_TorchVision_Interpret",
-      "title": "Interpreting vision with ResNet"
+      "id": "TorchVision_Interpret",
+      "title": "Interpreting vision with Pretrained Models"
     },
     {
       "id": "Resnet_TorchVision_Ablation",
