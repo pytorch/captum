@@ -55,6 +55,7 @@ class LatentShift(GradientAttribution):
         search_max_pixel_diff_pct: float = 0.05,
         lambda_sweep_steps: int = 10,
         heatmap_method: str = "int",
+        apply_sigmoid: bool = True,
         verbose: bool = True,
         return_dicts: bool = False,
     ) -> Union[Tensor, List[Dict[str, Any]]]:
@@ -99,6 +100,9 @@ class LatentShift(GradientAttribution):
                         between 0 and other lambda frames. 'mm': Difference
                         between first and last frames. 'max': Max difference
                         from lambda 0 frame
+            apply_sigmoid: Default: True. Apply a sigmoid to the output of the
+                        model. Set to false to work with regression models or
+                        if the model already applies a sigmoid.
             verbose: True to print debug text
             return_dicts (bool): Return a list of dicts containing information
                         from each image processed. Default False
@@ -143,7 +147,9 @@ class LatentShift(GradientAttribution):
             z = self.ae.encode(inp).detach()
             z.requires_grad = True
             x_lambda0 = self.ae.decode(z)
-            pred = torch.sigmoid(self.forward_func(x_lambda0))[:, target]
+            pred = self.forward_func(x_lambda0)[:, target]
+            if apply_sigmoid:
+                pred = torch.sigmoid(pred)
             dzdxp = torch.autograd.grad(pred, z)[0]
 
             # Cache so we can reuse at sweep stage
@@ -153,7 +159,9 @@ class LatentShift(GradientAttribution):
                 """Compute the shift for a specific lambda"""
                 if lambdax not in cache:
                     x_lambdax = self.ae.decode(z + dzdxp * lambdax).detach()
-                    pred1 = torch.sigmoid(self.forward_func(x_lambdax))[:, target]
+                    pred1 = self.forward_func(x_lambdax)[:, target]
+                    if apply_sigmoid:
+                        pred1 = torch.sigmoid(pred1)
                     pred1 = pred1.detach().cpu().numpy()
                     cache[lambdax] = x_lambdax, pred1
                 return cache[lambdax]
