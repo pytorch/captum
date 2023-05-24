@@ -247,7 +247,7 @@ def visualize_image_attr(
     plt_axis.yaxis.set_ticks_position("none")
     plt_axis.set_yticklabels([])
     plt_axis.set_xticklabels([])
-    plt_axis.grid(b=False)
+    plt_axis.grid(visible=False)
 
     heat_map = None
     # Show original image

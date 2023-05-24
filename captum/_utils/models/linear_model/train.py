@@ -343,7 +343,7 @@ def sklearn_train_linear_model(
     )
 
     # extract model device
-    device = model.device if hasattr(model, "device") else "cpu"
+    device = getattr(model, "device", "cpu")
 
     num_outputs = sklearn_model.coef_.shape[0] if sklearn_model.coef_.ndim > 1 else 1
     weight_values = torch.FloatTensor(sklearn_model.coef_).to(device)  # type: ignore
