@@ -137,8 +137,7 @@ jobs:
 
   lint_py36:
     docker:
-      - image: cimg
-      /python:3.6.8
+      - image: cimg/python:3.6.8
     steps:
       - checkout
       - pip_install
