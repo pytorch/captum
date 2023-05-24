@@ -34,36 +34,36 @@ sudo apt install yarn
 # yarn needs terminal info
 export TERM=xterm
 
-# NOTE: All of the below installs use sudo, b/c otherwise pip will get
+# NOTE: All of the below installs use sudo, b/c otherwise pip3 will get
 # permission errors installing in the docker container. An alternative would be
 # to use a virtualenv, but that would lead to bifurcation of the CircleCI config
 # since we'd need to source the environment in each step.
 
-# upgrade pip
-sudo pip install --upgrade pip
+# upgrade pip3
+sudo pip3 install --upgrade pip3
 
 # install captum with dev deps
-sudo pip install -e .[dev]
+sudo pip3 install -e .[dev]
 sudo BUILD_INSIGHTS=1 python setup.py develop
 
 # install other frameworks if asked for and make sure this is before pytorch
 if [[ $FRAMEWORKS == true ]]; then
-  sudo pip install pytext-nlp
+  sudo pip3 install pytext-nlp
 fi
 
 # install pytorch nightly if asked for
 if [[ $PYTORCH_NIGHTLY == true ]]; then
-  sudo pip install --upgrade --pre torch -f https://download.pytorch.org/whl/nightly/cpu/torch_nightly.html
+  sudo pip3 install --upgrade --pre torch -f https://download.pytorch.org/whl/nightly/cpu/torch_nightly.html
 else
   # If no version is specified, upgrade to the latest release.
   if [[ $CHOSEN_TORCH_VERSION == -1 ]]; then
-    sudo pip install --upgrade torch
+    sudo pip3 install --upgrade torch
   else
-    sudo pip install torch==$CHOSEN_TORCH_VERSION
+    sudo pip3 install torch==$CHOSEN_TORCH_VERSION
   fi
 fi
 
 # install deployment bits if asked for
 if [[ $DEPLOY == true ]]; then
-  sudo pip install beautifulsoup4 ipython nbconvert==5.6.1
+  sudo pip3 install beautifulsoup4 ipython nbconvert==5.6.1
 fi
