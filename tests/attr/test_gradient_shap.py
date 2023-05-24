@@ -269,7 +269,9 @@ def _assert_attribution_delta(
     _assert_delta(test, delta, delta_thresh)
 
 
-def _assert_delta(test: BaseTest, delta: Tensor, delta_thresh: Union[Tensor, float] = 0.0006) -> None:
+def _assert_delta(
+    test: BaseTest, delta: Tensor, delta_thresh: Union[Tensor, float] = 0.0006
+) -> None:
     delta_condition = (delta.abs() < delta_thresh).all()
     test.assertTrue(
         delta_condition,
