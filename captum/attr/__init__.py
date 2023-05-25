@@ -79,6 +79,8 @@ from captum.attr._utils.stat import (
 )
 from captum.attr._utils.summarizer import Summarizer
 
+from ._core.multiscale_fast_cam import MultiscaleFastCam  # noqa
+
 __all__ = [
     "Attribution",
     "GradientAttribution",
@@ -86,6 +88,7 @@ __all__ = [
     "NeuronAttribution",
     "LayerAttribution",
     "IntegratedGradients",
+    "MultiscaleFastCam",
     "DeepLift",
     "DeepLiftShap",
     "InputXGradient",
