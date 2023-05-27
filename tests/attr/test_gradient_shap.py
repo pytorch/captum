@@ -253,7 +253,7 @@ def _assert_attribution_delta(
     attributions: Union[Tensor, Tuple[Tensor, ...]],
     n_samples: int,
     delta: Tensor,
-    delta_thresh: Tensor = 0.0006,
+    delta_thresh: Union[float, Tensor] = 0.0006,
     is_layer: bool = False,
 ) -> None:
     if not is_layer:
@@ -269,7 +269,9 @@ def _assert_attribution_delta(
     _assert_delta(test, delta, delta_thresh)
 
 
-def _assert_delta(test: BaseTest, delta: Tensor, delta_thresh: Tensor = 0.0006) -> None:
+def _assert_delta(
+    test: BaseTest, delta: Tensor, delta_thresh: Union[Tensor, float] = 0.0006
+) -> None:
     delta_condition = (delta.abs() < delta_thresh).all()
     test.assertTrue(
         delta_condition,
