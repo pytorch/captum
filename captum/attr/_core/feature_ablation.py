@@ -8,8 +8,8 @@ from captum._utils.common import (
     _expand_additional_forward_args,
     _expand_target,
     _format_additional_forward_args,
+    _format_feature_mask,
     _format_output,
-    _format_tensor_into_tuples,
     _is_tuple,
     _run_forward,
 )
@@ -262,11 +262,8 @@ class FeatureAblation(PerturbationAttribution):
             additional_forward_args
         )
         num_examples = inputs[0].shape[0]
-        feature_mask = (
-            _format_tensor_into_tuples(feature_mask)
-            if feature_mask is not None
-            else None
-        )
+        feature_mask = _format_feature_mask(feature_mask, inputs)
+
         assert (
             isinstance(perturbations_per_eval, int) and perturbations_per_eval >= 1
         ), "Perturbations per evaluation must be an integer and at least 1."
