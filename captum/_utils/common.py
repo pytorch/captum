@@ -764,3 +764,15 @@ def _register_backward_hook(
         module.register_forward_pre_hook(pre_hook),
         module.register_forward_hook(forward_hook),
     ]
+
+
+def _get_max_feature_index(feature_mask: Tuple[Tensor, ...]):
+    """
+    Returns the max feature mask index
+    The feature mask should be formatted to tuple of tensors at first.
+
+    Note: This util is commonly used to identify the number of features (max_index + 1),
+    as we expect user to be resposible to ensure consecutive feature mask indices from 0
+    """
+
+    return int(max(torch.max(mask).item() for mask in feature_mask if mask.numel()))

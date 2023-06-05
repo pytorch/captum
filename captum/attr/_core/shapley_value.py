@@ -13,6 +13,7 @@ from captum._utils.common import (
     _format_feature_mask,
     _format_output,
     _format_tensor_into_tuples,
+    _get_max_feature_index,
     _is_tuple,
     _run_forward,
 )
@@ -287,9 +288,7 @@ class ShapleyValueSampling(PerturbationAttribution):
             baselines = _tensorize_baseline(inputs, baselines)
             num_examples = inputs[0].shape[0]
 
-            total_features = int(
-                max(torch.max(single_mask).item() for single_mask in feature_mask) + 1
-            )
+            total_features = _get_max_feature_index(feature_mask) + 1
 
             if show_progress:
                 attr_progress = progress(
