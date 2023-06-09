@@ -49,6 +49,7 @@ from captum.attr._core.neuron.neuron_integrated_gradients import (  # noqa
 )
 from captum.attr._core.noise_tunnel import NoiseTunnel  # noqa
 from captum.attr._core.occlusion import Occlusion  # noqa
+from captum.attr._core.rise import RISE  # noqa
 from captum.attr._core.saliency import Saliency  # noqa
 from captum.attr._core.shapley_value import ShapleyValues, ShapleyValueSampling  # noqa
 from captum.attr._models.base import (  # noqa
@@ -96,6 +97,7 @@ __all__ = [
     "FeatureAblation",
     "FeaturePermutation",
     "Occlusion",
+    "RISE",
     "ShapleyValueSampling",
     "ShapleyValues",
     "LimeBase",
