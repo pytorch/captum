@@ -12,6 +12,7 @@ from captum._utils.common import (
     _flatten_tensor_or_tuple,
     _format_output,
     _format_tensor_into_tuples,
+    _get_max_feature_index,
     _is_tuple,
     _reduce_list,
     _run_forward,
@@ -673,14 +674,7 @@ def construct_feature_mask(feature_mask, formatted_inputs):
                 single_mask - min_interp_features for single_mask in feature_mask
             )
 
-        num_interp_features = int(
-            max(
-                torch.max(single_mask).item()
-                for single_mask in feature_mask
-                if single_mask.numel()
-            )
-            + 1
-        )
+        num_interp_features = _get_max_feature_index(feature_mask) + 1
     return feature_mask, num_interp_features
 
 

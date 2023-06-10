@@ -10,8 +10,10 @@ from captum._utils.common import (
     _expand_additional_forward_args,
     _expand_target,
     _format_additional_forward_args,
+    _format_feature_mask,
     _format_output,
     _format_tensor_into_tuples,
+    _get_max_feature_index,
     _is_tuple,
     _run_forward,
 )
@@ -19,7 +21,6 @@ from captum._utils.progress import progress
 from captum._utils.typing import BaselineType, TargetType, TensorOrTupleOfTensorsGeneric
 from captum.attr._utils.attribution import PerturbationAttribution
 from captum.attr._utils.common import (
-    _construct_default_feature_mask,
     _find_output_mode_and_verify,
     _format_input_baseline,
     _tensorize_baseline,
@@ -277,11 +278,8 @@ class ShapleyValueSampling(PerturbationAttribution):
         additional_forward_args = _format_additional_forward_args(
             additional_forward_args
         )
-        feature_mask = (
-            _format_tensor_into_tuples(feature_mask)
-            if feature_mask is not None
-            else None
-        )
+        feature_mask = _format_feature_mask(feature_mask, inputs)
+
         assert (
             isinstance(perturbations_per_eval, int) and perturbations_per_eval >= 1
         ), "Ablations per evaluation must be at least 1."
@@ -290,13 +288,7 @@ class ShapleyValueSampling(PerturbationAttribution):
             baselines = _tensorize_baseline(inputs, baselines)
             num_examples = inputs[0].shape[0]
 
-            if feature_mask is None:
-                feature_mask, total_features = _construct_default_feature_mask(inputs)
-            else:
-                total_features = int(
-                    max(torch.max(single_mask).item() for single_mask in feature_mask)
-                    + 1
-                )
+            total_features = _get_max_feature_index(feature_mask) + 1
 
             if show_progress:
                 attr_progress = progress(
