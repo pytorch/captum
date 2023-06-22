@@ -137,7 +137,7 @@ jobs:
 
   lint_py36:
     docker:
-      - image: circleci/python:3.6.8
+      - image: cimg/python:3.6
     steps:
       - checkout
       - pip_install
@@ -147,7 +147,7 @@ jobs:
 
   test_py36_pip:
     docker:
-      - image: circleci/python:3.6.8
+      - image: cimg/python:3.6
     steps:
       - checkout
       - pip_install:
@@ -157,7 +157,7 @@ jobs:
 
   test_py36_pip_release:
     docker:
-      - image: circleci/python:3.6.8
+      - image: cimg/python:3.6
     steps:
       - checkout
       - pip_install
@@ -166,7 +166,7 @@ jobs:
 
   test_py36_pip_torch_1_6:
     docker:
-      - image: circleci/python:3.6.8
+      - image: cimg/python:3.6
     steps:
       - checkout
       - pip_install:
@@ -175,7 +175,7 @@ jobs:
 
   test_py36_pip_torch_1_7:
     docker:
-      - image: circleci/python:3.6.8
+      - image: cimg/python:3.6
     steps:
       - checkout
       - pip_install:
@@ -184,7 +184,7 @@ jobs:
 
   test_py36_pip_torch_1_8:
     docker:
-      - image: circleci/python:3.6.8
+      - image: cimg/python:3.6
     steps:
       - checkout
       - pip_install:
@@ -193,7 +193,7 @@ jobs:
 
   test_py36_pip_torch_1_9:
     docker:
-      - image: circleci/python:3.6.8
+      - image: cimg/python:3.6
     steps:
       - checkout
       - pip_install:
@@ -225,7 +225,7 @@ jobs:
 
   auto_deploy_site:
     docker:
-      - image: circleci/python:3.6.8-node
+      - image: cimg/python:3.6-node
     steps:
       - checkout
       - pip_install:

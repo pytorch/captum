@@ -14,7 +14,7 @@ def sklearn_dataset_to_loaders(
     data, train_prop=0.7, batch_size=64, num_workers=4, shuffle=False, one_hot=False
 ):
     xs, ys = data
-    if one_hot and ys.dtype != np.float:
+    if one_hot and ys.dtype != float:
         oh = np.zeros((ys.size, ys.max() + 1))
         oh[np.arange(ys.size), ys] = 1
         ys = oh

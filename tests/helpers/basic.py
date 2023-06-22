@@ -59,6 +59,10 @@ def assertTensorAlmostEqual(test, actual, expected, delta=0.0001, mode="sum"):
 
 def assertTensorTuplesAlmostEqual(test, actual, expected, delta=0.0001, mode="sum"):
     if isinstance(expected, tuple):
+        assert len(actual) == len(
+            expected
+        ), f"the length of actual {len(actual)} != expected {len(expected)}"
+
         for i in range(len(expected)):
             assertTensorAlmostEqual(test, actual[i], expected[i], delta, mode)
     else:

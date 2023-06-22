@@ -250,3 +250,104 @@ class TestTracInIntermediateQuantities(BaseTest):
                 delta=0.01,  # due to numerical issues, we can't set this to 0.0
                 mode="max",
             )
+
+    @parameterized.expand(
+        [
+            (reduction, constructor, projection_dim, unpack_inputs)
+            for unpack_inputs in [False]
+            for (reduction, constructor, projection_dim) in [
+                ("sum", DataInfluenceConstructor(TracInCPFastRandProj), None),
+                ("sum", DataInfluenceConstructor(TracInCPFastRandProj), 2),
+                ("sum", DataInfluenceConstructor(TracInCPFastRandProj), 4),
+                ("sum", DataInfluenceConstructor(TracInCPFastRandProj), 9),
+                ("sum", DataInfluenceConstructor(TracInCPFastRandProj), 10),
+                ("sum", DataInfluenceConstructor(TracInCPFastRandProj), 12),
+            ]
+        ],
+        name_func=build_test_name_func(),
+    )
+    def test_tracin_intermediate_quantities_projection_consistency(
+        self,
+        reduction: str,
+        tracin_constructor: Callable,
+        projection_dim: int,
+        unpack_inputs: bool,
+    ) -> None:
+        """
+
+        tests that the result of calling the public method
+        "compute_intermediate_quantities" with TracInCPFastRandProj
+        with/without projection_dim gives embedding of correct size.
+
+        if projection_dim None, size should be dim of
+        input to final layer * num classes * num checkpoints.
+        otherwise it should be "at most" projection_dim * num checkpoints.
+        See inline comments for "at most" caveat
+        """
+        with tempfile.TemporaryDirectory() as tmpdir:
+            (net, train_dataset,) = get_random_model_and_data(
+                tmpdir,
+                unpack_inputs,
+                return_test_data=False,
+            )
+
+            # create a single batch
+            batch_size = 1
+            single_batch = next(iter(DataLoader(train_dataset, batch_size=batch_size)))
+
+            # NOW add projection_dim as a parameter passed in
+            kwargs = {"projection_dim": projection_dim}
+
+            # create tracin instance
+            criterion = nn.MSELoss(reduction=reduction)
+            tracin = tracin_constructor(
+                net, train_dataset, tmpdir, batch_size, criterion, **kwargs
+            )
+
+            # compute intermediate quantities using `compute_intermediate_quantities`
+            # when passing in a single batch
+            single_batch_intermediate_quantities = (
+                tracin.compute_intermediate_quantities(single_batch)
+            )
+
+            """
+            net has
+            in_features = 5,
+            hidden_nodes (layer_input_dim) = 4,
+            out_features (jacobian_dim) = 3
+            and 5 checkpoints
+
+            projection only happens
+            (A) if project_dim < layer_input_dim * jacobian_dim  ( 4 * 3 = 12 here )
+
+            also if jacobian_dim < int(sqrt(projection dim)),
+            then jacobian_dim is not projected down
+            similarly if layer_input_dim < int(sqrt(projection dim)),
+            then it is not projected down
+
+            in other words,
+            jacobian_dim_post = min(jacobian_dim, int(sqrt(projection dim)))
+            layer_input_dim_post = min(layer_input_dim, int(sqrt(projection dim)))
+
+            and if not None and projection_dim < layer_input_dim * jacobian_dim
+            (B) final_projection_dim =
+                jacobian_dim_post * layer_input_dim_post * num_checkpoints
+
+
+            if project dim = None we expect final dimension size of
+            layer_input * jacobian_dim * num checkpoints = 4 * 3 * 5  = 60 dimension
+
+            otherwise using (B) if
+            project dim = 2  we expect 1 * 1 * 5 = 5
+            project dim = 4  we expect 2 * 2 * 5 = 20
+            project dim = 9  we expect 3 * 3 * 5 = 45
+            project dim = 10 we expect 3 * 3 * 5 = 45
+            project dim = 12 we expect 4 * 3 * 5 = 60 ( don't project since not (A))
+            """
+
+            # print(single_batch_intermediate_quantities.shape)
+            expected_dim = {None: 60, 2: 5, 4: 20, 9: 45, 10: 45, 12: 60}
+            self.assertEqual(
+                expected_dim[projection_dim],
+                single_batch_intermediate_quantities.shape[1],
+            )
