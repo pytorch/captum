@@ -1,5 +1,7 @@
 #!/usr/bin/env fbpython
+import math
 from typing import cast
+from unittest.mock import Mock, patch
 
 import torch
 
@@ -12,6 +14,7 @@ from tests.helpers.basic import (
     BaseTest,
 )
 from torch import Tensor
+from torch.utils.data import DataLoader, TensorDataset
 
 
 def sum_forward(*inps):
@@ -29,7 +32,7 @@ class Linear(torch.nn.Module):
         return self.linear(torch.cat(inps, dim=1))
 
 
-mock_dataset = torch.utils.data.TensorDataset(
+mock_dataset = TensorDataset(
     # iD feature
     torch.tensor(
         [
@@ -74,7 +77,7 @@ class Test(BaseTest):
         fa = FeatureAblation(forward)
         dl_fa = DataloaderAttribution(fa)
 
-        dataloader = torch.utils.data.DataLoader(mock_dataset, batch_size=2)
+        dataloader = DataLoader(mock_dataset, batch_size=2)
 
         dl_attributions = dl_fa.attribute(dataloader)
 
@@ -108,7 +111,7 @@ class Test(BaseTest):
         fa = FeatureAblation(forward)
         dl_fa = DataloaderAttribution(fa)
 
-        dataloader = torch.utils.data.DataLoader(mock_dataset, batch_size=2)
+        dataloader = DataLoader(mock_dataset, batch_size=2)
 
         dl_attributions = dl_fa.attribute(dataloader, feature_mask=masks)
 
@@ -140,7 +143,7 @@ class Test(BaseTest):
         fa = FeatureAblation(forward)
         dl_fa = DataloaderAttribution(fa)
 
-        dataloader = torch.utils.data.DataLoader(mock_dataset, batch_size=2)
+        dataloader = DataLoader(mock_dataset, batch_size=2)
 
         dl_attributions = dl_fa.attribute(dataloader, baselines=baselines)
 
@@ -188,7 +191,7 @@ class Test(BaseTest):
         dl_fa = DataloaderAttribution(fa)
 
         batch_size = 2
-        dataloader = torch.utils.data.DataLoader(mock_dataset, batch_size=batch_size)
+        dataloader = DataLoader(mock_dataset, batch_size=batch_size)
 
         dl_attribution = dl_fa.attribute(
             dataloader,
@@ -243,7 +246,7 @@ class Test(BaseTest):
         dl_fa = DataloaderAttribution(fa)
 
         batch_size = 2
-        dataloader = torch.utils.data.DataLoader(mock_dataset, batch_size=batch_size)
+        dataloader = DataLoader(mock_dataset, batch_size=batch_size)
 
         dl_attributions = dl_fa.attribute(
             dataloader,
@@ -282,7 +285,7 @@ class Test(BaseTest):
         fa = FeatureAblation(forward)
         dl_fa = DataloaderAttribution(fa)
 
-        dataloader = torch.utils.data.DataLoader(mock_dataset, batch_size=2)
+        dataloader = DataLoader(mock_dataset, batch_size=2)
 
         dl_attribution = dl_fa.attribute(dataloader, return_input_shape=False)
 
@@ -320,7 +323,7 @@ class Test(BaseTest):
         fa = FeatureAblation(forward)
         dl_fa = DataloaderAttribution(fa)
 
-        dataloader = torch.utils.data.DataLoader(mock_dataset, batch_size=2)
+        dataloader = DataLoader(mock_dataset, batch_size=2)
 
         dl_attribution = dl_fa.attribute(
             dataloader, feature_mask=masks, return_input_shape=False
@@ -331,3 +334,40 @@ class Test(BaseTest):
         self.assertEqual(type(dl_attribution), Tensor)
         dl_attribution = cast(Tensor, dl_attribution)
         self.assertEqual(dl_attribution.shape, expected_attr_shape)
+
+    @parameterized.expand([(2,), (3,), (4,)])
+    def test_dl_attr_with_perturb_per_pass(self, perturb_per_pass) -> None:
+        forward = sum_forward
+
+        fa = FeatureAblation(forward)
+        dl_fa = DataloaderAttribution(fa)
+
+        mock_dl_iter = Mock(wraps=DataLoader.__iter__)
+
+        with patch.object(DataLoader, "__iter__", lambda self: mock_dl_iter(self)):
+            dataloader = DataLoader(mock_dataset, batch_size=2)
+
+            dl_attributions = dl_fa.attribute(
+                dataloader, perturbations_per_pass=perturb_per_pass
+            )
+
+        n_features = 7
+        # 2 extra iter calls: get one input for format; get unperturbed output
+        n_iter_overhead = 2
+
+        self.assertEqual(
+            mock_dl_iter.call_count,
+            math.ceil(n_features / perturb_per_pass) + n_iter_overhead,
+        )
+
+        # default reduce of DataloaderAttribution works the same as concat all batches
+        attr_list = []
+        for batch in dataloader:
+            batch_attr = fa.attribute(tuple(batch))
+            attr_list.append(batch_attr)
+
+        expected_attr = tuple(
+            torch.cat(feature_attrs, dim=0) for feature_attrs in zip(*attr_list)
+        )
+
+        assertAttributionComparision(self, dl_attributions, expected_attr)
