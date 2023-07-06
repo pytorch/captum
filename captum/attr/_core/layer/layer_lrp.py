@@ -110,9 +110,9 @@ class LayerLRP(LRP, LayerAttribution):
 
             inputs (Tensor or tuple[Tensor, ...]): Input for which relevance is
                         propagated.
-                        If forward_func takes a single
+                        If model takes a single
                         tensor as input, a single input tensor should be provided.
-                        If forward_func takes multiple tensors as input, a tuple
+                        If model takes multiple tensors as input, a tuple
                         of the input tensors should be provided. It is assumed
                         that for all given input tensors, dimension 0 corresponds
                         to the number of examples, and if multiple input tensors
@@ -149,7 +149,7 @@ class LayerLRP(LRP, LayerAttribution):
                     argument of a Tensor or arbitrary (non-tuple) type or a tuple
                     containing multiple additional arguments including tensors
                     or any arbitrary python types. These arguments are provided to
-                    forward_func in order, following the arguments in inputs.
+                    model in order, following the arguments in inputs.
                     Note that attributions are not computed with respect
                     to these arguments.
                     Default: None
