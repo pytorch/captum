@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+from captum.attr._core.dataloader_attr import DataLoaderAttribution  # noqa
 from captum.attr._core.deep_lift import DeepLift, DeepLiftShap  # noqa
 from captum.attr._core.feature_ablation import FeatureAblation  # noqa
 from captum.attr._core.feature_permutation import FeaturePermutation  # noqa
@@ -86,6 +87,7 @@ __all__ = [
     "NeuronAttribution",
     "LayerAttribution",
     "IntegratedGradients",
+    "DataLoaderAttribution",
     "DeepLift",
     "DeepLiftShap",
     "InputXGradient",
