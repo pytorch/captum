@@ -5,7 +5,7 @@ from unittest.mock import Mock, patch
 
 import torch
 
-from captum.attr._core.dataloader_attr import DataloaderAttribution, InputRole
+from captum.attr._core.dataloader_attr import DataLoaderAttribution, InputRole
 from captum.attr._core.feature_ablation import FeatureAblation
 from parameterized import parameterized
 from tests.helpers.basic import (
@@ -75,13 +75,13 @@ class Test(BaseTest):
     )
     def test_dl_attr(self, forward) -> None:
         fa = FeatureAblation(forward)
-        dl_fa = DataloaderAttribution(fa)
+        dl_fa = DataLoaderAttribution(fa)
 
         dataloader = DataLoader(mock_dataset, batch_size=2)
 
         dl_attributions = dl_fa.attribute(dataloader)
 
-        # default reduce of DataloaderAttribution works the same as concat all batches
+        # default reduce of DataLoaderAttribution works the same as concat all batches
         attr_list = []
         for batch in dataloader:
             batch_attr = fa.attribute(tuple(batch))
@@ -109,13 +109,13 @@ class Test(BaseTest):
         )
 
         fa = FeatureAblation(forward)
-        dl_fa = DataloaderAttribution(fa)
+        dl_fa = DataLoaderAttribution(fa)
 
         dataloader = DataLoader(mock_dataset, batch_size=2)
 
         dl_attributions = dl_fa.attribute(dataloader, feature_mask=masks)
 
-        # default reduce of DataloaderAttribution works the same as concat all batches
+        # default reduce of DataLoaderAttribution works the same as concat all batches
         attr_list = []
         for batch in dataloader:
             batch_attr = fa.attribute(tuple(batch), feature_mask=masks)
@@ -141,13 +141,13 @@ class Test(BaseTest):
         )
 
         fa = FeatureAblation(forward)
-        dl_fa = DataloaderAttribution(fa)
+        dl_fa = DataLoaderAttribution(fa)
 
         dataloader = DataLoader(mock_dataset, batch_size=2)
 
         dl_attributions = dl_fa.attribute(dataloader, baselines=baselines)
 
-        # default reduce of DataloaderAttribution works the same as concat all batches
+        # default reduce of DataLoaderAttribution works the same as concat all batches
         attr_list = []
         for batch in dataloader:
             batch_attr = fa.attribute(tuple(batch), baselines=baselines)
@@ -188,7 +188,7 @@ class Test(BaseTest):
             )
 
         fa = FeatureAblation(forward)
-        dl_fa = DataloaderAttribution(fa)
+        dl_fa = DataLoaderAttribution(fa)
 
         batch_size = 2
         dataloader = DataLoader(mock_dataset, batch_size=batch_size)
@@ -243,7 +243,7 @@ class Test(BaseTest):
             return sum_forward(*forward_inputs)
 
         fa = FeatureAblation(forward)
-        dl_fa = DataloaderAttribution(fa)
+        dl_fa = DataLoaderAttribution(fa)
 
         batch_size = 2
         dataloader = DataLoader(mock_dataset, batch_size=batch_size)
@@ -257,7 +257,7 @@ class Test(BaseTest):
         # only inputs needs
         self.assertEqual(len(dl_attributions), n_attr_inputs)
 
-        # default reduce of DataloaderAttribution works the same as concat all batches
+        # default reduce of DataLoaderAttribution works the same as concat all batches
         attr_list = []
         for batch in dataloader:
             attr_inputs = tuple(
@@ -283,7 +283,7 @@ class Test(BaseTest):
     def test_dl_attr_not_return_input_shape(self) -> None:
         forward = sum_forward
         fa = FeatureAblation(forward)
-        dl_fa = DataloaderAttribution(fa)
+        dl_fa = DataLoaderAttribution(fa)
 
         dataloader = DataLoader(mock_dataset, batch_size=2)
 
@@ -295,7 +295,7 @@ class Test(BaseTest):
         dl_attribution = cast(Tensor, dl_attribution)
         self.assertEqual(dl_attribution.shape, expected_attr_shape)
 
-        # default reduce of DataloaderAttribution works the same as concat all batches
+        # default reduce of DataLoaderAttribution works the same as concat all batches
         attr_list = []
         for batch in dataloader:
             batch_attr = fa.attribute(tuple(batch))
@@ -321,7 +321,7 @@ class Test(BaseTest):
         )
 
         fa = FeatureAblation(forward)
-        dl_fa = DataloaderAttribution(fa)
+        dl_fa = DataLoaderAttribution(fa)
 
         dataloader = DataLoader(mock_dataset, batch_size=2)
 
@@ -340,7 +340,7 @@ class Test(BaseTest):
         forward = sum_forward
 
         fa = FeatureAblation(forward)
-        dl_fa = DataloaderAttribution(fa)
+        dl_fa = DataLoaderAttribution(fa)
 
         mock_dl_iter = Mock(wraps=DataLoader.__iter__)
 
@@ -360,7 +360,7 @@ class Test(BaseTest):
             math.ceil(n_features / perturb_per_pass) + n_iter_overhead,
         )
 
-        # default reduce of DataloaderAttribution works the same as concat all batches
+        # default reduce of DataLoaderAttribution works the same as concat all batches
         attr_list = []
         for batch in dataloader:
             batch_attr = fa.attribute(tuple(batch))

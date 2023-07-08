@@ -13,7 +13,7 @@ from captum._utils.common import (
     _run_forward,
 )
 from captum._utils.typing import BaselineType
-from captum.attr import FeatureAblation
+from captum.attr._core.feature_ablation import FeatureAblation
 from captum.attr._utils.attribution import Attribution
 from torch import Tensor
 
@@ -140,7 +140,7 @@ def _convert_output_shape(
     return tuple(attr)
 
 
-class DataloaderAttribution(Attribution):
+class DataLoaderAttribution(Attribution):
     r"""
     Decorate a perturbation-based attribution algorthm to make it work with dataloaders.
     The decorated instance will calculate attribution in the
