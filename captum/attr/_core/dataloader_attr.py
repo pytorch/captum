@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 from collections import defaultdict
 from copy import copy
-from typing import Callable, Dict, List, Optional, Tuple, Union
+from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, Union
 
 import torch
 from captum._utils.common import (
@@ -13,7 +13,7 @@ from captum._utils.common import (
     _run_forward,
 )
 from captum._utils.typing import BaselineType
-from captum.attr import FeatureAblation
+from captum.attr._core.feature_ablation import FeatureAblation
 from captum.attr._utils.attribution import Attribution
 from torch import Tensor
 
@@ -32,11 +32,78 @@ def _concat_tensors(accum, cur_output, _):
     return cur_output if accum is None else torch.cat([accum, cur_output])
 
 
+def _create_perturbation_mask(
+    perturbed_feature_indices: Tensor,  # 1D tensor of one-hot feature indices
+    feature_mask: Tuple[Tensor, ...],
+    feature_idx_to_mask_idx: Dict[int, List[int]],
+) -> Tuple[Union[Tensor, None], ...]:
+    """
+    Create binary mask for inputs based on perturbed one-hot feature indices
+    Use None if no perturbation is needed for the corresponding input
+    """
+
+    # a set of input/mask indices that need perturbation
+    perturbation_mask_indices = set()
+    for i, v in enumerate(perturbed_feature_indices.tolist()):
+        # value 0 means the feature has been perturbed
+        if not v:
+            perturbation_mask_indices |= set(feature_idx_to_mask_idx[i])
+
+    # create binary mask for inputs & set it to None if no perturbation is needed
+    perturbation_mask = tuple(
+        perturbed_feature_indices[mask_elem] if i in perturbation_mask_indices else None
+        for i, mask_elem in enumerate(feature_mask)
+    )
+
+    return perturbation_mask
+
+
+def _perturb_inputs(
+    inputs: Iterable[Any],
+    input_roles: Tuple[int],
+    baselines: Tuple[Union[int, float, Tensor], ...],
+    perturbation_mask: Tuple[Union[Tensor, None], ...],
+) -> Tuple[Any, ...]:
+    """
+    Perturb inputs based on perturbation mask and baselines
+    """
+
+    perturbed_inputs = []
+    attr_inp_count = 0
+
+    for inp, role in zip(inputs, input_roles):
+        if role != InputRole.need_attr:
+            perturbed_inputs.append(inp)
+            continue
+
+        pert_mask = perturbation_mask[attr_inp_count]
+
+        # no perturbation is needed for this input
+        if pert_mask is None:
+            perturbed_inputs.append(inp)
+        else:
+            baseline = baselines[attr_inp_count]
+
+            perturbed_inp = inp * pert_mask + baseline * (1 - pert_mask)
+            perturbed_inputs.append(perturbed_inp)
+
+        attr_inp_count += 1
+
+    perturbed_inputs = tuple(perturbed_inputs)
+
+    return perturbed_inputs
+
+
 def _convert_output_shape(
     unique_attr: Tensor,
     attr_inputs: Tuple[Tensor, ...],
     feature_mask: Tuple[Tensor, ...],
 ) -> Tuple[Tensor, ...]:
+    """
+    Convert the shape of a single tensor of unique feature attributionto
+    to match the shape of the inputs returned by dataloader
+    """
+
     # unique_attr in shape(*output_dims, n_features)
     output_dims = unique_attr.shape[:-1]
     n_features = unique_attr.shape[-1]
@@ -73,7 +140,7 @@ def _convert_output_shape(
     return tuple(attr)
 
 
-class DataloaderAttribution(Attribution):
+class DataLoaderAttribution(Attribution):
     r"""
     Decorate a perturbation-based attribution algorthm to make it work with dataloaders.
     The decorated instance will calculate attribution in the
@@ -107,77 +174,75 @@ class DataloaderAttribution(Attribution):
 
     def _forward_with_dataloader(
         self,
-        perturbed_feature_indices,
+        batched_perturbed_feature_indices: Tensor,
         dataloader: torch.utils.data.DataLoader,
         input_roles: Tuple[int],
         baselines: Tuple[Union[int, float, Tensor], ...],
         feature_mask: Tuple[Tensor, ...],
         reduce: Callable,
         to_metric: Optional[Callable],
-        perturbation_per_pass: int,
         show_progress: bool,
         feature_idx_to_mask_idx: Dict[int, List[int]],
     ):
-        # a set of input/mask indices that need perturbation
-        perturbation_mask_indices = set()
-        for i, v in enumerate(perturbed_feature_indices[0].tolist()):
-            # value 0 means the feature has been perturbed
-            if not v:
-                perturbation_mask_indices |= set(feature_idx_to_mask_idx[i])
+        """
+        Wrapper of the original given forward_func to be used in the attribution method
+        It iterates over the dataloader with the given forward_func
+        """
 
-        # create binary mask for inputs & set it to None if no perturbation is needed
-        perturbation_mask = tuple(
-            perturbed_feature_indices[0][mask_elem]
-            if i in perturbation_mask_indices
-            else None
-            for i, mask_elem in enumerate(feature_mask)
+        # batched_perturbed_feature_indices in shape(n_perturb, n_features)
+        # n_perturb is not always the same as perturb_per_pass if not enough perturb
+        perturbation_mask_list: List[Tuple[Union[Tensor, None], ...]] = [
+            _create_perturbation_mask(
+                perturbed_feature_indices,
+                feature_mask,
+                feature_idx_to_mask_idx,
+            )
+            for perturbed_feature_indices in batched_perturbed_feature_indices
+        ]
+
+        # each perturbation needs an accum state
+        accum_states = [None for _ in range(len(perturbation_mask_list))]
+
+        # tranverse the dataloader
+        for inputs in dataloader:
+            # for each batch read from the dataloader,
+            # apply every perturbation based on perturbations_per_pass
+            for i, perturbation_mask in enumerate(perturbation_mask_list):
+                perturbed_inputs = _perturb_inputs(
+                    inputs, input_roles, baselines, perturbation_mask
+                )
+
+                # due to explicitly defined roles
+                # we can keep inputs in their original order
+                # regardless of if they need attr
+                # instead of using additional_forward_inputs
+                forward_inputs = tuple(
+                    _
+                    for _, role in zip(perturbed_inputs, input_roles)
+                    if role != InputRole.no_forward
+                )
+
+                output = _run_forward(
+                    self.forward_func,
+                    forward_inputs,
+                )
+
+                accum_states[i] = reduce(accum_states[i], output, perturbed_inputs)
+
+        accum_results = [
+            to_metric(accum) if to_metric else accum for accum in accum_states
+        ]
+
+        assert all(type(r) is Tensor for r in accum_results), (
+            "Accumulated metrics for attribution must be a Tensor,"
+            f"received: {next(r for r in accum_results if type(r) is not Tensor)}"
         )
 
-        accum = None
-        for inputs in dataloader:
-            perturbed_inputs = []
-            attr_inp_count = 0
-
-            for inp, role in zip(inputs, input_roles):
-                if role != InputRole.need_attr:
-                    perturbed_inputs.append(inp)
-                    continue
-
-                pert_mask = perturbation_mask[attr_inp_count]
-
-                # no perturbation is needed for this input
-                if pert_mask is None:
-                    perturbed_inputs.append(inp)
-                else:
-                    baseline = baselines[attr_inp_count]
-
-                    perturbed_inp = inp * pert_mask + baseline * (1 - pert_mask)
-                    perturbed_inputs.append(perturbed_inp)
-
-                attr_inp_count += 1
-
-            perturbed_inputs = tuple(perturbed_inputs)
-
-            # due to explicitly defined roles
-            # we can keep inputs in their original order regardless of if they need attr
-            # instead of using additional_forward_inputs to always appeend in the end
-            forward_inputs = tuple(
-                _
-                for _, role in zip(perturbed_inputs, input_roles)
-                if role != InputRole.no_forward
-            )
-
-            output = _run_forward(
-                self.forward_func,
-                forward_inputs,
-            )
-
-            accum = reduce(accum, output, perturbed_inputs)
-
-        if to_metric is not None:
-            return to_metric(accum)
-
-        return accum
+        # shape(n_perturb * output_dims[0], *output_dims[1:])
+        # the underneath attr method needs to support forward_func output's
+        # 1st dim to grow with perturb_per_eval
+        batched_accum = torch.stack(accum_results, dim=0)
+        return batched_accum
 
     def attribute(
         self,
@@ -187,7 +252,7 @@ class DataloaderAttribution(Attribution):
         feature_mask: Union[None, Tensor, Tuple[Tensor, ...]] = None,
         reduce: Optional[Callable] = None,
         to_metric: Optional[Callable] = None,
-        perturbation_per_pass: int = -1,
+        perturbations_per_pass: int = 1,
         show_progress: bool = False,
         return_input_shape: bool = True,
     ) -> Union[Tensor, Tuple[Tensor, ...]]:
@@ -240,16 +305,17 @@ class DataloaderAttribution(Attribution):
                         metric (Tensor): final result to be attributed, must be a Tensor
 
                         If None, will directly attribute w.r.t the reduced ``accum``
-            perturbation_per_pass (int, optional
+            perturbations_per_pass (int, optional) the number perturbations to execute
                         concurrently in each traverse of the dataloader. The number of
-                        traverses is ceil(n_perturbations / perturbation_per_pass).
-                        The parameter offers a control of the trade-off between memory
+                        traverses needed is
+                        ceil(n_perturbations / perturbations_per_pass).
+
+                        This arguement offers control of the trade-off between memory
                         and efficiency. If the dataloader involves slow operations like
                         remote request or file I/O, multiple traversals can be
-                        inefficient. Each perturbation needs to store its accumulated
-                        outputs of the reduce function until the end of the data
-                        traverse. If the value is -1, all perturbations are concurrent
-                         in a single traverse.
+                        inefficient. On the other hand, each perturbation needs to
+                        store its accumulated outputs of the reduce
+                        function until the end of the data traverse.
             return_input_shape (bool, optional): if True, returns the attribution
                         following the input shapes given by the dataloader.
                         Otherwise, returns a single tensor for the attributions of
@@ -352,6 +418,7 @@ class DataloaderAttribution(Attribution):
         # unique_attr in shape(*output_dims, n_features)
         unique_attr = self.attr_method.attribute(
             feature_indices,
+            perturbations_per_eval=perturbations_per_pass,
             additional_forward_args=(
                 dataloader,
                 input_roles,
@@ -359,7 +426,6 @@ class DataloaderAttribution(Attribution):
                 feature_mask,
                 reduce,
                 to_metric,
-                perturbation_per_pass,
                 show_progress,
                 feature_idx_to_mask_idx,
             ),
