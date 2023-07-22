@@ -411,6 +411,7 @@ class LRP(GradientAttribution):
 
 
 SUPPORTED_LAYERS_WITH_RULES = {
+    nn.Identity: EpsilonRule,
     nn.MaxPool1d: EpsilonRule,
     nn.MaxPool2d: EpsilonRule,
     nn.MaxPool3d: EpsilonRule,

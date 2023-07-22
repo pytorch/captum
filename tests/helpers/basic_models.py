@@ -266,6 +266,7 @@ class ReLULinearModel(nn.Module):
 class SimpleLRPModel(nn.Module):
     def __init__(self, inplace) -> None:
         super().__init__()
+        self.identity = nn.Identity()
         self.linear = nn.Linear(3, 3, bias=False)
         self.linear.weight.data.fill_(2.0)
         self.relu = torch.nn.ReLU(inplace=inplace)
@@ -274,7 +275,7 @@ class SimpleLRPModel(nn.Module):
         self.dropout = torch.nn.Dropout(p=0.01)
 
     def forward(self, x):
-        return self.dropout(self.linear2(self.relu(self.linear(x))))
+        return self.dropout(self.linear2(self.relu(self.linear(self.identity(x)))))
 
 
 class Conv1dSeqModel(nn.Module):
