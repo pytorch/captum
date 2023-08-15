@@ -47,8 +47,16 @@ class BinaryConcreteStochasticGates(StochasticGatesBase):
     Then use hard-sigmoid rectification to "fold" the parts smaller than 0 or larger
     than 1 back to 0 and 1.
 
-    More details can be found in the
-    `original paper <https://arxiv.org/abs/1712.01312>`.
+    More details can be found in the original paper:
+    https://arxiv.org/abs/1712.01312
+
+    Examples::
+
+        >>> n_params = 5  # number of parameters
+        >>> stg = BinaryConcreteStochasticGates(n_params, reg_weight=0.01)
+        >>> inputs = torch.randn(3, n_params)  # mock inputs with batch size of 3
+        >>> gated_inputs, reg = stg(mock_inputs)  # gate the inputs
+
     """
 
     def __init__(
@@ -60,41 +68,52 @@ class BinaryConcreteStochasticGates(StochasticGatesBase):
         lower_bound: float = -0.1,
         upper_bound: float = 1.1,
         eps: float = 1e-8,
+        reg_reduction: str = "sum",
     ):
         """
         Args:
             n_gates (int): number of gates.
 
-            mask (Optional[Tensor]): If provided, this allows grouping multiple
+            mask (Tensor, optional): If provided, this allows grouping multiple
                 input tensor elements to share the same stochastic gate.
                 This tensor should be broadcastable to match the input shape
                 and contain integers in the range 0 to n_gates - 1.
                 Indices grouped to the same stochastic gate should have the same value.
                 If not provided, each element in the input tensor
-                (on dimensions other than dim 0 - batch dim) is gated separately.
+                (on dimensions other than dim 0, i.e., batch dim) is gated separately.
                 Default: None
 
-            reg_weight (Optional[float]): rescaling weight for L0 regularization term.
+            reg_weight (float, optional): rescaling weight for L0 regularization term.
                 Default: 1.0
 
-            temperature (float): temperature of the concrete distribution, controls
-                the degree of approximation, as 0 means the original Bernoulli
+            temperature (float, optional): temperature of the concrete distribution,
+                controls the degree of approximation, as 0 means the original Bernoulli
                 without relaxation. The value should be between 0 and 1.
                 Default: 2/3
 
-            lower_bound (float): the lower bound to "stretch" the binary concrete
-                distribution
+            lower_bound (float, optional): the lower bound to "stretch" the binary
+                concrete distribution
                 Default: -0.1
 
-            upper_bound (float): the upper bound to "stretch" the binary concrete
-                distribution
+            upper_bound (float, optional): the upper bound to "stretch" the binary
+                concrete distribution
                 Default: 1.1
 
-            eps (float): term to improve numerical stability in binary concerete
-                sampling
+            eps (float, optional): term to improve numerical stability in binary
+                concerete sampling
                 Default: 1e-8
+
+            reg_reduction (str, optional): the reduction to apply to the regularization:
+                ``'none'`` | ``'mean'`` | ``'sum'``. ``'none'``: no reduction will be
+                applied and it will be the same as the return of ``get_active_probs``,
+                ``'mean'``: the sum of the gates non-zero probabilities will be divided
+                by the number of gates, ``'sum'``: the gates non-zero probabilities will
+                be summed.
+                Default: ``'sum'``
         """
-        super().__init__(n_gates, mask=mask, reg_weight=reg_weight)
+        super().__init__(
+            n_gates, mask=mask, reg_weight=reg_weight, reg_reduction=reg_reduction
+        )
 
         # avoid changing the tensor's variable name
         # when the module is used after compilation,
@@ -121,22 +140,6 @@ class BinaryConcreteStochasticGates(StochasticGatesBase):
 
         # pre-calculate the fixed term used in active prob
         self.active_prob_offset = temperature * math.log(-lower_bound / upper_bound)
-
-    def forward(self, *args, **kwargs):
-        """
-        Args:
-            input_tensor (Tensor): Tensor to be gated with stochastic gates
-
-
-        Outputs:
-            gated_input (Tensor): Tensor of the same shape weighted by the sampled
-                gate values
-
-            l0_reg (Tensor): L0 regularization term to be optimized together with
-                model loss,
-                e.g. loss(model_out, target) + l0_reg
-        """
-        return super().forward(*args, **kwargs)
 
     def _sample_gate_values(self, batch_size: int) -> Tensor:
         """
@@ -188,3 +191,62 @@ class BinaryConcreteStochasticGates(StochasticGatesBase):
                 in shape(n_gates)
         """
         return torch.sigmoid(self.log_alpha_param - self.active_prob_offset)
+
+    @classmethod
+    def _from_pretrained(cls, log_alpha_param: Tensor, *args, **kwargs):
+        """
+        Private factory method to create an instance with pretrained parameters
+
+        Args:
+            log_alpha_param (Tensor): FloatTensor containing weights for
+                the pretrained log_alpha
+
+            mask (Tensor, optional): If provided, this allows grouping multiple
+                input tensor elements to share the same stochastic gate.
+                This tensor should be broadcastable to match the input shape
+                and contain integers in the range 0 to n_gates - 1.
+                Indices grouped to the same stochastic gate should have the same value.
+                If not provided, each element in the input tensor
+                (on dimensions other than dim 0 - batch dim) is gated separately.
+                Default: None
+
+            reg_weight (float, optional): rescaling weight for L0 regularization term.
+                Default: 1.0
+
+            temperature (float, optional): temperature of the concrete distribution,
+                controls the degree of approximation, as 0 means the original Bernoulli
+                without relaxation. The value should be between 0 and 1.
+                Default: 2/3
+
+            lower_bound (float, optional): the lower bound to "stretch" the binary
+                concrete distribution
+                Default: -0.1
+
+            upper_bound (float, optional): the upper bound to "stretch" the binary
+                concrete distribution
+                Default: 1.1
+
+            eps (float, optional): term to improve numerical stability in binary
+                concerete sampling
+                Default: 1e-8
+
+            reg_reduction (str, optional): the reduction to apply to the regularization:
+                ``'none'`` | ``'mean'`` | ``'sum'``. ``'none'``: no reduction will be
+                applied and it will be the same as the return of ``get_active_probs``,
+                ``'mean'``: the sum of the gates non-zero probabilities will be divided
+                by the number of gates, ``'sum'``: the gates non-zero probabilities will
+                be summed.
+                Default: ``'sum'``
+
+        Returns:
+            stg (BinaryConcreteStochasticGates): StochasticGates instance
+        """
+        assert (
+            log_alpha_param.dim() == 1
+        ), "log_alpha_param is expected to be 1-dimensional"
+
+        n_gates = log_alpha_param.numel()
+        stg = cls(n_gates, *args, **kwargs)
+        stg.load_state_dict({"log_alpha_param": log_alpha_param}, strict=False)
+
+        return stg

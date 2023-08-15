@@ -4,13 +4,19 @@ from typing import cast, List, Tuple
 
 import torch
 from captum._utils.common import (
+    _format_feature_mask,
+    _get_max_feature_index,
     _parse_version,
     _reduce_list,
     _select_targets,
     _sort_key_list,
     safe_div,
 )
-from tests.helpers.basic import assertTensorAlmostEqual, BaseTest
+from tests.helpers.basic import (
+    assertTensorAlmostEqual,
+    assertTensorTuplesAlmostEqual,
+    BaseTest,
+)
 
 
 class Test(BaseTest):
@@ -115,6 +121,56 @@ class Test(BaseTest):
         # Verify error is raised if too many dimensions are provided.
         with self.assertRaises(AssertionError):
             _select_targets(output_tensor, (1, 2, 3))
+
+    def test_format_feature_mask_of_tensor(self) -> None:
+        formatted_inputs = (torch.tensor([[0.0, 0.0], [0.0, 0.0]]),)
+        tensor_mask = torch.tensor([[0, 1]])
+        formatted_tensor_mask = _format_feature_mask(tensor_mask, formatted_inputs)
+
+        self.assertEqual(type(formatted_tensor_mask), tuple)
+        assertTensorTuplesAlmostEqual(self, formatted_tensor_mask, (tensor_mask,))
+
+    def test_format_feature_mask_of_tuple(self) -> None:
+        formatted_inputs = (
+            torch.tensor([[0.0, 0.0], [0.0, 0.0]]),
+            torch.tensor([[0.0, 0.0], [0.0, 0.0]]),
+        )
+
+        tuple_mask = (
+            torch.tensor([[0, 1], [2, 3]]),
+            torch.tensor([[4, 5], [6, 6]]),
+        )
+        formatted_tuple_mask = _format_feature_mask(tuple_mask, formatted_inputs)
+
+        self.assertEqual(type(formatted_tuple_mask), tuple)
+        assertTensorTuplesAlmostEqual(self, formatted_tuple_mask, tuple_mask)
+
+    def test_format_feature_mask_of_none(self) -> None:
+        formatted_inputs = (
+            torch.tensor([[0.0, 0.0], [0.0, 0.0]]),
+            torch.tensor([]),  # empty tensor
+            torch.tensor([[0.0, 0.0, 0.0], [0.0, 0.0, 0.0]]),
+        )
+
+        expected_mask = (
+            torch.tensor([[0, 1]]),
+            torch.tensor([]),
+            torch.tensor([[2, 3, 4]]),
+        )
+        formatted_none_mask = _format_feature_mask(None, formatted_inputs)
+
+        self.assertEqual(type(formatted_none_mask), tuple)
+        assertTensorTuplesAlmostEqual(self, formatted_none_mask, expected_mask)
+
+    def test_get_max_feature_index(self) -> None:
+        mask = (
+            torch.tensor([[0, 1], [2, 3]]),
+            torch.tensor([]),
+            torch.tensor([[4, 5], [6, 100]]),
+            torch.tensor([[0, 1], [2, 3]]),
+        )
+
+        assert _get_max_feature_index(mask) == 100
 
 
 class TestParseVersion(BaseTest):

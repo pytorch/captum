@@ -79,8 +79,8 @@ class ModifiedReluGradientAttribution(GradientAttribution):
 
     def _register_hooks(self, module: Module):
         if isinstance(module, torch.nn.ReLU):
-            hook = _register_backward_hook(module, self._backward_hook, self)
-            self.backward_hooks.append(hook)
+            hooks = _register_backward_hook(module, self._backward_hook, self)
+            self.backward_hooks.extend(hooks)
 
     def _backward_hook(
         self,
@@ -121,9 +121,7 @@ class GuidedBackprop(ModifiedReluGradientAttribution):
         r"""
         Args:
 
-            model (nn.Module): The reference to PyTorch model instance. Model cannot
-                        contain any in-place ReLU submodules; these are not
-                        supported by the register_full_backward_hook PyTorch API.
+            model (nn.Module):  The reference to PyTorch model instance.
         """
         ModifiedReluGradientAttribution.__init__(
             self, model, use_relu_grad_output=False
@@ -140,9 +138,9 @@ class GuidedBackprop(ModifiedReluGradientAttribution):
         Args:
 
             inputs (Tensor or tuple[Tensor, ...]): Input for which
-                        attributions are computed. If forward_func takes a single
+                        attributions are computed. If model takes a single
                         tensor as input, a single input tensor should be provided.
-                        If forward_func takes multiple tensors as input, a tuple
+                        If model takes multiple tensors as input, a tuple
                         of the input tensors should be provided. It is assumed
                         that for all given input tensors, dimension 0 corresponds
                         to the number of examples (aka batch size), and if
@@ -180,7 +178,7 @@ class GuidedBackprop(ModifiedReluGradientAttribution):
                         argument of a Tensor or arbitrary (non-tuple) type or a tuple
                         containing multiple additional arguments including tensors
                         or any arbitrary python types. These arguments are provided to
-                        forward_func in order, following the arguments in inputs.
+                        model in order, following the arguments in inputs.
                         Note that attributions are not computed with respect
                         to these arguments.
                         Default: None
@@ -234,9 +232,7 @@ class Deconvolution(ModifiedReluGradientAttribution):
         r"""
         Args:
 
-            model (nn.Module): The reference to PyTorch model instance. Model cannot
-                        contain any in-place ReLU submodules; these are not
-                        supported by the register_full_backward_hook PyTorch API.
+            model (nn.Module):  The reference to PyTorch model instance.
         """
         ModifiedReluGradientAttribution.__init__(self, model, use_relu_grad_output=True)
 
@@ -251,9 +247,9 @@ class Deconvolution(ModifiedReluGradientAttribution):
         Args:
 
             inputs (Tensor or tuple[Tensor, ...]): Input for which
-                        attributions are computed. If forward_func takes a single
+                        attributions are computed. If model takes a single
                         tensor as input, a single input tensor should be provided.
-                        If forward_func takes multiple tensors as input, a tuple
+                        If model takes multiple tensors as input, a tuple
                         of the input tensors should be provided. It is assumed
                         that for all given input tensors, dimension 0 corresponds
                         to the number of examples (aka batch size), and if
@@ -291,7 +287,7 @@ class Deconvolution(ModifiedReluGradientAttribution):
                         argument of a Tensor or arbitrary (non-tuple) type or a tuple
                         containing multiple additional arguments including tensors
                         or any arbitrary python types. These arguments are provided to
-                        forward_func in order, following the arguments in inputs.
+                        model in order, following the arguments in inputs.
                         Note that attributions are not computed with respect
                         to these arguments.
                         Default: None

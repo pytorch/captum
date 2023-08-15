@@ -32,7 +32,7 @@ class TestBinaryConcreteStochasticGates(BaseTest):
         ).to(self.testing_device)
 
         gated_input, reg = bcstg(input_tensor)
-        expected_reg = 0.8316
+        expected_reg = 2.4947
 
         if self.testing_device == "cpu":
             expected_gated_input = [[0.0000, 0.0212, 0.1892], [0.1839, 0.3753, 0.4937]]
@@ -41,6 +41,30 @@ class TestBinaryConcreteStochasticGates(BaseTest):
 
         assertTensorAlmostEqual(self, gated_input, expected_gated_input, mode="max")
         assertTensorAlmostEqual(self, reg, expected_reg)
+
+    def test_bcstg_1d_input_with_reg_reduction(self) -> None:
+
+        dim = 3
+        mean_bcstg = BinaryConcreteStochasticGates(dim, reg_reduction="mean").to(
+            self.testing_device
+        )
+        none_bcstg = BinaryConcreteStochasticGates(dim, reg_reduction="none").to(
+            self.testing_device
+        )
+        input_tensor = torch.tensor(
+            [
+                [0.0, 0.1, 0.2],
+                [0.3, 0.4, 0.5],
+            ]
+        ).to(self.testing_device)
+
+        mean_gated_input, mean_reg = mean_bcstg(input_tensor)
+        none_gated_input, none_reg = none_bcstg(input_tensor)
+        expected_mean_reg = 0.8316
+        expected_none_reg = torch.tensor([0.8321, 0.8310, 0.8325])
+
+        assertTensorAlmostEqual(self, mean_reg, expected_mean_reg)
+        assertTensorAlmostEqual(self, none_reg, expected_none_reg)
 
     def test_bcstg_1d_input_with_n_gates_error(self) -> None:
 
@@ -85,7 +109,7 @@ class TestBinaryConcreteStochasticGates(BaseTest):
         ).to(self.testing_device)
 
         gated_input, reg = bcstg(input_tensor)
-        expected_reg = 0.8321
+        expected_reg = 1.6643
 
         if self.testing_device == "cpu":
             expected_gated_input = [[0.0000, 0.0000, 0.1679], [0.0000, 0.0000, 0.2223]]
@@ -118,7 +142,7 @@ class TestBinaryConcreteStochasticGates(BaseTest):
 
         gated_input, reg = bcstg(input_tensor)
 
-        expected_reg = 0.8317
+        expected_reg = 4.9903
         if self.testing_device == "cpu":
             expected_gated_input = [
                 [[0.0000, 0.0990], [0.0261, 0.2431], [0.0551, 0.3863]],
@@ -179,7 +203,7 @@ class TestBinaryConcreteStochasticGates(BaseTest):
         ).to(self.testing_device)
 
         gated_input, reg = bcstg(input_tensor)
-        expected_reg = 0.8316
+        expected_reg = 2.4947
 
         if self.testing_device == "cpu":
             expected_gated_input = [
@@ -261,13 +285,10 @@ class TestBinaryConcreteStochasticGates(BaseTest):
         assertTensorAlmostEqual(self, gate_values, expected_gate_values, mode="max")
 
     def test_get_gate_values_clamp(self) -> None:
-        dim = 3
         # enlarge the bounds & extremify log_alpha to mock gate  values beyond 0 & 1
-        bcstg = BinaryConcreteStochasticGates(dim, lower_bound=-2, upper_bound=2).to(
-            self.testing_device
-        )
-        mocked_log_alpha = torch.tensor([10.0, -10.0, 10.0])
-        bcstg.load_state_dict({"log_alpha_param": mocked_log_alpha})
+        bcstg = BinaryConcreteStochasticGates._from_pretrained(
+            torch.tensor([10.0, -10.0, 10.0]), lower_bound=-2, upper_bound=2
+        ).to(self.testing_device)
 
         clamped_gate_values = bcstg.get_gate_values().cpu().tolist()
         assert clamped_gate_values == [1.0, 0.0, 1.0]
@@ -419,3 +440,20 @@ class TestBinaryConcreteStochasticGates(BaseTest):
         assertTensorAlmostEqual(
             self, gate_active_probs, expected_gate_active_probs, mode="max"
         )
+
+    def test_from_pretrained(self) -> None:
+        log_alpha_param = torch.tensor([0.1, 0.2, 0.3, 0.4])
+        kwargs = {
+            "mask": torch.tensor([0, 1, 1, 0, 2, 3]),
+            "reg_weight": 0.1,
+            "lower_bound": -0.2,
+            "upper_bound": 1.2,
+        }
+        stg = BinaryConcreteStochasticGates._from_pretrained(log_alpha_param, **kwargs)
+
+        for key, expected_val in kwargs.items():
+            val = getattr(stg, key)
+            if isinstance(expected_val, torch.Tensor):
+                assertTensorAlmostEqual(self, val, expected_val, mode="max")
+            else:
+                assert val == expected_val

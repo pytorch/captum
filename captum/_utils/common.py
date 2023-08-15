@@ -157,6 +157,41 @@ def _format_baseline(
     return baselines
 
 
+def _format_feature_mask(
+    feature_mask: Union[None, Tensor, Tuple[Tensor, ...]],
+    inputs: Tuple[Tensor, ...],
+) -> Tuple[Tensor, ...]:
+    """
+    Format a feature mask into a tuple of tensors.
+    The `inputs` should be correctly formatted first
+    If `feature_mask` is None, assign each non-batch dimension with a consecutive
+    integer from 0.
+    If `feature_mask` is a tensor, wrap it in a tuple.
+    """
+    if feature_mask is None:
+        formatted_mask = []
+        current_num_features = 0
+        for inp in inputs:
+            # the following can handle empty tensor where numel is 0
+            # empty tensor will be added to the feature mask
+            num_features = torch.numel(inp[0:1])
+
+            formatted_mask.append(
+                current_num_features
+                + torch.reshape(
+                    torch.arange(num_features, device=inp.device),
+                    inp[0:1].shape,
+                )
+            )
+            current_num_features += num_features
+        formatted_mask = tuple(formatted_mask)
+
+    else:
+        formatted_mask = _format_tensor_into_tuples(feature_mask)
+
+    return formatted_mask
+
+
 @overload
 def _format_tensor_into_tuples(inputs: None) -> None:
     ...
@@ -175,9 +210,10 @@ def _format_tensor_into_tuples(
     if inputs is None:
         return None
     if not isinstance(inputs, tuple):
-        assert isinstance(
-            inputs, torch.Tensor
-        ), "`inputs` must have type " "torch.Tensor but {} found: ".format(type(inputs))
+        assert isinstance(inputs, torch.Tensor), (
+            "`inputs` must be a torch.Tensor or a tuple[torch.Tensor] "
+            f"but found: {type(inputs)}"
+        )
         inputs = (inputs,)
     return inputs
 
@@ -683,20 +719,60 @@ def _get_module_from_name(model: Module, layer_name: str) -> Any:
 
 def _register_backward_hook(
     module: Module, hook: Callable, attr_obj: Any
-) -> torch.utils.hooks.RemovableHandle:
-    # Special case for supporting output attributions for neuron methods
-    # This can be removed after deprecation of neuron output attributions
-    # for NeuronDeepLift, NeuronDeconvolution, and NeuronGuidedBackprop
-    # in v0.6.0
-    if (
-        hasattr(attr_obj, "skip_new_hook_layer")
-        and attr_obj.skip_new_hook_layer == module
-    ):
-        return module.register_backward_hook(hook)
+) -> List[torch.utils.hooks.RemovableHandle]:
+    grad_out: Dict[device, Tensor] = {}
 
-    if _parse_version(torch.__version__) >= (1, 9, 0):
-        # Only supported for torch >= 1.9
-        return module.register_full_backward_hook(hook)
-    else:
-        # Fallback for previous versions of PyTorch
-        return module.register_backward_hook(hook)
+    def forward_hook(
+        module: Module,
+        inp: Union[Tensor, Tuple[Tensor, ...]],
+        out: Union[Tensor, Tuple[Tensor, ...]],
+    ) -> None:
+        nonlocal grad_out
+        grad_out = {}
+
+        def output_tensor_hook(output_grad: Tensor) -> None:
+            grad_out[output_grad.device] = output_grad
+
+        if isinstance(out, tuple):
+            assert (
+                len(out) == 1
+            ), "Backward hooks not supported for module with >1 output"
+            out[0].register_hook(output_tensor_hook)
+        else:
+            out.register_hook(output_tensor_hook)
+
+    def pre_hook(module, inp):
+        def input_tensor_hook(input_grad: Tensor):
+            if len(grad_out) == 0:
+                return
+            hook_out = hook(module, input_grad, grad_out[input_grad.device])
+
+            if hook_out is not None:
+                return hook_out[0] if isinstance(hook_out, tuple) else hook_out
+
+        if isinstance(inp, tuple):
+            assert (
+                len(inp) == 1
+            ), "Backward hooks not supported for module with >1 input"
+            inp[0].register_hook(input_tensor_hook)
+            return inp[0].clone()
+        else:
+            inp.register_hook(input_tensor_hook)
+            return inp.clone()
+
+    return [
+        module.register_forward_pre_hook(pre_hook),
+        module.register_forward_hook(forward_hook),
+    ]
+
+
+def _get_max_feature_index(feature_mask: Tuple[Tensor, ...]):
+    """
+    Returns the max feature mask index
+    The feature mask should be formatted to tuple of tensors at first.
+
+    Note: This util is commonly used to identify the number of features (max_index + 1),
+    as we expect user to be resposible to ensure consecutive feature mask indices from 0
+    """
+
+    return int(max(torch.max(mask).item() for mask in feature_mask if mask.numel()))

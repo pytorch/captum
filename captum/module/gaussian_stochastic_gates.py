@@ -28,8 +28,15 @@ class GaussianStochasticGates(StochasticGatesBase):
     within 0 and 1, gaussian does not have boundaries. So hard-sigmoid rectification
     is used to "fold" the parts smaller than 0 or larger than 1 back to 0 and 1.
 
-    More details can be found in the
-    `original paper <https://arxiv.org/abs/1810.04247>`.
+    More details can be found in the original paper:
+    https://arxiv.org/abs/1810.04247
+
+    Examples::
+
+        >>> n_params = 5  # number of gates
+        >>> stg = GaussianStochasticGates(n_params, reg_weight=0.01)
+        >>> inputs = torch.randn(3, n_params)  # mock inputs with batch size of 3
+        >>> gated_inputs, reg = stg(mock_inputs)  # gate the inputs
     """
 
     def __init__(
@@ -38,28 +45,38 @@ class GaussianStochasticGates(StochasticGatesBase):
         mask: Optional[Tensor] = None,
         reg_weight: Optional[float] = 1.0,
         std: Optional[float] = 0.5,
+        reg_reduction: str = "sum",
     ):
         """
         Args:
             n_gates (int): number of gates.
 
-            mask (Optional[Tensor]): If provided, this allows grouping multiple
+            mask (Tensor, optional): If provided, this allows grouping multiple
                 input tensor elements to share the same stochastic gate.
                 This tensor should be broadcastable to match the input shape
                 and contain integers in the range 0 to n_gates - 1.
                 Indices grouped to the same stochastic gate should have the same value.
                 If not provided, each element in the input tensor
-                (on dimensions other than dim 0 - batch dim) is gated separately.
+                (on dimensions other than dim 0, i.e., batch dim) is gated separately.
                 Default: None
 
-            reg_weight (Optional[float]): rescaling weight for L0 regularization term.
+            reg_weight (float, optional): rescaling weight for L0 regularization term.
                 Default: 1.0
 
-            std (Optional[float]): standard deviation that will be fixed throughout.
-                Default: 0.5 (by paper reference)
+            std (float, optional): standard deviation that will be fixed throughout.
+                Default: 0.5
 
+            reg_reduction (str, optional): the reduction to apply to the regularization:
+                ``'none'`` | ``'mean'`` | ``'sum'``. ``'none'``: no reduction will be
+                applied and it will be the same as the return of ``get_active_probs``,
+                ``'mean'``: the sum of the gates non-zero probabilities will be divided
+                by the number of gates, ``'sum'``: the gates non-zero probabilities will
+                be summed.
+                Default: ``'sum'``
         """
-        super().__init__(n_gates, mask=mask, reg_weight=reg_weight)
+        super().__init__(
+            n_gates, mask=mask, reg_weight=reg_weight, reg_reduction=reg_reduction
+        )
 
         mu = torch.empty(n_gates)
         nn.init.normal_(mu, mean=0.5, std=0.01)
@@ -67,21 +84,6 @@ class GaussianStochasticGates(StochasticGatesBase):
 
         assert 0 < std, f"the standard deviation should be positive, received {std}"
         self.std = std
-
-    def forward(self, *args, **kwargs):
-        """
-        Args:
-            input_tensor (Tensor): Tensor to be gated with stochastic gates
-
-        Outputs:
-            gated_input (Tensor): Tensor of the same shape weighted by the sampled
-                gate values
-
-            l0_reg (Tensor): L0 regularization term to be optimized together with
-                model loss,
-                e.g. loss(model_out, target) + l0_reg
-        """
-        return super().forward(*args, **kwargs)
 
     def _sample_gate_values(self, batch_size: int) -> Tensor:
         """
@@ -122,3 +124,43 @@ class GaussianStochasticGates(StochasticGatesBase):
         """
         x = self.mu / self.std
         return 0.5 * (1 + torch.erf(x / math.sqrt(2)))
+
+    @classmethod
+    def _from_pretrained(cls, mu: Tensor, *args, **kwargs):
+        """
+        Private factory method to create an instance with pretrained parameters
+
+        Args:
+            mu (Tensor): FloatTensor containing weights for the pretrained mu
+
+            mask (Tensor, optional): If provided, this allows grouping multiple
+                input tensor elements to share the same stochastic gate.
+                This tensor should be broadcastable to match the input shape
+                and contain integers in the range 0 to n_gates - 1.
+                Indices grouped to the same stochastic gate should have the same value.
+                If not provided, each element in the input tensor
+                (on dimensions other than dim 0 - batch dim) is gated separately.
+                Default: None
+
+            reg_weight (float, optional): rescaling weight for L0 regularization term.
+                Default: 1.0
+
+            std (float, optional): standard deviation that will be fixed throughout.
+                Default: 0.5
+
+            reg_reduction (str, optional): the reduction to apply to the regularization:
+                ``'none'`` | ``'mean'`` | ``'sum'``. ``'none'``: no reduction will be
+                applied and it will be the same as the return of ``get_active_probs``,
+                ``'mean'``: the sum of the gates non-zero probabilities will be divided
+                by the number of gates, ``'sum'``: the gates non-zero probabilities will
+                be summed.
+                Default: ``'sum'``
+
+        Returns:
+            stg (GaussianStochasticGates): StochasticGates instance
+        """
+        n_gates = mu.numel()
+        stg = cls(n_gates, *args, **kwargs)
+        stg.load_state_dict({"mu": mu}, strict=False)
+
+        return stg

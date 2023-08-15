@@ -178,8 +178,7 @@ class TestTracInShowProgress(BaseTest):
                 elif mode == "influence":
 
                     tracin.influence(
-                        test_samples,
-                        test_labels,
+                        (test_samples, test_labels),
                         k=None,
                         show_progress=True,
                     )
@@ -196,8 +195,7 @@ class TestTracInShowProgress(BaseTest):
                 elif mode == "k-most":
 
                     tracin.influence(
-                        test_samples,
-                        test_labels,
+                        (test_samples, test_labels),
                         k=2,
                         proponents=True,
                         show_progress=True,
@@ -218,8 +216,7 @@ class TestTracInShowProgress(BaseTest):
                     mock_stderr.truncate(0)
 
                     tracin.influence(
-                        test_samples,
-                        test_labels,
+                        (test_samples, test_labels),
                         k=2,
                         proponents=False,
                         show_progress=True,

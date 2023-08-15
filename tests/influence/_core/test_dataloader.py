@@ -10,6 +10,7 @@ from captum.influence._core.tracincp_fast_rand_proj import (
 from parameterized import parameterized
 from tests.helpers.basic import assertTensorAlmostEqual, BaseTest
 from tests.influence._utils.common import (
+    _format_batch_into_tuple,
     build_test_name_func,
     DataInfluenceConstructor,
     get_random_model_and_data,
@@ -76,7 +77,8 @@ class TestTracInDataLoader(BaseTest):
             )
 
             train_scores = tracin.influence(
-                test_samples, test_labels, k=None, unpack_inputs=unpack_inputs
+                _format_batch_into_tuple(test_samples, test_labels, unpack_inputs),
+                k=None,
             )
 
             tracin_dataloader = tracin_constructor(
@@ -88,7 +90,8 @@ class TestTracInDataLoader(BaseTest):
             )
 
             train_scores_dataloader = tracin_dataloader.influence(
-                test_samples, test_labels, k=None, unpack_inputs=unpack_inputs
+                _format_batch_into_tuple(test_samples, test_labels, unpack_inputs),
+                k=None,
             )
 
             assertTensorAlmostEqual(

@@ -49,10 +49,7 @@ class LRP(GradientAttribution):
                 it. Custom rules for a given layer need to be defined as attribute
                 `module.rule` and need to be of type PropagationRule. If no rule is
                 specified for a layer, a pre-defined default rule for the module type
-                is used. Model cannot contain any in-place nonlinear submodules;
-                these are not supported by the register_full_backward_hook
-                PyTorch API starting from PyTorch v1.9.
-
+                is used.
         """
         GradientAttribution.__init__(self, model)
         self.model = model
@@ -100,9 +97,9 @@ class LRP(GradientAttribution):
         Args:
 
             inputs (Tensor or tuple[Tensor, ...]): Input for which relevance is
-                        propagated. If forward_func takes a single
+                        propagated. If model takes a single
                         tensor as input, a single input tensor should be provided.
-                        If forward_func takes multiple tensors as input, a tuple
+                        If model takes multiple tensors as input, a tuple
                         of the input tensors should be provided. It is assumed
                         that for all given input tensors, dimension 0 corresponds
                         to the number of examples, and if multiple input tensors
@@ -140,7 +137,7 @@ class LRP(GradientAttribution):
                     argument of a Tensor or arbitrary (non-tuple) type or a tuple
                     containing multiple additional arguments including tensors
                     or any arbitrary python types. These arguments are provided to
-                    forward_func in order, following the arguments in inputs.
+                    model in order, following the arguments in inputs.
                     Note that attributions are not computed with respect
                     to these arguments.
                     Default: None
@@ -320,10 +317,10 @@ class LRP(GradientAttribution):
     def _register_forward_hooks(self) -> None:
         for layer in self.layers:
             if type(layer) in SUPPORTED_NON_LINEAR_LAYERS:
-                backward_handle = _register_backward_hook(
+                backward_handles = _register_backward_hook(
                     layer, PropagationRule.backward_hook_activation, self
                 )
-                self.backward_handles.append(backward_handle)
+                self.backward_handles.extend(backward_handles)
             else:
                 forward_handle = layer.register_forward_hook(
                     layer.rule.forward_hook  # type: ignore
