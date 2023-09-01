@@ -39,7 +39,7 @@ jobs:
         # Create Conda Env
         conda create -yp ci_env python="${PYTHON_VERSION}"
         conda activate /pytorch/captum/ci_env
-        ./scripts/install_via_conda.sh
+        ./scripts/install_via_conda.sh -n
 
         # Run Tests
         python3 -m pytest -ra --cov=. --cov-report term-missing
