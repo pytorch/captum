@@ -38,7 +38,7 @@ jobs:
 
         # Create Conda Env
         conda create -yp ci_env python="${PYTHON_VERSION}"
-        conda activate /work/ci_env
+        conda activate /pytorch/captum/ci_env
         ./scripts/install_via_conda.sh
 
         # Run Tests
