@@ -1,0 +1,54 @@
+name: Unit-tests for Pip install
+
+on:
+  pull_request:
+  push:
+    branches:
+      - nightly
+      - main
+      - release/*
+
+  workflow_dispatch:
+
+env:
+  CHANNEL: "nightly"
+
+jobs:
+  tests:
+    strategy:
+      matrix:
+        python_version: ["3.8"]
+        cuda_arch_version: ["11.7"]
+      fail-fast: false
+    uses: pytorch/test-infra/.github/workflows/linux_job.yml@main
+    with:
+      runner: linux.g5.4xlarge.nvidia.gpu
+      repository: pytorch/captum
+      gpu-arch-type: cuda
+      gpu-arch-version: ${{ matrix.cuda_arch_version }}
+      script: |
+        # Set up Environment Variables
+        export PYTHON_VERSION="${{ matrix.python_version }}"
+        export VERSION="${{ matrix.cuda_arch_version }}"
+        export CUDATOOLKIT="pytorch-cuda=${VERSION}"
+
+        # Set CHANNEL
+        if [[ (${GITHUB_EVENT_NAME} = 'pull_request' && (${GITHUB_BASE_REF} = 'release'*)) || (${GITHUB_REF} = 'refs/heads/release'*) ]]; then
+          export CHANNEL=test
+        else
+          export CHANNEL=nightly
+        fi
+
+        # Create Conda Env
+        conda create -yp ci_env python="${PYTHON_VERSION}"
+        conda activate /pytorch/captum/ci_env
+
+        python3 -m pip install --upgrade pip
+        python3 -m pip install -e .[dev]
+
+        # Build package
+        python3 -m pip install build
+        python3 -m build
+
+        # Run Tests
+        python3 -m pytest -ra --cov=. --cov-report term-missing
