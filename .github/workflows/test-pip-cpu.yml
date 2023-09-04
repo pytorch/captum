@@ -38,8 +38,8 @@ jobs:
         fi
 
         # Create Conda Env
-        conda create -yp ci_env python="${PYTHON_VERSION}"
-        conda activate /pytorch/captum/ci_env
+        #conda create -yp ci_env python="${PYTHON_VERSION}"
+        #conda activate /pytorch/captum/ci_env
         ./scripts/install_via_pip.sh ${{ matrix.pytorch_args }}
 
         # Run Tests
