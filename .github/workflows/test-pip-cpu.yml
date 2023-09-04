@@ -25,7 +25,8 @@ jobs:
       runner: linux.12xlarge
       repository: pytorch/captum
       script: |
-
+        which python
+        sudo update-alternatives --install /usr/bin/python python /usr/bin/python3.6 1
         # Create Conda Env
         #conda create -yp ci_env python="${PYTHON_VERSION}"
         #conda activate /pytorch/captum/ci_env
