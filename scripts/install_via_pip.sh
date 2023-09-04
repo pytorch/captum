@@ -22,7 +22,7 @@ while getopts 'ndfv:' flag; do
 # but users should hopefully be using conda installs.
 
 # install nodejs and yarn for insights build
-sudo yum -y install nodejs
+sudo yum -y install nodejs npm
 npm install --global yarn
 
 # yarn needs terminal info
