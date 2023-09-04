@@ -1,4 +1,4 @@
-name: Unit-tests on Linux CPU
+name: Unit-tests for Pip install
 
 on:
   pull_request:
@@ -17,7 +17,7 @@ jobs:
   tests:
     strategy:
       matrix:
-        python_version: ["3.6", "3.7", "3.8", "3.9", "3.10"]
+        python_version: ["3.6"]
       fail-fast: false
     uses: pytorch/test-infra/.github/workflows/linux_job.yml@main
     with:
@@ -39,7 +39,13 @@ jobs:
         # Create Conda Env
         conda create -yp ci_env python="${PYTHON_VERSION}"
         conda activate /pytorch/captum/ci_env
-        ./scripts/install_via_conda.sh -n
+        ./scripts/install_via_pip.sh
 
-        # Run Tests
-        python3 -m pytest -ra --cov=. --cov-report term-missing
+        # Check formatting with ufmt
+        ufmt check .
+
+        # Lint with flake8
+        flake8
+
+        # Run sphinx
+        sphinx-build -WT --keep-going sphinx/source sphinx/build
