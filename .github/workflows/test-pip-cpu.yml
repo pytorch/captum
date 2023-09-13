@@ -23,10 +23,9 @@ jobs:
     uses: pytorch/test-infra/.github/workflows/linux_job.yml@main
     with:
       runner: linux.12xlarge
+      docker-image: cimg/python:3.6
       repository: pytorch/captum
       script: |
-        which python
-        sudo update-alternatives --install /usr/bin/python python /usr/bin/python3.6 1
         # Create Conda Env
         #conda create -yp ci_env python="${PYTHON_VERSION}"
         #conda activate /pytorch/captum/ci_env
