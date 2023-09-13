@@ -34,3 +34,4 @@ jobs:
 
         # Run Tests
         python3 -m pytest -ra --cov=. --cov-report term-missing
+        ./scripts/run_mypy.sh
