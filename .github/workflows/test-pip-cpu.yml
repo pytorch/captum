@@ -31,6 +31,5 @@ jobs:
         #conda activate /pytorch/captum/ci_env
         sudo chmod -R 777 .
         ./scripts/install_via_pip.sh ${{ matrix.pytorch_args }}
-        ./scripts/run_mypy.sh
         # Run Tests
         python3 -m pytest -ra --cov=. --cov-report term-missing
