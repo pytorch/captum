@@ -40,9 +40,6 @@ jobs:
         fi
 
         # Create Conda Env
-        conda create -yp ci_env python="${PYTHON_VERSION}"
-        conda activate /pytorch/captum/ci_env
-
         python3 -m pip install --upgrade pip
         python3 -m pip install -e .[dev]
 
