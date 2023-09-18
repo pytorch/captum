@@ -29,7 +29,7 @@ jobs:
       script: |
         # Create Conda Env
         python3 -m pip install --upgrade pip
-        python3 -m pip install torch==1.7
+        python3 -m pip install torch==1.11
         python3 -m pip install -e .[dev]
 
         # Build package
