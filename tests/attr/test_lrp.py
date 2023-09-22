@@ -324,5 +324,5 @@ class Test(BaseTest):
         model = BasicModelWithReusedLinear()
         inp = torch.ones(2, 3)
         lrp = LRP(model)
-        with self.assertRaisesRegexp(RuntimeError, "more than once"):
+        with self.assertRaisesRegex(RuntimeError, "more than once"):
             lrp.attribute(inp, target=0)
