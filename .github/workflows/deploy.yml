@@ -1,0 +1,42 @@
+name: Captum Deploy Website
+
+on:
+  pull_request:
+  push:
+    branches:
+      - nightly
+      - main
+      - release/*
+
+  workflow_dispatch:
+
+env:
+  CHANNEL: "nightly"
+
+jobs:
+  tests:
+    uses: pytorch/test-infra/.github/workflows/linux_job.yml@main
+    with:
+      runner: linux.12xlarge
+      docker-image: cimg/python:3.6-node
+      repository: pytorch/captum
+      script: |
+        sudo chmod -R 777 .
+        ./scripts/install_via_pip.sh -n -d
+
+        if [[ $CIRCLE_PROJECT_USERNAME == "pytorch" && -z $CI_PULL_REQUEST && -z $CIRCLE_PR_USERNAME ]]; then
+          git config --global user.email "docusaurus-bot@users.noreply.github.com"
+          git config --global user.name "Captum website deployment script"
+          echo "machine github.com login docusaurus-bot password $DOCUSAURUS_GITHUB_TOKEN" > ~/.netrc
+        fi
+
+        if ! git diff --name-only HEAD^ | grep -E "(^captum\/.*)|(^\.circleci\/.*)|(^docs\/.*)|(^website\/.*)|(^scripts\/.*)|(^sphinx\/.*)|(^tutorials\/.*)"; then
+          echo "Skipping deploy. No relevant website files have changed"
+        elif [[ $CIRCLE_PROJECT_USERNAME == "pytorch" && -z $CI_PULL_REQUEST && -z $CIRCLE_PR_USERNAME ]]; then
+          mkdir -p website/static/.circleci && cp -a .circleci/. website/static/.circleci/.
+          ./scripts/build_docs.sh -b
+          cd website
+          GIT_USER=docusaurus-bot yarn run publish-gh-pages
+        else
+          echo "Skipping deploy."
+        fi
