@@ -262,8 +262,6 @@ def _assert_attribution_delta(
     if isinstance(inputs, tuple):
         bsz = inputs[0].shape[0]
     else:
-
-
         bsz = inputs.shape[0]
     test.assertEqual([bsz * n_samples], list(delta.shape))
 
