@@ -66,7 +66,6 @@ commands:
           name: "Configure Docusaurus GitHub bot"
           # Do not do this if we don't have the right org (pytorch), or if this is just a PR
           command: |
-            echo $DOCUSAURUS_GITHUB_TOKEN
             if [[ $CIRCLE_PROJECT_USERNAME == "pytorch" && -z $CI_PULL_REQUEST && -z $CIRCLE_PR_USERNAME ]]; then
               git config --global user.email "docusaurus-bot@users.noreply.github.com"
               git config --global user.name "Captum website deployment script"
