@@ -20,6 +20,8 @@ jobs:
       runner: linux.12xlarge
       docker-image: cimg/python:3.6-node
       repository: pytorch/captum
+      env:
+        DOCUSAURUS_GITHUB_TOKEN: ${{ secrets.DOCUSAURUS_GITHUB_TOKEN }}
       script: |
         sudo chmod -R 777 .
         ./scripts/install_via_pip.sh -n -d
