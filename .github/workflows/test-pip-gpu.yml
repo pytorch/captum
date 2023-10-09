@@ -18,7 +18,7 @@ jobs:
     strategy:
       matrix:
         python_version: ["3.8"]
-        cuda_arch_version: ["11.8"]
+        cuda_arch_version: ["12.1"]
       fail-fast: false
     uses: pytorch/test-infra/.github/workflows/linux_job.yml@main
     with:
@@ -29,7 +29,6 @@ jobs:
       script: |
         # Create Conda Env
         python3 -m pip install --upgrade pip
-        python3 -m pip install torch --index-url https://download.pytorch.org/whl/cu118
         python3 -m pip install -e .[dev]
 
         # Build package
