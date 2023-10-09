@@ -134,30 +134,9 @@ commands:
             sudo apt-get --yes --force-yes install cuda
 jobs:
 
-  lint_py36:
-    docker:
-      - image: cimg/python:3.6
-    steps:
-      - checkout
-      - configure_github_bot
-      - pip_install
-      - ufmt_check
-      - lint_flake8
-      - sphinx
 
 
 aliases:
 
-  - &exclude_ghpages_fbconfig
-    branches:
-      ignore:
-        - gh-pages
-        - fb-config
-
 
 workflows:
-
-  lint_test_and_deploy_site:
-    jobs:
-      - lint_py36:
-          filters: *exclude_ghpages_fbconfig
