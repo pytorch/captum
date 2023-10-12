@@ -4,20 +4,14 @@ on:
   pull_request:
   push:
     branches:
-      - nightly
-      - main
-      - release/*
+      - master
 
   workflow_dispatch:
-
-env:
-  CHANNEL: "nightly"
 
 jobs:
   tests:
     strategy:
       matrix:
-        python_version: ["3.6"]
         pytorch_args: ["-v 1.6", "-v 1.7", " -v 1.8", "-v 1.9"]
       fail-fast: false
     uses: pytorch/test-infra/.github/workflows/linux_job.yml@main
@@ -26,9 +20,6 @@ jobs:
       docker-image: cimg/python:3.6
       repository: pytorch/captum
       script: |
-        # Create Conda Env
-        #conda create -yp ci_env python="${PYTHON_VERSION}"
-        #conda activate /pytorch/captum/ci_env
         sudo chmod -R 777 .
         ./scripts/install_via_pip.sh ${{ matrix.pytorch_args }}
         # Run Tests

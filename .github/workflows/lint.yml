@@ -4,14 +4,9 @@ on:
   pull_request:
   push:
     branches:
-      - nightly
-      - main
-      - release/*
+      - master
 
   workflow_dispatch:
-
-env:
-  CHANNEL: "nightly"
 
 jobs:
   tests:
