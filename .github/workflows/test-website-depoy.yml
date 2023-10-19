@@ -23,7 +23,6 @@ jobs:
         git config --global user.name "Captum website deployment script"
         echo "machine github.com login github-actions[bot] password ${SECRET_GITHUB_TOKEN}" > ~/.netrc
 
-        mkdir -p website/static/.circleci && cp -a .circleci/. website/static/.circleci/.
         ./scripts/build_docs.sh -b
         cd website
         GIT_USER=github-actions[bot] yarn run publish-gh-pages
