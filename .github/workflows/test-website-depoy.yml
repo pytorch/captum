@@ -7,11 +7,12 @@ on:
       - master    # Review gh actions docs if you want to further define triggers, paths, etc
     # https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#on
 
+env:
+  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
 jobs:
   tests:
     uses: pytorch/test-infra/.github/workflows/linux_job.yml@main
-    env:
-      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     with:
       runner: linux.12xlarge
       docker-image: cimg/python:3.6-node
