@@ -10,7 +10,8 @@ on:
 jobs:
   tests:
     uses: pytorch/test-infra/.github/workflows/linux_job.yml@main
-    secrets: inherit
+    secrets:
+      access-token: ${{ secrets.GITHUB_TOKEN }}
     with:
       runner: linux.12xlarge
       docker-image: cimg/python:3.6-node
@@ -20,7 +21,7 @@ jobs:
         ./scripts/install_via_pip.sh -n -d
         git config --global user.email "github-actions[bot]@users.noreply.github.com"
         git config --global user.name "Captum website deployment script"
-        echo "machine github.com login github-actions[bot] password ${{ secrets.GITHUB_TOKEN }}" > ~/.netrc
+        echo "machine github.com login github-actions[bot] password ${{ secrets.access-token }}" > ~/.netrc
         if ! git diff --name-only HEAD^ | grep -E "(^captum\/.*)|(^\.circleci\/.*)|(^docs\/.*)|(^website\/.*)|(^scripts\/.*)|(^sphinx\/.*)|(^tutorials\/.*)"; then
           echo "Skipping deploy. No relevant website files have changed"
         else
