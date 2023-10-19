@@ -7,22 +7,21 @@ on:
       - master    # Review gh actions docs if you want to further define triggers, paths, etc
     # https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#on
 
-env:
-  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
 jobs:
   tests:
     uses: pytorch/test-infra/.github/workflows/linux_job.yml@main
+    secrets: inherit
     with:
       runner: linux.12xlarge
       docker-image: cimg/python:3.6-node
       repository: pytorch/captum
+      secrets-env: "GITHUB_TOKEN"
       script: |
         sudo chmod -R 777 .
         ./scripts/install_via_pip.sh -n -d
         git config --global user.email "github-actions[bot]@users.noreply.github.com"
         git config --global user.name "Captum website deployment script"
-        echo "machine github.com login github-actions[bot] password ${GITHUB_TOKEN}" > ~/.netrc
+        echo "machine github.com login github-actions[bot] password ${SECRET_GITHUB_TOKEN}" > ~/.netrc
         if ! git diff --name-only HEAD^ | grep -E "(^captum\/.*)|(^\.circleci\/.*)|(^docs\/.*)|(^website\/.*)|(^scripts\/.*)|(^sphinx\/.*)|(^tutorials\/.*)"; then
           echo "Skipping deploy. No relevant website files have changed"
         else
