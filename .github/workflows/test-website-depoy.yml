@@ -24,8 +24,10 @@ jobs:
         ./scripts/install_via_pip.sh -n -d
         git config --global user.email "github-actions[bot]@users.noreply.github.com"
         git config --global user.name "Captum website deployment script"
+        export GITHUB_TOKEN="${SECRET_GITHUB_TOKEN}"
+        echo $GITHUB_TOKEN
         echo "machine github.com login github-actions password ${SECRET_GITHUB_TOKEN}" > ~/.netrc
 
         ./scripts/build_docs.sh -b
         cd website
-        GIT_USER=github-actions yarn run publish-gh-pages
+        GIT_USER=github-actions USE_SSH=true yarn run publish-gh-pages
