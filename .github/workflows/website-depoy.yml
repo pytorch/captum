@@ -27,7 +27,9 @@ jobs:
       - name: Setup / build docs
         run: |
           sudo chmod -R 777 .
-          ./scripts/install_via_pip.sh -n -d
+          python3 -m pip install --upgrade pip --progress-bar off
+          python3 -m pip install -e .[dev] --progress-bar off
+          python3 -m pip install beautifulsoup4 ipython nbconvert==5.6.1 --progress-bar off
           ./scripts/build_docs.sh -b
           cd website
 
