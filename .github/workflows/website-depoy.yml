@@ -16,13 +16,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
-        with:
-          node-version: 18
-          cache: yarn
-      - name: Setup
-        run: mkdir -p website/static/.circleci && cp -a .circleci/. website/static/.circleci/.
-             ./scripts/build_docs.sh -b
 
       - name: Setup / build docs
         run: |
