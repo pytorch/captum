@@ -22,14 +22,10 @@ jobs:
           sudo chmod -R 777 .
           python3 -m pip install --upgrade pip --progress-bar off
           python3 -m pip install -e .[dev] --progress-bar off
-          python3 -m pip install beautifulsoup4 ipython nbconvert==5.6.1 --progress-bar off
+          python3 -m pip install beautifulsoup4 ipython nbconvert --progress-bar off
           ./scripts/build_docs.sh -b
           cd website
 
-      - name: Install dependencies
-        run: yarn install --frozen-lockfile
-      - name: Build website
-        run: yarn build
 
       # Popular action to deploy to GitHub Pages:
       # Docs: https://github.com/peaceiris/actions-gh-pages#%EF%B8%8F-docusaurus
