@@ -7,6 +7,9 @@ on:
       - master    # Review gh actions docs if you want to further define triggers, paths, etc
     # https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#on
 
+permissions:
+  contents: write
+
 jobs:
   tests:
     uses: pytorch/test-infra/.github/workflows/linux_job.yml@main
