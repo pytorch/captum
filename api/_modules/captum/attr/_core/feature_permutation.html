@@ -54,7 +54,9 @@ src="/_sphinx/documentation_options.js"></script>
     <span class="p">)</span>
 
 
-<div class="viewcode-block" id="FeaturePermutation"><a class="viewcode-back" href="../../../../feature_permutation.html#captum.attr.FeaturePermutation">[docs]</a><span class="k">class</span> <span class="nc">FeaturePermutation</span><span class="p">(</span><span class="n">FeatureAblation</span><span class="p">):</span>
+<div class="viewcode-block" id="FeaturePermutation">
+<a class="viewcode-back" href="../../../../feature_permutation.html#captum.attr.FeaturePermutation">[docs]</a>
+<span class="k">class</span> <span class="nc">FeaturePermutation</span><span class="p">(</span><span class="n">FeatureAblation</span><span class="p">):</span>
 <span class="w">    </span><span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">    A perturbation based approach to compute attribution, which</span>
 <span class="sd">    takes each input feature, permutes the feature values within a batch,</span>
@@ -121,7 +123,9 @@ src="/_sphinx/documentation_options.js"></script>
 
     <span class="c1"># suppressing error caused by the child class not having a matching</span>
     <span class="c1"># signature to the parent</span>
-<div class="viewcode-block" id="FeaturePermutation.attribute"><a class="viewcode-back" href="../../../../feature_permutation.html#captum.attr.FeaturePermutation.attribute">[docs]</a>    <span class="nd">@log_usage</span><span class="p">()</span>
+<div class="viewcode-block" id="FeaturePermutation.attribute">
+<a class="viewcode-back" href="../../../../feature_permutation.html#captum.attr.FeaturePermutation.attribute">[docs]</a>
+    <span class="nd">@log_usage</span><span class="p">()</span>
     <span class="k">def</span> <span class="nf">attribute</span><span class="p">(</span>  <span class="c1"># type: ignore</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">inputs</span><span class="p">:</span> <span class="n">TensorOrTupleOfTensorsGeneric</span><span class="p">,</span>
@@ -299,6 +303,7 @@ src="/_sphinx/documentation_options.js"></script>
             <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
         <span class="p">)</span></div>
 
+
     <span class="k">def</span> <span class="nf">_construct_ablated_input</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">expanded_input</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">,</span>
@@ -337,6 +342,7 @@ src="/_sphinx/documentation_options.js"></script>
             <span class="p">]</span>
         <span class="p">)</span>
         <span class="k">return</span> <span class="n">output</span><span class="p">,</span> <span class="n">current_mask</span></div>
+
 </pre></div>
 </div>
 </div>
@@ -382,7 +388,7 @@ src="/_sphinx/documentation_options.js"></script>
 </form>
 </div>
 </div>
-<script>$('#searchbox').show(0);</script>
+<script>document.getElementById('searchbox').style.display = "block"</script>
 </div>
 </div>
 <div class="clearer"></div>

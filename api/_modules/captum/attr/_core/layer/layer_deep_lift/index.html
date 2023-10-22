@@ -63,7 +63,9 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="kn">from</span> <span class="nn">torch.nn</span> <span class="kn">import</span> <span class="n">Module</span>
 
 
-<div class="viewcode-block" id="LayerDeepLift"><a class="viewcode-back" href="../../../../../layer.html#captum.attr.LayerDeepLift">[docs]</a><span class="k">class</span> <span class="nc">LayerDeepLift</span><span class="p">(</span><span class="n">LayerAttribution</span><span class="p">,</span> <span class="n">DeepLift</span><span class="p">):</span>
+<div class="viewcode-block" id="LayerDeepLift">
+<a class="viewcode-back" href="../../../../../layer.html#captum.attr.LayerDeepLift">[docs]</a>
+<span class="k">class</span> <span class="nc">LayerDeepLift</span><span class="p">(</span><span class="n">LayerAttribution</span><span class="p">,</span> <span class="n">DeepLift</span><span class="p">):</span>
 <span class="w">    </span><span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">    Implements DeepLIFT algorithm for the layer based on the following paper:</span>
 <span class="sd">    Learning Important Features Through Propagating Activation Differences,</span>
@@ -157,7 +159,9 @@ src="/_sphinx/documentation_options.js"></script>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">]],</span> <span class="n">Tensor</span><span class="p">]:</span>
         <span class="o">...</span>
 
-<div class="viewcode-block" id="LayerDeepLift.attribute"><a class="viewcode-back" href="../../../../../layer.html#captum.attr.LayerDeepLift.attribute">[docs]</a>    <span class="nd">@log_usage</span><span class="p">()</span>
+<div class="viewcode-block" id="LayerDeepLift.attribute">
+<a class="viewcode-back" href="../../../../../layer.html#captum.attr.LayerDeepLift.attribute">[docs]</a>
+    <span class="nd">@log_usage</span><span class="p">()</span>
     <span class="k">def</span> <span class="nf">attribute</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">inputs</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">]],</span>
@@ -174,9 +178,9 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">        Args:</span>
 
 <span class="sd">            inputs (Tensor or tuple[Tensor, ...]): Input for which layer</span>
-<span class="sd">                        attributions are computed. If forward_func takes a</span>
+<span class="sd">                        attributions are computed. If model takes a</span>
 <span class="sd">                        single tensor as input, a single input tensor should be</span>
-<span class="sd">                        provided. If forward_func takes multiple tensors as input,</span>
+<span class="sd">                        provided. If model takes multiple tensors as input,</span>
 <span class="sd">                        a tuple of the input tensors should be provided. It is</span>
 <span class="sd">                        assumed that for all given input tensors, dimension 0</span>
 <span class="sd">                        corresponds to the number of examples (aka batch size),</span>
@@ -246,7 +250,7 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">                        argument of a Tensor or arbitrary (non-tuple) type or a tuple</span>
 <span class="sd">                        containing multiple additional arguments including tensors</span>
 <span class="sd">                        or any arbitrary python types. These arguments are provided to</span>
-<span class="sd">                        forward_func in order, following the arguments in inputs.</span>
+<span class="sd">                        model in order, following the arguments in inputs.</span>
 <span class="sd">                        Note that attributions are not computed with respect</span>
 <span class="sd">                        to these arguments.</span>
 <span class="sd">                        Default: None</span>
@@ -296,7 +300,7 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">                of tensors is returned.</span>
 <span class="sd">            - **delta** (*Tensor*, returned if return_convergence_delta=True):</span>
 <span class="sd">                This is computed using the property that the total sum of</span>
-<span class="sd">                forward_func(inputs) - forward_func(baselines) must equal the</span>
+<span class="sd">                model(inputs) - model(baselines) must equal the</span>
 <span class="sd">                total sum of the attributions computed based on DeepLift's</span>
 <span class="sd">                rescale rule.</span>
 <span class="sd">                Delta is calculated per example, meaning that the number of</span>
@@ -395,12 +399,16 @@ src="/_sphinx/documentation_options.js"></script>
             <span class="n">cast</span><span class="p">(</span><span class="n">Union</span><span class="p">[</span><span class="n">Literal</span><span class="p">[</span><span class="kc">True</span><span class="p">],</span> <span class="n">Literal</span><span class="p">[</span><span class="kc">False</span><span class="p">]],</span> <span class="nb">len</span><span class="p">(</span><span class="n">attributions</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">),</span>
         <span class="p">)</span></div>
 
+
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">multiplies_by_inputs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_multiply_by_inputs</span></div>
 
 
-<div class="viewcode-block" id="LayerDeepLiftShap"><a class="viewcode-back" href="../../../../../layer.html#captum.attr.LayerDeepLiftShap">[docs]</a><span class="k">class</span> <span class="nc">LayerDeepLiftShap</span><span class="p">(</span><span class="n">LayerDeepLift</span><span class="p">,</span> <span class="n">DeepLiftShap</span><span class="p">):</span>
+
+<div class="viewcode-block" id="LayerDeepLiftShap">
+<a class="viewcode-back" href="../../../../../layer.html#captum.attr.LayerDeepLiftShap">[docs]</a>
+<span class="k">class</span> <span class="nc">LayerDeepLiftShap</span><span class="p">(</span><span class="n">LayerDeepLift</span><span class="p">,</span> <span class="n">DeepLiftShap</span><span class="p">):</span>
 <span class="w">    </span><span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">    Extends LayerDeepLift and DeepLiftShap algorithms and approximates SHAP</span>
 <span class="sd">    values for given input `layer`.</span>
@@ -490,7 +498,9 @@ src="/_sphinx/documentation_options.js"></script>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">]],</span> <span class="n">Tensor</span><span class="p">]:</span>
         <span class="o">...</span>
 
-<div class="viewcode-block" id="LayerDeepLiftShap.attribute"><a class="viewcode-back" href="../../../../../layer.html#captum.attr.LayerDeepLiftShap.attribute">[docs]</a>    <span class="nd">@log_usage</span><span class="p">()</span>
+<div class="viewcode-block" id="LayerDeepLiftShap.attribute">
+<a class="viewcode-back" href="../../../../../layer.html#captum.attr.LayerDeepLiftShap.attribute">[docs]</a>
+    <span class="nd">@log_usage</span><span class="p">()</span>
     <span class="k">def</span> <span class="nf">attribute</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">inputs</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">]],</span>
@@ -509,9 +519,9 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">        Args:</span>
 
 <span class="sd">            inputs (Tensor or tuple[Tensor, ...]): Input for which layer</span>
-<span class="sd">                        attributions are computed. If forward_func takes a single</span>
+<span class="sd">                        attributions are computed. If model takes a single</span>
 <span class="sd">                        tensor as input, a single input tensor should be provided.</span>
-<span class="sd">                        If forward_func takes multiple tensors as input, a tuple</span>
+<span class="sd">                        If model takes multiple tensors as input, a tuple</span>
 <span class="sd">                        of the input tensors should be provided. It is assumed</span>
 <span class="sd">                        that for all given input tensors, dimension 0 corresponds</span>
 <span class="sd">                        to the number of examples (aka batch size), and if</span>
@@ -574,7 +584,7 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">                        argument of a Tensor or arbitrary (non-tuple) type or a tuple</span>
 <span class="sd">                        containing multiple additional arguments including tensors</span>
 <span class="sd">                        or any arbitrary python types. These arguments are provided to</span>
-<span class="sd">                        forward_func in order, following the arguments in inputs.</span>
+<span class="sd">                        model in order, following the arguments in inputs.</span>
 <span class="sd">                        Note that attributions are not computed with respect</span>
 <span class="sd">                        to these arguments.</span>
 <span class="sd">                        Default: None</span>
@@ -626,7 +636,7 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">                        outputs of a single tensor are not.</span>
 <span class="sd">            - **delta** (*Tensor*, returned if return_convergence_delta=True):</span>
 <span class="sd">                        This is computed using the property that the</span>
-<span class="sd">                        total sum of forward_func(inputs) - forward_func(baselines)</span>
+<span class="sd">                        total sum of model(inputs) - model(baselines)</span>
 <span class="sd">                        must be very close to the total sum of attributions</span>
 <span class="sd">                        computed based on approximated SHAP values using</span>
 <span class="sd">                        DeepLift's rescale rule.</span>
@@ -706,9 +716,11 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">attributions</span></div>
 
+
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">multiplies_by_inputs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_multiply_by_inputs</span></div>
+
 </pre></div>
 </div>
 </div>
@@ -754,7 +766,7 @@ src="/_sphinx/documentation_options.js"></script>
 </form>
 </div>
 </div>
-<script>$('#searchbox').show(0);</script>
+<script>document.getElementById('searchbox').style.display = "block"</script>
 </div>
 </div>
 <div class="clearer"></div>

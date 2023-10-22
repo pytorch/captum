@@ -55,7 +55,9 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="kn">from</span> <span class="nn">torch.nn.parallel.scatter_gather</span> <span class="kn">import</span> <span class="n">scatter</span>
 
 
-<div class="viewcode-block" id="LayerIntegratedGradients"><a class="viewcode-back" href="../../../../../layer.html#captum.attr.LayerIntegratedGradients">[docs]</a><span class="k">class</span> <span class="nc">LayerIntegratedGradients</span><span class="p">(</span><span class="n">LayerAttribution</span><span class="p">,</span> <span class="n">GradientAttribution</span><span class="p">):</span>
+<div class="viewcode-block" id="LayerIntegratedGradients">
+<a class="viewcode-back" href="../../../../../layer.html#captum.attr.LayerIntegratedGradients">[docs]</a>
+<span class="k">class</span> <span class="nc">LayerIntegratedGradients</span><span class="p">(</span><span class="n">LayerAttribution</span><span class="p">,</span> <span class="n">GradientAttribution</span><span class="p">):</span>
 <span class="w">    </span><span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">    Layer Integrated Gradients is a variant of Integrated Gradients that assigns</span>
 <span class="sd">    an importance score to layer inputs or outputs, depending on whether we</span>
@@ -191,7 +193,9 @@ src="/_sphinx/documentation_options.js"></script>
     <span class="p">]:</span>
         <span class="o">...</span>
 
-<div class="viewcode-block" id="LayerIntegratedGradients.attribute"><a class="viewcode-back" href="../../../../../layer.html#captum.attr.LayerIntegratedGradients.attribute">[docs]</a>    <span class="nd">@log_usage</span><span class="p">()</span>
+<div class="viewcode-block" id="LayerIntegratedGradients.attribute">
+<a class="viewcode-back" href="../../../../../layer.html#captum.attr.LayerIntegratedGradients.attribute">[docs]</a>
+    <span class="nd">@log_usage</span><span class="p">()</span>
     <span class="k">def</span> <span class="nf">attribute</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">inputs</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">]],</span>
@@ -558,12 +562,17 @@ src="/_sphinx/documentation_options.js"></script>
             <span class="k">return</span> <span class="n">_format_outputs</span><span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">layer</span><span class="p">,</span> <span class="nb">list</span><span class="p">),</span> <span class="n">output</span><span class="p">),</span> <span class="n">delta</span>
         <span class="k">return</span> <span class="n">_format_outputs</span><span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">layer</span><span class="p">,</span> <span class="nb">list</span><span class="p">),</span> <span class="n">output</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="LayerIntegratedGradients.has_convergence_delta"><a class="viewcode-back" href="../../../../../layer.html#captum.attr.LayerIntegratedGradients.has_convergence_delta">[docs]</a>    <span class="k">def</span> <span class="nf">has_convergence_delta</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+
+<div class="viewcode-block" id="LayerIntegratedGradients.has_convergence_delta">
+<a class="viewcode-back" href="../../../../../layer.html#captum.attr.LayerIntegratedGradients.has_convergence_delta">[docs]</a>
+    <span class="k">def</span> <span class="nf">has_convergence_delta</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
         <span class="k">return</span> <span class="kc">True</span></div>
+
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">multiplies_by_inputs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">ig</span><span class="o">.</span><span class="n">multiplies_by_inputs</span></div>
+
 </pre></div>
 </div>
 </div>
@@ -609,7 +618,7 @@ src="/_sphinx/documentation_options.js"></script>
 </form>
 </div>
 </div>
-<script>$('#searchbox').show(0);</script>
+<script>document.getElementById('searchbox').style.display = "block"</script>
 </div>
 </div>
 <div class="clearer"></div>

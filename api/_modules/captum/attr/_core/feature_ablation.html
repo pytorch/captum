@@ -40,8 +40,8 @@ src="/_sphinx/documentation_options.js"></script>
     <span class="n">_expand_additional_forward_args</span><span class="p">,</span>
     <span class="n">_expand_target</span><span class="p">,</span>
     <span class="n">_format_additional_forward_args</span><span class="p">,</span>
+    <span class="n">_format_feature_mask</span><span class="p">,</span>
     <span class="n">_format_output</span><span class="p">,</span>
-    <span class="n">_format_tensor_into_tuples</span><span class="p">,</span>
     <span class="n">_is_tuple</span><span class="p">,</span>
     <span class="n">_run_forward</span><span class="p">,</span>
 <span class="p">)</span>
@@ -53,7 +53,9 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="kn">from</span> <span class="nn">torch</span> <span class="kn">import</span> <span class="n">dtype</span><span class="p">,</span> <span class="n">Tensor</span>
 
 
-<div class="viewcode-block" id="FeatureAblation"><a class="viewcode-back" href="../../../../feature_ablation.html#captum.attr.FeatureAblation">[docs]</a><span class="k">class</span> <span class="nc">FeatureAblation</span><span class="p">(</span><span class="n">PerturbationAttribution</span><span class="p">):</span>
+<div class="viewcode-block" id="FeatureAblation">
+<a class="viewcode-back" href="../../../../feature_ablation.html#captum.attr.FeatureAblation">[docs]</a>
+<span class="k">class</span> <span class="nc">FeatureAblation</span><span class="p">(</span><span class="n">PerturbationAttribution</span><span class="p">):</span>
 <span class="w">    </span><span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">    A perturbation based approach to computing attribution, involving</span>
 <span class="sd">    replacing each input feature with a given baseline / reference, and</span>
@@ -95,7 +97,9 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="c1"># behavior stays consistent and no longer check again</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_is_output_shape_valid</span> <span class="o">=</span> <span class="kc">False</span>
 
-<div class="viewcode-block" id="FeatureAblation.attribute"><a class="viewcode-back" href="../../../../feature_ablation.html#captum.attr.FeatureAblation.attribute">[docs]</a>    <span class="nd">@log_usage</span><span class="p">()</span>
+<div class="viewcode-block" id="FeatureAblation.attribute">
+<a class="viewcode-back" href="../../../../feature_ablation.html#captum.attr.FeatureAblation.attribute">[docs]</a>
+    <span class="nd">@log_usage</span><span class="p">()</span>
     <span class="k">def</span> <span class="nf">attribute</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">inputs</span><span class="p">:</span> <span class="n">TensorOrTupleOfTensorsGeneric</span><span class="p">,</span>
@@ -294,11 +298,8 @@ src="/_sphinx/documentation_options.js"></script>
             <span class="n">additional_forward_args</span>
         <span class="p">)</span>
         <span class="n">num_examples</span> <span class="o">=</span> <span class="n">inputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-        <span class="n">feature_mask</span> <span class="o">=</span> <span class="p">(</span>
-            <span class="n">_format_tensor_into_tuples</span><span class="p">(</span><span class="n">feature_mask</span><span class="p">)</span>
-            <span class="k">if</span> <span class="n">feature_mask</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
-            <span class="k">else</span> <span class="kc">None</span>
-        <span class="p">)</span>
+        <span class="n">feature_mask</span> <span class="o">=</span> <span class="n">_format_feature_mask</span><span class="p">(</span><span class="n">feature_mask</span><span class="p">,</span> <span class="n">inputs</span><span class="p">)</span>
+
         <span class="k">assert</span> <span class="p">(</span>
             <span class="nb">isinstance</span><span class="p">(</span><span class="n">perturbations_per_eval</span><span class="p">,</span> <span class="nb">int</span><span class="p">)</span> <span class="ow">and</span> <span class="n">perturbations_per_eval</span> <span class="o">&gt;=</span> <span class="mi">1</span>
         <span class="p">),</span> <span class="s2">"Perturbations per evaluation must be an integer and at least 1."</span>
@@ -458,6 +459,7 @@ src="/_sphinx/documentation_options.js"></script>
                 <span class="n">attrib</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">total_attrib</span><span class="p">)</span>
             <span class="n">_result</span> <span class="o">=</span> <span class="n">_format_output</span><span class="p">(</span><span class="n">is_inputs_tuple</span><span class="p">,</span> <span class="n">attrib</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">_result</span></div>
+
 
     <span class="k">def</span> <span class="nf">_ith_input_ablation_generator</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
@@ -645,6 +647,7 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="c1"># int -&gt; torch.int64, float -&gt; torch.float64</span>
         <span class="c1"># ref: https://github.com/pytorch/pytorch/pull/21215</span>
         <span class="k">return</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="n">forward_output</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">output_type</span><span class="p">)</span></div>
+
 </pre></div>
 </div>
 </div>
@@ -690,7 +693,7 @@ src="/_sphinx/documentation_options.js"></script>
 </form>
 </div>
 </div>
-<script>$('#searchbox').show(0);</script>
+<script>document.getElementById('searchbox').style.display = "block"</script>
 </div>
 </div>
 <div class="clearer"></div>

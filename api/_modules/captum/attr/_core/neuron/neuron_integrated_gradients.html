@@ -42,7 +42,9 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="kn">from</span> <span class="nn">torch.nn</span> <span class="kn">import</span> <span class="n">Module</span>
 
 
-<div class="viewcode-block" id="NeuronIntegratedGradients"><a class="viewcode-back" href="../../../../../neuron.html#captum.attr.NeuronIntegratedGradients">[docs]</a><span class="k">class</span> <span class="nc">NeuronIntegratedGradients</span><span class="p">(</span><span class="n">NeuronAttribution</span><span class="p">,</span> <span class="n">GradientAttribution</span><span class="p">):</span>
+<div class="viewcode-block" id="NeuronIntegratedGradients">
+<a class="viewcode-back" href="../../../../../neuron.html#captum.attr.NeuronIntegratedGradients">[docs]</a>
+<span class="k">class</span> <span class="nc">NeuronIntegratedGradients</span><span class="p">(</span><span class="n">NeuronAttribution</span><span class="p">,</span> <span class="n">GradientAttribution</span><span class="p">):</span>
 <span class="w">    </span><span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">    Approximates the integral of gradients for a particular neuron</span>
 <span class="sd">    along the path from a baseline input to the given input.</span>
@@ -101,7 +103,9 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="n">GradientAttribution</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">forward_func</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_multiply_by_inputs</span> <span class="o">=</span> <span class="n">multiply_by_inputs</span>
 
-<div class="viewcode-block" id="NeuronIntegratedGradients.attribute"><a class="viewcode-back" href="../../../../../neuron.html#captum.attr.NeuronIntegratedGradients.attribute">[docs]</a>    <span class="nd">@log_usage</span><span class="p">()</span>
+<div class="viewcode-block" id="NeuronIntegratedGradients.attribute">
+<a class="viewcode-back" href="../../../../../neuron.html#captum.attr.NeuronIntegratedGradients.attribute">[docs]</a>
+    <span class="nd">@log_usage</span><span class="p">()</span>
     <span class="k">def</span> <span class="nf">attribute</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">inputs</span><span class="p">:</span> <span class="n">TensorOrTupleOfTensorsGeneric</span><span class="p">,</span>
@@ -279,9 +283,11 @@ src="/_sphinx/documentation_options.js"></script>
             <span class="n">internal_batch_size</span><span class="o">=</span><span class="n">internal_batch_size</span><span class="p">,</span>
         <span class="p">)</span></div>
 
+
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">multiplies_by_inputs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_multiply_by_inputs</span></div>
+
 </pre></div>
 </div>
 </div>
@@ -327,7 +333,7 @@ src="/_sphinx/documentation_options.js"></script>
 </form>
 </div>
 </div>
-<script>$('#searchbox').show(0);</script>
+<script>document.getElementById('searchbox').style.display = "block"</script>
 </div>
 </div>
 <div class="clearer"></div>

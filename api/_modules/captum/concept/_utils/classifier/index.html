@@ -43,7 +43,9 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="kn">from</span> <span class="nn">torch.utils.data</span> <span class="kn">import</span> <span class="n">DataLoader</span><span class="p">,</span> <span class="n">TensorDataset</span>
 
 
-<div class="viewcode-block" id="Classifier"><a class="viewcode-back" href="../../../../concept.html#captum.concept.Classifier">[docs]</a><span class="k">class</span> <span class="nc">Classifier</span><span class="p">(</span><span class="n">ABC</span><span class="p">):</span>
+<div class="viewcode-block" id="Classifier">
+<a class="viewcode-back" href="../../../../concept.html#captum.concept.Classifier">[docs]</a>
+<span class="k">class</span> <span class="nc">Classifier</span><span class="p">(</span><span class="n">ABC</span><span class="p">):</span>
 <span class="w">    </span><span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">    An abstract class definition of any classifier that allows to train a model</span>
 <span class="sd">    and access trained weights of that model.</span>
@@ -94,7 +96,9 @@ src="/_sphinx/documentation_options.js"></script>
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">pass</span>
 
-<div class="viewcode-block" id="Classifier.train_and_eval"><a class="viewcode-back" href="../../../../concept.html#captum.concept.Classifier.train_and_eval">[docs]</a>    <span class="nd">@abstractmethod</span>
+<div class="viewcode-block" id="Classifier.train_and_eval">
+<a class="viewcode-back" href="../../../../concept.html#captum.concept.Classifier.train_and_eval">[docs]</a>
+    <span class="nd">@abstractmethod</span>
     <span class="k">def</span> <span class="nf">train_and_eval</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">dataloader</span><span class="p">:</span> <span class="n">DataLoader</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">Dict</span><span class="p">,</span> <span class="kc">None</span><span class="p">]:</span>
@@ -115,12 +119,15 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">            stats (dict): a dictionary of statistics about the performance of the model.</span>
 <span class="sd">                    For example the accuracy of the model on the test and/or</span>
 <span class="sd">                    train dataset(s). The user may decide to return None or an</span>
-<span class="sd">                    empty dictionary if she/he decides to not return any performance</span>
+<span class="sd">                    empty dictionary if they decide to not return any performance</span>
 <span class="sd">                    statistics.</span>
 <span class="sd">        """</span>
         <span class="k">pass</span></div>
 
-<div class="viewcode-block" id="Classifier.weights"><a class="viewcode-back" href="../../../../concept.html#captum.concept.Classifier.weights">[docs]</a>    <span class="nd">@abstractmethod</span>
+
+<div class="viewcode-block" id="Classifier.weights">
+<a class="viewcode-back" href="../../../../concept.html#captum.concept.Classifier.weights">[docs]</a>
+    <span class="nd">@abstractmethod</span>
     <span class="k">def</span> <span class="nf">weights</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tensor</span><span class="p">:</span>
 <span class="w">        </span><span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        This function returns a C x F tensor weights, where</span>
@@ -132,7 +139,10 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">        """</span>
         <span class="k">pass</span></div>
 
-<div class="viewcode-block" id="Classifier.classes"><a class="viewcode-back" href="../../../../concept.html#captum.concept.Classifier.classes">[docs]</a>    <span class="nd">@abstractmethod</span>
+
+<div class="viewcode-block" id="Classifier.classes">
+<a class="viewcode-back" href="../../../../concept.html#captum.concept.Classifier.classes">[docs]</a>
+    <span class="nd">@abstractmethod</span>
     <span class="k">def</span> <span class="nf">classes</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]:</span>
 <span class="w">        </span><span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        This function returns the list of all classes that are used by the</span>
@@ -144,7 +154,9 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">            classes (list): The list of classes used by the classifier to train</span>
 <span class="sd">            the model in the `train_and_eval` method.</span>
 <span class="sd">        """</span>
-        <span class="k">pass</span></div></div>
+        <span class="k">pass</span></div>
+</div>
+
 
 
 <span class="k">class</span> <span class="nc">DefaultClassifier</span><span class="p">(</span><span class="n">Classifier</span><span class="p">):</span>
@@ -314,7 +326,7 @@ src="/_sphinx/documentation_options.js"></script>
 </form>
 </div>
 </div>
-<script>$('#searchbox').show(0);</script>
+<script>document.getElementById('searchbox').style.display = "block"</script>
 </div>
 </div>
 <div class="clearer"></div>

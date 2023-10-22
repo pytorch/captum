@@ -30,20 +30,20 @@ src="/_sphinx/documentation_options.js"></script>
 <div class="bodywrapper">
 <div class="body" role="main">
 <section id="neuron-attribution">
-<h1>Neuron Attribution<a class="headerlink" href="#neuron-attribution" title="Permalink to this headline">¶</a></h1>
+<h1>Neuron Attribution<a class="headerlink" href="#neuron-attribution" title="Link to this heading">¶</a></h1>
 <section id="neuron-gradient">
-<h2>Neuron Gradient<a class="headerlink" href="#neuron-gradient" title="Permalink to this headline">¶</a></h2>
+<h2>Neuron Gradient<a class="headerlink" href="#neuron-gradient" title="Link to this heading">¶</a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="captum.attr.NeuronGradient">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">captum.attr.</span></span><span class="sig-name descname"><span class="pre">NeuronGradient</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">forward_func</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">layer</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">device_ids</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/neuron/neuron_gradient.html#NeuronGradient"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum.attr.NeuronGradient" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">captum.attr.</span></span><span class="sig-name descname"><span class="pre">NeuronGradient</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">forward_func</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">layer</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">device_ids</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/neuron/neuron_gradient.html#NeuronGradient"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum.attr.NeuronGradient" title="Link to this definition">¶</a></dt>
 <dd><p>Computes the gradient of the output of a particular neuron with
 respect to the inputs of the network.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>forward_func</strong> (<em>Callable</em>) – The forward function of the model or any
+<li><p><strong>forward_func</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Callable" title="(in Python v3.12)"><em>Callable</em></a>) – The forward function of the model or any
 modification of it</p></li>
-<li><p><strong>layer</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/generated/torch.nn.Module.html#torch.nn.Module" title="(in PyTorch v1.13)"><em>torch.nn.Module</em></a>) – Layer for which attributions are computed.
+<li><p><strong>layer</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/generated/torch.nn.Module.html#torch.nn.Module" title="(in PyTorch v2.1)"><em>torch.nn.Module</em></a>) – Layer for which attributions are computed.
 Output size of attribute matches this layer’s input or
 output dimensions, depending on whether we attribute to
 the inputs or outputs of the layer, corresponding to
@@ -52,7 +52,7 @@ this layer.
 Currently, it is assumed that the inputs or the outputs
 of the layer, depending on which one is used for
 attribution, can only be a single tensor.</p></li>
-<li><p><strong>device_ids</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.11)"><em>list</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><em>int</em></a><em>]</em>) – Device ID list, necessary only if forward_func
+<li><p><strong>device_ids</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.12)"><em>list</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><em>int</em></a><em>]</em>) – Device ID list, necessary only if forward_func
 applies a DataParallel model. This allows reconstruction of
 intermediate outputs from batched results across devices.
 If forward_func is given as the DataParallel model itself,
@@ -62,11 +62,11 @@ then it is not necessary to provide this argument.</p></li>
 </dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="captum.attr.NeuronGradient.attribute">
-<span class="sig-name descname"><span class="pre">attribute</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inputs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">neuron_selector</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">additional_forward_args</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">attribute_to_neuron_input</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/neuron/neuron_gradient.html#NeuronGradient.attribute"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum.attr.NeuronGradient.attribute" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">attribute</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inputs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">neuron_selector</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">additional_forward_args</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">attribute_to_neuron_input</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/neuron/neuron_gradient.html#NeuronGradient.attribute"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum.attr.NeuronGradient.attribute" title="Link to this definition">¶</a></dt>
 <dd><dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>inputs</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.13)"><em>Tensor</em></a><em> or </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.11)"><em>tuple</em></a><em>[</em><a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.13)"><em>Tensor</em></a><em>, </em><em>...</em><em>]</em>) – Input for which neuron
+<li><p><strong>inputs</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v2.1)"><em>Tensor</em></a><em> or </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.12)"><em>tuple</em></a><em>[</em><a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v2.1)"><em>Tensor</em></a><em>, </em><em>...</em><em>]</em>) – Input for which neuron
 gradients are computed. If forward_func takes a single
 tensor as input, a single input tensor should be provided.
 If forward_func takes multiple tensors as input, a tuple
@@ -74,7 +74,7 @@ of the input tensors should be provided. It is assumed
 that for all given input tensors, dimension 0 corresponds
 to the number of examples, and if multiple input tensors
 are provided, the examples must be aligned appropriately.</p></li>
-<li><p><strong>neuron_selector</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><em>int</em></a><em>, </em><em>Callable</em><em>, </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.11)"><em>tuple</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><em>int</em></a><em>]</em><em>, or </em><a class="reference external" href="https://docs.python.org/3/library/functions.html#slice" title="(in Python v3.11)"><em>slice</em></a>) – <p>Selector for neuron
+<li><p><strong>neuron_selector</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><em>int</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Callable" title="(in Python v3.12)"><em>Callable</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.12)"><em>tuple</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><em>int</em></a><em>]</em><em>, or </em><a class="reference external" href="https://docs.python.org/3/library/functions.html#slice" title="(in Python v3.12)"><em>slice</em></a>) – <p>Selector for neuron
 in given layer for which attribution is desired.
 Neuron selector can be provided as:</p>
 <ul>
@@ -106,7 +106,7 @@ or a 1D tensor with length equal to batch_size (one scalar
 per input example)</p></li>
 </ul>
 </p></li>
-<li><p><strong>additional_forward_args</strong> (<em>Any</em><em>, </em><em>optional</em>) – If the forward function
+<li><p><strong>additional_forward_args</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.12)"><em>Any</em></a><em>, </em><em>optional</em>) – If the forward function
 requires additional arguments other than the inputs for
 which attributions should not be computed, this argument
 can be provided. It must be either a single additional
@@ -118,7 +118,7 @@ arguments in inputs.
 Note that attributions are not computed with respect
 to these arguments.
 Default: None</p></li>
-<li><p><strong>attribute_to_neuron_input</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.11)"><em>bool</em></a><em>, </em><em>optional</em>) – Indicates whether to
+<li><p><strong>attribute_to_neuron_input</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.12)"><em>bool</em></a><em>, </em><em>optional</em>) – Indicates whether to
 compute the attributions with respect to the neuron input
 or output. If <cite>attribute_to_neuron_input</cite> is set to True
 then the attributions will be computed with respect to
@@ -131,7 +131,7 @@ Support for multiple tensors will be added later.
 Default: False</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p><ul class="simple">
 <li><dl class="simple">
 <dt><strong>attributions</strong> (<em>Tensor</em> or <em>tuple[Tensor, …]</em>):</dt><dd><p>Gradients of particular neuron with respect to each input
@@ -147,7 +147,7 @@ corresponding sized tensors is returned.</p>
 </ul>
 </p>
 </dd>
-<dt class="field-odd">Return type</dt>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><em>Tensor</em> or <em>tuple[Tensor, …]</em> of <strong>attributions</strong></p>
 </dd>
 </dl>
@@ -173,10 +173,10 @@ corresponding sized tensors is returned.</p>
 </dd></dl>
 </section>
 <section id="neuron-integrated-gradients">
-<h2>Neuron Integrated Gradients<a class="headerlink" href="#neuron-integrated-gradients" title="Permalink to this headline">¶</a></h2>
+<h2>Neuron Integrated Gradients<a class="headerlink" href="#neuron-integrated-gradients" title="Link to this heading">¶</a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="captum.attr.NeuronIntegratedGradients">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">captum.attr.</span></span><span class="sig-name descname"><span class="pre">NeuronIntegratedGradients</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">forward_func</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">layer</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">device_ids</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">multiply_by_inputs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/neuron/neuron_integrated_gradients.html#NeuronIntegratedGradients"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum.attr.NeuronIntegratedGradients" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">captum.attr.</span></span><span class="sig-name descname"><span class="pre">NeuronIntegratedGradients</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">forward_func</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">layer</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">device_ids</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">multiply_by_inputs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/neuron/neuron_integrated_gradients.html#NeuronIntegratedGradients"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum.attr.NeuronIntegratedGradients" title="Link to this definition">¶</a></dt>
 <dd><p>Approximates the integral of gradients for a particular neuron
 along the path from a baseline input to the given input.
 If no baseline is provided, the default baseline is the zero tensor.
@@ -186,11 +186,11 @@ original paper here:
 <p>Note that this method is equivalent to applying integrated gradients
 where the output is the output of the identified neuron.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>forward_func</strong> (<em>Callable</em>) – The forward function of the model or any
+<li><p><strong>forward_func</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Callable" title="(in Python v3.12)"><em>Callable</em></a>) – The forward function of the model or any
 modification of it</p></li>
-<li><p><strong>layer</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/generated/torch.nn.Module.html#torch.nn.Module" title="(in PyTorch v1.13)"><em>torch.nn.Module</em></a>) – Layer for which attributions are computed.
+<li><p><strong>layer</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/generated/torch.nn.Module.html#torch.nn.Module" title="(in PyTorch v2.1)"><em>torch.nn.Module</em></a>) – Layer for which attributions are computed.
 Output size of attribute matches this layer’s input or
 output dimensions, depending on whether we attribute to
 the inputs or outputs of the layer, corresponding to
@@ -199,12 +199,12 @@ this layer.
 Currently, it is assumed that the inputs or the outputs
 of the layer, depending on which one is used for
 attribution, can only be a single tensor.</p></li>
-<li><p><strong>device_ids</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.11)"><em>list</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><em>int</em></a><em>]</em>) – Device ID list, necessary only if forward_func
+<li><p><strong>device_ids</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.12)"><em>list</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><em>int</em></a><em>]</em>) – Device ID list, necessary only if forward_func
 applies a DataParallel model. This allows reconstruction of
 intermediate outputs from batched results across devices.
 If forward_func is given as the DataParallel model itself,
 then it is not necessary to provide this argument.</p></li>
-<li><p><strong>multiply_by_inputs</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.11)"><em>bool</em></a><em>, </em><em>optional</em>) – <p>Indicates whether to factor
+<li><p><strong>multiply_by_inputs</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.12)"><em>bool</em></a><em>, </em><em>optional</em>) – <p>Indicates whether to factor
 model inputs’ multiplier in the final attribution scores.
 In the literature this is also known as local vs global
 attribution. If inputs’ multiplier isn’t factored in
@@ -223,11 +223,11 @@ by (inputs - baselines).</p>
 </dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="captum.attr.NeuronIntegratedGradients.attribute">
-<span class="sig-name descname"><span class="pre">attribute</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inputs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">neuron_selector</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">baselines</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">additional_forward_args</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_steps</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">50</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">method</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'gausslegendre'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">internal_batch_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">attribute_to_neuron_input</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/neuron/neuron_integrated_gradients.html#NeuronIntegratedGradients.attribute"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum.attr.NeuronIntegratedGradients.attribute" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">attribute</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inputs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">neuron_selector</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">baselines</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">additional_forward_args</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_steps</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">50</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">method</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'gausslegendre'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">internal_batch_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">attribute_to_neuron_input</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/neuron/neuron_integrated_gradients.html#NeuronIntegratedGradients.attribute"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum.attr.NeuronIntegratedGradients.attribute" title="Link to this definition">¶</a></dt>
 <dd><dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>inputs</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.13)"><em>Tensor</em></a><em> or </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.11)"><em>tuple</em></a><em>[</em><a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.13)"><em>Tensor</em></a><em>, </em><em>...</em><em>]</em>) – Input for which neuron integrated
+<li><p><strong>inputs</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v2.1)"><em>Tensor</em></a><em> or </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.12)"><em>tuple</em></a><em>[</em><a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v2.1)"><em>Tensor</em></a><em>, </em><em>...</em><em>]</em>) – Input for which neuron integrated
 gradients are computed. If forward_func takes a single
 tensor as input, a single input tensor should be provided.
 If forward_func takes multiple tensors as input, a tuple
@@ -235,7 +235,7 @@ of the input tensors should be provided. It is assumed
 that for all given input tensors, dimension 0 corresponds
 to the number of examples, and if multiple input tensors
 are provided, the examples must be aligned appropriately.</p></li>
-<li><p><strong>neuron_selector</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><em>int</em></a><em>, </em><em>Callable</em><em>, </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.11)"><em>tuple</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><em>int</em></a><em>]</em><em>, or </em><a class="reference external" href="https://docs.python.org/3/library/functions.html#slice" title="(in Python v3.11)"><em>slice</em></a>) – <p>Selector for neuron
+<li><p><strong>neuron_selector</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><em>int</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Callable" title="(in Python v3.12)"><em>Callable</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.12)"><em>tuple</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><em>int</em></a><em>]</em><em>, or </em><a class="reference external" href="https://docs.python.org/3/library/functions.html#slice" title="(in Python v3.12)"><em>slice</em></a>) – <p>Selector for neuron
 in given layer for which attribution is desired.
 Neuron selector can be provided as:</p>
 <ul>
@@ -267,7 +267,7 @@ or a 1D tensor with length equal to batch_size (one scalar
 per input example)</p></li>
 </ul>
 </p></li>
-<li><p><strong>baselines</strong> (<em>scalar</em><em>, </em><a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.13)"><em>Tensor</em></a><em>, </em><em>tuple of scalar</em><em>, or </em><a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.13)"><em>Tensor</em></a><em>, </em><em>optional</em>) – <p>Baselines define the starting point from which integral
+<li><p><strong>baselines</strong> (<em>scalar</em><em>, </em><a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v2.1)"><em>Tensor</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.12)"><em>tuple</em></a><em> of </em><em>scalar</em><em>, or </em><a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v2.1)"><em>Tensor</em></a><em>, </em><em>optional</em>) – <p>Baselines define the starting point from which integral
 is computed.
 Baselines can be provided as:</p>
 <ul>
@@ -295,7 +295,7 @@ for corresponding input tensor.</p></li>
 use zero scalar corresponding to each input tensor.</p>
 <p>Default: None</p>
 </p></li>
-<li><p><strong>additional_forward_args</strong> (<em>Any</em><em>, </em><em>optional</em>) – If the forward function
+<li><p><strong>additional_forward_args</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.12)"><em>Any</em></a><em>, </em><em>optional</em>) – If the forward function
 requires additional arguments other than the inputs for
 which attributions should not be computed, this argument
 can be provided. It must be either a single additional
@@ -312,13 +312,13 @@ for all forward evaluations.
 Note that attributions are not computed with respect
 to these arguments.
 Default: None</p></li>
-<li><p><strong>n_steps</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><em>int</em></a><em>, </em><em>optional</em>) – The number of steps used by the approximation
+<li><p><strong>n_steps</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><em>int</em></a><em>, </em><em>optional</em>) – The number of steps used by the approximation
 method. Default: 50.</p></li>
-<li><p><strong>method</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><em>str</em></a><em>, </em><em>optional</em>) – Method for approximating the integral,
+<li><p><strong>method</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><em>str</em></a><em>, </em><em>optional</em>) – Method for approximating the integral,
 one of <cite>riemann_right</cite>, <cite>riemann_left</cite>, <cite>riemann_middle</cite>,
 <cite>riemann_trapezoid</cite> or <cite>gausslegendre</cite>.
 Default: <cite>gausslegendre</cite> if no method is provided.</p></li>
-<li><p><strong>internal_batch_size</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><em>int</em></a><em>, </em><em>optional</em>) – Divides total #steps * #examples
+<li><p><strong>internal_batch_size</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><em>int</em></a><em>, </em><em>optional</em>) – Divides total #steps * #examples
 data points into chunks of size at most internal_batch_size,
 which are computed (forward / backward passes)
 sequentially. internal_batch_size must be at least equal to
@@ -329,7 +329,7 @@ device contain internal_batch_size / num_devices examples.
 If internal_batch_size is None, then all evaluations are
 processed in one batch.
 Default: None</p></li>
-<li><p><strong>attribute_to_neuron_input</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.11)"><em>bool</em></a><em>, </em><em>optional</em>) – Indicates whether to
+<li><p><strong>attribute_to_neuron_input</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.12)"><em>bool</em></a><em>, </em><em>optional</em>) – Indicates whether to
 compute the attributions with respect to the neuron input
 or output. If <cite>attribute_to_neuron_input</cite> is set to True
 then the attributions will be computed with respect to
@@ -342,7 +342,7 @@ Support for multiple tensors will be added later.
 Default: False</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p><ul class="simple">
 <li><dl class="simple">
 <dt><strong>attributions</strong> (<em>Tensor</em> or <em>tuple[Tensor, …]</em>):</dt><dd><p>Integrated gradients for particular neuron with
@@ -359,7 +359,7 @@ corresponding sized tensors is returned.</p>
 </ul>
 </p>
 </dd>
-<dt class="field-odd">Return type</dt>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><em>Tensor</em> or <em>tuple[Tensor, …]</em> of <strong>attributions</strong></p>
 </dd>
 </dl>
@@ -385,21 +385,21 @@ corresponding sized tensors is returned.</p>
 </dd></dl>
 </section>
 <section id="neuron-conductance">
-<h2>Neuron Conductance<a class="headerlink" href="#neuron-conductance" title="Permalink to this headline">¶</a></h2>
+<h2>Neuron Conductance<a class="headerlink" href="#neuron-conductance" title="Link to this heading">¶</a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="captum.attr.NeuronConductance">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">captum.attr.</span></span><span class="sig-name descname"><span class="pre">NeuronConductance</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">forward_func</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">layer</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">device_ids</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">multiply_by_inputs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/neuron/neuron_conductance.html#NeuronConductance"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum.attr.NeuronConductance" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">captum.attr.</span></span><span class="sig-name descname"><span class="pre">NeuronConductance</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">forward_func</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">layer</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">device_ids</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">multiply_by_inputs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/neuron/neuron_conductance.html#NeuronConductance"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum.attr.NeuronConductance" title="Link to this definition">¶</a></dt>
 <dd><p>Computes conductance with respect to particular hidden neuron. The
 returned output is in the shape of the input, showing the attribution
 / conductance of each input feature to the selected hidden layer neuron.
 The details of the approach can be found here:
 <a class="reference external" href="https://arxiv.org/abs/1805.12233">https://arxiv.org/abs/1805.12233</a></p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>forward_func</strong> (<em>Callable</em>) – The forward function of the model or any
+<li><p><strong>forward_func</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Callable" title="(in Python v3.12)"><em>Callable</em></a>) – The forward function of the model or any
 modification of it</p></li>
-<li><p><strong>layer</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/generated/torch.nn.Module.html#torch.nn.Module" title="(in PyTorch v1.13)"><em>torch.nn.Module</em></a>) – Layer for which neuron attributions are computed.
+<li><p><strong>layer</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/generated/torch.nn.Module.html#torch.nn.Module" title="(in PyTorch v2.1)"><em>torch.nn.Module</em></a>) – Layer for which neuron attributions are computed.
 Attributions for a particular neuron in the input or output
 of this layer are computed using the argument neuron_selector
 in the attribute method.
@@ -414,12 +414,12 @@ this layer.
 Currently, it is assumed that the inputs or the outputs
 of the layer, depending on which one is used for
 attribution, can only be a single tensor.</p></li>
-<li><p><strong>device_ids</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.11)"><em>list</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><em>int</em></a><em>]</em>) – Device ID list, necessary only if forward_func
+<li><p><strong>device_ids</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.12)"><em>list</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><em>int</em></a><em>]</em>) – Device ID list, necessary only if forward_func
 applies a DataParallel model. This allows reconstruction of
 intermediate outputs from batched results across devices.
 If forward_func is given as the DataParallel model itself,
 then it is not necessary to provide this argument.</p></li>
-<li><p><strong>multiply_by_inputs</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.11)"><em>bool</em></a><em>, </em><em>optional</em>) – <p>Indicates whether to factor
+<li><p><strong>multiply_by_inputs</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.12)"><em>bool</em></a><em>, </em><em>optional</em>) – <p>Indicates whether to factor
 model inputs’ multiplier in the final attribution scores.
 In the literature this is also known as local vs global
 attribution. If inputs’ multiplier isn’t factored in
@@ -438,11 +438,11 @@ by (inputs - baselines).</p>
 </dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="captum.attr.NeuronConductance.attribute">
-<span class="sig-name descname"><span class="pre">attribute</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inputs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">neuron_selector</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">baselines</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">additional_forward_args</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_steps</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">50</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">method</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'riemann_trapezoid'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">internal_batch_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">attribute_to_neuron_input</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/neuron/neuron_conductance.html#NeuronConductance.attribute"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum.attr.NeuronConductance.attribute" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">attribute</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inputs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">neuron_selector</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">baselines</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">additional_forward_args</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_steps</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">50</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">method</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'riemann_trapezoid'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">internal_batch_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">attribute_to_neuron_input</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/neuron/neuron_conductance.html#NeuronConductance.attribute"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum.attr.NeuronConductance.attribute" title="Link to this definition">¶</a></dt>
 <dd><dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>inputs</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.13)"><em>Tensor</em></a><em> or </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.11)"><em>tuple</em></a><em>[</em><a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.13)"><em>Tensor</em></a><em>, </em><em>...</em><em>]</em>) – Input for which neuron
+<li><p><strong>inputs</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v2.1)"><em>Tensor</em></a><em> or </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.12)"><em>tuple</em></a><em>[</em><a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v2.1)"><em>Tensor</em></a><em>, </em><em>...</em><em>]</em>) – Input for which neuron
 conductance is computed. If forward_func takes a single
 tensor as input, a single input tensor should be provided.
 If forward_func takes multiple tensors as input, a tuple
@@ -450,7 +450,7 @@ of the input tensors should be provided. It is assumed
 that for all given input tensors, dimension 0 corresponds
 to the number of examples, and if multiple input tensors
 are provided, the examples must be aligned appropriately.</p></li>
-<li><p><strong>neuron_selector</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><em>int</em></a><em>, </em><em>Callable</em><em>, </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.11)"><em>tuple</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><em>int</em></a><em>]</em><em>, or </em><a class="reference external" href="https://docs.python.org/3/library/functions.html#slice" title="(in Python v3.11)"><em>slice</em></a>) – <p>Selector for neuron
+<li><p><strong>neuron_selector</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><em>int</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Callable" title="(in Python v3.12)"><em>Callable</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.12)"><em>tuple</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><em>int</em></a><em>]</em><em>, or </em><a class="reference external" href="https://docs.python.org/3/library/functions.html#slice" title="(in Python v3.12)"><em>slice</em></a>) – <p>Selector for neuron
 in given layer for which attribution is desired.
 Neuron selector can be provided as:</p>
 <ul>
@@ -481,7 +481,7 @@ intemediate neurons.</p>
 </li>
 </ul>
 </p></li>
-<li><p><strong>baselines</strong> (<em>scalar</em><em>, </em><a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.13)"><em>Tensor</em></a><em>, </em><em>tuple of scalar</em><em>, or </em><a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.13)"><em>Tensor</em></a><em>, </em><em>optional</em>) – <p>Baselines define the starting point from which integral
+<li><p><strong>baselines</strong> (<em>scalar</em><em>, </em><a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v2.1)"><em>Tensor</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.12)"><em>tuple</em></a><em> of </em><em>scalar</em><em>, or </em><a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v2.1)"><em>Tensor</em></a><em>, </em><em>optional</em>) – <p>Baselines define the starting point from which integral
 is computed and can be provided as:</p>
 <ul>
 <li><p>a single tensor, if inputs is a single tensor, with
@@ -508,7 +508,7 @@ for corresponding input tensor.</p></li>
 use zero scalar corresponding to each input tensor.</p>
 <p>Default: None</p>
 </p></li>
-<li><p><strong>target</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><em>int</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.11)"><em>tuple</em></a><em>, </em><a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.13)"><em>Tensor</em></a><em>, or </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.11)"><em>list</em></a><em>, </em><em>optional</em>) – <p>Output indices for
+<li><p><strong>target</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><em>int</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.12)"><em>tuple</em></a><em>, </em><a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v2.1)"><em>Tensor</em></a><em>, or </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.12)"><em>list</em></a><em>, </em><em>optional</em>) – <p>Output indices for
 which gradients are computed (for classification cases,
 this is usually the target class).
 If the network returns a scalar value per example,
@@ -532,7 +532,7 @@ target for the corresponding example.</p></li>
 </ul>
 <p>Default: None</p>
 </p></li>
-<li><p><strong>additional_forward_args</strong> (<em>Any</em><em>, </em><em>optional</em>) – If the forward function
+<li><p><strong>additional_forward_args</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.12)"><em>Any</em></a><em>, </em><em>optional</em>) – If the forward function
 requires additional arguments other than the inputs for
 which attributions should not be computed, this argument
 can be provided. It must be either a single additional
@@ -549,13 +549,13 @@ for all forward evaluations.
 Note that attributions are not computed with respect
 to these arguments.
 Default: None</p></li>
-<li><p><strong>n_steps</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><em>int</em></a><em>, </em><em>optional</em>) – The number of steps used by the approximation
+<li><p><strong>n_steps</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><em>int</em></a><em>, </em><em>optional</em>) – The number of steps used by the approximation
 method. Default: 50.</p></li>
-<li><p><strong>method</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><em>str</em></a><em>, </em><em>optional</em>) – Method for approximating the integral,
+<li><p><strong>method</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><em>str</em></a><em>, </em><em>optional</em>) – Method for approximating the integral,
 one of <cite>riemann_right</cite>, <cite>riemann_left</cite>, <cite>riemann_middle</cite>,
 <cite>riemann_trapezoid</cite> or <cite>gausslegendre</cite>.
 Default: <cite>gausslegendre</cite> if no method is provided.</p></li>
-<li><p><strong>internal_batch_size</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><em>int</em></a><em>, </em><em>optional</em>) – Divides total #steps * #examples
+<li><p><strong>internal_batch_size</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><em>int</em></a><em>, </em><em>optional</em>) – Divides total #steps * #examples
 data points into chunks of size at most internal_batch_size,
 which are computed (forward / backward passes)
 sequentially. internal_batch_size must be at least equal to
@@ -566,7 +566,7 @@ device contain internal_batch_size / num_devices examples.
 If internal_batch_size is None, then all evaluations are
 processed in one batch.
 Default: None</p></li>
-<li><p><strong>attribute_to_neuron_input</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.11)"><em>bool</em></a><em>, </em><em>optional</em>) – Indicates whether to
+<li><p><strong>attribute_to_neuron_input</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.12)"><em>bool</em></a><em>, </em><em>optional</em>) – Indicates whether to
 compute the attributions with respect to the neuron input
 or output. If <cite>attribute_to_neuron_input</cite> is set to True
 then the attributions will be computed with respect to
@@ -579,7 +579,7 @@ Support for multiple tensors will be added later.
 Default: False</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p><ul class="simple">
 <li><dl class="simple">
 <dt><strong>attributions</strong> (<em>Tensor</em> or <em>tuple[Tensor, …]</em>):</dt><dd><p>Conductance for
@@ -596,7 +596,7 @@ corresponding sized tensors is returned.</p>
 </ul>
 </p>
 </dd>
-<dt class="field-odd">Return type</dt>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><em>Tensor</em> or <em>tuple[Tensor, …]</em> of <strong>attributions</strong></p>
 </dd>
 </dl>
@@ -621,10 +621,10 @@ corresponding sized tensors is returned.</p>
 </dd></dl>
 </section>
 <section id="neuron-deeplift">
-<h2>Neuron DeepLift<a class="headerlink" href="#neuron-deeplift" title="Permalink to this headline">¶</a></h2>
+<h2>Neuron DeepLift<a class="headerlink" href="#neuron-deeplift" title="Link to this heading">¶</a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="captum.attr.NeuronDeepLift">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">captum.attr.</span></span><span class="sig-name descname"><span class="pre">NeuronDeepLift</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">layer</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">multiply_by_inputs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/neuron/neuron_deep_lift.html#NeuronDeepLift"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum.attr.NeuronDeepLift" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">captum.attr.</span></span><span class="sig-name descname"><span class="pre">NeuronDeepLift</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">layer</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">multiply_by_inputs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/neuron/neuron_deep_lift.html#NeuronDeepLift"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum.attr.NeuronDeepLift" title="Link to this definition">¶</a></dt>
 <dd><p>Implements DeepLIFT algorithm for the neuron based on the following paper:
 Learning Important Features Through Propagating Activation Differences,
 Avanti Shrikumar, et. al.
@@ -647,17 +647,17 @@ with performance similar to built-in ones using TorchScript.
 More details on how to build custom RNNs can be found here:
 <a class="reference external" href="https://pytorch.org/blog/optimizing-cuda-rnn-with-torchscript/">https://pytorch.org/blog/optimizing-cuda-rnn-with-torchscript/</a></p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>model</strong> (<em>nn.Module</em>) – The reference to PyTorch model instance.</p></li>
-<li><p><strong>layer</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/generated/torch.nn.Module.html#torch.nn.Module" title="(in PyTorch v1.13)"><em>torch.nn.Module</em></a>) – Layer for which neuron attributions are computed.
+<li><p><strong>layer</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/generated/torch.nn.Module.html#torch.nn.Module" title="(in PyTorch v2.1)"><em>torch.nn.Module</em></a>) – Layer for which neuron attributions are computed.
 Attributions for a particular neuron for the input or output
 of this layer are computed using the argument neuron_selector
 in the attribute method.
 Currently, it is assumed that the inputs or the outputs
 of the layer, depending on which one is used for
 attribution, can only be a single tensor.</p></li>
-<li><p><strong>multiply_by_inputs</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.11)"><em>bool</em></a><em>, </em><em>optional</em>) – <p>Indicates whether to factor
+<li><p><strong>multiply_by_inputs</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.12)"><em>bool</em></a><em>, </em><em>optional</em>) – <p>Indicates whether to factor
 model inputs’ multiplier in the final attribution scores.
 In the literature this is also known as local vs global
 attribution. If inputs’ multiplier isn’t factored in
@@ -677,20 +677,20 @@ set to None.</p>
 </dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="captum.attr.NeuronDeepLift.attribute">
-<span class="sig-name descname"><span class="pre">attribute</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inputs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">neuron_selector</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">baselines</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">additional_forward_args</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">attribute_to_neuron_input</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">custom_attribution_func</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/neuron/neuron_deep_lift.html#NeuronDeepLift.attribute"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum.attr.NeuronDeepLift.attribute" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">attribute</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inputs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">neuron_selector</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">baselines</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">additional_forward_args</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">attribute_to_neuron_input</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">custom_attribution_func</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/neuron/neuron_deep_lift.html#NeuronDeepLift.attribute"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum.attr.NeuronDeepLift.attribute" title="Link to this definition">¶</a></dt>
 <dd><dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>inputs</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.13)"><em>Tensor</em></a><em> or </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.11)"><em>tuple</em></a><em>[</em><a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.13)"><em>Tensor</em></a><em>, </em><em>...</em><em>]</em>) – Input for which layer
-attributions are computed. If forward_func takes a
+<li><p><strong>inputs</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v2.1)"><em>Tensor</em></a><em> or </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.12)"><em>tuple</em></a><em>[</em><a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v2.1)"><em>Tensor</em></a><em>, </em><em>...</em><em>]</em>) – Input for which layer
+attributions are computed. If model takes a
 single tensor as input, a single input tensor should be
-provided. If forward_func takes multiple tensors as input,
+provided. If model takes multiple tensors as input,
 a tuple of the input tensors should be provided. It is
 assumed that for all given input tensors, dimension 0
 corresponds to the number of examples (aka batch size),
 and if multiple input tensors are provided, the examples
 must be aligned appropriately.</p></li>
-<li><p><strong>neuron_selector</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><em>int</em></a><em>, </em><em>Callable</em><em>, </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.11)"><em>tuple</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><em>int</em></a><em>]</em><em>, or </em><a class="reference external" href="https://docs.python.org/3/library/functions.html#slice" title="(in Python v3.11)"><em>slice</em></a>) – <p>Selector for neuron
+<li><p><strong>neuron_selector</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><em>int</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Callable" title="(in Python v3.12)"><em>Callable</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.12)"><em>tuple</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><em>int</em></a><em>]</em><em>, or </em><a class="reference external" href="https://docs.python.org/3/library/functions.html#slice" title="(in Python v3.12)"><em>slice</em></a>) – <p>Selector for neuron
 in given layer for which attribution is desired.
 Neuron selector can be provided as:</p>
 <ul>
@@ -722,7 +722,7 @@ or a 1D tensor with length equal to batch_size (one scalar
 per input example)</p></li>
 </ul>
 </p></li>
-<li><p><strong>baselines</strong> (<em>scalar</em><em>, </em><a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.13)"><em>Tensor</em></a><em>, </em><em>tuple of scalar</em><em>, or </em><a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.13)"><em>Tensor</em></a><em>, </em><em>optional</em>) – <p>Baselines define reference samples that are compared with
+<li><p><strong>baselines</strong> (<em>scalar</em><em>, </em><a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v2.1)"><em>Tensor</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.12)"><em>tuple</em></a><em> of </em><em>scalar</em><em>, or </em><a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v2.1)"><em>Tensor</em></a><em>, </em><em>optional</em>) – <p>Baselines define reference samples that are compared with
 the inputs. In order to assign attribution scores DeepLift
 computes the differences between the inputs/outputs and
 corresponding references.
@@ -752,18 +752,18 @@ for corresponding input tensor.</p></li>
 use zero scalar corresponding to each input tensor.</p>
 <p>Default: None</p>
 </p></li>
-<li><p><strong>additional_forward_args</strong> (<em>Any</em><em>, </em><em>optional</em>) – If the forward function
+<li><p><strong>additional_forward_args</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.12)"><em>Any</em></a><em>, </em><em>optional</em>) – If the forward function
 requires additional arguments other than the inputs for
 which attributions should not be computed, this argument
 can be provided. It must be either a single additional
 argument of a Tensor or arbitrary (non-tuple) type or a tuple
 containing multiple additional arguments including tensors
 or any arbitrary python types. These arguments are provided
-to forward_func in order, following the arguments in inputs.
+to model in order, following the arguments in inputs.
 Note that attributions are not computed with respect
 to these arguments.
 Default: None</p></li>
-<li><p><strong>attribute_to_neuron_input</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.11)"><em>bool</em></a><em>, </em><em>optional</em>) – Indicates whether to
+<li><p><strong>attribute_to_neuron_input</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.12)"><em>bool</em></a><em>, </em><em>optional</em>) – Indicates whether to
 compute the attributions with respect to the neuron input
 or output. If <cite>attribute_to_neuron_input</cite> is set to True
 then the attributions will be computed with respect to
@@ -774,7 +774,7 @@ or the output of internal neuron, depending on whether we
 attribute to the input or output, is a single tensor.
 Support for multiple tensors will be added later.
 Default: False</p></li>
-<li><p><strong>custom_attribution_func</strong> (<em>Callable</em><em>, </em><em>optional</em>) – <p>A custom function for
+<li><p><strong>custom_attribution_func</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Callable" title="(in Python v3.12)"><em>Callable</em></a><em>, </em><em>optional</em>) – <p>A custom function for
 computing final attribution scores. This function can take
 at least one and at most three arguments with the
 following signature:</p>
@@ -794,7 +794,7 @@ Default: None</p>
 </p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p><ul class="simple">
 <li><dl class="simple">
 <dt><strong>attributions</strong> (<em>Tensor</em> or <em>tuple[Tensor, …]</em>):</dt><dd><p>Computes attributions using Deeplift’s rescale rule for
@@ -811,7 +811,7 @@ corresponding sized tensors is returned.</p>
 </ul>
 </p>
 </dd>
-<dt class="field-odd">Return type</dt>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>attributions</strong> or 2-element tuple of <strong>attributions</strong>, <strong>delta</strong></p>
 </dd>
 </dl>
@@ -832,10 +832,10 @@ corresponding sized tensors is returned.</p>
 </dd></dl>
 </section>
 <section id="neuron-deepliftshap">
-<h2>Neuron DeepLiftShap<a class="headerlink" href="#neuron-deepliftshap" title="Permalink to this headline">¶</a></h2>
+<h2>Neuron DeepLiftShap<a class="headerlink" href="#neuron-deepliftshap" title="Link to this heading">¶</a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="captum.attr.NeuronDeepLiftShap">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">captum.attr.</span></span><span class="sig-name descname"><span class="pre">NeuronDeepLiftShap</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">layer</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">multiply_by_inputs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/neuron/neuron_deep_lift.html#NeuronDeepLiftShap"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum.attr.NeuronDeepLiftShap" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">captum.attr.</span></span><span class="sig-name descname"><span class="pre">NeuronDeepLiftShap</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">layer</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">multiply_by_inputs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/neuron/neuron_deep_lift.html#NeuronDeepLiftShap"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum.attr.NeuronDeepLiftShap" title="Link to this definition">¶</a></dt>
 <dd><p>Extends NeuronAttribution and uses LayerDeepLiftShap algorithms and
 approximates SHAP values for given input <cite>layer</cite> and <cite>neuron_selector</cite>.
 For each input sample - baseline pair it computes DeepLift attributions
@@ -859,16 +859,16 @@ More details about the algorithm can be found here:</p>
 <p>Although, it assumes a linear model for each explanation, the overall
 model across multiple explanations can be complex and non-linear.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>model</strong> (<em>nn.Module</em>) – The reference to PyTorch model instance.</p></li>
-<li><p><strong>layer</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/generated/torch.nn.Module.html#torch.nn.Module" title="(in PyTorch v1.13)"><em>torch.nn.Module</em></a>) – Layer for which neuron attributions are computed.
+<li><p><strong>layer</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/generated/torch.nn.Module.html#torch.nn.Module" title="(in PyTorch v2.1)"><em>torch.nn.Module</em></a>) – Layer for which neuron attributions are computed.
 Attributions for a particular neuron for the input or output
 of this layer are computed using the argument neuron_selector
 in the attribute method.
 Currently, only layers with a single tensor input and output
 are supported.</p></li>
-<li><p><strong>multiply_by_inputs</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.11)"><em>bool</em></a><em>, </em><em>optional</em>) – <p>Indicates whether to factor
+<li><p><strong>multiply_by_inputs</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.12)"><em>bool</em></a><em>, </em><em>optional</em>) – <p>Indicates whether to factor
 model inputs’ multiplier in the final attribution scores.
 In the literature this is also known as local vs global
 attribution. If inputs’ multiplier isn’t factored in
@@ -888,20 +888,20 @@ set to None.</p>
 </dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="captum.attr.NeuronDeepLiftShap.attribute">
-<span class="sig-name descname"><span class="pre">attribute</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inputs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">neuron_selector</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">baselines</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">additional_forward_args</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">attribute_to_neuron_input</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">custom_attribution_func</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/neuron/neuron_deep_lift.html#NeuronDeepLiftShap.attribute"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum.attr.NeuronDeepLiftShap.attribute" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">attribute</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inputs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">neuron_selector</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">baselines</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">additional_forward_args</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">attribute_to_neuron_input</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">custom_attribution_func</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/neuron/neuron_deep_lift.html#NeuronDeepLiftShap.attribute"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum.attr.NeuronDeepLiftShap.attribute" title="Link to this definition">¶</a></dt>
 <dd><dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>inputs</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.13)"><em>Tensor</em></a><em> or </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.11)"><em>tuple</em></a><em>[</em><a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.13)"><em>Tensor</em></a><em>, </em><em>...</em><em>]</em>) – Input for which layer
-attributions are computed. If forward_func takes a
+<li><p><strong>inputs</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v2.1)"><em>Tensor</em></a><em> or </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.12)"><em>tuple</em></a><em>[</em><a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v2.1)"><em>Tensor</em></a><em>, </em><em>...</em><em>]</em>) – Input for which layer
+attributions are computed. If model takes a
 single tensor as input, a single input tensor should be
-provided. If forward_func takes multiple tensors as input,
+provided. If model takes multiple tensors as input,
 a tuple of the input tensors should be provided. It is
 assumed that for all given input tensors, dimension 0
 corresponds to the number of examples (aka batch size),
 and if multiple input tensors are provided, the examples
 must be aligned appropriately.</p></li>
-<li><p><strong>neuron_selector</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><em>int</em></a><em>, </em><em>Callable</em><em>, </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.11)"><em>tuple</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><em>int</em></a><em>]</em><em>, or </em><a class="reference external" href="https://docs.python.org/3/library/functions.html#slice" title="(in Python v3.11)"><em>slice</em></a>) – <p>Selector for neuron
+<li><p><strong>neuron_selector</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><em>int</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Callable" title="(in Python v3.12)"><em>Callable</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.12)"><em>tuple</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><em>int</em></a><em>]</em><em>, or </em><a class="reference external" href="https://docs.python.org/3/library/functions.html#slice" title="(in Python v3.12)"><em>slice</em></a>) – <p>Selector for neuron
 in given layer for which attribution is desired.
 Neuron selector can be provided as:</p>
 <ul>
@@ -933,7 +933,7 @@ or a 1D tensor with length equal to batch_size (one scalar
 per input example)</p></li>
 </ul>
 </p></li>
-<li><p><strong>baselines</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.13)"><em>Tensor</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.11)"><em>tuple</em></a><em>[</em><a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.13)"><em>Tensor</em></a><em>, </em><em>...</em><em>]</em><em>, or </em><em>Callable</em>) – <p>Baselines define reference samples that are compared with
+<li><p><strong>baselines</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v2.1)"><em>Tensor</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.12)"><em>tuple</em></a><em>[</em><a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v2.1)"><em>Tensor</em></a><em>, </em><em>...</em><em>]</em><em>, or </em><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Callable" title="(in Python v3.12)"><em>Callable</em></a>) – <p>Baselines define reference samples that are compared with
 the inputs. In order to assign attribution scores DeepLift
 computes the differences between the inputs/outputs and
 corresponding references. Baselines can be provided as:</p>
@@ -956,18 +956,18 @@ or a tuple of those.</p></li>
 <p>It is recommended that the number of samples in the baselines’
 tensors is larger than one.</p>
 </p></li>
-<li><p><strong>additional_forward_args</strong> (<em>Any</em><em>, </em><em>optional</em>) – If the forward function
+<li><p><strong>additional_forward_args</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.12)"><em>Any</em></a><em>, </em><em>optional</em>) – If the forward function
 requires additional arguments other than the inputs for
 which attributions should not be computed, this argument
 can be provided. It must be either a single additional
 argument of a Tensor or arbitrary (non-tuple) type or a tuple
 containing multiple additional arguments including tensors
 or any arbitrary python types. These arguments are provided
-to forward_func in order, following the arguments in inputs.
+to model in order, following the arguments in inputs.
 Note that attributions are not computed with respect
 to these arguments.
 Default: None</p></li>
-<li><p><strong>attribute_to_neuron_input</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.11)"><em>bool</em></a><em>, </em><em>optional</em>) – Indicates whether to
+<li><p><strong>attribute_to_neuron_input</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.12)"><em>bool</em></a><em>, </em><em>optional</em>) – Indicates whether to
 compute the attributions with respect to the neuron input
 or output. If <cite>attribute_to_neuron_input</cite> is set to True
 then the attributions will be computed with respect to
@@ -978,7 +978,7 @@ or the output of internal neuron, depending on whether we
 attribute to the input or output, is a single tensor.
 Support for multiple tensors will be added later.
 Default: False</p></li>
-<li><p><strong>custom_attribution_func</strong> (<em>Callable</em><em>, </em><em>optional</em>) – <p>A custom function for
+<li><p><strong>custom_attribution_func</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Callable" title="(in Python v3.12)"><em>Callable</em></a><em>, </em><em>optional</em>) – <p>A custom function for
 computing final attribution scores. This function can take
 at least one and at most three arguments with the
 following signature:</p>
@@ -998,7 +998,7 @@ Default: None</p>
 </p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p><ul class="simple">
 <li><dl class="simple">
 <dt><strong>attributions</strong> (<em>Tensor</em> or <em>tuple[Tensor, …]</em>):</dt><dd><p>Computes attributions using Deeplift’s rescale rule for
@@ -1015,7 +1015,7 @@ corresponding sized tensors is returned.</p>
 </ul>
 </p>
 </dd>
-<dt class="field-odd">Return type</dt>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>attributions</strong> or 2-element tuple of <strong>attributions</strong>, <strong>delta</strong></p>
 </dd>
 </dl>
@@ -1036,10 +1036,10 @@ corresponding sized tensors is returned.</p>
 </dd></dl>
 </section>
 <section id="neuron-gradientshap">
-<h2>Neuron GradientShap<a class="headerlink" href="#neuron-gradientshap" title="Permalink to this headline">¶</a></h2>
+<h2>Neuron GradientShap<a class="headerlink" href="#neuron-gradientshap" title="Link to this heading">¶</a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="captum.attr.NeuronGradientShap">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">captum.attr.</span></span><span class="sig-name descname"><span class="pre">NeuronGradientShap</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">forward_func</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">layer</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">device_ids</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">multiply_by_inputs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/neuron/neuron_gradient_shap.html#NeuronGradientShap"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum.attr.NeuronGradientShap" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">captum.attr.</span></span><span class="sig-name descname"><span class="pre">NeuronGradientShap</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">forward_func</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">layer</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">device_ids</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">multiply_by_inputs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/neuron/neuron_gradient_shap.html#NeuronGradientShap"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum.attr.NeuronGradientShap" title="Link to this definition">¶</a></dt>
 <dd><p>Implements gradient SHAP for a neuron in a hidden layer based on the
 implementation from SHAP’s primary author. For reference, please, view:</p>
 <p><a class="reference external" href="https://github.com/slundberg/shap">https://github.com/slundberg/shap</a>#deep-learning-example-with-gradientexplainer-tensorflowkeraspytorch-models</p>
@@ -1066,11 +1066,11 @@ by computing the expectations of gradients for different baselines.</p>
 randomly draw samples from the distribution of baselines, add noise to input
 samples and compute the expectation (smoothgrad).</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>forward_func</strong> (<em>Callable</em>) – The forward function of the model or any
+<li><p><strong>forward_func</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Callable" title="(in Python v3.12)"><em>Callable</em></a>) – The forward function of the model or any
 modification of it</p></li>
-<li><p><strong>layer</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/generated/torch.nn.Module.html#torch.nn.Module" title="(in PyTorch v1.13)"><em>torch.nn.Module</em></a>) – Layer for which neuron attributions are computed.
+<li><p><strong>layer</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/generated/torch.nn.Module.html#torch.nn.Module" title="(in PyTorch v2.1)"><em>torch.nn.Module</em></a>) – Layer for which neuron attributions are computed.
 The output size of the attribute method matches the
 dimensions of the inputs or outputs of the neuron with
 index <cite>neuron_selector</cite> in this layer, depending on whether
@@ -1078,12 +1078,12 @@ we attribute to the inputs or outputs of the neuron.
 Currently, it is assumed that the inputs or the outputs
 of the neurons in this layer, depending on which one is
 used for attribution, can only be a single tensor.</p></li>
-<li><p><strong>device_ids</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.11)"><em>list</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><em>int</em></a><em>]</em>) – Device ID list, necessary only if forward_func
+<li><p><strong>device_ids</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.12)"><em>list</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><em>int</em></a><em>]</em>) – Device ID list, necessary only if forward_func
 applies a DataParallel model. This allows reconstruction of
 intermediate outputs from batched results across devices.
 If forward_func is given as the DataParallel model itself,
 then it is not necessary to provide this argument.</p></li>
-<li><p><strong>multiply_by_inputs</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.11)"><em>bool</em></a><em>, </em><em>optional</em>) – <p>Indicates whether to factor
+<li><p><strong>multiply_by_inputs</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.12)"><em>bool</em></a><em>, </em><em>optional</em>) – <p>Indicates whether to factor
 model inputs’ multiplier in the final attribution scores.
 In the literature this is also known as local vs global
 attribution. If inputs’ multiplier isn’t factored in
@@ -1102,11 +1102,11 @@ being multiplied by (inputs - baselines).</p>
 </dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="captum.attr.NeuronGradientShap.attribute">
-<span class="sig-name descname"><span class="pre">attribute</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inputs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">neuron_selector</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">baselines</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_samples</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stdevs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">additional_forward_args</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">attribute_to_neuron_input</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/neuron/neuron_gradient_shap.html#NeuronGradientShap.attribute"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum.attr.NeuronGradientShap.attribute" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">attribute</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inputs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">neuron_selector</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">baselines</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_samples</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stdevs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">additional_forward_args</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">attribute_to_neuron_input</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/neuron/neuron_gradient_shap.html#NeuronGradientShap.attribute"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum.attr.NeuronGradientShap.attribute" title="Link to this definition">¶</a></dt>
 <dd><dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>inputs</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.13)"><em>Tensor</em></a><em> or </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.11)"><em>tuple</em></a><em>[</em><a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.13)"><em>Tensor</em></a><em>, </em><em>...</em><em>]</em>) – Input for which SHAP attribution
+<li><p><strong>inputs</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v2.1)"><em>Tensor</em></a><em> or </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.12)"><em>tuple</em></a><em>[</em><a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v2.1)"><em>Tensor</em></a><em>, </em><em>...</em><em>]</em>) – Input for which SHAP attribution
 values are computed. If <cite>forward_func</cite> takes a single
 tensor as input, a single input tensor should be provided.
 If <cite>forward_func</cite> takes multiple tensors as input, a tuple
@@ -1114,7 +1114,7 @@ of the input tensors should be provided. It is assumed
 that for all given input tensors, dimension 0 corresponds
 to the number of examples, and if multiple input tensors
 are provided, the examples must be aligned appropriately.</p></li>
-<li><p><strong>neuron_selector</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><em>int</em></a><em>, </em><em>Callable</em><em>, </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.11)"><em>tuple</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><em>int</em></a><em>]</em><em>, or </em><a class="reference external" href="https://docs.python.org/3/library/functions.html#slice" title="(in Python v3.11)"><em>slice</em></a>) – <p>Selector for neuron
+<li><p><strong>neuron_selector</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><em>int</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Callable" title="(in Python v3.12)"><em>Callable</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.12)"><em>tuple</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><em>int</em></a><em>]</em><em>, or </em><a class="reference external" href="https://docs.python.org/3/library/functions.html#slice" title="(in Python v3.12)"><em>slice</em></a>) – <p>Selector for neuron
 in given layer for which attribution is desired.
 Neuron selector can be provided as:</p>
 <ul>
@@ -1146,7 +1146,7 @@ or a 1D tensor with length equal to batch_size (one scalar
 per input example)</p></li>
 </ul>
 </p></li>
-<li><p><strong>baselines</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.13)"><em>Tensor</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.11)"><em>tuple</em></a><em>[</em><a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.13)"><em>Tensor</em></a><em>, </em><em>...</em><em>]</em><em>, or </em><em>Callable</em>) – <p>Baselines define the starting point from which expectation
+<li><p><strong>baselines</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v2.1)"><em>Tensor</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.12)"><em>tuple</em></a><em>[</em><a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v2.1)"><em>Tensor</em></a><em>, </em><em>...</em><em>]</em><em>, or </em><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Callable" title="(in Python v3.12)"><em>Callable</em></a>) – <p>Baselines define the starting point from which expectation
 is computed and can be provided as:</p>
 <ul>
 <li><p>a single tensor, if inputs is a single tensor, with
@@ -1167,11 +1167,11 @@ or a tuple of those.</p></li>
 <p>It is recommended that the number of samples in the baselines’
 tensors is larger than one.</p>
 </p></li>
-<li><p><strong>n_samples</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><em>int</em></a><em>, </em><em>optional</em>) – The number of randomly generated examples
+<li><p><strong>n_samples</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><em>int</em></a><em>, </em><em>optional</em>) – The number of randomly generated examples
 per sample in the input batch. Random examples are
 generated by adding gaussian random noise to each sample.
 Default: <cite>5</cite> if <cite>n_samples</cite> is not provided.</p></li>
-<li><p><strong>stdevs</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.11)"><em>float</em></a><em> or </em><em>tuple of float</em><em>, </em><em>optional</em>) – The standard deviation
+<li><p><strong>stdevs</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.12)"><em>float</em></a><em> or </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.12)"><em>tuple</em></a><em> of </em><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.12)"><em>float</em></a><em>, </em><em>optional</em>) – The standard deviation
 of gaussian noise with zero mean that is added to each
 input in the batch. If <cite>stdevs</cite> is a single float value
 then that same value is used for all inputs. If it is
@@ -1180,7 +1180,7 @@ tuple. In this case, each stdev value in the stdevs tuple
 corresponds to the input with the same index in the inputs
 tuple.
 Default: 0.0</p></li>
-<li><p><strong>additional_forward_args</strong> (<em>Any</em><em>, </em><em>optional</em>) – If the forward function
+<li><p><strong>additional_forward_args</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.12)"><em>Any</em></a><em>, </em><em>optional</em>) – If the forward function
 requires additional arguments other than the inputs for
 which attributions should not be computed, this argument
 can be provided. It can contain a tuple of ND tensors or
@@ -1192,7 +1192,7 @@ input sample.
 Note that the gradients are not computed with respect
 to these arguments.
 Default: None</p></li>
-<li><p><strong>attribute_to_neuron_input</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.11)"><em>bool</em></a><em>, </em><em>optional</em>) – Indicates whether to
+<li><p><strong>attribute_to_neuron_input</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.12)"><em>bool</em></a><em>, </em><em>optional</em>) – Indicates whether to
 compute the attributions with respect to the neuron input
 or output. If <cite>attribute_to_neuron_input</cite> is set to True
 then the attributions will be computed with respect to
@@ -1205,7 +1205,7 @@ Support for multiple tensors will be added later.
 Default: False</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p><ul class="simple">
 <li><dl class="simple">
 <dt><strong>attributions</strong> (<em>Tensor</em> or <em>tuple[Tensor, …]</em>):</dt><dd><p>Attribution score computed based on GradientSHAP with respect
@@ -1221,7 +1221,7 @@ corresponding sized tensors is returned.</p>
 </ul>
 </p>
 </dd>
-<dt class="field-odd">Return type</dt>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>attributions</strong> or 2-element tuple of <strong>attributions</strong>, <strong>delta</strong></p>
 </dd>
 </dl>
@@ -1244,10 +1244,10 @@ corresponding sized tensors is returned.</p>
 </dd></dl>
 </section>
 <section id="neuron-guided-backprop">
-<h2>Neuron Guided Backprop<a class="headerlink" href="#neuron-guided-backprop" title="Permalink to this headline">¶</a></h2>
+<h2>Neuron Guided Backprop<a class="headerlink" href="#neuron-guided-backprop" title="Link to this heading">¶</a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="captum.attr.NeuronGuidedBackprop">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">captum.attr.</span></span><span class="sig-name descname"><span class="pre">NeuronGuidedBackprop</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">layer</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">device_ids</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/neuron/neuron_guided_backprop_deconvnet.html#NeuronGuidedBackprop"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum.attr.NeuronGuidedBackprop" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">captum.attr.</span></span><span class="sig-name descname"><span class="pre">NeuronGuidedBackprop</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">layer</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">device_ids</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/neuron/neuron_guided_backprop_deconvnet.html#NeuronGuidedBackprop"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum.attr.NeuronGuidedBackprop" title="Link to this definition">¶</a></dt>
 <dd><p>Computes attribution of the given neuron using guided backpropagation.
 Guided backpropagation computes the gradient of the target neuron
 with respect to the input, but gradients of ReLU functions are overridden
@@ -1259,7 +1259,7 @@ in the original paper here:
 given model are performed using a module (nn.module.ReLU).
 If nn.functional.ReLU is used, gradients are not overridden appropriately.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>model</strong> (<em>nn.Module</em>) – The reference to PyTorch model instance.</p></li>
 <li><p><strong>layer</strong> (<em>Module</em>) – Layer for which neuron attributions are computed.
@@ -1268,30 +1268,30 @@ this layer are computed using the argument neuron_selector
 in the attribute method.
 Currently, only layers with a single tensor output are
 supported.</p></li>
-<li><p><strong>device_ids</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.11)"><em>list</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><em>int</em></a><em>]</em>) – Device ID list, necessary only if forward_func
+<li><p><strong>device_ids</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.12)"><em>list</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><em>int</em></a><em>]</em>) – Device ID list, necessary only if model
 applies a DataParallel model. This allows reconstruction of
 intermediate outputs from batched results across devices.
-If forward_func is given as the DataParallel model itself,
+If model is given as the DataParallel model itself,
 then it is not necessary to provide this argument.</p></li>
 </ul>
 </dd>
 </dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="captum.attr.NeuronGuidedBackprop.attribute">
-<span class="sig-name descname"><span class="pre">attribute</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inputs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">neuron_selector</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">additional_forward_args</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">attribute_to_neuron_input</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/neuron/neuron_guided_backprop_deconvnet.html#NeuronGuidedBackprop.attribute"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum.attr.NeuronGuidedBackprop.attribute" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">attribute</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inputs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">neuron_selector</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">additional_forward_args</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">attribute_to_neuron_input</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/neuron/neuron_guided_backprop_deconvnet.html#NeuronGuidedBackprop.attribute"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum.attr.NeuronGuidedBackprop.attribute" title="Link to this definition">¶</a></dt>
 <dd><dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>inputs</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.13)"><em>Tensor</em></a><em> or </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.11)"><em>tuple</em></a><em>[</em><a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.13)"><em>Tensor</em></a><em>, </em><em>...</em><em>]</em>) – Input for which
-attributions are computed. If forward_func takes a single
+<li><p><strong>inputs</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v2.1)"><em>Tensor</em></a><em> or </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.12)"><em>tuple</em></a><em>[</em><a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v2.1)"><em>Tensor</em></a><em>, </em><em>...</em><em>]</em>) – Input for which
+attributions are computed. If model takes a single
 tensor as input, a single input tensor should be provided.
-If forward_func takes multiple tensors as input, a tuple
+If model takes multiple tensors as input, a tuple
 of the input tensors should be provided. It is assumed
 that for all given input tensors, dimension 0 corresponds
 to the number of examples (aka batch size), and if
 multiple input tensors are provided, the examples must
 be aligned appropriately.</p></li>
-<li><p><strong>neuron_selector</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><em>int</em></a><em>, </em><em>Callable</em><em>, </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.11)"><em>tuple</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><em>int</em></a><em>]</em><em>, or </em><a class="reference external" href="https://docs.python.org/3/library/functions.html#slice" title="(in Python v3.11)"><em>slice</em></a>) – <p>Selector for neuron
+<li><p><strong>neuron_selector</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><em>int</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Callable" title="(in Python v3.12)"><em>Callable</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.12)"><em>tuple</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><em>int</em></a><em>]</em><em>, or </em><a class="reference external" href="https://docs.python.org/3/library/functions.html#slice" title="(in Python v3.12)"><em>slice</em></a>) – <p>Selector for neuron
 in given layer for which attribution is desired.
 Neuron selector can be provided as:</p>
 <ul>
@@ -1323,18 +1323,18 @@ or a 1D tensor with length equal to batch_size (one scalar
 per input example)</p></li>
 </ul>
 </p></li>
-<li><p><strong>additional_forward_args</strong> (<em>Any</em><em>, </em><em>optional</em>) – If the forward function
+<li><p><strong>additional_forward_args</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.12)"><em>Any</em></a><em>, </em><em>optional</em>) – If the forward function
 requires additional arguments other than the inputs for
 which attributions should not be computed, this argument
 can be provided. It must be either a single additional
 argument of a Tensor or arbitrary (non-tuple) type or a tuple
 containing multiple additional arguments including tensors
 or any arbitrary python types. These arguments are provided to
-forward_func in order, following the arguments in inputs.
+model in order, following the arguments in inputs.
 Note that attributions are not computed with respect
 to these arguments.
 Default: None</p></li>
-<li><p><strong>attribute_to_neuron_input</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.11)"><em>bool</em></a><em>, </em><em>optional</em>) – Indicates whether to
+<li><p><strong>attribute_to_neuron_input</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.12)"><em>bool</em></a><em>, </em><em>optional</em>) – Indicates whether to
 compute the attributions with respect to the neuron input
 or output. If <cite>attribute_to_neuron_input</cite> is set to True
 then the attributions will be computed with respect to
@@ -1347,7 +1347,7 @@ Support for multiple tensors will be added later.
 Default: False</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p><ul class="simple">
 <li><dl class="simple">
 <dt><strong>attributions</strong> (<em>Tensor</em> or <em>tuple[Tensor, …]</em>):</dt><dd><p>Guided backprop attribution of
@@ -1364,7 +1364,7 @@ corresponding sized tensors is returned.</p>
 </ul>
 </p>
 </dd>
-<dt class="field-odd">Return type</dt>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><em>Tensor</em> or <em>tuple[Tensor, …]</em> of <strong>attributions</strong></p>
 </dd>
 </dl>
@@ -1390,10 +1390,10 @@ corresponding sized tensors is returned.</p>
 </dd></dl>
 </section>
 <section id="neuron-deconvolution">
-<h2>Neuron Deconvolution<a class="headerlink" href="#neuron-deconvolution" title="Permalink to this headline">¶</a></h2>
+<h2>Neuron Deconvolution<a class="headerlink" href="#neuron-deconvolution" title="Link to this heading">¶</a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="captum.attr.NeuronDeconvolution">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">captum.attr.</span></span><span class="sig-name descname"><span class="pre">NeuronDeconvolution</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">layer</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">device_ids</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/neuron/neuron_guided_backprop_deconvnet.html#NeuronDeconvolution"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum.attr.NeuronDeconvolution" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">captum.attr.</span></span><span class="sig-name descname"><span class="pre">NeuronDeconvolution</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">layer</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">device_ids</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/neuron/neuron_guided_backprop_deconvnet.html#NeuronDeconvolution"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum.attr.NeuronDeconvolution" title="Link to this definition">¶</a></dt>
 <dd><p>Computes attribution of the given neuron using deconvolution.
 Deconvolution computes the gradient of the target output with
 respect to the input, but gradients of ReLU functions are overridden so
@@ -1408,7 +1408,7 @@ in these papers:
 given model are performed using a module (nn.module.ReLU).
 If nn.functional.ReLU is used, gradients are not overridden appropriately.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>model</strong> (<em>nn.Module</em>) – The reference to PyTorch model instance.</p></li>
 <li><p><strong>layer</strong> (<em>Module</em>) – Layer for which attributions are computed.
@@ -1420,30 +1420,30 @@ this layer.
 Currently, it is assumed that the inputs or the outputs
 of the layer, depending on which one is used for
 attribution, can only be a single tensor.</p></li>
-<li><p><strong>device_ids</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.11)"><em>list</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><em>int</em></a><em>]</em>) – Device ID list, necessary only if forward_func
+<li><p><strong>device_ids</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.12)"><em>list</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><em>int</em></a><em>]</em>) – Device ID list, necessary only if model
 applies a DataParallel model. This allows reconstruction of
 intermediate outputs from batched results across devices.
-If forward_func is given as the DataParallel model itself,
+If model is given as the DataParallel model itself,
 then it is not necessary to provide this argument.</p></li>
 </ul>
 </dd>
 </dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="captum.attr.NeuronDeconvolution.attribute">
-<span class="sig-name descname"><span class="pre">attribute</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inputs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">neuron_selector</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">additional_forward_args</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">attribute_to_neuron_input</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/neuron/neuron_guided_backprop_deconvnet.html#NeuronDeconvolution.attribute"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum.attr.NeuronDeconvolution.attribute" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">attribute</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inputs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">neuron_selector</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">additional_forward_args</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">attribute_to_neuron_input</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/neuron/neuron_guided_backprop_deconvnet.html#NeuronDeconvolution.attribute"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum.attr.NeuronDeconvolution.attribute" title="Link to this definition">¶</a></dt>
 <dd><dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>inputs</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.13)"><em>Tensor</em></a><em> or </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.11)"><em>tuple</em></a><em>[</em><a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.13)"><em>Tensor</em></a><em>, </em><em>...</em><em>]</em>) – Input for which
-attributions are computed. If forward_func takes a single
+<li><p><strong>inputs</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v2.1)"><em>Tensor</em></a><em> or </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.12)"><em>tuple</em></a><em>[</em><a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v2.1)"><em>Tensor</em></a><em>, </em><em>...</em><em>]</em>) – Input for which
+attributions are computed. If model takes a single
 tensor as input, a single input tensor should be provided.
-If forward_func takes multiple tensors as input, a tuple
+If model takes multiple tensors as input, a tuple
 of the input tensors should be provided. It is assumed
 that for all given input tensors, dimension 0 corresponds
 to the number of examples (aka batch size), and if
 multiple input tensors are provided, the examples must
 be aligned appropriately.</p></li>
-<li><p><strong>neuron_selector</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><em>int</em></a><em>, </em><em>Callable</em><em>, </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.11)"><em>tuple</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><em>int</em></a><em>]</em><em>, or </em><a class="reference external" href="https://docs.python.org/3/library/functions.html#slice" title="(in Python v3.11)"><em>slice</em></a>) – <p>Selector for neuron
+<li><p><strong>neuron_selector</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><em>int</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Callable" title="(in Python v3.12)"><em>Callable</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.12)"><em>tuple</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><em>int</em></a><em>]</em><em>, or </em><a class="reference external" href="https://docs.python.org/3/library/functions.html#slice" title="(in Python v3.12)"><em>slice</em></a>) – <p>Selector for neuron
 in given layer for which attribution is desired.
 Neuron selector can be provided as:</p>
 <ul>
@@ -1475,18 +1475,18 @@ or a 1D tensor with length equal to batch_size (one scalar
 per input example)</p></li>
 </ul>
 </p></li>
-<li><p><strong>additional_forward_args</strong> (<em>Any</em><em>, </em><em>optional</em>) – If the forward function
+<li><p><strong>additional_forward_args</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.12)"><em>Any</em></a><em>, </em><em>optional</em>) – If the forward function
 requires additional arguments other than the inputs for
 which attributions should not be computed, this argument
 can be provided. It must be either a single additional
 argument of a Tensor or arbitrary (non-tuple) type or a tuple
 containing multiple additional arguments including tensors
 or any arbitrary python types. These arguments are provided to
-forward_func in order, following the arguments in inputs.
+model in order, following the arguments in inputs.
 Note that attributions are not computed with respect
 to these arguments.
 Default: None</p></li>
-<li><p><strong>attribute_to_neuron_input</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.11)"><em>bool</em></a><em>, </em><em>optional</em>) – Indicates whether to
+<li><p><strong>attribute_to_neuron_input</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.12)"><em>bool</em></a><em>, </em><em>optional</em>) – Indicates whether to
 compute the attributions with respect to the neuron input
 or output. If <cite>attribute_to_neuron_input</cite> is set to True
 then the attributions will be computed with respect to
@@ -1499,7 +1499,7 @@ Support for multiple tensors will be added later.
 Default: False</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p><ul class="simple">
 <li><dl class="simple">
 <dt><strong>attributions</strong> (<em>Tensor</em> or <em>tuple[Tensor, …]</em>):</dt><dd><p>Deconvolution attribution of
@@ -1516,7 +1516,7 @@ corresponding sized tensors is returned.</p>
 </ul>
 </p>
 </dd>
-<dt class="field-odd">Return type</dt>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><em>Tensor</em> or <em>tuple[Tensor, …]</em> of <strong>attributions</strong></p>
 </dd>
 </dl>
@@ -1542,10 +1542,10 @@ corresponding sized tensors is returned.</p>
 </dd></dl>
 </section>
 <section id="neuron-feature-ablation">
-<h2>Neuron Feature Ablation<a class="headerlink" href="#neuron-feature-ablation" title="Permalink to this headline">¶</a></h2>
+<h2>Neuron Feature Ablation<a class="headerlink" href="#neuron-feature-ablation" title="Link to this heading">¶</a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="captum.attr.NeuronFeatureAblation">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">captum.attr.</span></span><span class="sig-name descname"><span class="pre">NeuronFeatureAblation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">forward_func</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">layer</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">device_ids</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/neuron/neuron_feature_ablation.html#NeuronFeatureAblation"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum.attr.NeuronFeatureAblation" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">captum.attr.</span></span><span class="sig-name descname"><span class="pre">NeuronFeatureAblation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">forward_func</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">layer</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">device_ids</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/neuron/neuron_feature_ablation.html#NeuronFeatureAblation"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum.attr.NeuronFeatureAblation" title="Link to this definition">¶</a></dt>
 <dd><p>A perturbation based approach to computing neuron attribution,
 involving replacing each input feature with a given baseline /
 reference, and computing the difference in the neuron’s input / output.
@@ -1558,18 +1558,18 @@ Each input scalar in the group will be given the same attribution value
 equal to the change in target as a result of ablating the entire feature
 group.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>forward_func</strong> (<em>Callable</em>) – The forward function of the model or any
+<li><p><strong>forward_func</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Callable" title="(in Python v3.12)"><em>Callable</em></a>) – The forward function of the model or any
 modification of it</p></li>
-<li><p><strong>layer</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/generated/torch.nn.Module.html#torch.nn.Module" title="(in PyTorch v1.13)"><em>torch.nn.Module</em></a>) – Layer for which attributions are computed.
+<li><p><strong>layer</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/generated/torch.nn.Module.html#torch.nn.Module" title="(in PyTorch v2.1)"><em>torch.nn.Module</em></a>) – Layer for which attributions are computed.
 Attributions for a particular neuron in the input or output
 of this layer are computed using the argument neuron_selector
 in the attribute method.
 Currently, it is assumed that the inputs or the outputs
 of the layer, depending on which one is used for
 attribution, can only be a single tensor.</p></li>
-<li><p><strong>device_ids</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.11)"><em>list</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><em>int</em></a><em>]</em>) – Device ID list, necessary only if forward_func
+<li><p><strong>device_ids</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.12)"><em>list</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><em>int</em></a><em>]</em>) – Device ID list, necessary only if forward_func
 applies a DataParallel model. This allows reconstruction of
 intermediate outputs from batched results across devices.
 If forward_func is given as the DataParallel model itself,
@@ -1579,11 +1579,11 @@ then it is not necessary to provide this argument.</p></li>
 </dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="captum.attr.NeuronFeatureAblation.attribute">
-<span class="sig-name descname"><span class="pre">attribute</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inputs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">neuron_selector</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">baselines</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">additional_forward_args</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">feature_mask</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">attribute_to_neuron_input</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">perturbations_per_eval</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/neuron/neuron_feature_ablation.html#NeuronFeatureAblation.attribute"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum.attr.NeuronFeatureAblation.attribute" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">attribute</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inputs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">neuron_selector</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">baselines</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">additional_forward_args</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">feature_mask</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">attribute_to_neuron_input</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">perturbations_per_eval</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/neuron/neuron_feature_ablation.html#NeuronFeatureAblation.attribute"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum.attr.NeuronFeatureAblation.attribute" title="Link to this definition">¶</a></dt>
 <dd><dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>inputs</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.13)"><em>Tensor</em></a><em> or </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.11)"><em>tuple</em></a><em>[</em><a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.13)"><em>Tensor</em></a><em>, </em><em>...</em><em>]</em>) – Input for which neuron
+<li><p><strong>inputs</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v2.1)"><em>Tensor</em></a><em> or </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.12)"><em>tuple</em></a><em>[</em><a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v2.1)"><em>Tensor</em></a><em>, </em><em>...</em><em>]</em>) – Input for which neuron
 attributions are computed. If forward_func takes a single
 tensor as input, a single input tensor should be provided.
 If forward_func takes multiple tensors as input, a tuple
@@ -1591,7 +1591,7 @@ of the input tensors should be provided. It is assumed
 that for all given input tensors, dimension 0 corresponds
 to the number of examples, and if multiple input tensors
 are provided, the examples must be aligned appropriately.</p></li>
-<li><p><strong>neuron_selector</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><em>int</em></a><em>, </em><em>Callable</em><em>, </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.11)"><em>tuple</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><em>int</em></a><em>]</em><em>, or </em><a class="reference external" href="https://docs.python.org/3/library/functions.html#slice" title="(in Python v3.11)"><em>slice</em></a>) – <p>Selector for neuron
+<li><p><strong>neuron_selector</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><em>int</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Callable" title="(in Python v3.12)"><em>Callable</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.12)"><em>tuple</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><em>int</em></a><em>]</em><em>, or </em><a class="reference external" href="https://docs.python.org/3/library/functions.html#slice" title="(in Python v3.12)"><em>slice</em></a>) – <p>Selector for neuron
 in given layer for which attribution is desired.
 Neuron selector can be provided as:</p>
 <ul>
@@ -1623,7 +1623,7 @@ or a 1D tensor with length equal to batch_size (one scalar
 per input example)</p></li>
 </ul>
 </p></li>
-<li><p><strong>baselines</strong> (<em>scalar</em><em>, </em><a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.13)"><em>Tensor</em></a><em>, </em><em>tuple of scalar</em><em>, or </em><a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.13)"><em>Tensor</em></a><em>, </em><em>optional</em>) – <p>Baselines define reference value which replaces each
+<li><p><strong>baselines</strong> (<em>scalar</em><em>, </em><a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v2.1)"><em>Tensor</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.12)"><em>tuple</em></a><em> of </em><em>scalar</em><em>, or </em><a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v2.1)"><em>Tensor</em></a><em>, </em><em>optional</em>) – <p>Baselines define reference value which replaces each
 feature when ablated.
 Baselines can be provided as:</p>
 <ul>
@@ -1650,7 +1650,7 @@ for corresponding input tensor.</p></li>
 use zero scalar corresponding to each input tensor.
 Default: None</p>
 </p></li>
-<li><p><strong>additional_forward_args</strong> (<em>Any</em><em>, </em><em>optional</em>) – If the forward function
+<li><p><strong>additional_forward_args</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.12)"><em>Any</em></a><em>, </em><em>optional</em>) – If the forward function
 requires additional arguments other than the inputs for
 which attributions should not be computed, this argument
 can be provided. It must be either a single additional
@@ -1662,7 +1662,7 @@ arguments in inputs.
 Note that attributions are not computed with respect
 to these arguments.
 Default: None</p></li>
-<li><p><strong>feature_mask</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.13)"><em>Tensor</em></a><em> or </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.11)"><em>tuple</em></a><em>[</em><a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.13)"><em>Tensor</em></a><em>, </em><em>...</em><em>]</em><em>, </em><em>optional</em>) – feature_mask defines a mask for the input, grouping
+<li><p><strong>feature_mask</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v2.1)"><em>Tensor</em></a><em> or </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.12)"><em>tuple</em></a><em>[</em><a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v2.1)"><em>Tensor</em></a><em>, </em><em>...</em><em>]</em><em>, </em><em>optional</em>) – feature_mask defines a mask for the input, grouping
 features which should be ablated together. feature_mask
 should contain the same number of tensors as inputs.
 Each tensor should
@@ -1677,7 +1677,7 @@ If None, then a feature mask is constructed which assigns
 each scalar within a tensor as a separate feature, which
 is ablated independently.
 Default: None</p></li>
-<li><p><strong>attribute_to_neuron_input</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.11)"><em>bool</em></a><em>, </em><em>optional</em>) – Indicates whether to
+<li><p><strong>attribute_to_neuron_input</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.12)"><em>bool</em></a><em>, </em><em>optional</em>) – Indicates whether to
 compute the attributions with respect to the neuron input
 or output. If <cite>attribute_to_neuron_input</cite> is set to True
 then the attributions will be computed with respect to
@@ -1688,7 +1688,7 @@ or the output of internal neurons, depending on whether we
 attribute to the input or output, is a single tensor.
 Support for multiple tensors will be added later.
 Default: False</p></li>
-<li><p><strong>perturbations_per_eval</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><em>int</em></a><em>, </em><em>optional</em>) – Allows ablation of multiple
+<li><p><strong>perturbations_per_eval</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><em>int</em></a><em>, </em><em>optional</em>) – Allows ablation of multiple
 features to be processed simultaneously in one call to
 forward_fn.
 Each forward pass will contain a maximum of
@@ -1701,7 +1701,7 @@ samples.
 Default: 1</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p><ul class="simple">
 <li><dl class="simple">
 <dt><strong>attributions</strong> (<em>Tensor</em> or <em>tuple[Tensor, …]</em>):</dt><dd><p>Attributions of particular neuron with respect to each input
@@ -1717,7 +1717,7 @@ corresponding sized tensors is returned.</p>
 </ul>
 </p>
 </dd>
-<dt class="field-odd">Return type</dt>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><em>Tensor</em> or <em>tuple[Tensor, …]</em> of <strong>attributions</strong></p>
 </dd>
 </dl>
@@ -1825,7 +1825,7 @@ corresponding sized tensors is returned.</p>
 </form>
 </div>
 </div>
-<script>$('#searchbox').show(0);</script>
+<script>document.getElementById('searchbox').style.display = "block"</script>
 </div>
 </div>
 <div class="clearer"></div>

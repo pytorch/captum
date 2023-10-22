@@ -30,10 +30,10 @@ src="/_sphinx/documentation_options.js"></script>
 <div class="bodywrapper">
 <div class="body" role="main">
 <section id="gaussianstochasticgates">
-<h1>GaussianStochasticGates<a class="headerlink" href="#gaussianstochasticgates" title="Permalink to this headline">¶</a></h1>
+<h1>GaussianStochasticGates<a class="headerlink" href="#gaussianstochasticgates" title="Link to this heading">¶</a></h1>
 <dl class="py class">
 <dt class="sig sig-object py" id="captum.module.GaussianStochasticGates">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">captum.module.</span></span><span class="sig-name descname"><span class="pre">GaussianStochasticGates</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n_gates</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mask</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reg_weight</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">std</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reg_reduction</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'sum'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/module/gaussian_stochastic_gates.html#GaussianStochasticGates"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum.module.GaussianStochasticGates" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">captum.module.</span></span><span class="sig-name descname"><span class="pre">GaussianStochasticGates</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n_gates</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mask</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reg_weight</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">std</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reg_reduction</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'sum'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/module/gaussian_stochastic_gates.html#GaussianStochasticGates"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum.module.GaussianStochasticGates" title="Link to this definition">¶</a></dt>
 <dd><p>Stochastic Gates with Gaussian distribution.</p>
 <p>Stochastic Gates is a practical solution to add L0 norm regularization for neural
 networks. L0 regularization, which explicitly penalizes any present (non-zero)
@@ -50,42 +50,49 @@ the distribution parameters via stochastic gradients.</p>
 distribution of gate. While the smoothed Bernoulli distribution should be
 within 0 and 1, gaussian does not have boundaries. So hard-sigmoid rectification
 is used to “fold” the parts smaller than 0 or larger than 1 back to 0 and 1.</p>
-<p>More details can be found in the
-<cite>original paper &lt;https://arxiv.org/abs/1810.04247&gt;</cite>.</p>
+<p>More details can be found in the original paper:
+<a class="reference external" href="https://arxiv.org/abs/1810.04247">https://arxiv.org/abs/1810.04247</a></p>
+<p>Examples:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">n_params</span> <span class="o">=</span> <span class="mi">5</span>  <span class="c1"># number of gates</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">stg</span> <span class="o">=</span> <span class="n">GaussianStochasticGates</span><span class="p">(</span><span class="n">n_params</span><span class="p">,</span> <span class="n">reg_weight</span><span class="o">=</span><span class="mf">0.01</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">inputs</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="n">n_params</span><span class="p">)</span>  <span class="c1"># mock inputs with batch size of 3</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">gated_inputs</span><span class="p">,</span> <span class="n">reg</span> <span class="o">=</span> <span class="n">stg</span><span class="p">(</span><span class="n">mock_inputs</span><span class="p">)</span>  <span class="c1"># gate the inputs</span>
+</pre></div>
+</div>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>n_gates</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><em>int</em></a>) – number of gates.</p></li>
-<li><p><strong>mask</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.13)"><em>Tensor</em></a><em>]</em>) – If provided, this allows grouping multiple
+<li><p><strong>n_gates</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><em>int</em></a>) – number of gates.</p></li>
+<li><p><strong>mask</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v2.1)"><em>Tensor</em></a><em>, </em><em>optional</em>) – If provided, this allows grouping multiple
 input tensor elements to share the same stochastic gate.
 This tensor should be broadcastable to match the input shape
 and contain integers in the range 0 to n_gates - 1.
 Indices grouped to the same stochastic gate should have the same value.
 If not provided, each element in the input tensor
-(on dimensions other than dim 0 - batch dim) is gated separately.
+(on dimensions other than dim 0, i.e., batch dim) is gated separately.
 Default: None</p></li>
-<li><p><strong>reg_weight</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.11)"><em>float</em></a><em>]</em>) – rescaling weight for L0 regularization term.
+<li><p><strong>reg_weight</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.12)"><em>float</em></a><em>, </em><em>optional</em>) – rescaling weight for L0 regularization term.
 Default: 1.0</p></li>
-<li><p><strong>std</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.11)"><em>float</em></a><em>]</em>) – standard deviation that will be fixed throughout.
-Default: 0.5 (by paper reference)</p></li>
-<li><p><strong>reg_reduction</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><em>str</em></a><em>, </em><em>optional</em>) – the reduction to apply to
-the regularization: ‘none’|’mean’|’sum’. ‘none’: no reduction will be
-applied and it will be the same as the return of get_active_probs,
-‘mean’: the sum of the gates non-zero probabilities will be divided by
-the number of gates, ‘sum’: the gates non-zero probabilities will
+<li><p><strong>std</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.12)"><em>float</em></a><em>, </em><em>optional</em>) – standard deviation that will be fixed throughout.
+Default: 0.5</p></li>
+<li><p><strong>reg_reduction</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><em>str</em></a><em>, </em><em>optional</em>) – the reduction to apply to the regularization:
+<code class="docutils literal notranslate"><span class="pre">'none'</span></code> | <code class="docutils literal notranslate"><span class="pre">'mean'</span></code> | <code class="docutils literal notranslate"><span class="pre">'sum'</span></code>. <code class="docutils literal notranslate"><span class="pre">'none'</span></code>: no reduction will be
+applied and it will be the same as the return of <code class="docutils literal notranslate"><span class="pre">get_active_probs</span></code>,
+<code class="docutils literal notranslate"><span class="pre">'mean'</span></code>: the sum of the gates non-zero probabilities will be divided
+by the number of gates, <code class="docutils literal notranslate"><span class="pre">'sum'</span></code>: the gates non-zero probabilities will
 be summed.
-Default: ‘sum’</p></li>
+Default: <code class="docutils literal notranslate"><span class="pre">'sum'</span></code></p></li>
 </ul>
 </dd>
 </dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="captum.module.GaussianStochasticGates.forward">
-<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_tensor</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#captum.module.GaussianStochasticGates.forward" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_tensor</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#captum.module.GaussianStochasticGates.forward" title="Link to this definition">¶</a></dt>
 <dd><dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>input_tensor</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.13)"><em>Tensor</em></a>) – Tensor to be gated with stochastic gates</p>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>input_tensor</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v2.1)"><em>Tensor</em></a>) – Tensor to be gated with stochastic gates</p>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p><ul class="simple">
 <li><dl class="simple">
 <dt>gated_input (Tensor): Tensor of the same shape weighted by the sampled</dt><dd><p>gate values</p>
@@ -101,17 +108,17 @@ e.g. loss(model_out, target) + l0_reg</p>
 </ul>
 </p>
 </dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.11)">tuple</a>[Tensor, Tensor]</p>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.12)">tuple</a>[Tensor, Tensor]</p>
 </dd>
 </dl>
 </dd></dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="captum.module.GaussianStochasticGates.get_gate_active_probs">
-<span class="sig-name descname"><span class="pre">get_gate_active_probs</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#captum.module.GaussianStochasticGates.get_gate_active_probs" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">get_gate_active_probs</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#captum.module.GaussianStochasticGates.get_gate_active_probs" title="Link to this definition">¶</a></dt>
 <dd><p>Get the active probability of each gate, i.e, gate value &gt; 0</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><p><ul class="simple">
 <li><dl class="simple">
 <dt>probs (Tensor): probabilities tensor of the gates are active</dt><dd><p>in shape(n_gates)</p>
@@ -121,33 +128,33 @@ e.g. loss(model_out, target) + l0_reg</p>
 </ul>
 </p>
 </dd>
-<dt class="field-even">Return type</dt>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>Tensor</p>
 </dd>
 </dl>
 </dd></dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="captum.module.GaussianStochasticGates.get_gate_values">
-<span class="sig-name descname"><span class="pre">get_gate_values</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">clamp</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#captum.module.GaussianStochasticGates.get_gate_values" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">get_gate_values</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">clamp</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#captum.module.GaussianStochasticGates.get_gate_values" title="Link to this definition">¶</a></dt>
 <dd><p>Get the gate values, which are the means of the underneath gate distributions,
 optionally clamped within 0 and 1.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>clamp</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.11)"><em>bool</em></a>) – whether to clamp the gate values or not. As smoothed Bernoulli
-variables, gate values are clamped within 0 and 1 by default.
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>clamp</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.12)"><em>bool</em></a><em>, </em><em>optional</em>) – whether to clamp the gate values or not. As smoothed
+Bernoulli variables, gate values are clamped within 0 and 1 by default.
 Turn this off to get the raw means of the underneath
 distribution (e.g., concrete, gaussian), which can be useful to
 differentiate the gates’ importance when multiple gate
 values are beyond 0 or 1.
-Default: True</p>
+Default: <code class="docutils literal notranslate"><span class="pre">True</span></code></p>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p><ul class="simple">
 <li><p>gate_values (Tensor): value of each gate in shape(n_gates)</p></li>
 </ul>
 </p>
 </dd>
-<dt class="field-odd">Return type</dt>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>Tensor</p>
 </dd>
 </dl>
@@ -204,7 +211,7 @@ Default: True</p>
 </form>
 </div>
 </div>
-<script>$('#searchbox').show(0);</script>
+<script>document.getElementById('searchbox').style.display = "block"</script>
 </div>
 </div>
 <div class="clearer"></div>

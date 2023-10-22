@@ -42,7 +42,9 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="kn">from</span> <span class="nn">torch.nn</span> <span class="kn">import</span> <span class="n">Module</span>
 
 
-<div class="viewcode-block" id="NeuronDeepLift"><a class="viewcode-back" href="../../../../../neuron.html#captum.attr.NeuronDeepLift">[docs]</a><span class="k">class</span> <span class="nc">NeuronDeepLift</span><span class="p">(</span><span class="n">NeuronAttribution</span><span class="p">,</span> <span class="n">GradientAttribution</span><span class="p">):</span>
+<div class="viewcode-block" id="NeuronDeepLift">
+<a class="viewcode-back" href="../../../../../neuron.html#captum.attr.NeuronDeepLift">[docs]</a>
+<span class="k">class</span> <span class="nc">NeuronDeepLift</span><span class="p">(</span><span class="n">NeuronAttribution</span><span class="p">,</span> <span class="n">GradientAttribution</span><span class="p">):</span>
 <span class="w">    </span><span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">    Implements DeepLIFT algorithm for the neuron based on the following paper:</span>
 <span class="sd">    Learning Important Features Through Propagating Activation Differences,</span>
@@ -105,7 +107,9 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="n">GradientAttribution</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_multiply_by_inputs</span> <span class="o">=</span> <span class="n">multiply_by_inputs</span>
 
-<div class="viewcode-block" id="NeuronDeepLift.attribute"><a class="viewcode-back" href="../../../../../neuron.html#captum.attr.NeuronDeepLift.attribute">[docs]</a>    <span class="nd">@log_usage</span><span class="p">()</span>
+<div class="viewcode-block" id="NeuronDeepLift.attribute">
+<a class="viewcode-back" href="../../../../../neuron.html#captum.attr.NeuronDeepLift.attribute">[docs]</a>
+    <span class="nd">@log_usage</span><span class="p">()</span>
     <span class="k">def</span> <span class="nf">attribute</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">inputs</span><span class="p">:</span> <span class="n">TensorOrTupleOfTensorsGeneric</span><span class="p">,</span>
@@ -119,9 +123,9 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">        Args:</span>
 
 <span class="sd">            inputs (Tensor or tuple[Tensor, ...]): Input for which layer</span>
-<span class="sd">                        attributions are computed. If forward_func takes a</span>
+<span class="sd">                        attributions are computed. If model takes a</span>
 <span class="sd">                        single tensor as input, a single input tensor should be</span>
-<span class="sd">                        provided. If forward_func takes multiple tensors as input,</span>
+<span class="sd">                        provided. If model takes multiple tensors as input,</span>
 <span class="sd">                        a tuple of the input tensors should be provided. It is</span>
 <span class="sd">                        assumed that for all given input tensors, dimension 0</span>
 <span class="sd">                        corresponds to the number of examples (aka batch size),</span>
@@ -200,7 +204,7 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">                        argument of a Tensor or arbitrary (non-tuple) type or a tuple</span>
 <span class="sd">                        containing multiple additional arguments including tensors</span>
 <span class="sd">                        or any arbitrary python types. These arguments are provided</span>
-<span class="sd">                        to forward_func in order, following the arguments in inputs.</span>
+<span class="sd">                        to model in order, following the arguments in inputs.</span>
 <span class="sd">                        Note that attributions are not computed with respect</span>
 <span class="sd">                        to these arguments.</span>
 <span class="sd">                        Default: None</span>
@@ -274,12 +278,16 @@ src="/_sphinx/documentation_options.js"></script>
             <span class="n">custom_attribution_func</span><span class="o">=</span><span class="n">custom_attribution_func</span><span class="p">,</span>
         <span class="p">)</span></div>
 
+
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">multiplies_by_inputs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_multiply_by_inputs</span></div>
 
 
-<div class="viewcode-block" id="NeuronDeepLiftShap"><a class="viewcode-back" href="../../../../../neuron.html#captum.attr.NeuronDeepLiftShap">[docs]</a><span class="k">class</span> <span class="nc">NeuronDeepLiftShap</span><span class="p">(</span><span class="n">NeuronAttribution</span><span class="p">,</span> <span class="n">GradientAttribution</span><span class="p">):</span>
+
+<div class="viewcode-block" id="NeuronDeepLiftShap">
+<a class="viewcode-back" href="../../../../../neuron.html#captum.attr.NeuronDeepLiftShap">[docs]</a>
+<span class="k">class</span> <span class="nc">NeuronDeepLiftShap</span><span class="p">(</span><span class="n">NeuronAttribution</span><span class="p">,</span> <span class="n">GradientAttribution</span><span class="p">):</span>
 <span class="w">    </span><span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">    Extends NeuronAttribution and uses LayerDeepLiftShap algorithms and</span>
 <span class="sd">    approximates SHAP values for given input `layer` and `neuron_selector`.</span>
@@ -334,7 +342,9 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="n">GradientAttribution</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_multiply_by_inputs</span> <span class="o">=</span> <span class="n">multiply_by_inputs</span>
 
-<div class="viewcode-block" id="NeuronDeepLiftShap.attribute"><a class="viewcode-back" href="../../../../../neuron.html#captum.attr.NeuronDeepLiftShap.attribute">[docs]</a>    <span class="nd">@log_usage</span><span class="p">()</span>
+<div class="viewcode-block" id="NeuronDeepLiftShap.attribute">
+<a class="viewcode-back" href="../../../../../neuron.html#captum.attr.NeuronDeepLiftShap.attribute">[docs]</a>
+    <span class="nd">@log_usage</span><span class="p">()</span>
     <span class="k">def</span> <span class="nf">attribute</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">inputs</span><span class="p">:</span> <span class="n">TensorOrTupleOfTensorsGeneric</span><span class="p">,</span>
@@ -350,9 +360,9 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">        Args:</span>
 
 <span class="sd">            inputs (Tensor or tuple[Tensor, ...]): Input for which layer</span>
-<span class="sd">                        attributions are computed. If forward_func takes a</span>
+<span class="sd">                        attributions are computed. If model takes a</span>
 <span class="sd">                        single tensor as input, a single input tensor should be</span>
-<span class="sd">                        provided. If forward_func takes multiple tensors as input,</span>
+<span class="sd">                        provided. If model takes multiple tensors as input,</span>
 <span class="sd">                        a tuple of the input tensors should be provided. It is</span>
 <span class="sd">                        assumed that for all given input tensors, dimension 0</span>
 <span class="sd">                        corresponds to the number of examples (aka batch size),</span>
@@ -424,7 +434,7 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">                        argument of a Tensor or arbitrary (non-tuple) type or a tuple</span>
 <span class="sd">                        containing multiple additional arguments including tensors</span>
 <span class="sd">                        or any arbitrary python types. These arguments are provided</span>
-<span class="sd">                        to forward_func in order, following the arguments in inputs.</span>
+<span class="sd">                        to model in order, following the arguments in inputs.</span>
 <span class="sd">                        Note that attributions are not computed with respect</span>
 <span class="sd">                        to these arguments.</span>
 <span class="sd">                        Default: None</span>
@@ -499,9 +509,11 @@ src="/_sphinx/documentation_options.js"></script>
             <span class="n">custom_attribution_func</span><span class="o">=</span><span class="n">custom_attribution_func</span><span class="p">,</span>
         <span class="p">)</span></div>
 
+
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">multiplies_by_inputs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_multiply_by_inputs</span></div>
+
 </pre></div>
 </div>
 </div>
@@ -547,7 +559,7 @@ src="/_sphinx/documentation_options.js"></script>
 </form>
 </div>
 </div>
-<script>$('#searchbox').show(0);</script>
+<script>document.getElementById('searchbox').style.display = "block"</script>
 </div>
 </div>
 <div class="clearer"></div>
