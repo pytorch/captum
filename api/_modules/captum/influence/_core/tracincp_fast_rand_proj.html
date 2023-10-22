@@ -91,9 +91,7 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">"""</span>
 
 
-<div class="viewcode-block" id="TracInCPFast">
-<a class="viewcode-back" href="../../../../influence.html#captum.influence.TracInCPFast">[docs]</a>
-<span class="k">class</span> <span class="nc">TracInCPFast</span><span class="p">(</span><span class="n">TracInCPBase</span><span class="p">):</span>
+<div class="viewcode-block" id="TracInCPFast"><a class="viewcode-back" href="../../../../influence.html#captum.influence.TracInCPFast">[docs]</a><span class="k">class</span> <span class="nc">TracInCPFast</span><span class="p">(</span><span class="n">TracInCPBase</span><span class="p">):</span>
 <span class="w">    </span><span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">    In Appendix F, Page 14 of the TracIn paper, they show that the calculation</span>
 <span class="sd">    of the influence score of between a test example x' and a training example x,</span>
@@ -237,9 +235,7 @@ src="/_sphinx/documentation_options.js"></script>
             <span class="k">else</span> <span class="n">_check_loss_fn</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">test_loss_fn</span><span class="p">,</span> <span class="s2">"test_loss_fn"</span><span class="p">)</span>
         <span class="p">)</span>
 
-<div class="viewcode-block" id="TracInCPFast.influence">
-<a class="viewcode-back" href="../../../../influence.html#captum.influence.TracInCPFast.influence">[docs]</a>
-    <span class="nd">@log_usage</span><span class="p">()</span>
+<div class="viewcode-block" id="TracInCPFast.influence"><a class="viewcode-back" href="../../../../influence.html#captum.influence.TracInCPFast.influence">[docs]</a>    <span class="nd">@log_usage</span><span class="p">()</span>
     <span class="k">def</span> <span class="nf">influence</span><span class="p">(</span>  <span class="c1"># type: ignore[override]</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">inputs</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span>
@@ -328,7 +324,6 @@ src="/_sphinx/documentation_options.js"></script>
             <span class="n">proponents</span><span class="p">,</span>
             <span class="n">show_progress</span><span class="o">=</span><span class="n">show_progress</span><span class="p">,</span>
         <span class="p">)</span></div>
-
 
     <span class="k">def</span> <span class="nf">_influence_batch_tracincp_fast</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
@@ -661,9 +656,7 @@ src="/_sphinx/documentation_options.js"></script>
                 <span class="n">checkpoints_progress</span><span class="o">.</span><span class="n">update</span><span class="p">()</span>
             <span class="k">return</span> <span class="n">batches_self_tracin_scores</span>
 
-<div class="viewcode-block" id="TracInCPFast.self_influence">
-<a class="viewcode-back" href="../../../../influence.html#captum.influence.TracInCPFast.self_influence">[docs]</a>
-    <span class="nd">@log_usage</span><span class="p">()</span>
+<div class="viewcode-block" id="TracInCPFast.self_influence"><a class="viewcode-back" href="../../../../influence.html#captum.influence.TracInCPFast.self_influence">[docs]</a>    <span class="nd">@log_usage</span><span class="p">()</span>
     <span class="k">def</span> <span class="nf">self_influence</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">inputs</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span> <span class="n">DataLoader</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -737,9 +730,7 @@ src="/_sphinx/documentation_options.js"></script>
             <span class="bp">self</span><span class="o">.</span><span class="n">get_name</span><span class="p">(),</span>
             <span class="n">inputs</span><span class="p">,</span>
             <span class="n">show_progress</span><span class="p">,</span>
-        <span class="p">)</span></div>
-</div>
-
+        <span class="p">)</span></div></div>
 
 
 <span class="k">def</span> <span class="nf">_basic_computation_tracincp_fast</span><span class="p">(</span>
@@ -838,9 +829,7 @@ src="/_sphinx/documentation_options.js"></script>
     <span class="k">return</span> <span class="n">input_jacobians</span><span class="p">,</span> <span class="n">_layer_inputs</span>
 
 
-<div class="viewcode-block" id="TracInCPFastRandProj">
-<a class="viewcode-back" href="../../../../influence.html#captum.influence.TracInCPFastRandProj">[docs]</a>
-<span class="k">class</span> <span class="nc">TracInCPFastRandProj</span><span class="p">(</span><span class="n">TracInCPFast</span><span class="p">):</span>
+<div class="viewcode-block" id="TracInCPFastRandProj"><a class="viewcode-back" href="../../../../influence.html#captum.influence.TracInCPFastRandProj">[docs]</a><span class="k">class</span> <span class="nc">TracInCPFastRandProj</span><span class="p">(</span><span class="n">TracInCPFast</span><span class="p">):</span>
 <span class="w">    </span><span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">    A version of TracInCPFast which is optimized for "interactive" calls to</span>
 <span class="sd">    `influence` for the purpose of calculating proponents / opponents, or</span>
@@ -1149,9 +1138,7 @@ src="/_sphinx/documentation_options.js"></script>
 
         <span class="k">return</span> <span class="n">KMostInfluentialResults</span><span class="p">(</span><span class="n">indices</span><span class="p">,</span> <span class="n">distances</span><span class="p">)</span>
 
-<div class="viewcode-block" id="TracInCPFastRandProj.self_influence">
-<a class="viewcode-back" href="../../../../influence.html#captum.influence.TracInCPFastRandProj.self_influence">[docs]</a>
-    <span class="nd">@log_usage</span><span class="p">()</span>
+<div class="viewcode-block" id="TracInCPFastRandProj.self_influence"><a class="viewcode-back" href="../../../../influence.html#captum.influence.TracInCPFastRandProj.self_influence">[docs]</a>    <span class="nd">@log_usage</span><span class="p">()</span>
     <span class="k">def</span> <span class="nf">self_influence</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">inputs</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span> <span class="n">DataLoader</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -1223,10 +1210,7 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="p">)</span>
         <span class="k">raise</span> <span class="ne">NotImplementedError</span></div>
 
-
-<div class="viewcode-block" id="TracInCPFastRandProj.influence">
-<a class="viewcode-back" href="../../../../influence.html#captum.influence.TracInCPFastRandProj.influence">[docs]</a>
-    <span class="nd">@log_usage</span><span class="p">()</span>
+<div class="viewcode-block" id="TracInCPFastRandProj.influence"><a class="viewcode-back" href="../../../../influence.html#captum.influence.TracInCPFastRandProj.influence">[docs]</a>    <span class="nd">@log_usage</span><span class="p">()</span>
     <span class="k">def</span> <span class="nf">influence</span><span class="p">(</span>  <span class="c1"># type: ignore[override]</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">inputs</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="o">...</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -1303,7 +1287,6 @@ src="/_sphinx/documentation_options.js"></script>
             <span class="n">k</span><span class="p">,</span>
             <span class="n">proponents</span><span class="p">,</span>
         <span class="p">)</span></div>
-
 
     <span class="k">def</span> <span class="nf">_set_projections_tracincp_fast_rand_proj</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
@@ -1573,9 +1556,7 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="c1"># each row in this result is the "embedding" vector for an example in `batch`</span>
         <span class="k">return</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">(</span><span class="n">checkpoint_contributions</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>  <span class="c1"># type: ignore</span>
 
-<div class="viewcode-block" id="TracInCPFastRandProj.compute_intermediate_quantities">
-<a class="viewcode-back" href="../../../../influence.html#captum.influence.TracInCPFastRandProj.compute_intermediate_quantities">[docs]</a>
-    <span class="nd">@log_usage</span><span class="p">()</span>
+<div class="viewcode-block" id="TracInCPFastRandProj.compute_intermediate_quantities"><a class="viewcode-back" href="../../../../influence.html#captum.influence.TracInCPFastRandProj.compute_intermediate_quantities">[docs]</a>    <span class="nd">@log_usage</span><span class="p">()</span>
     <span class="k">def</span> <span class="nf">compute_intermediate_quantities</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">inputs</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span> <span class="n">DataLoader</span><span class="p">],</span>
@@ -1627,9 +1608,7 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">        """</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_intermediate_quantities_tracincp_fast_rand_proj</span><span class="p">(</span>
             <span class="n">inputs</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">projection_quantities</span>
-        <span class="p">)</span></div>
-</div>
-
+        <span class="p">)</span></div></div>
 </pre></div>
 </div>
 </div>
@@ -1675,7 +1654,7 @@ src="/_sphinx/documentation_options.js"></script>
 </form>
 </div>
 </div>
-<script>document.getElementById('searchbox').style.display = "block"</script>
+<script>$('#searchbox').show(0);</script>
 </div>
 </div>
 <div class="clearer"></div>

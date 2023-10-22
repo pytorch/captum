@@ -41,9 +41,7 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="kn">from</span> <span class="nn">torch.nn</span> <span class="kn">import</span> <span class="n">Module</span>
 
 
-<div class="viewcode-block" id="NeuronGradientShap">
-<a class="viewcode-back" href="../../../../../neuron.html#captum.attr.NeuronGradientShap">[docs]</a>
-<span class="k">class</span> <span class="nc">NeuronGradientShap</span><span class="p">(</span><span class="n">NeuronAttribution</span><span class="p">,</span> <span class="n">GradientAttribution</span><span class="p">):</span>
+<div class="viewcode-block" id="NeuronGradientShap"><a class="viewcode-back" href="../../../../../neuron.html#captum.attr.NeuronGradientShap">[docs]</a><span class="k">class</span> <span class="nc">NeuronGradientShap</span><span class="p">(</span><span class="n">NeuronAttribution</span><span class="p">,</span> <span class="n">GradientAttribution</span><span class="p">):</span>
 <span class="w">    </span><span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">    Implements gradient SHAP for a neuron in a hidden layer based on the</span>
 <span class="sd">    implementation from SHAP's primary author. For reference, please, view:</span>
@@ -124,9 +122,7 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="n">GradientAttribution</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">forward_func</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_multiply_by_inputs</span> <span class="o">=</span> <span class="n">multiply_by_inputs</span>
 
-<div class="viewcode-block" id="NeuronGradientShap.attribute">
-<a class="viewcode-back" href="../../../../../neuron.html#captum.attr.NeuronGradientShap.attribute">[docs]</a>
-    <span class="nd">@log_usage</span><span class="p">()</span>
+<div class="viewcode-block" id="NeuronGradientShap.attribute"><a class="viewcode-back" href="../../../../../neuron.html#captum.attr.NeuronGradientShap.attribute">[docs]</a>    <span class="nd">@log_usage</span><span class="p">()</span>
     <span class="k">def</span> <span class="nf">attribute</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">inputs</span><span class="p">:</span> <span class="n">TensorOrTupleOfTensorsGeneric</span><span class="p">,</span>
@@ -288,11 +284,9 @@ src="/_sphinx/documentation_options.js"></script>
             <span class="n">additional_forward_args</span><span class="o">=</span><span class="n">additional_forward_args</span><span class="p">,</span>
         <span class="p">)</span></div>
 
-
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">multiplies_by_inputs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_multiply_by_inputs</span></div>
-
 </pre></div>
 </div>
 </div>
@@ -338,7 +332,7 @@ src="/_sphinx/documentation_options.js"></script>
 </form>
 </div>
 </div>
-<script>document.getElementById('searchbox').style.display = "block"</script>
+<script>$('#searchbox').show(0);</script>
 </div>
 </div>
 <div class="clearer"></div>

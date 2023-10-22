@@ -43,9 +43,7 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="kn">from</span> <span class="nn">torch</span> <span class="kn">import</span> <span class="n">Tensor</span>
 
 
-<div class="viewcode-block" id="PGD">
-<a class="viewcode-back" href="../../../../robust.html#captum.robust.PGD">[docs]</a>
-<span class="k">class</span> <span class="nc">PGD</span><span class="p">(</span><span class="n">Perturbation</span><span class="p">):</span>
+<div class="viewcode-block" id="PGD"><a class="viewcode-back" href="../../../../robust.html#captum.robust.PGD">[docs]</a><span class="k">class</span> <span class="nc">PGD</span><span class="p">(</span><span class="n">Perturbation</span><span class="p">):</span>
 <span class="w">    </span><span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">    Projected Gradient Descent is an iterative version of the one-step attack</span>
 <span class="sd">    FGSM that can generate adversarial examples. It takes multiple gradient</span>
@@ -100,9 +98,7 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="bp">self</span><span class="o">.</span><span class="n">fgsm</span> <span class="o">=</span> <span class="n">FGSM</span><span class="p">(</span><span class="n">forward_func</span><span class="p">,</span> <span class="n">loss_func</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">bound</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">clamp</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="nb">min</span><span class="o">=</span><span class="n">lower_bound</span><span class="p">,</span> <span class="nb">max</span><span class="o">=</span><span class="n">upper_bound</span><span class="p">)</span>
 
-<div class="viewcode-block" id="PGD.perturb">
-<a class="viewcode-back" href="../../../../robust.html#captum.robust.PGD.perturb">[docs]</a>
-    <span class="nd">@log_usage</span><span class="p">()</span>
+<div class="viewcode-block" id="PGD.perturb"><a class="viewcode-back" href="../../../../robust.html#captum.robust.PGD.perturb">[docs]</a>    <span class="nd">@log_usage</span><span class="p">()</span>
     <span class="k">def</span> <span class="nf">perturb</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">inputs</span><span class="p">:</span> <span class="n">TensorOrTupleOfTensorsGeneric</span><span class="p">,</span>
@@ -235,7 +231,6 @@ src="/_sphinx/documentation_options.js"></script>
             <span class="p">)</span>
         <span class="k">return</span> <span class="n">_format_output</span><span class="p">(</span><span class="n">is_inputs_tuple</span><span class="p">,</span> <span class="n">perturbed_inputs</span><span class="p">)</span></div>
 
-
     <span class="k">def</span> <span class="nf">_random_point</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">center</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">,</span> <span class="n">radius</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">norm</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">mask</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tensor</span><span class="p">:</span>
@@ -256,7 +251,6 @@ src="/_sphinx/documentation_options.js"></script>
             <span class="k">return</span> <span class="n">center</span> <span class="o">+</span> <span class="p">(</span><span class="n">x</span> <span class="o">*</span> <span class="n">mask</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">AssertionError</span><span class="p">(</span><span class="s2">"Norm constraint must be L2 or Linf."</span><span class="p">)</span></div>
-
 </pre></div>
 </div>
 </div>
@@ -302,7 +296,7 @@ src="/_sphinx/documentation_options.js"></script>
 </form>
 </div>
 </div>
-<script>document.getElementById('searchbox').style.display = "block"</script>
+<script>$('#searchbox').show(0);</script>
 </div>
 </div>
 <div class="clearer"></div>

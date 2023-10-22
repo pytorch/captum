@@ -44,7 +44,6 @@ src="/_sphinx/documentation_options.js"></script>
     <span class="n">_flatten_tensor_or_tuple</span><span class="p">,</span>
     <span class="n">_format_output</span><span class="p">,</span>
     <span class="n">_format_tensor_into_tuples</span><span class="p">,</span>
-    <span class="n">_get_max_feature_index</span><span class="p">,</span>
     <span class="n">_is_tuple</span><span class="p">,</span>
     <span class="n">_reduce_list</span><span class="p">,</span>
     <span class="n">_run_forward</span><span class="p">,</span>
@@ -70,9 +69,7 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="kn">from</span> <span class="nn">torch.utils.data</span> <span class="kn">import</span> <span class="n">DataLoader</span><span class="p">,</span> <span class="n">TensorDataset</span>
 
 
-<div class="viewcode-block" id="LimeBase">
-<a class="viewcode-back" href="../../../../lime.html#captum.attr.LimeBase">[docs]</a>
-<span class="k">class</span> <span class="nc">LimeBase</span><span class="p">(</span><span class="n">PerturbationAttribution</span><span class="p">):</span>
+<div class="viewcode-block" id="LimeBase"><a class="viewcode-back" href="../../../../lime.html#captum.attr.LimeBase">[docs]</a><span class="k">class</span> <span class="nc">LimeBase</span><span class="p">(</span><span class="n">PerturbationAttribution</span><span class="p">):</span>
 <span class="w">    </span><span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">    Lime is an interpretability method that trains an interpretable surrogate model</span>
 <span class="sd">    by sampling points around a specified input example and using model evaluations</span>
@@ -269,9 +266,7 @@ src="/_sphinx/documentation_options.js"></script>
                 <span class="bp">self</span><span class="o">.</span><span class="n">to_interp_rep_transform</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
             <span class="p">),</span> <span class="s2">"Must provide transform from original input space to interpretable space"</span>
 
-<div class="viewcode-block" id="LimeBase.attribute">
-<a class="viewcode-back" href="../../../../lime.html#captum.attr.LimeBase.attribute">[docs]</a>
-    <span class="nd">@log_usage</span><span class="p">()</span>
+<div class="viewcode-block" id="LimeBase.attribute"><a class="viewcode-back" href="../../../../lime.html#captum.attr.LimeBase.attribute">[docs]</a>    <span class="nd">@log_usage</span><span class="p">()</span>
     <span class="k">def</span> <span class="nf">attribute</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">inputs</span><span class="p">:</span> <span class="n">TensorOrTupleOfTensorsGeneric</span><span class="p">,</span>
@@ -566,7 +561,6 @@ src="/_sphinx/documentation_options.js"></script>
             <span class="bp">self</span><span class="o">.</span><span class="n">interpretable_model</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">DataLoader</span><span class="p">(</span><span class="n">dataset</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="n">batch_count</span><span class="p">))</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">interpretable_model</span><span class="o">.</span><span class="n">representation</span><span class="p">()</span></div>
 
-
     <span class="k">def</span> <span class="nf">_evaluate_batch</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">curr_model_inputs</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">TensorOrTupleOfTensorsGeneric</span><span class="p">],</span>
@@ -589,16 +583,12 @@ src="/_sphinx/documentation_options.js"></script>
             <span class="k">return</span> <span class="n">model_out</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span>
         <span class="k">return</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">([</span><span class="n">model_out</span><span class="p">],</span> <span class="n">device</span><span class="o">=</span><span class="n">device</span><span class="p">)</span>
 
-<div class="viewcode-block" id="LimeBase.has_convergence_delta">
-<a class="viewcode-back" href="../../../../lime.html#captum.attr.LimeBase.has_convergence_delta">[docs]</a>
-    <span class="k">def</span> <span class="nf">has_convergence_delta</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<div class="viewcode-block" id="LimeBase.has_convergence_delta"><a class="viewcode-back" href="../../../../lime.html#captum.attr.LimeBase.has_convergence_delta">[docs]</a>    <span class="k">def</span> <span class="nf">has_convergence_delta</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
         <span class="k">return</span> <span class="kc">False</span></div>
-
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">multiplies_by_inputs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="kc">False</span></div>
-
 
 
 <span class="c1"># Default transformations and methods</span>
@@ -630,9 +620,7 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="p">)</span>
 
 
-<div class="viewcode-block" id="get_exp_kernel_similarity_function">
-<a class="viewcode-back" href="../../../../lime.html#captum.attr.get_exp_kernel_similarity_function">[docs]</a>
-<span class="k">def</span> <span class="nf">get_exp_kernel_similarity_function</span><span class="p">(</span>
+<div class="viewcode-block" id="get_exp_kernel_similarity_function"><a class="viewcode-back" href="../../../../lime.html#captum.attr.get_exp_kernel_similarity_function">[docs]</a><span class="k">def</span> <span class="nf">get_exp_kernel_similarity_function</span><span class="p">(</span>
     <span class="n">distance_mode</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"cosine"</span><span class="p">,</span> <span class="n">kernel_width</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">:</span>
 <span class="w">    </span><span class="sa">r</span><span class="sd">"""</span>
@@ -681,7 +669,6 @@ src="/_sphinx/documentation_options.js"></script>
     <span class="k">return</span> <span class="n">default_exp_kernel</span></div>
 
 
-
 <span class="k">def</span> <span class="nf">default_perturb_func</span><span class="p">(</span><span class="n">original_inp</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
     <span class="k">assert</span> <span class="p">(</span>
         <span class="s2">"num_interp_features"</span> <span class="ow">in</span> <span class="n">kwargs</span>
@@ -718,13 +705,18 @@ src="/_sphinx/documentation_options.js"></script>
                 <span class="n">single_mask</span> <span class="o">-</span> <span class="n">min_interp_features</span> <span class="k">for</span> <span class="n">single_mask</span> <span class="ow">in</span> <span class="n">feature_mask</span>
             <span class="p">)</span>
 
-        <span class="n">num_interp_features</span> <span class="o">=</span> <span class="n">_get_max_feature_index</span><span class="p">(</span><span class="n">feature_mask</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
+        <span class="n">num_interp_features</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span>
+            <span class="nb">max</span><span class="p">(</span>
+                <span class="n">torch</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">single_mask</span><span class="p">)</span><span class="o">.</span><span class="n">item</span><span class="p">()</span>
+                <span class="k">for</span> <span class="n">single_mask</span> <span class="ow">in</span> <span class="n">feature_mask</span>
+                <span class="k">if</span> <span class="n">single_mask</span><span class="o">.</span><span class="n">numel</span><span class="p">()</span>
+            <span class="p">)</span>
+            <span class="o">+</span> <span class="mi">1</span>
+        <span class="p">)</span>
     <span class="k">return</span> <span class="n">feature_mask</span><span class="p">,</span> <span class="n">num_interp_features</span>
 
 
-<div class="viewcode-block" id="Lime">
-<a class="viewcode-back" href="../../../../lime.html#captum.attr.Lime">[docs]</a>
-<span class="k">class</span> <span class="nc">Lime</span><span class="p">(</span><span class="n">LimeBase</span><span class="p">):</span>
+<div class="viewcode-block" id="Lime"><a class="viewcode-back" href="../../../../lime.html#captum.attr.Lime">[docs]</a><span class="k">class</span> <span class="nc">Lime</span><span class="p">(</span><span class="n">LimeBase</span><span class="p">):</span>
 <span class="w">    </span><span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">    Lime is an interpretability method that trains an interpretable surrogate model</span>
 <span class="sd">    by sampling points around a specified input example and using model evaluations</span>
@@ -874,9 +866,7 @@ src="/_sphinx/documentation_options.js"></script>
             <span class="kc">None</span><span class="p">,</span>
         <span class="p">)</span>
 
-<div class="viewcode-block" id="Lime.attribute">
-<a class="viewcode-back" href="../../../../lime.html#captum.attr.Lime.attribute">[docs]</a>
-    <span class="nd">@log_usage</span><span class="p">()</span>
+<div class="viewcode-block" id="Lime.attribute"><a class="viewcode-back" href="../../../../lime.html#captum.attr.Lime.attribute">[docs]</a>    <span class="nd">@log_usage</span><span class="p">()</span>
     <span class="k">def</span> <span class="nf">attribute</span><span class="p">(</span>  <span class="c1"># type: ignore</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">inputs</span><span class="p">:</span> <span class="n">TensorOrTupleOfTensorsGeneric</span><span class="p">,</span>
@@ -1118,7 +1108,6 @@ src="/_sphinx/documentation_options.js"></script>
             <span class="n">show_progress</span><span class="o">=</span><span class="n">show_progress</span><span class="p">,</span>
         <span class="p">)</span></div>
 
-
     <span class="k">def</span> <span class="nf">_attribute_kwargs</span><span class="p">(</span>  <span class="c1"># type: ignore</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">inputs</span><span class="p">:</span> <span class="n">TensorOrTupleOfTensorsGeneric</span><span class="p">,</span>
@@ -1284,7 +1273,6 @@ src="/_sphinx/documentation_options.js"></script>
                     <span class="o">*</span> <span class="p">(</span><span class="n">feature_mask</span><span class="p">[</span><span class="n">tensor_ind</span><span class="p">]</span> <span class="o">==</span> <span class="n">single_feature</span><span class="p">)</span><span class="o">.</span><span class="n">float</span><span class="p">()</span>
                 <span class="p">)</span>
         <span class="k">return</span> <span class="n">_format_output</span><span class="p">(</span><span class="n">is_inputs_tuple</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">attr</span><span class="p">))</span></div>
-
 </pre></div>
 </div>
 </div>
@@ -1330,7 +1318,7 @@ src="/_sphinx/documentation_options.js"></script>
 </form>
 </div>
 </div>
-<script>document.getElementById('searchbox').style.display = "block"</script>
+<script>$('#searchbox').show(0);</script>
 </div>
 </div>
 <div class="clearer"></div>

@@ -39,9 +39,7 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="kn">from</span> <span class="nn">torch</span> <span class="kn">import</span> <span class="n">nn</span><span class="p">,</span> <span class="n">Tensor</span>
 
 
-<div class="viewcode-block" id="GaussianStochasticGates">
-<a class="viewcode-back" href="../../../gaussian_stg.html#captum.module.GaussianStochasticGates">[docs]</a>
-<span class="k">class</span> <span class="nc">GaussianStochasticGates</span><span class="p">(</span><span class="n">StochasticGatesBase</span><span class="p">):</span>
+<div class="viewcode-block" id="GaussianStochasticGates"><a class="viewcode-back" href="../../../gaussian_stg.html#captum.module.GaussianStochasticGates">[docs]</a><span class="k">class</span> <span class="nc">GaussianStochasticGates</span><span class="p">(</span><span class="n">StochasticGatesBase</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Stochastic Gates with Gaussian distribution.</span>
 
@@ -62,15 +60,8 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">    within 0 and 1, gaussian does not have boundaries. So hard-sigmoid rectification</span>
 <span class="sd">    is used to "fold" the parts smaller than 0 or larger than 1 back to 0 and 1.</span>
 
-<span class="sd">    More details can be found in the original paper:</span>
-<span class="sd">    https://arxiv.org/abs/1810.04247</span>
-
-<span class="sd">    Examples::</span>
-
-<span class="sd">        &gt;&gt;&gt; n_params = 5  # number of gates</span>
-<span class="sd">        &gt;&gt;&gt; stg = GaussianStochasticGates(n_params, reg_weight=0.01)</span>
-<span class="sd">        &gt;&gt;&gt; inputs = torch.randn(3, n_params)  # mock inputs with batch size of 3</span>
-<span class="sd">        &gt;&gt;&gt; gated_inputs, reg = stg(mock_inputs)  # gate the inputs</span>
+<span class="sd">    More details can be found in the</span>
+<span class="sd">    `original paper &lt;https://arxiv.org/abs/1810.04247&gt;`.</span>
 <span class="sd">    """</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
@@ -85,28 +76,28 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">        Args:</span>
 <span class="sd">            n_gates (int): number of gates.</span>
 
-<span class="sd">            mask (Tensor, optional): If provided, this allows grouping multiple</span>
+<span class="sd">            mask (Optional[Tensor]): If provided, this allows grouping multiple</span>
 <span class="sd">                input tensor elements to share the same stochastic gate.</span>
 <span class="sd">                This tensor should be broadcastable to match the input shape</span>
 <span class="sd">                and contain integers in the range 0 to n_gates - 1.</span>
 <span class="sd">                Indices grouped to the same stochastic gate should have the same value.</span>
 <span class="sd">                If not provided, each element in the input tensor</span>
-<span class="sd">                (on dimensions other than dim 0, i.e., batch dim) is gated separately.</span>
+<span class="sd">                (on dimensions other than dim 0 - batch dim) is gated separately.</span>
 <span class="sd">                Default: None</span>
 
-<span class="sd">            reg_weight (float, optional): rescaling weight for L0 regularization term.</span>
+<span class="sd">            reg_weight (Optional[float]): rescaling weight for L0 regularization term.</span>
 <span class="sd">                Default: 1.0</span>
 
-<span class="sd">            std (float, optional): standard deviation that will be fixed throughout.</span>
-<span class="sd">                Default: 0.5</span>
+<span class="sd">            std (Optional[float]): standard deviation that will be fixed throughout.</span>
+<span class="sd">                Default: 0.5 (by paper reference)</span>
 
-<span class="sd">            reg_reduction (str, optional): the reduction to apply to the regularization:</span>
-<span class="sd">                ``'none'`` | ``'mean'`` | ``'sum'``. ``'none'``: no reduction will be</span>
-<span class="sd">                applied and it will be the same as the return of ``get_active_probs``,</span>
-<span class="sd">                ``'mean'``: the sum of the gates non-zero probabilities will be divided</span>
-<span class="sd">                by the number of gates, ``'sum'``: the gates non-zero probabilities will</span>
+<span class="sd">            reg_reduction (str, optional): the reduction to apply to</span>
+<span class="sd">                the regularization: 'none'|'mean'|'sum'. 'none': no reduction will be</span>
+<span class="sd">                applied and it will be the same as the return of get_active_probs,</span>
+<span class="sd">                'mean': the sum of the gates non-zero probabilities will be divided by</span>
+<span class="sd">                the number of gates, 'sum': the gates non-zero probabilities will</span>
 <span class="sd">                be summed.</span>
-<span class="sd">                Default: ``'sum'``</span>
+<span class="sd">                Default: 'sum'</span>
 <span class="sd">        """</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
             <span class="n">n_gates</span><span class="p">,</span> <span class="n">mask</span><span class="o">=</span><span class="n">mask</span><span class="p">,</span> <span class="n">reg_weight</span><span class="o">=</span><span class="n">reg_weight</span><span class="p">,</span> <span class="n">reg_reduction</span><span class="o">=</span><span class="n">reg_reduction</span>
@@ -167,7 +158,7 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">        Args:</span>
 <span class="sd">            mu (Tensor): FloatTensor containing weights for the pretrained mu</span>
 
-<span class="sd">            mask (Tensor, optional): If provided, this allows grouping multiple</span>
+<span class="sd">            mask (Optional[Tensor]): If provided, this allows grouping multiple</span>
 <span class="sd">                input tensor elements to share the same stochastic gate.</span>
 <span class="sd">                This tensor should be broadcastable to match the input shape</span>
 <span class="sd">                and contain integers in the range 0 to n_gates - 1.</span>
@@ -176,19 +167,11 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">                (on dimensions other than dim 0 - batch dim) is gated separately.</span>
 <span class="sd">                Default: None</span>
 
-<span class="sd">            reg_weight (float, optional): rescaling weight for L0 regularization term.</span>
+<span class="sd">            reg_weight (Optional[float]): rescaling weight for L0 regularization term.</span>
 <span class="sd">                Default: 1.0</span>
 
-<span class="sd">            std (float, optional): standard deviation that will be fixed throughout.</span>
-<span class="sd">                Default: 0.5</span>
-
-<span class="sd">            reg_reduction (str, optional): the reduction to apply to the regularization:</span>
-<span class="sd">                ``'none'`` | ``'mean'`` | ``'sum'``. ``'none'``: no reduction will be</span>
-<span class="sd">                applied and it will be the same as the return of ``get_active_probs``,</span>
-<span class="sd">                ``'mean'``: the sum of the gates non-zero probabilities will be divided</span>
-<span class="sd">                by the number of gates, ``'sum'``: the gates non-zero probabilities will</span>
-<span class="sd">                be summed.</span>
-<span class="sd">                Default: ``'sum'``</span>
+<span class="sd">            std (Optional[float]): standard deviation that will be fixed throughout.</span>
+<span class="sd">                Default: 0.5 (by paper reference)</span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            stg (GaussianStochasticGates): StochasticGates instance</span>
@@ -198,7 +181,6 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="n">stg</span><span class="o">.</span><span class="n">load_state_dict</span><span class="p">({</span><span class="s2">"mu"</span><span class="p">:</span> <span class="n">mu</span><span class="p">},</span> <span class="n">strict</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 
         <span class="k">return</span> <span class="n">stg</span></div>
-
 </pre></div>
 </div>
 </div>
@@ -244,7 +226,7 @@ src="/_sphinx/documentation_options.js"></script>
 </form>
 </div>
 </div>
-<script>document.getElementById('searchbox').style.display = "block"</script>
+<script>$('#searchbox').show(0);</script>
 </div>
 </div>
 <div class="clearer"></div>

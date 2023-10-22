@@ -43,9 +43,7 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="kn">from</span> <span class="nn">torch.nn</span> <span class="kn">import</span> <span class="n">Module</span>
 
 
-<div class="viewcode-block" id="LayerActivation">
-<a class="viewcode-back" href="../../../../../layer.html#captum.attr.LayerActivation">[docs]</a>
-<span class="k">class</span> <span class="nc">LayerActivation</span><span class="p">(</span><span class="n">LayerAttribution</span><span class="p">):</span>
+<div class="viewcode-block" id="LayerActivation"><a class="viewcode-back" href="../../../../../layer.html#captum.attr.LayerActivation">[docs]</a><span class="k">class</span> <span class="nc">LayerActivation</span><span class="p">(</span><span class="n">LayerAttribution</span><span class="p">):</span>
 <span class="w">    </span><span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">    Computes activation of selected layer for given input.</span>
 <span class="sd">    """</span>
@@ -78,9 +76,7 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">        """</span>
         <span class="n">LayerAttribution</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">forward_func</span><span class="p">,</span> <span class="n">layer</span><span class="p">,</span> <span class="n">device_ids</span><span class="p">)</span>
 
-<div class="viewcode-block" id="LayerActivation.attribute">
-<a class="viewcode-back" href="../../../../../layer.html#captum.attr.LayerActivation.attribute">[docs]</a>
-    <span class="nd">@log_usage</span><span class="p">()</span>
+<div class="viewcode-block" id="LayerActivation.attribute"><a class="viewcode-back" href="../../../../../layer.html#captum.attr.LayerActivation.attribute">[docs]</a>    <span class="nd">@log_usage</span><span class="p">()</span>
     <span class="k">def</span> <span class="nf">attribute</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">inputs</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">]],</span>
@@ -167,11 +163,9 @@ src="/_sphinx/documentation_options.js"></script>
                 <span class="k">for</span> <span class="n">single_layer_eval</span> <span class="ow">in</span> <span class="n">layer_eval</span>
             <span class="p">]</span></div>
 
-
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">multiplies_by_inputs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="kc">True</span></div>
-
 </pre></div>
 </div>
 </div>
@@ -217,7 +211,7 @@ src="/_sphinx/documentation_options.js"></script>
 </form>
 </div>
 </div>
-<script>document.getElementById('searchbox').style.display = "block"</script>
+<script>$('#searchbox').show(0);</script>
 </div>
 </div>
 <div class="clearer"></div>

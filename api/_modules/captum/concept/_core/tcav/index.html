@@ -234,9 +234,7 @@ src="/_sphinx/documentation_options.js"></script>
     <span class="k">return</span> <span class="n">cavs</span>
 
 
-<div class="viewcode-block" id="TCAV">
-<a class="viewcode-back" href="../../../../concept.html#captum.concept.TCAV">[docs]</a>
-<span class="k">class</span> <span class="nc">TCAV</span><span class="p">(</span><span class="n">ConceptInterpreter</span><span class="p">):</span>
+<div class="viewcode-block" id="TCAV"><a class="viewcode-back" href="../../../../concept.html#captum.concept.TCAV">[docs]</a><span class="k">class</span> <span class="nc">TCAV</span><span class="p">(</span><span class="n">ConceptInterpreter</span><span class="p">):</span>
 <span class="w">    </span><span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">    This class implements ConceptInterpreter abstract class using an</span>
 <span class="sd">    approach called Testing with Concept Activation Vectors (TCAVs),</span>
@@ -367,9 +365,7 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="c1"># otherwise `create_cav_dir_if_missing` will raise an error</span>
         <span class="n">CAV</span><span class="o">.</span><span class="n">create_cav_dir_if_missing</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">save_path</span><span class="p">,</span> <span class="n">model_id</span><span class="p">)</span>
 
-<div class="viewcode-block" id="TCAV.generate_all_activations">
-<a class="viewcode-back" href="../../../../concept.html#captum.concept.TCAV.generate_all_activations">[docs]</a>
-    <span class="k">def</span> <span class="nf">generate_all_activations</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<div class="viewcode-block" id="TCAV.generate_all_activations"><a class="viewcode-back" href="../../../../concept.html#captum.concept.TCAV.generate_all_activations">[docs]</a>    <span class="k">def</span> <span class="nf">generate_all_activations</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        Computes layer activations for all concepts and layers that are</span>
 <span class="sd">        defined in `self.layers` and `self.concepts` instance variables.</span>
@@ -377,10 +373,7 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="k">for</span> <span class="n">concept</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">concepts</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">generate_activation</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">layers</span><span class="p">,</span> <span class="n">concept</span><span class="p">)</span></div>
 
-
-<div class="viewcode-block" id="TCAV.generate_activation">
-<a class="viewcode-back" href="../../../../concept.html#captum.concept.TCAV.generate_activation">[docs]</a>
-    <span class="k">def</span> <span class="nf">generate_activation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">layers</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">List</span><span class="p">],</span> <span class="n">concept</span><span class="p">:</span> <span class="n">Concept</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<div class="viewcode-block" id="TCAV.generate_activation"><a class="viewcode-back" href="../../../../concept.html#captum.concept.TCAV.generate_activation">[docs]</a>    <span class="k">def</span> <span class="nf">generate_activation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">layers</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">List</span><span class="p">],</span> <span class="n">concept</span><span class="p">:</span> <span class="n">Concept</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        Computes layer activations for the specified `concept` and</span>
 <span class="sd">        the list of layer(s) `layers`.</span>
@@ -417,10 +410,7 @@ src="/_sphinx/documentation_options.js"></script>
                     <span class="nb">str</span><span class="p">(</span><span class="n">i</span><span class="p">),</span>
                 <span class="p">)</span></div>
 
-
-<div class="viewcode-block" id="TCAV.generate_activations">
-<a class="viewcode-back" href="../../../../concept.html#captum.concept.TCAV.generate_activations">[docs]</a>
-    <span class="k">def</span> <span class="nf">generate_activations</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">concept_layers</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="n">Concept</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<div class="viewcode-block" id="TCAV.generate_activations"><a class="viewcode-back" href="../../../../concept.html#captum.concept.TCAV.generate_activations">[docs]</a>    <span class="k">def</span> <span class="nf">generate_activations</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">concept_layers</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="n">Concept</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        Computes layer activations for the concepts and layers specified in</span>
 <span class="sd">        `concept_layers` dictionary.</span>
@@ -434,10 +424,7 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="k">for</span> <span class="n">concept</span> <span class="ow">in</span> <span class="n">concept_layers</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">generate_activation</span><span class="p">(</span><span class="n">concept_layers</span><span class="p">[</span><span class="n">concept</span><span class="p">],</span> <span class="n">concept</span><span class="p">)</span></div>
 
-
-<div class="viewcode-block" id="TCAV.load_cavs">
-<a class="viewcode-back" href="../../../../concept.html#captum.concept.TCAV.load_cavs">[docs]</a>
-    <span class="k">def</span> <span class="nf">load_cavs</span><span class="p">(</span>
+<div class="viewcode-block" id="TCAV.load_cavs"><a class="viewcode-back" href="../../../../concept.html#captum.concept.TCAV.load_cavs">[docs]</a>    <span class="k">def</span> <span class="nf">load_cavs</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">concepts</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Concept</span><span class="p">]</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">Dict</span><span class="p">[</span><span class="n">Concept</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]]]:</span>
 <span class="w">        </span><span class="sa">r</span><span class="sd">"""</span>
@@ -492,10 +479,7 @@ src="/_sphinx/documentation_options.js"></script>
                         <span class="n">concept_layers</span><span class="p">[</span><span class="n">concept</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">layer</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">layers</span><span class="p">,</span> <span class="n">concept_layers</span></div>
 
-
-<div class="viewcode-block" id="TCAV.compute_cavs">
-<a class="viewcode-back" href="../../../../concept.html#captum.concept.TCAV.compute_cavs">[docs]</a>
-    <span class="k">def</span> <span class="nf">compute_cavs</span><span class="p">(</span>
+<div class="viewcode-block" id="TCAV.compute_cavs"><a class="viewcode-back" href="../../../../concept.html#captum.concept.TCAV.compute_cavs">[docs]</a>    <span class="k">def</span> <span class="nf">compute_cavs</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">experimental_sets</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">Concept</span><span class="p">]],</span>
         <span class="n">force_train</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
@@ -608,10 +592,7 @@ src="/_sphinx/documentation_options.js"></script>
 
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">cavs</span></div>
 
-
-<div class="viewcode-block" id="TCAV.interpret">
-<a class="viewcode-back" href="../../../../concept.html#captum.concept.TCAV.interpret">[docs]</a>
-    <span class="nd">@log_usage</span><span class="p">()</span>
+<div class="viewcode-block" id="TCAV.interpret"><a class="viewcode-back" href="../../../../concept.html#captum.concept.TCAV.interpret">[docs]</a>    <span class="nd">@log_usage</span><span class="p">()</span>
     <span class="k">def</span> <span class="nf">interpret</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">inputs</span><span class="p">:</span> <span class="n">TensorOrTupleOfTensorsGeneric</span><span class="p">,</span>
@@ -804,7 +785,6 @@ src="/_sphinx/documentation_options.js"></script>
 
         <span class="k">return</span> <span class="n">scores</span></div>
 
-
     <span class="k">def</span> <span class="nf">_tcav_sub_computation</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">scores</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Tensor</span><span class="p">]]],</span>
@@ -850,7 +830,6 @@ src="/_sphinx/documentation_options.js"></script>
                     <span class="n">magnitude_score</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="p">:],</span> <span class="n">dim</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="n">new_ord</span>
                 <span class="p">),</span>
             <span class="p">}</span></div>
-
 </pre></div>
 </div>
 </div>
@@ -896,7 +875,7 @@ src="/_sphinx/documentation_options.js"></script>
 </form>
 </div>
 </div>
-<script>document.getElementById('searchbox').style.display = "block"</script>
+<script>$('#searchbox').show(0);</script>
 </div>
 </div>
 <div class="clearer"></div>

@@ -81,9 +81,7 @@ src="/_sphinx/documentation_options.js"></script>
     <span class="k">return</span> <span class="n">inp</span>
 
 
-<div class="viewcode-block" id="AttackComparator">
-<a class="viewcode-back" href="../../../../../robust.html#captum.robust.AttackComparator">[docs]</a>
-<span class="k">class</span> <span class="nc">AttackComparator</span><span class="p">(</span><span class="n">Generic</span><span class="p">[</span><span class="n">MetricResultType</span><span class="p">]):</span>
+<div class="viewcode-block" id="AttackComparator"><a class="viewcode-back" href="../../../../../robust.html#captum.robust.AttackComparator">[docs]</a><span class="k">class</span> <span class="nc">AttackComparator</span><span class="p">(</span><span class="n">Generic</span><span class="p">[</span><span class="n">MetricResultType</span><span class="p">]):</span>
 <span class="w">    </span><span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">    Allows measuring model robustness for a given attack or set of attacks. This class</span>
 <span class="sd">    can be used with any metric(s) as well as any set of attacks, either based on</span>
@@ -136,9 +134,7 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="bp">self</span><span class="o">.</span><span class="n">summary_results</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">out_format</span> <span class="o">=</span> <span class="kc">None</span>
 
-<div class="viewcode-block" id="AttackComparator.add_attack">
-<a class="viewcode-back" href="../../../../../robust.html#captum.robust.AttackComparator.add_attack">[docs]</a>
-    <span class="k">def</span> <span class="nf">add_attack</span><span class="p">(</span>
+<div class="viewcode-block" id="AttackComparator.add_attack"><a class="viewcode-back" href="../../../../../robust.html#captum.robust.AttackComparator.add_attack">[docs]</a>    <span class="k">def</span> <span class="nf">add_attack</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">attack</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Perturbation</span><span class="p">,</span> <span class="n">Callable</span><span class="p">],</span>
         <span class="n">name</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -207,7 +203,6 @@ src="/_sphinx/documentation_options.js"></script>
             <span class="n">additional_args</span><span class="o">=</span><span class="n">additional_attack_arg_names</span><span class="p">,</span>
         <span class="p">)</span></div>
 
-
     <span class="k">def</span> <span class="nf">_format_summary</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">summary</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">]]</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">MetricResultType</span><span class="p">]:</span>
@@ -273,9 +268,7 @@ src="/_sphinx/documentation_options.js"></script>
                 <span class="n">batch_summarizers</span><span class="p">[</span><span class="n">key_list</span><span class="p">[</span><span class="n">i</span><span class="p">]]</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">out_metric</span><span class="p">)</span>
                 <span class="n">current_count</span> <span class="o">+=</span> <span class="n">batch_size</span>
 
-<div class="viewcode-block" id="AttackComparator.evaluate">
-<a class="viewcode-back" href="../../../../../robust.html#captum.robust.AttackComparator.evaluate">[docs]</a>
-    <span class="nd">@log_usage</span><span class="p">()</span>
+<div class="viewcode-block" id="AttackComparator.evaluate"><a class="viewcode-back" href="../../../../../robust.html#captum.robust.AttackComparator.evaluate">[docs]</a>    <span class="nd">@log_usage</span><span class="p">()</span>
     <span class="k">def</span> <span class="nf">evaluate</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">inputs</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
@@ -448,7 +441,6 @@ src="/_sphinx/documentation_options.js"></script>
 
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parse_and_update_results</span><span class="p">(</span><span class="n">batch_summarizers</span><span class="p">)</span></div>
 
-
     <span class="k">def</span> <span class="nf">_parse_and_update_results</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">batch_summarizers</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Summarizer</span><span class="p">]</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Union</span><span class="p">[</span><span class="n">MetricResultType</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">MetricResultType</span><span class="p">]]]:</span>
@@ -488,9 +480,7 @@ src="/_sphinx/documentation_options.js"></script>
                     <span class="p">)</span>
         <span class="k">return</span> <span class="n">results</span>
 
-<div class="viewcode-block" id="AttackComparator.summary">
-<a class="viewcode-back" href="../../../../../robust.html#captum.robust.AttackComparator.summary">[docs]</a>
-    <span class="k">def</span> <span class="nf">summary</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">MetricResultType</span><span class="p">]]:</span>
+<div class="viewcode-block" id="AttackComparator.summary"><a class="viewcode-back" href="../../../../../robust.html#captum.robust.AttackComparator.summary">[docs]</a>    <span class="k">def</span> <span class="nf">summary</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">MetricResultType</span><span class="p">]]:</span>
 <span class="w">        </span><span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        Returns average results over all previous batches evaluated.</span>
 
@@ -513,16 +503,11 @@ src="/_sphinx/documentation_options.js"></script>
             <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">summary_results</span>
         <span class="p">}</span></div>
 
-
-<div class="viewcode-block" id="AttackComparator.reset">
-<a class="viewcode-back" href="../../../../../robust.html#captum.robust.AttackComparator.reset">[docs]</a>
-    <span class="k">def</span> <span class="nf">reset</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<div class="viewcode-block" id="AttackComparator.reset"><a class="viewcode-back" href="../../../../../robust.html#captum.robust.AttackComparator.reset">[docs]</a>    <span class="k">def</span> <span class="nf">reset</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        Reset stored average summary results for previous batches</span>
 <span class="sd">        """</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">summary_results</span> <span class="o">=</span> <span class="p">{}</span></div>
-</div>
-
+        <span class="bp">self</span><span class="o">.</span><span class="n">summary_results</span> <span class="o">=</span> <span class="p">{}</span></div></div>
 </pre></div>
 </div>
 </div>
@@ -568,7 +553,7 @@ src="/_sphinx/documentation_options.js"></script>
 </form>
 </div>
 </div>
-<script>document.getElementById('searchbox').style.display = "block"</script>
+<script>$('#searchbox').show(0);</script>
 </div>
 </div>
 <div class="clearer"></div>

@@ -30,12 +30,12 @@ src="/_sphinx/documentation_options.js"></script>
 <div class="bodywrapper">
 <div class="body" role="main">
 <section id="robustness">
-<h1>Robustness<a class="headerlink" href="#robustness" title="Link to this heading">¶</a></h1>
+<h1>Robustness<a class="headerlink" href="#robustness" title="Permalink to this headline">¶</a></h1>
 <section id="fgsm">
-<h2>FGSM<a class="headerlink" href="#fgsm" title="Link to this heading">¶</a></h2>
+<h2>FGSM<a class="headerlink" href="#fgsm" title="Permalink to this headline">¶</a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="captum.robust.FGSM">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">captum.robust.</span></span><span class="sig-name descname"><span class="pre">FGSM</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">forward_func</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">loss_func</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lower_bound</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">float('-inf')</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">upper_bound</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">float('inf')</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/robust/_core/fgsm.html#FGSM"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum.robust.FGSM" title="Link to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">captum.robust.</span></span><span class="sig-name descname"><span class="pre">FGSM</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">forward_func</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">loss_func</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lower_bound</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">float('-inf')</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">upper_bound</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">float('inf')</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/robust/_core/fgsm.html#FGSM"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum.robust.FGSM" title="Permalink to this definition">¶</a></dt>
 <dd><p>Fast Gradient Sign Method is a one-step method that can generate
 adversarial examples.</p>
 <p>For non-targeted attack, the formulation is:</p>
@@ -51,17 +51,17 @@ parameters, inputs and labels.</p>
 <p>More details on Fast Gradient Sign Method can be found in the original
 paper: <a class="reference external" href="https://arxiv.org/abs/1412.6572">https://arxiv.org/abs/1412.6572</a></p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>forward_func</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Callable" title="(in Python v3.12)"><em>Callable</em></a>) – The pytorch model for which the attack is
+<li><p><strong>forward_func</strong> (<em>Callable</em>) – The pytorch model for which the attack is
 computed.</p></li>
-<li><p><strong>loss_func</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Callable" title="(in Python v3.12)"><em>Callable</em></a><em>, </em><em>optional</em>) – Loss function of which the gradient
+<li><p><strong>loss_func</strong> (<em>Callable</em><em>, </em><em>optional</em>) – Loss function of which the gradient
 computed. The loss function should take in outputs of the
 model and labels, and return a loss tensor.
 The default loss function is negative log.</p></li>
-<li><p><strong>lower_bound</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.12)"><em>float</em></a><em>, </em><em>optional</em>) – Lower bound of input values.
+<li><p><strong>lower_bound</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.11)"><em>float</em></a><em>, </em><em>optional</em>) – Lower bound of input values.
 Default: <code class="docutils literal notranslate"><span class="pre">float("-inf")</span></code></p></li>
-<li><p><strong>upper_bound</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.12)"><em>float</em></a><em>, </em><em>optional</em>) – Upper bound of input values.
+<li><p><strong>upper_bound</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.11)"><em>float</em></a><em>, </em><em>optional</em>) – Upper bound of input values.
 e.g. image pixels must be in the range 0-255
 Default: <code class="docutils literal notranslate"><span class="pre">float("inf")</span></code></p></li>
 </ul>
@@ -69,42 +69,42 @@ Default: <code class="docutils literal notranslate"><span class="pre">float("inf
 </dl>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="captum.robust.FGSM.bound">
-<span class="sig-name descname"><span class="pre">bound</span></span><a class="headerlink" href="#captum.robust.FGSM.bound" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">bound</span></span><a class="headerlink" href="#captum.robust.FGSM.bound" title="Permalink to this definition">¶</a></dt>
 <dd><p>A function that bounds the input values based on
 given lower_bound and upper_bound. Can be overwritten for
 custom use cases if necessary.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dt class="field-odd">Type</dt>
 <dd class="field-odd"><p>Callable</p>
 </dd>
 </dl>
 </dd></dl>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="captum.robust.FGSM.zero_thresh">
-<span class="sig-name descname"><span class="pre">zero_thresh</span></span><a class="headerlink" href="#captum.robust.FGSM.zero_thresh" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">zero_thresh</span></span><a class="headerlink" href="#captum.robust.FGSM.zero_thresh" title="Permalink to this definition">¶</a></dt>
 <dd><p>The threshold below which gradient will be treated
 as zero. Can be modified for custom use cases if necessary.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.12)">float</a></p>
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.11)">float</a></p>
 </dd>
 </dl>
 </dd></dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="captum.robust.FGSM.perturb">
-<span class="sig-name descname"><span class="pre">perturb</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inputs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">epsilon</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">additional_forward_args</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">targeted</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mask</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/robust/_core/fgsm.html#FGSM.perturb"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum.robust.FGSM.perturb" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">perturb</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inputs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">epsilon</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">additional_forward_args</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">targeted</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mask</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/robust/_core/fgsm.html#FGSM.perturb"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum.robust.FGSM.perturb" title="Permalink to this definition">¶</a></dt>
 <dd><p>This method computes and returns the perturbed input for each input tensor.
 It supports both targeted and non-targeted attacks.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>inputs</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v2.1)"><em>Tensor</em></a><em> or </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.12)"><em>tuple</em></a><em>[</em><a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v2.1)"><em>Tensor</em></a><em>, </em><em>...</em><em>]</em>) – Input for which adversarial
+<li><p><strong>inputs</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.13)"><em>Tensor</em></a><em> or </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.11)"><em>tuple</em></a><em>[</em><a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.13)"><em>Tensor</em></a><em>, </em><em>...</em><em>]</em>) – Input for which adversarial
 attack is computed. It can be provided as a single
 tensor or a tuple of multiple tensors. If multiple
 input tensors are provided, the batch sizes must be
 aligned across all tensors.</p></li>
-<li><p><strong>epsilon</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.12)"><em>float</em></a>) – Step size of perturbation.</p></li>
-<li><p><strong>target</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.12)"><em>Any</em></a>) – <p>True labels of inputs if non-targeted attack is
+<li><p><strong>epsilon</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.11)"><em>float</em></a>) – Step size of perturbation.</p></li>
+<li><p><strong>target</strong> (<em>Any</em>) – <p>True labels of inputs if non-targeted attack is
 desired. Target class of inputs if targeted attack
 is desired. Target will be passed to the loss function
 to compute loss, so the type needs to match the
@@ -129,15 +129,15 @@ examples in inputs (dim 0), and each tuple containing
 label for the corresponding example.</p></li>
 </ul>
 </p></li>
-<li><p><strong>additional_forward_args</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.12)"><em>Any</em></a><em>, </em><em>optional</em>) – If the forward function
+<li><p><strong>additional_forward_args</strong> (<em>Any</em><em>, </em><em>optional</em>) – If the forward function
 requires additional arguments other than the inputs for
 which attributions should not be computed, this argument
 can be provided. These arguments are provided to
 forward_func in order following the arguments in inputs.
 Default: None.</p></li>
-<li><p><strong>targeted</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.12)"><em>bool</em></a><em>, </em><em>optional</em>) – If attack should be targeted.
+<li><p><strong>targeted</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.11)"><em>bool</em></a><em>, </em><em>optional</em>) – If attack should be targeted.
 Default: False.</p></li>
-<li><p><strong>mask</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v2.1)"><em>Tensor</em></a><em> or </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.12)"><em>tuple</em></a><em>[</em><a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v2.1)"><em>Tensor</em></a><em>, </em><em>...</em><em>]</em><em>, </em><em>optional</em>) – mask of zeroes and ones
+<li><p><strong>mask</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.13)"><em>Tensor</em></a><em> or </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.11)"><em>tuple</em></a><em>[</em><a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.13)"><em>Tensor</em></a><em>, </em><em>...</em><em>]</em><em>, </em><em>optional</em>) – mask of zeroes and ones
 that defines which elements within the input tensor(s) are
 perturbed. This mask must have the same shape and
 dimensionality as the inputs. If this argument is not
@@ -145,7 +145,7 @@ provided, all elements will be perturbed.
 Default: None.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dt class="field-even">Returns</dt>
 <dd class="field-even"><p>Perturbed input for each
 input tensor. The perturbed inputs have the same shape and
 dimensionality as the inputs.
@@ -153,7 +153,7 @@ If a single tensor is provided as inputs, a single tensor
 is returned. If a tuple is provided for inputs, a tuple of
 corresponding sized tensors is returned.</p>
 </dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dt class="field-odd">Return type</dt>
 <dd class="field-odd"><p><ul class="simple">
 <li><p><strong>perturbed inputs</strong> (<em>Tensor</em> or <em>tuple[Tensor, …]</em>)</p></li>
 </ul>
@@ -164,10 +164,10 @@ corresponding sized tensors is returned.</p>
 </dd></dl>
 </section>
 <section id="pgd">
-<h2>PGD<a class="headerlink" href="#pgd" title="Link to this heading">¶</a></h2>
+<h2>PGD<a class="headerlink" href="#pgd" title="Permalink to this headline">¶</a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="captum.robust.PGD">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">captum.robust.</span></span><span class="sig-name descname"><span class="pre">PGD</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">forward_func</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">loss_func</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lower_bound</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">float('-inf')</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">upper_bound</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">float('inf')</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/robust/_core/pgd.html#PGD"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum.robust.PGD" title="Link to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">captum.robust.</span></span><span class="sig-name descname"><span class="pre">PGD</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">forward_func</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">loss_func</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lower_bound</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">float('-inf')</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">upper_bound</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">float('inf')</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/robust/_core/pgd.html#PGD"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum.robust.PGD" title="Permalink to this definition">¶</a></dt>
 <dd><p>Projected Gradient Descent is an iterative version of the one-step attack
 FGSM that can generate adversarial examples. It takes multiple gradient
 steps to search for an adversarial perturbation within the desired
@@ -189,17 +189,17 @@ In a targeted attack, the formulation is similar:</p>
 <p>More details on Projected Gradient Descent can be found in the original
 paper: <a class="reference external" href="https://arxiv.org/abs/1706.06083">https://arxiv.org/abs/1706.06083</a></p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>forward_func</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Callable" title="(in Python v3.12)"><em>Callable</em></a>) – The pytorch model for which the attack is
+<li><p><strong>forward_func</strong> (<em>Callable</em>) – The pytorch model for which the attack is
 computed.</p></li>
-<li><p><strong>loss_func</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Callable" title="(in Python v3.12)"><em>Callable</em></a><em>, </em><em>optional</em>) – Loss function of which the gradient
+<li><p><strong>loss_func</strong> (<em>Callable</em><em>, </em><em>optional</em>) – Loss function of which the gradient
 computed. The loss function should take in outputs of the
 model and labels, and return the loss for each input tensor.
 The default loss function is negative log.</p></li>
-<li><p><strong>lower_bound</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.12)"><em>float</em></a><em>, </em><em>optional</em>) – Lower bound of input values.
+<li><p><strong>lower_bound</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.11)"><em>float</em></a><em>, </em><em>optional</em>) – Lower bound of input values.
 Default: <code class="docutils literal notranslate"><span class="pre">float("-inf")</span></code></p></li>
-<li><p><strong>upper_bound</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.12)"><em>float</em></a><em>, </em><em>optional</em>) – Upper bound of input values.
+<li><p><strong>upper_bound</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.11)"><em>float</em></a><em>, </em><em>optional</em>) – Upper bound of input values.
 e.g. image pixels must be in the range 0-255
 Default: <code class="docutils literal notranslate"><span class="pre">float("inf")</span></code></p></li>
 </ul>
@@ -207,35 +207,35 @@ Default: <code class="docutils literal notranslate"><span class="pre">float("inf
 </dl>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="captum.robust.PGD.bound">
-<span class="sig-name descname"><span class="pre">bound</span></span><a class="headerlink" href="#captum.robust.PGD.bound" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">bound</span></span><a class="headerlink" href="#captum.robust.PGD.bound" title="Permalink to this definition">¶</a></dt>
 <dd><p>A function that bounds the input values based on
 given lower_bound and upper_bound. Can be overwritten for
 custom use cases if necessary.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dt class="field-odd">Type</dt>
 <dd class="field-odd"><p>Callable</p>
 </dd>
 </dl>
 </dd></dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="captum.robust.PGD.perturb">
-<span class="sig-name descname"><span class="pre">perturb</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inputs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">radius</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">step_size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">step_num</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">additional_forward_args</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">targeted</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">random_start</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">norm</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'Linf'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mask</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/robust/_core/pgd.html#PGD.perturb"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum.robust.PGD.perturb" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">perturb</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inputs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">radius</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">step_size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">step_num</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">additional_forward_args</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">targeted</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">random_start</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">norm</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'Linf'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mask</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/robust/_core/pgd.html#PGD.perturb"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum.robust.PGD.perturb" title="Permalink to this definition">¶</a></dt>
 <dd><p>This method computes and returns the perturbed input for each input tensor.
 It supports both targeted and non-targeted attacks.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>inputs</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v2.1)"><em>Tensor</em></a><em> or </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.12)"><em>tuple</em></a><em>[</em><a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v2.1)"><em>Tensor</em></a><em>, </em><em>...</em><em>]</em>) – Input for which adversarial
+<li><p><strong>inputs</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.13)"><em>Tensor</em></a><em> or </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.11)"><em>tuple</em></a><em>[</em><a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.13)"><em>Tensor</em></a><em>, </em><em>...</em><em>]</em>) – Input for which adversarial
 attack is computed. It can be provided as a single
 tensor or a tuple of multiple tensors. If multiple
 input tensors are provided, the batch sizes must be
 aligned across all tensors.</p></li>
-<li><p><strong>radius</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.12)"><em>float</em></a>) – Radius of the neighbor ball centered around inputs.
+<li><p><strong>radius</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.11)"><em>float</em></a>) – Radius of the neighbor ball centered around inputs.
 The perturbation should be within this range.</p></li>
-<li><p><strong>step_size</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.12)"><em>float</em></a>) – Step size of each gradient step.</p></li>
-<li><p><strong>step_num</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><em>int</em></a>) – Step numbers. It usually guarantees that the perturbation
+<li><p><strong>step_size</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.11)"><em>float</em></a>) – Step size of each gradient step.</p></li>
+<li><p><strong>step_num</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><em>int</em></a>) – Step numbers. It usually guarantees that the perturbation
 can reach the border.</p></li>
-<li><p><strong>target</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.12)"><em>Any</em></a>) – <p>True labels of inputs if non-targeted attack is
+<li><p><strong>target</strong> (<em>Any</em>) – <p>True labels of inputs if non-targeted attack is
 desired. Target class of inputs if targeted attack
 is desired. Target will be passed to the loss function
 to compute loss, so the type needs to match the
@@ -260,20 +260,20 @@ examples in inputs (dim 0), and each tuple containing
 label for the corresponding example.</p></li>
 </ul>
 </p></li>
-<li><p><strong>additional_forward_args</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.12)"><em>Any</em></a><em>, </em><em>optional</em>) – If the forward function
+<li><p><strong>additional_forward_args</strong> (<em>Any</em><em>, </em><em>optional</em>) – If the forward function
 requires additional arguments other than the inputs for
 which attributions should not be computed, this argument
 can be provided. These arguments are provided to
 forward_func in order following the arguments in inputs.
 Default: <code class="docutils literal notranslate"><span class="pre">None</span></code></p></li>
-<li><p><strong>targeted</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.12)"><em>bool</em></a><em>, </em><em>optional</em>) – If attack should be targeted.
+<li><p><strong>targeted</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.11)"><em>bool</em></a><em>, </em><em>optional</em>) – If attack should be targeted.
 Default: <code class="docutils literal notranslate"><span class="pre">False</span></code></p></li>
-<li><p><strong>random_start</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.12)"><em>bool</em></a><em>, </em><em>optional</em>) – If a random initialization is added to
+<li><p><strong>random_start</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.11)"><em>bool</em></a><em>, </em><em>optional</em>) – If a random initialization is added to
 inputs. Default: <code class="docutils literal notranslate"><span class="pre">False</span></code></p></li>
-<li><p><strong>norm</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><em>str</em></a><em>, </em><em>optional</em>) – Specifies the norm to calculate distance from
+<li><p><strong>norm</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><em>str</em></a><em>, </em><em>optional</em>) – Specifies the norm to calculate distance from
 original inputs: <code class="docutils literal notranslate"><span class="pre">Linf</span></code> | <code class="docutils literal notranslate"><span class="pre">L2</span></code>.
 Default: <code class="docutils literal notranslate"><span class="pre">Linf</span></code></p></li>
-<li><p><strong>mask</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v2.1)"><em>Tensor</em></a><em> or </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.12)"><em>tuple</em></a><em>[</em><a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v2.1)"><em>Tensor</em></a><em>, </em><em>...</em><em>]</em><em>, </em><em>optional</em>) – mask of zeroes and ones
+<li><p><strong>mask</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.13)"><em>Tensor</em></a><em> or </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.11)"><em>tuple</em></a><em>[</em><a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.13)"><em>Tensor</em></a><em>, </em><em>...</em><em>]</em><em>, </em><em>optional</em>) – mask of zeroes and ones
 that defines which elements within the input tensor(s) are
 perturbed. This mask must have the same shape and
 dimensionality as the inputs. If this argument is not
@@ -281,7 +281,7 @@ provided, all elements are perturbed.
 Default: None.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dt class="field-even">Returns</dt>
 <dd class="field-even"><p>Perturbed input for each
 input tensor. The perturbed inputs have the same shape and
 dimensionality as the inputs.
@@ -289,7 +289,7 @@ If a single tensor is provided as inputs, a single tensor
 is returned. If a tuple is provided for inputs, a tuple of
 corresponding sized tensors is returned.</p>
 </dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dt class="field-odd">Return type</dt>
 <dd class="field-odd"><p><ul class="simple">
 <li><p><strong>perturbed inputs</strong> (<em>Tensor</em> or <em>tuple[Tensor, …]</em>)</p></li>
 </ul>
@@ -300,21 +300,21 @@ corresponding sized tensors is returned.</p>
 </dd></dl>
 </section>
 <section id="attack-comparator">
-<h2>Attack Comparator<a class="headerlink" href="#attack-comparator" title="Link to this heading">¶</a></h2>
+<h2>Attack Comparator<a class="headerlink" href="#attack-comparator" title="Permalink to this headline">¶</a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="captum.robust.AttackComparator">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">captum.robust.</span></span><span class="sig-name descname"><span class="pre">AttackComparator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">forward_func</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metric</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">preproc_fn</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/robust/_core/metrics/attack_comparator.html#AttackComparator"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum.robust.AttackComparator" title="Link to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">captum.robust.</span></span><span class="sig-name descname"><span class="pre">AttackComparator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">forward_func</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metric</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">preproc_fn</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/robust/_core/metrics/attack_comparator.html#AttackComparator"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum.robust.AttackComparator" title="Permalink to this definition">¶</a></dt>
 <dd><p>Allows measuring model robustness for a given attack or set of attacks. This class
 can be used with any metric(s) as well as any set of attacks, either based on
 attacks / perturbations from captum.robust such as FGSM or PGD or external
 augmentation methods or perturbations such as torchvision transforms.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>forward_func</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Callable" title="(in Python v3.12)"><em>Callable</em></a><em> or </em><a class="reference external" href="https://pytorch.org/docs/stable/generated/torch.nn.Module.html#torch.nn.Module" title="(in PyTorch v2.1)"><em>torch.nn.Module</em></a>) – This can either be an instance
+<li><p><strong>forward_func</strong> (<em>Callable</em><em> or </em><a class="reference external" href="https://pytorch.org/docs/stable/generated/torch.nn.Module.html#torch.nn.Module" title="(in PyTorch v1.13)"><em>torch.nn.Module</em></a>) – This can either be an instance
 of pytorch model or any modification of a model’s forward
 function.</p></li>
-<li><p><strong>metric</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Callable" title="(in Python v3.12)"><em>Callable</em></a>) – <p>This function is applied to the model output in
+<li><p><strong>metric</strong> (<em>Callable</em>) – <p>This function is applied to the model output in
 order to compute the desired performance metric or metrics.
 This function should have the following signature:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">def</span> <span class="nf">model_metric</span><span class="p">(</span><span class="n">model_out</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span>
@@ -331,7 +331,7 @@ dimension when aggregating multiple batch results.
 If tensor metrics represent results for the full batch, the size of the
 first dimension should be 1.</p>
 </p></li>
-<li><p><strong>preproc_fn</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Callable" title="(in Python v3.12)"><em>Callable</em></a><em>, </em><em>optional</em>) – Optional method applied to inputs. Output
+<li><p><strong>preproc_fn</strong> (<em>Callable</em><em>, </em><em>optional</em>) – Optional method applied to inputs. Output
 of preproc_fn is then provided as input to model, in addition to
 additional_forward_args provided to evaluate.
 Default: <code class="docutils literal notranslate"><span class="pre">None</span></code></p></li>
@@ -340,32 +340,32 @@ Default: <code class="docutils literal notranslate"><span class="pre">None</span
 </dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="captum.robust.AttackComparator.add_attack">
-<span class="sig-name descname"><span class="pre">add_attack</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">attack</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_attempts</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">apply_before_preproc</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">attack_kwargs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">additional_attack_arg_names</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/robust/_core/metrics/attack_comparator.html#AttackComparator.add_attack"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum.robust.AttackComparator.add_attack" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">add_attack</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">attack</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_attempts</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">apply_before_preproc</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">attack_kwargs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">additional_attack_arg_names</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/robust/_core/metrics/attack_comparator.html#AttackComparator.add_attack"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum.robust.AttackComparator.add_attack" title="Permalink to this definition">¶</a></dt>
 <dd><p>Adds attack to be evaluated when calling evaluate.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>attack</strong> (<em>Perturbation</em><em> or </em><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Callable" title="(in Python v3.12)"><em>Callable</em></a>) – This can either be an instance
+<li><p><strong>attack</strong> (<em>Perturbation</em><em> or </em><em>Callable</em>) – This can either be an instance
 of a Captum Perturbation / Attack
 or any other perturbation or attack function such
 as a torchvision transform.</p></li>
-<li><p><strong>name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><em>str</em></a><em>, </em><em>optional</em>) – Name or identifier for attack, used as key for
+<li><p><strong>name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><em>str</em></a><em>, </em><em>optional</em>) – Name or identifier for attack, used as key for
 attack results. This defaults to attack.__class__.__name__
 if not provided and must be unique for all added attacks.
 Default: <code class="docutils literal notranslate"><span class="pre">None</span></code></p></li>
-<li><p><strong>num_attempts</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><em>int</em></a><em>, </em><em>optional</em>) – Number of attempts that attack should be
+<li><p><strong>num_attempts</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><em>int</em></a><em>, </em><em>optional</em>) – Number of attempts that attack should be
 repeated. This should only be set to &gt; 1 for non-deterministic
 attacks. The minimum, maximum, and average (best, worst, and
 average case) are tracked for attack attempts.
 Default: <code class="docutils literal notranslate"><span class="pre">1</span></code></p></li>
-<li><p><strong>apply_before_preproc</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.12)"><em>bool</em></a><em>, </em><em>optional</em>) – Defines whether attack should be
+<li><p><strong>apply_before_preproc</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.11)"><em>bool</em></a><em>, </em><em>optional</em>) – Defines whether attack should be
 applied before or after preproc function.
 Default: <code class="docutils literal notranslate"><span class="pre">True</span></code></p></li>
-<li><p><strong>attack_kwargs</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.12)"><em>dict</em></a><em>, </em><em>optional</em>) – Additional arguments to be provided to
+<li><p><strong>attack_kwargs</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><em>dict</em></a><em>, </em><em>optional</em>) – Additional arguments to be provided to
 given attack. This should be provided as a dictionary of keyword
 arguments.
 Default: <code class="docutils literal notranslate"><span class="pre">None</span></code></p></li>
-<li><p><strong>additional_attack_arg_names</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.12)"><em>list</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><em>str</em></a><em>]</em><em>, </em><em>optional</em>) – Any additional
+<li><p><strong>additional_attack_arg_names</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.11)"><em>list</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><em>str</em></a><em>]</em><em>, </em><em>optional</em>) – Any additional
 arguments for the attack which are specific to the particular input
 example or batch. An example of this is target, which is necessary
 for some attacks such as FGSM or PGD. These arguments are included
@@ -373,26 +373,26 @@ if provided as a kwarg to evaluate.
 Default: <code class="docutils literal notranslate"><span class="pre">None</span></code></p></li>
 </ul>
 </dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.12)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a></p>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.11)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a></p>
 </dd>
 </dl>
 </dd></dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="captum.robust.AttackComparator.evaluate">
-<span class="sig-name descname"><span class="pre">evaluate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inputs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">additional_forward_args</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">perturbations_per_eval</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/robust/_core/metrics/attack_comparator.html#AttackComparator.evaluate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum.robust.AttackComparator.evaluate" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">evaluate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inputs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">additional_forward_args</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">perturbations_per_eval</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/robust/_core/metrics/attack_comparator.html#AttackComparator.evaluate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum.robust.AttackComparator.evaluate" title="Permalink to this definition">¶</a></dt>
 <dd><p>Evaluate model and attack performance on provided inputs</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>inputs</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.12)"><em>Any</em></a>) – Input for which attack metrics
+<li><p><strong>inputs</strong> (<em>Any</em>) – Input for which attack metrics
 are computed. It can be provided as a tensor, tuple of tensors,
 or any raw input type (e.g. PIL image or text string).
 This input is provided directly as input to preproc function as well
 as any attack applied before preprocessing. If no pre-processing
 function is provided, this input is provided directly to the main
 model and all attacks.</p></li>
-<li><p><strong>additional_forward_args</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.12)"><em>Any</em></a><em>, </em><em>optional</em>) – If the forward function
+<li><p><strong>additional_forward_args</strong> (<em>Any</em><em>, </em><em>optional</em>) – If the forward function
 requires additional arguments other than the preprocessing
 outputs (or inputs if preproc_fn is None), this argument
 can be provided. It must be either a single additional
@@ -405,7 +405,7 @@ For a tensor, the first dimension of the tensor must
 correspond to the number of examples. For all other types,
 the given argument is used for all forward evaluations.
 Default: <code class="docutils literal notranslate"><span class="pre">None</span></code></p></li>
-<li><p><strong>perturbations_per_eval</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><em>int</em></a><em>, </em><em>optional</em>) – Allows perturbations of multiple
+<li><p><strong>perturbations_per_eval</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><em>int</em></a><em>, </em><em>optional</em>) – Allows perturbations of multiple
 attacks to be grouped and evaluated in one call of forward_fn
 Each forward pass will contain a maximum of
 perturbations_per_eval * #examples samples.
@@ -418,13 +418,10 @@ In order to apply this functionality, the output of preproc_fn
 (or inputs itself if no preproc_fn is provided) must be a tensor
 or tuple of tensors.
 Default: <code class="docutils literal notranslate"><span class="pre">1</span></code></p></li>
-<li><p><strong>kwargs</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.12)"><em>Any</em></a><em>, </em><em>optional</em>) – Additional keyword arguments provided to metric
+<li><p><strong>kwargs</strong> (<em>Any</em><em>, </em><em>optional</em>) – Additional keyword arguments provided to metric
 function as well as selected attacks based on chosen additional_args.
 Default: <code class="docutils literal notranslate"><span class="pre">None</span></code></p></li>
 </ul>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Dict" title="(in Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Dict</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Union" title="(in Python v3.12)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.TypeVar" title="(in Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">TypeVar</span></code></a>(<code class="docutils literal notranslate"><span class="pre">MetricResultType</span></code>, <a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a>, <a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v2.1)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tensor</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Tuple" title="(in Python v3.12)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Tuple</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Union" title="(in Python v3.12)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a>, <a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v2.1)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tensor</span></code></a>], <a class="reference external" href="https://docs.python.org/3/library/constants.html#Ellipsis" title="(in Python v3.12)"><code class="xref py py-data docutils literal notranslate"><span class="pre">...</span></code></a>]), <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Dict" title="(in Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Dict</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.TypeVar" title="(in Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">TypeVar</span></code></a>(<code class="docutils literal notranslate"><span class="pre">MetricResultType</span></code>, <a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a>, <a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v2.1)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tensor</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Tuple" title="(in Python v3.12)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Tuple</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Union" title="(in Python v3.12)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a>, <a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v2.1)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tensor</span></code></a>], <a class="reference external" href="https://docs.python.org/3/library/constants.html#Ellipsis" title="(in Python v3.12)"><code class="xref py py-data docutils literal notranslate"><span class="pre">...</span></code></a>])]]]</p>
 </dd>
 </dl>
 <p>Returns:</p>
@@ -469,23 +466,28 @@ without any perturbations.</p>
 <span class="gp">&gt;&gt;&gt; </span>    <span class="n">batch_results</span> <span class="o">=</span> <span class="n">attack_metric</span><span class="o">.</span><span class="n">evaluate</span><span class="p">(</span><span class="n">inputs</span><span class="o">=</span><span class="n">images</span><span class="p">,</span> <span class="n">targets</span><span class="o">=</span><span class="n">labels</span><span class="p">)</span>
 </pre></div>
 </div>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Dict" title="(in Python v3.11)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Dict</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Union" title="(in Python v3.11)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code></a>[~MetricResultType, <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Dict" title="(in Python v3.11)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Dict</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, ~MetricResultType]]]</p>
+</dd>
+</dl>
 </dd></dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="captum.robust.AttackComparator.reset">
-<span class="sig-name descname"><span class="pre">reset</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/robust/_core/metrics/attack_comparator.html#AttackComparator.reset"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum.robust.AttackComparator.reset" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">reset</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/robust/_core/metrics/attack_comparator.html#AttackComparator.reset"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum.robust.AttackComparator.reset" title="Permalink to this definition">¶</a></dt>
 <dd><p>Reset stored average summary results for previous batches</p>
 <dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.12)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a></p>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.11)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a></p>
 </dd>
 </dl>
 </dd></dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="captum.robust.AttackComparator.summary">
-<span class="sig-name descname"><span class="pre">summary</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/robust/_core/metrics/attack_comparator.html#AttackComparator.summary"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum.robust.AttackComparator.summary" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">summary</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/robust/_core/metrics/attack_comparator.html#AttackComparator.summary"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum.robust.AttackComparator.summary" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns average results over all previous batches evaluated.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dt class="field-odd">Returns</dt>
 <dd class="field-odd"><p><dl class="simple">
 <dt>str -&gt; Dict[str, Union[Tensor, Tuple[Tensor, …]]]:</dt><dd><p>Dictionary containing summarized average attack results.
 Maps attack name (with “Mean Attempt”, “Max Attempt” and “Min Attempt”
@@ -499,7 +501,7 @@ per batch.</p>
 </dl>
 </p>
 </dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dt class="field-even">Return type</dt>
 <dd class="field-even"><p><ul class="simple">
 <li><p><strong>summary</strong> Dict</p></li>
 </ul>
@@ -510,10 +512,10 @@ per batch.</p>
 </dd></dl>
 </section>
 <section id="min-param-perturbation">
-<h2>Min Param Perturbation<a class="headerlink" href="#min-param-perturbation" title="Link to this heading">¶</a></h2>
+<h2>Min Param Perturbation<a class="headerlink" href="#min-param-perturbation" title="Permalink to this headline">¶</a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="captum.robust.MinParamPerturbation">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">captum.robust.</span></span><span class="sig-name descname"><span class="pre">MinParamPerturbation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">forward_func</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">attack</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">arg_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">arg_min</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">arg_max</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">arg_step</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'linear'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_attempts</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">preproc_fn</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">apply_before_preproc</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">correct_fn</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/robust/_core/metrics/min_param_perturbation.html#MinParamPerturbation"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum.robust.MinParamPerturbation" title="Link to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">captum.robust.</span></span><span class="sig-name descname"><span class="pre">MinParamPerturbation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">forward_func</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">attack</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">arg_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">arg_min</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">arg_max</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">arg_step</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'linear'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_attempts</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">preproc_fn</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">apply_before_preproc</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">correct_fn</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/robust/_core/metrics/min_param_perturbation.html#MinParamPerturbation"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum.robust.MinParamPerturbation" title="Permalink to this definition">¶</a></dt>
 <dd><p>Identifies minimal perturbation based on target variable which causes
 misclassification (or other incorrect prediction) of target input.</p>
 <p>More specifically, given a perturbation parametrized by a single value
@@ -522,39 +524,39 @@ attribution results), MinParamPerturbation helps identify the minimum value
 which leads to misclassification (or other model output change) with the
 corresponding perturbed input.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>forward_func</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Callable" title="(in Python v3.12)"><em>Callable</em></a><em> or </em><a class="reference external" href="https://pytorch.org/docs/stable/generated/torch.nn.Module.html#torch.nn.Module" title="(in PyTorch v2.1)"><em>torch.nn.Module</em></a>) – This can either be an instance
+<li><p><strong>forward_func</strong> (<em>Callable</em><em> or </em><a class="reference external" href="https://pytorch.org/docs/stable/generated/torch.nn.Module.html#torch.nn.Module" title="(in PyTorch v1.13)"><em>torch.nn.Module</em></a>) – This can either be an instance
 of pytorch model or any modification of a model’s forward
 function.</p></li>
-<li><p><strong>attack</strong> (<em>Perturbation</em><em> or </em><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Callable" title="(in Python v3.12)"><em>Callable</em></a>) – This can either be an instance
+<li><p><strong>attack</strong> (<em>Perturbation</em><em> or </em><em>Callable</em>) – This can either be an instance
 of a Captum Perturbation / Attack
 or any other perturbation or attack function such
 as a torchvision transform.
 Perturb function must take additional argument (var_name) used for
 minimal perturbation search.</p></li>
-<li><p><strong>arg_name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><em>str</em></a>) – Name of argument / variable paramterizing attack, must be
+<li><p><strong>arg_name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><em>str</em></a>) – Name of argument / variable paramterizing attack, must be
 kwarg of attack. Examples are num_dropout or stdevs</p></li>
-<li><p><strong>arg_min</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><em>int</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.12)"><em>float</em></a>) – Minimum value of target variable</p></li>
-<li><p><strong>arg_max</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><em>int</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.12)"><em>float</em></a>) – Maximum value of target variable
+<li><p><strong>arg_min</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><em>int</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.11)"><em>float</em></a>) – Minimum value of target variable</p></li>
+<li><p><strong>arg_max</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><em>int</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.11)"><em>float</em></a>) – Maximum value of target variable
 (not included in range)</p></li>
-<li><p><strong>arg_step</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><em>int</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.12)"><em>float</em></a>) – Minimum interval for increase of target variable.</p></li>
-<li><p><strong>mode</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><em>str</em></a><em>, </em><em>optional</em>) – Mode for search of minimum attack value;
+<li><p><strong>arg_step</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><em>int</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.11)"><em>float</em></a>) – Minimum interval for increase of target variable.</p></li>
+<li><p><strong>mode</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><em>str</em></a><em>, </em><em>optional</em>) – Mode for search of minimum attack value;
 either <code class="docutils literal notranslate"><span class="pre">linear</span></code> for linear search on variable, or <code class="docutils literal notranslate"><span class="pre">binary</span></code> for
 binary search of variable
 Default: <code class="docutils literal notranslate"><span class="pre">linear</span></code></p></li>
-<li><p><strong>num_attempts</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><em>int</em></a><em>, </em><em>optional</em>) – Number of attempts or trials with
+<li><p><strong>num_attempts</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><em>int</em></a><em>, </em><em>optional</em>) – Number of attempts or trials with
 given variable. This should only be set to &gt; 1 for non-deterministic
 perturbation / attack functions
 Default: <code class="docutils literal notranslate"><span class="pre">1</span></code></p></li>
-<li><p><strong>preproc_fn</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Callable" title="(in Python v3.12)"><em>Callable</em></a><em>, </em><em>optional</em>) – Optional method applied to inputs. Output
+<li><p><strong>preproc_fn</strong> (<em>Callable</em><em>, </em><em>optional</em>) – Optional method applied to inputs. Output
 of preproc_fn is then provided as input to model, in addition to
 additional_forward_args provided to evaluate.
 Default: <code class="docutils literal notranslate"><span class="pre">None</span></code></p></li>
-<li><p><strong>apply_before_preproc</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.12)"><em>bool</em></a><em>, </em><em>optional</em>) – Defines whether attack should be
+<li><p><strong>apply_before_preproc</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.11)"><em>bool</em></a><em>, </em><em>optional</em>) – Defines whether attack should be
 applied before or after preproc function.
 Default: <code class="docutils literal notranslate"><span class="pre">False</span></code></p></li>
-<li><p><strong>correct_fn</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Callable" title="(in Python v3.12)"><em>Callable</em></a><em>, </em><em>optional</em>) – <p>This determines whether the perturbed input
+<li><p><strong>correct_fn</strong> (<em>Callable</em><em>, </em><em>optional</em>) – <p>This determines whether the perturbed input
 leads to a correct or incorrect prediction. By default, this function
 is set to the standard classification test for correctness
 (comparing argmax of output with target), which requires model output to
@@ -578,7 +580,7 @@ Default: <code class="docutils literal notranslate"><span class="pre">None</span
 </dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="captum.robust.MinParamPerturbation.evaluate">
-<span class="sig-name descname"><span class="pre">evaluate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inputs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">additional_forward_args</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">perturbations_per_eval</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">attack_kwargs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">correct_fn_kwargs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/robust/_core/metrics/min_param_perturbation.html#MinParamPerturbation.evaluate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum.robust.MinParamPerturbation.evaluate" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">evaluate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inputs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">additional_forward_args</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">perturbations_per_eval</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">attack_kwargs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">correct_fn_kwargs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/robust/_core/metrics/min_param_perturbation.html#MinParamPerturbation.evaluate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum.robust.MinParamPerturbation.evaluate" title="Permalink to this definition">¶</a></dt>
 <dd><p>This method evaluates the model at each perturbed input and identifies
 the minimum perturbation that leads to an incorrect model prediction.</p>
 <p>It is recommended to provide a single input (batch size = 1) when using
@@ -588,16 +590,16 @@ the minimal perturbation for at least 1 example in the batch to be
 misclassified. A custom correct_fn can be provided to customize
 this behavior and define correctness for the batch.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>inputs</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.12)"><em>Any</em></a>) – Input for which minimal perturbation
+<li><p><strong>inputs</strong> (<em>Any</em>) – Input for which minimal perturbation
 is computed. It can be provided as a tensor, tuple of tensors,
 or any raw input type (e.g. PIL image or text string).
 This input is provided directly as input to preproc function
 as well as any attack applied before preprocessing. If no
 pre-processing function is provided,
 this input is provided directly to the main model and all attacks.</p></li>
-<li><p><strong>additional_forward_args</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.12)"><em>Any</em></a><em>, </em><em>optional</em>) – If the forward function
+<li><p><strong>additional_forward_args</strong> (<em>Any</em><em>, </em><em>optional</em>) – If the forward function
 requires additional arguments other than the preprocessing
 outputs (or inputs if preproc_fn is None), this argument
 can be provided. It must be either a single additional
@@ -612,7 +614,7 @@ the given argument is used for all forward evaluations.
 Default: <code class="docutils literal notranslate"><span class="pre">None</span></code></p></li>
 <li><p><strong>target</strong> (<em>TargetType</em>) – Target class for classification. This is required if
 using the default <code class="docutils literal notranslate"><span class="pre">correct_fn</span></code>.</p></li>
-<li><p><strong>perturbations_per_eval</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><em>int</em></a><em>, </em><em>optional</em>) – Allows perturbations of multiple
+<li><p><strong>perturbations_per_eval</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><em>int</em></a><em>, </em><em>optional</em>) – Allows perturbations of multiple
 attacks to be grouped and evaluated in one call of forward_fn
 Each forward pass will contain a maximum of
 perturbations_per_eval * #examples samples.
@@ -625,16 +627,16 @@ In order to apply this functionality, the output of preproc_fn
 (or inputs itself if no preproc_fn is provided) must be a tensor
 or tuple of tensors.
 Default: <code class="docutils literal notranslate"><span class="pre">1</span></code></p></li>
-<li><p><strong>attack_kwargs</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.12)"><em>dict</em></a><em>, </em><em>optional</em>) – Optional dictionary of keyword
+<li><p><strong>attack_kwargs</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><em>dict</em></a><em>, </em><em>optional</em>) – Optional dictionary of keyword
 arguments provided to attack function</p></li>
-<li><p><strong>correct_fn_kwargs</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.12)"><em>dict</em></a><em>, </em><em>optional</em>) – Optional dictionary of keyword
+<li><p><strong>correct_fn_kwargs</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><em>dict</em></a><em>, </em><em>optional</em>) – Optional dictionary of keyword
 arguments provided to correct function</p></li>
 </ul>
 </dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Tuple" title="(in Python v3.12)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Tuple</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.12)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Union" title="(in Python v3.12)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.12)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a>]]</p>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Tuple" title="(in Python v3.11)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Tuple</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.11)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Union" title="(in Python v3.11)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.11)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.11)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a>]]</p>
 </dd>
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dt class="field-odd">Returns</dt>
 <dd class="field-odd"><p><p>Tuple of (perturbed_inputs, param_val) if successful
 else Tuple of (None, None)</p>
 <ul class="simple">
@@ -723,7 +725,7 @@ prediction.</p>
 </form>
 </div>
 </div>
-<script>document.getElementById('searchbox').style.display = "block"</script>
+<script>$('#searchbox').show(0);</script>
 </div>
 </div>
 <div class="clearer"></div>

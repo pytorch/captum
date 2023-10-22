@@ -56,9 +56,7 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="k">return</span> <span class="n">torch</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">inp</span><span class="p">)</span> <span class="o">-</span> <span class="n">torch</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">inp</span><span class="p">)</span>
 
 
-<div class="viewcode-block" id="BinaryConcreteStochasticGates">
-<a class="viewcode-back" href="../../../binary_concrete_stg.html#captum.module.BinaryConcreteStochasticGates">[docs]</a>
-<span class="k">class</span> <span class="nc">BinaryConcreteStochasticGates</span><span class="p">(</span><span class="n">StochasticGatesBase</span><span class="p">):</span>
+<div class="viewcode-block" id="BinaryConcreteStochasticGates"><a class="viewcode-back" href="../../../binary_concrete_stg.html#captum.module.BinaryConcreteStochasticGates">[docs]</a><span class="k">class</span> <span class="nc">BinaryConcreteStochasticGates</span><span class="p">(</span><span class="n">StochasticGatesBase</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Stochastic Gates with binary concrete distribution.</span>
 
@@ -81,16 +79,8 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">    Then use hard-sigmoid rectification to "fold" the parts smaller than 0 or larger</span>
 <span class="sd">    than 1 back to 0 and 1.</span>
 
-<span class="sd">    More details can be found in the original paper:</span>
-<span class="sd">    https://arxiv.org/abs/1712.01312</span>
-
-<span class="sd">    Examples::</span>
-
-<span class="sd">        &gt;&gt;&gt; n_params = 5  # number of parameters</span>
-<span class="sd">        &gt;&gt;&gt; stg = BinaryConcreteStochasticGates(n_params, reg_weight=0.01)</span>
-<span class="sd">        &gt;&gt;&gt; inputs = torch.randn(3, n_params)  # mock inputs with batch size of 3</span>
-<span class="sd">        &gt;&gt;&gt; gated_inputs, reg = stg(mock_inputs)  # gate the inputs</span>
-
+<span class="sd">    More details can be found in the</span>
+<span class="sd">    `original paper &lt;https://arxiv.org/abs/1712.01312&gt;`.</span>
 <span class="sd">    """</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
@@ -108,42 +98,42 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">        Args:</span>
 <span class="sd">            n_gates (int): number of gates.</span>
 
-<span class="sd">            mask (Tensor, optional): If provided, this allows grouping multiple</span>
+<span class="sd">            mask (Optional[Tensor]): If provided, this allows grouping multiple</span>
 <span class="sd">                input tensor elements to share the same stochastic gate.</span>
 <span class="sd">                This tensor should be broadcastable to match the input shape</span>
 <span class="sd">                and contain integers in the range 0 to n_gates - 1.</span>
 <span class="sd">                Indices grouped to the same stochastic gate should have the same value.</span>
 <span class="sd">                If not provided, each element in the input tensor</span>
-<span class="sd">                (on dimensions other than dim 0, i.e., batch dim) is gated separately.</span>
+<span class="sd">                (on dimensions other than dim 0 - batch dim) is gated separately.</span>
 <span class="sd">                Default: None</span>
 
-<span class="sd">            reg_weight (float, optional): rescaling weight for L0 regularization term.</span>
+<span class="sd">            reg_weight (Optional[float]): rescaling weight for L0 regularization term.</span>
 <span class="sd">                Default: 1.0</span>
 
-<span class="sd">            temperature (float, optional): temperature of the concrete distribution,</span>
-<span class="sd">                controls the degree of approximation, as 0 means the original Bernoulli</span>
+<span class="sd">            temperature (float): temperature of the concrete distribution, controls</span>
+<span class="sd">                the degree of approximation, as 0 means the original Bernoulli</span>
 <span class="sd">                without relaxation. The value should be between 0 and 1.</span>
 <span class="sd">                Default: 2/3</span>
 
-<span class="sd">            lower_bound (float, optional): the lower bound to "stretch" the binary</span>
-<span class="sd">                concrete distribution</span>
+<span class="sd">            lower_bound (float): the lower bound to "stretch" the binary concrete</span>
+<span class="sd">                distribution</span>
 <span class="sd">                Default: -0.1</span>
 
-<span class="sd">            upper_bound (float, optional): the upper bound to "stretch" the binary</span>
-<span class="sd">                concrete distribution</span>
+<span class="sd">            upper_bound (float): the upper bound to "stretch" the binary concrete</span>
+<span class="sd">                distribution</span>
 <span class="sd">                Default: 1.1</span>
 
-<span class="sd">            eps (float, optional): term to improve numerical stability in binary</span>
-<span class="sd">                concerete sampling</span>
+<span class="sd">            eps (float): term to improve numerical stability in binary concerete</span>
+<span class="sd">                sampling</span>
 <span class="sd">                Default: 1e-8</span>
 
-<span class="sd">            reg_reduction (str, optional): the reduction to apply to the regularization:</span>
-<span class="sd">                ``'none'`` | ``'mean'`` | ``'sum'``. ``'none'``: no reduction will be</span>
-<span class="sd">                applied and it will be the same as the return of ``get_active_probs``,</span>
-<span class="sd">                ``'mean'``: the sum of the gates non-zero probabilities will be divided</span>
-<span class="sd">                by the number of gates, ``'sum'``: the gates non-zero probabilities will</span>
+<span class="sd">            reg_reduction (str, optional): the reduction to apply to</span>
+<span class="sd">                the regularization: 'none'|'mean'|'sum'. 'none': no reduction will be</span>
+<span class="sd">                applied and it will be the same as the return of get_active_probs,</span>
+<span class="sd">                'mean': the sum of the gates non-zero probabilities will be divided by</span>
+<span class="sd">                the number of gates, 'sum': the gates non-zero probabilities will</span>
 <span class="sd">                be summed.</span>
-<span class="sd">                Default: ``'sum'``</span>
+<span class="sd">                Default: 'sum'</span>
 <span class="sd">        """</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
             <span class="n">n_gates</span><span class="p">,</span> <span class="n">mask</span><span class="o">=</span><span class="n">mask</span><span class="p">,</span> <span class="n">reg_weight</span><span class="o">=</span><span class="n">reg_weight</span><span class="p">,</span> <span class="n">reg_reduction</span><span class="o">=</span><span class="n">reg_reduction</span>
@@ -235,7 +225,7 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">            log_alpha_param (Tensor): FloatTensor containing weights for</span>
 <span class="sd">                the pretrained log_alpha</span>
 
-<span class="sd">            mask (Tensor, optional): If provided, this allows grouping multiple</span>
+<span class="sd">            mask (Optional[Tensor]): If provided, this allows grouping multiple</span>
 <span class="sd">                input tensor elements to share the same stochastic gate.</span>
 <span class="sd">                This tensor should be broadcastable to match the input shape</span>
 <span class="sd">                and contain integers in the range 0 to n_gates - 1.</span>
@@ -244,33 +234,25 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">                (on dimensions other than dim 0 - batch dim) is gated separately.</span>
 <span class="sd">                Default: None</span>
 
-<span class="sd">            reg_weight (float, optional): rescaling weight for L0 regularization term.</span>
+<span class="sd">            reg_weight (Optional[float]): rescaling weight for L0 regularization term.</span>
 <span class="sd">                Default: 1.0</span>
 
-<span class="sd">            temperature (float, optional): temperature of the concrete distribution,</span>
-<span class="sd">                controls the degree of approximation, as 0 means the original Bernoulli</span>
+<span class="sd">            temperature (float): temperature of the concrete distribution, controls</span>
+<span class="sd">                the degree of approximation, as 0 means the original Bernoulli</span>
 <span class="sd">                without relaxation. The value should be between 0 and 1.</span>
 <span class="sd">                Default: 2/3</span>
 
-<span class="sd">            lower_bound (float, optional): the lower bound to "stretch" the binary</span>
-<span class="sd">                concrete distribution</span>
+<span class="sd">            lower_bound (float): the lower bound to "stretch" the binary concrete</span>
+<span class="sd">                distribution</span>
 <span class="sd">                Default: -0.1</span>
 
-<span class="sd">            upper_bound (float, optional): the upper bound to "stretch" the binary</span>
-<span class="sd">                concrete distribution</span>
+<span class="sd">            upper_bound (float): the upper bound to "stretch" the binary concrete</span>
+<span class="sd">                distribution</span>
 <span class="sd">                Default: 1.1</span>
 
-<span class="sd">            eps (float, optional): term to improve numerical stability in binary</span>
-<span class="sd">                concerete sampling</span>
+<span class="sd">            eps (float): term to improve numerical stability in binary concerete</span>
+<span class="sd">                sampling</span>
 <span class="sd">                Default: 1e-8</span>
-
-<span class="sd">            reg_reduction (str, optional): the reduction to apply to the regularization:</span>
-<span class="sd">                ``'none'`` | ``'mean'`` | ``'sum'``. ``'none'``: no reduction will be</span>
-<span class="sd">                applied and it will be the same as the return of ``get_active_probs``,</span>
-<span class="sd">                ``'mean'``: the sum of the gates non-zero probabilities will be divided</span>
-<span class="sd">                by the number of gates, ``'sum'``: the gates non-zero probabilities will</span>
-<span class="sd">                be summed.</span>
-<span class="sd">                Default: ``'sum'``</span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            stg (BinaryConcreteStochasticGates): StochasticGates instance</span>
@@ -284,7 +266,6 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="n">stg</span><span class="o">.</span><span class="n">load_state_dict</span><span class="p">({</span><span class="s2">"log_alpha_param"</span><span class="p">:</span> <span class="n">log_alpha_param</span><span class="p">},</span> <span class="n">strict</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 
         <span class="k">return</span> <span class="n">stg</span></div>
-
 </pre></div>
 </div>
 </div>
@@ -330,7 +311,7 @@ src="/_sphinx/documentation_options.js"></script>
 </form>
 </div>
 </div>
-<script>document.getElementById('searchbox').style.display = "block"</script>
+<script>$('#searchbox').show(0);</script>
 </div>
 </div>
 <div class="clearer"></div>

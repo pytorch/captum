@@ -30,17 +30,17 @@ src="/_sphinx/documentation_options.js"></script>
 <div class="bodywrapper">
 <div class="body" role="main">
 <section id="utilities">
-<h1>Utilities<a class="headerlink" href="#utilities" title="Link to this heading">¶</a></h1>
+<h1>Utilities<a class="headerlink" href="#utilities" title="Permalink to this headline">¶</a></h1>
 <section id="visualization">
-<h2>Visualization<a class="headerlink" href="#visualization" title="Link to this heading">¶</a></h2>
+<h2>Visualization<a class="headerlink" href="#visualization" title="Permalink to this headline">¶</a></h2>
 <dl class="py function">
 <dt class="sig sig-object py" id="captum.attr.visualization.visualize_image_attr">
-<span class="sig-prename descclassname"><span class="pre">captum.attr.visualization.</span></span><span class="sig-name descname"><span class="pre">visualize_image_attr</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">attr</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">original_image</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">method</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'heat_map'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sign</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'absolute_value'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plt_fig_axis</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">outlier_perc</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cmap</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha_overlay</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">show_colorbar</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">title</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fig_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">(6,</span> <span class="pre">6)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_pyplot</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#captum.attr.visualization.visualize_image_attr" title="Link to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">captum.attr.visualization.</span></span><span class="sig-name descname"><span class="pre">visualize_image_attr</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">attr</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">original_image</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">method</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'heat_map'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sign</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'absolute_value'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plt_fig_axis</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">outlier_perc</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cmap</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha_overlay</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">show_colorbar</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">title</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fig_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">(6,</span> <span class="pre">6)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_pyplot</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#captum.attr.visualization.visualize_image_attr" title="Permalink to this definition">¶</a></dt>
 <dd><p>Visualizes attribution for a given image by normalizing attribution values
 of the desired sign (positive, negative, absolute value, or all) and displaying
 them using the desired mode in a matplotlib figure.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>attr</strong> (<em>numpy.ndarray</em>) – Numpy array corresponding to attributions to be
 visualized. Shape must be in the form (H, W, C), with
@@ -53,7 +53,7 @@ with float values in range 0-1 or int values between 0-255.
 This is a necessary argument for any visualization method
 which utilizes the original image.
 Default: None</p></li>
-<li><p><strong>method</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><em>str</em></a><em>, </em><em>optional</em>) – <p>Chosen method for visualizing attribution.
+<li><p><strong>method</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><em>str</em></a><em>, </em><em>optional</em>) – <p>Chosen method for visualizing attribution.
 Supported options are:</p>
 <ol class="arabic simple">
 <li><p><cite>heat_map</cite> - Display heat map of chosen attributions</p></li>
@@ -68,7 +68,7 @@ to be equal to normalized attribution value.</p></li>
 </ol>
 <p>Default: <cite>heat_map</cite></p>
 </p></li>
-<li><p><strong>sign</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><em>str</em></a><em>, </em><em>optional</em>) – <p>Chosen sign of attributions to visualize. Supported
+<li><p><strong>sign</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><em>str</em></a><em>, </em><em>optional</em>) – <p>Chosen sign of attributions to visualize. Supported
 options are:</p>
 <ol class="arabic simple">
 <li><p><cite>positive</cite> - Displays only positive pixel attributions.</p></li>
@@ -82,46 +82,46 @@ be represented in these modes.</p></li>
 </ol>
 <p>Default: <cite>absolute_value</cite></p>
 </p></li>
-<li><p><strong>plt_fig_axis</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.12)"><em>tuple</em></a><em>, </em><em>optional</em>) – Tuple of matplotlib.pyplot.figure and axis
+<li><p><strong>plt_fig_axis</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.11)"><em>tuple</em></a><em>, </em><em>optional</em>) – Tuple of matplotlib.pyplot.figure and axis
 on which to visualize. If None is provided, then a new figure
 and axis are created.
 Default: None</p></li>
-<li><p><strong>outlier_perc</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.12)"><em>float</em></a><em> or </em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><em>int</em></a><em>, </em><em>optional</em>) – Top attribution values which
+<li><p><strong>outlier_perc</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.11)"><em>float</em></a><em> or </em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><em>int</em></a><em>, </em><em>optional</em>) – Top attribution values which
 correspond to a total of outlier_perc percentage of the
 total attribution are set to 1 and scaling is performed
 using the minimum of these values. For sign=`all`, outliers
 and scale value are computed using absolute value of
 attributions.
 Default: 2</p></li>
-<li><p><strong>cmap</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><em>str</em></a><em>, </em><em>optional</em>) – String corresponding to desired colormap for
+<li><p><strong>cmap</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><em>str</em></a><em>, </em><em>optional</em>) – String corresponding to desired colormap for
 heatmap visualization. This defaults to “Reds” for negative
 sign, “Blues” for absolute value, “Greens” for positive sign,
 and a spectrum from red to green for all. Note that this
 argument is only used for visualizations displaying heatmaps.
 Default: None</p></li>
-<li><p><strong>alpha_overlay</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.12)"><em>float</em></a><em>, </em><em>optional</em>) – Alpha to set for heatmap when using
+<li><p><strong>alpha_overlay</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.11)"><em>float</em></a><em>, </em><em>optional</em>) – Alpha to set for heatmap when using
 <cite>blended_heat_map</cite> visualization mode, which overlays the
 heat map over the greyscaled original image.
 Default: 0.5</p></li>
-<li><p><strong>show_colorbar</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.12)"><em>bool</em></a><em>, </em><em>optional</em>) – Displays colorbar for heatmap below
+<li><p><strong>show_colorbar</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.11)"><em>bool</em></a><em>, </em><em>optional</em>) – Displays colorbar for heatmap below
 the visualization. If given method does not use a heatmap,
 then a colormap axis is created and hidden. This is
 necessary for appropriate alignment when visualizing
 multiple plots, some with colorbars and some without.
 Default: False</p></li>
-<li><p><strong>title</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><em>str</em></a><em>, </em><em>optional</em>) – Title string for plot. If None, no title is
+<li><p><strong>title</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><em>str</em></a><em>, </em><em>optional</em>) – Title string for plot. If None, no title is
 set.
 Default: None</p></li>
-<li><p><strong>fig_size</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.12)"><em>tuple</em></a><em>, </em><em>optional</em>) – Size of figure created.
+<li><p><strong>fig_size</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.11)"><em>tuple</em></a><em>, </em><em>optional</em>) – Size of figure created.
 Default: (6,6)</p></li>
-<li><p><strong>use_pyplot</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.12)"><em>bool</em></a><em>, </em><em>optional</em>) – If true, uses pyplot to create and show
+<li><p><strong>use_pyplot</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.11)"><em>bool</em></a><em>, </em><em>optional</em>) – If true, uses pyplot to create and show
 figure and displays the figure after creating. If False,
 uses Matplotlib object oriented API and simply returns a
 figure object without showing.
 Default: True.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dt class="field-even">Returns</dt>
 <dd class="field-even"><p><ul class="simple">
 <li><dl class="simple">
 <dt><strong>figure</strong> (<em>matplotlib.pyplot.figure</em>):</dt><dd><p>Figure object on which visualization
@@ -140,7 +140,7 @@ same axis provided.</p>
 </ul>
 </p>
 </dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dt class="field-odd">Return type</dt>
 <dd class="field-odd"><p>2-element tuple of <strong>figure</strong>, <strong>axis</strong></p>
 </dd>
 </dl>
@@ -158,11 +158,11 @@ same axis provided.</p>
 </dd></dl>
 <dl class="py function">
 <dt class="sig sig-object py" id="captum.attr.visualization.visualize_image_attr_multiple">
-<span class="sig-prename descclassname"><span class="pre">captum.attr.visualization.</span></span><span class="sig-name descname"><span class="pre">visualize_image_attr_multiple</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">attr</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">original_image</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">methods</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">signs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">titles</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fig_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">(8,</span> <span class="pre">6)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_pyplot</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#captum.attr.visualization.visualize_image_attr_multiple" title="Link to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">captum.attr.visualization.</span></span><span class="sig-name descname"><span class="pre">visualize_image_attr_multiple</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">attr</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">original_image</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">methods</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">signs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">titles</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fig_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">(8,</span> <span class="pre">6)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_pyplot</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#captum.attr.visualization.visualize_image_attr_multiple" title="Permalink to this definition">¶</a></dt>
 <dd><p>Visualizes attribution using multiple visualization methods displayed
 in a 1 x k grid, where k is the number of desired visualizations.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>attr</strong> (<em>numpy.ndarray</em>) – Numpy array corresponding to attributions to be
 visualized. Shape must be in the form (H, W, C), with
@@ -174,29 +174,29 @@ channels as the last dimension. Image can be provided either
 with values in range 0-1 or 0-255. This is a necessary
 argument for any visualization method which utilizes
 the original image.</p></li>
-<li><p><strong>methods</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.12)"><em>list</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><em>str</em></a><em>]</em>) – List of strings of length k, defining method
+<li><p><strong>methods</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.11)"><em>list</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><em>str</em></a><em>]</em>) – List of strings of length k, defining method
 for each visualization. Each method must be a valid
 string argument for method to visualize_image_attr.</p></li>
-<li><p><strong>signs</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.12)"><em>list</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><em>str</em></a><em>]</em>) – List of strings of length k, defining signs for
+<li><p><strong>signs</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.11)"><em>list</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><em>str</em></a><em>]</em>) – List of strings of length k, defining signs for
 each visualization. Each sign must be a valid
 string argument for sign to visualize_image_attr.</p></li>
-<li><p><strong>titles</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.12)"><em>list</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><em>str</em></a><em>]</em><em>, </em><em>optional</em>) – List of strings of length k, providing
+<li><p><strong>titles</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.11)"><em>list</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><em>str</em></a><em>]</em><em>, </em><em>optional</em>) – List of strings of length k, providing
 a title string for each plot. If None is provided, no titles
 are added to subplots.
 Default: None</p></li>
-<li><p><strong>fig_size</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.12)"><em>tuple</em></a><em>, </em><em>optional</em>) – Size of figure created.
+<li><p><strong>fig_size</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.11)"><em>tuple</em></a><em>, </em><em>optional</em>) – Size of figure created.
 Default: (8, 6)</p></li>
-<li><p><strong>use_pyplot</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.12)"><em>bool</em></a><em>, </em><em>optional</em>) – If true, uses pyplot to create and show
+<li><p><strong>use_pyplot</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.11)"><em>bool</em></a><em>, </em><em>optional</em>) – If true, uses pyplot to create and show
 figure and displays the figure after creating. If False,
 uses Matplotlib object oriented API and simply returns a
 figure object without showing.
 Default: True.</p></li>
-<li><p><strong>**kwargs</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.12)"><em>Any</em></a><em>, </em><em>optional</em>) – Any additional arguments which will be passed
+<li><p><strong>**kwargs</strong> (<em>Any</em><em>, </em><em>optional</em>) – Any additional arguments which will be passed
 to every individual visualization. Such arguments include
 <cite>show_colorbar</cite>, <cite>alpha_overlay</cite>, <cite>cmap</cite>, etc.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dt class="field-even">Returns</dt>
 <dd class="field-even"><p><ul class="simple">
 <li><dl class="simple">
 <dt><strong>figure</strong> (<em>matplotlib.pyplot.figure</em>):</dt><dd><p>Figure object on which visualization
@@ -215,7 +215,7 @@ same axis provided.</p>
 </ul>
 </p>
 </dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dt class="field-odd">Return type</dt>
 <dd class="field-odd"><p>2-element tuple of <strong>figure</strong>, <strong>axis</strong></p>
 </dd>
 </dl>
@@ -235,12 +235,12 @@ same axis provided.</p>
 </dd></dl>
 <dl class="py function">
 <dt class="sig sig-object py" id="captum.attr.visualization.visualize_timeseries_attr">
-<span class="sig-prename descclassname"><span class="pre">captum.attr.visualization.</span></span><span class="sig-name descname"><span class="pre">visualize_timeseries_attr</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">attr</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x_values</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">method</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'individual_channels'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sign</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'absolute_value'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">channel_labels</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">channels_last</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plt_fig_axis</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">outlier_perc</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cmap</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha_overlay</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.7</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">show_colorbar</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">title</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fig_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">(6,</span> <span class="pre">6)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_pyplot</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">pyplot_kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#captum.attr.visualization.visualize_timeseries_attr" title="Link to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">captum.attr.visualization.</span></span><span class="sig-name descname"><span class="pre">visualize_timeseries_attr</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">attr</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x_values</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">method</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'individual_channels'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sign</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'absolute_value'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">channel_labels</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">channels_last</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plt_fig_axis</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">outlier_perc</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cmap</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha_overlay</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.7</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">show_colorbar</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">title</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fig_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">(6,</span> <span class="pre">6)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_pyplot</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">pyplot_kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#captum.attr.visualization.visualize_timeseries_attr" title="Permalink to this definition">¶</a></dt>
 <dd><p>Visualizes attribution for a given timeseries data by normalizing
 attribution values of the desired sign (positive, negative, absolute value,
 or all) and displaying them using the desired mode in a matplotlib figure.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>attr</strong> (<em>numpy.ndarray</em>) – Numpy array corresponding to attributions to be
 visualized. Shape must be in the form (N, C) with channels
@@ -254,7 +254,7 @@ equidistant timeseries data. Shape must be in the form
 points on the x-axis. Shape must be in the form (N, ). If
 not provided, integers from 0 to N-1 are used.
 Default: None</p></li>
-<li><p><strong>method</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><em>str</em></a><em>, </em><em>optional</em>) – <p>Chosen method for visualizing attributions
+<li><p><strong>method</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><em>str</em></a><em>, </em><em>optional</em>) – <p>Chosen method for visualizing attributions
 overlaid onto data. Supported options are:</p>
 <ol class="arabic simple">
 <li><dl class="simple">
@@ -279,7 +279,7 @@ white or very bright colors.</p>
 </ol>
 <p>Default: <cite>overlay_individual</cite></p>
 </p></li>
-<li><p><strong>sign</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><em>str</em></a><em>, </em><em>optional</em>) – <p>Chosen sign of attributions to visualize.
+<li><p><strong>sign</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><em>str</em></a><em>, </em><em>optional</em>) – <p>Chosen sign of attributions to visualize.
 Supported options are:</p>
 <ol class="arabic simple">
 <li><p><cite>positive</cite> - Displays only positive pixel attributions.</p></li>
@@ -297,42 +297,42 @@ Supported options are:</p>
 </ol>
 <p>Default: <cite>absolute_value</cite></p>
 </p></li>
-<li><p><strong>channel_labels</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.12)"><em>list</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><em>str</em></a><em>]</em><em>, </em><em>optional</em>) – List of labels
+<li><p><strong>channel_labels</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.11)"><em>list</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><em>str</em></a><em>]</em><em>, </em><em>optional</em>) – List of labels
 corresponding to each channel in data.
 Default: None</p></li>
-<li><p><strong>channels_last</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.12)"><em>bool</em></a><em>, </em><em>optional</em>) – If True, data is expected to have
+<li><p><strong>channels_last</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.11)"><em>bool</em></a><em>, </em><em>optional</em>) – If True, data is expected to have
 channels as the last dimension, i.e. (N, C). If False, data
 is expected to have channels first, i.e. (C, N).
 Default: True</p></li>
-<li><p><strong>plt_fig_axis</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.12)"><em>tuple</em></a><em>, </em><em>optional</em>) – Tuple of matplotlib.pyplot.figure and axis
+<li><p><strong>plt_fig_axis</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.11)"><em>tuple</em></a><em>, </em><em>optional</em>) – Tuple of matplotlib.pyplot.figure and axis
 on which to visualize. If None is provided, then a new figure
 and axis are created.
 Default: None</p></li>
-<li><p><strong>outlier_perc</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.12)"><em>float</em></a><em> or </em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><em>int</em></a><em>, </em><em>optional</em>) – Top attribution values which
+<li><p><strong>outlier_perc</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.11)"><em>float</em></a><em> or </em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><em>int</em></a><em>, </em><em>optional</em>) – Top attribution values which
 correspond to a total of outlier_perc percentage of the
 total attribution are set to 1 and scaling is performed
 using the minimum of these values. For sign=`all`, outliers
 and scale value are computed using absolute value of
 attributions.
 Default: 2</p></li>
-<li><p><strong>cmap</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><em>str</em></a><em>, </em><em>optional</em>) – String corresponding to desired colormap for
+<li><p><strong>cmap</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><em>str</em></a><em>, </em><em>optional</em>) – String corresponding to desired colormap for
 heatmap visualization. This defaults to “Reds” for negative
 sign, “Blues” for absolute value, “Greens” for positive sign,
 and a spectrum from red to green for all. Note that this
 argument is only used for visualizations displaying heatmaps.
 Default: None</p></li>
-<li><p><strong>alpha_overlay</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.12)"><em>float</em></a><em>, </em><em>optional</em>) – Alpha to set for heatmap when using
+<li><p><strong>alpha_overlay</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.11)"><em>float</em></a><em>, </em><em>optional</em>) – Alpha to set for heatmap when using
 <cite>blended_heat_map</cite> visualization mode, which overlays the
 heat map over the greyscaled original image.
 Default: 0.7</p></li>
-<li><p><strong>show_colorbar</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.12)"><em>bool</em></a>) – Displays colorbar for heat map below
+<li><p><strong>show_colorbar</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.11)"><em>bool</em></a>) – Displays colorbar for heat map below
 the visualization.</p></li>
-<li><p><strong>title</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><em>str</em></a><em>, </em><em>optional</em>) – Title string for plot. If None, no title is
+<li><p><strong>title</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><em>str</em></a><em>, </em><em>optional</em>) – Title string for plot. If None, no title is
 set.
 Default: None</p></li>
-<li><p><strong>fig_size</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.12)"><em>tuple</em></a><em>, </em><em>optional</em>) – Size of figure created.
+<li><p><strong>fig_size</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.11)"><em>tuple</em></a><em>, </em><em>optional</em>) – Size of figure created.
 Default: (6,6)</p></li>
-<li><p><strong>use_pyplot</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.12)"><em>bool</em></a>) – If true, uses pyplot to create and show
+<li><p><strong>use_pyplot</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.11)"><em>bool</em></a>) – If true, uses pyplot to create and show
 figure and displays the figure after creating. If False,
 uses Matplotlib object oriented API and simply returns a
 figure object without showing.
@@ -341,7 +341,7 @@ Default: True.</p></li>
 <cite>linewidth=3</cite>, <cite>color=’black’</cite>, etc</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dt class="field-even">Returns</dt>
 <dd class="field-even"><p><ul class="simple">
 <li><dl class="simple">
 <dt><strong>figure</strong> (<em>matplotlib.pyplot.figure</em>):</dt><dd><p>Figure object on which visualization
@@ -360,7 +360,7 @@ same axis provided.</p>
 </ul>
 </p>
 </dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dt class="field-odd">Return type</dt>
 <dd class="field-odd"><p>2-element tuple of <strong>figure</strong>, <strong>axis</strong></p>
 </dd>
 </dl>
@@ -377,10 +377,10 @@ same axis provided.</p>
 </dd></dl>
 </section>
 <section id="interpretable-embeddings">
-<h2>Interpretable Embeddings<a class="headerlink" href="#interpretable-embeddings" title="Link to this heading">¶</a></h2>
+<h2>Interpretable Embeddings<a class="headerlink" href="#interpretable-embeddings" title="Permalink to this headline">¶</a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="captum.attr.InterpretableEmbeddingBase">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">captum.attr.</span></span><span class="sig-name descname"><span class="pre">InterpretableEmbeddingBase</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">embedding</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">full_name</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_models/base.html#InterpretableEmbeddingBase"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum.attr.InterpretableEmbeddingBase" title="Link to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">captum.attr.</span></span><span class="sig-name descname"><span class="pre">InterpretableEmbeddingBase</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">embedding</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">full_name</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_models/base.html#InterpretableEmbeddingBase"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum.attr.InterpretableEmbeddingBase" title="Permalink to this definition">¶</a></dt>
 <dd><p>Since some embedding vectors, e.g. word are created and assigned in
 the embedding layers of Pytorch models we need a way to access
 those layers, generate the embeddings and subtract the baseline.
@@ -392,14 +392,14 @@ precomputed embedding vectors to the layers below.</p>
 <p>Initializes internal Module state, shared by both nn.Module and ScriptModule.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="captum.attr.InterpretableEmbeddingBase.forward">
-<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">inputs</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_models/base.html#InterpretableEmbeddingBase.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum.attr.InterpretableEmbeddingBase.forward" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">inputs</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_models/base.html#InterpretableEmbeddingBase.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum.attr.InterpretableEmbeddingBase.forward" title="Permalink to this definition">¶</a></dt>
 <dd><p>The forward function of a wrapper embedding layer that takes and returns
 embedding layer. It allows embeddings to be created outside of the model
 and passes them seamlessly to the preceding layers of the model.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>*inputs</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.12)"><em>Any</em></a><em>, </em><em>optional</em>) – A sequence of inputs arguments that the
+<li><p><strong>*inputs</strong> (<em>Any</em><em>, </em><em>optional</em>) – A sequence of inputs arguments that the
 forward function takes. Since forward functions can take any
 type and number of arguments, this will ensure that we can
 execute the forward pass using interpretable embedding layer.
@@ -407,7 +407,7 @@ Note that if inputs are specified, it is assumed that the first
 argument is the embedding tensor generated using the
 <cite>self.embedding</cite> layer using all input arguments provided in
 <cite>inputs</cite> and <cite>kwargs</cite>.</p></li>
-<li><p><strong>**kwargs</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.12)"><em>Any</em></a><em>, </em><em>optional</em>) – Similar to <cite>inputs</cite> we want to make sure
+<li><p><strong>**kwargs</strong> (<em>Any</em><em>, </em><em>optional</em>) – Similar to <cite>inputs</cite> we want to make sure
 that our forward pass supports arbitrary number and type of
 key-value arguments. If <cite>inputs</cite> is not provided, <cite>kwargs</cite> must
 be provided and the first argument corresponds to the embedding
@@ -420,37 +420,37 @@ it is encouraged to override <cite>InterpretableEmbeddingBase</cite> and
 address those specifics in descendant classes.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dt class="field-even">Returns</dt>
 <dd class="field-even"><p>Returns a tensor which is the same as first argument passed
 to the forward function.
 It passes pre-computed embedding tensors to lower layers
 without any modifications.</p>
 </dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dt class="field-odd">Return type</dt>
 <dd class="field-odd"><p>embedding_tensor (Tensor)</p>
 </dd>
 </dl>
 </dd></dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="captum.attr.InterpretableEmbeddingBase.indices_to_embeddings">
-<span class="sig-name descname"><span class="pre">indices_to_embeddings</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">input</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_models/base.html#InterpretableEmbeddingBase.indices_to_embeddings"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum.attr.InterpretableEmbeddingBase.indices_to_embeddings" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">indices_to_embeddings</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">input</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_models/base.html#InterpretableEmbeddingBase.indices_to_embeddings"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum.attr.InterpretableEmbeddingBase.indices_to_embeddings" title="Permalink to this definition">¶</a></dt>
 <dd><p>Maps indices to corresponding embedding vectors. E.g. word embeddings</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>*input</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.12)"><em>Any</em></a><em>, </em><em>optional</em>) – This can be a tensor(s) of input indices or any
+<li><p><strong>*input</strong> (<em>Any</em><em>, </em><em>optional</em>) – This can be a tensor(s) of input indices or any
 other variable necessary to comput the embeddings. A typical
 example of input indices are word or token indices.</p></li>
-<li><p><strong>**kwargs</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.12)"><em>Any</em></a><em>, </em><em>optional</em>) – Similar to <cite>input</cite> this can be any sequence
+<li><p><strong>**kwargs</strong> (<em>Any</em><em>, </em><em>optional</em>) – Similar to <cite>input</cite> this can be any sequence
 of key-value arguments necessary to compute final embedding
 tensor.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dt class="field-even">Returns</dt>
 <dd class="field-even"><p>A tensor of word embeddings corresponding to the
 indices specified in the input</p>
 </dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dt class="field-odd">Return type</dt>
 <dd class="field-odd"><p>tensor</p>
 </dd>
 </dl>
@@ -458,18 +458,18 @@ indices specified in the input</p>
 </dd></dl>
 <dl class="py function">
 <dt class="sig sig-object py" id="captum.attr.configure_interpretable_embedding_layer">
-<span class="sig-prename descclassname"><span class="pre">captum.attr.</span></span><span class="sig-name descname"><span class="pre">configure_interpretable_embedding_layer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">embedding_layer_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'embedding'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_models/base.html#configure_interpretable_embedding_layer"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum.attr.configure_interpretable_embedding_layer" title="Link to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">captum.attr.</span></span><span class="sig-name descname"><span class="pre">configure_interpretable_embedding_layer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">embedding_layer_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'embedding'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_models/base.html#configure_interpretable_embedding_layer"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum.attr.configure_interpretable_embedding_layer" title="Permalink to this definition">¶</a></dt>
 <dd><p>This method wraps a model’s embedding layer with an interpretable embedding
 layer that allows us to access the embeddings through their indices.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>model</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/generated/torch.nn.Module.html#torch.nn.Module" title="(in PyTorch v2.1)"><em>torch.nn.Module</em></a>) – An instance of PyTorch model that contains embeddings.</p></li>
-<li><p><strong>embedding_layer_name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><em>str</em></a><em>, </em><em>optional</em>) – The name of the embedding layer
+<li><p><strong>model</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/generated/torch.nn.Module.html#torch.nn.Module" title="(in PyTorch v1.13)"><em>torch.nn.Module</em></a>) – An instance of PyTorch model that contains embeddings.</p></li>
+<li><p><strong>embedding_layer_name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><em>str</em></a><em>, </em><em>optional</em>) – The name of the embedding layer
 in the <cite>model</cite> that we would like to make interpretable.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dt class="field-even">Returns</dt>
 <dd class="field-even"><p><dl class="simple">
 <dt>An instance of</dt><dd><p><cite>InterpretableEmbeddingBase</cite> embedding layer that wraps model’s
 embedding layer that is being accessed through
@@ -478,7 +478,7 @@ embedding layer that is being accessed through
 </dl>
 </p>
 </dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dt class="field-odd">Return type</dt>
 <dd class="field-odd"><p>interpretable_emb (<a class="reference internal" href="#captum.attr.InterpretableEmbeddingBase" title="captum.attr.InterpretableEmbeddingBase">InterpretableEmbeddingBase</a>)</p>
 </dd>
 </dl>
@@ -509,21 +509,18 @@ embedding layer that is being accessed through
 </dd></dl>
 <dl class="py function">
 <dt class="sig sig-object py" id="captum.attr.remove_interpretable_embedding_layer">
-<span class="sig-prename descclassname"><span class="pre">captum.attr.</span></span><span class="sig-name descname"><span class="pre">remove_interpretable_embedding_layer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">interpretable_emb</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_models/base.html#remove_interpretable_embedding_layer"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum.attr.remove_interpretable_embedding_layer" title="Link to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">captum.attr.</span></span><span class="sig-name descname"><span class="pre">remove_interpretable_embedding_layer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">interpretable_emb</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_models/base.html#remove_interpretable_embedding_layer"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum.attr.remove_interpretable_embedding_layer" title="Permalink to this definition">¶</a></dt>
 <dd><p>Removes interpretable embedding layer and sets back original
 embedding layer in the model.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>model</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/generated/torch.nn.Module.html#torch.nn.Module" title="(in PyTorch v2.1)"><em>torch.nn.Module</em></a>) – An instance of PyTorch model that contains embeddings</p></li>
+<li><p><strong>model</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/generated/torch.nn.Module.html#torch.nn.Module" title="(in PyTorch v1.13)"><em>torch.nn.Module</em></a>) – An instance of PyTorch model that contains embeddings</p></li>
 <li><p><strong>interpretable_emb</strong> (<a class="reference internal" href="#captum.attr.InterpretableEmbeddingBase" title="captum.attr.InterpretableEmbeddingBase"><em>InterpretableEmbeddingBase</em></a>) – An instance of
 <cite>InterpretableEmbeddingBase</cite> that was originally created in
 <cite>configure_interpretable_embedding_layer</cite> function and has
 to be removed after interpretation is finished.</p></li>
 </ul>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.12)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a></p>
 </dd>
 </dl>
 <p>Examples:</p>
@@ -550,38 +547,43 @@ to be removed after interpretation is finished.</p></li>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">remove_interpretable_embedding_layer</span><span class="p">(</span><span class="n">net</span><span class="p">,</span> <span class="n">interpretable_emb</span><span class="p">)</span>
 </pre></div>
 </div>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.11)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a></p>
+</dd>
+</dl>
 </dd></dl>
 </section>
 <section id="token-reference-base">
-<h2>Token Reference Base<a class="headerlink" href="#token-reference-base" title="Link to this heading">¶</a></h2>
+<h2>Token Reference Base<a class="headerlink" href="#token-reference-base" title="Permalink to this headline">¶</a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="captum.attr.TokenReferenceBase">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">captum.attr.</span></span><span class="sig-name descname"><span class="pre">TokenReferenceBase</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">reference_token_idx</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_models/base.html#TokenReferenceBase"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum.attr.TokenReferenceBase" title="Link to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">captum.attr.</span></span><span class="sig-name descname"><span class="pre">TokenReferenceBase</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">reference_token_idx</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_models/base.html#TokenReferenceBase"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum.attr.TokenReferenceBase" title="Permalink to this definition">¶</a></dt>
 <dd><p>A base class for creating reference (aka baseline) tensor for a sequence of
 tokens. A typical example of such token is <cite>PAD</cite>. Users need to provide the
 index of the reference token in the vocabulary as an argument to
 <cite>TokenReferenceBase</cite> class.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="captum.attr.TokenReferenceBase.generate_reference">
-<span class="sig-name descname"><span class="pre">generate_reference</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sequence_length</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">device</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_models/base.html#TokenReferenceBase.generate_reference"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum.attr.TokenReferenceBase.generate_reference" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">generate_reference</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sequence_length</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">device</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_models/base.html#TokenReferenceBase.generate_reference"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum.attr.TokenReferenceBase.generate_reference" title="Permalink to this definition">¶</a></dt>
 <dd><p>Generated reference tensor of given <cite>sequence_length</cite> using
 <cite>reference_token_idx</cite>.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>sequence_length</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><em>int</em></a>) – The length of the reference sequence</p></li>
-<li><p><strong>device</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/tensor_attributes.html#torch.device" title="(in PyTorch v2.1)"><em>torch.device</em></a>) – The device on which the reference tensor will
+<li><p><strong>sequence_length</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><em>int</em></a>) – The length of the reference sequence</p></li>
+<li><p><strong>device</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/tensor_attributes.html#torch.device" title="(in PyTorch v1.13)"><em>torch.device</em></a>) – The device on which the reference tensor will
 be created.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dt class="field-even">Returns</dt>
 <dd class="field-even"><p><dl class="simple">
 <dt>A sequence of reference token with shape:</dt><dd><p>[sequence_length]</p>
 </dd>
 </dl>
 </p>
 </dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dt class="field-odd">Return type</dt>
 <dd class="field-odd"><p>tensor</p>
 </dd>
 </dl>
@@ -589,28 +591,28 @@ be created.</p></li>
 </dd></dl>
 </section>
 <section id="linear-models">
-<h2>Linear Models<a class="headerlink" href="#linear-models" title="Link to this heading">¶</a></h2>
+<h2>Linear Models<a class="headerlink" href="#linear-models" title="Permalink to this headline">¶</a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="captum._utils.models.model.Model">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">captum._utils.models.model.</span></span><span class="sig-name descname"><span class="pre">Model</span></span><a class="reference internal" href="_modules/captum/_utils/models/model.html#Model"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum._utils.models.model.Model" title="Link to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">captum._utils.models.model.</span></span><span class="sig-name descname"><span class="pre">Model</span></span><a class="reference internal" href="_modules/captum/_utils/models/model.html#Model"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum._utils.models.model.Model" title="Permalink to this definition">¶</a></dt>
 <dd><p>Abstract Class to describe the interface of a trainable model to be used
 within the algorithms of captum.</p>
 <p>Please note that this is an experimental feature.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="captum._utils.models.model.Model.fit">
-<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">train_data</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/_utils/models/model.html#Model.fit"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum._utils.models.model.Model.fit" title="Link to this definition">¶</a></dt>
+<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">train_data</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/_utils/models/model.html#Model.fit"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum._utils.models.model.Model.fit" title="Permalink to this definition">¶</a></dt>
 <dd><p>Override this method to actually train your model.</p>
 <p>The specification of the dataloader will be supplied by the algorithm
 you are using within captum. This will likely be a supervised learning
 task, thus you should expect batched (x, y) pairs or (x, y, w) triples.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><p><strong>train_data</strong> (<em>DataLoader</em>) – The data to train on</p>
 </dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Optional" title="(in Python v3.12)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Dict" title="(in Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Dict</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Union" title="(in Python v3.12)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a>, <a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v2.1)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tensor</span></code></a>]]]</p>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Optional" title="(in Python v3.11)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Dict" title="(in Python v3.11)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Dict</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Union" title="(in Python v3.11)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.11)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a>, <a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.13)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tensor</span></code></a>]]]</p>
 </dd>
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dt class="field-odd">Returns</dt>
 <dd class="field-odd"><p>Optional statistics about training, e.g.  iterations it took to
 train, training loss, etc.</p>
 </dd>
@@ -618,16 +620,16 @@ train, training loss, etc.</p>
 </dd></dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="captum._utils.models.model.Model.representation">
-<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">representation</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/_utils/models/model.html#Model.representation"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum._utils.models.model.Model.representation" title="Link to this definition">¶</a></dt>
+<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">representation</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/_utils/models/model.html#Model.representation"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum._utils.models.model.Model.representation" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns the underlying representation of the interpretable model. For a
 linear model this is simply a tensor (the concatenation of weights
 and bias). For something slightly more complicated, such as a decision
 tree, this could be the nodes of a decision tree.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v2.1)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tensor</span></code></a></p>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.13)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tensor</span></code></a></p>
 </dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dt class="field-even">Returns</dt>
 <dd class="field-even"><p>A Tensor describing the representation of the model.</p>
 </dd>
 </dl>
@@ -635,7 +637,7 @@ tree, this could be the nodes of a decision tree.</p>
 </dd></dl>
 <dl class="py class">
 <dt class="sig sig-object py" id="captum._utils.models.linear_model.SkLearnLinearModel">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">captum._utils.models.linear_model.</span></span><span class="sig-name descname"><span class="pre">SkLearnLinearModel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sklearn_module</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/_utils/models/linear_model/model.html#SkLearnLinearModel"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum._utils.models.linear_model.SkLearnLinearModel" title="Link to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">captum._utils.models.linear_model.</span></span><span class="sig-name descname"><span class="pre">SkLearnLinearModel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sklearn_module</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/_utils/models/linear_model/model.html#SkLearnLinearModel"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum._utils.models.linear_model.SkLearnLinearModel" title="Permalink to this definition">¶</a></dt>
 <dd><p>Factory class to construct a <cite>LinearModel</cite> with sklearn training method.</p>
 <p>Please note that this assumes:</p>
 <ol class="arabic simple" start="0">
@@ -646,9 +648,9 @@ tree, this could be the nodes of a decision tree.</p>
 tensors to numpy and then convert the resulting trained model to a
 <cite>LinearModel</cite> object. However, this conversion should be negligible.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>sklearn_module</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>) – <p>The module under sklearn to construct and use for training, e.g.
+<li><p><strong>sklearn_module</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>) – <p>The module under sklearn to construct and use for training, e.g.
 use “svm.LinearSVC” for an SVM or “linear_model.Lasso” for Lasso.</p>
 <p>There are factory classes defined for you for common use cases,
 such as <cite>SkLearnLasso</cite>.</p>
@@ -659,11 +661,11 @@ such as <cite>SkLearnLasso</cite>.</p>
 </dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="captum._utils.models.linear_model.SkLearnLinearModel.fit">
-<span class="sig-name descname"><span class="pre">fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">train_data</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/_utils/models/linear_model/model.html#SkLearnLinearModel.fit"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum._utils.models.linear_model.SkLearnLinearModel.fit" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">train_data</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/_utils/models/linear_model/model.html#SkLearnLinearModel.fit"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum._utils.models.linear_model.SkLearnLinearModel.fit" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>train_data</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/data.html#torch.utils.data.DataLoader" title="(in PyTorch v2.1)"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataLoader</span></code></a>) – Train data to use</p></li>
+<li><p><strong>train_data</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/data.html#torch.utils.data.DataLoader" title="(in PyTorch v1.13)"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataLoader</span></code></a>) – Train data to use</p></li>
 <li><p><strong>kwargs</strong> – Arguments to feed to <cite>.fit</cite> method for sklearn</p></li>
 </ul>
 </dd>
@@ -672,17 +674,17 @@ such as <cite>SkLearnLasso</cite>.</p>
 </dd></dl>
 <dl class="py class">
 <dt class="sig sig-object py" id="captum._utils.models.linear_model.SkLearnLinearRegression">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">captum._utils.models.linear_model.</span></span><span class="sig-name descname"><span class="pre">SkLearnLinearRegression</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/_utils/models/linear_model/model.html#SkLearnLinearRegression"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum._utils.models.linear_model.SkLearnLinearRegression" title="Link to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">captum._utils.models.linear_model.</span></span><span class="sig-name descname"><span class="pre">SkLearnLinearRegression</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/_utils/models/linear_model/model.html#SkLearnLinearRegression"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum._utils.models.linear_model.SkLearnLinearRegression" title="Permalink to this definition">¶</a></dt>
 <dd><p>Factory class. Trains a model with <cite>sklearn.linear_model.LinearRegression</cite>.</p>
 <p>Any arguments provided to the sklearn constructor can be provided
 as kwargs here.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="captum._utils.models.linear_model.SkLearnLinearRegression.fit">
-<span class="sig-name descname"><span class="pre">fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">train_data</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/_utils/models/linear_model/model.html#SkLearnLinearRegression.fit"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum._utils.models.linear_model.SkLearnLinearRegression.fit" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">train_data</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/_utils/models/linear_model/model.html#SkLearnLinearRegression.fit"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum._utils.models.linear_model.SkLearnLinearRegression.fit" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>train_data</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/data.html#torch.utils.data.DataLoader" title="(in PyTorch v2.1)"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataLoader</span></code></a>) – Train data to use</p></li>
+<li><p><strong>train_data</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/data.html#torch.utils.data.DataLoader" title="(in PyTorch v1.13)"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataLoader</span></code></a>) – Train data to use</p></li>
 <li><p><strong>kwargs</strong> – Arguments to feed to <cite>.fit</cite> method for sklearn</p></li>
 </ul>
 </dd>
@@ -691,17 +693,17 @@ as kwargs here.</p>
 </dd></dl>
 <dl class="py class">
 <dt class="sig sig-object py" id="captum._utils.models.linear_model.SkLearnLasso">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">captum._utils.models.linear_model.</span></span><span class="sig-name descname"><span class="pre">SkLearnLasso</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/_utils/models/linear_model/model.html#SkLearnLasso"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum._utils.models.linear_model.SkLearnLasso" title="Link to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">captum._utils.models.linear_model.</span></span><span class="sig-name descname"><span class="pre">SkLearnLasso</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/_utils/models/linear_model/model.html#SkLearnLasso"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum._utils.models.linear_model.SkLearnLasso" title="Permalink to this definition">¶</a></dt>
 <dd><p>Factory class. Trains a <cite>LinearModel</cite> model with
 <cite>sklearn.linear_model.Lasso</cite>. You will need sklearn version &gt;= 0.23 to
 support sample weights.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="captum._utils.models.linear_model.SkLearnLasso.fit">
-<span class="sig-name descname"><span class="pre">fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">train_data</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/_utils/models/linear_model/model.html#SkLearnLasso.fit"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum._utils.models.linear_model.SkLearnLasso.fit" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">train_data</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/_utils/models/linear_model/model.html#SkLearnLasso.fit"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum._utils.models.linear_model.SkLearnLasso.fit" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>train_data</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/data.html#torch.utils.data.DataLoader" title="(in PyTorch v2.1)"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataLoader</span></code></a>) – Train data to use</p></li>
+<li><p><strong>train_data</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/data.html#torch.utils.data.DataLoader" title="(in PyTorch v1.13)"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataLoader</span></code></a>) – Train data to use</p></li>
 <li><p><strong>kwargs</strong> – Arguments to feed to <cite>.fit</cite> method for sklearn</p></li>
 </ul>
 </dd>
@@ -710,17 +712,17 @@ support sample weights.</p>
 </dd></dl>
 <dl class="py class">
 <dt class="sig sig-object py" id="captum._utils.models.linear_model.SkLearnRidge">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">captum._utils.models.linear_model.</span></span><span class="sig-name descname"><span class="pre">SkLearnRidge</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/_utils/models/linear_model/model.html#SkLearnRidge"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum._utils.models.linear_model.SkLearnRidge" title="Link to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">captum._utils.models.linear_model.</span></span><span class="sig-name descname"><span class="pre">SkLearnRidge</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/_utils/models/linear_model/model.html#SkLearnRidge"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum._utils.models.linear_model.SkLearnRidge" title="Permalink to this definition">¶</a></dt>
 <dd><p>Factory class. Trains a model with <cite>sklearn.linear_model.Ridge</cite>.</p>
 <p>Any arguments provided to the sklearn constructor can be provided
 as kwargs here.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="captum._utils.models.linear_model.SkLearnRidge.fit">
-<span class="sig-name descname"><span class="pre">fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">train_data</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/_utils/models/linear_model/model.html#SkLearnRidge.fit"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum._utils.models.linear_model.SkLearnRidge.fit" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">train_data</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/_utils/models/linear_model/model.html#SkLearnRidge.fit"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum._utils.models.linear_model.SkLearnRidge.fit" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>train_data</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/data.html#torch.utils.data.DataLoader" title="(in PyTorch v2.1)"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataLoader</span></code></a>) – Train data to use</p></li>
+<li><p><strong>train_data</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/data.html#torch.utils.data.DataLoader" title="(in PyTorch v1.13)"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataLoader</span></code></a>) – Train data to use</p></li>
 <li><p><strong>kwargs</strong> – Arguments to feed to <cite>.fit</cite> method for sklearn</p></li>
 </ul>
 </dd>
@@ -729,11 +731,11 @@ as kwargs here.</p>
 </dd></dl>
 <dl class="py class">
 <dt class="sig sig-object py" id="captum._utils.models.linear_model.SGDLinearModel">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">captum._utils.models.linear_model.</span></span><span class="sig-name descname"><span class="pre">SGDLinearModel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/_utils/models/linear_model/model.html#SGDLinearModel"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum._utils.models.linear_model.SGDLinearModel" title="Link to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">captum._utils.models.linear_model.</span></span><span class="sig-name descname"><span class="pre">SGDLinearModel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/_utils/models/linear_model/model.html#SGDLinearModel"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum._utils.models.linear_model.SGDLinearModel" title="Permalink to this definition">¶</a></dt>
 <dd><p>Factory class. Construct a a <cite>LinearModel</cite> with the
 <cite>sgd_train_linear_model</cite> as the train method</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><p><strong>kwargs</strong> – Arguments send to <cite>self._construct_model_params</cite> after
 <cite>self.fit</cite> is called. Please refer to that method for parameter
 documentation.</p>
@@ -742,7 +744,7 @@ documentation.</p>
 </dd></dl>
 <dl class="py class">
 <dt class="sig sig-object py" id="captum._utils.models.linear_model.SGDLasso">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">captum._utils.models.linear_model.</span></span><span class="sig-name descname"><span class="pre">SGDLasso</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/_utils/models/linear_model/model.html#SGDLasso"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum._utils.models.linear_model.SGDLasso" title="Link to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">captum._utils.models.linear_model.</span></span><span class="sig-name descname"><span class="pre">SGDLasso</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/_utils/models/linear_model/model.html#SGDLasso"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum._utils.models.linear_model.SGDLasso" title="Permalink to this definition">¶</a></dt>
 <dd><p>Factory class to train a <cite>LinearModel</cite> with SGD
 (<cite>sgd_train_linear_model</cite>) whilst setting appropriate parameters to
 optimize for ridge regression loss. This optimizes L2 loss + alpha * L1
@@ -751,20 +753,20 @@ regularization.</p>
 converge to 0.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="captum._utils.models.linear_model.SGDLasso.fit">
-<span class="sig-name descname"><span class="pre">fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">train_data</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/_utils/models/linear_model/model.html#SGDLasso.fit"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum._utils.models.linear_model.SGDLasso.fit" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">train_data</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/_utils/models/linear_model/model.html#SGDLasso.fit"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum._utils.models.linear_model.SGDLasso.fit" title="Permalink to this definition">¶</a></dt>
 <dd><p>Calls <cite>self.train_fn</cite></p>
 </dd></dl>
 </dd></dl>
 <dl class="py class">
 <dt class="sig sig-object py" id="captum._utils.models.linear_model.SGDRidge">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">captum._utils.models.linear_model.</span></span><span class="sig-name descname"><span class="pre">SGDRidge</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/_utils/models/linear_model/model.html#SGDRidge"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum._utils.models.linear_model.SGDRidge" title="Link to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">captum._utils.models.linear_model.</span></span><span class="sig-name descname"><span class="pre">SGDRidge</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/_utils/models/linear_model/model.html#SGDRidge"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum._utils.models.linear_model.SGDRidge" title="Permalink to this definition">¶</a></dt>
 <dd><p>Factory class to train a <cite>LinearModel</cite> with SGD
 (<cite>sgd_train_linear_model</cite>) whilst setting appropriate parameters to
 optimize for ridge regression loss. This optimizes L2 loss + alpha *
 L2 regularization.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="captum._utils.models.linear_model.SGDRidge.fit">
-<span class="sig-name descname"><span class="pre">fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">train_data</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/_utils/models/linear_model/model.html#SGDRidge.fit"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum._utils.models.linear_model.SGDRidge.fit" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">train_data</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/_utils/models/linear_model/model.html#SGDRidge.fit"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum._utils.models.linear_model.SGDRidge.fit" title="Permalink to this definition">¶</a></dt>
 <dd><p>Calls <cite>self.train_fn</cite></p>
 </dd></dl>
 </dd></dl>
@@ -820,7 +822,7 @@ L2 regularization.</p>
 </form>
 </div>
 </div>
-<script>document.getElementById('searchbox').style.display = "block"</script>
+<script>$('#searchbox').show(0);</script>
 </div>
 </div>
 <div class="clearer"></div>
