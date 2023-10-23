@@ -30,10 +30,10 @@ src="/_sphinx/documentation_options.js"></script>
 <div class="bodywrapper">
 <div class="body" role="main">
 <section id="noisetunnel">
-<h1>NoiseTunnel<a class="headerlink" href="#noisetunnel" title="Permalink to this headline">¶</a></h1>
+<h1>NoiseTunnel<a class="headerlink" href="#noisetunnel" title="Link to this heading">¶</a></h1>
 <dl class="py class">
 <dt class="sig sig-object py" id="captum.attr.NoiseTunnel">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">captum.attr.</span></span><span class="sig-name descname"><span class="pre">NoiseTunnel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">attribution_method</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/noise_tunnel.html#NoiseTunnel"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum.attr.NoiseTunnel" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">captum.attr.</span></span><span class="sig-name descname"><span class="pre">NoiseTunnel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">attribution_method</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/noise_tunnel.html#NoiseTunnel"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum.attr.NoiseTunnel" title="Link to this definition">¶</a></dt>
 <dd><p>Adds gaussian noise to each input in the batch <cite>nt_samples</cite> times
 and applies the given attribution algorithm to each of the samples.
 The attributions of the samples are combined based on the given noise
@@ -59,7 +59,7 @@ however it can be computationally expensive depending on the model,
 the dimensionality of the data and execution environment.
 It is assumed that the batch size is the first dimension of input tensors.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>attribution_method</strong> (<a class="reference internal" href="base_classes.html#captum.attr.Attribution" title="captum.attr.Attribution"><em>Attribution</em></a>) – An instance of any attribution algorithm
 of type <cite>Attribution</cite>. E.g. Integrated Gradients,
 Conductance or Saliency.</p>
@@ -67,11 +67,11 @@ Conductance or Saliency.</p>
 </dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="captum.attr.NoiseTunnel.attribute">
-<span class="sig-name descname"><span class="pre">attribute</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inputs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nt_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'smoothgrad'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nt_samples</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nt_samples_batch_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stdevs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">draw_baseline_from_distrib</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/noise_tunnel.html#NoiseTunnel.attribute"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum.attr.NoiseTunnel.attribute" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">attribute</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inputs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nt_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'smoothgrad'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nt_samples</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nt_samples_batch_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stdevs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">draw_baseline_from_distrib</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/noise_tunnel.html#NoiseTunnel.attribute"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum.attr.NoiseTunnel.attribute" title="Link to this definition">¶</a></dt>
 <dd><dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>inputs</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.13)"><em>Tensor</em></a><em> or </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.11)"><em>tuple</em></a><em>[</em><a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.13)"><em>Tensor</em></a><em>, </em><em>...</em><em>]</em>) – Input for which integrated
+<li><p><strong>inputs</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v2.1)"><em>Tensor</em></a><em> or </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.12)"><em>tuple</em></a><em>[</em><a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v2.1)"><em>Tensor</em></a><em>, </em><em>...</em><em>]</em>) – Input for which integrated
 gradients are computed. If forward_func takes a single
 tensor as input, a single input tensor should be provided.
 If forward_func takes multiple tensors as input, a tuple
@@ -79,21 +79,21 @@ of the input tensors should be provided. It is assumed
 that for all given input tensors, dimension 0 corresponds
 to the number of examples, and if multiple input tensors
 are provided, the examples must be aligned appropriately.</p></li>
-<li><p><strong>nt_type</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><em>str</em></a><em>, </em><em>optional</em>) – Smoothing type of the attributions.
+<li><p><strong>nt_type</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><em>str</em></a><em>, </em><em>optional</em>) – Smoothing type of the attributions.
 <cite>smoothgrad</cite>, <cite>smoothgrad_sq</cite> or <cite>vargrad</cite>
 Default: <cite>smoothgrad</cite> if <cite>type</cite> is not provided.</p></li>
-<li><p><strong>nt_samples</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><em>int</em></a><em>, </em><em>optional</em>) – The number of randomly generated examples
+<li><p><strong>nt_samples</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><em>int</em></a><em>, </em><em>optional</em>) – The number of randomly generated examples
 per sample in the input batch. Random examples are
 generated by adding gaussian random noise to each sample.
 Default: <cite>5</cite> if <cite>nt_samples</cite> is not provided.</p></li>
-<li><p><strong>nt_samples_batch_size</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><em>int</em></a><em>, </em><em>optional</em>) – The number of the <cite>nt_samples</cite>
+<li><p><strong>nt_samples_batch_size</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><em>int</em></a><em>, </em><em>optional</em>) – The number of the <cite>nt_samples</cite>
 that will be processed together. With the help
 of this parameter we can avoid out of memory situation and
 reduce the number of randomly generated examples per sample
 in each batch.
 Default: None if <cite>nt_samples_batch_size</cite> is not provided. In
 this case all <cite>nt_samples</cite> will be processed together.</p></li>
-<li><p><strong>stdevs</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.11)"><em>float</em></a><em> or </em><em>tuple of float</em><em>, </em><em>optional</em>) – The standard deviation
+<li><p><strong>stdevs</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.12)"><em>float</em></a><em> or </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.12)"><em>tuple</em></a><em> of </em><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.12)"><em>float</em></a><em>, </em><em>optional</em>) – The standard deviation
 of gaussian noise with zero mean that is added to each
 input in the batch. If <cite>stdevs</cite> is a single float value
 then that same value is used for all inputs. If it is
@@ -102,11 +102,11 @@ tuple. In this case, each stdev value in the stdevs tuple
 corresponds to the input with the same index in the inputs
 tuple.
 Default: <cite>1.0</cite> if <cite>stdevs</cite> is not provided.</p></li>
-<li><p><strong>draw_baseline_from_distrib</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.11)"><em>bool</em></a><em>, </em><em>optional</em>) – Indicates whether to
+<li><p><strong>draw_baseline_from_distrib</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.12)"><em>bool</em></a><em>, </em><em>optional</em>) – Indicates whether to
 randomly draw baseline samples from the <cite>baselines</cite>
 distribution provided as an input tensor.
 Default: False</p></li>
-<li><p><strong>**kwargs</strong> (<em>Any</em><em>, </em><em>optional</em>) – Contains a list of arguments that are passed
+<li><p><strong>**kwargs</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.12)"><em>Any</em></a><em>, </em><em>optional</em>) – Contains a list of arguments that are passed
 to <cite>attribution_method</cite> attribution algorithm.
 Any additional arguments that should be used for the
 chosen attribution method should be included here.
@@ -114,7 +114,7 @@ For instance, such arguments include
 <cite>additional_forward_args</cite> and <cite>baselines</cite>.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p><ul class="simple">
 <li><dl class="simple">
 <dt><strong>attributions</strong> (<em>Tensor</em> or <em>tuple[Tensor, …]</em>):</dt><dd><p>Attribution with
@@ -141,7 +141,7 @@ across all <cite>nt_samples</cite> perturbed tensors for that input.</p>
 </ul>
 </p>
 </dd>
-<dt class="field-odd">Return type</dt>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>attributions</strong> or 2-element tuple of <strong>attributions</strong>, <strong>delta</strong></p>
 </dd>
 </dl>
@@ -164,7 +164,7 @@ across all <cite>nt_samples</cite> perturbed tensors for that input.</p>
 </dd></dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="captum.attr.NoiseTunnel.has_convergence_delta">
-<span class="sig-name descname"><span class="pre">has_convergence_delta</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/noise_tunnel.html#NoiseTunnel.has_convergence_delta"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum.attr.NoiseTunnel.has_convergence_delta" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">has_convergence_delta</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/noise_tunnel.html#NoiseTunnel.has_convergence_delta"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum.attr.NoiseTunnel.has_convergence_delta" title="Link to this definition">¶</a></dt>
 <dd><p>This method informs the user whether the attribution algorithm provides
 a convergence delta (aka an approximation error) or not. Convergence
 delta may serve as a proxy of correctness of attribution algorithm’s
@@ -172,12 +172,12 @@ approximation. If deriving attribution class provides a
 <cite>compute_convergence_delta</cite> method, it should
 override both <cite>compute_convergence_delta</cite> and <cite>has_convergence_delta</cite> methods.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><p>Returns whether the attribution algorithm
 provides a convergence delta (aka approximation error) or not.</p>
 </dd>
-<dt class="field-even">Return type</dt>
-<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.11)">bool</a></p>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.12)">bool</a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -193,7 +193,10 @@ provides a convergence delta (aka approximation error) or not.</p>
 <p class="caption" role="heading"><span class="caption-text">API Reference</span></p>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="attribution.html">Attribution</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">NoiseTunnel</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">NoiseTunnel</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#captum.attr.NoiseTunnel"><code class="docutils literal notranslate"><span class="pre">NoiseTunnel</span></code></a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="layer.html">Layer Attribution</a></li>
 <li class="toctree-l1"><a class="reference internal" href="neuron.html">Neuron Attribution</a></li>
 <li class="toctree-l1"><a class="reference internal" href="metrics.html">Metrics</a></li>
@@ -227,7 +230,7 @@ provides a convergence delta (aka approximation error) or not.</p>
 </form>
 </div>
 </div>
-<script>$('#searchbox').show(0);</script>
+<script>document.getElementById('searchbox').style.display = "block"</script>
 </div>
 </div>
 <div class="clearer"></div>

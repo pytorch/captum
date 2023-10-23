@@ -59,7 +59,9 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="kn">from</span> <span class="nn">torch.utils.hooks</span> <span class="kn">import</span> <span class="n">RemovableHandle</span>
 
 
-<div class="viewcode-block" id="LRP"><a class="viewcode-back" href="../../../../lrp.html#captum.attr.LRP">[docs]</a><span class="k">class</span> <span class="nc">LRP</span><span class="p">(</span><span class="n">GradientAttribution</span><span class="p">):</span>
+<div class="viewcode-block" id="LRP">
+<a class="viewcode-back" href="../../../../lrp.html#captum.attr.LRP">[docs]</a>
+<span class="k">class</span> <span class="nc">LRP</span><span class="p">(</span><span class="n">GradientAttribution</span><span class="p">):</span>
 <span class="w">    </span><span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">    Layer-wise relevance propagation is based on a backward propagation</span>
 <span class="sd">    mechanism applied sequentially to all layers of the model. Here, the</span>
@@ -114,7 +116,9 @@ src="/_sphinx/documentation_options.js"></script>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">TensorOrTupleOfTensorsGeneric</span><span class="p">,</span> <span class="n">Tensor</span><span class="p">]:</span>
         <span class="o">...</span>
 
-<div class="viewcode-block" id="LRP.attribute"><a class="viewcode-back" href="../../../../lrp.html#captum.attr.LRP.attribute">[docs]</a>    <span class="nd">@log_usage</span><span class="p">()</span>
+<div class="viewcode-block" id="LRP.attribute">
+<a class="viewcode-back" href="../../../../lrp.html#captum.attr.LRP.attribute">[docs]</a>
+    <span class="nd">@log_usage</span><span class="p">()</span>
     <span class="k">def</span> <span class="nf">attribute</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">inputs</span><span class="p">:</span> <span class="n">TensorOrTupleOfTensorsGeneric</span><span class="p">,</span>
@@ -129,9 +133,9 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">        Args:</span>
 
 <span class="sd">            inputs (Tensor or tuple[Tensor, ...]): Input for which relevance is</span>
-<span class="sd">                        propagated. If forward_func takes a single</span>
+<span class="sd">                        propagated. If model takes a single</span>
 <span class="sd">                        tensor as input, a single input tensor should be provided.</span>
-<span class="sd">                        If forward_func takes multiple tensors as input, a tuple</span>
+<span class="sd">                        If model takes multiple tensors as input, a tuple</span>
 <span class="sd">                        of the input tensors should be provided. It is assumed</span>
 <span class="sd">                        that for all given input tensors, dimension 0 corresponds</span>
 <span class="sd">                        to the number of examples, and if multiple input tensors</span>
@@ -169,7 +173,7 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">                    argument of a Tensor or arbitrary (non-tuple) type or a tuple</span>
 <span class="sd">                    containing multiple additional arguments including tensors</span>
 <span class="sd">                    or any arbitrary python types. These arguments are provided to</span>
-<span class="sd">                    forward_func in order, following the arguments in inputs.</span>
+<span class="sd">                    model in order, following the arguments in inputs.</span>
 <span class="sd">                    Note that attributions are not computed with respect</span>
 <span class="sd">                    to these arguments.</span>
 <span class="sd">                    Default: None</span>
@@ -259,10 +263,16 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">_format_output</span><span class="p">(</span><span class="n">is_inputs_tuple</span><span class="p">,</span> <span class="n">relevances</span><span class="p">)</span>  <span class="c1"># type: ignore</span></div>
 
-<div class="viewcode-block" id="LRP.has_convergence_delta"><a class="viewcode-back" href="../../../../lrp.html#captum.attr.LRP.has_convergence_delta">[docs]</a>    <span class="k">def</span> <span class="nf">has_convergence_delta</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+
+<div class="viewcode-block" id="LRP.has_convergence_delta">
+<a class="viewcode-back" href="../../../../lrp.html#captum.attr.LRP.has_convergence_delta">[docs]</a>
+    <span class="k">def</span> <span class="nf">has_convergence_delta</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
         <span class="k">return</span> <span class="kc">True</span></div>
 
-<div class="viewcode-block" id="LRP.compute_convergence_delta"><a class="viewcode-back" href="../../../../lrp.html#captum.attr.LRP.compute_convergence_delta">[docs]</a>    <span class="k">def</span> <span class="nf">compute_convergence_delta</span><span class="p">(</span>
+
+<div class="viewcode-block" id="LRP.compute_convergence_delta">
+<a class="viewcode-back" href="../../../../lrp.html#captum.attr.LRP.compute_convergence_delta">[docs]</a>
+    <span class="k">def</span> <span class="nf">compute_convergence_delta</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">attributions</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">]],</span> <span class="n">output</span><span class="p">:</span> <span class="n">Tensor</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tensor</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">"""</span>
@@ -300,6 +310,7 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">summed_attr</span> <span class="o">=</span> <span class="n">_sum_rows</span><span class="p">(</span><span class="n">attributions</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">output</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span> <span class="o">-</span> <span class="n">summed_attr</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span></div>
+
 
     <span class="k">def</span> <span class="nf">_get_layers</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model</span><span class="p">:</span> <span class="n">Module</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">for</span> <span class="n">layer</span> <span class="ow">in</span> <span class="n">model</span><span class="o">.</span><span class="n">children</span><span class="p">():</span>
@@ -442,6 +453,7 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">(</span><span class="o">*</span><span class="n">adjusted_inputs</span><span class="p">)</span></div>
 
 
+
 <span class="n">SUPPORTED_LAYERS_WITH_RULES</span> <span class="o">=</span> <span class="p">{</span>
     <span class="n">nn</span><span class="o">.</span><span class="n">MaxPool1d</span><span class="p">:</span> <span class="n">EpsilonRule</span><span class="p">,</span>
     <span class="n">nn</span><span class="o">.</span><span class="n">MaxPool2d</span><span class="p">:</span> <span class="n">EpsilonRule</span><span class="p">,</span>
@@ -500,7 +512,7 @@ src="/_sphinx/documentation_options.js"></script>
 </form>
 </div>
 </div>
-<script>$('#searchbox').show(0);</script>
+<script>document.getElementById('searchbox').style.display = "block"</script>
 </div>
 </div>
 <div class="clearer"></div>

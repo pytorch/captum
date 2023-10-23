@@ -51,7 +51,9 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="kn">from</span> <span class="nn">torch.nn.parallel.scatter_gather</span> <span class="kn">import</span> <span class="n">scatter</span>
 
 
-<div class="viewcode-block" id="LayerFeatureAblation"><a class="viewcode-back" href="../../../../../layer.html#captum.attr.LayerFeatureAblation">[docs]</a><span class="k">class</span> <span class="nc">LayerFeatureAblation</span><span class="p">(</span><span class="n">LayerAttribution</span><span class="p">,</span> <span class="n">PerturbationAttribution</span><span class="p">):</span>
+<div class="viewcode-block" id="LayerFeatureAblation">
+<a class="viewcode-back" href="../../../../../layer.html#captum.attr.LayerFeatureAblation">[docs]</a>
+<span class="k">class</span> <span class="nc">LayerFeatureAblation</span><span class="p">(</span><span class="n">LayerAttribution</span><span class="p">,</span> <span class="n">PerturbationAttribution</span><span class="p">):</span>
 <span class="w">    </span><span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">    A perturbation based approach to computing layer attribution, involving</span>
 <span class="sd">    replacing values in the input / output of a layer with a given baseline /</span>
@@ -93,7 +95,9 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="n">LayerAttribution</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">forward_func</span><span class="p">,</span> <span class="n">layer</span><span class="p">,</span> <span class="n">device_ids</span><span class="p">)</span>
         <span class="n">PerturbationAttribution</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">forward_func</span><span class="p">)</span>
 
-<div class="viewcode-block" id="LayerFeatureAblation.attribute"><a class="viewcode-back" href="../../../../../layer.html#captum.attr.LayerFeatureAblation.attribute">[docs]</a>    <span class="nd">@log_usage</span><span class="p">()</span>
+<div class="viewcode-block" id="LayerFeatureAblation.attribute">
+<a class="viewcode-back" href="../../../../../layer.html#captum.attr.LayerFeatureAblation.attribute">[docs]</a>
+    <span class="nd">@log_usage</span><span class="p">()</span>
     <span class="k">def</span> <span class="nf">attribute</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">inputs</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">]],</span>
@@ -331,7 +335,9 @@ src="/_sphinx/documentation_options.js"></script>
                 <span class="n">perturbations_per_eval</span><span class="o">=</span><span class="n">perturbations_per_eval</span><span class="p">,</span>
             <span class="p">)</span>
             <span class="n">_attr</span> <span class="o">=</span> <span class="n">_format_output</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">layer_attribs</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">,</span> <span class="n">layer_attribs</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">_attr</span></div></div>
+        <span class="k">return</span> <span class="n">_attr</span></div>
+</div>
+
 </pre></div>
 </div>
 </div>
@@ -377,7 +383,7 @@ src="/_sphinx/documentation_options.js"></script>
 </form>
 </div>
 </div>
-<script>$('#searchbox').show(0);</script>
+<script>document.getElementById('searchbox').style.display = "block"</script>
 </div>
 </div>
 <div class="clearer"></div>

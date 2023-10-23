@@ -54,7 +54,9 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="kn">from</span> <span class="nn">torch.nn</span> <span class="kn">import</span> <span class="n">Module</span>
 
 
-<div class="viewcode-block" id="Attribution"><a class="viewcode-back" href="../../../../base_classes.html#captum.attr.Attribution">[docs]</a><span class="k">class</span> <span class="nc">Attribution</span><span class="p">:</span>
+<div class="viewcode-block" id="Attribution">
+<a class="viewcode-back" href="../../../../base_classes.html#captum.attr.Attribution">[docs]</a>
+<span class="k">class</span> <span class="nc">Attribution</span><span class="p">:</span>
 <span class="w">    </span><span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">    All attribution algorithms extend this class. It enforces its child classes</span>
 <span class="sd">    to extend and override core `attribute` method.</span>
@@ -103,7 +105,9 @@ src="/_sphinx/documentation_options.js"></script>
     <span class="k">def</span> <span class="nf">multiplies_by_inputs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="kc">False</span>
 
-<div class="viewcode-block" id="Attribution.has_convergence_delta"><a class="viewcode-back" href="../../../../base_classes.html#captum.attr.Attribution.has_convergence_delta">[docs]</a>    <span class="k">def</span> <span class="nf">has_convergence_delta</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<div class="viewcode-block" id="Attribution.has_convergence_delta">
+<a class="viewcode-back" href="../../../../base_classes.html#captum.attr.Attribution.has_convergence_delta">[docs]</a>
+    <span class="k">def</span> <span class="nf">has_convergence_delta</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
 <span class="w">        </span><span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        This method informs the user whether the attribution algorithm provides</span>
 <span class="sd">        a convergence delta (aka an approximation error) or not. Convergence</span>
@@ -119,6 +123,7 @@ src="/_sphinx/documentation_options.js"></script>
 
 <span class="sd">        """</span>
         <span class="k">return</span> <span class="kc">False</span></div>
+
 
     <span class="n">compute_convergence_delta</span><span class="p">:</span> <span class="n">Callable</span>
 <span class="w">    </span><span class="sa">r</span><span class="sd">"""</span>
@@ -151,7 +156,9 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">                single floating point tensor.</span>
 <span class="sd">    """</span>
 
-<div class="viewcode-block" id="Attribution.get_name"><a class="viewcode-back" href="../../../../base_classes.html#captum.attr.Attribution.get_name">[docs]</a>    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="Attribution.get_name">
+<a class="viewcode-back" href="../../../../base_classes.html#captum.attr.Attribution.get_name">[docs]</a>
+    <span class="nd">@classmethod</span>
     <span class="k">def</span> <span class="nf">get_name</span><span class="p">(</span><span class="bp">cls</span><span class="p">:</span> <span class="n">Type</span><span class="p">[</span><span class="s2">"Attribution"</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <span class="w">        </span><span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        Create readable class name by inserting a space before any capital</span>
@@ -168,10 +175,14 @@ src="/_sphinx/documentation_options.js"></script>
                 <span class="n">char</span> <span class="k">if</span> <span class="n">char</span><span class="o">.</span><span class="n">islower</span><span class="p">()</span> <span class="ow">or</span> <span class="n">idx</span> <span class="o">==</span> <span class="mi">0</span> <span class="k">else</span> <span class="s2">" "</span> <span class="o">+</span> <span class="n">char</span>
                 <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">char</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">cls</span><span class="o">.</span><span class="vm">__name__</span><span class="p">)</span>
             <span class="p">]</span>
-        <span class="p">)</span></div></div>
+        <span class="p">)</span></div>
+</div>
 
 
-<div class="viewcode-block" id="GradientAttribution"><a class="viewcode-back" href="../../../../base_classes.html#captum.attr.GradientAttribution">[docs]</a><span class="k">class</span> <span class="nc">GradientAttribution</span><span class="p">(</span><span class="n">Attribution</span><span class="p">):</span>
+
+<div class="viewcode-block" id="GradientAttribution">
+<a class="viewcode-back" href="../../../../base_classes.html#captum.attr.GradientAttribution">[docs]</a>
+<span class="k">class</span> <span class="nc">GradientAttribution</span><span class="p">(</span><span class="n">Attribution</span><span class="p">):</span>
 <span class="w">    </span><span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">    All gradient based attribution algorithms extend this class. It requires a</span>
 <span class="sd">    forward function, which most commonly is the forward function of the model</span>
@@ -189,7 +200,9 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="n">Attribution</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">forward_func</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">gradient_func</span> <span class="o">=</span> <span class="n">compute_gradients</span>
 
-<div class="viewcode-block" id="GradientAttribution.compute_convergence_delta"><a class="viewcode-back" href="../../../../base_classes.html#captum.attr.GradientAttribution.compute_convergence_delta">[docs]</a>    <span class="nd">@log_usage</span><span class="p">()</span>
+<div class="viewcode-block" id="GradientAttribution.compute_convergence_delta">
+<a class="viewcode-back" href="../../../../base_classes.html#captum.attr.GradientAttribution.compute_convergence_delta">[docs]</a>
+    <span class="nd">@log_usage</span><span class="p">()</span>
     <span class="k">def</span> <span class="nf">compute_convergence_delta</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">attributions</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">]],</span>
@@ -324,10 +337,14 @@ src="/_sphinx/documentation_options.js"></script>
                 <span class="p">[</span><span class="n">cast</span><span class="p">(</span><span class="n">Tensor</span><span class="p">,</span> <span class="nb">sum</span><span class="p">(</span><span class="n">row_sum</span><span class="p">))</span> <span class="k">for</span> <span class="n">row_sum</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="o">*</span><span class="n">row_sums</span><span class="p">)]</span>
             <span class="p">)</span>
             <span class="n">_delta</span> <span class="o">=</span> <span class="n">attr_sum</span> <span class="o">-</span> <span class="p">(</span><span class="n">end_out_sum</span> <span class="o">-</span> <span class="n">start_out_sum</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">_delta</span></div></div>
+        <span class="k">return</span> <span class="n">_delta</span></div>
+</div>
 
 
-<div class="viewcode-block" id="PerturbationAttribution"><a class="viewcode-back" href="../../../../base_classes.html#captum.attr.PerturbationAttribution">[docs]</a><span class="k">class</span> <span class="nc">PerturbationAttribution</span><span class="p">(</span><span class="n">Attribution</span><span class="p">):</span>
+
+<div class="viewcode-block" id="PerturbationAttribution">
+<a class="viewcode-back" href="../../../../base_classes.html#captum.attr.PerturbationAttribution">[docs]</a>
+<span class="k">class</span> <span class="nc">PerturbationAttribution</span><span class="p">(</span><span class="n">Attribution</span><span class="p">):</span>
 <span class="w">    </span><span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">    All perturbation based attribution algorithms extend this class. It requires a</span>
 <span class="sd">    forward function, which most commonly is the forward function of the model</span>
@@ -347,6 +364,7 @@ src="/_sphinx/documentation_options.js"></script>
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">multiplies_by_inputs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="kc">True</span></div>
+
 
 
 <span class="k">class</span> <span class="nc">InternalAttribution</span><span class="p">(</span><span class="n">Attribution</span><span class="p">,</span> <span class="n">Generic</span><span class="p">[</span><span class="n">ModuleOrModuleList</span><span class="p">]):</span>
@@ -382,7 +400,9 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="bp">self</span><span class="o">.</span><span class="n">device_ids</span> <span class="o">=</span> <span class="n">device_ids</span>
 
 
-<div class="viewcode-block" id="LayerAttribution"><a class="viewcode-back" href="../../../../base_classes.html#captum.attr.LayerAttribution">[docs]</a><span class="k">class</span> <span class="nc">LayerAttribution</span><span class="p">(</span><span class="n">InternalAttribution</span><span class="p">):</span>
+<div class="viewcode-block" id="LayerAttribution">
+<a class="viewcode-back" href="../../../../base_classes.html#captum.attr.LayerAttribution">[docs]</a>
+<span class="k">class</span> <span class="nc">LayerAttribution</span><span class="p">(</span><span class="n">InternalAttribution</span><span class="p">):</span>
 <span class="w">    </span><span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">    Layer attribution provides attribution values for the given layer, quantifying</span>
 <span class="sd">    the importance of each neuron within the given layer's output. The output</span>
@@ -412,7 +432,9 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">        """</span>
         <span class="n">InternalAttribution</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">forward_func</span><span class="p">,</span> <span class="n">layer</span><span class="p">,</span> <span class="n">device_ids</span><span class="p">)</span>
 
-<div class="viewcode-block" id="LayerAttribution.interpolate"><a class="viewcode-back" href="../../../../base_classes.html#captum.attr.LayerAttribution.interpolate">[docs]</a>    <span class="nd">@staticmethod</span>
+<div class="viewcode-block" id="LayerAttribution.interpolate">
+<a class="viewcode-back" href="../../../../base_classes.html#captum.attr.LayerAttribution.interpolate">[docs]</a>
+    <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">interpolate</span><span class="p">(</span>
         <span class="n">layer_attribution</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">,</span>
         <span class="n">interpolate_dims</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">]],</span>
@@ -446,10 +468,14 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">                slayer_attribution and remaining dimensions given by</span>
 <span class="sd">                interpolate_dims.</span>
 <span class="sd">        """</span>
-        <span class="k">return</span> <span class="n">F</span><span class="o">.</span><span class="n">interpolate</span><span class="p">(</span><span class="n">layer_attribution</span><span class="p">,</span> <span class="n">interpolate_dims</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="n">interpolate_mode</span><span class="p">)</span></div></div>
+        <span class="k">return</span> <span class="n">F</span><span class="o">.</span><span class="n">interpolate</span><span class="p">(</span><span class="n">layer_attribution</span><span class="p">,</span> <span class="n">interpolate_dims</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="n">interpolate_mode</span><span class="p">)</span></div>
+</div>
 
 
-<div class="viewcode-block" id="NeuronAttribution"><a class="viewcode-back" href="../../../../base_classes.html#captum.attr.NeuronAttribution">[docs]</a><span class="k">class</span> <span class="nc">NeuronAttribution</span><span class="p">(</span><span class="n">InternalAttribution</span><span class="p">):</span>
+
+<div class="viewcode-block" id="NeuronAttribution">
+<a class="viewcode-back" href="../../../../base_classes.html#captum.attr.NeuronAttribution">[docs]</a>
+<span class="k">class</span> <span class="nc">NeuronAttribution</span><span class="p">(</span><span class="n">InternalAttribution</span><span class="p">):</span>
 <span class="w">    </span><span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">    Neuron attribution provides input attribution for a given neuron, quantifying</span>
 <span class="sd">    the importance of each input feature in the activation of a particular neuron.</span>
@@ -508,6 +534,7 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">                    each input vector. The `attributions` have the</span>
 <span class="sd">                    dimensionality of inputs.</span>
 <span class="sd">    """</span></div>
+
 </pre></div>
 </div>
 </div>
@@ -553,7 +580,7 @@ src="/_sphinx/documentation_options.js"></script>
 </form>
 </div>
 </div>
-<script>$('#searchbox').show(0);</script>
+<script>document.getElementById('searchbox').style.display = "block"</script>
 </div>
 </div>
 <div class="clearer"></div>

@@ -46,7 +46,9 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="kn">from</span> <span class="nn">torch.nn</span> <span class="kn">import</span> <span class="n">Module</span>
 
 
-<div class="viewcode-block" id="LayerGradientXActivation"><a class="viewcode-back" href="../../../../../layer.html#captum.attr.LayerGradientXActivation">[docs]</a><span class="k">class</span> <span class="nc">LayerGradientXActivation</span><span class="p">(</span><span class="n">LayerAttribution</span><span class="p">,</span> <span class="n">GradientAttribution</span><span class="p">):</span>
+<div class="viewcode-block" id="LayerGradientXActivation">
+<a class="viewcode-back" href="../../../../../layer.html#captum.attr.LayerGradientXActivation">[docs]</a>
+<span class="k">class</span> <span class="nc">LayerGradientXActivation</span><span class="p">(</span><span class="n">LayerAttribution</span><span class="p">,</span> <span class="n">GradientAttribution</span><span class="p">):</span>
 <span class="w">    </span><span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">    Computes element-wise product of gradient and activation for selected</span>
 <span class="sd">    layer on given inputs.</span>
@@ -101,7 +103,9 @@ src="/_sphinx/documentation_options.js"></script>
     <span class="k">def</span> <span class="nf">multiplies_by_inputs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_multiply_by_inputs</span>
 
-<div class="viewcode-block" id="LayerGradientXActivation.attribute"><a class="viewcode-back" href="../../../../../layer.html#captum.attr.LayerGradientXActivation.attribute">[docs]</a>    <span class="nd">@log_usage</span><span class="p">()</span>
+<div class="viewcode-block" id="LayerGradientXActivation.attribute">
+<a class="viewcode-back" href="../../../../../layer.html#captum.attr.LayerGradientXActivation.attribute">[docs]</a>
+    <span class="nd">@log_usage</span><span class="p">()</span>
     <span class="k">def</span> <span class="nf">attribute</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">inputs</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">]],</span>
@@ -222,6 +226,7 @@ src="/_sphinx/documentation_options.js"></script>
                 <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">layer</span><span class="p">))</span>
             <span class="p">]</span></div>
 
+
     <span class="k">def</span> <span class="nf">multiply_gradient_acts</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">gradients</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span> <span class="n">evals</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span>
@@ -231,6 +236,7 @@ src="/_sphinx/documentation_options.js"></script>
             <span class="k">else</span> <span class="n">single_gradient</span>
             <span class="k">for</span> <span class="n">single_gradient</span><span class="p">,</span> <span class="n">single_eval</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">gradients</span><span class="p">,</span> <span class="n">evals</span><span class="p">)</span>
         <span class="p">)</span></div>
+
 </pre></div>
 </div>
 </div>
@@ -276,7 +282,7 @@ src="/_sphinx/documentation_options.js"></script>
 </form>
 </div>
 </div>
-<script>$('#searchbox').show(0);</script>
+<script>document.getElementById('searchbox').style.display = "block"</script>
 </div>
 </div>
 <div class="clearer"></div>
