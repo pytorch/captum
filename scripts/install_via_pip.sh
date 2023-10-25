@@ -18,7 +18,7 @@ while getopts 'ndfv:' flag; do
   done
 
 # NOTE: Only Debian variants are supported, since this script is only
-# used by our tests on CircleCI. In the future we might generalize,
+# used by our tests on GitHub Actions. In the future we might generalize,
 # but users should hopefully be using conda installs.
 
 # install nodejs and yarn for insights build
