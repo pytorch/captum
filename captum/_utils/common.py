@@ -523,6 +523,43 @@ def _run_forward(
 
 
 def _select_targets(output: Tensor, target: TargetType) -> Tensor:
+    """
+    IMPORTANT:
+    please avoid patching this function. The existing behavior is very
+    unpredictable. We should be more opinionated about the type and format of
+    the target so that we can stop supporting some unpredictable cases.
+    Or better, we should encourage users to wrapping their forward function to
+    return the attr targets themselves, instead of passing target.
+
+    This legacy function behaves based on
+    - the type of target
+    - if the target has the length of the output
+
+    If the target is int or scalar tensor, the target is seen as the
+    index of the last dimensions of every example in the output. E.g., if the
+    output is of shape (Batch, ..., X, Y), the selected output will be (Batch, ..., X)
+
+    If the target is tuple[int], the target is seens as the last indices of every
+    example in the output. E.g., if the
+    output is of shape (Batch, ..., X, Y, Z) and the target is tuple(y, z),
+    the selected output will be (Batch, ..., X)
+
+    If the target is a non-scalar tensor, it must be a 1D tensor of the output length
+    and the output must be a 2D tensor. The target is then seen as the indices of the
+    2nd dim of the output. E.g., if the output is of shape (Batch, X) and the target is
+    in shape (X,), the selected output will be (Batch,)
+
+    If the target is a list[int], it must has the same length as the output. The output
+    must be a 2D tensor and each int element of the target is seen as the 2nd dim of it.
+    E.g., if the output is of shape (Batch, X) and the target is [x1, x2, ...],
+    the selected output will be (Batch,)
+
+    If the target is a list[tuple], it must has the same length as the output. Each
+    tuple element of the target is seen as the leading dim behind the batch dim
+    of the output. E.g., if the output is of shape (Batch, X, Y, Z, ...) and
+    the target is [(x1, y1), (x2, y2), ...], the selected output
+    will be in shape (Batch, Z, ...)
+    """
     if target is None:
         return output
 
@@ -536,7 +573,7 @@ def _select_targets(output: Tensor, target: TargetType) -> Tensor:
             return _verify_select_column(output, cast(int, target.item()))
         elif len(target.shape) == 1 and torch.numel(target) == num_examples:
             assert dims == 2, "Output must be 2D to select tensor of targets."
-            return torch.gather(output, 1, target.reshape(len(output), 1))
+            return torch.gather(output, 1, target.reshape(len(output), 1)).squeeze(-1)
         else:
             raise AssertionError(
                 "Tensor target dimension %r is not valid. %r"
@@ -548,7 +585,7 @@ def _select_targets(output: Tensor, target: TargetType) -> Tensor:
             assert dims == 2, "Output must be 2D to select tensor of targets."
             return torch.gather(
                 output, 1, torch.tensor(target, device=device).reshape(len(output), 1)
-            )
+            ).squeeze(-1)
         elif isinstance(target[0], tuple):
             return torch.stack(
                 [
