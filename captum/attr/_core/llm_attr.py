@@ -4,12 +4,13 @@ from typing import Callable, cast, Dict, List, Optional, Union
 
 import torch
 from captum.attr._core.feature_ablation import FeatureAblation
+from captum.attr._core.shapley_value import ShapleyValues, ShapleyValueSampling
 from captum.attr._utils.attribution import Attribution
 from captum.attr._utils.interpretable_input import InterpretableInput, TextTemplateInput
 from torch import nn, Tensor
 
 
-SUPPORTED_METHODS = (FeatureAblation,)
+SUPPORTED_METHODS = (FeatureAblation, ShapleyValueSampling, ShapleyValues)
 SUPPORTED_INPUTS = (TextTemplateInput,)
 
 DEFAULT_GEN_ARGS = {"max_new_tokens": 25, "do_sample": False}
@@ -129,8 +130,11 @@ class LLMAttribution(Attribution):
             )
 
         total_log_prob = sum(log_prob_list)
-        # 1st dim is the total prob, rest are the target tokens
-        target_log_probs = torch.stack([total_log_prob, *log_prob_list], dim=0)
+        # 1st element is the total prob, rest are the target tokens
+        # add a leading dim for batch even we only support single instance for now
+        target_log_probs = torch.stack(
+            [total_log_prob, *log_prob_list], dim=0
+        ).unsqueeze(0)
         target_probs = torch.exp(target_log_probs)
 
         if _inspect_forward:
@@ -138,7 +142,7 @@ class LLMAttribution(Attribution):
             response = self.tokenizer.decode(target_tokens)
 
             # callback for externals to inspect (prompt, response, seq_prob)
-            _inspect_forward(prompt, response, target_probs[0].item())
+            _inspect_forward(prompt, response, target_probs[0].tolist())
 
         return target_probs if self.attr_target != "log_prob" else target_log_probs
 
@@ -227,6 +231,11 @@ class LLMAttribution(Attribution):
                 additional_forward_args=(inp, target_tokens, _inspect_forward),
                 **kwargs,
             )
+
+            # temp necessary due to FA & Shapley's different return shape of multi-task
+            # FA will flatten output shape internally (n_output_token, n_itp_features)
+            # Shapley will keep output shape (batch, n_output_token, n_input_features)
+            cur_attr = cur_attr.reshape(attr.shape)
 
             attr += cur_attr
 

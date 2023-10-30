@@ -6,7 +6,9 @@ from typing import List, Optional, Union
 import torch
 from captum.attr._core.feature_ablation import FeatureAblation
 from captum.attr._core.llm_attr import LLMAttribution
+from captum.attr._core.shapley_value import ShapleyValueSampling
 from captum.attr._utils.interpretable_input import TextTemplateInput
+from parameterized import parameterized
 from tests.helpers.basic import assertTensorAlmostEqual, BaseTest
 from torch import nn, Tensor
 
@@ -63,14 +65,14 @@ class DummyLLM(nn.Module):
 
 
 class TestLLMAttr(BaseTest):
-    def test_llm_attr(self) -> None:
+    @parameterized.expand([(FeatureAblation,), (ShapleyValueSampling,)])
+    def test_llm_attr(self, AttrClass) -> None:
         llm = DummyLLM()
         tokenizer = DummyTokenizer()
-        fa = FeatureAblation(llm)
-        llm_fa = LLMAttribution(fa, tokenizer)
+        llm_attr = LLMAttribution(AttrClass(llm), tokenizer)
 
         inp = TextTemplateInput("{} b {} {} e {}", ["a", "c", "d", "f"])
-        res = llm_fa.attribute(inp, "m n o p q")
+        res = llm_attr.attribute(inp, "m n o p q")
 
         self.assertEqual(res.seq_attr.shape, (4,))
         self.assertEqual(res.token_attr.shape, (5, 4))
