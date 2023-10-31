@@ -318,6 +318,7 @@ def _find_output_mode_and_verify(
     num_examples: int,
     perturbations_per_eval: int,
     feature_mask: Union[None, TensorOrTupleOfTensorsGeneric],
+    allow_multi_outputs: bool = False,
 ) -> bool:
     """
     This method identifies whether the model outputs a single output for a batch
@@ -346,9 +347,10 @@ def _find_output_mode_and_verify(
                 )
     else:
         agg_output_mode = False
-        assert (
-            isinstance(initial_eval, torch.Tensor) and initial_eval[0].numel() == 1
-        ), "Target should identify a single element in the model output."
+        if not allow_multi_outputs:
+            assert (
+                isinstance(initial_eval, torch.Tensor) and initial_eval[0].numel() == 1
+            ), "Target should identify a single element in the model output."
     return agg_output_mode
 
 
