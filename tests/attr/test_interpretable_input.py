@@ -16,8 +16,8 @@ class TestTextTemplateInput(BaseTest):
             ),
         ]
     )
-    def test_input(self, template, inputs) -> None:
-        tt_input = TextTemplateInput(template, inputs)
+    def test_input(self, template, values) -> None:
+        tt_input = TextTemplateInput(template, values)
 
         expected_tensor = torch.tensor([[1.0] * 4])
         assertTensorAlmostEqual(self, tt_input.to_tensor(), expected_tensor)
@@ -37,11 +37,11 @@ class TestTextTemplateInput(BaseTest):
             ),
         ]
     )
-    def test_input_with_baselines(self, template, inputs, baselines) -> None:
+    def test_input_with_baselines(self, template, values, baselines) -> None:
         perturbed_tensor = torch.tensor([[1.0, 0.0, 1.0, 0.0]])
 
         # single instance baselines
-        tt_input = TextTemplateInput(template, inputs, baselines=baselines)
+        tt_input = TextTemplateInput(template, values, baselines=baselines)
         self.assertEqual(tt_input.to_model_input(perturbed_tensor), "a b x d e z")
 
     @parameterized.expand(
@@ -54,8 +54,8 @@ class TestTextTemplateInput(BaseTest):
             ),
         ]
     )
-    def test_input_with_mask(self, template, inputs, mask) -> None:
-        tt_input = TextTemplateInput(template, inputs, mask=mask)
+    def test_input_with_mask(self, template, values, mask) -> None:
+        tt_input = TextTemplateInput(template, values, mask=mask)
 
         expected_tensor = torch.tensor([[1.0] * 2])
         assertTensorAlmostEqual(self, tt_input.to_tensor(), expected_tensor)
@@ -75,8 +75,8 @@ class TestTextTemplateInput(BaseTest):
             ),
         ]
     )
-    def test_format_attr(self, template, inputs, mask) -> None:
-        tt_input = TextTemplateInput(template, inputs, mask=mask)
+    def test_format_attr(self, template, values, mask) -> None:
+        tt_input = TextTemplateInput(template, values, mask=mask)
 
         attr = torch.tensor([[0.1, 0.2]])
 
