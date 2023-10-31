@@ -151,6 +151,43 @@ class Test(BaseTest):
             perturbations_per_eval=(1, 2, 3),
         )
 
+    def test_shapley_sampling_multi_task_output(self) -> None:
+        # return shape (batch size, 2)
+        net1 = BasicModel_MultiLayer()
+
+        # return shape (batch size, 4)
+        def forward_func(*args, **kwargs):
+            net_output = net1(*args, **kwargs)
+            batch_size = net_output.size(0)
+            constant = torch.ones(batch_size, 2)
+            output = torch.cat(
+                [
+                    net_output,
+                    constant,
+                ],
+                dim=-1,
+            )
+            return output
+
+        inp = torch.tensor([[20.0, 50.0, 30.0]], requires_grad=True)
+
+        self._shapley_test_assert(
+            forward_func,
+            inp,
+            [
+                [
+                    [76.66666, 196.66666, 116.66666],
+                    [76.66666, 196.66666, 116.66666],
+                    [0, 0, 0],
+                    [0, 0, 0],
+                ]
+            ],
+            target=None,  # no target, multi-task output for all classes
+            perturbations_per_eval=(1, 2, 3),
+            n_samples=150,
+            test_true_shapley=True,
+        )
+
     # Remaining tests are for cases where forward function returns a scalar
     # per batch, as either a float, integer, 0d tensor or 1d tensor.
     def test_single_shapley_batch_scalar_float(self) -> None:
