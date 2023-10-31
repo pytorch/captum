@@ -210,14 +210,24 @@ class TextTemplateInput(InterpretableInput):
         if baselines is None:
             # default baseline is to remove the element
             baselines = [""] * len(values)
-        elif dict_keys:
-            assert isinstance(baselines, dict), (
-                "if values is dict, the baselines must also be a dict, "
-                f"received: {type(baselines)}"
-            )
+        elif not callable(baselines):
+            if dict_keys:
+                assert isinstance(baselines, dict), (
+                    "if values is a dict, the baselines must also be a dict "
+                    "or a callable which return a dict, "
+                    f"received: {type(baselines)}"
+                )
 
-            # convert dict to list
-            baselines = [baselines[k] for k in self.dict_keys]
+                # convert dict to list
+                baselines = [baselines[k] for k in dict_keys]
+            else:
+                assert isinstance(baselines, list), (
+                    "if values is a list, the baselines must also be a list "
+                    "or a callable which return a list, "
+                    f"received: {type(baselines)}"
+                )
+
+        self.baselines = baselines
 
         if mask is None:
             n_itp_features = n_features
@@ -247,14 +257,13 @@ class TextTemplateInput(InterpretableInput):
         if isinstance(template, str):
             template = template.format
         else:
-            assert isinstance(template, Callable), (
+            assert callable(template), (
                 "the template must be either a string or a callable, "
                 f"received: {type(template)}"
             )
             template = template
         self.format_fn = template
 
-        self.baselines = baselines
         self.mask = mask
 
     def to_tensor(self) -> torch.Tensor:
@@ -265,13 +274,23 @@ class TextTemplateInput(InterpretableInput):
         values = list(self.values)  # clone
 
         if perturbed_tensor is not None:
-            baselines = self.baselines
-            if isinstance(baselines, Callable):
+            if callable(self.baselines):
                 # a placeholder for advanced baselines
                 # TODO: support callable baselines
                 baselines = self.baselines()
                 if self.dict_keys:
+                    assert isinstance(baselines, dict), (
+                        "if values is a dict and the baselines is a callable"
+                        f"it must return a dict, received: {type(baselines)}"
+                    )
                     baselines = [baselines[k] for k in self.dict_keys]
+                else:
+                    assert isinstance(baselines, list), (
+                        "if values is a list and the baselines is a callable"
+                        f"it must return a list, received: {type(baselines)}"
+                    )
+            else:
+                baselines = self.baselines
 
             for i in range(len(values)):
                 itp_idx = i
@@ -284,8 +303,8 @@ class TextTemplateInput(InterpretableInput):
                     values[i] = baselines[i]
 
         if self.dict_keys:
-            values = dict(zip(self.dict_keys, values))
-            input_str = self.format_fn(**values)
+            dict_values = dict(zip(self.dict_keys, values))
+            input_str = self.format_fn(**dict_values)
         else:
             input_str = self.format_fn(*values)
 

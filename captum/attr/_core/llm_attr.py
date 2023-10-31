@@ -153,7 +153,7 @@ class LLMAttribution(Attribution):
         raw text and text token tensors
         """
         # return tensor(1, n_tokens)
-        if type(model_input) is str:
+        if isinstance(model_input, str):
             return self.tokenizer.encode(model_input, return_tensors="pt").to(
                 self.device
             )
