@@ -336,7 +336,7 @@ src="/_sphinx/documentation_options.js"></script>
                 <span class="p">)</span>
                 <span class="n">attr_progress</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
 
-            <span class="n">initial_eval</span> <span class="o">=</span> <span class="n">_run_forward</span><span class="p">(</span>
+            <span class="n">initial_eval</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_strict_run_forward</span><span class="p">(</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">forward_func</span><span class="p">,</span> <span class="n">baselines</span><span class="p">,</span> <span class="n">target</span><span class="p">,</span> <span class="n">additional_forward_args</span>
             <span class="p">)</span>
 
@@ -344,13 +344,23 @@ src="/_sphinx/documentation_options.js"></script>
                 <span class="n">attr_progress</span><span class="o">.</span><span class="n">update</span><span class="p">()</span>
 
             <span class="n">agg_output_mode</span> <span class="o">=</span> <span class="n">_find_output_mode_and_verify</span><span class="p">(</span>
-                <span class="n">initial_eval</span><span class="p">,</span> <span class="n">num_examples</span><span class="p">,</span> <span class="n">perturbations_per_eval</span><span class="p">,</span> <span class="n">feature_mask</span>
+                <span class="n">initial_eval</span><span class="p">,</span>
+                <span class="n">num_examples</span><span class="p">,</span>
+                <span class="n">perturbations_per_eval</span><span class="p">,</span>
+                <span class="n">feature_mask</span><span class="p">,</span>
+                <span class="n">allow_multi_outputs</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
             <span class="p">)</span>
 
             <span class="c1"># Initialize attribution totals and counts</span>
+            <span class="n">output_shape</span> <span class="o">=</span> <span class="n">initial_eval</span><span class="o">.</span><span class="n">shape</span>
+            <span class="n">n_outputs</span> <span class="o">=</span> <span class="n">initial_eval</span><span class="o">.</span><span class="n">numel</span><span class="p">()</span>
+
+            <span class="c1"># attr shape (*output_shape, *input_feature_shape)</span>
             <span class="n">total_attrib</span> <span class="o">=</span> <span class="p">[</span>
-                <span class="n">torch</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span>
-                    <span class="nb">input</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">1</span><span class="p">]</span> <span class="k">if</span> <span class="n">agg_output_mode</span> <span class="k">else</span> <span class="nb">input</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">float</span>
+                <span class="n">torch</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span>
+                    <span class="p">(</span><span class="o">*</span><span class="n">output_shape</span><span class="p">,</span> <span class="o">*</span><span class="nb">input</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">:]),</span>
+                    <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">float</span><span class="p">,</span>
+                    <span class="n">device</span><span class="o">=</span><span class="n">inputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">device</span><span class="p">,</span>
                 <span class="p">)</span>
                 <span class="k">for</span> <span class="nb">input</span> <span class="ow">in</span> <span class="n">inputs</span>
             <span class="p">]</span>
@@ -385,7 +395,7 @@ src="/_sphinx/documentation_options.js"></script>
                         <span class="p">)</span>
                     <span class="c1"># modified_eval dimensions: 1D tensor with length</span>
                     <span class="c1"># equal to #num_examples * #features in batch</span>
-                    <span class="n">modified_eval</span> <span class="o">=</span> <span class="n">_run_forward</span><span class="p">(</span>
+                    <span class="n">modified_eval</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_strict_run_forward</span><span class="p">(</span>
                         <span class="bp">self</span><span class="o">.</span><span class="n">forward_func</span><span class="p">,</span>
                         <span class="n">current_inputs</span><span class="p">,</span>
                         <span class="n">current_target</span><span class="p">,</span>
@@ -398,23 +408,35 @@ src="/_sphinx/documentation_options.js"></script>
                         <span class="n">eval_diff</span> <span class="o">=</span> <span class="n">modified_eval</span> <span class="o">-</span> <span class="n">prev_results</span>
                         <span class="n">prev_results</span> <span class="o">=</span> <span class="n">modified_eval</span>
                     <span class="k">else</span><span class="p">:</span>
+                        <span class="c1"># when perturb_per_eval &gt; 1, every num_examples stands for</span>
+                        <span class="c1"># one perturb. Since the perturbs are from a consecutive</span>
+                        <span class="c1"># perumuation, each diff of a perturb is its eval minus</span>
+                        <span class="c1"># the eval of the previous perturb</span>
                         <span class="n">all_eval</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">((</span><span class="n">prev_results</span><span class="p">,</span> <span class="n">modified_eval</span><span class="p">),</span> <span class="n">dim</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
                         <span class="n">eval_diff</span> <span class="o">=</span> <span class="n">all_eval</span><span class="p">[</span><span class="n">num_examples</span><span class="p">:]</span> <span class="o">-</span> <span class="n">all_eval</span><span class="p">[:</span><span class="o">-</span><span class="n">num_examples</span><span class="p">]</span>
                         <span class="n">prev_results</span> <span class="o">=</span> <span class="n">all_eval</span><span class="p">[</span><span class="o">-</span><span class="n">num_examples</span><span class="p">:]</span>
+
                     <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">total_attrib</span><span class="p">)):</span>
-                        <span class="n">current_eval_diff</span> <span class="o">=</span> <span class="n">eval_diff</span>
-                        <span class="k">if</span> <span class="ow">not</span> <span class="n">agg_output_mode</span><span class="p">:</span>
-                            <span class="c1"># current_eval_diff dimensions:</span>
-                            <span class="c1"># (#features in batch, #num_examples, 1,.. 1)</span>
-                            <span class="c1"># (contains 1 more dimension than inputs). This adds extra</span>
-                            <span class="c1"># dimensions of 1 to make the tensor broadcastable with the</span>
-                            <span class="c1"># inputs tensor.</span>
-                            <span class="n">current_eval_diff</span> <span class="o">=</span> <span class="n">current_eval_diff</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span>
-                                <span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">num_examples</span><span class="p">)</span> <span class="o">+</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">inputs</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span><span class="p">,)</span>
-                            <span class="p">)</span>
-                        <span class="n">total_attrib</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">+=</span> <span class="p">(</span>
-                            <span class="n">current_eval_diff</span> <span class="o">*</span> <span class="n">current_masks</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="o">.</span><span class="n">float</span><span class="p">()</span>
-                        <span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">dim</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+                        <span class="c1"># format eval_diff to shape</span>
+                        <span class="c1"># (n_perturb, n_outputs, 1,.. 1)</span>
+                        <span class="c1"># where n_perturb may not be perturb_per_eval</span>
+                        <span class="c1"># Append n_input_feature dim of 1 to make the tensor</span>
+                        <span class="c1"># have the same dim as the mask tensor.</span>
+                        <span class="n">formatted_eval_diff</span> <span class="o">=</span> <span class="n">eval_diff</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span>
+                            <span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">n_outputs</span><span class="p">)</span> <span class="o">+</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">inputs</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span><span class="p">,)</span>
+                        <span class="p">)</span>
+
+                        <span class="c1"># mask in shape (n_perturb, *mask_shape_broadcastable_to_input)</span>
+                        <span class="c1"># aggregate n_perturb</span>
+                        <span class="n">cur_attr</span> <span class="o">=</span> <span class="p">(</span><span class="n">formatted_eval_diff</span> <span class="o">*</span> <span class="n">current_masks</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="o">.</span><span class="n">float</span><span class="p">())</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span>
+                            <span class="n">dim</span><span class="o">=</span><span class="mi">0</span>
+                        <span class="p">)</span>
+
+                        <span class="c1"># (n_outputs, *input_feature_shape) -&gt;</span>
+                        <span class="c1"># (*output_shape, *input_feature_shape)</span>
+                        <span class="n">total_attrib</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">+=</span> <span class="n">cur_attr</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span>
+                            <span class="p">(</span><span class="o">*</span><span class="n">output_shape</span><span class="p">,</span> <span class="o">*</span><span class="n">cur_attr</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">:])</span>
+                        <span class="p">)</span>
 
             <span class="k">if</span> <span class="n">show_progress</span><span class="p">:</span>
                 <span class="n">attr_progress</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
@@ -511,7 +533,32 @@ src="/_sphinx/documentation_options.js"></script>
 
     <span class="k">def</span> <span class="nf">_get_n_evaluations</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">total_features</span><span class="p">,</span> <span class="n">n_samples</span><span class="p">,</span> <span class="n">perturbations_per_eval</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">"""return the total number of forward evaluations needed"""</span>
-        <span class="k">return</span> <span class="n">math</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">total_features</span> <span class="o">/</span> <span class="n">perturbations_per_eval</span><span class="p">)</span> <span class="o">*</span> <span class="n">n_samples</span></div>
+        <span class="k">return</span> <span class="n">math</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">total_features</span> <span class="o">/</span> <span class="n">perturbations_per_eval</span><span class="p">)</span> <span class="o">*</span> <span class="n">n_samples</span>
+
+    <span class="k">def</span> <span class="nf">_strict_run_forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tensor</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        A temp wrapper for global _run_forward util to force forward output</span>
+<span class="sd">        type assertion &amp; conversion.</span>
+<span class="sd">        Remove after the strict logic is supported by all attr classes</span>
+<span class="sd">        """</span>
+        <span class="n">forward_output</span> <span class="o">=</span> <span class="n">_run_forward</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">forward_output</span><span class="p">,</span> <span class="n">Tensor</span><span class="p">):</span>
+            <span class="c1"># format scalar to shape (1) so we can always assume non-empty output_shape</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">forward_output</span><span class="o">.</span><span class="n">shape</span><span class="p">:</span>
+                <span class="n">forward_output</span> <span class="o">=</span> <span class="n">forward_output</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+
+            <span class="k">return</span> <span class="n">forward_output</span>
+
+        <span class="n">output_type</span> <span class="o">=</span> <span class="nb">type</span><span class="p">(</span><span class="n">forward_output</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">output_type</span> <span class="ow">is</span> <span class="nb">int</span> <span class="ow">or</span> <span class="n">output_type</span> <span class="ow">is</span> <span class="nb">float</span><span class="p">,</span> <span class="p">(</span>
+            <span class="s2">"the return of forward_func must be a tensor, int, or float,"</span>
+            <span class="sa">f</span><span class="s2">" received: </span><span class="si">{</span><span class="n">forward_output</span><span class="si">}</span><span class="s2">"</span>
+        <span class="p">)</span>
+
+        <span class="c1"># using python built-in type as torch dtype</span>
+        <span class="c1"># int -&gt; torch.int64, float -&gt; torch.float64</span>
+        <span class="c1"># ref: https://github.com/pytorch/pytorch/pull/21215</span>
+        <span class="k">return</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">([</span><span class="n">forward_output</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">output_type</span><span class="p">)</span></div>
 
 
 
