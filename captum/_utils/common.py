@@ -157,6 +157,20 @@ def _format_baseline(
     return baselines
 
 
+def _is_mask_valid(mask: Tensor, inp: Tensor) -> bool:
+    """
+    Checks whether the mask is valid for the given input.
+    """
+    if mask.dim() > inp.dim():
+        return False
+
+    for mask_d, inp_d in zip(mask.shape[::-1], inp.shape[::-1]):
+        if mask_d != 1 and mask_d != inp_d:
+            return False
+
+    return True
+
+
 def _format_feature_mask(
     feature_mask: Union[None, Tensor, Tuple[Tensor, ...]],
     inputs: Tuple[Tensor, ...],

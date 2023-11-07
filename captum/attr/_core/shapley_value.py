@@ -14,6 +14,7 @@ from captum._utils.common import (
     _format_output,
     _format_tensor_into_tuples,
     _get_max_feature_index,
+    _is_mask_valid,
     _is_tuple,
     _run_forward,
 )
@@ -37,6 +38,27 @@ def _all_perm_generator(num_features: int, num_samples: int) -> Iterable[Sequenc
 def _perm_generator(num_features: int, num_samples: int) -> Iterable[Sequence[int]]:
     for _ in range(num_samples):
         yield torch.randperm(num_features).tolist()
+
+
+def _shape_feature_mask(
+    feature_mask: Tuple[Tensor, ...], inputs: Tuple[Tensor, ...]
+) -> Tuple[Tensor, ...]:
+    """
+    ensure feature_mask has the same number of dims as the inputs
+    i.e., prepend dummy dims of 1 to the masks that broadcastable to inputs
+    """
+    mask_list = []
+    for i, (mask, inp) in enumerate(zip(feature_mask, inputs)):
+        assert _is_mask_valid(mask, inp), (
+            f"the shape of feature mask (index {i}) is invalid,"
+            f"input shape: {inp.shape}, feature mask shape {mask.shape}"
+        )
+        if mask.dim() < inp.dim():
+            mask = mask.reshape((1,) * (inp.dim() - mask.dim()) + mask.shape)
+
+        mask_list.append(mask)
+
+    return tuple(mask_list)
 
 
 class ShapleyValueSampling(PerturbationAttribution):
@@ -279,6 +301,7 @@ class ShapleyValueSampling(PerturbationAttribution):
             additional_forward_args
         )
         feature_mask = _format_feature_mask(feature_mask, inputs)
+        feature_mask = _shape_feature_mask(feature_mask, inputs)
 
         assert (
             isinstance(perturbations_per_eval, int) and perturbations_per_eval >= 1
@@ -317,12 +340,11 @@ class ShapleyValueSampling(PerturbationAttribution):
 
             # Initialize attribution totals and counts
             output_shape = initial_eval.shape
-            n_outputs = initial_eval.numel()
 
             # attr shape (*output_shape, *input_feature_shape)
             total_attrib = [
                 torch.zeros(
-                    (*output_shape, *input.shape[1:]),
+                    output_shape + input.shape[1:],
                     dtype=torch.float,
                     device=inputs[0].device,
                 )
@@ -382,25 +404,33 @@ class ShapleyValueSampling(PerturbationAttribution):
 
                     for j in range(len(total_attrib)):
                         # format eval_diff to shape
-                        # (n_perturb, n_outputs, 1,.. 1)
+                        # (n_perturb, *output_shape, 1,.. 1)
                         # where n_perturb may not be perturb_per_eval
                         # Append n_input_feature dim of 1 to make the tensor
                         # have the same dim as the mask tensor.
                         formatted_eval_diff = eval_diff.reshape(
-                            (-1, n_outputs) + (len(inputs[j].shape) - 1) * (1,)
+                            (-1,) + output_shape + (len(inputs[j].shape) - 1) * (1,)
                         )
 
                         # mask in shape (n_perturb, *mask_shape_broadcastable_to_input)
-                        # aggregate n_perturb
-                        cur_attr = (formatted_eval_diff * current_masks[j].float()).sum(
-                            dim=0
+                        # reshape to
+                        # (
+                        #     n_perturb,
+                        #     *broadcastable_to_output_shape
+                        #     *broadcastable_to_input_feature_shape
+                        # )
+                        cur_mask = current_masks[j]
+                        cur_mask = cur_mask.reshape(
+                            cur_mask.shape[:2]
+                            + (len(output_shape) - 1) * (1,)
+                            + cur_mask.shape[2:]
                         )
 
-                        # (n_outputs, *input_feature_shape) ->
+                        # aggregate n_perturb
+                        cur_attr = (formatted_eval_diff * cur_mask.float()).sum(dim=0)
+
                         # (*output_shape, *input_feature_shape)
-                        total_attrib[j] += cur_attr.reshape(
-                            (*output_shape, *cur_attr.shape[1:])
-                        )
+                        total_attrib[j] += cur_attr
 
             if show_progress:
                 attr_progress.close()
