@@ -322,3 +322,119 @@ class TextTemplateInput(InterpretableInput):
             torch.tensor([self.formatted_mask], device=device),
         )
         return formatted_attr
+
+
+class TextTokenInput(InterpretableInput):
+    """
+    TextTokenInput is an implementation of InterpretableInput for text inputs, whose
+    interpretable features are the tokens of the text with respect to a given tokenizer.
+    It is initiated with the string form of the input text and the corresponding
+    tokenizer. Its input format to the model will be the tokenized id tensor,
+    while its interpretable representation will be a binary tensor of the tokens
+    whose values indicates if the token is “presence” or “absence”.
+
+    Args:
+
+        text (str): text string for the model
+        tokenizer (Tokenizer): tokenizer of the language model
+        baselines (int or str, optional): the
+                baseline value for the tokens. It can be a string of the baseline token
+                or an integer of the baseline token id. Common choices include unknown
+                token or padding token. The default value is 0, which
+                is commonly used for unknown token.
+                Default: 0
+        skip_tokens (List[int] or List[str], optional): the tokens to skip in the
+                the input's interpretable representation. Use this argument to define
+                uninterested tokens, commonly like special tokens, e.g., sos, and unk.
+                It can be a list of strings of the tokens or a list of integers of the
+                token ids.
+                Default: None
+
+    Examples::
+
+        >>> text_inp = TextTokenInput("This is a test.", tokenizer)
+        >>>
+        >>> text_inp.to_tensor()
+        >>> # the shape dependens on the tokenizer
+        >>> # assuming it is broken into ["<s>", "This", "is", "a", "test", "."],
+        >>> # torch.tensor([[1, 6]])
+        >>>
+        >>> text_inp.to_model_input(torch.tensor([[0, 1]]))
+        >>> # torch.tensor([[1, 6]])
+
+    """
+
+    def __init__(
+        self,
+        text: str,
+        tokenizer,
+        baselines: Union[int, str] = 0,  # usually UNK
+        skip_tokens: Union[List[int], List[str], None] = None,
+    ):
+        inp_tensor = tokenizer.encode(text, return_tensors="pt")
+
+        # input tensor into the model of token ids
+        self.inp_tensor = inp_tensor
+        # tensor of interpretable token ids
+        self.itp_tensor = inp_tensor
+        # interpretable mask
+        self.itp_mask = None
+
+        if skip_tokens:
+            if isinstance(skip_tokens[0], str):
+                skip_tokens = tokenizer.convert_tokens_to_ids(skip_tokens)
+                assert isinstance(skip_tokens, list)
+
+            skip_token_set = set(skip_tokens)
+            itp_mask = torch.zeros_like(inp_tensor)
+            itp_mask.map_(inp_tensor, lambda _, v: v not in skip_token_set)
+            itp_mask = itp_mask.bool()
+
+            itp_tensor = inp_tensor[itp_mask].unsqueeze(0)
+
+            self.itp_tensor = itp_tensor
+            self.itp_mask = itp_mask
+
+        self.skip_tokens = skip_tokens
+
+        # features values, the tokens
+        self.values = tokenizer.convert_ids_to_tokens(self.itp_tensor[0])
+        self.tokenizer = tokenizer
+        self.n_itp_features = len(self.values)
+
+        self.baselines = (
+            baselines
+            if type(baselines) is int
+            else tokenizer.convert_tokens_to_ids([baselines])[0]
+        )
+
+    def to_tensor(self) -> torch.Tensor:
+        return torch.ones_like(self.itp_tensor)
+
+    def to_model_input(self, perturbed_tensor=None) -> torch.Tensor:
+        if perturbed_tensor is None:
+            return self.inp_tensor
+
+        device = perturbed_tensor.device
+
+        perturb_mask = perturbed_tensor != 1
+
+        # perturb_per_eval or gradient based can expand the batch dim
+        expand_shape = (perturbed_tensor.size(0), -1)
+
+        perturb_itp_tensor = self.itp_tensor.expand(*expand_shape).to(device)
+        perturb_itp_tensor[perturb_mask] = self.baselines
+
+        # if no iterpretable mask, the interpretable tensor is the input tensor
+        if self.itp_mask is None:
+            return perturb_itp_tensor
+
+        perturb_inp_tensor = self.inp_tensor.expand(*expand_shape).to(device)
+        itp_mask = self.itp_mask.expand(*expand_shape).to(device)
+
+        perturb_inp_tensor[itp_mask] = perturb_itp_tensor.view(-1)
+
+        return perturb_inp_tensor
+
+    def format_attr(self, itp_attr: torch.Tensor):
+        return itp_attr
