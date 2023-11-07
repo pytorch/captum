@@ -46,6 +46,7 @@ src="/_sphinx/documentation_options.js"></script>
     <span class="n">_format_output</span><span class="p">,</span>
     <span class="n">_format_tensor_into_tuples</span><span class="p">,</span>
     <span class="n">_get_max_feature_index</span><span class="p">,</span>
+    <span class="n">_is_mask_valid</span><span class="p">,</span>
     <span class="n">_is_tuple</span><span class="p">,</span>
     <span class="n">_run_forward</span><span class="p">,</span>
 <span class="p">)</span>
@@ -69,6 +70,27 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="k">def</span> <span class="nf">_perm_generator</span><span class="p">(</span><span class="n">num_features</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">num_samples</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">Sequence</span><span class="p">[</span><span class="nb">int</span><span class="p">]]:</span>
     <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_samples</span><span class="p">):</span>
         <span class="k">yield</span> <span class="n">torch</span><span class="o">.</span><span class="n">randperm</span><span class="p">(</span><span class="n">num_features</span><span class="p">)</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
+
+
+<span class="k">def</span> <span class="nf">_shape_feature_mask</span><span class="p">(</span>
+    <span class="n">feature_mask</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span> <span class="n">inputs</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    ensure feature_mask has the same number of dims as the inputs</span>
+<span class="sd">    i.e., prepend dummy dims of 1 to the masks that broadcastable to inputs</span>
+<span class="sd">    """</span>
+    <span class="n">mask_list</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="p">(</span><span class="n">mask</span><span class="p">,</span> <span class="n">inp</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">feature_mask</span><span class="p">,</span> <span class="n">inputs</span><span class="p">)):</span>
+        <span class="k">assert</span> <span class="n">_is_mask_valid</span><span class="p">(</span><span class="n">mask</span><span class="p">,</span> <span class="n">inp</span><span class="p">),</span> <span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"the shape of feature mask (index </span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">) is invalid,"</span>
+            <span class="sa">f</span><span class="s2">"input shape: </span><span class="si">{</span><span class="n">inp</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s2">, feature mask shape </span><span class="si">{</span><span class="n">mask</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s2">"</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="n">mask</span><span class="o">.</span><span class="n">dim</span><span class="p">()</span> <span class="o">&lt;</span> <span class="n">inp</span><span class="o">.</span><span class="n">dim</span><span class="p">():</span>
+            <span class="n">mask</span> <span class="o">=</span> <span class="n">mask</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="mi">1</span><span class="p">,)</span> <span class="o">*</span> <span class="p">(</span><span class="n">inp</span><span class="o">.</span><span class="n">dim</span><span class="p">()</span> <span class="o">-</span> <span class="n">mask</span><span class="o">.</span><span class="n">dim</span><span class="p">())</span> <span class="o">+</span> <span class="n">mask</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+
+        <span class="n">mask_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">mask</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">mask_list</span><span class="p">)</span>
 
 
 <div class="viewcode-block" id="ShapleyValueSampling">
@@ -315,6 +337,7 @@ src="/_sphinx/documentation_options.js"></script>
             <span class="n">additional_forward_args</span>
         <span class="p">)</span>
         <span class="n">feature_mask</span> <span class="o">=</span> <span class="n">_format_feature_mask</span><span class="p">(</span><span class="n">feature_mask</span><span class="p">,</span> <span class="n">inputs</span><span class="p">)</span>
+        <span class="n">feature_mask</span> <span class="o">=</span> <span class="n">_shape_feature_mask</span><span class="p">(</span><span class="n">feature_mask</span><span class="p">,</span> <span class="n">inputs</span><span class="p">)</span>
 
         <span class="k">assert</span> <span class="p">(</span>
             <span class="nb">isinstance</span><span class="p">(</span><span class="n">perturbations_per_eval</span><span class="p">,</span> <span class="nb">int</span><span class="p">)</span> <span class="ow">and</span> <span class="n">perturbations_per_eval</span> <span class="o">&gt;=</span> <span class="mi">1</span>
@@ -353,12 +376,11 @@ src="/_sphinx/documentation_options.js"></script>
 
             <span class="c1"># Initialize attribution totals and counts</span>
             <span class="n">output_shape</span> <span class="o">=</span> <span class="n">initial_eval</span><span class="o">.</span><span class="n">shape</span>
-            <span class="n">n_outputs</span> <span class="o">=</span> <span class="n">initial_eval</span><span class="o">.</span><span class="n">numel</span><span class="p">()</span>
 
             <span class="c1"># attr shape (*output_shape, *input_feature_shape)</span>
             <span class="n">total_attrib</span> <span class="o">=</span> <span class="p">[</span>
                 <span class="n">torch</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span>
-                    <span class="p">(</span><span class="o">*</span><span class="n">output_shape</span><span class="p">,</span> <span class="o">*</span><span class="nb">input</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">:]),</span>
+                    <span class="n">output_shape</span> <span class="o">+</span> <span class="nb">input</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">:],</span>
                     <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">float</span><span class="p">,</span>
                     <span class="n">device</span><span class="o">=</span><span class="n">inputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">device</span><span class="p">,</span>
                 <span class="p">)</span>
@@ -418,25 +440,33 @@ src="/_sphinx/documentation_options.js"></script>
 
                     <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">total_attrib</span><span class="p">)):</span>
                         <span class="c1"># format eval_diff to shape</span>
-                        <span class="c1"># (n_perturb, n_outputs, 1,.. 1)</span>
+                        <span class="c1"># (n_perturb, *output_shape, 1,.. 1)</span>
                         <span class="c1"># where n_perturb may not be perturb_per_eval</span>
                         <span class="c1"># Append n_input_feature dim of 1 to make the tensor</span>
                         <span class="c1"># have the same dim as the mask tensor.</span>
                         <span class="n">formatted_eval_diff</span> <span class="o">=</span> <span class="n">eval_diff</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span>
-                            <span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">n_outputs</span><span class="p">)</span> <span class="o">+</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">inputs</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span><span class="p">,)</span>
+                            <span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,)</span> <span class="o">+</span> <span class="n">output_shape</span> <span class="o">+</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">inputs</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span><span class="p">,)</span>
                         <span class="p">)</span>
 
                         <span class="c1"># mask in shape (n_perturb, *mask_shape_broadcastable_to_input)</span>
-                        <span class="c1"># aggregate n_perturb</span>
-                        <span class="n">cur_attr</span> <span class="o">=</span> <span class="p">(</span><span class="n">formatted_eval_diff</span> <span class="o">*</span> <span class="n">current_masks</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="o">.</span><span class="n">float</span><span class="p">())</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span>
-                            <span class="n">dim</span><span class="o">=</span><span class="mi">0</span>
+                        <span class="c1"># reshape to</span>
+                        <span class="c1"># (</span>
+                        <span class="c1">#     n_perturb,</span>
+                        <span class="c1">#     *broadcastable_to_output_shape</span>
+                        <span class="c1">#     *broadcastable_to_input_feature_shape</span>
+                        <span class="c1"># )</span>
+                        <span class="n">cur_mask</span> <span class="o">=</span> <span class="n">current_masks</span><span class="p">[</span><span class="n">j</span><span class="p">]</span>
+                        <span class="n">cur_mask</span> <span class="o">=</span> <span class="n">cur_mask</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span>
+                            <span class="n">cur_mask</span><span class="o">.</span><span class="n">shape</span><span class="p">[:</span><span class="mi">2</span><span class="p">]</span>
+                            <span class="o">+</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">output_shape</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span><span class="p">,)</span>
+                            <span class="o">+</span> <span class="n">cur_mask</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">2</span><span class="p">:]</span>
                         <span class="p">)</span>
 
-                        <span class="c1"># (n_outputs, *input_feature_shape) -&gt;</span>
+                        <span class="c1"># aggregate n_perturb</span>
+                        <span class="n">cur_attr</span> <span class="o">=</span> <span class="p">(</span><span class="n">formatted_eval_diff</span> <span class="o">*</span> <span class="n">cur_mask</span><span class="o">.</span><span class="n">float</span><span class="p">())</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">dim</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+
                         <span class="c1"># (*output_shape, *input_feature_shape)</span>
-                        <span class="n">total_attrib</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">+=</span> <span class="n">cur_attr</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span>
-                            <span class="p">(</span><span class="o">*</span><span class="n">output_shape</span><span class="p">,</span> <span class="o">*</span><span class="n">cur_attr</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">:])</span>
-                        <span class="p">)</span>
+                        <span class="n">total_attrib</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">+=</span> <span class="n">cur_attr</span>
 
             <span class="k">if</span> <span class="n">show_progress</span><span class="p">:</span>
                 <span class="n">attr_progress</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
