@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash -e
 
 # run this script from the project root using `./scripts/build_docs.sh`
 
