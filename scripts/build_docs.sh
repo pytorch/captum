@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash -e
 
 # run this script from the project root using `./scripts/build_docs.sh`
 
@@ -51,8 +51,6 @@ mkdir -p $WEBSITE_SPHINX_DIR
 
 # move static files from /sphinx/build/html/_static/*:
 for sphinx_static_file in 'documentation_options.js' \
-               'jquery.js' \
-               'underscore.js' \
                'doctools.js' \
                'language_data.js' \
                'searchtools.js' \
