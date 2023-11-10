@@ -1,0 +1,690 @@
+<!DOCTYPE html><html lang=""><head><meta charSet="utf-8"/><meta http-equiv="X-UA-Compatible" content="IE=edge"/><title>Captum · Model Interpretability for PyTorch</title><meta name="viewport" content="width=device-width"/><meta name="generator" content="Docusaurus"/><meta name="description" content="Model Interpretability for PyTorch"/><meta property="og:title" content="Captum · Model Interpretability for PyTorch"/><meta property="og:type" content="website"/><meta property="og:url" content="https://captum.ai/"/><meta property="og:description" content="Model Interpretability for PyTorch"/><meta property="og:image" content="https://captum.ai/img/captum-icon.png"/><meta name="twitter:card" content="summary"/><meta name="twitter:image" content="https://captum.ai/img/captum.png"/><link rel="shortcut icon" href="/img/captum.ico"/><link rel="stylesheet" href="https://cdn.jsdelivr.net/docsearch.js/1/docsearch.min.css"/><link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/default.min.css"/><script>
+              (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+              (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+              m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+              })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+              ga('create', 'UA-44373548-48', 'auto');
+              ga('send', 'pageview');
+            </script><script type="text/javascript" src="https://buttons.github.io/buttons.js"></script><script type="text/javascript" src="/js/code_block_buttons.js"></script><script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.0/clipboard.min.js"></script><script src="https://unpkg.com/vanilla-back-to-top@7.1.14/dist/vanilla-back-to-top.min.js"></script><script>
+        document.addEventListener('DOMContentLoaded', function() {
+          addBackToTop(
+            {"zIndex":100}
+          )
+        });
+        </script><script src="/js/scrollSpy.js"></script><link rel="stylesheet" href="/css/main.css"/><script src="/js/codetabs.js"></script></head><body><div class="fixedHeaderContainer"><div class="headerWrapper wrapper"><header><a href="/"><img class="logo" src="/img/captum_logo.svg" alt="Captum"/></a><div class="navigationWrapper navigationSlider"><nav class="slidingNav"><ul class="nav-site nav-site-internal"><li class=""><a href="/docs/introduction" target="_self">Docs</a></li><li class=""><a href="/tutorials/" target="_self">Tutorials</a></li><li class=""><a href="/api/" target="_self">API Reference</a></li><li class=""><a href="https://github.com/pytorch/captum" target="_self">GitHub</a></li><li class="navSearchWrapper reactNavSearchWrapper"><input type="text" id="search_input_react" placeholder="Search" title="Search"/></li></ul></nav></div></header></div></div><div class="navPusher"><div class="docMainWrapper wrapper"><div class="container docsNavContainer" id="docsNav"><nav class="toc"><div class="toggleNav"><section class="navWrapper wrapper"><div class="navBreadcrumb wrapper"><div class="navToggle" id="navToggler"><div class="hamburger-menu"><div class="line1"></div><div class="line2"></div><div class="line3"></div></div></div><h2><i>›</i><span></span></h2><div class="tocToggler" id="tocToggler"><i class="icon-toc"></i></div></div><div class="navGroups"><div class="navGroup"><h3 class="navGroupCategoryTitle">Captum Tutorials</h3><ul class=""><li class="navListItem"><a class="navItem" href="/tutorials/">Overview</a></li></ul></div><div class="navGroup"><h3 class="navGroupCategoryTitle">Introduction to Captum</h3><ul class=""><li class="navListItem"><a class="navItem" href="/tutorials/Titanic_Basic_Interpret">Getting started with Captum</a></li></ul></div><div class="navGroup"><h3 class="navGroupCategoryTitle">Attribution</h3><ul class=""><li class="navListItem"><a class="navItem" href="/tutorials/IMDB_TorchText_Interpret">Interpreting text models</a></li><li class="navListItem"><a class="navItem" href="/tutorials/CIFAR_TorchVision_Interpret">Intepreting vision with CIFAR</a></li><li class="navListItem"><a class="navItem" href="/tutorials/TorchVision_Interpret">Interpreting vision with Pretrained Models</a></li><li class="navListItem"><a class="navItem" href="/tutorials/Resnet_TorchVision_Ablation">Feature ablation on images with ResNet</a></li><li class="navListItem"><a class="navItem" href="/tutorials/Multimodal_VQA_Interpret">Interpreting multimodal models</a></li><li class="navListItem"><a class="navItem" href="/tutorials/House_Prices_Regression_Interpret">Interpreting a regression model of California house prices</a></li><li class="navListItem"><a class="navItem" href="/tutorials/Segmentation_Interpret">Interpreting semantic segmentation models</a></li><li class="navListItem navListItemActive"><a class="navItem" href="/tutorials/Distributed_Attribution">Using Captum with torch.distributed</a></li><li class="navListItem"><a class="navItem" href="/tutorials/DLRM_Tutorial">Interpreting Deep Learning Recommender Models</a></li><li class="navListItem"><a class="navItem" href="/tutorials/Image_and_Text_Classification_LIME">Interpreting vision and text models with LIME</a></li><div class="navGroup subNavGroup"><h4 class="navGroupSubcategoryTitle">Interpreting BERT</h4><ul><li class="navListItem"><a class="navItem" href="/tutorials/Bert_SQUAD_Interpret">Interpreting question answering with BERT Part 1</a></li><li class="navListItem"><a class="navItem" href="/tutorials/Bert_SQUAD_Interpret2">Interpreting question answering with BERT Part 2</a></li></ul></div></ul></div><div class="navGroup"><h3 class="navGroupCategoryTitle">Robustness</h3><ul class=""><li class="navListItem"><a class="navItem" href="/tutorials/CIFAR_Captum_Robustness">Applying robustness attacks and metrics to CIFAR model and dataset</a></li></ul></div><div class="navGroup"><h3 class="navGroupCategoryTitle">Concept</h3><ul class=""><li class="navListItem"><a class="navItem" href="/tutorials/TCAV_Image">TCAV for image classification for googlenet model</a></li><li class="navListItem"><a class="navItem" href="/tutorials/TCAV_NLP">TCAV for NLP sentiment analysis model</a></li></ul></div><div class="navGroup"><h3 class="navGroupCategoryTitle">Influential Examples</h3><ul class=""><li class="navListItem"><a class="navItem" href="/tutorials/TracInCP_Tutorial">Identifying influential examples and mis-labelled examples with TracInCP</a></li></ul></div><div class="navGroup"><h3 class="navGroupCategoryTitle">Captum Insight</h3><ul class=""><li class="navListItem"><a class="navItem" href="/tutorials/CIFAR_TorchVision_Captum_Insights">Getting started with Captum Insights</a></li><li class="navListItem"><a class="navItem" href="/tutorials/Multimodal_VQA_Captum_Insights">Using Captum Insights with multimodal models (VQA)</a></li></ul></div></div></section></div><script>
+            var coll = document.getElementsByClassName('collapsible');
+            var checkActiveCategory = true;
+            for (var i = 0; i < coll.length; i++) {
+              var links = coll[i].nextElementSibling.getElementsByTagName('*');
+              if (checkActiveCategory){
+                for (var j = 0; j < links.length; j++) {
+                  if (links[j].classList.contains('navListItemActive')){
+                    coll[i].nextElementSibling.classList.toggle('hide');
+                    coll[i].childNodes[1].classList.toggle('rotate');
+                    checkActiveCategory = false;
+                    break;
+                  }
+                }
+              }
+
+              coll[i].addEventListener('click', function() {
+                var arrow = this.childNodes[1];
+                arrow.classList.toggle('rotate');
+                var content = this.nextElementSibling;
+                content.classList.toggle('hide');
+              });
+            }
+
+            document.addEventListener('DOMContentLoaded', function() {
+              createToggler('#navToggler', '#docsNav', 'docsSliderActive');
+              createToggler('#tocToggler', 'body', 'tocActive');
+
+              var headings = document.querySelector('.toc-headings');
+              headings && headings.addEventListener('click', function(event) {
+                var el = event.target;
+                while(el !== headings){
+                  if (el.tagName === 'A') {
+                    document.body.classList.remove('tocActive');
+                    break;
+                  } else{
+                    el = el.parentNode;
+                  }
+                }
+              }, false);
+
+              function createToggler(togglerSelector, targetSelector, className) {
+                var toggler = document.querySelector(togglerSelector);
+                var target = document.querySelector(targetSelector);
+
+                if (!toggler) {
+                  return;
+                }
+
+                toggler.onclick = function(event) {
+                  event.preventDefault();
+
+                  target.classList.toggle(className);
+                };
+              }
+            });
+        </script></nav></div><div class="container mainContainer"><div class="wrapper"><div class="tutorialBody">
+<script
+  src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.1.10/require.min.js">
+</script>
+<script
+  src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.0.3/jquery.min.js">
+</script>
+<div class="notebook">
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h1 id="Distributed-Computation-of-Attributions-using-Captum">Distributed Computation of Attributions using Captum<a class="anchor-link" href="#Distributed-Computation-of-Attributions-using-Captum">¶</a></h1>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>In this tutorial, we provide some examples of using Captum with the torch.distributed package and DataParallel, allowing computing attributions in a distributed manner across processors, machines or GPUs.</p>
+<p>In the first part of this tutorial, we demonstrate dividing a single batch of inputs and computing attributions for each part of the batch in a separate process or GPU if available using torch.distributed and DataParallel. In the second part of this tutorial, we demonstrate computing attributions over the Titanic dataset in a distributed manner, dividing the dataset among processes and computing the global average attribution.</p>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h2 id="Part-1:-Distributing-computation-of-Integrated-Gradients-for-an-input-batch">Part 1: Distributing computation of Integrated Gradients for an input batch<a class="anchor-link" href="#Part-1:-Distributing-computation-of-Integrated-Gradients-for-an-input-batch">¶</a></h2>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>In this part, our goal is to distribute a small batch of input examples across processes, compute the attributions independently on each process, and collect the resulting attributions. This approach can be very helpful for algorithms such as IntegratedGradients, which internally expand the input, since they can be performed with a larger number of steps when inputs are distributed across devices.</p>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>We will first demonstrate this with torch.distributed and then demonstrate the same computation with DataParallel, which is particularly for distribution across GPUs.</p>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>Initial imports:</p>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In [1]:</div>
+<div class="inner_cell">
+<div class="input_area">
+<div class="highlight hl-ipython3"><pre><span></span><span class="kn">import</span> <span class="nn">os</span>
+
+<span class="kn">import</span> <span class="nn">torch</span>
+<span class="kn">import</span> <span class="nn">torch.nn</span> <span class="k">as</span> <span class="nn">nn</span>
+<span class="kn">import</span> <span class="nn">torch.distributed</span> <span class="k">as</span> <span class="nn">dist</span>
+<span class="kn">from</span> <span class="nn">torch</span> <span class="kn">import</span> <span class="n">Tensor</span>
+<span class="kn">from</span> <span class="nn">torch.multiprocessing</span> <span class="kn">import</span> <span class="n">Process</span>
+
+<span class="kn">from</span> <span class="nn">captum.attr</span> <span class="kn">import</span> <span class="n">IntegratedGradients</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>We now define a small toy model for this example.</p>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In [2]:</div>
+<div class="inner_cell">
+<div class="input_area">
+<div class="highlight hl-ipython3"><pre><span></span><span class="k">class</span> <span class="nc">ToyModel</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">linear1</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">linear1</span><span class="o">.</span><span class="n">weight</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Parameter</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">3</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">linear1</span><span class="o">.</span><span class="n">bias</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Parameter</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">([</span><span class="o">-</span><span class="mf">10.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">]))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">relu</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">ReLU</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">relu</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">linear1</span><span class="p">(</span><span class="n">x</span><span class="p">))</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h3 id="torch.distributed-Example">torch.distributed Example<a class="anchor-link" href="#torch.distributed-Example">¶</a></h3>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>In the following cell, we set parameters USE_CUDA and WORLD_SIZE. WORLD_SIZE corresponds to the number of processes initialized and should be set to either 1, 2, or 4 for this example. USE_CUDA should be set to true if GPUs are available and there must be at least WORLD_SIZE GPUs available.</p>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In [3]:</div>
+<div class="inner_cell">
+<div class="input_area">
+<div class="highlight hl-ipython3"><pre><span></span><span class="n">USE_CUDA</span> <span class="o">=</span> <span class="kc">True</span>
+<span class="n">WORLD_SIZE</span> <span class="o">=</span> <span class="mi">4</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>We now define the function that runs on each process, which takes the rank (identifier for current process), size (total number of processes), and inp_batch, which corresponds to the input portion for the current process. Integrated Gradients is computed on the given input and concatenated with other processes on the process with rank 0. The model can also be wrapped in Distributed Data Parallel, which synchronizes parameter updates across processes, by uncommenting the corresponding line, but it is not necessary for this example, since no parameters updates / training is conducted.</p>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In [4]:</div>
+<div class="inner_cell">
+<div class="input_area">
+<div class="highlight hl-ipython3"><pre><span></span><span class="c1">#Uncomment the following import and corresponding line in run to test with DistributedDataParallel</span>
+<span class="kn">from</span> <span class="nn">torch.nn.parallel</span> <span class="kn">import</span> <span class="n">DistributedDataParallel</span> <span class="k">as</span> <span class="n">DDP</span>
+
+<span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="n">rank</span><span class="p">,</span> <span class="n">size</span><span class="p">,</span> <span class="n">inp_batch</span><span class="p">):</span>
+    <span class="c1"># Initialize model</span>
+    <span class="n">model</span> <span class="o">=</span> <span class="n">ToyModel</span><span class="p">()</span>
+    
+    <span class="c1"># Move model and input to device with ID rank if USE_CUDA is True</span>
+    <span class="k">if</span> <span class="n">USE_CUDA</span><span class="p">:</span>
+        <span class="n">inp_batch</span> <span class="o">=</span> <span class="n">inp_batch</span><span class="o">.</span><span class="n">cuda</span><span class="p">(</span><span class="n">rank</span><span class="p">)</span>
+        <span class="n">model</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">cuda</span><span class="p">(</span><span class="n">rank</span><span class="p">)</span>
+        <span class="c1"># Uncomment line below to wrap with DistributedDataParallel</span>
+        <span class="n">model</span> <span class="o">=</span> <span class="n">DDP</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">device_ids</span><span class="o">=</span><span class="p">[</span><span class="n">rank</span><span class="p">])</span>
+
+    <span class="c1"># Create IG object and compute attributions.</span>
+    <span class="n">ig</span> <span class="o">=</span> <span class="n">IntegratedGradients</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
+    <span class="n">attr</span> <span class="o">=</span> <span class="n">ig</span><span class="o">.</span><span class="n">attribute</span><span class="p">(</span><span class="n">inp_batch</span><span class="p">,</span> <span class="n">target</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    
+    <span class="c1"># Combine attributions from each device using distributed.gather</span>
+    <span class="c1"># Rank 0 process gathers all attributions, each other process</span>
+    <span class="c1"># sends its corresponding attribution.</span>
+    <span class="k">if</span> <span class="n">rank</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">output_list</span> <span class="o">=</span> <span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">attr</span><span class="p">)</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">size</span><span class="p">)]</span>
+        <span class="n">torch</span><span class="o">.</span><span class="n">distributed</span><span class="o">.</span><span class="n">gather</span><span class="p">(</span><span class="n">attr</span><span class="p">,</span> <span class="n">gather_list</span><span class="o">=</span><span class="n">output_list</span><span class="p">)</span>
+        <span class="n">combined_attr</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">(</span><span class="n">output_list</span><span class="p">)</span>
+        <span class="c1"># Rank 0 prints the combined attribution tensor after gathering</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">combined_attr</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">torch</span><span class="o">.</span><span class="n">distributed</span><span class="o">.</span><span class="n">gather</span><span class="p">(</span><span class="n">attr</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>This function performs required setup and cleanup steps on each process and executes the chosen function (run).</p>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In [5]:</div>
+<div class="inner_cell">
+<div class="input_area">
+<div class="highlight hl-ipython3"><pre><span></span><span class="k">def</span> <span class="nf">init_process</span><span class="p">(</span><span class="n">rank</span><span class="p">,</span> <span class="n">size</span><span class="p">,</span> <span class="n">fn</span><span class="p">,</span> <span class="n">inp_batch</span><span class="p">,</span> <span class="n">backend</span><span class="o">=</span><span class="s1">'gloo'</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">""" Initialize the distributed environment. """</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s1">'MASTER_ADDR'</span><span class="p">]</span> <span class="o">=</span> <span class="s1">'127.0.0.1'</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s1">'MASTER_PORT'</span><span class="p">]</span> <span class="o">=</span> <span class="s1">'29500'</span>
+    <span class="n">dist</span><span class="o">.</span><span class="n">init_process_group</span><span class="p">(</span><span class="n">backend</span><span class="p">,</span> <span class="n">rank</span><span class="o">=</span><span class="n">rank</span><span class="p">,</span> <span class="n">world_size</span><span class="o">=</span><span class="n">size</span><span class="p">)</span>
+    <span class="n">fn</span><span class="p">(</span><span class="n">rank</span><span class="p">,</span> <span class="n">size</span><span class="p">,</span> <span class="n">inp_batch</span><span class="p">)</span>
+    <span class="n">dist</span><span class="o">.</span><span class="n">destroy_process_group</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>We are now ready to run the initialize and run the processes. The gathered output attributions are printed by the rank 0 process upon completion.</p>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In [6]:</div>
+<div class="inner_cell">
+<div class="input_area">
+<div class="highlight hl-ipython3"><pre><span></span><span class="n">size</span> <span class="o">=</span> <span class="n">WORLD_SIZE</span>
+<span class="n">processes</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="n">batch</span> <span class="o">=</span> <span class="mf">1.0</span> <span class="o">*</span> <span class="n">torch</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">12</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span><span class="mi">3</span><span class="p">)</span>
+<span class="n">batch_chunks</span> <span class="o">=</span> <span class="n">batch</span><span class="o">.</span><span class="n">chunk</span><span class="p">(</span><span class="n">size</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">rank</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">size</span><span class="p">):</span>
+    <span class="n">p</span> <span class="o">=</span> <span class="n">Process</span><span class="p">(</span><span class="n">target</span><span class="o">=</span><span class="n">init_process</span><span class="p">,</span> <span class="n">args</span><span class="o">=</span><span class="p">(</span><span class="n">rank</span><span class="p">,</span> <span class="n">size</span><span class="p">,</span> <span class="n">run</span><span class="p">,</span> <span class="n">batch_chunks</span><span class="p">[</span><span class="n">rank</span><span class="p">]))</span>
+    <span class="n">p</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+    <span class="n">processes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
+
+<span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">processes</span><span class="p">:</span>
+    <span class="n">p</span><span class="o">.</span><span class="n">join</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="output_wrapper">
+<div class="output">
+<div class="output_area">
+<div class="prompt"></div>
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>tensor([[0.0000, 0.0000, 0.0000],
+        [0.4813, 0.6417, 0.8021],
+        [3.1865, 3.7176, 4.2487],
+        [5.8774, 6.5305, 7.1835]], device='cuda:0')
+</pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>To confirm the correctness of the attributions, we can compute the same attributions from a single process and confirm the results match.</p>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In [7]:</div>
+<div class="inner_cell">
+<div class="input_area">
+<div class="highlight hl-ipython3"><pre><span></span><span class="n">model</span> <span class="o">=</span> <span class="n">ToyModel</span><span class="p">()</span>
+<span class="n">ig</span> <span class="o">=</span> <span class="n">IntegratedGradients</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
+
+<span class="n">batch</span> <span class="o">=</span> <span class="mf">1.0</span> <span class="o">*</span> <span class="n">torch</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">12</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span><span class="mi">3</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">ig</span><span class="o">.</span><span class="n">attribute</span><span class="p">(</span><span class="n">batch</span><span class="p">,</span> <span class="n">target</span><span class="o">=</span><span class="mi">0</span><span class="p">))</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="output_wrapper">
+<div class="output">
+<div class="output_area">
+<div class="prompt"></div>
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>tensor([[0.0000, 0.0000, 0.0000],
+        [0.4813, 0.6417, 0.8021],
+        [3.1865, 3.7176, 4.2487],
+        [5.8774, 6.5305, 7.1835]])
+</pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h3 id="DataParallel-Example">DataParallel Example<a class="anchor-link" href="#DataParallel-Example">¶</a></h3>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>If GPUs are available, we can also distribute computation using torch.nn.DataParallel instead. DataParallel is a wrapper around a module which internally splits each input batch across available CUDA device, parallelizing computation. Note that DistributedDataParallel is expected to be faster than DataParallel, but DataParallel can be simpler to setup, with only a wrapper around the module. More information regarding comparing the 2 approaches can be found <a href="https://pytorch.org/tutorials/intermediate/ddp_tutorial.html">here</a>.</p>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>The same attributions can be computed using DataParallel as follows. Note that this can only be run when CUDA is available.</p>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In [8]:</div>
+<div class="inner_cell">
+<div class="input_area">
+<div class="highlight hl-ipython3"><pre><span></span><span class="n">dp_model</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">DataParallel</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">cuda</span><span class="p">())</span>
+<span class="n">ig</span> <span class="o">=</span> <span class="n">IntegratedGradients</span><span class="p">(</span><span class="n">dp_model</span><span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="n">ig</span><span class="o">.</span><span class="n">attribute</span><span class="p">(</span><span class="n">batch</span><span class="o">.</span><span class="n">cuda</span><span class="p">(),</span> <span class="n">target</span><span class="o">=</span><span class="mi">0</span><span class="p">))</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="output_wrapper">
+<div class="output">
+<div class="output_area">
+<div class="prompt"></div>
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>tensor([[0.0000, 0.0000, 0.0000],
+        [0.4813, 0.6417, 0.8021],
+        [3.1865, 3.7176, 4.2487],
+        [5.8774, 6.5305, 7.1835]], device='cuda:0')
+</pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h2 id="Part-2:-Distributing-computation-of-Titanic-Dataset-Attribution">Part 2: Distributing computation of Titanic Dataset Attribution<a class="anchor-link" href="#Part-2:-Distributing-computation-of-Titanic-Dataset-Attribution">¶</a></h2>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>In this part, our goal is to distribute a small batch of input examples across processes, compute the attributions independently on each process, and collect the resulting attributions. For this part, make sure that pandas is installed and available.</p>
+<p>NOTE: Please restart your kernel before executing this portion, due to issues with mutliprocessing from Jupyter notebooks.</p>
+<p>Initial Imports:</p>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In [1]:</div>
+<div class="inner_cell">
+<div class="input_area">
+<div class="highlight hl-ipython3"><pre><span></span><span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<span class="kn">import</span> <span class="nn">torch</span>
+<span class="kn">import</span> <span class="nn">torch.nn</span> <span class="k">as</span> <span class="nn">nn</span>
+<span class="kn">import</span> <span class="nn">torch.distributed</span> <span class="k">as</span> <span class="nn">dist</span>
+<span class="kn">from</span> <span class="nn">torch.utils.data</span> <span class="kn">import</span> <span class="n">TensorDataset</span><span class="p">,</span> <span class="n">DataLoader</span>
+<span class="kn">from</span> <span class="nn">torch.utils.data.distributed</span> <span class="kn">import</span> <span class="n">DistributedSampler</span>
+<span class="kn">from</span> <span class="nn">torch.multiprocessing</span> <span class="kn">import</span> <span class="n">Process</span>
+
+<span class="kn">from</span> <span class="nn">captum.attr</span> <span class="kn">import</span> <span class="n">IntegratedGradients</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>Download the Titanic dataset from: <a href="http://biostat.mc.vanderbilt.edu/wiki/pub/Main/DataSets/titanic3.csv">http://biostat.mc.vanderbilt.edu/wiki/pub/Main/DataSets/titanic3.csv</a>. 
+Update path to the dataset here.</p>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In [2]:</div>
+<div class="inner_cell">
+<div class="input_area">
+<div class="highlight hl-ipython3"><pre><span></span><span class="n">dataset_path</span> <span class="o">=</span> <span class="s2">"titanic3.csv"</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>We define a simple neural network architecture, which is trained in the Titanic tutorial.</p>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In [3]:</div>
+<div class="inner_cell">
+<div class="input_area">
+<div class="highlight hl-ipython3"><pre><span></span><span class="k">class</span> <span class="nc">TitanicSimpleNNModel</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">linear1</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="mi">12</span><span class="p">,</span> <span class="mi">12</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sigmoid1</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Sigmoid</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">linear2</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="mi">12</span><span class="p">,</span> <span class="mi">8</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sigmoid2</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Sigmoid</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">linear3</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="mi">8</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">softmax</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Softmax</span><span class="p">(</span><span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="n">lin1_out</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">linear1</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="n">sigmoid_out1</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sigmoid1</span><span class="p">(</span><span class="n">lin1_out</span><span class="p">)</span>
+        <span class="n">sigmoid_out2</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sigmoid2</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">linear2</span><span class="p">(</span><span class="n">sigmoid_out1</span><span class="p">))</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">softmax</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">linear3</span><span class="p">(</span><span class="n">sigmoid_out2</span><span class="p">))</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>We now define a helper method to read the CSV and generate a TensorDataset object corresponding to the test set of the Titianic dataset. For more details on the pre-processing, refer to the Titanic_Basic_Interpret tutorial.</p>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In [4]:</div>
+<div class="inner_cell">
+<div class="input_area">
+<div class="highlight hl-ipython3"><pre><span></span><span class="c1"># Read dataset from csv file.</span>
+<span class="k">def</span> <span class="nf">load_dataset</span><span class="p">():</span>
+    <span class="n">titanic_data</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">dataset_path</span><span class="p">)</span>
+    <span class="n">titanic_data</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">([</span><span class="n">titanic_data</span><span class="p">,</span>
+                              <span class="n">pd</span><span class="o">.</span><span class="n">get_dummies</span><span class="p">(</span><span class="n">titanic_data</span><span class="p">[</span><span class="s1">'sex'</span><span class="p">]),</span>
+                              <span class="n">pd</span><span class="o">.</span><span class="n">get_dummies</span><span class="p">(</span><span class="n">titanic_data</span><span class="p">[</span><span class="s1">'embarked'</span><span class="p">],</span><span class="n">prefix</span><span class="o">=</span><span class="s2">"embark"</span><span class="p">),</span>
+                              <span class="n">pd</span><span class="o">.</span><span class="n">get_dummies</span><span class="p">(</span><span class="n">titanic_data</span><span class="p">[</span><span class="s1">'pclass'</span><span class="p">],</span><span class="n">prefix</span><span class="o">=</span><span class="s2">"class"</span><span class="p">)],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">titanic_data</span><span class="p">[</span><span class="s2">"age"</span><span class="p">]</span> <span class="o">=</span> <span class="n">titanic_data</span><span class="p">[</span><span class="s2">"age"</span><span class="p">]</span><span class="o">.</span><span class="n">fillna</span><span class="p">(</span><span class="n">titanic_data</span><span class="p">[</span><span class="s2">"age"</span><span class="p">]</span><span class="o">.</span><span class="n">mean</span><span class="p">())</span>
+    <span class="n">titanic_data</span><span class="p">[</span><span class="s2">"fare"</span><span class="p">]</span> <span class="o">=</span> <span class="n">titanic_data</span><span class="p">[</span><span class="s2">"fare"</span><span class="p">]</span><span class="o">.</span><span class="n">fillna</span><span class="p">(</span><span class="n">titanic_data</span><span class="p">[</span><span class="s2">"fare"</span><span class="p">]</span><span class="o">.</span><span class="n">mean</span><span class="p">())</span>
+    <span class="n">titanic_data</span> <span class="o">=</span> <span class="n">titanic_data</span><span class="o">.</span><span class="n">drop</span><span class="p">([</span><span class="s1">'name'</span><span class="p">,</span><span class="s1">'ticket'</span><span class="p">,</span><span class="s1">'cabin'</span><span class="p">,</span><span class="s1">'boat'</span><span class="p">,</span><span class="s1">'body'</span><span class="p">,</span><span class="s1">'home.dest'</span><span class="p">,</span><span class="s1">'sex'</span><span class="p">,</span><span class="s1">'embarked'</span><span class="p">,</span><span class="s1">'pclass'</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="c1"># Set random seed for reproducibility.</span>
+    <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="mi">131254</span><span class="p">)</span>
+
+    <span class="c1"># Convert features and labels to numpy arrays.</span>
+    <span class="n">labels</span> <span class="o">=</span> <span class="n">titanic_data</span><span class="p">[</span><span class="s2">"survived"</span><span class="p">]</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()</span>
+    <span class="n">titanic_data</span> <span class="o">=</span> <span class="n">titanic_data</span><span class="o">.</span><span class="n">drop</span><span class="p">([</span><span class="s1">'survived'</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">feature_names</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">titanic_data</span><span class="o">.</span><span class="n">columns</span><span class="p">)</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="n">titanic_data</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()</span>
+
+    <span class="c1"># Separate training and test sets using </span>
+    <span class="n">train_indices</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">labels</span><span class="p">),</span> <span class="nb">int</span><span class="p">(</span><span class="mf">0.7</span><span class="o">*</span><span class="nb">len</span><span class="p">(</span><span class="n">labels</span><span class="p">)),</span> <span class="n">replace</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="n">test_indices</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">labels</span><span class="p">)))</span> <span class="o">-</span> <span class="nb">set</span><span class="p">(</span><span class="n">train_indices</span><span class="p">))</span>
+
+    <span class="n">test_features</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="n">test_indices</span><span class="p">]</span>
+    <span class="n">test_features_tensor</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">from_numpy</span><span class="p">(</span><span class="n">test_features</span><span class="p">)</span><span class="o">.</span><span class="n">type</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">FloatTensor</span><span class="p">)</span>
+    <span class="n">dataset</span> <span class="o">=</span> <span class="n">TensorDataset</span><span class="p">(</span><span class="n">test_features_tensor</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">dataset</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>In the following cell, we set parameters USE_CUDA and WORLD_SIZE. WORLD_SIZE corresponds to the number of processes initialized. USE_CUDA should be set to true if GPUs are available and there must be at least WORLD_SIZE GPUs available.</p>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In [5]:</div>
+<div class="inner_cell">
+<div class="input_area">
+<div class="highlight hl-ipython3"><pre><span></span><span class="n">USE_CUDA</span> <span class="o">=</span> <span class="kc">True</span>
+<span class="n">WORLD_SIZE</span> <span class="o">=</span> <span class="mi">4</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>We now define the function that runs on each process, which takes the rank (identifier for current process) and size (total number of processes). The model and appropriate part of the dataset are loaded, and attributions are computed for this part of the dataset. The attributions are then averaged across processes. Note that DistributedSampler repeats examples to ensure that each partition has the same number of examples.</p>
+<p>Note that this method loads a pretrained Titanic model, which can be downloaded from here: <a href="https://github.com/pytorch/captum/blob/master/tutorials/models/titanic_model.pt">https://github.com/pytorch/captum/blob/master/tutorials/models/titanic_model.pt</a> . Alternatively, the model can be trained from scratch from the Titanic_Basic_Interpret tutorial.</p>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In [6]:</div>
+<div class="inner_cell">
+<div class="input_area">
+<div class="highlight hl-ipython3"><pre><span></span><span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="n">rank</span><span class="p">,</span> <span class="n">size</span><span class="p">):</span>
+    <span class="c1"># Load Dataset</span>
+    <span class="n">dataset</span> <span class="o">=</span> <span class="n">load_dataset</span><span class="p">()</span>
+    
+    <span class="c1"># Create TitanicSimpleNNModel and load saved weights.</span>
+    <span class="n">net</span> <span class="o">=</span> <span class="n">TitanicSimpleNNModel</span><span class="p">()</span>
+    <span class="n">net</span><span class="o">.</span><span class="n">load_state_dict</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s1">'models/titanic_model.pt'</span><span class="p">))</span>
+    
+    <span class="c1"># Create sampler which divides dataset among processes.</span>
+    <span class="n">sampler</span> <span class="o">=</span> <span class="n">DistributedSampler</span><span class="p">(</span><span class="n">dataset</span><span class="p">,</span><span class="n">num_replicas</span><span class="o">=</span><span class="n">size</span><span class="p">,</span> <span class="n">rank</span><span class="o">=</span><span class="n">rank</span><span class="p">,</span> <span class="n">shuffle</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="n">loader</span> <span class="o">=</span> <span class="n">DataLoader</span><span class="p">(</span><span class="n">dataset</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span> <span class="n">sampler</span><span class="o">=</span><span class="n">sampler</span><span class="p">)</span>
+    
+    <span class="c1"># If USE_CUDA, move model to CUDA device with id rank.</span>
+    <span class="k">if</span> <span class="n">USE_CUDA</span><span class="p">:</span>
+        <span class="n">net</span> <span class="o">=</span> <span class="n">net</span><span class="o">.</span><span class="n">cuda</span><span class="p">(</span><span class="n">rank</span><span class="p">)</span>
+        
+    <span class="c1"># Initialize IG object</span>
+    <span class="n">ig</span> <span class="o">=</span> <span class="n">IntegratedGradients</span><span class="p">(</span><span class="n">net</span><span class="p">)</span>
+    
+    <span class="c1"># Compute total attribution</span>
+    <span class="n">total_attr</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">for</span> <span class="n">batch</span> <span class="ow">in</span> <span class="n">loader</span><span class="p">:</span>
+        <span class="n">inp</span> <span class="o">=</span> <span class="n">batch</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">USE_CUDA</span><span class="p">:</span>
+            <span class="n">inp</span> <span class="o">=</span> <span class="n">inp</span><span class="o">.</span><span class="n">cuda</span><span class="p">(</span><span class="n">rank</span><span class="p">)</span>
+        <span class="n">attr</span> <span class="o">=</span> <span class="n">ig</span><span class="o">.</span><span class="n">attribute</span><span class="p">(</span><span class="n">inp</span><span class="p">,</span> <span class="n">target</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">total_attr</span> <span class="o">+=</span> <span class="n">attr</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">dim</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        
+    <span class="c1"># Divide by number of examples in partition</span>
+    <span class="n">total_attr</span> <span class="o">/=</span> <span class="nb">len</span><span class="p">(</span><span class="n">sampler</span><span class="p">)</span>
+    
+    <span class="c1"># Sum average attributions from each process on rank 0.</span>
+    <span class="n">torch</span><span class="o">.</span><span class="n">distributed</span><span class="o">.</span><span class="n">reduce</span><span class="p">(</span><span class="n">total_attr</span><span class="p">,</span> <span class="n">dst</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">rank</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="c1"># Average across processes, since each partition has same number of examples.</span>
+        <span class="n">total_attr</span> <span class="o">=</span> <span class="n">total_attr</span> <span class="o">/</span> <span class="n">size</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">"Average Attributions:"</span><span class="p">,</span> <span class="n">total_attr</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>This function performs required setup and cleanup steps on each process and executes the chosen function (run).</p>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In [7]:</div>
+<div class="inner_cell">
+<div class="input_area">
+<div class="highlight hl-ipython3"><pre><span></span><span class="k">def</span> <span class="nf">init_process</span><span class="p">(</span><span class="n">rank</span><span class="p">,</span> <span class="n">size</span><span class="p">,</span> <span class="n">fn</span><span class="p">,</span> <span class="n">backend</span><span class="o">=</span><span class="s1">'gloo'</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">""" Initialize the distributed environment. """</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s1">'MASTER_ADDR'</span><span class="p">]</span> <span class="o">=</span> <span class="s1">'127.0.0.1'</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s1">'MASTER_PORT'</span><span class="p">]</span> <span class="o">=</span> <span class="s1">'29500'</span>
+    <span class="n">dist</span><span class="o">.</span><span class="n">init_process_group</span><span class="p">(</span><span class="n">backend</span><span class="p">,</span> <span class="n">rank</span><span class="o">=</span><span class="n">rank</span><span class="p">,</span> <span class="n">world_size</span><span class="o">=</span><span class="n">size</span><span class="p">)</span>
+    <span class="n">fn</span><span class="p">(</span><span class="n">rank</span><span class="p">,</span> <span class="n">size</span><span class="p">)</span>
+    <span class="n">dist</span><span class="o">.</span><span class="n">destroy_process_group</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>We are now ready to run the initialize and run the processes. The average attributions over the dataset are printed by the rank 0 process upon completion.</p>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In [8]:</div>
+<div class="inner_cell">
+<div class="input_area">
+<div class="highlight hl-ipython3"><pre><span></span><span class="n">size</span> <span class="o">=</span> <span class="n">WORLD_SIZE</span>
+<span class="n">processes</span> <span class="o">=</span> <span class="p">[]</span>
+
+<span class="k">for</span> <span class="n">rank</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">size</span><span class="p">):</span>
+    <span class="n">p</span> <span class="o">=</span> <span class="n">Process</span><span class="p">(</span><span class="n">target</span><span class="o">=</span><span class="n">init_process</span><span class="p">,</span> <span class="n">args</span><span class="o">=</span><span class="p">(</span><span class="n">rank</span><span class="p">,</span> <span class="n">size</span><span class="p">,</span> <span class="n">run</span><span class="p">))</span>
+    <span class="n">p</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+    <span class="n">processes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
+
+<span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">processes</span><span class="p">:</span>
+    <span class="n">p</span><span class="o">.</span><span class="n">join</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="output_wrapper">
+<div class="output">
+<div class="output_area">
+<div class="prompt"></div>
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>Average Attributions: tensor([-0.4516, -0.1182, -0.0551,  0.1736,  0.1527, -0.3588,  0.0861, -0.0005,
+        -0.0811,  0.0622,  0.0207, -0.1581], device='cuda:0')
+</pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div></div><div class="tutorialButtonWrapper buttonWrapper"><a class="tutorialButton button" download="" href="/files/Distributed_Attribution.ipynb" target="_blank"><svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="file-download" class="svg-inline--fa fa-file-download fa-w-12" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><path fill="currentColor" d="M224 136V0H24C10.7 0 0 10.7 0 24v464c0 13.3 10.7 24 24 24h336c13.3 0 24-10.7 24-24V160H248c-13.2 0-24-10.8-24-24zm76.45 211.36l-96.42 95.7c-6.65 6.61-17.39 6.61-24.04 0l-96.42-95.7C73.42 337.29 80.54 320 94.82 320H160v-80c0-8.84 7.16-16 16-16h32c8.84 0 16 7.16 16 16v80h65.18c14.28 0 21.4 17.29 11.27 27.36zM377 105L279.1 7c-4.5-4.5-10.6-7-17-7H256v128h128v-6.1c0-6.3-2.5-12.4-7-16.9z"></path></svg>Download Tutorial Jupyter Notebook</a></div><div class="tutorialButtonWrapper buttonWrapper"><a class="tutorialButton button" download="" href="/files/Distributed_Attribution.py" target="_blank"><svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="file-download" class="svg-inline--fa fa-file-download fa-w-12" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><path fill="currentColor" d="M224 136V0H24C10.7 0 0 10.7 0 24v464c0 13.3 10.7 24 24 24h336c13.3 0 24-10.7 24-24V160H248c-13.2 0-24-10.8-24-24zm76.45 211.36l-96.42 95.7c-6.65 6.61-17.39 6.61-24.04 0l-96.42-95.7C73.42 337.29 80.54 320 94.82 320H160v-80c0-8.84 7.16-16 16-16h32c8.84 0 16 7.16 16 16v80h65.18c14.28 0 21.4 17.29 11.27 27.36zM377 105L279.1 7c-4.5-4.5-10.6-7-17-7H256v128h128v-6.1c0-6.3-2.5-12.4-7-16.9z"></path></svg>Download Tutorial Source Code</a></div></div></div></div><footer class="nav-footer" id="footer"><section class="sitemap"><div class="footerSection"><h5>Docs</h5><a href="/docs/introduction">Introduction</a><a href="/docs/getting_started">Getting Started</a><a href="/tutorials/">Tutorials</a><a href="/api/">API Reference</a></div><div class="footerSection"><h5>Legal</h5><a href="https://opensource.facebook.com/legal/privacy/" target="_blank" rel="noreferrer noopener">Privacy</a><a href="https://opensource.facebook.com/legal/terms/" target="_blank" rel="noreferrer noopener">Terms</a></div><div class="footerSection"><h5>Social</h5><div class="social"><a class="github-button" href="https://github.com/pytorch/captum" data-count-href="https://github.com/pytorch/captum/stargazers" data-show-count="true" data-count-aria-label="# stargazers on GitHub" aria-label="Star Captum on GitHub">captum</a></div></div></section><a href="https://opensource.facebook.com/" target="_blank" rel="noreferrer noopener" class="fbOpenSource"><img src="/img/oss_logo.png" alt="Facebook Open Source" width="170" height="45"/></a><section class="copyright"> Copyright © 2023 Facebook Inc.</section><script>
+            (function() {
+              var BAD_BASE = '/captum/';
+              if (window.location.origin !== 'https://captum.ai') {
+                var pathname = window.location.pathname;
+                var newPathname = pathname.slice(pathname.indexOf(BAD_BASE) === 0 ? BAD_BASE.length : 1);
+                var newLocation = 'https://captum.ai/' + newPathname;
+                console.log('redirecting to ' + newLocation);
+                window.location.href = newLocation;
+              }
+            })();
+          </script></footer></div><script type="text/javascript" src="https://cdn.jsdelivr.net/docsearch.js/1/docsearch.min.js"></script><script>
+                document.addEventListener('keyup', function(e) {
+                  if (e.target !== document.body) {
+                    return;
+                  }
+                  // keyCode for '/' (slash)
+                  if (e.keyCode === 191) {
+                    const search = document.getElementById('search_input_react');
+                    search && search.focus();
+                  }
+                });
+              </script><script>
+              var search = docsearch({
+                
+                apiKey: '207c27d819f967749142d8611de7cb19',
+                indexName: 'captum',
+                inputSelector: '#search_input_react'
+              });
+            </script></body></html>
