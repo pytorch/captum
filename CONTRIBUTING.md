@@ -45,7 +45,7 @@ flake8 .
 from the repository root.
 
 We feel strongly that having a consistent code style is extremely important, so
-CircleCI will fail on your PR if it does not adhere to the ufmt or flake8 formatting style.
+Github Actions will fail on your PR if it does not adhere to the ufmt or flake8 formatting style.
 
 
 #### Type Hints

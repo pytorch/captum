@@ -89,10 +89,10 @@ class Test(BaseTest):
         assertTensorAlmostEqual(
             self,
             _select_targets(output_tensor, torch.tensor([1, 2, 0])),
-            [[2], [6], [7]],
+            [2, 6, 7],
         )
         assertTensorAlmostEqual(
-            self, _select_targets(output_tensor, [1, 2, 0]), [[2], [6], [7]]
+            self, _select_targets(output_tensor, [1, 2, 0]), [2, 6, 7]
         )
 
         # Verify error is raised if too many dimensions are provided.

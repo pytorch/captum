@@ -18,7 +18,7 @@ while getopts 'ndfv:' flag; do
   done
 
 # NOTE: Only Debian variants are supported, since this script is only
-# used by our tests on CircleCI. In the future we might generalize,
+# used by our tests on GitHub Actions. In the future we might generalize,
 # but users should hopefully be using conda installs.
 
 # install nodejs and yarn for insights build
@@ -35,30 +35,30 @@ sudo apt install yarn
 export TERM=xterm
 
 # upgrade pip
-pip install --upgrade pip
+pip install --upgrade pip --progress-bar off
 
 # install captum with dev deps
-pip install -e .[dev]
+pip install -e .[dev] --progress-bar off
 BUILD_INSIGHTS=1 python setup.py develop
 
 # install other frameworks if asked for and make sure this is before pytorch
 if [[ $FRAMEWORKS == true ]]; then
-  pip install pytext-nlp
+  pip install pytext-nlp --progress-bar off
 fi
 
 # install pytorch nightly if asked for
 if [[ $PYTORCH_NIGHTLY == true ]]; then
-  pip install --upgrade --pre torch -f https://download.pytorch.org/whl/nightly/cpu/torch_nightly.html
+  pip install --upgrade --pre torch -f https://download.pytorch.org/whl/nightly/cpu/torch_nightly.html --progress-bar off
 else
   # If no version is specified, upgrade to the latest release.
   if [[ $CHOSEN_TORCH_VERSION == -1 ]]; then
-    pip install --upgrade torch
+    pip install --upgrade torch --progress-bar off
   else
-    pip install torch==$CHOSEN_TORCH_VERSION
+    pip install torch==$CHOSEN_TORCH_VERSION --progress-bar off
   fi
 fi
 
 # install deployment bits if asked for
 if [[ $DEPLOY == true ]]; then
-  pip install beautifulsoup4 ipython nbconvert==5.6.1
+  pip install beautifulsoup4 ipython nbconvert==5.6.1 --progress-bar off
 fi

@@ -144,7 +144,7 @@ class Test(BaseTest):
             grad = NeuronIntegratedGradients(
                 model, target_layer, multiply_by_inputs=multiply_by_inputs
             )
-            self.assertEquals(grad.multiplies_by_inputs, multiply_by_inputs)
+            self.assertEqual(grad.multiplies_by_inputs, multiply_by_inputs)
             attributions = grad.attribute(
                 test_input,
                 test_neuron,

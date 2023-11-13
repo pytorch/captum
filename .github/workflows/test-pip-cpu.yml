@@ -1,0 +1,26 @@
+name: Unit-tests for Pip install
+
+on:
+  pull_request:
+  push:
+    branches:
+      - master
+
+  workflow_dispatch:
+
+jobs:
+  tests:
+    strategy:
+      matrix:
+        pytorch_args: ["-v 1.6", "-v 1.7", " -v 1.8", "-v 1.9"]
+      fail-fast: false
+    uses: pytorch/test-infra/.github/workflows/linux_job.yml@main
+    with:
+      runner: linux.12xlarge
+      docker-image: cimg/python:3.6
+      repository: pytorch/captum
+      script: |
+        sudo chmod -R 777 .
+        ./scripts/install_via_pip.sh ${{ matrix.pytorch_args }}
+        # Run Tests
+        python3 -m pytest -ra --cov=. --cov-report term-missing
