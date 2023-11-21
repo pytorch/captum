@@ -5,9 +5,10 @@ from typing import List, Optional, Union
 
 import torch
 from captum.attr._core.feature_ablation import FeatureAblation
-from captum.attr._core.llm_attr import LLMAttribution
+from captum.attr._core.layer.layer_integrated_gradients import LayerIntegratedGradients
+from captum.attr._core.llm_attr import LLMAttribution, LLMGradientAttribution
 from captum.attr._core.shapley_value import ShapleyValueSampling
-from captum.attr._utils.interpretable_input import TextTemplateInput
+from captum.attr._utils.interpretable_input import TextTemplateInput, TextTokenInput
 from parameterized import parameterized
 from tests.helpers.basic import assertTensorAlmostEqual, BaseTest
 from torch import nn, Tensor
@@ -105,3 +106,46 @@ class TestLLMAttr(BaseTest):
         # With FeatureAblation, the seq attr in log_prob
         # equals to the sum of each token attr
         assertTensorAlmostEqual(self, res.seq_attr, res.token_attr.sum(0))
+
+
+class TestLLMGradAttr(BaseTest):
+    def test_llm_attr(self) -> None:
+        llm = DummyLLM()
+        tokenizer = DummyTokenizer()
+        attr = LayerIntegratedGradients(llm, llm.emb)
+        llm_attr = LLMGradientAttribution(attr, tokenizer)
+
+        inp = TextTokenInput("a b c", tokenizer)
+        res = llm_attr.attribute(inp, "m n o p q")
+
+        # 5 output tokens, 4 input tokens including sos
+        self.assertEqual(res.token_attr.shape, (5, 4))
+        self.assertEqual(res.input_tokens, ["<sos>", "a", "b", "c"])
+        self.assertEqual(res.output_tokens, ["m", "n", "o", "p", "q"])
+
+    def test_llm_attr_without_target(self) -> None:
+        llm = DummyLLM()
+        tokenizer = DummyTokenizer()
+        attr = LayerIntegratedGradients(llm, llm.emb)
+        llm_attr = LLMGradientAttribution(attr, tokenizer)
+
+        inp = TextTokenInput("a b c", tokenizer)
+        res = llm_attr.attribute(inp, gen_args={"mock_response": "x y z"})
+
+        self.assertEqual(res.token_attr.shape, (3, 4))
+        self.assertEqual(res.input_tokens, ["<sos>", "a", "b", "c"])
+        self.assertEqual(res.output_tokens, ["x", "y", "z"])
+
+    def test_llm_attr_with_skip_tokens(self) -> None:
+        llm = DummyLLM()
+        tokenizer = DummyTokenizer()
+        attr = LayerIntegratedGradients(llm, llm.emb)
+        llm_attr = LLMGradientAttribution(attr, tokenizer)
+
+        inp = TextTokenInput("a b c", tokenizer, skip_tokens=[0])
+        res = llm_attr.attribute(inp, "m n o p q")
+
+        # 5 output tokens, 4 input tokens including sos
+        self.assertEqual(res.token_attr.shape, (5, 3))
+        self.assertEqual(res.input_tokens, ["a", "b", "c"])
+        self.assertEqual(res.output_tokens, ["m", "n", "o", "p", "q"])

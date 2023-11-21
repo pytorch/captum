@@ -398,7 +398,7 @@ class TextTokenInput(InterpretableInput):
         self.skip_tokens = skip_tokens
 
         # features values, the tokens
-        self.values = tokenizer.convert_ids_to_tokens(self.itp_tensor[0])
+        self.values = tokenizer.convert_ids_to_tokens(self.itp_tensor[0].tolist())
         self.tokenizer = tokenizer
         self.n_itp_features = len(self.values)
 
@@ -409,6 +409,7 @@ class TextTokenInput(InterpretableInput):
         )
 
     def to_tensor(self) -> torch.Tensor:
+        # return the perturbation indicator as interpretable tensor instead of token ids
         return torch.ones_like(self.itp_tensor)
 
     def to_model_input(self, perturbed_tensor=None) -> torch.Tensor:
@@ -422,14 +423,14 @@ class TextTokenInput(InterpretableInput):
         # perturb_per_eval or gradient based can expand the batch dim
         expand_shape = (perturbed_tensor.size(0), -1)
 
-        perturb_itp_tensor = self.itp_tensor.expand(*expand_shape).to(device)
+        perturb_itp_tensor = self.itp_tensor.expand(*expand_shape).clone().to(device)
         perturb_itp_tensor[perturb_mask] = self.baselines
 
         # if no iterpretable mask, the interpretable tensor is the input tensor
         if self.itp_mask is None:
             return perturb_itp_tensor
 
-        perturb_inp_tensor = self.inp_tensor.expand(*expand_shape).to(device)
+        perturb_inp_tensor = self.inp_tensor.expand(*expand_shape).clone().to(device)
         itp_mask = self.itp_mask.expand(*expand_shape).to(device)
 
         perturb_inp_tensor[itp_mask] = perturb_itp_tensor.view(-1)

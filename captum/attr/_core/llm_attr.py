@@ -4,14 +4,16 @@ from typing import Callable, cast, Dict, List, Optional, Union
 
 import torch
 from captum.attr._core.feature_ablation import FeatureAblation
+from captum.attr._core.layer.layer_integrated_gradients import LayerIntegratedGradients
 from captum.attr._core.shapley_value import ShapleyValues, ShapleyValueSampling
 from captum.attr._utils.attribution import Attribution
-from captum.attr._utils.interpretable_input import InterpretableInput, TextTemplateInput
+from captum.attr._utils.interpretable_input import (
+    InterpretableInput,
+    TextTemplateInput,
+    TextTokenInput,
+)
 from torch import nn, Tensor
 
-
-SUPPORTED_METHODS = (FeatureAblation, ShapleyValueSampling, ShapleyValues)
-SUPPORTED_INPUTS = (TextTemplateInput,)
 
 DEFAULT_GEN_ARGS = {"max_new_tokens": 25, "do_sample": False}
 
@@ -57,6 +59,9 @@ class LLMAttribution(Attribution):
     and returns LLMAttributionResult
     """
 
+    SUPPORTED_METHODS = (FeatureAblation, ShapleyValueSampling, ShapleyValues)
+    SUPPORTED_INPUTS = (TextTemplateInput, TextTokenInput)
+
     def __init__(
         self,
         attr_method: Attribution,
@@ -75,7 +80,7 @@ class LLMAttribution(Attribution):
         """
 
         assert isinstance(
-            attr_method, SUPPORTED_METHODS
+            attr_method, self.SUPPORTED_METHODS
         ), f"LLMAttribution does not support {type(attr_method)}"
 
         super().__init__(attr_method.forward_func)
@@ -86,6 +91,7 @@ class LLMAttribution(Attribution):
         self.attr_method.forward_func = self._forward_func
 
         # alias, we really need a model and don't support wrapper functions
+        # coz we need call model.forward, model.generate, etc.
         self.model = cast(nn.Module, self.forward_func)
 
         self.tokenizer = tokenizer
@@ -103,14 +109,12 @@ class LLMAttribution(Attribution):
 
     def _forward_func(
         self,
-        perturbed_feature,
-        input_feature,
+        perturbed_tensor,
+        inp,
         target_tokens,
         _inspect_forward,
     ):
-        perturbed_input = self._format_model_input(
-            input_feature.to_model_input(perturbed_feature)
-        )
+        perturbed_input = self._format_model_input(inp.to_model_input(perturbed_tensor))
         init_model_inp = perturbed_input
 
         model_inp = init_model_inp
@@ -192,7 +196,7 @@ class LLMAttribution(Attribution):
         """
 
         assert isinstance(
-            inp, SUPPORTED_INPUTS
+            inp, self.SUPPORTED_INPUTS
         ), f"LLMAttribution does not support input type {type(inp)}"
 
         if target is None:
@@ -214,6 +218,7 @@ class LLMAttribution(Attribution):
             if type(target) is str:
                 # exclude sos
                 target_tokens = self.tokenizer.encode(target)[1:]
+                target_tokens = torch.tensor(target_tokens)
             elif type(target) is torch.Tensor:
                 target_tokens = target
 
@@ -246,6 +251,204 @@ class LLMAttribution(Attribution):
         return LLMAttributionResult(
             attr[0],
             attr[1:],  # shape(n_output_token, n_input_features)
+            inp.values,
+            self.tokenizer.convert_ids_to_tokens(target_tokens),
+        )
+
+
+class LLMGradientAttribution(Attribution):
+    """
+    Attribution class for large language models. It wraps a gradient-based
+    attribution algorthm to produce commonly interested attribution
+    results for the use case of text generation.
+    The wrapped instance will calculate attribution in the
+    same way as configured in the original attribution algorthm, but it will provide a
+    new "attribute" function which accepts text-based inputs
+    and returns LLMAttributionResult
+    """
+
+    SUPPORTED_METHODS = (LayerIntegratedGradients,)
+    SUPPORTED_INPUTS = (TextTokenInput,)
+
+    def __init__(
+        self,
+        attr_method,
+        tokenizer,
+        attr_target: str = "log_prob",
+    ):
+        """
+        Args:
+            attr_method (Attribution): instance of a supported perturbation attribution
+                    class created with the llm model that follows huggingface style
+                    interface convention
+            tokenizer (Tokenizer): tokenizer of the llm model used in the attr_method
+            attr_target (str): attribute towards log probability or probability.
+                    Available values ["log_prob", "prob"]
+                    Default: "log_prob"
+        """
+        assert isinstance(
+            attr_method, self.SUPPORTED_METHODS
+        ), f"LLMGradientAttribution does not support {type(attr_method)}"
+
+        super().__init__(attr_method.forward_func)
+
+        # shallow copy is enough to avoid modifying original instance
+        self.attr_method = copy(attr_method)
+        self.attr_method.forward_func = self._forward_func
+
+        # alias, we really need a model and don't support wrapper functions
+        # coz we need call model.forward, model.generate, etc.
+        self.model = cast(nn.Module, self.forward_func)
+
+        self.tokenizer = tokenizer
+        self.device = (
+            cast(torch.device, self.model.device)
+            if hasattr(self.model, "device")
+            else next(self.model.parameters()).device
+        )
+
+        assert attr_target in (
+            "log_prob",
+            "prob",
+        ), "attr_target should be either 'log_prob' or 'prob'"
+        self.attr_target = attr_target
+
+    def _forward_func(
+        self,
+        perturbed_tensor: Tensor,
+        inp: InterpretableInput,
+        target_tokens: Tensor,  # 1D tensor of target token ids
+        cur_target_idx: int,  # current target index
+    ):
+        perturbed_input = self._format_model_input(inp.to_model_input(perturbed_tensor))
+
+        if cur_target_idx:
+            # the input batch size can be expanded by attr method
+            output_token_tensor = (
+                target_tokens[:cur_target_idx]
+                .unsqueeze(0)
+                .expand(perturbed_input.size(0), -1)
+                .to(self.device)
+            )
+            new_input_tensor = torch.cat([perturbed_input, output_token_tensor], dim=1)
+        else:
+            new_input_tensor = perturbed_input
+
+        output_logits = self.model(new_input_tensor)
+
+        new_token_logits = output_logits.logits[:, -1]
+        log_probs = torch.nn.functional.log_softmax(new_token_logits, dim=1)
+
+        target_token = target_tokens[cur_target_idx]
+        token_log_probs = log_probs[..., target_token]
+
+        return (
+            token_log_probs
+            if self.attr_target == "log_prob"
+            else torch.exp(token_log_probs)
+        )
+
+    def _format_model_input(self, model_input):
+        """
+        Convert str to tokenized tensor
+        """
+        return model_input.to(self.device)
+
+    def attribute(
+        self,
+        inp: InterpretableInput,
+        target: Union[str, torch.Tensor, None] = None,
+        gen_args: Optional[Dict] = None,
+        **kwargs,
+    ):
+        """
+        Args:
+            inp (InterpretableInput): input prompt for which attributions are computed
+            target (str or Tensor, optional): target response with respect to
+                    which attributions are computed. If None, it uses the model
+                    to generate the target based on the input and gen_args.
+                    Default: None
+            gen_args (dict, optional): arguments for generating the target. Only used if
+                    target is not given. When None, the default arguments are used,
+                    {"max_length": 25, "do_sample": False}
+                    Defaults: None
+            **kwargs (Any): any extra keyword arguments passed to the call of the
+                    underlying attribute function of the given attribution instance
+
+        Returns:
+
+            attr (LLMAttributionResult): attribution result
+        """
+
+        assert isinstance(
+            inp, self.SUPPORTED_INPUTS
+        ), f"LLMGradAttribution does not support input type {type(inp)}"
+
+        if target is None:
+            # generate when None
+            assert hasattr(self.model, "generate") and callable(self.model.generate), (
+                "The model does not have recognizable generate function."
+                "Target must be given for attribution"
+            )
+
+            if not gen_args:
+                gen_args = DEFAULT_GEN_ARGS
+
+            model_inp = self._format_model_input(inp.to_model_input())
+            output_tokens = self.model.generate(model_inp, **gen_args)
+            target_tokens = output_tokens[0][model_inp.size(1) :]
+        else:
+            assert gen_args is None, "gen_args must be None when target is given"
+
+            if type(target) is str:
+                # exclude sos
+                target_tokens = self.tokenizer.encode(target)[1:]
+                target_tokens = torch.tensor(target_tokens)
+            elif type(target) is torch.Tensor:
+                target_tokens = target
+
+        attr_inp = inp.to_tensor().to(self.device)
+
+        attr_list = []
+        for cur_target_idx, _ in enumerate(target_tokens):
+            # attr in shape(batch_size, input+output_len, emb_dim)
+            attr = self.attr_method.attribute(
+                attr_inp,
+                additional_forward_args=(
+                    inp,
+                    target_tokens,
+                    cur_target_idx,
+                ),
+                **kwargs,
+            )
+            attr = cast(Tensor, attr)
+
+            # will have the attr for previous output tokens
+            # cut to shape(batch_size, inp_len, emb_dim)
+            if cur_target_idx:
+                attr = attr[:, :-cur_target_idx]
+
+            # the author of IG uses sum
+            # https://github.com/ankurtaly/Integrated-Gradients/blob/master/BertModel/bert_model_utils.py#L350
+            attr = attr.sum(-1)
+
+            attr_list.append(attr)
+
+        # assume inp batch only has one instance
+        # to shape(n_output_token, ...)
+        attr = torch.cat(attr_list, dim=0)
+
+        # grad attr method do not care the length of features in interpretable format
+        # it attributes to all the elements of the output of the specified layer
+        # so we need special handling for the inp type which don't care all the elements
+        if isinstance(inp, TextTokenInput) and inp.itp_mask is not None:
+            itp_mask = inp.itp_mask.to(self.device)
+            itp_mask = itp_mask.expand_as(attr)
+            attr = attr[itp_mask].view(attr.size(0), -1)
+
+        return LLMAttributionResult(
+            torch.tensor([]),  # TODO how to handle seq level attribution?
+            attr,  # shape(n_output_token, n_input_features)
             inp.values,
             self.tokenizer.convert_ids_to_tokens(target_tokens),
         )

@@ -467,6 +467,8 @@ class LayerIntegratedGradients(LayerAttribution, GradientAttribution):
 
                         hooks.append(hook)
 
+                    # the inputs is an empty tuple
+                    # coz it is prepended into additional_forward_args
                     output = _run_forward(
                         self.forward_func, tuple(), target_ind, additional_forward_args
                     )
