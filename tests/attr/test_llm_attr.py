@@ -119,6 +119,7 @@ class TestLLMGradAttr(BaseTest):
         res = llm_attr.attribute(inp, "m n o p q")
 
         # 5 output tokens, 4 input tokens including sos
+        self.assertEqual(res.seq_attr.shape, (4,))
         self.assertEqual(res.token_attr.shape, (5, 4))
         self.assertEqual(res.input_tokens, ["<sos>", "a", "b", "c"])
         self.assertEqual(res.output_tokens, ["m", "n", "o", "p", "q"])
@@ -132,6 +133,7 @@ class TestLLMGradAttr(BaseTest):
         inp = TextTokenInput("a b c", tokenizer)
         res = llm_attr.attribute(inp, gen_args={"mock_response": "x y z"})
 
+        self.assertEqual(res.seq_attr.shape, (4,))
         self.assertEqual(res.token_attr.shape, (3, 4))
         self.assertEqual(res.input_tokens, ["<sos>", "a", "b", "c"])
         self.assertEqual(res.output_tokens, ["x", "y", "z"])
@@ -146,6 +148,7 @@ class TestLLMGradAttr(BaseTest):
         res = llm_attr.attribute(inp, "m n o p q")
 
         # 5 output tokens, 4 input tokens including sos
+        self.assertEqual(res.seq_attr.shape, (3,))
         self.assertEqual(res.token_attr.shape, (5, 3))
         self.assertEqual(res.input_tokens, ["a", "b", "c"])
         self.assertEqual(res.output_tokens, ["m", "n", "o", "p", "q"])

@@ -262,7 +262,9 @@ class LLMGradientAttribution(Attribution):
     attribution algorthm to produce commonly interested attribution
     results for the use case of text generation.
     The wrapped instance will calculate attribution in the
-    same way as configured in the original attribution algorthm, but it will provide a
+    same way as configured in the original attribution algorthm,
+    with respect to the log probabilities of each
+    generated token and the whole sequence. It will provide a
     new "attribute" function which accepts text-based inputs
     and returns LLMAttributionResult
     """
@@ -274,7 +276,6 @@ class LLMGradientAttribution(Attribution):
         self,
         attr_method,
         tokenizer,
-        attr_target: str = "log_prob",
     ):
         """
         Args:
@@ -282,9 +283,6 @@ class LLMGradientAttribution(Attribution):
                     class created with the llm model that follows huggingface style
                     interface convention
             tokenizer (Tokenizer): tokenizer of the llm model used in the attr_method
-            attr_target (str): attribute towards log probability or probability.
-                    Available values ["log_prob", "prob"]
-                    Default: "log_prob"
         """
         assert isinstance(
             attr_method, self.SUPPORTED_METHODS
@@ -306,12 +304,6 @@ class LLMGradientAttribution(Attribution):
             if hasattr(self.model, "device")
             else next(self.model.parameters()).device
         )
-
-        assert attr_target in (
-            "log_prob",
-            "prob",
-        ), "attr_target should be either 'log_prob' or 'prob'"
-        self.attr_target = attr_target
 
     def _forward_func(
         self,
@@ -342,11 +334,8 @@ class LLMGradientAttribution(Attribution):
         target_token = target_tokens[cur_target_idx]
         token_log_probs = log_probs[..., target_token]
 
-        return (
-            token_log_probs
-            if self.attr_target == "log_prob"
-            else torch.exp(token_log_probs)
-        )
+        # the attribution target is limited to the log probability
+        return token_log_probs
 
     def _format_model_input(self, model_input):
         """
@@ -446,8 +435,13 @@ class LLMGradientAttribution(Attribution):
             itp_mask = itp_mask.expand_as(attr)
             attr = attr[itp_mask].view(attr.size(0), -1)
 
+        # for all the gradient methods we support in this class
+        # the seq attr is the sum of all the token attr if the attr_target is log_prob,
+        # shape(n_input_features)
+        seq_attr = attr.sum(0)
+
         return LLMAttributionResult(
-            torch.tensor([]),  # TODO how to handle seq level attribution?
+            seq_attr,
             attr,  # shape(n_output_token, n_input_features)
             inp.values,
             self.tokenizer.convert_ids_to_tokens(target_tokens),
