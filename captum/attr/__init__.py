@@ -30,6 +30,7 @@ from captum.attr._core.layer.layer_integrated_gradients import (  # noqa
 )
 from captum.attr._core.layer.layer_lrp import LayerLRP  # noqa
 from captum.attr._core.lime import Lime, LimeBase  # noqa
+from captum.attr._core.llm_attr import LLMAttribution, LLMGradientAttribution  # noqa
 from captum.attr._core.lrp import LRP  # noqa
 from captum.attr._core.neuron.neuron_conductance import NeuronConductance  # noqa
 from captum.attr._core.neuron.neuron_deep_lift import (  # noqa
@@ -67,6 +68,11 @@ from captum.attr._utils.attribution import (  # noqa  # noqa  # noqa  # noqa  # 
     PerturbationAttribution,
 )
 from captum.attr._utils.class_summarizer import ClassSummarizer
+from captum.attr._utils.interpretable_input import (  # noqa
+    InterpretableInput,
+    TextTemplateInput,
+    TextTokenInput,
+)
 from captum.attr._utils.stat import (
     CommonStats,
     Count,
@@ -108,7 +114,10 @@ __all__ = [
     "LayerGradientXActivation",
     "LayerActivation",
     "LayerFeatureAblation",
+    "LLMAttribution",
+    "LLMGradientAttribution",
     "InternalInfluence",
+    "InterpretableInput",
     "LayerGradCam",
     "LayerDeepLift",
     "LayerDeepLiftShap",
@@ -127,6 +136,8 @@ __all__ = [
     "NoiseTunnel",
     "GradientShap",
     "InterpretableEmbeddingBase",
+    "TextTemplateInput",
+    "TextTokenInput",
     "TokenReferenceBase",
     "visualization",
     "configure_interpretable_embedding_layer",
