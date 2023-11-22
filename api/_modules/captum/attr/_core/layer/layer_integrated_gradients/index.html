@@ -503,6 +503,8 @@ src="/_sphinx/documentation_options.js"></script>
 
                         <span class="n">hooks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">hook</span><span class="p">)</span>
 
+                    <span class="c1"># the inputs is an empty tuple</span>
+                    <span class="c1"># coz it is prepended into additional_forward_args</span>
                     <span class="n">output</span> <span class="o">=</span> <span class="n">_run_forward</span><span class="p">(</span>
                         <span class="bp">self</span><span class="o">.</span><span class="n">forward_func</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">(),</span> <span class="n">target_ind</span><span class="p">,</span> <span class="n">additional_forward_args</span>
                     <span class="p">)</span>
