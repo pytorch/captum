@@ -188,7 +188,7 @@ def _load_flexible_state_dict(model: Module, path: str) -> float:
 def _get_k_most_influential_helper(
     influence_src_dataloader: DataLoader,
     influence_batch_fn: Callable,
-    inputs: Tuple[Any, ...],
+    inputs: Any,
     k: int = 5,
     proponents: bool = True,
     show_progress: bool = False,
@@ -205,10 +205,10 @@ def _get_k_most_influential_helper(
         influence_batch_fn (Callable): A callable that will be called via
                 `influence_batch_fn(inputs, batch)`, where `batch` is a batch
                 in the `influence_src_dataloader` argument.
-        inputs (tuple[Any, ...]): This argument represents the test batch, and is a
-                single tuple of any, where the last element is assumed to be the labels
-                for the batch. That is, `model(*batch[0:-1])` produces the output for
-                `model`, and `batch[-1]` are the labels, if any.
+        inputs (any): This argument represents the test batch, and can be of any type.
+                It is passed as the first argument to `influence_batch_fn`, and thus
+                needs to be compatible with it. It is not necessarily the test batch
+                itself, but can be some quantity derived from it, i.e. its jacobians.
         k (int, optional): The number of proponents or opponents to return per test
                 instance.
                 Default: 5
