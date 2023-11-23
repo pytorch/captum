@@ -319,7 +319,7 @@ Default: False</p></li>
 <ul class="simple">
 <li><p>influence score mode: if this mode is run (<cite>k</cite> is None), returns a 2D
 tensor <cite>influence_scores</cite> of shape <cite>(input_size, train_dataset_size)</cite>,
-where <cite>input_size</cite> is the number of examples in the test dataset, and
+where <cite>input_size</cite> is the number of examples in the test batch, and
 <cite>train_dataset_size</cite> is the number of examples in training dataset
 <cite>train_dataset</cite>. In other words, <cite>influence_scores[i][j]</cite> is the
 influence score of the <cite>j</cite>-th example in <cite>train_dataset</cite> on the <cite>i</cite>-th
@@ -585,17 +585,18 @@ the variable d in the top of page 15 of the TracIn paper:
 </dd></dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="captum.influence.TracInCP.influence">
-<span class="sig-name descname"><span class="pre">influence</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inputs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">k</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">proponents</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">show_progress</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/influence/_core/tracincp.html#TracInCP.influence"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum.influence.TracInCP.influence" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">influence</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inputs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">k</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">proponents</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">show_progress</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">aggregate</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/influence/_core/tracincp.html#TracInCP.influence"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum.influence.TracInCP.influence" title="Link to this definition">¶</a></dt>
 <dd><p>This is the key method of this class, and can be run in 2 different modes,
-where the mode that is run depends on the arguments passed to this method:</p>
+where the mode that is run depends on the arguments passed to this method.
+Below, we describe the 2 modes, when <cite>aggregate</cite> is false:</p>
 <ul class="simple">
 <li><p>influence score mode: This mode is used if <cite>k</cite> is None. This mode computes
 the influence score of every example in training dataset <cite>train_dataset</cite>
-on every example in the test batch represented by <cite>inputs</cite>.</p></li>
+on every example in the test dataset represented by <cite>inputs</cite>.</p></li>
 <li><p>k-most influential mode: This mode is used if <cite>k</cite> is not None, and an int.
 This mode computes the proponents or opponents of every example in the
-test batch represented by <cite>inputs</cite>. In particular, for each test example in
-the test batch, this mode computes its proponents (resp. opponents),
+test dataset represented by <cite>inputs</cite>. In particular, for each test example in
+the test dataset, this mode computes its proponents (resp. opponents),
 which are the indices in the training dataset <cite>train_dataset</cite> of the
 training examples with the <cite>k</cite> highest (resp. lowest) influence scores on the
 test example. Proponents are computed if <cite>proponents</cite> is True. Otherwise,
@@ -603,16 +604,36 @@ opponents are computed. For each test example, this method also returns the
 actual influence score of each proponent (resp. opponent) on the test
 example.</p></li>
 </ul>
+<p>When <cite>aggregate</cite> is True, this method computes “aggregate” influence scores,
+which for a given training example, is the <em>sum</em> of its influence scores over
+all examples in the test dataset. Below, we describe the 2 modes, when
+<cite>aggregate</cite> is True:</p>
+<ul class="simple">
+<li><p>influence score mode: This mode is used if <cite>k</cite> is None. This mode computes
+the aggregate influence score of each example in training dataset
+<cite>train_dataset</cite> on the test dataset.</p></li>
+<li><p>k-most influential mode: This mode is used if <cite>k</cite> is not None, and an int.
+This mode computes the “aggregate” proponents (resp. opponents), which are
+the indices in the training dataset <cite>train_dataset</cite> of the examples with the
+<cite>k</cite> highest (resp. lowest) aggregate influence scores on the test dataset.
+Proponents are computed if <cite>proponents</cite> is True. Otherwise, opponents are
+computed. This method also returns the actual aggregate influence scores
+of each proponent (resp. opponent) on the test dataset.</p></li>
+</ul>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>inputs</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.12)"><em>tuple</em></a>) – <cite>inputs</cite> is the test batch and is a tuple of
-any, where the last element is assumed to be the labels for the
-batch. That is, <cite>model(*batch[0:-1])</cite> produces the output for
-<cite>model</cite>, and <cite>batch[-1]</cite> are the labels, if any. This is the same
-assumption made for each batch yielded by training dataset
-<cite>train_dataset</cite> - please see its documentation in <cite>__init__</cite> for
-more details on the assumed structure of a batch.</p></li>
+<li><p><strong>inputs</strong> (<em>Tuple</em><em>, or </em><em>DataLoader</em>) – Either a single tuple of any, or a
+<cite>DataLoader</cite>, where each batch yielded is a tuple of any. In
+either case, the tuple represents a single batch, where the last
+element is assumed to be the labels for the batch. That is,
+<cite>model(*batch[0:-1])</cite> produces the output for <cite>model</cite>, and
+and <cite>batch[-1]</cite> are the labels, if any. Here, <cite>model</cite> is model
+provided in initialization. This is the same assumption made for
+each batch yielded by training dataset <cite>train_dataset</cite>. Please see
+documentation for the <cite>train_dataset</cite> argument to
+<cite>TracInCPFastRandProj.__init__</cite> for more details on the assumed
+structure of a batch.</p></li>
 <li><p><strong>k</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><em>int</em></a><em>, </em><em>optional</em>) – If not provided or <cite>None</cite>, the influence score mode will
 be run. Otherwise, the k-most influential mode will be run,
 and <cite>k</cite> is the number of proponents / opponents to return per
@@ -632,32 +653,53 @@ will be displayed. It will try to use tqdm if available for
 advanced features (e.g. time estimation). Otherwise, it will
 fallback to a simple output of progress.
 Default: False</p></li>
+<li><p><strong>aggregate</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.12)"><em>bool</em></a><em>, </em><em>optional</em>) – If true, return “aggregate” influence scores or
+examples with the highest / lowest aggregate influence scores on
+the test dataset, depending on the mode.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Union" title="(in Python v3.12)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code></a>[<a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v2.1)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tensor</span></code></a>, <code class="xref py py-class docutils literal notranslate"><span class="pre">KMostInfluentialResults</span></code>]</span></p>
 </dd>
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p><p>The return value of this method depends on which mode is run.</p>
+<dd class="field-odd"><p><p>The return value of this method depends on which mode is run, and whether
+<cite>aggregate</cite> is True of False.</p>
+<p>Below are the return values for the 2 modes, when <cite>aggregate</cite> is False:</p>
 <ul class="simple">
 <li><p>influence score mode: if this mode is run (<cite>k</cite> is None), returns a 2D
 tensor <cite>influence_scores</cite> of shape <cite>(input_size, train_dataset_size)</cite>,
-where <cite>input_size</cite> is the number of examples in the test batch, and
+where <cite>input_size</cite> is the number of examples in the test dataset, and
 <cite>train_dataset_size</cite> is the number of examples in training dataset
 <cite>train_dataset</cite>. In other words, <cite>influence_scores[i][j]</cite> is the
 influence score of the <cite>j</cite>-th example in <cite>train_dataset</cite> on the <cite>i</cite>-th
-example in the test batch.</p></li>
+example in the test dataset.</p></li>
 <li><p>k-most influential mode: if this mode is run (<cite>k</cite> is an int), returns
 a namedtuple <cite>(indices, influence_scores)</cite>. <cite>indices</cite> is a 2D tensor of
 shape <cite>(input_size, k)</cite>, where <cite>input_size</cite> is the number of examples in
-the test batch. If computing proponents (resp. opponents),
+the test dataset. If computing proponents (resp. opponents),
 <cite>indices[i][j]</cite> is the index in training dataset <cite>train_dataset</cite> of the
 example with the <cite>j</cite>-th highest (resp. lowest) influence score (out of
 the examples in <cite>train_dataset</cite>) on the <cite>i</cite>-th example in the test
-batch. <cite>influence_scores</cite> contains the corresponding influence scores.
+dataset. <cite>influence_scores</cite> contains the corresponding influence scores.
 In particular, <cite>influence_scores[i][j]</cite> is the influence score of example
-<cite>indices[i][j]</cite> in <cite>train_dataset</cite> on example <cite>i</cite> in the test batch
+<cite>indices[i][j]</cite> in <cite>train_dataset</cite> on example <cite>i</cite> in the test dataset
 represented by <cite>inputs</cite>.</p></li>
+</ul>
+<p>Below are the return values for the 2 modes, when <cite>aggregate</cite> is True:</p>
+<ul class="simple">
+<li><p>influence score mode: if this mode is run (<cite>k</cite> is None), returns a 2D
+tensor <cite>influence_scores</cite> of shape <cite>(1, train_dataset_size)</cite>, where
+<cite>influence_scores[0][j] is the aggregate influence score of the `j</cite>-th
+example in <cite>train_dataset</cite> on the test dataset.</p></li>
+<li><p>k-most influential mode: if this mode is run (<cite>k</cite> is an int), returns a
+namedtuple <cite>(indices, influence_scores)</cite>. <cite>indices</cite> is a 2D tensor of
+shape <cite>(1, k)</cite>. If computing proponents (resp. opponents),
+<cite>indices[0][j]</cite> is the index in training dataset <cite>train_dataset</cite> of the
+example with the <cite>j</cite>-th highest (resp. lowest) aggregate influence score
+on the test dataset. <cite>influence_scores</cite> contains the corresponding
+aggregate influence scores. In particular, <cite>influence_scores[0][j]</cite> is
+the aggregate influence score of example <cite>indices[0][j]</cite> on the test
+dataset.</p></li>
 </ul>
 </p>
 </dd>
