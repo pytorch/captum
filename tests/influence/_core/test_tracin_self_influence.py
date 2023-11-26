@@ -3,7 +3,8 @@ from typing import Callable, Union
 
 import torch
 import torch.nn as nn
-from captum.influence._core.tracincp import TracInCP
+from captum.influence._core.influence_function import NaiveInfluenceFunction
+from captum.influence._core.tracincp import TracInCP, TracInCPBase
 from captum.influence._core.tracincp_fast_rand_proj import TracInCPFast
 from parameterized import parameterized
 from tests.helpers.basic import assertTensorAlmostEqual, BaseTest
@@ -28,6 +29,20 @@ class TestTracInSelfInfluence(BaseTest):
     for unpack_inputs in [True, False]:
         for use_gpu in use_gpu_list:
             for (reduction, constructor) in [
+                (
+                    "none",
+                    DataInfluenceConstructor(
+                        NaiveInfluenceFunction, name="NaiveInfluenceFunction_all_layers"
+                    ),
+                ),
+                (
+                    "none",
+                    DataInfluenceConstructor(
+                        NaiveInfluenceFunction,
+                        name="NaiveInfluenceFunction_linear1",
+                        layers=["module.linear1"] if use_gpu else ["linear1"],
+                    ),
+                ),
                 (
                     "none",
                     DataInfluenceConstructor(TracInCP, name="TracInCP_all_layers"),
@@ -117,9 +132,7 @@ class TestTracInSelfInfluence(BaseTest):
                 k=None,
             )
             # calculate self_tracin_scores
-            self_tracin_scores = tracin.self_influence(
-                outer_loop_by_checkpoints=False,
-            )
+            self_tracin_scores = tracin.self_influence()
 
             # check that self_tracin scores equals the diagonal of influence scores
             assertTensorAlmostEqual(
@@ -132,17 +145,20 @@ class TestTracInSelfInfluence(BaseTest):
 
             # check that setting `outer_loop_by_checkpoints=False` and
             # `outer_loop_by_checkpoints=True` gives the same self influence scores
-            self_tracin_scores_by_checkpoints = tracin.self_influence(
-                DataLoader(train_dataset, batch_size=batch_size),
-                outer_loop_by_checkpoints=True,
-            )
-            assertTensorAlmostEqual(
-                self,
-                self_tracin_scores_by_checkpoints,
-                self_tracin_scores,
-                delta=0.01,
-                mode="max",
-            )
+            # this test is only relevant for implementations of `TracInCPBase`, as
+            # implementations of `InfluenceFunctionBase` do not use checkpoints.
+            if isinstance(tracin, TracInCPBase):
+                self_tracin_scores_by_checkpoints = tracin.self_influence(
+                    DataLoader(train_dataset, batch_size=batch_size),
+                    outer_loop_by_checkpoints=True,
+                )
+                assertTensorAlmostEqual(
+                    self,
+                    self_tracin_scores_by_checkpoints,
+                    self_tracin_scores,
+                    delta=0.01,
+                    mode="max",
+                )
 
     @parameterized.expand(
         [
