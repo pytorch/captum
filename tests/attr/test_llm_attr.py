@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 from collections import namedtuple
-from typing import List, Optional, Union, cast
+from typing import cast, List, Optional, Union
 
 import torch
 from captum.attr._core.feature_ablation import FeatureAblation
