@@ -4,9 +4,9 @@ from typing import Callable, cast, Dict, List, Optional, Union
 
 import torch
 from captum.attr._core.feature_ablation import FeatureAblation
-from captum.attr._core.lime import Lime
 from captum.attr._core.kernel_shap import KernelShap
 from captum.attr._core.layer.layer_integrated_gradients import LayerIntegratedGradients
+from captum.attr._core.lime import Lime
 from captum.attr._core.shapley_value import ShapleyValues, ShapleyValueSampling
 from captum.attr._utils.attribution import Attribution
 from captum.attr._utils.interpretable_input import (
@@ -61,8 +61,18 @@ class LLMAttribution(Attribution):
     and returns LLMAttributionResult
     """
 
-    SUPPORTED_METHODS = (FeatureAblation, ShapleyValueSampling, ShapleyValues, Lime, KernelShap)
-    SUPPORTED_PER_TOKEN_ATTR_METHODS = (FeatureAblation, ShapleyValueSampling, ShapleyValues)
+    SUPPORTED_METHODS = (
+        FeatureAblation,
+        ShapleyValueSampling,
+        ShapleyValues,
+        Lime,
+        KernelShap,
+    )
+    SUPPORTED_PER_TOKEN_ATTR_METHODS = (
+        FeatureAblation,
+        ShapleyValueSampling,
+        ShapleyValues,
+    )
     SUPPORTED_INPUTS = (TextTemplateInput, TextTokenInput)
 
     def __init__(
@@ -73,7 +83,11 @@ class LLMAttribution(Attribution):
     ):
         """
         Args:
-            attr_method (Attribution): instance of a supported perturbation attribution
+            attr_method (Attribution): Instance of a supported perturbation attribution
+                    Supported methods include FeatureAblation, ShapleyValueSampling,
+                    ShapleyValues, Lime, and KernelShap. Lime and KernelShap do not
+                    support per-token attribution and will only return attribution
+                    for the full target sequence.
                     class created with the llm model that follows huggingface style
                     interface convention
             tokenizer (Tokenizer): tokenizer of the llm model used in the attr_method
@@ -90,7 +104,9 @@ class LLMAttribution(Attribution):
 
         # shallow copy is enough to avoid modifying original instance
         self.attr_method = copy(attr_method)
-        self.include_per_token_attr = isinstance(attr_method, self.SUPPORTED_PER_TOKEN_ATTR_METHODS)
+        self.include_per_token_attr = isinstance(
+            attr_method, self.SUPPORTED_PER_TOKEN_ATTR_METHODS
+        )
 
         self.attr_method.forward_func = self._forward_func
 
@@ -199,7 +215,8 @@ class LLMAttribution(Attribution):
 
         Returns:
 
-            attr (LLMAttributionResult): attribution result
+            attr (LLMAttributionResult): Attribution result. token_attr will be None
+                    if attr method is Lime or KernelShap.
         """
 
         assert isinstance(
@@ -230,7 +247,10 @@ class LLMAttribution(Attribution):
                 target_tokens = target
 
         attr = torch.zeros(
-            [1 + len(target_tokens) if self.include_per_token_attr else 1, inp.n_itp_features],
+            [
+                1 + len(target_tokens) if self.include_per_token_attr else 1,
+                inp.n_itp_features,
+            ],
             dtype=torch.float,
             device=self.device,
         )
@@ -257,7 +277,9 @@ class LLMAttribution(Attribution):
 
         return LLMAttributionResult(
             attr[0],
-            attr[1:] if self.include_per_token_attr else None,  # shape(n_output_token, n_input_features)
+            attr[1:]
+            if self.include_per_token_attr
+            else None,  # shape(n_output_token, n_input_features)
             inp.values,
             self.tokenizer.convert_ids_to_tokens(target_tokens),
         )
