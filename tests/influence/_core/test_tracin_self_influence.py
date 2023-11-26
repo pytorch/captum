@@ -1,5 +1,5 @@
 import tempfile
-from typing import Callable
+from typing import Callable, Union
 
 import torch
 import torch.nn as nn
@@ -19,7 +19,7 @@ from torch.utils.data import DataLoader
 class TestTracInSelfInfluence(BaseTest):
 
     use_gpu_list = (
-        [True, False]
+        [False, "cuda", "cuda_data_parallel"]
         if torch.cuda.is_available() and torch.cuda.device_count() != 0
         else [False]
     )
@@ -37,7 +37,9 @@ class TestTracInSelfInfluence(BaseTest):
                     DataInfluenceConstructor(
                         TracInCP,
                         name="TracInCP_linear1",
-                        layers=["module.linear1"] if use_gpu else ["linear1"],
+                        layers=["module.linear1"]
+                        if use_gpu == "cuda_data_parallel"
+                        else ["linear1"],
                     ),
                 ),
                 (
@@ -46,7 +48,7 @@ class TestTracInSelfInfluence(BaseTest):
                         TracInCP,
                         name="TracInCP_linear1_linear2",
                         layers=["module.linear1", "module.linear2"]
-                        if use_gpu
+                        if use_gpu == "cuda_data_parallel"
                         else ["linear1", "linear2"],
                     ),
                 ),
@@ -87,7 +89,7 @@ class TestTracInSelfInfluence(BaseTest):
         reduction: str,
         tracin_constructor: Callable,
         unpack_inputs: bool,
-        use_gpu: bool,
+        use_gpu: Union[bool, str],
     ) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
             (net, train_dataset,) = get_random_model_and_data(

@@ -183,6 +183,15 @@ class MultLinearNet(nn.Module):
 def get_random_model_and_data(
     tmpdir, unpack_inputs, return_test_data=True, use_gpu=False
 ):
+    """
+    `use_gpu` can either be
+    - `False`: returned model is on cpu
+    - `'cuda'`: returned model is on gpu
+    - `'cuda_data_parallel``: returned model is a `DataParallel` model, and on cpu
+    The need to differentiate between `'cuda'` and `'cuda_data_parallel'` is that sometimes
+    we may want to test a model that is on cpu, but is *not* wrapped in `DataParallel`.
+    """
+    assert use_gpu in [False, "cuda", "cuda_data_parallel"]
 
     in_features, hidden_nodes, out_features = 5, 4, 3
     num_inputs = 2
@@ -209,7 +218,11 @@ def get_random_model_and_data(
         if hasattr(net, "pre"):
             net.pre.weight.data = net.pre.weight.data.double()
         checkpoint_name = "-".join(["checkpoint-reg", str(i + 1) + ".pt"])
-        net_adjusted = _wrap_model_in_dataparallel(net) if use_gpu else net
+        net_adjusted = (
+            _wrap_model_in_dataparallel(net)
+            if use_gpu == "cuda_data_parallel"
+            else (net.to(device="cuda") if use_gpu == "cuda" else net)
+        )
         torch.save(net_adjusted.state_dict(), os.path.join(tmpdir, checkpoint_name))
 
     num_samples = 50
@@ -238,7 +251,9 @@ def get_random_model_and_data(
 
     if return_test_data:
         return (
-            _wrap_model_in_dataparallel(net) if use_gpu else net,
+            _wrap_model_in_dataparallel(net)
+            if use_gpu == "cuda_data_parallel"
+            else (net.to(device="cuda") if use_gpu == "cuda" else net),
             dataset,
             _move_sample_to_cuda(test_samples)
             if isinstance(test_samples, list) and use_gpu
@@ -248,7 +263,12 @@ def get_random_model_and_data(
             test_labels.cuda() if use_gpu else test_labels,
         )
     else:
-        return _wrap_model_in_dataparallel(net) if use_gpu else net, dataset
+        return (
+            _wrap_model_in_dataparallel(net)
+            if use_gpu == "cuda_data_parallel"
+            else (net.to(device="cuda") if use_gpu == "cuda" else net),
+            dataset,
+        )
 
 
 class DataInfluenceConstructor:
