@@ -12,6 +12,8 @@ from captum.attr._utils.interpretable_input import TextTemplateInput, TextTokenI
 from parameterized import parameterized
 from tests.helpers.basic import assertTensorAlmostEqual, BaseTest
 from torch import nn, Tensor
+from captum.attr._core.lime import Lime
+from captum.attr._core.kernel_shap import KernelShap
 
 
 class DummyTokenizer:
@@ -107,6 +109,20 @@ class TestLLMAttr(BaseTest):
         # equals to the sum of each token attr
         assertTensorAlmostEqual(self, res.seq_attr, res.token_attr.sum(0))
 
+    @parameterized.expand([(Lime,), (KernelShap,)])
+    def test_llm_attr_without_token(self, AttrClass) -> None:
+        llm = DummyLLM()
+        tokenizer = DummyTokenizer()
+        fa = AttrClass(llm)
+        llm_fa = LLMAttribution(fa, tokenizer, attr_target="log_prob")
+
+        inp = TextTemplateInput("{} b {} {} e {}", ["a", "c", "d", "f"])
+        res = llm_fa.attribute(inp, "m n o p q")
+
+        self.assertEqual(res.seq_attr.shape, (4,))
+        self.assertEqual(res.token_attr, None)
+        self.assertEqual(res.input_tokens, ["a", "c", "d", "f"])
+        self.assertEqual(res.output_tokens, ["m", "n", "o", "p", "q"])
 
 class TestLLMGradAttr(BaseTest):
     def test_llm_attr(self) -> None:
