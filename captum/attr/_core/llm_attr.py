@@ -30,7 +30,7 @@ class LLMAttributionResult:
     def __init__(
         self,
         seq_attr: Tensor,
-        token_attr: Tensor,
+        token_attr: Union[Tensor, None],
         input_tokens: List[str],
         output_tokens: List[str],
     ):
