@@ -146,7 +146,7 @@ if __name__ == "__main__":
         ],
         long_description=long_description,
         long_description_content_type="text/markdown",
-        python_requires=">=3.6",
+        python_requires=">=3.7",
         install_requires=["matplotlib", "numpy", "torch>=1.9", "tqdm"],
         packages=find_packages(exclude=("tests", "tests.*")),
         extras_require={
