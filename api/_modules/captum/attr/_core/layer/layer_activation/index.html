@@ -148,7 +148,7 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">            &gt;&gt;&gt; input = torch.randn(2, 3, 32, 32, requires_grad=True)</span>
 <span class="sd">            &gt;&gt;&gt; # Computes layer activation.</span>
 <span class="sd">            &gt;&gt;&gt; # attribution is layer output, with size Nx12x32x32</span>
-<span class="sd">            &gt;&gt;&gt; attribution = layer_cond.attribute(input)</span>
+<span class="sd">            &gt;&gt;&gt; attribution = layer_act.attribute(input)</span>
 <span class="sd">        """</span>
         <span class="k">with</span> <span class="n">torch</span><span class="o">.</span><span class="n">no_grad</span><span class="p">():</span>
             <span class="n">layer_eval</span> <span class="o">=</span> <span class="n">_forward_layer_eval</span><span class="p">(</span>
