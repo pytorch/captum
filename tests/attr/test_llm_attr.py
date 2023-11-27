@@ -1,11 +1,13 @@
 #!/usr/bin/env python3
 
 from collections import namedtuple
-from typing import List, Optional, Union
+from typing import cast, List, Optional, Union
 
 import torch
 from captum.attr._core.feature_ablation import FeatureAblation
+from captum.attr._core.kernel_shap import KernelShap
 from captum.attr._core.layer.layer_integrated_gradients import LayerIntegratedGradients
+from captum.attr._core.lime import Lime
 from captum.attr._core.llm_attr import LLMAttribution, LLMGradientAttribution
 from captum.attr._core.shapley_value import ShapleyValueSampling
 from captum.attr._utils.interpretable_input import TextTemplateInput, TextTokenInput
@@ -76,7 +78,7 @@ class TestLLMAttr(BaseTest):
         res = llm_attr.attribute(inp, "m n o p q")
 
         self.assertEqual(res.seq_attr.shape, (4,))
-        self.assertEqual(res.token_attr.shape, (5, 4))
+        self.assertEqual(cast(Tensor, res.token_attr).shape, (5, 4))
         self.assertEqual(res.input_tokens, ["a", "c", "d", "f"])
         self.assertEqual(res.output_tokens, ["m", "n", "o", "p", "q"])
 
@@ -90,7 +92,7 @@ class TestLLMAttr(BaseTest):
         res = llm_fa.attribute(inp, gen_args={"mock_response": "x y z"})
 
         self.assertEqual(res.seq_attr.shape, (4,))
-        self.assertEqual(res.token_attr.shape, (3, 4))
+        self.assertEqual(cast(Tensor, res.token_attr).shape, (3, 4))
         self.assertEqual(res.input_tokens, ["a", "c", "d", "f"])
         self.assertEqual(res.output_tokens, ["x", "y", "z"])
 
@@ -105,7 +107,22 @@ class TestLLMAttr(BaseTest):
 
         # With FeatureAblation, the seq attr in log_prob
         # equals to the sum of each token attr
-        assertTensorAlmostEqual(self, res.seq_attr, res.token_attr.sum(0))
+        assertTensorAlmostEqual(self, res.seq_attr, cast(Tensor, res.token_attr).sum(0))
+
+    @parameterized.expand([(Lime,), (KernelShap,)])
+    def test_llm_attr_without_token(self, AttrClass) -> None:
+        llm = DummyLLM()
+        tokenizer = DummyTokenizer()
+        fa = AttrClass(llm)
+        llm_fa = LLMAttribution(fa, tokenizer, attr_target="log_prob")
+
+        inp = TextTemplateInput("{} b {} {} e {}", ["a", "c", "d", "f"])
+        res = llm_fa.attribute(inp, "m n o p q")
+
+        self.assertEqual(res.seq_attr.shape, (4,))
+        self.assertEqual(res.token_attr, None)
+        self.assertEqual(res.input_tokens, ["a", "c", "d", "f"])
+        self.assertEqual(res.output_tokens, ["m", "n", "o", "p", "q"])
 
 
 class TestLLMGradAttr(BaseTest):
