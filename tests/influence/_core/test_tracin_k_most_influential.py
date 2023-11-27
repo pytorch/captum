@@ -1,5 +1,5 @@
 import tempfile
-from typing import Callable
+from typing import Callable, Union
 
 import torch
 import torch.nn as nn
@@ -18,7 +18,7 @@ from tests.influence._utils.common import (
 class TestTracInGetKMostInfluential(BaseTest):
 
     use_gpu_list = (
-        [True, False]
+        [False, "cuda", "cuda_data_parallel"]
         if torch.cuda.is_available() and torch.cuda.device_count() != 0
         else [False]
     )
@@ -48,7 +48,9 @@ class TestTracInGetKMostInfluential(BaseTest):
                             DataInfluenceConstructor(
                                 TracInCP,
                                 name="linear2",
-                                layers=["module.linear2"] if use_gpu else ["linear2"],
+                                layers=["module.linear2"]
+                                if use_gpu == "cuda_data_parallel"
+                                else ["linear2"],
                             ),
                             False,
                         ),
@@ -83,7 +85,7 @@ class TestTracInGetKMostInfluential(BaseTest):
         proponents: bool,
         batch_size: int,
         k: int,
-        use_gpu: bool,
+        use_gpu: Union[bool, str],
         aggregate: bool,
     ) -> None:
         """
