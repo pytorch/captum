@@ -2,6 +2,9 @@ from copy import copy
 
 from typing import Callable, cast, Dict, List, Optional, Union
 
+import matplotlib.pyplot as plt
+import numpy as np
+
 import torch
 from captum.attr._core.feature_ablation import FeatureAblation
 from captum.attr._core.kernel_shap import KernelShap
@@ -43,11 +46,110 @@ class LLMAttributionResult:
     def seq_attr_dict(self):
         return {k: v for v, k in zip(self.seq_attr.cpu().tolist(), self.input_tokens)}
 
-    def plot_token_attr(self):
-        pass
+    def plot_token_attr(self, show=False):
+        """
+        Generate a matplotlib plot for visualising the attribution
+        of the output tokens.
 
-    def plot_seq_attr(self):
-        pass
+        Args:
+            show (bool): whether to show the plot directly or return the figure and axis
+                Default: False
+        """
+
+        token_attr = self.token_attr.cpu()
+
+        # maximum absolute attribution value
+        # used as the boundary of normalization
+        # always keep 0 as the mid point to differentiate pos/neg attr
+        max_abs_attr_val = max(
+            [token_attr.max().abs().item(), token_attr.min().abs().item()]
+        )
+
+        fig, ax = plt.subplots()
+
+        # Plot the heatmap
+        data = token_attr.numpy()
+
+        fig.set_size_inches(
+            max(data.shape[1] * 1.3, 6.4), max(data.shape[0] / 2.5, 4.8)
+        )
+        im = ax.imshow(
+            data,
+            vmax=max_abs_attr_val,
+            vmin=-max_abs_attr_val,
+            cmap="RdYlGn",
+            aspect="auto",
+        )
+
+        # Create colorbar
+        cbar = ax.figure.colorbar(im, ax=ax)
+        cbar.ax.set_ylabel("Token Attribuiton", rotation=-90, va="bottom")
+
+        # Show all ticks and label them with the respective list entries.
+        ax.set_xticks(np.arange(data.shape[1]), labels=self.input_tokens)
+        ax.set_yticks(np.arange(data.shape[0]), labels=self.output_tokens)
+
+        # Let the horizontal axes labeling appear on top.
+        ax.tick_params(top=True, bottom=False, labeltop=True, labelbottom=False)
+
+        # Rotate the tick labels and set their alignment.
+        plt.setp(ax.get_xticklabels(), rotation=-30, ha="right", rotation_mode="anchor")
+
+        # Loop over the data and create a `Text` for each "pixel".
+        # Change the text's color depending on the data.
+        for i in range(data.shape[0]):
+            for j in range(data.shape[1]):
+                val = data[i, j]
+                color = "black" if 0.2 < im.norm(val) < 0.8 else "white"
+                im.axes.text(
+                    j,
+                    i,
+                    "%.4f" % val,
+                    horizontalalignment="center",
+                    verticalalignment="center",
+                    color=color,
+                )
+
+        if show:
+            plt.show()
+        else:
+            return fig, ax
+
+    def plot_seq_attr(self, show=False):
+        """
+        Generate a matplotlib plot for visualising the attribution
+        of the output sequence.
+
+        Args:
+            show (bool): whether to show the plot directly or return the figure and axis
+                Default: False
+        """
+
+        fig, ax = plt.subplots()
+
+        data = self.seq_attr.cpu().numpy()
+
+        ax.set_xticks(range(data.shape[0]), labels=self.input_tokens)
+
+        ax.tick_params(top=True, bottom=False, labeltop=True, labelbottom=False)
+
+        plt.setp(ax.get_xticklabels(), rotation=-30, ha="right", rotation_mode="anchor")
+
+        # pos bar
+        ax.bar(
+            range(data.shape[0]), [max(v, 0) for v in data], align="center", color="g"
+        )
+        # neg bar
+        ax.bar(
+            range(data.shape[0]), [min(v, 0) for v in data], align="center", color="r"
+        )
+
+        ax.set_ylabel("Sequence Attribuiton", rotation=90, va="bottom")
+
+        if show:
+            plt.show()
+        else:
+            return fig, ax
 
 
 class LLMAttribution(Attribution):
