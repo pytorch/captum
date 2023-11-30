@@ -61,9 +61,7 @@ class LLMAttributionResult:
         # maximum absolute attribution value
         # used as the boundary of normalization
         # always keep 0 as the mid point to differentiate pos/neg attr
-        max_abs_attr_val = max(
-            [token_attr.max().abs().item(), token_attr.min().abs().item()]
-        )
+        max_abs_attr_val = token_attr.abs().max().item()
 
         fig, ax = plt.subplots()
 
