@@ -3,6 +3,7 @@ from typing import Callable, Union
 
 import torch
 import torch.nn as nn
+from captum.influence._core.arnoldi_influence_function import ArnoldiInfluenceFunction
 from captum.influence._core.influence_function import NaiveInfluenceFunction
 from captum.influence._core.tracincp import TracInCP, TracInCPBase
 from captum.influence._core.tracincp_fast_rand_proj import TracInCPFast
@@ -107,6 +108,23 @@ class TestTracInSelfInfluence(BaseTest):
                     DataInfluenceConstructor(
                         NaiveInfluenceFunction,
                         name="NaiveInfluenceFunction_linear1",
+                        layers=["module.linear1"]
+                        if use_gpu == "cuda_data_parallel"
+                        else ["linear1"],
+                    ),
+                ),
+                (
+                    "none",
+                    DataInfluenceConstructor(
+                        ArnoldiInfluenceFunction,
+                        name="ArnoldiInfluenceFunction_all_layers",
+                    ),
+                ),
+                (
+                    "none",
+                    DataInfluenceConstructor(
+                        ArnoldiInfluenceFunction,
+                        name="ArnoldiInfluenceFunction_linear1",
                         layers=["module.linear1"]
                         if use_gpu == "cuda_data_parallel"
                         else ["linear1"],

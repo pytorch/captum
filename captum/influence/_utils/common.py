@@ -859,6 +859,57 @@ def _influence_route_to_helpers(
         )
 
 
+def _parameter_dot(
+    params_1: Tuple[Tensor, ...], params_2: Tuple[Tensor, ...]
+) -> Tensor:
+    """
+    returns the dot-product of 2 tensors, represented as tuple of tensors.
+    """
+    return torch.tensor(
+        sum(
+            torch.sum(param_1 * param_2)
+            for (param_1, param_2) in zip(params_1, params_2)
+        )
+    )
+
+
+def _parameter_add(
+    params_1: Tuple[Tensor, ...], params_2: Tuple[Tensor, ...]
+) -> Tuple[Tensor, ...]:
+    """
+    returns the sum of 2 tensors, represented as tuple of tensors.
+    """
+    return tuple(param_1 + param_2 for (param_1, param_2) in zip(params_1, params_2))
+
+
+def _parameter_multiply(params: Tuple[Tensor, ...], c: Tensor) -> Tuple[Tensor, ...]:
+    """
+    multiplies all tensors in a tuple of tensors by a given scalar
+    """
+    return tuple(param * c for param in params)
+
+
+def _parameter_to(params: Tuple[Tensor, ...], **to_kwargs) -> Tuple[Tensor, ...]:
+    """
+    applies the `to` method to all tensors in a tuple of tensors
+    """
+    return tuple(param.to(**to_kwargs) for param in params)
+
+
+def _parameter_linear_combination(
+    paramss: List[Tuple[Tensor, ...]], cs: Tensor
+) -> Tuple[Tensor, ...]:
+    """
+    scales each parameter (tensor of tuples) in a list by the corresponding scalar in a
+    1D tensor of the same length, and sums up the scaled parameters
+    """
+    assert len(cs.shape) == 1
+    result = _parameter_multiply(paramss[0], cs[0])
+    for (params, c) in zip(paramss[1:], cs[1:]):
+        result = _parameter_add(result, _parameter_multiply(params, c))
+    return result
+
+
 def _compute_jacobian_sample_wise_grads_per_batch(
     influence_inst: Union["TracInCP", "InfluenceFunctionBase"],
     inputs: Tuple[Any, ...],
@@ -1015,7 +1066,9 @@ def _functional_call(model, d, features):
 def _dataset_fn(dataloader, batch_fn, reduce_fn, *batch_fn_args, **batch_fn_kwargs):
     """
     Applies `batch_fn` to each batch in `dataloader`, reducing the results using
-    `reduce_fn`.  This is useful for computing Hessians over an entire dataloader.
+    `reduce_fn`.  This is useful for computing Hessians and Hessian-vector
+    products over an entire dataloader, and is used by both `NaiveInfluenceFunction`
+    and `ArnoldiInfluenceFunction`.
     """
     _dataloader = iter(dataloader)
 

@@ -4,6 +4,7 @@ from typing import Callable
 import torch
 
 import torch.nn as nn
+from captum.influence._core.arnoldi_influence_function import ArnoldiInfluenceFunction
 from captum.influence._core.influence_function import NaiveInfluenceFunction
 from captum.influence._core.tracincp import TracInCP
 from captum.influence._core.tracincp_fast_rand_proj import (
@@ -29,6 +30,7 @@ class TestTracInIntermediateQuantities(BaseTest):
             for (reduction, constructor) in [
                 ("none", DataInfluenceConstructor(TracInCP)),
                 ("none", DataInfluenceConstructor(NaiveInfluenceFunction)),
+                ("none", DataInfluenceConstructor(ArnoldiInfluenceFunction)),
             ]
         ],
         name_func=build_test_name_func(),

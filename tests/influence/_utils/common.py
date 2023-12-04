@@ -10,6 +10,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from captum._utils.common import _parse_version
 from captum.influence import DataInfluence
+from captum.influence._core.arnoldi_influence_function import ArnoldiInfluenceFunction
 from captum.influence._core.influence_function import NaiveInfluenceFunction
 from captum.influence._core.tracincp_fast_rand_proj import (
     TracInCPFast,
@@ -379,6 +380,46 @@ def get_random_model_and_data(
         )
         torch.save(net_adjusted.state_dict(), os.path.join(tmpdir, checkpoint_name))
 
+    elif model_type == "trained_NN":
+        net = (
+            BasicLinearNet(in_features, hidden_nodes, out_features)
+            if not unpack_inputs
+            else MultLinearNet(in_features, hidden_nodes, out_features, num_inputs)
+        ).double()
+
+        net_adjusted = (
+            _wrap_model_in_dataparallel(net)
+            if use_gpu == "cuda_data_parallel"
+            else (net.to(device="cuda") if use_gpu == "cuda" else net)
+        )
+
+        # train model using several optimization steps on Hessian data
+
+        # create entire Hessian data as a batch
+        hessian_dataset = (
+            ExplicitDataset(hessian_samples, hessian_labels, use_gpu)
+            if not unpack_inputs
+            else UnpackDataset(hessian_samples, hessian_labels, use_gpu)
+        )
+        batch = next(iter(DataLoader(hessian_dataset, batch_size=num_hessian)))
+
+        optimizer = torch.optim.Adam(net.parameters())
+        num_steps = 200
+        criterion = nn.MSELoss(reduction="sum")
+        for _ in range(num_steps):
+            optimizer.zero_grad()
+            output = net_adjusted(*batch[:-1])
+            loss = criterion(output, batch[-1])
+            loss.backward()
+            optimizer.step()
+
+        # save that trained parameter as a checkpoint
+        checkpoint_name = "checkpoint-final.pt"
+        net_adjusted = (
+            _wrap_model_in_dataparallel(net) if use_gpu == "cuda_data_parallel" else net
+        )
+        torch.save(net_adjusted.state_dict(), os.path.join(tmpdir, checkpoint_name))
+
     training_data = (
         net_adjusted,
         dataset,
@@ -413,26 +454,48 @@ def get_random_model_and_data(
             return (*training_data, *hessian_data)
 
 
-def generate_symmetric_matrix_given_eigenvalues(eigenvalues: List[float]):
+def generate_symmetric_matrix_given_eigenvalues(
+    eigenvalues: Union[Tensor, List[float]]
+):
     """
-    following https://github.com/google-research/jax-influence/blob/74bd321156b5445bb35b9594568e4eaaec1a76a3/jax_influence/test_utils.py#L123 # noqa: E501
-    generate symmetric random matrix with specified eigenvalues
+    following https://github.com/google-research/jax-influence/blob/74bd321156b5445bb35b9594568e4eaaec1a76a3/jax_influence/test_utils.py#L123  # noqa: E501
+    generate symmetric random matrix with specified eigenvalues.  this is used in
+    `TestArnoldiInfluence._test_parameter_arnoldi_and_distill` either to check that
+    `_parameter_arnoldi` does return the top eigenvalues of a symmetric random matrix,
+    or that `_parameter_distill` does return the eigenvectors corresponding to the top
+    eigenvalues of that symmetric random matrix.
     """
     # generate random matrix, then apply gram-schmidt to get random orthonormal basis
     D = len(eigenvalues)
-    Q, _ = torch.linalg.qr(torch.randn((D, D)))
+    version = _parse_version(torch.__version__)
+    if version < (1, 8):
+        Q, _ = torch.qr(torch.randn((D, D)))
+    else:
+        Q, _ = torch.linalg.qr(torch.randn((D, D)))
     return torch.matmul(Q, torch.matmul(torch.diag(torch.tensor(eigenvalues)), Q.T))
 
 
-def generate_assymetric_matrix_given_eigenvalues(eigenvalues: List[float]):
+def generate_assymetric_matrix_given_eigenvalues(
+    eigenvalues: Union[Tensor, List[float]]
+):
     """
     following https://github.com/google-research/jax-influence/blob/74bd321156b5445bb35b9594568e4eaaec1a76a3/jax_influence/test_utils.py#L105 # noqa: E501
-    generate assymetric random matrix with specified eigenvalues
+    generate assymetric random matrix with specified eigenvalues. this is used in
+    `TestArnoldiInfluence._test_parameter_arnoldi_and_distill` either to check that
+    `_parameter_arnoldi` does return the top eigenvalues of a assymmetric random
+    matrix, or that `_parameter_distill` does return the eigenvectors corresponding to
+    the top eigenvalues of that assymmetric random matrix.
     """
     # the matrix M, given eigenvectors Q and eigenvalues L, should satisfy MQ = QL
     # or equivalently, Q'M' = LQ'.
     D = len(eigenvalues)
     Q_T = torch.randn((D, D))
+    version = _parse_version(torch.__version__)
+    if version < (1, 8):
+        X, _ = torch.solve(
+            Q_T, torch.matmul(torch.diag(torch.tensor(eigenvalues)), Q_T)
+        )
+        return X.T
     return torch.linalg.solve(
         Q_T, torch.matmul(torch.diag(torch.tensor(eigenvalues)), Q_T)
     ).T
@@ -495,6 +558,7 @@ class DataInfluenceConstructor:
             )
         elif self.data_influence_class in [
             NaiveInfluenceFunction,
+            ArnoldiInfluenceFunction,
         ]:
             # for these implementations, only a single checkpoint is needed, not
             # a directory containing several checkpoints. therefore, given
