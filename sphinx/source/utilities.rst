@@ -1,6 +1,18 @@
 Utilities
 ==========
 
+Interpretable Inpit
+^^^^^^^^^^^^^^
+.. autoclass:: captum.attr.InterpretableInput
+    :members:
+
+.. autoclass:: captum.attr.TextTemplateInput
+    :members:
+
+.. autoclass:: captum.attr.TextTokenInput
+    :members:
+
+
 Visualization
 ^^^^^^^^^^^^^^
 
