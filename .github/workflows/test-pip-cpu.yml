@@ -16,7 +16,7 @@ jobs:
         docker_img: ["cimg/python:3.6", "cimg/python:3.7"]
         include:
           - pytorch_args: " -v 2.0"
-            docker_img: "cimg/pytorch:3.8"
+            docker_img: "cimg/python:3.8"
         exclude:
           - pytorch_args: "-v 1.11"
             docker_img: "cimg/python:3.6"
