@@ -60,3 +60,9 @@ Linear Models
     :members:
 .. autoclass:: captum._utils.models.linear_model.SGDRidge
     :members:
+
+Baselines
+^^^^^^^^^^^^^^^^
+
+.. autoclass:: captum._utils.baselines.ProductBaselines
+    :members:
