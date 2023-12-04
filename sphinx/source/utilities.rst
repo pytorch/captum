@@ -64,5 +64,5 @@ Linear Models
 Baselines
 ^^^^^^^^^^^^^^^^
 
-.. autoclass:: captum._utils.baselines.ProductBaselines
+.. autoclass:: captum.attr.ProductBaselines
     :members:
