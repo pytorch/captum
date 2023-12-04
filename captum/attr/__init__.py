@@ -71,7 +71,7 @@ from captum.attr._utils.attribution import (  # noqa  # noqa  # noqa  # noqa  # 
     NeuronAttribution,
     PerturbationAttribution,
 )
-from captum.attr._utils.baselines import ProductBaselines # noqa
+from captum.attr._utils.baselines import ProductBaselines  # noqa
 from captum.attr._utils.class_summarizer import ClassSummarizer
 from captum.attr._utils.interpretable_input import (  # noqa
     InterpretableInput,
