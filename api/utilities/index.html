@@ -31,6 +31,296 @@ src="/_sphinx/documentation_options.js"></script>
 <div class="body" role="main">
 <section id="utilities">
 <h1>Utilities<a class="headerlink" href="#utilities" title="Link to this heading">¶</a></h1>
+<section id="interpretable-input">
+<h2>Interpretable Input<a class="headerlink" href="#interpretable-input" title="Link to this heading">¶</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="captum.attr.InterpretableInput">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">captum.attr.</span></span><span class="sig-name descname"><span class="pre">InterpretableInput</span></span><a class="reference internal" href="_modules/captum/attr/_utils/interpretable_input.html#InterpretableInput"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum.attr.InterpretableInput" title="Link to this definition">¶</a></dt>
+<dd><p>InterpretableInput is an adapter for different kinds of model inputs to
+work in Captum’s attribution methods. Generally, attribution methods of Captum
+assume the inputs are numerical PyTorch tensors whose 1st dimension must be batch
+size and each index in the rest of dimensions is an interpretable feature. But this
+is not always true in practice. First, the model may take inputs of formats other
+than tensor that also require attributions. For example, a model with encapsulated
+tokenizer can directly take string as input. Second, what is considered as
+an interpretable feature always depends on the actual application and the user’s
+desire. For example, the interpretable feature of an image tensor can either be
+each pixel or some segments. For text, users may see the entire string as one
+interpretable feature or view each word as one interpretable feature. This class
+provides a place to define what is the actual model input and the corresponding
+interpretable format for attribution, and the transformation between them.
+It serves as a common interface to be used inthe attribution methods to make
+Captum understand how to perturb various inputs.</p>
+<p>The concept Interpretable Input mainly comes from the following two papers:</p>
+<p><a class="reference external" href="https://arxiv.org/abs/1602.04938">“Why Should I Trust You?”: Explaining the Predictions of Any Classifier</a></p>
+<p><a class="reference external" href="https://arxiv.org/abs/1705.07874">A Unified Approach to Interpreting Model Predictions</a></p>
+<p>which is also referred to as interpretable representation or simplified
+input. It can be represented as a mapping function:</p>
+<div class="math">
+\[x = h_x(x')
+
+\]</div>
+<p>where <span class="math">\(x\)</span> is the model input, which can be anything that the model consumes;
+<span class="math">\(x'\)</span> is the interpretable input used in the attribution algorithms
+(it must be a PyTorch tensor in Captum), which is often
+binary indicating the “presence” or “absence”; <span class="math">\(h_x\)</span> is the
+transformer. It is supposed to work with perturbation-based attribution methods,
+but if <span class="math">\(h_x\)</span> is differentiable, it may also be used
+in gradient-based methods.</p>
+<p>InterpretableInput is the abstract class defining the interface. Captum provides
+the child implementations for some common input formats,
+like text and sparse features. Users can inherit this
+class to create other types of customized input.</p>
+<p>(We expect to support InterpretableInput in all attribution methods, but it
+is only allowed in certain attribution classes like LLMAttribution for now.)</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="captum.attr.InterpretableInput.format_attr">
+<span class="sig-name descname"><span class="pre">format_attr</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">itp_attr</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_utils/interpretable_input.html#InterpretableInput.format_attr"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum.attr.InterpretableInput.format_attr" title="Link to this definition">¶</a></dt>
+<dd><p>Format the attribution of the interpretable feature if needed.
+The way of formatting depends on the specific interpretable input type.
+A common use is if the interpretable features are the mask groups of the raw
+input elements, the attribution of the interpretable features can be scattered
+back to the model input shape.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>itp_attr</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v2.1)"><em>Tensor</em></a>) – attributions of the interpretable features</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>formatted attribution</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>attr (Tensor)</p>
+</dd>
+</dl>
+</dd></dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="captum.attr.InterpretableInput.to_model_input">
+<span class="sig-name descname"><span class="pre">to_model_input</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">itp_tensor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_utils/interpretable_input.html#InterpretableInput.to_model_input"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum.attr.InterpretableInput.to_model_input" title="Link to this definition">¶</a></dt>
+<dd><p>Get the (perturbed) input in the format required by the model
+based on the given (perturbed) interpretable representation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>itp_tensor</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v2.1)"><em>Tensor</em></a><em>, </em><em>optional</em>) – tensor of the interpretable representation
+of this input. If it is None, assume the interpretable
+representation is pristine and return the original model input
+Default: None.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>model input passed to the forward function</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>model_input (Any)</p>
+</dd>
+</dl>
+</dd></dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="captum.attr.InterpretableInput.to_tensor">
+<span class="sig-name descname"><span class="pre">to_tensor</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_utils/interpretable_input.html#InterpretableInput.to_tensor"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum.attr.InterpretableInput.to_tensor" title="Link to this definition">¶</a></dt>
+<dd><p>Return the interpretable representation of this input as a tensor</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>interpretable tensor</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>itp_tensor (Tensor)</p>
+</dd>
+</dl>
+</dd></dl>
+</dd></dl>
+<dl class="py class">
+<dt class="sig sig-object py" id="captum.attr.TextTemplateInput">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">captum.attr.</span></span><span class="sig-name descname"><span class="pre">TextTemplateInput</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">template</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">values</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">baselines</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mask</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_utils/interpretable_input.html#TextTemplateInput"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum.attr.TextTemplateInput" title="Link to this definition">¶</a></dt>
+<dd><p>TextTemplateInput is an implementation of InterpretableInput for text inputs, whose
+interpretable features are certain segments (e.g., words, phrases) of the text.
+It takes a template string (or function) to define the feature segmentats
+of the input text. Its input format to the model will be the completed text,
+while its interpretable representation will be a binary tensor of the number of
+the segment features whose values indicates if the feature is
+“presence” or “absence”.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>template</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><em>str</em></a><em> or </em><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Callable" title="(in Python v3.12)"><em>Callable</em></a>) – template string or function that takes
+the text segments and format them into the text input for the model</p></li>
+<li><p><strong>values</strong> (<em>List</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><em>str</em></a><em>] or </em><em>Dict</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><em>str</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><em>str</em></a><em>]</em>) – the values of the segments. it is
+the input to the template.</p></li>
+<li><p><strong>baselines</strong> (<em>List</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><em>str</em></a><em>] or </em><em>Dict</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><em>str</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><em>str</em></a><em>] or </em><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Callable" title="(in Python v3.12)"><em>Callable</em></a><em> or </em><em>None</em><em>, </em><em>optional</em>) – the
+baseline values for the segment features. If it is None, emptry string
+will be used as the baseline.
+Default: None</p></li>
+<li><p><strong>mask</strong> (<em>List</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><em>int</em></a><em>] or </em><em>Dict</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><em>str</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><em>int</em></a><em>] or </em><em>None</em><em>, </em><em>optional</em>) – the mask to group the
+segment features. It must be in the same format as the values
+and assign each segment a mask index. Segments with the same
+index will be seen as a single interpretable feature, which means
+they must be perturbed together and end with same attributions.
+Default: None</p></li>
+</ul>
+</dd>
+</dl>
+<p>Examples:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">text_inp</span> <span class="o">=</span> <span class="n">TextTemplateInput</span><span class="p">(</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="n">template</span><span class="o">=</span><span class="s2">"</span><span class="si">{}</span><span class="s2"> feels </span><span class="si">{}</span><span class="s2"> right now"</span><span class="p">,</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="n">values</span><span class="o">=</span><span class="p">[</span><span class="s2">"He"</span><span class="p">,</span> <span class="s2">"depressed"</span><span class="p">],</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="n">baselines</span><span class="o">=</span><span class="p">[</span><span class="s2">"It"</span><span class="p">,</span> <span class="s2">"neutral"</span><span class="p">],</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">text_inp</span><span class="o">.</span><span class="n">to_tensor</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># torch.tensor([[1, 1]])</span>
+<span class="gp">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">text_inp</span><span class="o">.</span><span class="n">to_model_input</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">([[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]]))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># "It feels depressed right now"</span>
+</pre></div>
+</div>
+<dl class="py method">
+<dt class="sig sig-object py" id="captum.attr.TextTemplateInput.format_attr">
+<span class="sig-name descname"><span class="pre">format_attr</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">itp_attr</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_utils/interpretable_input.html#TextTemplateInput.format_attr"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum.attr.TextTemplateInput.format_attr" title="Link to this definition">¶</a></dt>
+<dd><p>Format the attribution of the interpretable feature if needed.
+The way of formatting depends on the specific interpretable input type.
+A common use is if the interpretable features are the mask groups of the raw
+input elements, the attribution of the interpretable features can be scattered
+back to the model input shape.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>itp_attr</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v2.1)"><em>Tensor</em></a>) – attributions of the interpretable features</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>formatted attribution</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>attr (Tensor)</p>
+</dd>
+</dl>
+</dd></dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="captum.attr.TextTemplateInput.to_model_input">
+<span class="sig-name descname"><span class="pre">to_model_input</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">perturbed_tensor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_utils/interpretable_input.html#TextTemplateInput.to_model_input"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum.attr.TextTemplateInput.to_model_input" title="Link to this definition">¶</a></dt>
+<dd><p>Get the (perturbed) input in the format required by the model
+based on the given (perturbed) interpretable representation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>itp_tensor</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v2.1)"><em>Tensor</em></a><em>, </em><em>optional</em>) – tensor of the interpretable representation
+of this input. If it is None, assume the interpretable
+representation is pristine and return the original model input
+Default: None.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>model input passed to the forward function</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>model_input (Any)</p>
+</dd>
+</dl>
+</dd></dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="captum.attr.TextTemplateInput.to_tensor">
+<span class="sig-name descname"><span class="pre">to_tensor</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_utils/interpretable_input.html#TextTemplateInput.to_tensor"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum.attr.TextTemplateInput.to_tensor" title="Link to this definition">¶</a></dt>
+<dd><p>Return the interpretable representation of this input as a tensor</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>interpretable tensor</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>itp_tensor (Tensor)</p>
+</dd>
+</dl>
+</dd></dl>
+</dd></dl>
+<dl class="py class">
+<dt class="sig sig-object py" id="captum.attr.TextTokenInput">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">captum.attr.</span></span><span class="sig-name descname"><span class="pre">TextTokenInput</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">text</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tokenizer</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">baselines</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">skip_tokens</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_utils/interpretable_input.html#TextTokenInput"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum.attr.TextTokenInput" title="Link to this definition">¶</a></dt>
+<dd><p>TextTokenInput is an implementation of InterpretableInput for text inputs, whose
+interpretable features are the tokens of the text with respect to a given tokenizer.
+It is initiated with the string form of the input text and the corresponding
+tokenizer. Its input format to the model will be the tokenized id tensor,
+while its interpretable representation will be a binary tensor of the tokens
+whose values indicates if the token is “presence” or “absence”.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>text</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><em>str</em></a>) – text string for the model</p></li>
+<li><p><strong>tokenizer</strong> (<em>Tokenizer</em>) – tokenizer of the language model</p></li>
+<li><p><strong>baselines</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><em>int</em></a><em> or </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><em>str</em></a><em>, </em><em>optional</em>) – the
+baseline value for the tokens. It can be a string of the baseline token
+or an integer of the baseline token id. Common choices include unknown
+token or padding token. The default value is 0, which
+is commonly used for unknown token.
+Default: 0</p></li>
+<li><p><strong>skip_tokens</strong> (<em>List</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><em>int</em></a><em>] or </em><em>List</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><em>str</em></a><em>]</em><em>, </em><em>optional</em>) – the tokens to skip in the
+the input’s interpretable representation. Use this argument to define
+uninterested tokens, commonly like special tokens, e.g., sos, and unk.
+It can be a list of strings of the tokens or a list of integers of the
+token ids.
+Default: None</p></li>
+</ul>
+</dd>
+</dl>
+<p>Examples:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">text_inp</span> <span class="o">=</span> <span class="n">TextTokenInput</span><span class="p">(</span><span class="s2">"This is a test."</span><span class="p">,</span> <span class="n">tokenizer</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">text_inp</span><span class="o">.</span><span class="n">to_tensor</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># the shape dependens on the tokenizer</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># assuming it is broken into ["&lt;s&gt;", "This", "is", "a", "test", "."],</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># torch.tensor([[1, 6]])</span>
+<span class="gp">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">text_inp</span><span class="o">.</span><span class="n">to_model_input</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">([[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]]))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># torch.tensor([[1, 6]])</span>
+</pre></div>
+</div>
+<dl class="py method">
+<dt class="sig sig-object py" id="captum.attr.TextTokenInput.format_attr">
+<span class="sig-name descname"><span class="pre">format_attr</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">itp_attr</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_utils/interpretable_input.html#TextTokenInput.format_attr"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum.attr.TextTokenInput.format_attr" title="Link to this definition">¶</a></dt>
+<dd><p>Format the attribution of the interpretable feature if needed.
+The way of formatting depends on the specific interpretable input type.
+A common use is if the interpretable features are the mask groups of the raw
+input elements, the attribution of the interpretable features can be scattered
+back to the model input shape.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>itp_attr</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v2.1)"><em>Tensor</em></a>) – attributions of the interpretable features</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>formatted attribution</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>attr (Tensor)</p>
+</dd>
+</dl>
+</dd></dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="captum.attr.TextTokenInput.to_model_input">
+<span class="sig-name descname"><span class="pre">to_model_input</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">perturbed_tensor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_utils/interpretable_input.html#TextTokenInput.to_model_input"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum.attr.TextTokenInput.to_model_input" title="Link to this definition">¶</a></dt>
+<dd><p>Get the (perturbed) input in the format required by the model
+based on the given (perturbed) interpretable representation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>itp_tensor</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v2.1)"><em>Tensor</em></a><em>, </em><em>optional</em>) – tensor of the interpretable representation
+of this input. If it is None, assume the interpretable
+representation is pristine and return the original model input
+Default: None.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>model input passed to the forward function</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>model_input (Any)</p>
+</dd>
+</dl>
+</dd></dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="captum.attr.TextTokenInput.to_tensor">
+<span class="sig-name descname"><span class="pre">to_tensor</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_utils/interpretable_input.html#TextTokenInput.to_tensor"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum.attr.TextTokenInput.to_tensor" title="Link to this definition">¶</a></dt>
+<dd><p>Return the interpretable representation of this input as a tensor</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>interpretable tensor</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>itp_tensor (Tensor)</p>
+</dd>
+</dl>
+</dd></dl>
+</dd></dl>
+</section>
 <section id="visualization">
 <h2>Visualization<a class="headerlink" href="#visualization" title="Link to this heading">¶</a></h2>
 <dl class="py function">
@@ -769,6 +1059,26 @@ L2 regularization.</p>
 </dd></dl>
 </dd></dl>
 </section>
+<section id="baselines">
+<h2>Baselines<a class="headerlink" href="#baselines" title="Link to this heading">¶</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="captum.attr.ProductBaselines">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">captum.attr.</span></span><span class="sig-name descname"><span class="pre">ProductBaselines</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">baseline_values</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_utils/baselines.html#ProductBaselines"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum.attr.ProductBaselines" title="Link to this definition">¶</a></dt>
+<dd><p>A Callable Baselines class that returns a sample from the Cartesian product of
+the inputs’ available baselines.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>baseline_values</strong> (<em>List</em><em> or </em><em>Dict</em>) – A list or dict of lists containing
+the possible values for each feature. If a dict is provided, the keys
+can a string of the feature name and the values is a list of available
+baselines. The keys can also be a tuple of strings to group
+multiple features whose baselines are not independent to each other.
+If the key is a tuple, the value must be a list of tuples of
+the corresponding values.</p>
+</dd>
+</dl>
+</dd></dl>
+</section>
 </section>
 </div>
 </div>
@@ -780,6 +1090,7 @@ L2 regularization.</p>
 <p class="caption" role="heading"><span class="caption-text">API Reference</span></p>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="attribution.html">Attribution</a></li>
+<li class="toctree-l1"><a class="reference internal" href="llm_attr.html">LLM Attribution Classes</a></li>
 <li class="toctree-l1"><a class="reference internal" href="noise_tunnel.html">NoiseTunnel</a></li>
 <li class="toctree-l1"><a class="reference internal" href="layer.html">Layer Attribution</a></li>
 <li class="toctree-l1"><a class="reference internal" href="neuron.html">Neuron Attribution</a></li>
@@ -789,10 +1100,12 @@ L2 regularization.</p>
 <li class="toctree-l1"><a class="reference internal" href="influence.html">Influential Examples</a></li>
 <li class="toctree-l1"><a class="reference internal" href="module.html">Module</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Utilities</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#interpretable-input">Interpretable Input</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#visualization">Visualization</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#interpretable-embeddings">Interpretable Embeddings</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#token-reference-base">Token Reference Base</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#linear-models">Linear Models</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#baselines">Baselines</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="base_classes.html">Base Classes</a></li>

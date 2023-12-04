@@ -113,6 +113,10 @@ src="/_sphinx/documentation_options.js"></script>
 </li>
 <li><a href="lime.html#captum.attr.LimeBase.attribute">(captum.attr.LimeBase method)</a>
 </li>
+<li><a href="llm_attr.html#captum.attr.LLMAttribution.attribute">(captum.attr.LLMAttribution method)</a>
+</li>
+<li><a href="llm_attr.html#captum.attr.LLMGradientAttribution.attribute">(captum.attr.LLMGradientAttribution method)</a>
+</li>
 <li><a href="lrp.html#captum.attr.LRP.attribute">(captum.attr.LRP method)</a>
 </li>
 <li><a href="neuron.html#captum.attr.NeuronConductance.attribute">(captum.attr.NeuronConductance method)</a>
@@ -252,6 +256,13 @@ src="/_sphinx/documentation_options.js"></script>
 </ul></li>
 </ul></td>
 <td style="width: 33%; vertical-align: top;"><ul>
+<li><a href="utilities.html#captum.attr.InterpretableInput.format_attr">format_attr() (captum.attr.InterpretableInput method)</a>
+<ul>
+<li><a href="utilities.html#captum.attr.TextTemplateInput.format_attr">(captum.attr.TextTemplateInput method)</a>
+</li>
+<li><a href="utilities.html#captum.attr.TextTokenInput.format_attr">(captum.attr.TextTokenInput method)</a>
+</li>
+</ul></li>
 <li><a href="utilities.html#captum.attr.InterpretableEmbeddingBase.forward">forward() (captum.attr.InterpretableEmbeddingBase method)</a>
 <ul>
 <li><a href="binary_concrete_stg.html#captum.module.BinaryConcreteStochasticGates.forward">(captum.module.BinaryConcreteStochasticGates method)</a>
@@ -369,6 +380,8 @@ src="/_sphinx/documentation_options.js"></script>
 </li>
 <li><a href="utilities.html#captum.attr.InterpretableEmbeddingBase">InterpretableEmbeddingBase (class in captum.attr)</a>
 </li>
+<li><a href="utilities.html#captum.attr.InterpretableInput">InterpretableInput (class in captum.attr)</a>
+</li>
 </ul></td>
 </tr></table>
 <h2 id="K">K</h2>
@@ -399,12 +412,12 @@ src="/_sphinx/documentation_options.js"></script>
 </li>
 <li><a href="layer.html#captum.attr.LayerGradCam">LayerGradCam (class in captum.attr)</a>
 </li>
-</ul></td>
-<td style="width: 33%; vertical-align: top;"><ul>
 <li><a href="layer.html#captum.attr.LayerGradientShap">LayerGradientShap (class in captum.attr)</a>
 </li>
 <li><a href="layer.html#captum.attr.LayerGradientXActivation">LayerGradientXActivation (class in captum.attr)</a>
 </li>
+</ul></td>
+<td style="width: 33%; vertical-align: top;"><ul>
 <li><a href="layer.html#captum.attr.LayerIntegratedGradients">LayerIntegratedGradients (class in captum.attr)</a>
 </li>
 <li><a href="layer.html#captum.attr.LayerLRP">LayerLRP (class in captum.attr)</a>
@@ -412,6 +425,12 @@ src="/_sphinx/documentation_options.js"></script>
 <li><a href="lime.html#captum.attr.Lime">Lime (class in captum.attr)</a>
 </li>
 <li><a href="lime.html#captum.attr.LimeBase">LimeBase (class in captum.attr)</a>
+</li>
+<li><a href="llm_attr.html#captum.attr.LLMAttribution">LLMAttribution (class in captum.attr)</a>
+</li>
+<li><a href="llm_attr.html#captum.attr.LLMAttributionResult">LLMAttributionResult (class in captum.attr)</a>
+</li>
+<li><a href="llm_attr.html#captum.attr.LLMGradientAttribution">LLMGradientAttribution (class in captum.attr)</a>
 </li>
 <li><a href="concept.html#captum.concept.TCAV.load_cavs">load_cavs() (captum.concept.TCAV method)</a>
 </li>
@@ -474,11 +493,17 @@ src="/_sphinx/documentation_options.js"></script>
 <li><a href="robust.html#captum.robust.PGD.perturb">(captum.robust.PGD method)</a>
 </li>
 </ul></li>
-</ul></td>
-<td style="width: 33%; vertical-align: top;"><ul>
 <li><a href="base_classes.html#captum.attr.PerturbationAttribution">PerturbationAttribution (class in captum.attr)</a>
 </li>
+</ul></td>
+<td style="width: 33%; vertical-align: top;"><ul>
 <li><a href="robust.html#captum.robust.PGD">PGD (class in captum.robust)</a>
+</li>
+<li><a href="llm_attr.html#captum.attr.LLMAttributionResult.plot_seq_attr">plot_seq_attr() (captum.attr.LLMAttributionResult method)</a>
+</li>
+<li><a href="llm_attr.html#captum.attr.LLMAttributionResult.plot_token_attr">plot_token_attr() (captum.attr.LLMAttributionResult method)</a>
+</li>
+<li><a href="utilities.html#captum.attr.ProductBaselines">ProductBaselines (class in captum.attr)</a>
 </li>
 </ul></td>
 </tr></table>
@@ -546,10 +571,28 @@ src="/_sphinx/documentation_options.js"></script>
 </li>
 <li><a href="insights.html#captum.insights.features.TextFeature">TextFeature (class in captum.insights.features)</a>
 </li>
-<li><a href="utilities.html#captum.attr.TokenReferenceBase">TokenReferenceBase (class in captum.attr)</a>
+<li><a href="utilities.html#captum.attr.TextTemplateInput">TextTemplateInput (class in captum.attr)</a>
 </li>
+<li><a href="utilities.html#captum.attr.TextTokenInput">TextTokenInput (class in captum.attr)</a>
+</li>
+<li><a href="utilities.html#captum.attr.InterpretableInput.to_model_input">to_model_input() (captum.attr.InterpretableInput method)</a>
+<ul>
+<li><a href="utilities.html#captum.attr.TextTemplateInput.to_model_input">(captum.attr.TextTemplateInput method)</a>
+</li>
+<li><a href="utilities.html#captum.attr.TextTokenInput.to_model_input">(captum.attr.TextTokenInput method)</a>
+</li>
+</ul></li>
 </ul></td>
 <td style="width: 33%; vertical-align: top;"><ul>
+<li><a href="utilities.html#captum.attr.InterpretableInput.to_tensor">to_tensor() (captum.attr.InterpretableInput method)</a>
+<ul>
+<li><a href="utilities.html#captum.attr.TextTemplateInput.to_tensor">(captum.attr.TextTemplateInput method)</a>
+</li>
+<li><a href="utilities.html#captum.attr.TextTokenInput.to_tensor">(captum.attr.TextTokenInput method)</a>
+</li>
+</ul></li>
+<li><a href="utilities.html#captum.attr.TokenReferenceBase">TokenReferenceBase (class in captum.attr)</a>
+</li>
 <li><a href="influence.html#captum.influence.TracInCP">TracInCP (class in captum.influence)</a>
 </li>
 <li><a href="influence.html#captum.influence.TracInCPBase">TracInCPBase (class in captum.influence)</a>
@@ -599,6 +642,7 @@ src="/_sphinx/documentation_options.js"></script>
 <p class="caption" role="heading"><span class="caption-text">API Reference</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="attribution.html">Attribution</a></li>
+<li class="toctree-l1"><a class="reference internal" href="llm_attr.html">LLM Attribution Classes</a></li>
 <li class="toctree-l1"><a class="reference internal" href="noise_tunnel.html">NoiseTunnel</a></li>
 <li class="toctree-l1"><a class="reference internal" href="layer.html">Layer Attribution</a></li>
 <li class="toctree-l1"><a class="reference internal" href="neuron.html">Neuron Attribution</a></li>

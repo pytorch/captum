@@ -1,0 +1,710 @@
+<!DOCTYPE html><html lang="en"><head><meta charSet="utf-8"/><meta http-equiv="X-UA-Compatible" content="IE=edge"/><title>Captum · Model Interpretability for PyTorch</title><meta name="viewport" content="width=device-width"/><meta name="generator" content="Docusaurus"/><meta name="description" content="Model Interpretability for PyTorch"/><meta name="docsearch:language" content="en"/><meta property="og:title" content="Captum · Model Interpretability for PyTorch"/><meta property="og:type" content="website"/><meta property="og:url" content="https://captum.ai/"/><meta property="og:description" content="Model Interpretability for PyTorch"/><meta property="og:image" content="https://captum.ai/img/captum-icon.png"/><meta name="twitter:card" content="summary"/><meta name="twitter:image" content="https://captum.ai/img/captum.png"/><link rel="shortcut icon" href="/img/captum.ico"/><link rel="stylesheet" href="https://cdn.jsdelivr.net/docsearch.js/1/docsearch.min.css"/><link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/default.min.css"/><script>
+              (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+              (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+              m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+              })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+              ga('create', 'UA-44373548-48', 'auto');
+              ga('send', 'pageview');
+            </script><script type="text/javascript" src="https://buttons.github.io/buttons.js"></script><script type="text/javascript" src="/js/code_block_buttons.js"></script><script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.0/clipboard.min.js"></script><script src="https://unpkg.com/vanilla-back-to-top@7.1.14/dist/vanilla-back-to-top.min.js"></script><script>
+        document.addEventListener('DOMContentLoaded', function() {
+          addBackToTop(
+            {"zIndex":100}
+          )
+        });
+        </script><script src="/js/scrollSpy.js"></script><link rel="stylesheet" href="/css/main.css"/><script src="/js/codetabs.js"></script></head><body><div class="fixedHeaderContainer"><div class="headerWrapper wrapper"><header><a href="/"><img class="logo" src="/img/captum_logo.svg" alt="Captum"/></a><div class="navigationWrapper navigationSlider"><nav class="slidingNav"><ul class="nav-site nav-site-internal"><li class=""><a href="/docs/introduction" target="_self">Docs</a></li><li class=""><a href="/tutorials/" target="_self">Tutorials</a></li><li class=""><a href="/api/" target="_self">API Reference</a></li><li class=""><a href="https://github.com/pytorch/captum" target="_self">GitHub</a></li><li class="navSearchWrapper reactNavSearchWrapper"><input type="text" id="search_input_react" placeholder="Search" title="Search"/></li></ul></nav></div></header></div></div><div class="navPusher"><div>
+<script type="text/javascript" id="documentation_options" data-url_root="./"
+src="/_sphinx/documentation_options.js"></script>
+<script type="text/javascript" src="/_sphinx/jquery.js"></script>
+<script type="text/javascript" src="/_sphinx/underscore.js"></script>
+<script type="text/javascript" src="/_sphinx/doctools.js"></script>
+<script type="text/javascript" src="/_sphinx/language_data.js"></script>
+<script type="text/javascript" src="/_sphinx/searchtools.js"></script>
+
+<script src="https://cdn.jsdelivr.net/npm/katex@0.13.11/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.13.11/dist/contrib/auto-render.min.js"></script>
+<script src="/_sphinx/katex_autorenderer.js"></script>
+<link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/katex@0.13.11/dist/katex.min.css" />
+<div class="sphinx wrapper"><div class="document">
+<div class="documentwrapper">
+<div class="bodywrapper">
+<div class="body" role="main">
+<h1>Source code for captum.attr._core.llm_attr</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">copy</span> <span class="kn">import</span> <span class="n">copy</span>
+
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">cast</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Union</span>
+
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<span class="kn">import</span> <span class="nn">torch</span>
+<span class="kn">from</span> <span class="nn">captum.attr._core.feature_ablation</span> <span class="kn">import</span> <span class="n">FeatureAblation</span>
+<span class="kn">from</span> <span class="nn">captum.attr._core.kernel_shap</span> <span class="kn">import</span> <span class="n">KernelShap</span>
+<span class="kn">from</span> <span class="nn">captum.attr._core.layer.layer_integrated_gradients</span> <span class="kn">import</span> <span class="n">LayerIntegratedGradients</span>
+<span class="kn">from</span> <span class="nn">captum.attr._core.lime</span> <span class="kn">import</span> <span class="n">Lime</span>
+<span class="kn">from</span> <span class="nn">captum.attr._core.shapley_value</span> <span class="kn">import</span> <span class="n">ShapleyValues</span><span class="p">,</span> <span class="n">ShapleyValueSampling</span>
+<span class="kn">from</span> <span class="nn">captum.attr._utils.attribution</span> <span class="kn">import</span> <span class="n">Attribution</span>
+<span class="kn">from</span> <span class="nn">captum.attr._utils.interpretable_input</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">InterpretableInput</span><span class="p">,</span>
+    <span class="n">TextTemplateInput</span><span class="p">,</span>
+    <span class="n">TextTokenInput</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span> <span class="nn">torch</span> <span class="kn">import</span> <span class="n">nn</span><span class="p">,</span> <span class="n">Tensor</span>
+
+
+<span class="n">DEFAULT_GEN_ARGS</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"max_new_tokens"</span><span class="p">:</span> <span class="mi">25</span><span class="p">,</span> <span class="s2">"do_sample"</span><span class="p">:</span> <span class="kc">False</span><span class="p">}</span>
+
+
+<div class="viewcode-block" id="LLMAttributionResult">
+<a class="viewcode-back" href="../../../../llm_attr.html#captum.attr.LLMAttributionResult">[docs]</a>
+<span class="k">class</span> <span class="nc">LLMAttributionResult</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    Data class for the return result of LLMAttribution,</span>
+<span class="sd">    which includes the necessary properties of the attribution.</span>
+<span class="sd">    It also provides utilities to help present and plot the result in different forms.</span>
+<span class="sd">    """</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">seq_attr</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">,</span>
+        <span class="n">token_attr</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="kc">None</span><span class="p">],</span>
+        <span class="n">input_tokens</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
+        <span class="n">output_tokens</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
+    <span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">seq_attr</span> <span class="o">=</span> <span class="n">seq_attr</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">token_attr</span> <span class="o">=</span> <span class="n">token_attr</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">input_tokens</span> <span class="o">=</span> <span class="n">input_tokens</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">output_tokens</span> <span class="o">=</span> <span class="n">output_tokens</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">seq_attr_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">v</span> <span class="k">for</span> <span class="n">v</span><span class="p">,</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">seq_attr</span><span class="o">.</span><span class="n">cpu</span><span class="p">()</span><span class="o">.</span><span class="n">tolist</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">input_tokens</span><span class="p">)}</span>
+
+<div class="viewcode-block" id="LLMAttributionResult.plot_token_attr">
+<a class="viewcode-back" href="../../../../llm_attr.html#captum.attr.LLMAttributionResult.plot_token_attr">[docs]</a>
+    <span class="k">def</span> <span class="nf">plot_token_attr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">show</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        Generate a matplotlib plot for visualising the attribution</span>
+<span class="sd">        of the output tokens.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            show (bool): whether to show the plot directly or return the figure and axis</span>
+<span class="sd">                Default: False</span>
+<span class="sd">        """</span>
+
+        <span class="n">token_attr</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">token_attr</span><span class="o">.</span><span class="n">cpu</span><span class="p">()</span>
+
+        <span class="c1"># maximum absolute attribution value</span>
+        <span class="c1"># used as the boundary of normalization</span>
+        <span class="c1"># always keep 0 as the mid point to differentiate pos/neg attr</span>
+        <span class="n">max_abs_attr_val</span> <span class="o">=</span> <span class="n">token_attr</span><span class="o">.</span><span class="n">abs</span><span class="p">()</span><span class="o">.</span><span class="n">max</span><span class="p">()</span><span class="o">.</span><span class="n">item</span><span class="p">()</span>
+
+        <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">()</span>
+
+        <span class="c1"># Plot the heatmap</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">token_attr</span><span class="o">.</span><span class="n">numpy</span><span class="p">()</span>
+
+        <span class="n">fig</span><span class="o">.</span><span class="n">set_size_inches</span><span class="p">(</span>
+            <span class="nb">max</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="mf">1.3</span><span class="p">,</span> <span class="mf">6.4</span><span class="p">),</span> <span class="nb">max</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">/</span> <span class="mf">2.5</span><span class="p">,</span> <span class="mf">4.8</span><span class="p">)</span>
+        <span class="p">)</span>
+        <span class="n">im</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span>
+            <span class="n">data</span><span class="p">,</span>
+            <span class="n">vmax</span><span class="o">=</span><span class="n">max_abs_attr_val</span><span class="p">,</span>
+            <span class="n">vmin</span><span class="o">=-</span><span class="n">max_abs_attr_val</span><span class="p">,</span>
+            <span class="n">cmap</span><span class="o">=</span><span class="s2">"RdYlGn"</span><span class="p">,</span>
+            <span class="n">aspect</span><span class="o">=</span><span class="s2">"auto"</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="c1"># Create colorbar</span>
+        <span class="n">cbar</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">figure</span><span class="o">.</span><span class="n">colorbar</span><span class="p">(</span><span class="n">im</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">)</span>
+        <span class="n">cbar</span><span class="o">.</span><span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">"Token Attribuiton"</span><span class="p">,</span> <span class="n">rotation</span><span class="o">=-</span><span class="mi">90</span><span class="p">,</span> <span class="n">va</span><span class="o">=</span><span class="s2">"bottom"</span><span class="p">)</span>
+
+        <span class="c1"># Show all ticks and label them with the respective list entries.</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_xticks</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span> <span class="n">labels</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">input_tokens</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_yticks</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="n">labels</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">output_tokens</span><span class="p">)</span>
+
+        <span class="c1"># Let the horizontal axes labeling appear on top.</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">tick_params</span><span class="p">(</span><span class="n">top</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">bottom</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">labeltop</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">labelbottom</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+        <span class="c1"># Rotate the tick labels and set their alignment.</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">setp</span><span class="p">(</span><span class="n">ax</span><span class="o">.</span><span class="n">get_xticklabels</span><span class="p">(),</span> <span class="n">rotation</span><span class="o">=-</span><span class="mi">30</span><span class="p">,</span> <span class="n">ha</span><span class="o">=</span><span class="s2">"right"</span><span class="p">,</span> <span class="n">rotation_mode</span><span class="o">=</span><span class="s2">"anchor"</span><span class="p">)</span>
+
+        <span class="c1"># Loop over the data and create a `Text` for each "pixel".</span>
+        <span class="c1"># Change the text's color depending on the data.</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
+            <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]):</span>
+                <span class="n">val</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">]</span>
+                <span class="n">color</span> <span class="o">=</span> <span class="s2">"black"</span> <span class="k">if</span> <span class="mf">0.2</span> <span class="o">&lt;</span> <span class="n">im</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">val</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mf">0.8</span> <span class="k">else</span> <span class="s2">"white"</span>
+                <span class="n">im</span><span class="o">.</span><span class="n">axes</span><span class="o">.</span><span class="n">text</span><span class="p">(</span>
+                    <span class="n">j</span><span class="p">,</span>
+                    <span class="n">i</span><span class="p">,</span>
+                    <span class="s2">"</span><span class="si">%.4f</span><span class="s2">"</span> <span class="o">%</span> <span class="n">val</span><span class="p">,</span>
+                    <span class="n">horizontalalignment</span><span class="o">=</span><span class="s2">"center"</span><span class="p">,</span>
+                    <span class="n">verticalalignment</span><span class="o">=</span><span class="s2">"center"</span><span class="p">,</span>
+                    <span class="n">color</span><span class="o">=</span><span class="n">color</span><span class="p">,</span>
+                <span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">show</span><span class="p">:</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span></div>
+
+
+<div class="viewcode-block" id="LLMAttributionResult.plot_seq_attr">
+<a class="viewcode-back" href="../../../../llm_attr.html#captum.attr.LLMAttributionResult.plot_seq_attr">[docs]</a>
+    <span class="k">def</span> <span class="nf">plot_seq_attr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">show</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        Generate a matplotlib plot for visualising the attribution</span>
+<span class="sd">        of the output sequence.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            show (bool): whether to show the plot directly or return the figure and axis</span>
+<span class="sd">                Default: False</span>
+<span class="sd">        """</span>
+
+        <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">()</span>
+
+        <span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">seq_attr</span><span class="o">.</span><span class="n">cpu</span><span class="p">()</span><span class="o">.</span><span class="n">numpy</span><span class="p">()</span>
+
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_xticks</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="n">labels</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">input_tokens</span><span class="p">)</span>
+
+        <span class="n">ax</span><span class="o">.</span><span class="n">tick_params</span><span class="p">(</span><span class="n">top</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">bottom</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">labeltop</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">labelbottom</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+        <span class="n">plt</span><span class="o">.</span><span class="n">setp</span><span class="p">(</span><span class="n">ax</span><span class="o">.</span><span class="n">get_xticklabels</span><span class="p">(),</span> <span class="n">rotation</span><span class="o">=-</span><span class="mi">30</span><span class="p">,</span> <span class="n">ha</span><span class="o">=</span><span class="s2">"right"</span><span class="p">,</span> <span class="n">rotation_mode</span><span class="o">=</span><span class="s2">"anchor"</span><span class="p">)</span>
+
+        <span class="c1"># pos bar</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">bar</span><span class="p">(</span>
+            <span class="nb">range</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="p">[</span><span class="nb">max</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">data</span><span class="p">],</span> <span class="n">align</span><span class="o">=</span><span class="s2">"center"</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">"g"</span>
+        <span class="p">)</span>
+        <span class="c1"># neg bar</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">bar</span><span class="p">(</span>
+            <span class="nb">range</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="p">[</span><span class="nb">min</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">data</span><span class="p">],</span> <span class="n">align</span><span class="o">=</span><span class="s2">"center"</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">"r"</span>
+        <span class="p">)</span>
+
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">"Sequence Attribuiton"</span><span class="p">,</span> <span class="n">rotation</span><span class="o">=</span><span class="mi">90</span><span class="p">,</span> <span class="n">va</span><span class="o">=</span><span class="s2">"bottom"</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">show</span><span class="p">:</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="LLMAttribution">
+<a class="viewcode-back" href="../../../../llm_attr.html#captum.attr.LLMAttribution">[docs]</a>
+<span class="k">class</span> <span class="nc">LLMAttribution</span><span class="p">(</span><span class="n">Attribution</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    Attribution class for large language models. It wraps a perturbation-based</span>
+<span class="sd">    attribution algorthm to produce commonly interested attribution</span>
+<span class="sd">    results for the use case of text generation.</span>
+<span class="sd">    The wrapped instance will calculate attribution in the</span>
+<span class="sd">    same way as configured in the original attribution algorthm, but it will provide a</span>
+<span class="sd">    new "attribute" function which accepts text-based inputs</span>
+<span class="sd">    and returns LLMAttributionResult</span>
+<span class="sd">    """</span>
+
+    <span class="n">SUPPORTED_METHODS</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">FeatureAblation</span><span class="p">,</span>
+        <span class="n">ShapleyValueSampling</span><span class="p">,</span>
+        <span class="n">ShapleyValues</span><span class="p">,</span>
+        <span class="n">Lime</span><span class="p">,</span>
+        <span class="n">KernelShap</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">SUPPORTED_PER_TOKEN_ATTR_METHODS</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">FeatureAblation</span><span class="p">,</span>
+        <span class="n">ShapleyValueSampling</span><span class="p">,</span>
+        <span class="n">ShapleyValues</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">SUPPORTED_INPUTS</span> <span class="o">=</span> <span class="p">(</span><span class="n">TextTemplateInput</span><span class="p">,</span> <span class="n">TextTokenInput</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">attr_method</span><span class="p">:</span> <span class="n">Attribution</span><span class="p">,</span>
+        <span class="n">tokenizer</span><span class="p">,</span>
+        <span class="n">attr_target</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"log_prob"</span><span class="p">,</span>  <span class="c1"># TODO: support callable attr_target</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        Args:</span>
+<span class="sd">            attr_method (Attribution): Instance of a supported perturbation attribution</span>
+<span class="sd">                    Supported methods include FeatureAblation, ShapleyValueSampling,</span>
+<span class="sd">                    ShapleyValues, Lime, and KernelShap. Lime and KernelShap do not</span>
+<span class="sd">                    support per-token attribution and will only return attribution</span>
+<span class="sd">                    for the full target sequence.</span>
+<span class="sd">                    class created with the llm model that follows huggingface style</span>
+<span class="sd">                    interface convention</span>
+<span class="sd">            tokenizer (Tokenizer): tokenizer of the llm model used in the attr_method</span>
+<span class="sd">            attr_target (str): attribute towards log probability or probability.</span>
+<span class="sd">                    Available values ["log_prob", "prob"]</span>
+<span class="sd">                    Default: "log_prob"</span>
+<span class="sd">        """</span>
+
+        <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span>
+            <span class="n">attr_method</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">SUPPORTED_METHODS</span>
+        <span class="p">),</span> <span class="sa">f</span><span class="s2">"LLMAttribution does not support </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">attr_method</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span>
+
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">attr_method</span><span class="o">.</span><span class="n">forward_func</span><span class="p">)</span>
+
+        <span class="c1"># shallow copy is enough to avoid modifying original instance</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">attr_method</span> <span class="o">=</span> <span class="n">copy</span><span class="p">(</span><span class="n">attr_method</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">include_per_token_attr</span> <span class="o">=</span> <span class="nb">isinstance</span><span class="p">(</span>
+            <span class="n">attr_method</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">SUPPORTED_PER_TOKEN_ATTR_METHODS</span>
+        <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">attr_method</span><span class="o">.</span><span class="n">forward_func</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_forward_func</span>
+
+        <span class="c1"># alias, we really need a model and don't support wrapper functions</span>
+        <span class="c1"># coz we need call model.forward, model.generate, etc.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">model</span> <span class="o">=</span> <span class="n">cast</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">forward_func</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">tokenizer</span> <span class="o">=</span> <span class="n">tokenizer</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">device</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">cast</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">device</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">,</span> <span class="s2">"device"</span><span class="p">)</span>
+            <span class="k">else</span> <span class="nb">next</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">parameters</span><span class="p">())</span><span class="o">.</span><span class="n">device</span>
+        <span class="p">)</span>
+
+        <span class="k">assert</span> <span class="n">attr_target</span> <span class="ow">in</span> <span class="p">(</span>
+            <span class="s2">"log_prob"</span><span class="p">,</span>
+            <span class="s2">"prob"</span><span class="p">,</span>
+        <span class="p">),</span> <span class="s2">"attr_target should be either 'log_prob' or 'prob'"</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">attr_target</span> <span class="o">=</span> <span class="n">attr_target</span>
+
+    <span class="k">def</span> <span class="nf">_forward_func</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">perturbed_tensor</span><span class="p">,</span>
+        <span class="n">inp</span><span class="p">,</span>
+        <span class="n">target_tokens</span><span class="p">,</span>
+        <span class="n">_inspect_forward</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="n">perturbed_input</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_format_model_input</span><span class="p">(</span><span class="n">inp</span><span class="o">.</span><span class="n">to_model_input</span><span class="p">(</span><span class="n">perturbed_tensor</span><span class="p">))</span>
+        <span class="n">init_model_inp</span> <span class="o">=</span> <span class="n">perturbed_input</span>
+
+        <span class="n">model_inp</span> <span class="o">=</span> <span class="n">init_model_inp</span>
+
+        <span class="n">log_prob_list</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">target_token</span> <span class="ow">in</span> <span class="n">target_tokens</span><span class="p">:</span>
+            <span class="n">output_logits</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">forward</span><span class="p">(</span>
+                <span class="n">model_inp</span><span class="p">,</span> <span class="n">attention_mask</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">([[</span><span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="n">model_inp</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]])</span>
+            <span class="p">)</span>
+            <span class="n">new_token_logits</span> <span class="o">=</span> <span class="n">output_logits</span><span class="o">.</span><span class="n">logits</span><span class="p">[:,</span> <span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+            <span class="n">log_probs</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">functional</span><span class="o">.</span><span class="n">log_softmax</span><span class="p">(</span><span class="n">new_token_logits</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+            <span class="n">log_prob_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">log_probs</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="n">target_token</span><span class="p">]</span><span class="o">.</span><span class="n">detach</span><span class="p">())</span>
+
+            <span class="n">model_inp</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">(</span>
+                <span class="p">(</span><span class="n">model_inp</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">([[</span><span class="n">target_token</span><span class="p">]])</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">)),</span> <span class="n">dim</span><span class="o">=</span><span class="mi">1</span>
+            <span class="p">)</span>
+
+        <span class="n">total_log_prob</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">log_prob_list</span><span class="p">)</span>
+        <span class="c1"># 1st element is the total prob, rest are the target tokens</span>
+        <span class="c1"># add a leading dim for batch even we only support single instance for now</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">include_per_token_attr</span><span class="p">:</span>
+            <span class="n">target_log_probs</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">stack</span><span class="p">(</span>
+                <span class="p">[</span><span class="n">total_log_prob</span><span class="p">,</span> <span class="o">*</span><span class="n">log_prob_list</span><span class="p">],</span> <span class="n">dim</span><span class="o">=</span><span class="mi">0</span>
+            <span class="p">)</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">target_log_probs</span> <span class="o">=</span> <span class="n">total_log_prob</span>
+        <span class="n">target_probs</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">target_log_probs</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">_inspect_forward</span><span class="p">:</span>
+            <span class="n">prompt</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">tokenizer</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="n">init_model_inp</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+            <span class="n">response</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">tokenizer</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="n">target_tokens</span><span class="p">)</span>
+
+            <span class="c1"># callback for externals to inspect (prompt, response, seq_prob)</span>
+            <span class="n">_inspect_forward</span><span class="p">(</span><span class="n">prompt</span><span class="p">,</span> <span class="n">response</span><span class="p">,</span> <span class="n">target_probs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">tolist</span><span class="p">())</span>
+
+        <span class="k">return</span> <span class="n">target_probs</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">attr_target</span> <span class="o">!=</span> <span class="s2">"log_prob"</span> <span class="k">else</span> <span class="n">target_log_probs</span>
+
+    <span class="k">def</span> <span class="nf">_format_model_input</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model_input</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Tensor</span><span class="p">]):</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        Convert str to tokenized tensor</span>
+<span class="sd">        to make LLMAttribution work with model inputs of both</span>
+<span class="sd">        raw text and text token tensors</span>
+<span class="sd">        """</span>
+        <span class="c1"># return tensor(1, n_tokens)</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">model_input</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">tokenizer</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="n">model_input</span><span class="p">,</span> <span class="n">return_tensors</span><span class="o">=</span><span class="s2">"pt"</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">device</span>
+            <span class="p">)</span>
+        <span class="k">return</span> <span class="n">model_input</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
+
+<div class="viewcode-block" id="LLMAttribution.attribute">
+<a class="viewcode-back" href="../../../../llm_attr.html#captum.attr.LLMAttribution.attribute">[docs]</a>
+    <span class="k">def</span> <span class="nf">attribute</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">inp</span><span class="p">:</span> <span class="n">InterpretableInput</span><span class="p">,</span>
+        <span class="n">target</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">num_trials</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
+        <span class="n">gen_args</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="c1"># internal callback hook can be used for logging</span>
+        <span class="n">_inspect_forward</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Callable</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">LLMAttributionResult</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        Args:</span>
+<span class="sd">            inp (InterpretableInput): input prompt for which attributions are computed</span>
+<span class="sd">            target (str or Tensor, optional): target response with respect to</span>
+<span class="sd">                    which attributions are computed. If None, it uses the model</span>
+<span class="sd">                    to generate the target based on the input and gen_args.</span>
+<span class="sd">                    Default: None</span>
+<span class="sd">            num_trials (int, optional): number of trials to run. Return is the average</span>
+<span class="sd">                    attribibutions over all the trials.</span>
+<span class="sd">                    Defaults: 1.</span>
+<span class="sd">            gen_args (dict, optional): arguments for generating the target. Only used if</span>
+<span class="sd">                    target is not given. When None, the default arguments are used,</span>
+<span class="sd">                    {"max_length": 25, "do_sample": False}</span>
+<span class="sd">                    Defaults: None</span>
+<span class="sd">            **kwargs (Any): any extra keyword arguments passed to the call of the</span>
+<span class="sd">                    underlying attribute function of the given attribution instance</span>
+
+<span class="sd">        Returns:</span>
+
+<span class="sd">            attr (LLMAttributionResult): Attribution result. token_attr will be None</span>
+<span class="sd">                    if attr method is Lime or KernelShap.</span>
+<span class="sd">        """</span>
+
+        <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span>
+            <span class="n">inp</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">SUPPORTED_INPUTS</span>
+        <span class="p">),</span> <span class="sa">f</span><span class="s2">"LLMAttribution does not support input type </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">inp</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span>
+
+        <span class="k">if</span> <span class="n">target</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># generate when None</span>
+            <span class="k">assert</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">,</span> <span class="s2">"generate"</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">callable</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">generate</span><span class="p">),</span> <span class="p">(</span>
+                <span class="s2">"The model does not have recognizable generate function."</span>
+                <span class="s2">"Target must be given for attribution"</span>
+            <span class="p">)</span>
+
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">gen_args</span><span class="p">:</span>
+                <span class="n">gen_args</span> <span class="o">=</span> <span class="n">DEFAULT_GEN_ARGS</span>
+
+            <span class="n">model_inp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_format_model_input</span><span class="p">(</span><span class="n">inp</span><span class="o">.</span><span class="n">to_model_input</span><span class="p">())</span>
+            <span class="n">output_tokens</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">generate</span><span class="p">(</span><span class="n">model_inp</span><span class="p">,</span> <span class="o">**</span><span class="n">gen_args</span><span class="p">)</span>
+            <span class="n">target_tokens</span> <span class="o">=</span> <span class="n">output_tokens</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="n">model_inp</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span> <span class="p">:]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">assert</span> <span class="n">gen_args</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">,</span> <span class="s2">"gen_args must be None when target is given"</span>
+
+            <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">target</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">str</span><span class="p">:</span>
+                <span class="c1"># exclude sos</span>
+                <span class="n">target_tokens</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">tokenizer</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="n">target</span><span class="p">)[</span><span class="mi">1</span><span class="p">:]</span>
+                <span class="n">target_tokens</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="n">target_tokens</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="nb">type</span><span class="p">(</span><span class="n">target</span><span class="p">)</span> <span class="ow">is</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
+                <span class="n">target_tokens</span> <span class="o">=</span> <span class="n">target</span>
+
+        <span class="n">attr</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span>
+            <span class="p">[</span>
+                <span class="mi">1</span> <span class="o">+</span> <span class="nb">len</span><span class="p">(</span><span class="n">target_tokens</span><span class="p">)</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">include_per_token_attr</span> <span class="k">else</span> <span class="mi">1</span><span class="p">,</span>
+                <span class="n">inp</span><span class="o">.</span><span class="n">n_itp_features</span><span class="p">,</span>
+            <span class="p">],</span>
+            <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">float</span><span class="p">,</span>
+            <span class="n">device</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_trials</span><span class="p">):</span>
+            <span class="n">attr_input</span> <span class="o">=</span> <span class="n">inp</span><span class="o">.</span><span class="n">to_tensor</span><span class="p">()</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
+
+            <span class="n">cur_attr</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">attr_method</span><span class="o">.</span><span class="n">attribute</span><span class="p">(</span>
+                <span class="n">attr_input</span><span class="p">,</span>
+                <span class="n">additional_forward_args</span><span class="o">=</span><span class="p">(</span><span class="n">inp</span><span class="p">,</span> <span class="n">target_tokens</span><span class="p">,</span> <span class="n">_inspect_forward</span><span class="p">),</span>
+                <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+            <span class="p">)</span>
+
+            <span class="c1"># temp necessary due to FA &amp; Shapley's different return shape of multi-task</span>
+            <span class="c1"># FA will flatten output shape internally (n_output_token, n_itp_features)</span>
+            <span class="c1"># Shapley will keep output shape (batch, n_output_token, n_input_features)</span>
+            <span class="n">cur_attr</span> <span class="o">=</span> <span class="n">cur_attr</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">attr</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+
+            <span class="n">attr</span> <span class="o">+=</span> <span class="n">cur_attr</span>
+
+        <span class="n">attr</span> <span class="o">=</span> <span class="n">attr</span> <span class="o">/</span> <span class="n">num_trials</span>
+
+        <span class="n">attr</span> <span class="o">=</span> <span class="n">inp</span><span class="o">.</span><span class="n">format_attr</span><span class="p">(</span><span class="n">attr</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">LLMAttributionResult</span><span class="p">(</span>
+            <span class="n">attr</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+            <span class="n">attr</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">include_per_token_attr</span>
+            <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>  <span class="c1"># shape(n_output_token, n_input_features)</span>
+            <span class="n">inp</span><span class="o">.</span><span class="n">values</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">tokenizer</span><span class="o">.</span><span class="n">convert_ids_to_tokens</span><span class="p">(</span><span class="n">target_tokens</span><span class="p">),</span>
+        <span class="p">)</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="LLMGradientAttribution">
+<a class="viewcode-back" href="../../../../llm_attr.html#captum.attr.LLMGradientAttribution">[docs]</a>
+<span class="k">class</span> <span class="nc">LLMGradientAttribution</span><span class="p">(</span><span class="n">Attribution</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    Attribution class for large language models. It wraps a gradient-based</span>
+<span class="sd">    attribution algorthm to produce commonly interested attribution</span>
+<span class="sd">    results for the use case of text generation.</span>
+<span class="sd">    The wrapped instance will calculate attribution in the</span>
+<span class="sd">    same way as configured in the original attribution algorthm,</span>
+<span class="sd">    with respect to the log probabilities of each</span>
+<span class="sd">    generated token and the whole sequence. It will provide a</span>
+<span class="sd">    new "attribute" function which accepts text-based inputs</span>
+<span class="sd">    and returns LLMAttributionResult</span>
+<span class="sd">    """</span>
+
+    <span class="n">SUPPORTED_METHODS</span> <span class="o">=</span> <span class="p">(</span><span class="n">LayerIntegratedGradients</span><span class="p">,)</span>
+    <span class="n">SUPPORTED_INPUTS</span> <span class="o">=</span> <span class="p">(</span><span class="n">TextTokenInput</span><span class="p">,)</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">attr_method</span><span class="p">,</span>
+        <span class="n">tokenizer</span><span class="p">,</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        Args:</span>
+<span class="sd">            attr_method (Attribution): instance of a supported perturbation attribution</span>
+<span class="sd">                    class created with the llm model that follows huggingface style</span>
+<span class="sd">                    interface convention</span>
+<span class="sd">            tokenizer (Tokenizer): tokenizer of the llm model used in the attr_method</span>
+<span class="sd">        """</span>
+        <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span>
+            <span class="n">attr_method</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">SUPPORTED_METHODS</span>
+        <span class="p">),</span> <span class="sa">f</span><span class="s2">"LLMGradientAttribution does not support </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">attr_method</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span>
+
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">attr_method</span><span class="o">.</span><span class="n">forward_func</span><span class="p">)</span>
+
+        <span class="c1"># shallow copy is enough to avoid modifying original instance</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">attr_method</span> <span class="o">=</span> <span class="n">copy</span><span class="p">(</span><span class="n">attr_method</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">attr_method</span><span class="o">.</span><span class="n">forward_func</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_forward_func</span>
+
+        <span class="c1"># alias, we really need a model and don't support wrapper functions</span>
+        <span class="c1"># coz we need call model.forward, model.generate, etc.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">model</span> <span class="o">=</span> <span class="n">cast</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">forward_func</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">tokenizer</span> <span class="o">=</span> <span class="n">tokenizer</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">device</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">cast</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">device</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">,</span> <span class="s2">"device"</span><span class="p">)</span>
+            <span class="k">else</span> <span class="nb">next</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">parameters</span><span class="p">())</span><span class="o">.</span><span class="n">device</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_forward_func</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">perturbed_tensor</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">,</span>
+        <span class="n">inp</span><span class="p">:</span> <span class="n">InterpretableInput</span><span class="p">,</span>
+        <span class="n">target_tokens</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">,</span>  <span class="c1"># 1D tensor of target token ids</span>
+        <span class="n">cur_target_idx</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>  <span class="c1"># current target index</span>
+    <span class="p">):</span>
+        <span class="n">perturbed_input</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_format_model_input</span><span class="p">(</span><span class="n">inp</span><span class="o">.</span><span class="n">to_model_input</span><span class="p">(</span><span class="n">perturbed_tensor</span><span class="p">))</span>
+
+        <span class="k">if</span> <span class="n">cur_target_idx</span><span class="p">:</span>
+            <span class="c1"># the input batch size can be expanded by attr method</span>
+            <span class="n">output_token_tensor</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="n">target_tokens</span><span class="p">[:</span><span class="n">cur_target_idx</span><span class="p">]</span>
+                <span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+                <span class="o">.</span><span class="n">expand</span><span class="p">(</span><span class="n">perturbed_input</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="mi">0</span><span class="p">),</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+                <span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
+            <span class="p">)</span>
+            <span class="n">new_input_tensor</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">([</span><span class="n">perturbed_input</span><span class="p">,</span> <span class="n">output_token_tensor</span><span class="p">],</span> <span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">new_input_tensor</span> <span class="o">=</span> <span class="n">perturbed_input</span>
+
+        <span class="n">output_logits</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">(</span><span class="n">new_input_tensor</span><span class="p">)</span>
+
+        <span class="n">new_token_logits</span> <span class="o">=</span> <span class="n">output_logits</span><span class="o">.</span><span class="n">logits</span><span class="p">[:,</span> <span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">log_probs</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">functional</span><span class="o">.</span><span class="n">log_softmax</span><span class="p">(</span><span class="n">new_token_logits</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+        <span class="n">target_token</span> <span class="o">=</span> <span class="n">target_tokens</span><span class="p">[</span><span class="n">cur_target_idx</span><span class="p">]</span>
+        <span class="n">token_log_probs</span> <span class="o">=</span> <span class="n">log_probs</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">target_token</span><span class="p">]</span>
+
+        <span class="c1"># the attribution target is limited to the log probability</span>
+        <span class="k">return</span> <span class="n">token_log_probs</span>
+
+    <span class="k">def</span> <span class="nf">_format_model_input</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model_input</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        Convert str to tokenized tensor</span>
+<span class="sd">        """</span>
+        <span class="k">return</span> <span class="n">model_input</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
+
+<div class="viewcode-block" id="LLMGradientAttribution.attribute">
+<a class="viewcode-back" href="../../../../llm_attr.html#captum.attr.LLMGradientAttribution.attribute">[docs]</a>
+    <span class="k">def</span> <span class="nf">attribute</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">inp</span><span class="p">:</span> <span class="n">InterpretableInput</span><span class="p">,</span>
+        <span class="n">target</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">gen_args</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        Args:</span>
+<span class="sd">            inp (InterpretableInput): input prompt for which attributions are computed</span>
+<span class="sd">            target (str or Tensor, optional): target response with respect to</span>
+<span class="sd">                    which attributions are computed. If None, it uses the model</span>
+<span class="sd">                    to generate the target based on the input and gen_args.</span>
+<span class="sd">                    Default: None</span>
+<span class="sd">            gen_args (dict, optional): arguments for generating the target. Only used if</span>
+<span class="sd">                    target is not given. When None, the default arguments are used,</span>
+<span class="sd">                    {"max_length": 25, "do_sample": False}</span>
+<span class="sd">                    Defaults: None</span>
+<span class="sd">            **kwargs (Any): any extra keyword arguments passed to the call of the</span>
+<span class="sd">                    underlying attribute function of the given attribution instance</span>
+
+<span class="sd">        Returns:</span>
+
+<span class="sd">            attr (LLMAttributionResult): attribution result</span>
+<span class="sd">        """</span>
+
+        <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span>
+            <span class="n">inp</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">SUPPORTED_INPUTS</span>
+        <span class="p">),</span> <span class="sa">f</span><span class="s2">"LLMGradAttribution does not support input type </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">inp</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span>
+
+        <span class="k">if</span> <span class="n">target</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># generate when None</span>
+            <span class="k">assert</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">,</span> <span class="s2">"generate"</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">callable</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">generate</span><span class="p">),</span> <span class="p">(</span>
+                <span class="s2">"The model does not have recognizable generate function."</span>
+                <span class="s2">"Target must be given for attribution"</span>
+            <span class="p">)</span>
+
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">gen_args</span><span class="p">:</span>
+                <span class="n">gen_args</span> <span class="o">=</span> <span class="n">DEFAULT_GEN_ARGS</span>
+
+            <span class="n">model_inp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_format_model_input</span><span class="p">(</span><span class="n">inp</span><span class="o">.</span><span class="n">to_model_input</span><span class="p">())</span>
+            <span class="n">output_tokens</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">generate</span><span class="p">(</span><span class="n">model_inp</span><span class="p">,</span> <span class="o">**</span><span class="n">gen_args</span><span class="p">)</span>
+            <span class="n">target_tokens</span> <span class="o">=</span> <span class="n">output_tokens</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="n">model_inp</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span> <span class="p">:]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">assert</span> <span class="n">gen_args</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">,</span> <span class="s2">"gen_args must be None when target is given"</span>
+
+            <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">target</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">str</span><span class="p">:</span>
+                <span class="c1"># exclude sos</span>
+                <span class="n">target_tokens</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">tokenizer</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="n">target</span><span class="p">)[</span><span class="mi">1</span><span class="p">:]</span>
+                <span class="n">target_tokens</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="n">target_tokens</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="nb">type</span><span class="p">(</span><span class="n">target</span><span class="p">)</span> <span class="ow">is</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
+                <span class="n">target_tokens</span> <span class="o">=</span> <span class="n">target</span>
+
+        <span class="n">attr_inp</span> <span class="o">=</span> <span class="n">inp</span><span class="o">.</span><span class="n">to_tensor</span><span class="p">()</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
+
+        <span class="n">attr_list</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">cur_target_idx</span><span class="p">,</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">target_tokens</span><span class="p">):</span>
+            <span class="c1"># attr in shape(batch_size, input+output_len, emb_dim)</span>
+            <span class="n">attr</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">attr_method</span><span class="o">.</span><span class="n">attribute</span><span class="p">(</span>
+                <span class="n">attr_inp</span><span class="p">,</span>
+                <span class="n">additional_forward_args</span><span class="o">=</span><span class="p">(</span>
+                    <span class="n">inp</span><span class="p">,</span>
+                    <span class="n">target_tokens</span><span class="p">,</span>
+                    <span class="n">cur_target_idx</span><span class="p">,</span>
+                <span class="p">),</span>
+                <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="n">attr</span> <span class="o">=</span> <span class="n">cast</span><span class="p">(</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">attr</span><span class="p">)</span>
+
+            <span class="c1"># will have the attr for previous output tokens</span>
+            <span class="c1"># cut to shape(batch_size, inp_len, emb_dim)</span>
+            <span class="k">if</span> <span class="n">cur_target_idx</span><span class="p">:</span>
+                <span class="n">attr</span> <span class="o">=</span> <span class="n">attr</span><span class="p">[:,</span> <span class="p">:</span><span class="o">-</span><span class="n">cur_target_idx</span><span class="p">]</span>
+
+            <span class="c1"># the author of IG uses sum</span>
+            <span class="c1"># https://github.com/ankurtaly/Integrated-Gradients/blob/master/BertModel/bert_model_utils.py#L350</span>
+            <span class="n">attr</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+
+            <span class="n">attr_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">attr</span><span class="p">)</span>
+
+        <span class="c1"># assume inp batch only has one instance</span>
+        <span class="c1"># to shape(n_output_token, ...)</span>
+        <span class="n">attr</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">(</span><span class="n">attr_list</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+
+        <span class="c1"># grad attr method do not care the length of features in interpretable format</span>
+        <span class="c1"># it attributes to all the elements of the output of the specified layer</span>
+        <span class="c1"># so we need special handling for the inp type which don't care all the elements</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">inp</span><span class="p">,</span> <span class="n">TextTokenInput</span><span class="p">)</span> <span class="ow">and</span> <span class="n">inp</span><span class="o">.</span><span class="n">itp_mask</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">itp_mask</span> <span class="o">=</span> <span class="n">inp</span><span class="o">.</span><span class="n">itp_mask</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
+            <span class="n">itp_mask</span> <span class="o">=</span> <span class="n">itp_mask</span><span class="o">.</span><span class="n">expand_as</span><span class="p">(</span><span class="n">attr</span><span class="p">)</span>
+            <span class="n">attr</span> <span class="o">=</span> <span class="n">attr</span><span class="p">[</span><span class="n">itp_mask</span><span class="p">]</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="n">attr</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="mi">0</span><span class="p">),</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+
+        <span class="c1"># for all the gradient methods we support in this class</span>
+        <span class="c1"># the seq attr is the sum of all the token attr if the attr_target is log_prob,</span>
+        <span class="c1"># shape(n_input_features)</span>
+        <span class="n">seq_attr</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">LLMAttributionResult</span><span class="p">(</span>
+            <span class="n">seq_attr</span><span class="p">,</span>
+            <span class="n">attr</span><span class="p">,</span>  <span class="c1"># shape(n_output_token, n_input_features)</span>
+            <span class="n">inp</span><span class="o">.</span><span class="n">values</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">tokenizer</span><span class="o">.</span><span class="n">convert_ids_to_tokens</span><span class="p">(</span><span class="n">target_tokens</span><span class="p">),</span>
+        <span class="p">)</span></div>
+</div>
+
+</pre></div>
+</div>
+</div>
+</div>
+<div aria-label="main navigation" class="sphinxsidebar" role="navigation">
+<div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../../index.html">Captum</a></h1>
+<h3>Navigation</h3>
+<p class="caption" role="heading"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../attribution.html">Attribution</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../llm_attr.html">LLM Attribution Classes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../noise_tunnel.html">NoiseTunnel</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../layer.html">Layer Attribution</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../neuron.html">Neuron Attribution</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../metrics.html">Metrics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../robust.html">Robustness</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../concept.html">Concept-based Interpretability</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../influence.html">Influential Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module.html">Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../utilities.html">Utilities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../base_classes.html">Base Classes</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Insights API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../insights.html">Insights</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../insights.html#features">Features</a></li>
+</ul>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+<li><a href="../../../../index.html">Documentation overview</a><ul>
+<li><a href="../../../index.html">Module code</a><ul>
+</ul></li>
+</ul></li>
+</ul>
+</div>
+<div id="searchbox" role="search" style="display: none">
+<h3 id="searchlabel">Quick search</h3>
+<div class="searchformwrapper">
+<form action="../../../../search.html" class="search" method="get">
+<input aria-labelledby="searchlabel" autocapitalize="off" autocomplete="off" autocorrect="off" name="q" spellcheck="false" type="text"/>
+<input type="submit" value="Go"/>
+</form>
+</div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+</div>
+</div>
+<div class="clearer"></div>
+</div></div></div><footer class="nav-footer" id="footer"><section class="sitemap"><div class="footerSection"><h5>Docs</h5><a href="/docs/introduction">Introduction</a><a href="/docs/getting_started">Getting Started</a><a href="/tutorials/">Tutorials</a><a href="/api/">API Reference</a></div><div class="footerSection"><h5>Legal</h5><a href="https://opensource.facebook.com/legal/privacy/" target="_blank" rel="noreferrer noopener">Privacy</a><a href="https://opensource.facebook.com/legal/terms/" target="_blank" rel="noreferrer noopener">Terms</a></div><div class="footerSection"><h5>Social</h5><div class="social"><a class="github-button" href="https://github.com/pytorch/captum" data-count-href="https://github.com/pytorch/captum/stargazers" data-show-count="true" data-count-aria-label="# stargazers on GitHub" aria-label="Star Captum on GitHub">captum</a></div></div></section><a href="https://opensource.facebook.com/" target="_blank" rel="noreferrer noopener" class="fbOpenSource"><img src="/img/oss_logo.png" alt="Facebook Open Source" width="170" height="45"/></a><section class="copyright"> Copyright © 2023 Facebook Inc.</section><script>
+            (function() {
+              var BAD_BASE = '/captum/';
+              if (window.location.origin !== 'https://captum.ai') {
+                var pathname = window.location.pathname;
+                var newPathname = pathname.slice(pathname.indexOf(BAD_BASE) === 0 ? BAD_BASE.length : 1);
+                var newLocation = 'https://captum.ai/' + newPathname;
+                console.log('redirecting to ' + newLocation);
+                window.location.href = newLocation;
+              }
+            })();
+          </script></footer></div><script type="text/javascript" src="https://cdn.jsdelivr.net/docsearch.js/1/docsearch.min.js"></script><script>
+                document.addEventListener('keyup', function(e) {
+                  if (e.target !== document.body) {
+                    return;
+                  }
+                  // keyCode for '/' (slash)
+                  if (e.keyCode === 191) {
+                    const search = document.getElementById('search_input_react');
+                    search && search.focus();
+                  }
+                });
+              </script><script>
+              var search = docsearch({
+                
+                apiKey: '207c27d819f967749142d8611de7cb19',
+                indexName: 'captum',
+                inputSelector: '#search_input_react'
+              });
+            </script></body></html>

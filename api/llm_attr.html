@@ -1,0 +1,270 @@
+<!DOCTYPE html><html lang="en"><head><meta charSet="utf-8"/><meta http-equiv="X-UA-Compatible" content="IE=edge"/><title>Captum · Model Interpretability for PyTorch</title><meta name="viewport" content="width=device-width"/><meta name="generator" content="Docusaurus"/><meta name="description" content="Model Interpretability for PyTorch"/><meta name="docsearch:language" content="en"/><meta property="og:title" content="Captum · Model Interpretability for PyTorch"/><meta property="og:type" content="website"/><meta property="og:url" content="https://captum.ai/"/><meta property="og:description" content="Model Interpretability for PyTorch"/><meta property="og:image" content="https://captum.ai/img/captum-icon.png"/><meta name="twitter:card" content="summary"/><meta name="twitter:image" content="https://captum.ai/img/captum.png"/><link rel="shortcut icon" href="/img/captum.ico"/><link rel="stylesheet" href="https://cdn.jsdelivr.net/docsearch.js/1/docsearch.min.css"/><link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/default.min.css"/><script>
+              (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+              (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+              m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+              })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+              ga('create', 'UA-44373548-48', 'auto');
+              ga('send', 'pageview');
+            </script><script type="text/javascript" src="https://buttons.github.io/buttons.js"></script><script type="text/javascript" src="/js/code_block_buttons.js"></script><script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.0/clipboard.min.js"></script><script src="https://unpkg.com/vanilla-back-to-top@7.1.14/dist/vanilla-back-to-top.min.js"></script><script>
+        document.addEventListener('DOMContentLoaded', function() {
+          addBackToTop(
+            {"zIndex":100}
+          )
+        });
+        </script><script src="/js/scrollSpy.js"></script><link rel="stylesheet" href="/css/main.css"/><script src="/js/codetabs.js"></script></head><body><div class="fixedHeaderContainer"><div class="headerWrapper wrapper"><header><a href="/"><img class="logo" src="/img/captum_logo.svg" alt="Captum"/></a><div class="navigationWrapper navigationSlider"><nav class="slidingNav"><ul class="nav-site nav-site-internal"><li class=""><a href="/docs/introduction" target="_self">Docs</a></li><li class=""><a href="/tutorials/" target="_self">Tutorials</a></li><li class=""><a href="/api/" target="_self">API Reference</a></li><li class=""><a href="https://github.com/pytorch/captum" target="_self">GitHub</a></li><li class="navSearchWrapper reactNavSearchWrapper"><input type="text" id="search_input_react" placeholder="Search" title="Search"/></li></ul></nav></div></header></div></div><div class="navPusher"><div>
+<script type="text/javascript" id="documentation_options" data-url_root="./"
+src="/_sphinx/documentation_options.js"></script>
+<script type="text/javascript" src="/_sphinx/jquery.js"></script>
+<script type="text/javascript" src="/_sphinx/underscore.js"></script>
+<script type="text/javascript" src="/_sphinx/doctools.js"></script>
+<script type="text/javascript" src="/_sphinx/language_data.js"></script>
+<script type="text/javascript" src="/_sphinx/searchtools.js"></script>
+
+<script src="https://cdn.jsdelivr.net/npm/katex@0.13.11/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.13.11/dist/contrib/auto-render.min.js"></script>
+<script src="/_sphinx/katex_autorenderer.js"></script>
+<link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/katex@0.13.11/dist/katex.min.css" />
+<div class="sphinx wrapper"><div class="document">
+<div class="documentwrapper">
+<div class="bodywrapper">
+<div class="body" role="main">
+<section id="llm-attribution-classes">
+<h1>LLM Attribution Classes<a class="headerlink" href="#llm-attribution-classes" title="Link to this heading">¶</a></h1>
+<section id="llmattribution">
+<h2>LLMAttribution<a class="headerlink" href="#llmattribution" title="Link to this heading">¶</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="captum.attr.LLMAttribution">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">captum.attr.</span></span><span class="sig-name descname"><span class="pre">LLMAttribution</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">attr_method</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tokenizer</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">attr_target</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'log_prob'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/llm_attr.html#LLMAttribution"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum.attr.LLMAttribution" title="Link to this definition">¶</a></dt>
+<dd><p>Attribution class for large language models. It wraps a perturbation-based
+attribution algorthm to produce commonly interested attribution
+results for the use case of text generation.
+The wrapped instance will calculate attribution in the
+same way as configured in the original attribution algorthm, but it will provide a
+new “attribute” function which accepts text-based inputs
+and returns LLMAttributionResult</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>attr_method</strong> (<a class="reference internal" href="base_classes.html#captum.attr.Attribution" title="captum.attr.Attribution"><em>Attribution</em></a>) – Instance of a supported perturbation attribution
+Supported methods include FeatureAblation, ShapleyValueSampling,
+ShapleyValues, Lime, and KernelShap. Lime and KernelShap do not
+support per-token attribution and will only return attribution
+for the full target sequence.
+class created with the llm model that follows huggingface style
+interface convention</p></li>
+<li><p><strong>tokenizer</strong> (<em>Tokenizer</em>) – tokenizer of the llm model used in the attr_method</p></li>
+<li><p><strong>attr_target</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><em>str</em></a>) – attribute towards log probability or probability.
+Available values [“log_prob”, “prob”]
+Default: “log_prob”</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="captum.attr.LLMAttribution.attribute">
+<span class="sig-name descname"><span class="pre">attribute</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inp</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_trials</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gen_args</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">_inspect_forward</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/llm_attr.html#LLMAttribution.attribute"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum.attr.LLMAttribution.attribute" title="Link to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>inp</strong> (<a class="reference internal" href="utilities.html#captum.attr.InterpretableInput" title="captum.attr.InterpretableInput"><em>InterpretableInput</em></a>) – input prompt for which attributions are computed</p></li>
+<li><p><strong>target</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><em>str</em></a><em> or </em><a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v2.1)"><em>Tensor</em></a><em>, </em><em>optional</em>) – target response with respect to
+which attributions are computed. If None, it uses the model
+to generate the target based on the input and gen_args.
+Default: None</p></li>
+<li><p><strong>num_trials</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><em>int</em></a><em>, </em><em>optional</em>) – number of trials to run. Return is the average
+attribibutions over all the trials.
+Defaults: 1.</p></li>
+<li><p><strong>gen_args</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.12)"><em>dict</em></a><em>, </em><em>optional</em>) – arguments for generating the target. Only used if
+target is not given. When None, the default arguments are used,
+{“max_length”: 25, “do_sample”: False}
+Defaults: None</p></li>
+<li><p><strong>**kwargs</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.12)"><em>Any</em></a>) – any extra keyword arguments passed to the call of the
+underlying attribute function of the given attribution instance</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><dl class="simple">
+<dt>Attribution result. token_attr will be None</dt><dd><p>if attr method is Lime or KernelShap.</p>
+</dd>
+</dl>
+</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>attr (<a class="reference internal" href="#captum.attr.LLMAttributionResult" title="captum.attr.LLMAttributionResult">LLMAttributionResult</a>)</p>
+</dd>
+</dl>
+</dd></dl>
+</dd></dl>
+</section>
+<section id="llmgradientattribution">
+<h2>LLMGradientAttribution<a class="headerlink" href="#llmgradientattribution" title="Link to this heading">¶</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="captum.attr.LLMGradientAttribution">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">captum.attr.</span></span><span class="sig-name descname"><span class="pre">LLMGradientAttribution</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">attr_method</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tokenizer</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/llm_attr.html#LLMGradientAttribution"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum.attr.LLMGradientAttribution" title="Link to this definition">¶</a></dt>
+<dd><p>Attribution class for large language models. It wraps a gradient-based
+attribution algorthm to produce commonly interested attribution
+results for the use case of text generation.
+The wrapped instance will calculate attribution in the
+same way as configured in the original attribution algorthm,
+with respect to the log probabilities of each
+generated token and the whole sequence. It will provide a
+new “attribute” function which accepts text-based inputs
+and returns LLMAttributionResult</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>attr_method</strong> (<a class="reference internal" href="base_classes.html#captum.attr.Attribution" title="captum.attr.Attribution"><em>Attribution</em></a>) – instance of a supported perturbation attribution
+class created with the llm model that follows huggingface style
+interface convention</p></li>
+<li><p><strong>tokenizer</strong> (<em>Tokenizer</em>) – tokenizer of the llm model used in the attr_method</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="captum.attr.LLMGradientAttribution.attribute">
+<span class="sig-name descname"><span class="pre">attribute</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inp</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gen_args</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/llm_attr.html#LLMGradientAttribution.attribute"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum.attr.LLMGradientAttribution.attribute" title="Link to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>inp</strong> (<a class="reference internal" href="utilities.html#captum.attr.InterpretableInput" title="captum.attr.InterpretableInput"><em>InterpretableInput</em></a>) – input prompt for which attributions are computed</p></li>
+<li><p><strong>target</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><em>str</em></a><em> or </em><a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v2.1)"><em>Tensor</em></a><em>, </em><em>optional</em>) – target response with respect to
+which attributions are computed. If None, it uses the model
+to generate the target based on the input and gen_args.
+Default: None</p></li>
+<li><p><strong>gen_args</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.12)"><em>dict</em></a><em>, </em><em>optional</em>) – arguments for generating the target. Only used if
+target is not given. When None, the default arguments are used,
+{“max_length”: 25, “do_sample”: False}
+Defaults: None</p></li>
+<li><p><strong>**kwargs</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.12)"><em>Any</em></a>) – any extra keyword arguments passed to the call of the
+underlying attribute function of the given attribution instance</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>attribution result</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>attr (<a class="reference internal" href="#captum.attr.LLMAttributionResult" title="captum.attr.LLMAttributionResult">LLMAttributionResult</a>)</p>
+</dd>
+</dl>
+</dd></dl>
+</dd></dl>
+</section>
+<section id="llmattributionresult">
+<h2>LLMAttributionResult<a class="headerlink" href="#llmattributionresult" title="Link to this heading">¶</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="captum.attr.LLMAttributionResult">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">captum.attr.</span></span><span class="sig-name descname"><span class="pre">LLMAttributionResult</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">seq_attr</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">token_attr</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_tokens</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_tokens</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/llm_attr.html#LLMAttributionResult"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum.attr.LLMAttributionResult" title="Link to this definition">¶</a></dt>
+<dd><p>Data class for the return result of LLMAttribution,
+which includes the necessary properties of the attribution.
+It also provides utilities to help present and plot the result in different forms.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="captum.attr.LLMAttributionResult.plot_seq_attr">
+<span class="sig-name descname"><span class="pre">plot_seq_attr</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">show</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/llm_attr.html#LLMAttributionResult.plot_seq_attr"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum.attr.LLMAttributionResult.plot_seq_attr" title="Link to this definition">¶</a></dt>
+<dd><p>Generate a matplotlib plot for visualising the attribution
+of the output sequence.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>show</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.12)"><em>bool</em></a>) – whether to show the plot directly or return the figure and axis
+Default: False</p>
+</dd>
+</dl>
+</dd></dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="captum.attr.LLMAttributionResult.plot_token_attr">
+<span class="sig-name descname"><span class="pre">plot_token_attr</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">show</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/llm_attr.html#LLMAttributionResult.plot_token_attr"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum.attr.LLMAttributionResult.plot_token_attr" title="Link to this definition">¶</a></dt>
+<dd><p>Generate a matplotlib plot for visualising the attribution
+of the output tokens.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>show</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.12)"><em>bool</em></a>) – whether to show the plot directly or return the figure and axis
+Default: False</p>
+</dd>
+</dl>
+</dd></dl>
+</dd></dl>
+</section>
+</section>
+</div>
+</div>
+</div>
+<div aria-label="main navigation" class="sphinxsidebar" role="navigation">
+<div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">Captum</a></h1>
+<h3>Navigation</h3>
+<p class="caption" role="heading"><span class="caption-text">API Reference</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="attribution.html">Attribution</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">LLM Attribution Classes</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#llmattribution">LLMAttribution</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#llmgradientattribution">LLMGradientAttribution</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#llmattributionresult">LLMAttributionResult</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="noise_tunnel.html">NoiseTunnel</a></li>
+<li class="toctree-l1"><a class="reference internal" href="layer.html">Layer Attribution</a></li>
+<li class="toctree-l1"><a class="reference internal" href="neuron.html">Neuron Attribution</a></li>
+<li class="toctree-l1"><a class="reference internal" href="metrics.html">Metrics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="robust.html">Robustness</a></li>
+<li class="toctree-l1"><a class="reference internal" href="concept.html">Concept-based Interpretability</a></li>
+<li class="toctree-l1"><a class="reference internal" href="influence.html">Influential Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="module.html">Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="utilities.html">Utilities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="base_classes.html">Base Classes</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Insights API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="insights.html">Insights</a></li>
+<li class="toctree-l1"><a class="reference internal" href="insights.html#features">Features</a></li>
+</ul>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+<li><a href="index.html">Documentation overview</a><ul>
+<li>Previous: <a href="lrp.html" title="previous chapter">LRP</a></li>
+<li>Next: <a href="noise_tunnel.html" title="next chapter">NoiseTunnel</a></li>
+</ul></li>
+</ul>
+</div>
+<div id="searchbox" role="search" style="display: none">
+<h3 id="searchlabel">Quick search</h3>
+<div class="searchformwrapper">
+<form action="search.html" class="search" method="get">
+<input aria-labelledby="searchlabel" autocapitalize="off" autocomplete="off" autocorrect="off" name="q" spellcheck="false" type="text"/>
+<input type="submit" value="Go"/>
+</form>
+</div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+</div>
+</div>
+<div class="clearer"></div>
+</div></div></div><footer class="nav-footer" id="footer"><section class="sitemap"><div class="footerSection"><h5>Docs</h5><a href="/docs/introduction">Introduction</a><a href="/docs/getting_started">Getting Started</a><a href="/tutorials/">Tutorials</a><a href="/api/">API Reference</a></div><div class="footerSection"><h5>Legal</h5><a href="https://opensource.facebook.com/legal/privacy/" target="_blank" rel="noreferrer noopener">Privacy</a><a href="https://opensource.facebook.com/legal/terms/" target="_blank" rel="noreferrer noopener">Terms</a></div><div class="footerSection"><h5>Social</h5><div class="social"><a class="github-button" href="https://github.com/pytorch/captum" data-count-href="https://github.com/pytorch/captum/stargazers" data-show-count="true" data-count-aria-label="# stargazers on GitHub" aria-label="Star Captum on GitHub">captum</a></div></div></section><a href="https://opensource.facebook.com/" target="_blank" rel="noreferrer noopener" class="fbOpenSource"><img src="/img/oss_logo.png" alt="Facebook Open Source" width="170" height="45"/></a><section class="copyright"> Copyright © 2023 Facebook Inc.</section><script>
+            (function() {
+              var BAD_BASE = '/captum/';
+              if (window.location.origin !== 'https://captum.ai') {
+                var pathname = window.location.pathname;
+                var newPathname = pathname.slice(pathname.indexOf(BAD_BASE) === 0 ? BAD_BASE.length : 1);
+                var newLocation = 'https://captum.ai/' + newPathname;
+                console.log('redirecting to ' + newLocation);
+                window.location.href = newLocation;
+              }
+            })();
+          </script></footer></div><script type="text/javascript" src="https://cdn.jsdelivr.net/docsearch.js/1/docsearch.min.js"></script><script>
+                document.addEventListener('keyup', function(e) {
+                  if (e.target !== document.body) {
+                    return;
+                  }
+                  // keyCode for '/' (slash)
+                  if (e.keyCode === 191) {
+                    const search = document.getElementById('search_input_react');
+                    search && search.focus();
+                  }
+                });
+              </script><script>
+              var search = docsearch({
+                
+                apiKey: '207c27d819f967749142d8611de7cb19',
+                indexName: 'captum',
+                inputSelector: '#search_input_react'
+              });
+            </script></body></html>
