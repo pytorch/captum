@@ -12,6 +12,7 @@ Captum API Reference
    :caption: API Reference
 
    attribution
+   llm_attr
    noise_tunnel
    layer
    neuron
