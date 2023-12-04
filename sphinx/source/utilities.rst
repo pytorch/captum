@@ -1,8 +1,8 @@
 Utilities
 ==========
 
-Interpretable Inpit
-^^^^^^^^^^^^^^
+Interpretable Input
+^^^^^^^^^^^^^^^^^^^^^
 .. autoclass:: captum.attr.InterpretableInput
     :members:
 
