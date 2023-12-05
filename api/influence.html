@@ -38,6 +38,21 @@ src="/_sphinx/documentation_options.js"></script>
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">captum.influence.</span></span><span class="sig-name descname"><span class="pre">DataInfluence</span></span><a class="reference internal" href="_modules/captum/influence/_core/influence.html#DataInfluence"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum.influence.DataInfluence" title="Link to this definition">¶</a></dt>
 <dd><p>An abstract class to define model data influence skeleton.</p>
 <dl class="py method">
+<dt class="sig sig-object py" id="captum.influence.DataInfluence.get_name">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">get_name</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/influence/_core/influence.html#DataInfluence.get_name"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum.influence.DataInfluence.get_name" title="Link to this definition">¶</a></dt>
+<dd><p>Create readable class name.  Due to the nature of the names of <cite>TracInCPBase</cite>
+subclasses, simply returns the class name.  For example, for a class called
+TracInCP, we return the string TracInCP.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>a readable class name</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>name (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)">str</a>)</p>
+</dd>
+</dl>
+</dd></dl>
+<dl class="py method">
 <dt class="sig sig-object py" id="captum.influence.DataInfluence.influence">
 <em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">influence</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inputs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/influence/_core/influence.html#DataInfluence.influence"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum.influence.DataInfluence.influence" title="Link to this definition">¶</a></dt>
 <dd><dl class="field-list simple">

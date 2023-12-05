@@ -36,34 +36,24 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="kn">import</span> <span class="nn">warnings</span>
 <span class="kn">from</span> <span class="nn">abc</span> <span class="kn">import</span> <span class="n">abstractmethod</span>
 <span class="kn">from</span> <span class="nn">os.path</span> <span class="kn">import</span> <span class="n">join</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="p">(</span>
-    <span class="n">Any</span><span class="p">,</span>
-    <span class="n">Callable</span><span class="p">,</span>
-    <span class="n">Iterator</span><span class="p">,</span>
-    <span class="n">List</span><span class="p">,</span>
-    <span class="n">NamedTuple</span><span class="p">,</span>
-    <span class="n">Optional</span><span class="p">,</span>
-    <span class="n">Tuple</span><span class="p">,</span>
-    <span class="n">Type</span><span class="p">,</span>
-    <span class="n">Union</span><span class="p">,</span>
-<span class="p">)</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Iterator</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Type</span><span class="p">,</span> <span class="n">Union</span>
 
 <span class="kn">import</span> <span class="nn">torch</span>
 <span class="kn">from</span> <span class="nn">captum._utils.av</span> <span class="kn">import</span> <span class="n">AV</span>
-<span class="kn">from</span> <span class="nn">captum._utils.common</span> <span class="kn">import</span> <span class="n">_get_module_from_name</span><span class="p">,</span> <span class="n">_parse_version</span>
-<span class="kn">from</span> <span class="nn">captum._utils.gradient</span> <span class="kn">import</span> <span class="p">(</span>
-    <span class="n">_compute_jacobian_wrt_params</span><span class="p">,</span>
-    <span class="n">_compute_jacobian_wrt_params_with_sample_wise_trick</span><span class="p">,</span>
-<span class="p">)</span>
+<span class="kn">from</span> <span class="nn">captum._utils.common</span> <span class="kn">import</span> <span class="n">_parse_version</span>
 <span class="kn">from</span> <span class="nn">captum._utils.progress</span> <span class="kn">import</span> <span class="n">NullProgress</span><span class="p">,</span> <span class="n">progress</span>
 <span class="kn">from</span> <span class="nn">captum.influence._core.influence</span> <span class="kn">import</span> <span class="n">DataInfluence</span>
 <span class="kn">from</span> <span class="nn">captum.influence._utils.common</span> <span class="kn">import</span> <span class="p">(</span>
     <span class="n">_check_loss_fn</span><span class="p">,</span>
+    <span class="n">_compute_jacobian_sample_wise_grads_per_batch</span><span class="p">,</span>
     <span class="n">_format_inputs_dataset</span><span class="p">,</span>
     <span class="n">_get_k_most_influential_helper</span><span class="p">,</span>
     <span class="n">_gradient_dot_product</span><span class="p">,</span>
+    <span class="n">_influence_route_to_helpers</span><span class="p">,</span>
     <span class="n">_load_flexible_state_dict</span><span class="p">,</span>
     <span class="n">_self_influence_by_batches_helper</span><span class="p">,</span>
+    <span class="n">_set_active_parameters</span><span class="p">,</span>
+    <span class="n">KMostInfluentialResults</span><span class="p">,</span>
 <span class="p">)</span>
 <span class="kn">from</span> <span class="nn">captum.log</span> <span class="kn">import</span> <span class="n">log_usage</span>
 <span class="kn">from</span> <span class="nn">torch</span> <span class="kn">import</span> <span class="n">Tensor</span>
@@ -99,24 +89,6 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">                saved / loaded checkpoints can be either model parameters, or</span>
 <span class="sd">                gradient of the loss function on an input w.r.t parameters.</span>
 <span class="sd">"""</span>
-
-
-<span class="k">class</span> <span class="nc">KMostInfluentialResults</span><span class="p">(</span><span class="n">NamedTuple</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">"""</span>
-<span class="sd">    This namedtuple stores the results of using the `influence` method. This method</span>
-<span class="sd">    is implemented by all subclasses of `TracInCPBase` to calculate</span>
-<span class="sd">    proponents / opponents. The `indices` field stores the indices of the</span>
-<span class="sd">    proponents / opponents for each example in the test dataset. For example, if</span>
-<span class="sd">    finding opponents, `indices[i][j]` stores the index in the training data of the</span>
-<span class="sd">    example with the `j`-th highest influence score on the `i`-th example in the test</span>
-<span class="sd">    dataset. Similarly, the `influence_scores` field stores the actual influence</span>
-<span class="sd">    scores, so that `influence_scores[i][j]` is the influence score of example</span>
-<span class="sd">    `indices[i][j]` in the training data on example `i` of the test dataset.</span>
-<span class="sd">    Please see `TracInCPBase.influence` for more details.</span>
-<span class="sd">    """</span>
-
-    <span class="n">indices</span><span class="p">:</span> <span class="n">Tensor</span>
-    <span class="n">influence_scores</span><span class="p">:</span> <span class="n">Tensor</span>
 
 
 <div class="viewcode-block" id="TracInCPBase">
@@ -492,34 +464,6 @@ src="/_sphinx/documentation_options.js"></script>
 
 
 
-<span class="k">def</span> <span class="nf">_influence_route_to_helpers</span><span class="p">(</span>
-    <span class="n">influence_instance</span><span class="p">:</span> <span class="n">TracInCPBase</span><span class="p">,</span>
-    <span class="n">inputs</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span> <span class="n">DataLoader</span><span class="p">],</span>
-    <span class="n">k</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="n">proponents</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
-    <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
-<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">KMostInfluentialResults</span><span class="p">]:</span>
-<span class="w">    </span><span class="sd">"""</span>
-<span class="sd">    This is a helper function called by `TracInCP.influence` and</span>
-<span class="sd">    `TracInCPFast.influence`. Those methods share a common logic in that they assume</span>
-<span class="sd">    an instance of their respective classes implement 2 private methods</span>
-<span class="sd">    (``_influence`, `_get_k_most_influential`), and the logic of</span>
-<span class="sd">    which private method to call is common, as described in the documentation of the</span>
-<span class="sd">    `influence` method. The arguments and return values of this function are the exact</span>
-<span class="sd">    same as the `influence` method. Note that `influence_instance` refers to the</span>
-<span class="sd">    instance for which the `influence` method was called.</span>
-<span class="sd">    """</span>
-    <span class="k">if</span> <span class="n">k</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="k">return</span> <span class="n">influence_instance</span><span class="o">.</span><span class="n">_influence</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="k">return</span> <span class="n">influence_instance</span><span class="o">.</span><span class="n">_get_k_most_influential</span><span class="p">(</span>
-            <span class="n">inputs</span><span class="p">,</span>
-            <span class="n">k</span><span class="p">,</span>
-            <span class="n">proponents</span><span class="p">,</span>
-            <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
-        <span class="p">)</span>
-
-
 <div class="viewcode-block" id="TracInCP">
 <a class="viewcode-back" href="../../../../influence.html#captum.influence.TracInCP">[docs]</a>
 <span class="k">class</span> <span class="nc">TracInCP</span><span class="p">(</span><span class="n">TracInCPBase</span><span class="p">):</span>
@@ -676,23 +620,7 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">        """</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">layer_modules</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="k">if</span> <span class="n">layers</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">layers</span><span class="p">,</span> <span class="n">List</span><span class="p">),</span> <span class="s2">"`layers` should be a list!"</span>
-            <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">layers</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">"`layers` cannot be empty!"</span>
-            <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span>
-                <span class="n">layers</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="nb">str</span>
-            <span class="p">),</span> <span class="s2">"`layers` should contain str layer names."</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">layer_modules</span> <span class="o">=</span> <span class="p">[</span>
-                <span class="n">_get_module_from_name</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">,</span> <span class="n">layer</span><span class="p">)</span> <span class="k">for</span> <span class="n">layer</span> <span class="ow">in</span> <span class="n">layers</span>
-            <span class="p">]</span>
-            <span class="k">for</span> <span class="n">layer</span><span class="p">,</span> <span class="n">layer_module</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">layers</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">layer_modules</span><span class="p">):</span>
-                <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">param</span> <span class="ow">in</span> <span class="n">layer_module</span><span class="o">.</span><span class="n">named_parameters</span><span class="p">():</span>
-                    <span class="k">if</span> <span class="ow">not</span> <span class="n">param</span><span class="o">.</span><span class="n">requires_grad</span><span class="p">:</span>
-                        <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
-                            <span class="s2">"Setting required grads for layer: </span><span class="si">{}</span><span class="s2">, name: </span><span class="si">{}</span><span class="s2">"</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
-                                <span class="s2">"."</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">layer</span><span class="p">),</span> <span class="n">name</span>
-                            <span class="p">)</span>
-                        <span class="p">)</span>
-                        <span class="n">param</span><span class="o">.</span><span class="n">requires_grad</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">layer_modules</span> <span class="o">=</span> <span class="n">_set_active_parameters</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">layers</span><span class="p">)</span>
 
 <div class="viewcode-block" id="TracInCP.influence">
 <a class="viewcode-back" href="../../../../influence.html#captum.influence.TracInCP.influence">[docs]</a>
@@ -1518,21 +1446,8 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">                    argument is only used if `sample_wise_grads_per_batch` was true in</span>
 <span class="sd">                    initialization.</span>
 <span class="sd">        """</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">sample_wise_grads_per_batch</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">_compute_jacobian_wrt_params_with_sample_wise_trick</span><span class="p">(</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">,</span>
-                <span class="n">inputs</span><span class="p">,</span>
-                <span class="n">targets</span><span class="p">,</span>
-                <span class="n">loss_fn</span><span class="p">,</span>
-                <span class="n">reduction_type</span><span class="p">,</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">layer_modules</span><span class="p">,</span>
-            <span class="p">)</span>
-        <span class="k">return</span> <span class="n">_compute_jacobian_wrt_params</span><span class="p">(</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">,</span>
-            <span class="n">inputs</span><span class="p">,</span>
-            <span class="n">targets</span><span class="p">,</span>
-            <span class="n">loss_fn</span><span class="p">,</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">layer_modules</span><span class="p">,</span>
+        <span class="k">return</span> <span class="n">_compute_jacobian_sample_wise_grads_per_batch</span><span class="p">(</span>
+            <span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">,</span> <span class="n">targets</span><span class="p">,</span> <span class="n">loss_fn</span><span class="p">,</span> <span class="n">reduction_type</span>
         <span class="p">)</span></div>
 
 </pre></div>
