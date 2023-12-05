@@ -1,5 +1,5 @@
 import tempfile
-from typing import Callable, List, Tuple
+from typing import Callable, List, Tuple, Union
 
 import torch
 
@@ -110,7 +110,7 @@ class TestNaiveInfluence(BaseTest):
         delta: float,
         mode: str,
         unpack_inputs: bool,
-        use_gpu: bool,
+        use_gpu: Union[bool, str],
     ):
         """
         this tests that `NaiveInfluence`, the simplest implementation, agree with the
