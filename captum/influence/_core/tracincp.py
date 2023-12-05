@@ -4,34 +4,24 @@ import glob
 import warnings
 from abc import abstractmethod
 from os.path import join
-from typing import (
-    Any,
-    Callable,
-    Iterator,
-    List,
-    NamedTuple,
-    Optional,
-    Tuple,
-    Type,
-    Union,
-)
+from typing import Any, Callable, Iterator, List, Optional, Tuple, Type, Union
 
 import torch
 from captum._utils.av import AV
-from captum._utils.common import _get_module_from_name, _parse_version
-from captum._utils.gradient import (
-    _compute_jacobian_wrt_params,
-    _compute_jacobian_wrt_params_with_sample_wise_trick,
-)
+from captum._utils.common import _parse_version
 from captum._utils.progress import NullProgress, progress
 from captum.influence._core.influence import DataInfluence
 from captum.influence._utils.common import (
     _check_loss_fn,
+    _compute_jacobian_sample_wise_grads_per_batch,
     _format_inputs_dataset,
     _get_k_most_influential_helper,
     _gradient_dot_product,
+    _influence_route_to_helpers,
     _load_flexible_state_dict,
     _self_influence_by_batches_helper,
+    _set_active_parameters,
+    KMostInfluentialResults,
 )
 from captum.log import log_usage
 from torch import Tensor
@@ -67,24 +57,6 @@ checkpoint_type (Enum = [Parameters | Loss_Grad]): For performance,
                 saved / loaded checkpoints can be either model parameters, or
                 gradient of the loss function on an input w.r.t parameters.
 """
-
-
-class KMostInfluentialResults(NamedTuple):
-    """
-    This namedtuple stores the results of using the `influence` method. This method
-    is implemented by all subclasses of `TracInCPBase` to calculate
-    proponents / opponents. The `indices` field stores the indices of the
-    proponents / opponents for each example in the test dataset. For example, if
-    finding opponents, `indices[i][j]` stores the index in the training data of the
-    example with the `j`-th highest influence score on the `i`-th example in the test
-    dataset. Similarly, the `influence_scores` field stores the actual influence
-    scores, so that `influence_scores[i][j]` is the influence score of example
-    `indices[i][j]` in the training data on example `i` of the test dataset.
-    Please see `TracInCPBase.influence` for more details.
-    """
-
-    indices: Tensor
-    influence_scores: Tensor
 
 
 class TracInCPBase(DataInfluence):
@@ -448,34 +420,6 @@ class TracInCPBase(DataInfluence):
         return cls.__name__
 
 
-def _influence_route_to_helpers(
-    influence_instance: TracInCPBase,
-    inputs: Union[Tuple[Any, ...], DataLoader],
-    k: Optional[int] = None,
-    proponents: bool = True,
-    **kwargs,
-) -> Union[Tensor, KMostInfluentialResults]:
-    """
-    This is a helper function called by `TracInCP.influence` and
-    `TracInCPFast.influence`. Those methods share a common logic in that they assume
-    an instance of their respective classes implement 2 private methods
-    (``_influence`, `_get_k_most_influential`), and the logic of
-    which private method to call is common, as described in the documentation of the
-    `influence` method. The arguments and return values of this function are the exact
-    same as the `influence` method. Note that `influence_instance` refers to the
-    instance for which the `influence` method was called.
-    """
-    if k is None:
-        return influence_instance._influence(inputs, **kwargs)
-    else:
-        return influence_instance._get_k_most_influential(
-            inputs,
-            k,
-            proponents,
-            **kwargs,
-        )
-
-
 class TracInCP(TracInCPBase):
     def __init__(
         self,
@@ -630,23 +574,7 @@ class TracInCP(TracInCPBase):
         """
         self.layer_modules = None
         if layers is not None:
-            assert isinstance(layers, List), "`layers` should be a list!"
-            assert len(layers) > 0, "`layers` cannot be empty!"
-            assert isinstance(
-                layers[0], str
-            ), "`layers` should contain str layer names."
-            self.layer_modules = [
-                _get_module_from_name(self.model, layer) for layer in layers
-            ]
-            for layer, layer_module in zip(layers, self.layer_modules):
-                for name, param in layer_module.named_parameters():
-                    if not param.requires_grad:
-                        warnings.warn(
-                            "Setting required grads for layer: {}, name: {}".format(
-                                ".".join(layer), name
-                            )
-                        )
-                        param.requires_grad = True
+            self.layer_modules = _set_active_parameters(model, layers)
 
     @log_usage()
     def influence(  # type: ignore[override]
@@ -1463,19 +1391,6 @@ class TracInCP(TracInCPBase):
                     argument is only used if `sample_wise_grads_per_batch` was true in
                     initialization.
         """
-        if self.sample_wise_grads_per_batch:
-            return _compute_jacobian_wrt_params_with_sample_wise_trick(
-                self.model,
-                inputs,
-                targets,
-                loss_fn,
-                reduction_type,
-                self.layer_modules,
-            )
-        return _compute_jacobian_wrt_params(
-            self.model,
-            inputs,
-            targets,
-            loss_fn,
-            self.layer_modules,
+        return _compute_jacobian_sample_wise_grads_per_batch(
+            self, inputs, targets, loss_fn, reduction_type
         )

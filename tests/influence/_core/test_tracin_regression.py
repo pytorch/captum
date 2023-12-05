@@ -4,6 +4,7 @@ from typing import Callable, cast, Optional
 
 import torch
 import torch.nn as nn
+from captum.influence._core.influence_function import NaiveInfluenceFunction
 from captum.influence._core.tracincp import TracInCP
 from captum.influence._core.tracincp_fast_rand_proj import (
     TracInCPFast,
@@ -340,6 +341,7 @@ class TestTracInRegression(BaseTest):
             ("check_idx", "sum", DataInfluenceConstructor(TracInCPFastRandProj)),
             ("check_idx", "mean", DataInfluenceConstructor(TracInCPFast)),
             ("check_idx", "mean", DataInfluenceConstructor(TracInCPFastRandProj)),
+            ("check_idx", "none", DataInfluenceConstructor(NaiveInfluenceFunction)),
         ],
         name_func=build_test_name_func(),
     )
@@ -435,6 +437,7 @@ class TestTracInRegression(BaseTest):
             ("mean", "mean", DataInfluenceConstructor(TracInCPFast)),
             ("sum", "sum", DataInfluenceConstructor(TracInCPFastRandProj)),
             ("mean", "mean", DataInfluenceConstructor(TracInCPFastRandProj)),
+            ("none", "none", DataInfluenceConstructor(NaiveInfluenceFunction)),
         ],
         name_func=build_test_name_func(),
     )
