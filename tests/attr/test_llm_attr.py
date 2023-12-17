@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import copy
 from collections import namedtuple
 from typing import cast, List, Optional, Union
 
@@ -53,9 +54,11 @@ class DummyLLM(nn.Module):
 
     def forward(self, input_ids, *args, **kwargs):
         emb = self.emb(input_ids)
+        if "past_key_values" in kwargs:
+            emb = torch.cat((kwargs["past_key_values"], emb), dim=1)
         logits = self.linear(self.trans(emb))
-        Result = namedtuple("Result", ["logits"])
-        return Result(logits=logits)
+        Result = namedtuple("Result", ["logits", "past_key_values"])
+        return Result(logits=logits, past_key_values=emb)
 
     def generate(self, input_ids, *args, mock_response=None, **kwargs):
         assert mock_response, "must mock response to use DummyLLM to geenrate"
@@ -63,6 +66,21 @@ class DummyLLM(nn.Module):
         return torch.cat(
             [input_ids, torch.tensor([response], device=self.device)], dim=1
         )
+
+    def _update_model_kwargs_for_generation(self, outputs, model_kwargs):
+        new_kwargs = copy.deepcopy(model_kwargs)
+        if hasattr(outputs, "past_key_values"):
+            new_kwargs["past_key_values"] = outputs.past_key_values
+        return new_kwargs
+
+    def prepare_inputs_for_generation(self, model_inp, **model_kwargs):
+        if "past_key_values" in model_kwargs:
+            emb_len = model_kwargs["past_key_values"].shape[1]
+            return {
+                "input_ids": model_inp[:, emb_len:],
+                "past_key_values": model_kwargs["past_key_values"],
+            }
+        return {"input_ids": model_inp}
 
     @property
     def device(self):
