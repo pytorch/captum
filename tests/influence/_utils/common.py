@@ -2,12 +2,16 @@ import inspect
 import os
 import unittest
 from functools import partial
-from typing import Callable, Iterator, List, Optional, Tuple, Union
+from inspect import isfunction
+from typing import Callable, List, Optional, Tuple, Union
 
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from captum._utils.common import _parse_version
 from captum.influence import DataInfluence
+from captum.influence._core.arnoldi_influence_function import ArnoldiInfluenceFunction
+from captum.influence._core.influence_function import NaiveInfluenceFunction
 from captum.influence._core.tracincp_fast_rand_proj import (
     TracInCPFast,
     TracInCPFastRandProj,
@@ -180,10 +184,73 @@ class MultLinearNet(nn.Module):
         return torch.tanh(self.linear2(x))
 
 
+class Linear(nn.Module):
+    """
+    a wrapper around `nn.Linear`, with purpose being to have an analogue to
+    `UnpackLinear`, with both's only parameter being 'linear'. "infinitesimal"
+    influence (i.e. that calculated by `InfluenceFunctionBase` implementations) for
+    this simple module can be analytically calculated, so its purpose is for testing
+    those implementations.
+    """
+
+    def __init__(self, in_features):
+        super().__init__()
+        self.linear = nn.Linear(in_features, 1, bias=False)
+
+    def forward(self, input):
+        return self.linear(input)
+
+
+class UnpackLinear(nn.Module):
+    """
+    the analogue of `Linear` which unpacks inputs, serving the same purpose.
+    """
+
+    def __init__(self, in_features, num_inputs) -> None:
+        super().__init__()
+        self.linear = nn.Linear(in_features * num_inputs, 1, bias=False)
+
+    def forward(self, *inputs):
+        return self.linear(torch.cat(inputs, dim=1))
+
+
 def get_random_model_and_data(
-    tmpdir, unpack_inputs, return_test_data=True, use_gpu=False
+    tmpdir,
+    unpack_inputs,
+    return_test_data=True,
+    use_gpu=False,
+    return_hessian_data=False,
+    model_type="random",
 ):
     """
+    returns a model, training data, and optionally data for computing the hessian
+    (needed for `InfluenceFunctionBase` implementations) as features / labels, and
+    optionally test data as features / labels.
+
+    the data is always generated the same way. however depending on `model_type`,
+    a different model and checkpoints are returned.
+    - `model_type='random'`: the model is a 2-layer NN, and several checkpoints are
+    generated
+    - `model_type='trained_linear'`: the model is a linear model, and assumed to be
+    eventually trained to optimality. therefore, we find the optimal parameters, and
+    save a single checkpoint containing them. the training is done using the Hessian
+    data, because the purpose of training the model is so that the Hessian is positive
+    definite. since the Hessian is calculated using the Hessian data, it should be
+    used for training. since it is trained to optimality using the Hessian data, we can
+    guarantee that the Hessian is positive definite, so that different
+    implementations of `InfluenceFunctionBase` can be more easily compared. (if the
+    Hessian is not positive definite, we drop eigenvectors corresponding to negative
+    eigenvalues. since the eigenvectors dropped in `ArnoldiInfluence` differ from those
+    in `NaiveInfluenceFunction` due to the formers' use of Arnoldi iteration, we should
+    only use models / data whose Hessian is positive definite, so that no eigenvectors
+    are dropped). in short, this model / data are suitable for comparing different
+    `InfluenceFunctionBase` implementations.
+    - `model_type='trained_NN'`: the model is a 2-layer NN, and trained (not
+    necessarily) to optimality using the Hessian data. since it is trained, for same
+    reasons as for `model_type='trained_linear`, different implementations of
+    `InfluenceFunctionBase` can be more easily compared, due to lack of numerical
+    issues.
+
     `use_gpu` can either be
     - `False`: returned model is on cpu
     - `'cuda'`: returned model is on gpu
@@ -192,57 +259,54 @@ def get_random_model_and_data(
     is that sometimes we may want to test a model that is on cpu, but is *not*
     wrapped in `DataParallel`.
     """
-    assert use_gpu in [False, "cuda", "cuda_data_parallel"]
-
-    in_features, hidden_nodes, out_features = 5, 4, 3
+    in_features, hidden_nodes = 5, 4
     num_inputs = 2
 
-    net = (
-        BasicLinearNet(in_features, hidden_nodes, out_features)
-        if not unpack_inputs
-        else MultLinearNet(in_features, hidden_nodes, out_features, num_inputs)
-    ).double()
-
-    num_checkpoints = 5
-
-    for i in range(num_checkpoints):
-        net.linear1.weight.data = torch.normal(
-            3, 4, (hidden_nodes, in_features)
-        ).double()
-        net.linear2.weight.data = torch.normal(
-            5, 6, (out_features, hidden_nodes)
-        ).double()
-        if unpack_inputs:
-            net.pre.weight.data = torch.normal(
-                3, 4, (in_features, in_features * num_inputs)
-            )
-        if hasattr(net, "pre"):
-            net.pre.weight.data = net.pre.weight.data.double()
-        checkpoint_name = "-".join(["checkpoint-reg", str(i + 1) + ".pt"])
-        net_adjusted = (
-            _wrap_model_in_dataparallel(net)
-            if use_gpu == "cuda_data_parallel"
-            else (net.to(device="cuda") if use_gpu == "cuda" else net)
-        )
-        torch.save(net_adjusted.state_dict(), os.path.join(tmpdir, checkpoint_name))
+    # generate data. regardless the model, the data is always generated the same way
+    # the only exception is if the `model_type` is 'trained_linear', i.e. a simple
+    # linear regression model. this is a simple model, and for simplicity, the
+    # number of `out_features` is 1 in this case.
+    if model_type == "trained_linear":
+        out_features = 1
+    else:
+        out_features = 3
 
     num_samples = 50
     num_train = 32
+    num_hessian = 22  # this needs to be high to prevent numerical issues
     all_labels = torch.normal(1, 2, (num_samples, out_features)).double()
+    all_labels = all_labels.cuda() if use_gpu else all_labels
     train_labels = all_labels[:num_train]
     test_labels = all_labels[num_train:]
+    hessian_labels = all_labels[:num_hessian]
 
     if unpack_inputs:
         all_samples = [
             torch.normal(0, 1, (num_samples, in_features)).double()
             for _ in range(num_inputs)
         ]
+        all_samples = (
+            _move_sample_to_cuda(all_samples)
+            if isinstance(all_samples, list) and use_gpu
+            else all_samples.cuda()
+            if use_gpu
+            else all_samples
+        )
         train_samples = [ts[:num_train] for ts in all_samples]
         test_samples = [ts[num_train:] for ts in all_samples]
+        hessian_samples = [ts[:num_hessian] for ts in all_samples]
     else:
         all_samples = torch.normal(0, 1, (num_samples, in_features)).double()
+        all_samples = (
+            _move_sample_to_cuda(all_samples)
+            if isinstance(all_samples, list) and use_gpu
+            else all_samples.cuda()
+            if use_gpu
+            else all_samples
+        )
         train_samples = all_samples[:num_train]
         test_samples = all_samples[num_train:]
+        hessian_samples = all_samples[:num_hessian]
 
     dataset = (
         ExplicitDataset(train_samples, train_labels, use_gpu)
@@ -250,26 +314,191 @@ def get_random_model_and_data(
         else UnpackDataset(train_samples, train_labels, use_gpu)
     )
 
+    if model_type == "random":
+        net = (
+            BasicLinearNet(in_features, hidden_nodes, out_features)
+            if not unpack_inputs
+            else MultLinearNet(in_features, hidden_nodes, out_features, num_inputs)
+        ).double()
+
+        # generate checkpoints randomly
+        num_checkpoints = 5
+
+        for i in range(num_checkpoints):
+            net.linear1.weight.data = torch.normal(
+                3, 4, (hidden_nodes, in_features)
+            ).double()
+            net.linear2.weight.data = torch.normal(
+                5, 6, (out_features, hidden_nodes)
+            ).double()
+            if unpack_inputs:
+                net.pre.weight.data = torch.normal(
+                    3, 4, (in_features, in_features * num_inputs)
+                ).double()
+            checkpoint_name = "-".join(["checkpoint-reg", str(i + 1) + ".pt"])
+            net_adjusted = (
+                _wrap_model_in_dataparallel(net)
+                if use_gpu == "cuda_data_parallel"
+                else (net.to(device="cuda") if use_gpu == "cuda" else net)
+            )
+            torch.save(net_adjusted.state_dict(), os.path.join(tmpdir, checkpoint_name))
+
+    elif model_type == "trained_linear":
+        net = (
+            Linear(in_features)
+            if not unpack_inputs
+            else UnpackLinear(in_features, num_inputs)
+        ).double()
+
+        # regardless of `unpack_inputs`, the model is a linear regression, so that
+        # we can get the optimal trained parameters via least squares
+
+        # turn input into a single tensor for use by least squares
+        tensor_hessian_samples = (
+            hessian_samples if not unpack_inputs else torch.cat(hessian_samples, dim=1)
+        )
+        version = _parse_version(torch.__version__)
+        if version < (1, 9):
+            theta = torch.lstsq(tensor_hessian_samples, hessian_labels).solution[0:1]
+        else:
+            # run least squares to get optimal trained parameters
+            theta = torch.linalg.lstsq(
+                hessian_labels,
+                tensor_hessian_samples,
+            ).solution
+        # the first `n` rows of `theta` contains the least squares solution, where
+        # `n` is the number of features in `tensor_hessian_samples`
+        theta = theta[: tensor_hessian_samples.shape[1]]
+
+        # save that trained parameter as a checkpoint
+        checkpoint_name = "checkpoint-final.pt"
+        net.linear.weight.data = theta.contiguous()
+        net_adjusted = (
+            _wrap_model_in_dataparallel(net)
+            if use_gpu == "cuda_data_parallel"
+            else (net.to(device="cuda") if use_gpu == "cuda" else net)
+        )
+        torch.save(net_adjusted.state_dict(), os.path.join(tmpdir, checkpoint_name))
+
+    elif model_type == "trained_NN":
+        net = (
+            BasicLinearNet(in_features, hidden_nodes, out_features)
+            if not unpack_inputs
+            else MultLinearNet(in_features, hidden_nodes, out_features, num_inputs)
+        ).double()
+
+        net_adjusted = (
+            _wrap_model_in_dataparallel(net)
+            if use_gpu == "cuda_data_parallel"
+            else (net.to(device="cuda") if use_gpu == "cuda" else net)
+        )
+
+        # train model using several optimization steps on Hessian data
+
+        # create entire Hessian data as a batch
+        hessian_dataset = (
+            ExplicitDataset(hessian_samples, hessian_labels, use_gpu)
+            if not unpack_inputs
+            else UnpackDataset(hessian_samples, hessian_labels, use_gpu)
+        )
+        batch = next(iter(DataLoader(hessian_dataset, batch_size=num_hessian)))
+
+        optimizer = torch.optim.Adam(net.parameters())
+        num_steps = 200
+        criterion = nn.MSELoss(reduction="sum")
+        for _ in range(num_steps):
+            optimizer.zero_grad()
+            output = net_adjusted(*batch[:-1])
+            loss = criterion(output, batch[-1])
+            loss.backward()
+            optimizer.step()
+
+        # save that trained parameter as a checkpoint
+        checkpoint_name = "checkpoint-final.pt"
+        net_adjusted = (
+            _wrap_model_in_dataparallel(net) if use_gpu == "cuda_data_parallel" else net
+        )
+        torch.save(net_adjusted.state_dict(), os.path.join(tmpdir, checkpoint_name))
+
+    training_data = (
+        net_adjusted,
+        dataset,
+    )
+
+    hessian_data = (
+        _move_sample_to_cuda(hessian_samples)
+        if isinstance(hessian_samples, list) and use_gpu
+        else hessian_samples.cuda()
+        if use_gpu
+        else hessian_samples,
+        hessian_labels.cuda() if use_gpu else hessian_labels,
+    )
+
+    test_data = (
+        _move_sample_to_cuda(test_samples)
+        if isinstance(test_samples, list) and use_gpu
+        else test_samples.cuda()
+        if use_gpu
+        else test_samples,
+        test_labels.cuda() if use_gpu else test_labels,
+    )
     if return_test_data:
-        return (
-            _wrap_model_in_dataparallel(net)
-            if use_gpu == "cuda_data_parallel"
-            else (net.to(device="cuda") if use_gpu == "cuda" else net),
-            dataset,
-            _move_sample_to_cuda(test_samples)
-            if isinstance(test_samples, list) and use_gpu
-            else test_samples.cuda()
-            if use_gpu
-            else test_samples,
-            test_labels.cuda() if use_gpu else test_labels,
-        )
+        if not return_hessian_data:
+            return (*training_data, *test_data)
+        else:
+            return (*training_data, *hessian_data, *test_data)
     else:
-        return (
-            _wrap_model_in_dataparallel(net)
-            if use_gpu == "cuda_data_parallel"
-            else (net.to(device="cuda") if use_gpu == "cuda" else net),
-            dataset,
+        if not return_hessian_data:
+            return training_data
+        else:
+            return (*training_data, *hessian_data)
+
+
+def generate_symmetric_matrix_given_eigenvalues(
+    eigenvalues: Union[Tensor, List[float]]
+):
+    """
+    following https://github.com/google-research/jax-influence/blob/74bd321156b5445bb35b9594568e4eaaec1a76a3/jax_influence/test_utils.py#L123  # noqa: E501
+    generate symmetric random matrix with specified eigenvalues.  this is used in
+    `TestArnoldiInfluence._test_parameter_arnoldi_and_distill` either to check that
+    `_parameter_arnoldi` does return the top eigenvalues of a symmetric random matrix,
+    or that `_parameter_distill` does return the eigenvectors corresponding to the top
+    eigenvalues of that symmetric random matrix.
+    """
+    # generate random matrix, then apply gram-schmidt to get random orthonormal basis
+    D = len(eigenvalues)
+    version = _parse_version(torch.__version__)
+    if version < (1, 8):
+        Q, _ = torch.qr(torch.randn((D, D)))
+    else:
+        Q, _ = torch.linalg.qr(torch.randn((D, D)))
+    return torch.matmul(Q, torch.matmul(torch.diag(torch.tensor(eigenvalues)), Q.T))
+
+
+def generate_assymetric_matrix_given_eigenvalues(
+    eigenvalues: Union[Tensor, List[float]]
+):
+    """
+    following https://github.com/google-research/jax-influence/blob/74bd321156b5445bb35b9594568e4eaaec1a76a3/jax_influence/test_utils.py#L105 # noqa: E501
+    generate assymetric random matrix with specified eigenvalues. this is used in
+    `TestArnoldiInfluence._test_parameter_arnoldi_and_distill` either to check that
+    `_parameter_arnoldi` does return the top eigenvalues of a assymmetric random
+    matrix, or that `_parameter_distill` does return the eigenvectors corresponding to
+    the top eigenvalues of that assymmetric random matrix.
+    """
+    # the matrix M, given eigenvectors Q and eigenvalues L, should satisfy MQ = QL
+    # or equivalently, Q'M' = LQ'.
+    D = len(eigenvalues)
+    Q_T = torch.randn((D, D))
+    version = _parse_version(torch.__version__)
+    if version < (1, 8):
+        X, _ = torch.solve(
+            Q_T, torch.matmul(torch.diag(torch.tensor(eigenvalues)), Q_T)
         )
+        return X.T
+    return torch.linalg.solve(
+        Q_T, torch.matmul(torch.diag(torch.tensor(eigenvalues)), Q_T)
+    ).T
 
 
 class DataInfluenceConstructor:
@@ -295,11 +524,14 @@ class DataInfluenceConstructor:
     def __repr__(self) -> str:
         return self.name
 
+    def __name__(self) -> str:
+        return self.name
+
     def __call__(
         self,
         net: Module,
         dataset: Union[Dataset, DataLoader],
-        tmpdir: Union[str, List[str], Iterator],
+        tmpdir: str,
         batch_size: Union[int, None],
         loss_fn: Optional[Union[Module, Callable]],
         **kwargs,
@@ -320,6 +552,26 @@ class DataInfluenceConstructor:
                 list(net.children())[-1],
                 dataset,
                 tmpdir,
+                loss_fn=loss_fn,
+                batch_size=batch_size,
+                **constructor_kwargs,
+            )
+        elif self.data_influence_class in [
+            NaiveInfluenceFunction,
+            ArnoldiInfluenceFunction,
+        ]:
+            # for these implementations, only a single checkpoint is needed, not
+            # a directory containing several checkpoints. therefore, given
+            # directory `tmpdir`, we do not pass it directly to the constructor,
+            # but instead find 1 checkpoint in it, and pass that to the
+            # constructor
+            checkpoint_name = sorted(os.listdir(tmpdir))[-1]
+            checkpoint = os.path.join(tmpdir, checkpoint_name)
+
+            return self.data_influence_class(
+                net,
+                dataset,
+                checkpoint,
                 loss_fn=loss_fn,
                 batch_size=batch_size,
                 **constructor_kwargs,
@@ -371,6 +623,8 @@ def generate_test_name(
         if isinstance(arg, bool):
             if arg:
                 param_strs.append(func_param_names[i])
+        elif isfunction(arg):
+            param_strs.append(arg.__name__)
         else:
             args_str = str(arg)
             if args_str.isnumeric():
@@ -397,3 +651,10 @@ def _format_batch_into_tuple(
         return (*inputs, targets)
     else:
         return (inputs, targets)
+
+
+USE_GPU_LIST = (
+    [False, "cuda"]
+    if torch.cuda.is_available() and torch.cuda.device_count() != 0
+    else [False]
+)

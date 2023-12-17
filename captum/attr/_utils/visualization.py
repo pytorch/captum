@@ -448,7 +448,7 @@ def visualize_timeseries_attr(
     attr: ndarray,
     data: ndarray,
     x_values: Optional[ndarray] = None,
-    method: str = "individual_channels",
+    method: str = "overlay_individual",
     sign: str = "absolute_value",
     channel_labels: Optional[List[str]] = None,
     channels_last: bool = True,

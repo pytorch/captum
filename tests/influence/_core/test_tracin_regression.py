@@ -4,6 +4,8 @@ from typing import Callable, cast, Optional
 
 import torch
 import torch.nn as nn
+from captum.influence._core.arnoldi_influence_function import ArnoldiInfluenceFunction
+from captum.influence._core.influence_function import NaiveInfluenceFunction
 from captum.influence._core.tracincp import TracInCP
 from captum.influence._core.tracincp_fast_rand_proj import (
     TracInCPFast,
@@ -320,7 +322,7 @@ class TestTracInRegression(BaseTest):
         num_checkpoints = 5
 
         for i in range(num_checkpoints):
-            net.fc1.weight.data = torch.rand((1, num_features))
+            net.fc1.weight.data = torch.rand((1, num_features)) * 100
             checkpoint_name = "-".join(["checkpoint-reg", str(i) + ".pt"])
             torch.save(net.state_dict(), os.path.join(tmpdir, checkpoint_name))
 
@@ -340,6 +342,15 @@ class TestTracInRegression(BaseTest):
             ("check_idx", "sum", DataInfluenceConstructor(TracInCPFastRandProj)),
             ("check_idx", "mean", DataInfluenceConstructor(TracInCPFast)),
             ("check_idx", "mean", DataInfluenceConstructor(TracInCPFastRandProj)),
+            ("check_idx", "none", DataInfluenceConstructor(NaiveInfluenceFunction)),
+            (
+                "check_idx",
+                "none",
+                DataInfluenceConstructor(
+                    ArnoldiInfluenceFunction,
+                    arnoldi_tol=1e-8,  # needs to be small to avoid empty arnoldi basis
+                ),
+            ),
         ],
         name_func=build_test_name_func(),
     )
@@ -435,6 +446,14 @@ class TestTracInRegression(BaseTest):
             ("mean", "mean", DataInfluenceConstructor(TracInCPFast)),
             ("sum", "sum", DataInfluenceConstructor(TracInCPFastRandProj)),
             ("mean", "mean", DataInfluenceConstructor(TracInCPFastRandProj)),
+            ("none", "none", DataInfluenceConstructor(NaiveInfluenceFunction)),
+            # (
+            #    "none",
+            #    "none",
+            #    DataInfluenceConstructor(ArnoldiInfluenceFunction, arnoldi_tol=1e-9),
+            #    # need to set `arnoldi_tol` small. otherwise, arnoldi iteration
+            #    # terminates early and get 'Arnoldi basis is empty' exception.
+            # ),
         ],
         name_func=build_test_name_func(),
     )

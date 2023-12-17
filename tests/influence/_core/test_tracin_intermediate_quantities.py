@@ -4,6 +4,8 @@ from typing import Callable
 import torch
 
 import torch.nn as nn
+from captum.influence._core.arnoldi_influence_function import ArnoldiInfluenceFunction
+from captum.influence._core.influence_function import NaiveInfluenceFunction
 from captum.influence._core.tracincp import TracInCP
 from captum.influence._core.tracincp_fast_rand_proj import (
     TracInCPFast,
@@ -27,6 +29,8 @@ class TestTracInIntermediateQuantities(BaseTest):
             for unpack_inputs in [True, False]
             for (reduction, constructor) in [
                 ("none", DataInfluenceConstructor(TracInCP)),
+                ("none", DataInfluenceConstructor(NaiveInfluenceFunction)),
+                ("none", DataInfluenceConstructor(ArnoldiInfluenceFunction)),
             ]
         ],
         name_func=build_test_name_func(),
@@ -83,6 +87,7 @@ class TestTracInIntermediateQuantities(BaseTest):
             for (reduction, constructor) in [
                 ("sum", DataInfluenceConstructor(TracInCPFastRandProj)),
                 ("none", DataInfluenceConstructor(TracInCP)),
+                ("none", DataInfluenceConstructor(NaiveInfluenceFunction)),
             ]
         ],
         name_func=build_test_name_func(),
@@ -166,6 +171,11 @@ class TestTracInIntermediateQuantities(BaseTest):
                     DataInfluenceConstructor(TracInCP),
                     DataInfluenceConstructor(TracInCP),
                 ),
+                (
+                    "none",
+                    DataInfluenceConstructor(NaiveInfluenceFunction),
+                    DataInfluenceConstructor(NaiveInfluenceFunction),
+                ),
             ]
         ],
         name_func=build_test_name_func(),
@@ -190,7 +200,9 @@ class TestTracInIntermediateQuantities(BaseTest):
         methods for the 2 cases are different, we need to parametrize the test with 2
         different tracin constructors. `tracin_constructor` is the constructor for the
         tracin implementation for case 1.  `intermediate_quantities_tracin_constructor`
-        is the constructor for the tracin implementation for case 2.
+        is the constructor for the tracin implementation for case 2. Note that we also
+        use this test for implementations of `InfluenceFunctionBase`, where for the
+        same method, both ways should give the same result by definition.
         """
         with tempfile.TemporaryDirectory() as tmpdir:
             (

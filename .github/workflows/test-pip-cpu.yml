@@ -12,12 +12,23 @@ jobs:
   tests:
     strategy:
       matrix:
-        pytorch_args: ["-v 1.6", "-v 1.7", " -v 1.8", "-v 1.9"]
+        pytorch_args: ["-v 1.6", "-v 1.7", "-v 1.8", "-v 1.9", "-v 1.10", "-v 1.11", "-v 1.12", "-v 1.13"]
+        docker_img: ["cimg/python:3.6", "cimg/python:3.7"]
+        include:
+          - pytorch_args: "-v 2.0"
+            docker_img: "cimg/python:3.8"
+        exclude:
+          - pytorch_args: "-v 1.11"
+            docker_img: "cimg/python:3.6"
+          - pytorch_args: "-v 1.12"
+            docker_img: "cimg/python:3.6"
+          - pytorch_args: "-v 1.13"
+            docker_img: "cimg/python:3.6"
       fail-fast: false
     uses: pytorch/test-infra/.github/workflows/linux_job.yml@main
     with:
       runner: linux.12xlarge
-      docker-image: cimg/python:3.6
+      docker-image: ${{ matrix.docker_img }}
       repository: pytorch/captum
       script: |
         sudo chmod -R 777 .
