@@ -239,14 +239,12 @@ class LLMAttribution(Attribution):
         init_model_inp = perturbed_input
 
         model_inp = init_model_inp
+        model_kwargs = {"attention_mask": torch.tensor([[1] * model_inp.shape[1]])}
 
         log_prob_list = []
         outputs = None
         for target_token in target_tokens:
             if use_cached_outputs:
-                model_kwargs = {
-                    "attention_mask": torch.tensor([[1] * model_inp.shape[1]])
-                }
                 if outputs is not None:
                     model_kwargs = self.model._update_model_kwargs_for_generation(
                         outputs, model_kwargs

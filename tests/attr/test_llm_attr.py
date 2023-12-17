@@ -88,10 +88,14 @@ class DummyLLM(nn.Module):
 
 
 @parameterized_class(
-    ("device",), [("cpu",), ("cuda",)] if torch.cuda.is_available() else [("cpu",)]
+    ("device", "use_cached_outputs"),
+    [("cpu", True), ("cpu", False), ("cuda", True), ("cuda", False)]
+    if torch.cuda.is_available()
+    else [("cpu", True), ("cpu", False)],
 )
 class TestLLMAttr(BaseTest):
     device: str
+    use_cached_outputs: bool
 
     @parameterized.expand([(FeatureAblation,), (ShapleyValueSampling,)])
     def test_llm_attr(self, AttrClass) -> None:
@@ -101,7 +105,9 @@ class TestLLMAttr(BaseTest):
         llm_attr = LLMAttribution(AttrClass(llm), tokenizer)
 
         inp = TextTemplateInput("{} b {} {} e {}", ["a", "c", "d", "f"])
-        res = llm_attr.attribute(inp, "m n o p q")
+        res = llm_attr.attribute(
+            inp, "m n o p q", use_cached_outputs=self.use_cached_outputs
+        )
 
         self.assertEqual(res.seq_attr.shape, (4,))
         self.assertEqual(cast(Tensor, res.token_attr).shape, (5, 4))
@@ -118,7 +124,11 @@ class TestLLMAttr(BaseTest):
         llm_fa = LLMAttribution(fa, tokenizer)
 
         inp = TextTemplateInput("{} b {} {} e {}", ["a", "c", "d", "f"])
-        res = llm_fa.attribute(inp, gen_args={"mock_response": "x y z"})
+        res = llm_fa.attribute(
+            inp,
+            gen_args={"mock_response": "x y z"},
+            use_cached_outputs=self.use_cached_outputs,
+        )
 
         self.assertEqual(res.seq_attr.shape, (4,))
         self.assertEqual(cast(Tensor, res.token_attr).shape, (3, 4))
@@ -135,7 +145,9 @@ class TestLLMAttr(BaseTest):
         llm_fa = LLMAttribution(fa, tokenizer, attr_target="log_prob")
 
         inp = TextTemplateInput("{} b {} {} e {}", ["a", "c", "d", "f"])
-        res = llm_fa.attribute(inp, "m n o p q")
+        res = llm_fa.attribute(
+            inp, "m n o p q", use_cached_outputs=self.use_cached_outputs
+        )
 
         # With FeatureAblation, the seq attr in log_prob
         # equals to the sum of each token attr
@@ -150,7 +162,9 @@ class TestLLMAttr(BaseTest):
         llm_fa = LLMAttribution(fa, tokenizer, attr_target="log_prob")
 
         inp = TextTemplateInput("{} b {} {} e {}", ["a", "c", "d", "f"])
-        res = llm_fa.attribute(inp, "m n o p q")
+        res = llm_fa.attribute(
+            inp, "m n o p q", use_cached_outputs=self.use_cached_outputs
+        )
 
         self.assertEqual(res.seq_attr.shape, (4,))
         self.assertEqual(res.seq_attr.device.type, self.device)
