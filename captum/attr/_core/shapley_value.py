@@ -341,7 +341,6 @@ class ShapleyValueSampling(PerturbationAttribution):
             # Initialize attribution totals and counts
             output_shape = initial_eval.shape
 
-<<<<<<< HEAD
             # attr shape (*output_shape, *input_feature_shape)
             total_attrib = [
                 torch.zeros(
@@ -351,24 +350,6 @@ class ShapleyValueSampling(PerturbationAttribution):
                 )
                 for input in inputs
             ]
-=======
-            if agg_output_mode:
-                total_attrib = [
-                    torch.zeros_like(
-                        input[0:1], dtype=torch.float
-                    )
-                    for input in inputs
-                ]
-            else:
-                total_attrib = [
-                    torch.zeros(
-                        (*output_shape, *input.shape[1:]), dtype=torch.float, device=inputs[0].device
-                    )
-                    for input in inputs
-                ]
-
-            print("sv shape::",total_attrib[0].shape)
->>>>>>> 19803159 (llm attr)
 
             iter_count = 0
             # Iterate for number of samples, generate a permutation of the features
@@ -422,7 +403,6 @@ class ShapleyValueSampling(PerturbationAttribution):
                         prev_results = all_eval[-num_examples:]
 
                     for j in range(len(total_attrib)):
-<<<<<<< HEAD
                         # format eval_diff to shape
                         # (n_perturb, *output_shape, 1,.. 1)
                         # where n_perturb may not be perturb_per_eval
@@ -430,26 +410,6 @@ class ShapleyValueSampling(PerturbationAttribution):
                         # have the same dim as the mask tensor.
                         formatted_eval_diff = eval_diff.reshape(
                             (-1,) + output_shape + (len(inputs[j].shape) - 1) * (1,)
-=======
-                        current_eval_diff = eval_diff
-                        if not agg_output_mode:
-                            # current_eval_diff dimensions:
-                            # (#features in batch, #num_examples, 1,.. 1)
-                            # (contains 1 more dimension than inputs). This adds extra
-                            # dimensions of 1 to make the tensor broadcastable with the
-                            # inputs tensor.
-                            # print("inputs[j]", inputs[j].shape)
-                            # print("output_shape", output_shape)
-                            # print("current_eval_diff]", current_eval_diff)
-
-                            current_eval_diff = current_eval_diff.reshape(
-                                output_shape + (len(inputs[j].shape) - 1) * (1,)
-                            )
-
-                        # mask in shape (1, 1, 5), remove 1st
-                        total_attrib[j] += (
-                            current_eval_diff * current_masks[j].squeeze(0).float()
->>>>>>> 19803159 (llm attr)
                         )
 
                         # mask in shape (n_perturb, *mask_shape_broadcastable_to_input)
