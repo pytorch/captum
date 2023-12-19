@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import copy
 from collections import namedtuple
 from typing import cast, List, Optional, Union
 
@@ -53,9 +54,11 @@ class DummyLLM(nn.Module):
 
     def forward(self, input_ids, *args, **kwargs):
         emb = self.emb(input_ids)
+        if "past_key_values" in kwargs:
+            emb = torch.cat((kwargs["past_key_values"], emb), dim=1)
         logits = self.linear(self.trans(emb))
-        Result = namedtuple("Result", ["logits"])
-        return Result(logits=logits)
+        Result = namedtuple("Result", ["logits", "past_key_values"])
+        return Result(logits=logits, past_key_values=emb)
 
     def generate(self, input_ids, *args, mock_response=None, **kwargs):
         assert mock_response, "must mock response to use DummyLLM to geenrate"
@@ -64,16 +67,35 @@ class DummyLLM(nn.Module):
             [input_ids, torch.tensor([response], device=self.device)], dim=1
         )
 
+    def _update_model_kwargs_for_generation(self, outputs, model_kwargs):
+        new_kwargs = copy.deepcopy(model_kwargs)
+        if hasattr(outputs, "past_key_values"):
+            new_kwargs["past_key_values"] = outputs.past_key_values
+        return new_kwargs
+
+    def prepare_inputs_for_generation(self, model_inp, **model_kwargs):
+        if "past_key_values" in model_kwargs:
+            emb_len = model_kwargs["past_key_values"].shape[1]
+            return {
+                "input_ids": model_inp[:, emb_len:],
+                "past_key_values": model_kwargs["past_key_values"],
+            }
+        return {"input_ids": model_inp}
+
     @property
     def device(self):
         return next(self.parameters()).device
 
 
 @parameterized_class(
-    ("device",), [("cpu",), ("cuda",)] if torch.cuda.is_available() else [("cpu",)]
+    ("device", "use_cached_outputs"),
+    [("cpu", True), ("cpu", False), ("cuda", True), ("cuda", False)]
+    if torch.cuda.is_available()
+    else [("cpu", True), ("cpu", False)],
 )
 class TestLLMAttr(BaseTest):
     device: str
+    use_cached_outputs: bool
 
     @parameterized.expand([(FeatureAblation,), (ShapleyValueSampling,)])
     def test_llm_attr(self, AttrClass) -> None:
@@ -83,7 +105,9 @@ class TestLLMAttr(BaseTest):
         llm_attr = LLMAttribution(AttrClass(llm), tokenizer)
 
         inp = TextTemplateInput("{} b {} {} e {}", ["a", "c", "d", "f"])
-        res = llm_attr.attribute(inp, "m n o p q")
+        res = llm_attr.attribute(
+            inp, "m n o p q", use_cached_outputs=self.use_cached_outputs
+        )
 
         self.assertEqual(res.seq_attr.shape, (4,))
         self.assertEqual(cast(Tensor, res.token_attr).shape, (5, 4))
@@ -100,7 +124,11 @@ class TestLLMAttr(BaseTest):
         llm_fa = LLMAttribution(fa, tokenizer)
 
         inp = TextTemplateInput("{} b {} {} e {}", ["a", "c", "d", "f"])
-        res = llm_fa.attribute(inp, gen_args={"mock_response": "x y z"})
+        res = llm_fa.attribute(
+            inp,
+            gen_args={"mock_response": "x y z"},
+            use_cached_outputs=self.use_cached_outputs,
+        )
 
         self.assertEqual(res.seq_attr.shape, (4,))
         self.assertEqual(cast(Tensor, res.token_attr).shape, (3, 4))
@@ -117,7 +145,9 @@ class TestLLMAttr(BaseTest):
         llm_fa = LLMAttribution(fa, tokenizer, attr_target="log_prob")
 
         inp = TextTemplateInput("{} b {} {} e {}", ["a", "c", "d", "f"])
-        res = llm_fa.attribute(inp, "m n o p q")
+        res = llm_fa.attribute(
+            inp, "m n o p q", use_cached_outputs=self.use_cached_outputs
+        )
 
         # With FeatureAblation, the seq attr in log_prob
         # equals to the sum of each token attr
@@ -132,7 +162,9 @@ class TestLLMAttr(BaseTest):
         llm_fa = LLMAttribution(fa, tokenizer, attr_target="log_prob")
 
         inp = TextTemplateInput("{} b {} {} e {}", ["a", "c", "d", "f"])
-        res = llm_fa.attribute(inp, "m n o p q")
+        res = llm_fa.attribute(
+            inp, "m n o p q", use_cached_outputs=self.use_cached_outputs
+        )
 
         self.assertEqual(res.seq_attr.shape, (4,))
         self.assertEqual(res.seq_attr.device.type, self.device)
