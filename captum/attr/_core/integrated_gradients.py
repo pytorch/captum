@@ -359,7 +359,7 @@ class IntegratedGradients(GradientAttribution):
         # calling contiguous to avoid `memory whole` problems
         scaled_grads = [
             grad.contiguous().view(n_steps, -1)
-            * torch.tensor(step_sizes).view(n_steps, 1).to(grad.device)
+            * torch.tensor(step_sizes).float().view(n_steps, 1).to(grad.device)
             for grad in grads
         ]
 
