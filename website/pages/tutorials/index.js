@@ -85,6 +85,11 @@ class TutorialHome extends React.Component {
                 Using Captum and Integrated Gradients we interpret the output of several test questions and analyze the attribution scores
                 of the text and visual parts of the model. Find the tutorial <a href="Multimodal_VQA_Interpret">here</a>.
 
+                <h4>Understanding Llama2 with Captum LLM Attribution:</h4>
+                This tutorial demonstrates how to easily use the LLM attribution functionality to interpret the large langague models (LLM) in text generation.
+                It takes Llama2 as the example and shows the step-by-step improvements from the basic attribution setting to more advanced techniques.
+                Find the tutorial <a href="Llama2_LLM_Attribution">here</a>.
+
                 <h4>Interpreting question answering with BERT Part 1:</h4>
                 This tutorial demonstrates how to use Captum to interpret a BERT model for question answering.
                 We use a pre-trained model from Hugging Face fine-tuned on the SQUAD dataset and show how to use hooks to
