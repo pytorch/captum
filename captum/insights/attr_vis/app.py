@@ -228,7 +228,7 @@ class AttributionVisualizer:
 
     @log_usage()
     def render(self, debug=True):
-        from captum.insights.attr_vis.widget import CaptumInsights
+        from captum.insights.attr_vis.widget.widget import CaptumInsights
         from IPython.display import display
 
         widget = CaptumInsights(visualizer=self)

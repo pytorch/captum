@@ -20,11 +20,13 @@ try:
     from pytext.config.doc_classification import ModelInputConfig, TargetConfig
     from pytext.config.field_config import FeatureConfig, WordFeatConfig
     from pytext.data import CommonMetadata
-    from pytext.data.doc_classification_data_handler import DocClassificationDataHandler
+    from pytext.data.doc_classification_data_handler import (  # @manual=//pytext:main_lib
+        DocClassificationDataHandler,
+    )
     from pytext.data.featurizer import SimpleFeaturizer
     from pytext.fields import FieldMeta
     from pytext.models.decoders.mlp_decoder import MLPDecoder
-    from pytext.models.doc_model import DocModel_Deprecated
+    from pytext.models.doc_model import DocModel_Deprecated  # @manual=//pytext:main_lib
     from pytext.models.embeddings.word_embedding import WordEmbedding
     from pytext.models.representations.bilstm_doc_attention import BiLSTMDocAttention
 except ImportError:
