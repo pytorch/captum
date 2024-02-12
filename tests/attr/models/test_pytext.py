@@ -20,7 +20,7 @@ try:
     from pytext.config.doc_classification import ModelInputConfig, TargetConfig
     from pytext.config.field_config import FeatureConfig, WordFeatConfig
     from pytext.data import CommonMetadata
-    from pytext.data.doc_classification_data_handler import (  # @manual=//pytext:main_lib
+    from pytext.data.doc_classification_data_handler import (  # @manual=//pytext:main_lib  # noqa
         DocClassificationDataHandler,
     )
     from pytext.data.featurizer import SimpleFeaturizer
