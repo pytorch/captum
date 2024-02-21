@@ -1,6 +1,5 @@
 import io
 import tempfile
-import unittest
 import unittest.mock
 from typing import Callable
 

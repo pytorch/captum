@@ -5,8 +5,8 @@ import torch.nn as nn
 from captum.attr import LayerLRP
 from captum.attr._utils.lrp_rules import Alpha1_Beta0_Rule, EpsilonRule, GammaRule
 
-from ...helpers.basic import assertTensorAlmostEqual, BaseTest
-from ...helpers.basic_models import BasicModel_ConvNet_One_Conv, SimpleLRPModel
+from tests.helpers.basic import assertTensorAlmostEqual, BaseTest
+from tests.helpers.basic_models import BasicModel_ConvNet_One_Conv, SimpleLRPModel
 
 
 def _get_basic_config():
