@@ -2,7 +2,7 @@ version_info = (0, 1, 0, "alpha", 0)
 
 _specifier_ = {"alpha": "a", "beta": "b", "candidate": "rc", "final": ""}
 
-__version__ = "%s.%s.%s%s" % (
+__version__: str = "%s.%s.%s%s" % (
     version_info[0],
     version_info[1],
     version_info[2],

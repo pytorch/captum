@@ -1,15 +1,14 @@
 #!/usr/bin/env python3
-from typing import Any, Callable, Dict, List, NamedTuple, Optional, Tuple, Union
+from typing import Any, Callable, Dict, List, NamedTuple, Optional, Tuple, Type, Union
 
-from captum.attr import (
-    Deconvolution,
-    DeepLift,
-    FeatureAblation,
-    GuidedBackprop,
-    InputXGradient,
-    IntegratedGradients,
-    Occlusion,
-    Saliency,
+from captum.attr._core import (
+    deep_lift,
+    feature_ablation,
+    guided_backprop_deconvnet,
+    input_x_gradient,
+    integrated_gradients,
+    occlusion,
+    saliency,
 )
 from captum.attr._utils.approximation_methods import SUPPORTED_METHODS
 
@@ -34,14 +33,14 @@ class StrConfig(NamedTuple):
 Config = Union[NumberConfig, StrEnumConfig, StrConfig]
 
 SUPPORTED_ATTRIBUTION_METHODS = [
-    Deconvolution,
-    DeepLift,
-    GuidedBackprop,
-    InputXGradient,
-    IntegratedGradients,
-    Saliency,
-    FeatureAblation,
-    Occlusion,
+    guided_backprop_deconvnet.Deconvolution,
+    deep_lift.DeepLift,
+    guided_backprop_deconvnet.GuidedBackprop,
+    input_x_gradient.InputXGradient,
+    integrated_gradients.IntegratedGradients,
+    saliency.Saliency,
+    feature_ablation.FeatureAblation,
+    occlusion.Occlusion,
 ]
 
 
@@ -51,7 +50,20 @@ class ConfigParameters(NamedTuple):
     post_process: Optional[Dict[str, Callable[[Any], Any]]] = None
 
 
-ATTRIBUTION_NAMES_TO_METHODS = {
+ATTRIBUTION_NAMES_TO_METHODS: Dict[
+    str,
+    Type[
+        Union[
+            deep_lift.DeepLift,
+            feature_ablation.FeatureAblation,
+            guided_backprop_deconvnet.Deconvolution,
+            guided_backprop_deconvnet.GuidedBackprop,
+            input_x_gradient.InputXGradient,
+            integrated_gradients.IntegratedGradients,
+            saliency.Saliency,
+        ]
+    ],
+] = {
     # mypy bug - treating it as a type instead of a class
     cls.get_name(): cls  # type: ignore
     for cls in SUPPORTED_ATTRIBUTION_METHODS
@@ -65,17 +77,17 @@ def _str_to_tuple(s):
 
 
 ATTRIBUTION_METHOD_CONFIG: Dict[str, ConfigParameters] = {
-    IntegratedGradients.get_name(): ConfigParameters(
+    integrated_gradients.IntegratedGradients.get_name(): ConfigParameters(
         params={
             "n_steps": NumberConfig(value=25, limit=(2, None)),
             "method": StrEnumConfig(limit=SUPPORTED_METHODS, value="gausslegendre"),
         },
         post_process={"n_steps": int},
     ),
-    FeatureAblation.get_name(): ConfigParameters(
+    feature_ablation.FeatureAblation.get_name(): ConfigParameters(
         params={"perturbations_per_eval": NumberConfig(value=1, limit=(1, 100))},
     ),
-    Occlusion.get_name(): ConfigParameters(
+    occlusion.Occlusion.get_name(): ConfigParameters(
         params={
             "sliding_window_shapes": StrConfig(value=""),
             "strides": StrConfig(value=""),

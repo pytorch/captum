@@ -35,7 +35,7 @@ _CONTEXT_IPYTHON = "_CONTEXT_IPYTHON"
 _CONTEXT_NONE = "_CONTEXT_NONE"
 
 
-def _get_context():
+def _get_context() -> str:
     """Determine the most specific context that we're in.
     Implementation from TensorBoard: https://git.io/JvObD.
 
@@ -217,7 +217,7 @@ class AttributionVisualizer:
             return None
         return result[0]
 
-    def _update_config(self, settings):
+    def _update_config(self, settings) -> None:
         self._config = FilterConfig(
             attribution_method=settings["attribution_method"],
             attribution_arguments=settings["arguments"],
@@ -227,7 +227,7 @@ class AttributionVisualizer:
         )
 
     @log_usage()
-    def render(self, debug=True):
+    def render(self, debug: bool = True) -> None:
         from captum.insights.attr_vis.widget.widget import CaptumInsights
         from IPython.display import display
 
@@ -237,7 +237,13 @@ class AttributionVisualizer:
             display(widget.out)
 
     @log_usage()
-    def serve(self, blocking=False, debug=False, port=None, bind_all=False):
+    def serve(
+        self,
+        blocking: bool = False,
+        debug: bool = False,
+        port=None,
+        bind_all: bool = False,
+    ):
         context = _get_context()
         if context == _CONTEXT_COLAB:
             return self._serve_colab(blocking=blocking, debug=debug, port=port)
@@ -246,14 +252,22 @@ class AttributionVisualizer:
                 blocking=blocking, debug=debug, port=port, bind_all=bind_all
             )
 
-    def _serve(self, blocking=False, debug=False, port=None, bind_all=False):
+    def _serve(
+        self,
+        blocking: bool = False,
+        debug: bool = False,
+        port=None,
+        bind_all: bool = False,
+    ):
         from captum.insights.attr_vis.server import start_server
 
         return start_server(
             self, blocking=blocking, debug=debug, _port=port, bind_all=bind_all
         )
 
-    def _serve_colab(self, blocking=False, debug=False, port=None):
+    def _serve_colab(
+        self, blocking: bool = False, debug: bool = False, port=None
+    ) -> None:
         import ipywidgets as widgets
         from captum.insights.attr_vis.server import start_server
         from IPython.display import display, HTML
@@ -482,7 +496,7 @@ class AttributionVisualizer:
             self._outputs.extend(self._get_outputs())
         return [o[0] for o in self._outputs]
 
-    def get_insights_config(self):
+    def get_insights_config(self) -> Dict[str, Any]:
         return {
             "classes": self.classes,
             "methods": list(ATTRIBUTION_NAMES_TO_METHODS.keys()),

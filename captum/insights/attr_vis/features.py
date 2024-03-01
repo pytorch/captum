@@ -8,11 +8,12 @@ from typing import Callable, List, Optional, Union
 from captum._utils.common import safe_div
 from captum.attr._utils import visualization as viz
 from captum.insights.attr_vis._utils.transforms import format_transforms
+from torch._tensor import Tensor
 
 FeatureOutput = namedtuple("FeatureOutput", "name base modified type contribution")
 
 
-def _convert_figure_base64(fig):
+def _convert_figure_base64(fig) -> str:
     buff = BytesIO()
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
@@ -200,7 +201,7 @@ class TextFeature(BaseFeature):
     def visualization_type() -> str:
         return "text"
 
-    def visualize(self, attribution, data, contribution_frac) -> FeatureOutput:
+    def visualize(self, attribution: Tensor, data, contribution_frac) -> FeatureOutput:
         if self.visualization_transform:
             text = self.visualization_transform(data)
         else:
@@ -255,7 +256,7 @@ class GeneralFeature(BaseFeature):
     def visualization_type() -> str:
         return "general"
 
-    def visualize(self, attribution, data, contribution_frac) -> FeatureOutput:
+    def visualize(self, attribution: Tensor, data, contribution_frac) -> FeatureOutput:
         attribution = attribution.squeeze(0)
         data = data.squeeze(0)
 
