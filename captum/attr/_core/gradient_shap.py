@@ -91,8 +91,7 @@ class GradientShap(GradientAttribution):
         additional_forward_args: Any = None,
         *,
         return_convergence_delta: Literal[True],
-    ) -> Tuple[TensorOrTupleOfTensorsGeneric, Tensor]:
-        ...
+    ) -> Tuple[TensorOrTupleOfTensorsGeneric, Tensor]: ...
 
     @typing.overload
     def attribute(
@@ -106,8 +105,7 @@ class GradientShap(GradientAttribution):
         target: TargetType = None,
         additional_forward_args: Any = None,
         return_convergence_delta: Literal[False] = False,
-    ) -> TensorOrTupleOfTensorsGeneric:
-        ...
+    ) -> TensorOrTupleOfTensorsGeneric: ...
 
     @log_usage()
     def attribute(
@@ -323,8 +321,7 @@ class InputBaselineXGradient(GradientAttribution):
         additional_forward_args: Any = None,
         *,
         return_convergence_delta: Literal[True],
-    ) -> Tuple[TensorOrTupleOfTensorsGeneric, Tensor]:
-        ...
+    ) -> Tuple[TensorOrTupleOfTensorsGeneric, Tensor]: ...
 
     @typing.overload
     def attribute(
@@ -334,8 +331,7 @@ class InputBaselineXGradient(GradientAttribution):
         target: TargetType = None,
         additional_forward_args: Any = None,
         return_convergence_delta: Literal[False] = False,
-    ) -> TensorOrTupleOfTensorsGeneric:
-        ...
+    ) -> TensorOrTupleOfTensorsGeneric: ...
 
     @log_usage()
     def attribute(  # type: ignore

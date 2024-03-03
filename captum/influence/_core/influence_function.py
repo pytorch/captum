@@ -501,6 +501,7 @@ def _flatten_forward_factory(
     calculate the kind of influence scores returned by implementations of
     `InfluenceFunctionBase`.
     """
+
     # this is the factory that accepts a batch
     def flatten_forward_factory_given_batch(batch):
 

@@ -784,9 +784,11 @@ def _basic_computation_tracincp_fast(
 
     device_ids = cast(
         Union[None, List[int]],
-        influence_instance.model.device_ids
-        if hasattr(influence_instance.model, "device_ids")
-        else None,
+        (
+            influence_instance.model.device_ids
+            if hasattr(influence_instance.model, "device_ids")
+            else None
+        ),
     )
     key_list = _sort_key_list(list(layer_inputs.keys()), device_ids)
 
@@ -1449,7 +1451,7 @@ class TracInCPFastRandProj(TracInCPFast):
 
         # the "embedding" vector is the concatenation of contributions from each
         # checkpoint, which we compute one by one
-        for (j, checkpoint) in enumerate(self.checkpoints):
+        for j, checkpoint in enumerate(self.checkpoints):
 
             assert (
                 checkpoint is not None

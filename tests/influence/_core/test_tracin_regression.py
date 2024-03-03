@@ -55,7 +55,7 @@ class TestTracInRegression(BaseTest):
     param_list = []
     for use_gpu in use_gpu_list:
         for dim in [1, 20]:
-            for (mode, reduction, constructor) in [
+            for mode, reduction, constructor in [
                 (
                     "check_idx",
                     "none",

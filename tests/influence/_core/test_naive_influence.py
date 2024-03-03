@@ -70,9 +70,11 @@ class TestNaiveInfluence(BaseTest):
                 (
                     DataInfluenceConstructor(
                         NaiveInfluenceFunction,
-                        layers=["module.linear"]
-                        if use_gpu == "cuda_dataparallel"
-                        else ["linear"],
+                        layers=(
+                            ["module.linear"]
+                            if use_gpu == "cuda_dataparallel"
+                            else ["linear"]
+                        ),
                         projection_dim=None,
                         # letting projection_dim is None means no projection is done,
                         # in which case exact influence is returned

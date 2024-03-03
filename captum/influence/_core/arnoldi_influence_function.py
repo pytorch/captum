@@ -757,7 +757,7 @@ class ArnoldiInfluenceFunction(IntermediateQuantitiesInfluenceFunction):
             # tuple of tensors by using broadcasting.
             def get_batch_coordinate(params):
                 batch_coordinate = 0
-                for (_jacobians, param) in zip(jacobians, params):
+                for _jacobians, param in zip(jacobians, params):
                     batch_coordinate += torch.sum(
                         _jacobians * param.to(device=self.model_device).unsqueeze(0),
                         dim=tuple(range(1, len(_jacobians.shape))),

@@ -150,9 +150,11 @@ class TargetsMeta(type):
                 )
                 if original_additional_forward_args is not None:
                     args["additional_forward_args"] = tuple(
-                        single_add_arg[i : i + 1]
-                        if isinstance(single_add_arg, Tensor)
-                        else single_add_arg
+                        (
+                            single_add_arg[i : i + 1]
+                            if isinstance(single_add_arg, Tensor)
+                            else single_add_arg
+                        )
                         for single_add_arg in original_additional_forward_args
                     )
                 if replace_baselines:
@@ -160,9 +162,11 @@ class TargetsMeta(type):
                         args["baselines"] = original_baselines[i : i + 1]
                     elif isinstance(original_baselines, tuple):
                         args["baselines"] = tuple(
-                            single_baseline[i : i + 1]
-                            if isinstance(single_baseline, Tensor)
-                            else single_baseline
+                            (
+                                single_baseline[i : i + 1]
+                                if isinstance(single_baseline, Tensor)
+                                else single_baseline
+                            )
                             for single_baseline in original_baselines
                         )
                 # Since Lime methods compute attributions for a batch

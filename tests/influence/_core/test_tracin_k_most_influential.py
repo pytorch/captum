@@ -24,11 +24,11 @@ class TestTracInGetKMostInfluential(BaseTest):
     )
 
     param_list = []
-    for (batch_size, k) in [(4, 7), (7, 4), (40, 5), (5, 40), (40, 45)]:
+    for batch_size, k in [(4, 7), (7, 4), (40, 5), (5, 40), (40, 45)]:
         for unpack_inputs in [True, False]:
             for proponents in [True, False]:
                 for use_gpu in use_gpu_list:
-                    for (reduction, constr, aggregate) in [
+                    for reduction, constr, aggregate in [
                         (
                             "none",
                             DataInfluenceConstructor(
@@ -48,9 +48,11 @@ class TestTracInGetKMostInfluential(BaseTest):
                             DataInfluenceConstructor(
                                 TracInCP,
                                 name="linear2",
-                                layers=["module.linear2"]
-                                if use_gpu == "cuda_data_parallel"
-                                else ["linear2"],
+                                layers=(
+                                    ["module.linear2"]
+                                    if use_gpu == "cuda_data_parallel"
+                                    else ["linear2"]
+                                ),
                             ),
                             False,
                         ),

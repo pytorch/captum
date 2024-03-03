@@ -194,8 +194,10 @@ class LayerGradientXActivation(LayerAttribution, GradientAttribution):
         self, gradients: Tuple[Tensor, ...], evals: Tuple[Tensor, ...]
     ) -> Tuple[Tensor, ...]:
         return tuple(
-            single_gradient * single_eval
-            if self.multiplies_by_inputs
-            else single_gradient
+            (
+                single_gradient * single_eval
+                if self.multiplies_by_inputs
+                else single_gradient
+            )
             for single_gradient, single_eval in zip(gradients, evals)
         )

@@ -97,13 +97,11 @@ def _batch_attribution(
 
 
 @typing.overload
-def _tuple_splice_range(inputs: None, start: int, end: int) -> None:
-    ...
+def _tuple_splice_range(inputs: None, start: int, end: int) -> None: ...
 
 
 @typing.overload
-def _tuple_splice_range(inputs: Tuple, start: int, end: int) -> Tuple:
-    ...
+def _tuple_splice_range(inputs: Tuple, start: int, end: int) -> Tuple: ...
 
 
 def _tuple_splice_range(
@@ -162,13 +160,12 @@ def _batched_generator(
                 additional_forward_args,
                 current_total,
                 current_total + internal_batch_size,
-            ), target_ind[
-                current_total : current_total + internal_batch_size
-            ] if isinstance(
-                target_ind, list
-            ) or (
-                isinstance(target_ind, torch.Tensor) and target_ind.numel() > 1
-            ) else target_ind
+            ), (
+                target_ind[current_total : current_total + internal_batch_size]
+                if isinstance(target_ind, list)
+                or (isinstance(target_ind, torch.Tensor) and target_ind.numel() > 1)
+                else target_ind
+            )
 
 
 def _batched_operator(

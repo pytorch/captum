@@ -188,9 +188,13 @@ class NoiseTunnel(Attribution):
                 ), "stdevs must be type float. " "Given: {}".format(type(stdevs))
                 stdevs_ = (stdevs,) * len(inputs)
             return tuple(
-                add_noise_to_input(input, stdev, nt_samples_partition).requires_grad_()
-                if self.is_gradient_method
-                else add_noise_to_input(input, stdev, nt_samples_partition)
+                (
+                    add_noise_to_input(
+                        input, stdev, nt_samples_partition
+                    ).requires_grad_()
+                    if self.is_gradient_method
+                    else add_noise_to_input(input, stdev, nt_samples_partition)
+                )
                 for (input, stdev) in zip(inputs, stdevs_)
             )
 
@@ -252,9 +256,11 @@ class NoiseTunnel(Attribution):
 
             attributions = attr_func.__wrapped__(  # type: ignore
                 self.attribution_method,  # self
-                inputs_with_noise_partition
-                if is_inputs_tuple
-                else inputs_with_noise_partition[0],
+                (
+                    inputs_with_noise_partition
+                    if is_inputs_tuple
+                    else inputs_with_noise_partition[0]
+                ),
                 **kwargs_partition,
             )
             delta = None

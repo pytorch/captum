@@ -66,13 +66,11 @@ def safe_div(
 
 
 @typing.overload
-def _is_tuple(inputs: Tensor) -> Literal[False]:
-    ...
+def _is_tuple(inputs: Tensor) -> Literal[False]: ...
 
 
 @typing.overload
-def _is_tuple(inputs: Tuple[Tensor, ...]) -> Literal[True]:
-    ...
+def _is_tuple(inputs: Tuple[Tensor, ...]) -> Literal[True]: ...
 
 
 def _is_tuple(inputs: Union[Tensor, Tuple[Tensor, ...]]) -> bool:
@@ -207,15 +205,13 @@ def _format_feature_mask(
 
 
 @overload
-def _format_tensor_into_tuples(inputs: None) -> None:
-    ...
+def _format_tensor_into_tuples(inputs: None) -> None: ...
 
 
 @overload
 def _format_tensor_into_tuples(
     inputs: Union[Tensor, Tuple[Tensor, ...]]
-) -> Tuple[Tensor, ...]:
-    ...
+) -> Tuple[Tensor, ...]: ...
 
 
 def _format_tensor_into_tuples(
@@ -254,20 +250,19 @@ def _format_float_or_tensor_into_tuples(
 
 
 @overload
-def _format_additional_forward_args(additional_forward_args: None) -> None:
-    ...
+def _format_additional_forward_args(additional_forward_args: None) -> None: ...
 
 
 @overload
 def _format_additional_forward_args(
     additional_forward_args: Union[Tensor, Tuple]
-) -> Tuple:
-    ...
+) -> Tuple: ...
 
 
 @overload
-def _format_additional_forward_args(additional_forward_args: Any) -> Union[None, Tuple]:
-    ...
+def _format_additional_forward_args(
+    additional_forward_args: Any,
+) -> Union[None, Tuple]: ...
 
 
 def _format_additional_forward_args(additional_forward_args: Any) -> Union[None, Tuple]:
@@ -304,9 +299,11 @@ def _expand_additional_forward_args(
         return None
 
     return tuple(
-        _expand_tensor_forward_arg(additional_forward_arg, n_steps, expansion_type)
-        if isinstance(additional_forward_arg, torch.Tensor)
-        else additional_forward_arg
+        (
+            _expand_tensor_forward_arg(additional_forward_arg, n_steps, expansion_type)
+            if isinstance(additional_forward_arg, torch.Tensor)
+            else additional_forward_arg
+        )
         for additional_forward_arg in additional_forward_args
     )
 
@@ -350,9 +347,11 @@ def _expand_feature_mask(
     is_feature_mask_tuple = _is_tuple(feature_mask)
     feature_mask = _format_tensor_into_tuples(feature_mask)
     feature_mask_new = tuple(
-        feature_mask_elem.repeat_interleave(n_samples, dim=0)
-        if feature_mask_elem.size(0) > 1
-        else feature_mask_elem
+        (
+            feature_mask_elem.repeat_interleave(n_samples, dim=0)
+            if feature_mask_elem.size(0) > 1
+            else feature_mask_elem
+        )
         for feature_mask_elem in feature_mask
     )
     return _format_output(is_feature_mask_tuple, feature_mask_new)
@@ -381,18 +380,22 @@ def _expand_and_update_baselines(
     if draw_baseline_from_distrib:
         bsz = inputs[0].shape[0]
         baselines = tuple(
-            baseline[get_random_baseline_indices(bsz, baseline)]
-            if isinstance(baseline, torch.Tensor)
-            else baseline
+            (
+                baseline[get_random_baseline_indices(bsz, baseline)]
+                if isinstance(baseline, torch.Tensor)
+                else baseline
+            )
             for baseline in baselines
         )
     else:
         baselines = tuple(
-            baseline.repeat_interleave(n_samples, dim=0)
-            if isinstance(baseline, torch.Tensor)
-            and baseline.shape[0] == input.shape[0]
-            and baseline.shape[0] > 1
-            else baseline
+            (
+                baseline.repeat_interleave(n_samples, dim=0)
+                if isinstance(baseline, torch.Tensor)
+                and baseline.shape[0] == input.shape[0]
+                and baseline.shape[0] > 1
+                else baseline
+            )
             for input, baseline in zip(inputs, baselines)
         )
     # update kwargs with expanded baseline
@@ -441,22 +444,19 @@ def _expand_and_update_feature_mask(n_samples: int, kwargs: dict):
 @typing.overload
 def _format_output(
     is_inputs_tuple: Literal[True], output: Tuple[Tensor, ...]
-) -> Tuple[Tensor, ...]:
-    ...
+) -> Tuple[Tensor, ...]: ...
 
 
 @typing.overload
 def _format_output(
     is_inputs_tuple: Literal[False], output: Tuple[Tensor, ...]
-) -> Tensor:
-    ...
+) -> Tensor: ...
 
 
 @typing.overload
 def _format_output(
     is_inputs_tuple: bool, output: Tuple[Tensor, ...]
-) -> Union[Tensor, Tuple[Tensor, ...]]:
-    ...
+) -> Union[Tensor, Tuple[Tensor, ...]]: ...
 
 
 def _format_output(
@@ -478,22 +478,19 @@ def _format_output(
 @typing.overload
 def _format_outputs(
     is_multiple_inputs: Literal[False], outputs: List[Tuple[Tensor, ...]]
-) -> Union[Tensor, Tuple[Tensor, ...]]:
-    ...
+) -> Union[Tensor, Tuple[Tensor, ...]]: ...
 
 
 @typing.overload
 def _format_outputs(
     is_multiple_inputs: Literal[True], outputs: List[Tuple[Tensor, ...]]
-) -> List[Union[Tensor, Tuple[Tensor, ...]]]:
-    ...
+) -> List[Union[Tensor, Tuple[Tensor, ...]]]: ...
 
 
 @typing.overload
 def _format_outputs(
     is_multiple_inputs: bool, outputs: List[Tuple[Tensor, ...]]
-) -> Union[Tensor, Tuple[Tensor, ...], List[Union[Tensor, Tuple[Tensor, ...]]]]:
-    ...
+) -> Union[Tensor, Tuple[Tensor, ...], List[Union[Tensor, Tuple[Tensor, ...]]]]: ...
 
 
 def _format_outputs(
@@ -529,9 +526,11 @@ def _run_forward(
     additional_forward_args = _format_additional_forward_args(additional_forward_args)
 
     output = forward_func(
-        *(*inputs, *additional_forward_args)
-        if additional_forward_args is not None
-        else inputs
+        *(
+            (*inputs, *additional_forward_args)
+            if additional_forward_args is not None
+            else inputs
+        )
     )
     return _select_targets(output, target)
 

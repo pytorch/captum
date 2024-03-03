@@ -584,9 +584,11 @@ class FeatureAblation(PerturbationAttribution):
             return tuple(inp[0].numel() if inp.numel() else 0 for inp in inputs)
 
         return tuple(
-            (mask.max() - mask.min()).item() + 1
-            if mask is not None
-            else (inp[0].numel() if inp.numel() else 0)
+            (
+                (mask.max() - mask.min()).item() + 1
+                if mask is not None
+                else (inp[0].numel() if inp.numel() else 0)
+            )
             for inp, mask in zip(inputs, feature_mask)
         )
 

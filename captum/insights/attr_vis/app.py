@@ -438,14 +438,16 @@ class AttributionVisualizer:
                     feature_outputs=features_per_input,
                     actual=actual_label_output,
                     predicted=predicted_scores,
-                    active_index=target
-                    if target is not None
-                    else actual_label_output.index,
+                    active_index=(
+                        target if target is not None else actual_label_output.index
+                    ),
                     # Even if we only iterated over one model, the index should be fixed
                     # to show the index the model would have had in the list
-                    model_index=single_model_index
-                    if single_model_index is not None
-                    else model_index,
+                    model_index=(
+                        single_model_index
+                        if single_model_index is not None
+                        else model_index
+                    ),
                 )
             )
 

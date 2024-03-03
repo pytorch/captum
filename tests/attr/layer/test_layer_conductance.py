@@ -229,9 +229,11 @@ class Test(BaseTest):
                     Tensor,
                     cond.attribute(
                         test_input[i : i + 1],
-                        baselines=test_baseline[i : i + 1]
-                        if test_baseline is not None
-                        else None,
+                        baselines=(
+                            test_baseline[i : i + 1]
+                            if test_baseline is not None
+                            else None
+                        ),
                         target=target_index,
                         n_steps=n_steps,
                         method="gausslegendre",

@@ -34,7 +34,7 @@ class TestTracInSelfInfluence(BaseTest):
 
     for unpack_inputs in [True, False]:
         for use_gpu in use_gpu_list:
-            for (reduction, constructor) in [
+            for reduction, constructor in [
                 (
                     "none",
                     DataInfluenceConstructor(TracInCP, name="TracInCP_all_layers"),
@@ -44,9 +44,11 @@ class TestTracInSelfInfluence(BaseTest):
                     DataInfluenceConstructor(
                         TracInCP,
                         name="TracInCP_linear1",
-                        layers=["module.linear1"]
-                        if use_gpu == "cuda_data_parallel"
-                        else ["linear1"],
+                        layers=(
+                            ["module.linear1"]
+                            if use_gpu == "cuda_data_parallel"
+                            else ["linear1"]
+                        ),
                     ),
                 ),
                 (
@@ -54,9 +56,11 @@ class TestTracInSelfInfluence(BaseTest):
                     DataInfluenceConstructor(
                         TracInCP,
                         name="TracInCP_linear1_linear2",
-                        layers=["module.linear1", "module.linear2"]
-                        if use_gpu == "cuda_data_parallel"
-                        else ["linear1", "linear2"],
+                        layers=(
+                            ["module.linear1", "module.linear2"]
+                            if use_gpu == "cuda_data_parallel"
+                            else ["linear1", "linear2"]
+                        ),
                     ),
                 ),
                 (
@@ -96,7 +100,7 @@ class TestTracInSelfInfluence(BaseTest):
 
     for unpack_inputs in [True, False]:
         for use_gpu in use_gpu_list:
-            for (reduction, constructor) in [
+            for reduction, constructor in [
                 (
                     "none",
                     DataInfluenceConstructor(
@@ -108,9 +112,11 @@ class TestTracInSelfInfluence(BaseTest):
                     DataInfluenceConstructor(
                         NaiveInfluenceFunction,
                         name="NaiveInfluenceFunction_linear1",
-                        layers=["module.linear1"]
-                        if use_gpu == "cuda_data_parallel"
-                        else ["linear1"],
+                        layers=(
+                            ["module.linear1"]
+                            if use_gpu == "cuda_data_parallel"
+                            else ["linear1"]
+                        ),
                     ),
                 ),
                 (
@@ -125,9 +131,11 @@ class TestTracInSelfInfluence(BaseTest):
                     DataInfluenceConstructor(
                         ArnoldiInfluenceFunction,
                         name="ArnoldiInfluenceFunction_linear1",
-                        layers=["module.linear1"]
-                        if use_gpu == "cuda_data_parallel"
-                        else ["linear1"],
+                        layers=(
+                            ["module.linear1"]
+                            if use_gpu == "cuda_data_parallel"
+                            else ["linear1"]
+                        ),
                     ),
                 ),
             ]:
@@ -150,7 +158,10 @@ class TestTracInSelfInfluence(BaseTest):
         use_gpu: Union[bool, str],
     ) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
-            (net, train_dataset,) = get_random_model_and_data(
+            (
+                net,
+                train_dataset,
+            ) = get_random_model_and_data(
                 tmpdir,
                 unpack_inputs,
                 False,

@@ -44,7 +44,10 @@ class TestTracInIntermediateQuantities(BaseTest):
         summing
         """
         with tempfile.TemporaryDirectory() as tmpdir:
-            (net, train_dataset,) = get_random_model_and_data(
+            (
+                net,
+                train_dataset,
+            ) = get_random_model_and_data(
                 tmpdir,
                 unpack_inputs,
                 return_test_data=False,
@@ -101,7 +104,10 @@ class TestTracInIntermediateQuantities(BaseTest):
         when the batches are collated into a single batch
         """
         with tempfile.TemporaryDirectory() as tmpdir:
-            (net, train_dataset,) = get_random_model_and_data(
+            (
+                net,
+                train_dataset,
+            ) = get_random_model_and_data(
                 tmpdir,
                 unpack_inputs,
                 return_test_data=False,
@@ -297,7 +303,10 @@ class TestTracInIntermediateQuantities(BaseTest):
         See inline comments for "at most" caveat
         """
         with tempfile.TemporaryDirectory() as tmpdir:
-            (net, train_dataset,) = get_random_model_and_data(
+            (
+                net,
+                train_dataset,
+            ) = get_random_model_and_data(
                 tmpdir,
                 unpack_inputs,
                 return_test_data=False,

@@ -139,7 +139,7 @@ class AnnoyNearestNeighbors(NearestNeighbors):
         data = data.view((len(data), -1))
         projection_dim = data.shape[1]
         self.knn_index = annoy.AnnoyIndex(projection_dim, "dot")
-        for (i, projection) in enumerate(data):
+        for i, projection in enumerate(data):
             self.knn_index.add_item(i, projection)
         self.knn_index.build(self.num_trees)
 

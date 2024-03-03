@@ -52,10 +52,10 @@ class InputLayerMeta(type):
                     f"test_{layer_method.__name__}"
                     + f"_{equiv_method.__name__}_{multi_layer}"
                 )
-                attrs[
-                    test_name
-                ] = lambda self: self.layer_method_with_input_layer_patches(
-                    layer_method, equiv_method, multi_layer
+                attrs[test_name] = (
+                    lambda self: self.layer_method_with_input_layer_patches(
+                        layer_method, equiv_method, multi_layer
+                    )
                 )
 
         return super(InputLayerMeta, cls).__new__(cls, name, bases, attrs)

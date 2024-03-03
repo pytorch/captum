@@ -43,7 +43,10 @@ class TestTracInAggregateInfluence(BaseTest):
         summing
         """
         with tempfile.TemporaryDirectory() as tmpdir:
-            (net, train_dataset,) = get_random_model_and_data(
+            (
+                net,
+                train_dataset,
+            ) = get_random_model_and_data(
                 tmpdir,
                 unpack_inputs,
                 return_test_data=False,
@@ -100,7 +103,10 @@ class TestTracInAggregateInfluence(BaseTest):
         when the batches are collated into a single batch
         """
         with tempfile.TemporaryDirectory() as tmpdir:
-            (net, train_dataset,) = get_random_model_and_data(
+            (
+                net,
+                train_dataset,
+            ) = get_random_model_and_data(
                 tmpdir,
                 unpack_inputs,
                 return_test_data=False,

@@ -292,9 +292,9 @@ class TestDeepLift(BaseTest):
         assertTensorAlmostEqual(self, attr[0], expected, 1e-19)
 
 
-def _create_inps_and_base_for_deeplift_neuron_layer_testing() -> Tuple[
-    Tuple[Tensor, Tensor], Tuple[Tensor, Tensor]
-]:
+def _create_inps_and_base_for_deeplift_neuron_layer_testing() -> (
+    Tuple[Tuple[Tensor, Tensor], Tuple[Tensor, Tensor]]
+):
     x1 = torch.tensor([[-10.0, 1.0, -5.0]], requires_grad=True)
     x2 = torch.tensor([[3.0, 3.0, 1.0]], requires_grad=True)
 
@@ -307,9 +307,9 @@ def _create_inps_and_base_for_deeplift_neuron_layer_testing() -> Tuple[
     return inputs, baselines
 
 
-def _create_inps_and_base_for_deepliftshap_neuron_layer_testing() -> Tuple[
-    Tuple[Tensor, Tensor], Tuple[Tensor, Tensor]
-]:
+def _create_inps_and_base_for_deepliftshap_neuron_layer_testing() -> (
+    Tuple[Tuple[Tensor, Tensor], Tuple[Tensor, Tensor]]
+):
     x1 = torch.tensor([[-10.0, 1.0, -5.0]], requires_grad=True)
     x2 = torch.tensor([[3.0, 3.0, 1.0]], requires_grad=True)
 

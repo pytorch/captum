@@ -67,8 +67,7 @@ class LRP(GradientAttribution):
         additional_forward_args: Any = None,
         return_convergence_delta: Literal[False] = False,
         verbose: bool = False,
-    ) -> TensorOrTupleOfTensorsGeneric:
-        ...
+    ) -> TensorOrTupleOfTensorsGeneric: ...
 
     @typing.overload
     def attribute(
@@ -79,8 +78,7 @@ class LRP(GradientAttribution):
         *,
         return_convergence_delta: Literal[True],
         verbose: bool = False,
-    ) -> Tuple[TensorOrTupleOfTensorsGeneric, Tensor]:
-        ...
+    ) -> Tuple[TensorOrTupleOfTensorsGeneric, Tensor]: ...
 
     @log_usage()
     def attribute(

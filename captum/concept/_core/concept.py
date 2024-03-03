@@ -7,7 +7,6 @@ from torch.nn import Module
 
 
 class Concept:
-
     r"""
     Concepts are human-friendly abstract representations that can be
     numerically encoded into torch tensors. They can be illustrated as
@@ -22,7 +21,6 @@ class Concept:
     def __init__(
         self, id: int, name: str, data_iter: Union[None, torch.utils.data.DataLoader]
     ) -> None:
-
         r"""
         Args:
             id (int): The unique identifier of the concept.

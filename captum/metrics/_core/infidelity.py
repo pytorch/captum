@@ -78,24 +78,28 @@ def infidelity_perturb_func_decorator(multipy_by_inputs: bool = True) -> Callabl
             baselines = _format_baseline(baselines, inputs)
             if baselines is None:
                 perturbations = tuple(
-                    safe_div(
-                        input - input_perturbed,
-                        input,
-                        default_denom=1.0,
+                    (
+                        safe_div(
+                            input - input_perturbed,
+                            input,
+                            default_denom=1.0,
+                        )
+                        if multipy_by_inputs
+                        else input - input_perturbed
                     )
-                    if multipy_by_inputs
-                    else input - input_perturbed
                     for input, input_perturbed in zip(inputs, inputs_perturbed)
                 )
             else:
                 perturbations = tuple(
-                    safe_div(
-                        input - input_perturbed,
-                        input - baseline,
-                        default_denom=1.0,
+                    (
+                        safe_div(
+                            input - input_perturbed,
+                            input - baseline,
+                            default_denom=1.0,
+                        )
+                        if multipy_by_inputs
+                        else input - input_perturbed
                     )
-                    if multipy_by_inputs
-                    else input - input_perturbed
                     for input, input_perturbed, baseline in zip(
                         inputs, inputs_perturbed, baselines
                     )
@@ -424,11 +428,13 @@ def infidelity(
         baselines_expanded = baselines
         if baselines is not None:
             baselines_expanded = tuple(
-                baseline.repeat_interleave(current_n_perturb_samples, dim=0)
-                if isinstance(baseline, torch.Tensor)
-                and baseline.shape[0] == input.shape[0]
-                and baseline.shape[0] > 1
-                else baseline
+                (
+                    baseline.repeat_interleave(current_n_perturb_samples, dim=0)
+                    if isinstance(baseline, torch.Tensor)
+                    and baseline.shape[0] == input.shape[0]
+                    and baseline.shape[0] > 1
+                    else baseline
+                )
                 for input, baseline in zip(inputs, cast(Tuple, baselines))
             )
 

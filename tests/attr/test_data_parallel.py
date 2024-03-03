@@ -115,7 +115,6 @@ class DataParallelMeta(type):
         baseline_distr: bool,
         mode: DataParallelCompareMode,
     ) -> Callable:
-
         """
         This method creates a single Data Parallel / GPU test for the given
         algorithm and parameters.

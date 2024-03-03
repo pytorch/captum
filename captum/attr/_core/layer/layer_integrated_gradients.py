@@ -117,8 +117,7 @@ class LayerIntegratedGradients(LayerAttribution, GradientAttribution):
         internal_batch_size: Union[None, int],
         return_convergence_delta: Literal[False],
         attribute_to_layer_input: bool,
-    ) -> Union[Tensor, Tuple[Tensor, ...], List[Union[Tensor, Tuple[Tensor, ...]]]]:
-        ...
+    ) -> Union[Tensor, Tuple[Tensor, ...], List[Union[Tensor, Tuple[Tensor, ...]]]]: ...
 
     @overload
     def attribute(
@@ -135,8 +134,7 @@ class LayerIntegratedGradients(LayerAttribution, GradientAttribution):
     ) -> Tuple[
         Union[Tensor, Tuple[Tensor, ...], List[Union[Tensor, Tuple[Tensor, ...]]]],
         Tensor,
-    ]:
-        ...
+    ]: ...
 
     @overload
     def attribute(
@@ -156,8 +154,7 @@ class LayerIntegratedGradients(LayerAttribution, GradientAttribution):
             Union[Tensor, Tuple[Tensor, ...], List[Union[Tensor, Tuple[Tensor, ...]]]],
             Tensor,
         ],
-    ]:
-        ...
+    ]: ...
 
     @log_usage()
     def attribute(

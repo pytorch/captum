@@ -1134,12 +1134,14 @@ class Lime(LimeBase):
                             additional_forward_args=curr_additional_args,
                             n_samples=n_samples,
                             perturbations_per_eval=perturbations_per_eval,
-                            baselines=curr_baselines
-                            if is_inputs_tuple
-                            else curr_baselines[0],
-                            feature_mask=curr_feature_mask
-                            if is_inputs_tuple
-                            else curr_feature_mask[0],
+                            baselines=(
+                                curr_baselines if is_inputs_tuple else curr_baselines[0]
+                            ),
+                            feature_mask=(
+                                curr_feature_mask
+                                if is_inputs_tuple
+                                else curr_feature_mask[0]
+                            ),
                             num_interp_features=num_interp_features,
                             show_progress=show_progress,
                             **kwargs,
@@ -1201,8 +1203,7 @@ class Lime(LimeBase):
         coefs: Tensor,
         num_interp_features: int,
         is_inputs_tuple: Literal[True],
-    ) -> Tuple[Tensor, ...]:
-        ...
+    ) -> Tuple[Tensor, ...]: ...
 
     @typing.overload
     def _convert_output_shape(
@@ -1212,8 +1213,7 @@ class Lime(LimeBase):
         coefs: Tensor,
         num_interp_features: int,
         is_inputs_tuple: Literal[False],
-    ) -> Tensor:
-        ...
+    ) -> Tensor: ...
 
     def _convert_output_shape(
         self,

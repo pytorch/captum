@@ -81,6 +81,7 @@ class BaselineGenerator:
     This is an example input baseline generator for DocNN model which uses
     word and dict features.
     """
+
     PAD = "<pad>"
 
     def __init__(self, model, data_handler, device) -> None:
@@ -163,9 +164,11 @@ class BaselineGenerator:
         gazetteer_feat_id = (
             torch.tensor(
                 [
-                    self.vocab_dict.stoi[gazetteer_feat]
-                    if hasattr(self, "vocab_dict")
-                    else 0
+                    (
+                        self.vocab_dict.stoi[gazetteer_feat]
+                        if hasattr(self, "vocab_dict")
+                        else 0
+                    )
                     for gazetteer_feat in gazetteer_feats
                 ]
             )

@@ -89,9 +89,11 @@ class DummyLLM(nn.Module):
 
 @parameterized_class(
     ("device", "use_cached_outputs"),
-    [("cpu", True), ("cpu", False), ("cuda", True), ("cuda", False)]
-    if torch.cuda.is_available()
-    else [("cpu", True), ("cpu", False)],
+    (
+        [("cpu", True), ("cpu", False), ("cuda", True), ("cuda", False)]
+        if torch.cuda.is_available()
+        else [("cpu", True), ("cpu", False)]
+    ),
 )
 class TestLLMAttr(BaseTest):
     device: str

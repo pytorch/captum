@@ -55,13 +55,11 @@ def should_create_generated_test(algorithm: Type[Attribution]) -> bool:
 
 
 @typing.overload
-def get_target_layer(model: Module, layer_name: str) -> Module:
-    ...
+def get_target_layer(model: Module, layer_name: str) -> Module: ...
 
 
 @typing.overload
-def get_target_layer(model: Module, layer_name: List[str]) -> List[Module]:
-    ...
+def get_target_layer(model: Module, layer_name: List[str]) -> List[Module]: ...
 
 
 def get_target_layer(

@@ -24,9 +24,9 @@ def _get_basic_config() -> Tuple[Module, Tensor, Tensor, Any]:
     return BasicModel(), input, grads, None
 
 
-def _get_multiargs_basic_config() -> Tuple[
-    Module, Tuple[Tensor, ...], Tuple[Tensor, ...], Any
-]:
+def _get_multiargs_basic_config() -> (
+    Tuple[Module, Tuple[Tensor, ...], Tuple[Tensor, ...], Any]
+):
     model = BasicModel5_MultiArgs()
     additional_forward_args = ([2, 3], 1)
     inputs = (
@@ -39,9 +39,9 @@ def _get_multiargs_basic_config() -> Tuple[
     return model, inputs, grads, additional_forward_args
 
 
-def _get_multiargs_basic_config_large() -> Tuple[
-    Module, Tuple[Tensor, ...], Tuple[Tensor, ...], Any
-]:
+def _get_multiargs_basic_config_large() -> (
+    Tuple[Module, Tuple[Tensor, ...], Tuple[Tensor, ...], Any]
+):
     model = BasicModel5_MultiArgs()
     additional_forward_args = ([2, 3], 1)
     inputs = (

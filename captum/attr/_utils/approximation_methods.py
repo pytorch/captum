@@ -91,9 +91,9 @@ def riemann_builders(
     return step_sizes, alphas
 
 
-def gauss_legendre_builders() -> Tuple[
-    Callable[[int], List[float]], Callable[[int], List[float]]
-]:
+def gauss_legendre_builders() -> (
+    Tuple[Callable[[int], List[float]], Callable[[int], List[float]]]
+):
     r"""Numpy's `np.polynomial.legendre` function helps to compute step sizes
     and alpha coefficients using gauss-legendre quadrature rule.
     Since numpy returns the integration parameters in different scales we need to

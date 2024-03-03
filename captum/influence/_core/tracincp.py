@@ -905,7 +905,7 @@ class TracInCP(TracInCPBase):
             input_checkpoint_jacobians[0], self.checkpoints[0]
         )
 
-        for (input_jacobians, checkpoint) in zip(
+        for input_jacobians, checkpoint in zip(
             input_checkpoint_jacobians[1:], self.checkpoints[1:]
         ):
             batch_tracin_scores += get_checkpoint_contribution(

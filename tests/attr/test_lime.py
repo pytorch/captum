@@ -511,9 +511,11 @@ class Test(BaseTest):
             lime = Lime(
                 model,
                 similarity_func=get_exp_kernel_similarity_function("cosine", 10.0),
-                interpretable_model=interpretable_model
-                if interpretable_model
-                else SkLearnLasso(alpha=1.0),
+                interpretable_model=(
+                    interpretable_model
+                    if interpretable_model
+                    else SkLearnLasso(alpha=1.0)
+                ),
             )
             attributions = lime.attribute(
                 test_input,
@@ -547,9 +549,11 @@ class Test(BaseTest):
 
                 lime_alt = LimeBase(
                     model,
-                    interpretable_model
-                    if interpretable_model
-                    else SkLearnLasso(alpha=1.0),
+                    (
+                        interpretable_model
+                        if interpretable_model
+                        else SkLearnLasso(alpha=1.0)
+                    ),
                     get_exp_kernel_similarity_function("euclidean", 1000.0),
                     alt_perturb_generator if test_generator else alt_perturb_func,
                     False,
@@ -580,9 +584,11 @@ class Test(BaseTest):
                     attributions = lime_alt.attribute(
                         test_input,
                         target=target,
-                        feature_mask=formatted_feature_mask
-                        if isinstance(test_input, tuple)
-                        else formatted_feature_mask[0],
+                        feature_mask=(
+                            formatted_feature_mask
+                            if isinstance(test_input, tuple)
+                            else formatted_feature_mask[0]
+                        ),
                         additional_forward_args=additional_input,
                         baselines=baselines,
                         perturbations_per_eval=batch_size,
@@ -609,9 +615,11 @@ class Test(BaseTest):
                     target,
                     additional_input,
                     baselines if isinstance(test_input, tuple) else baselines[0],
-                    formatted_feature_mask
-                    if isinstance(test_input, tuple)
-                    else formatted_feature_mask[0],
+                    (
+                        formatted_feature_mask
+                        if isinstance(test_input, tuple)
+                        else formatted_feature_mask[0]
+                    ),
                     expected_coefs_only,
                 ):
                     attributions = lime_alt.attribute(

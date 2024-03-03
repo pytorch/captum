@@ -82,8 +82,7 @@ class LayerConductance(LayerAttribution, GradientAttribution):
         *,
         return_convergence_delta: Literal[True],
         attribute_to_layer_input: bool = False,
-    ) -> Tuple[Union[Tensor, Tuple[Tensor, ...]], Tensor]:
-        ...
+    ) -> Tuple[Union[Tensor, Tuple[Tensor, ...]], Tensor]: ...
 
     @typing.overload
     def attribute(
@@ -97,8 +96,7 @@ class LayerConductance(LayerAttribution, GradientAttribution):
         internal_batch_size: Union[None, int] = None,
         return_convergence_delta: Literal[False] = False,
         attribute_to_layer_input: bool = False,
-    ) -> Union[Tensor, Tuple[Tensor, ...]]:
-        ...
+    ) -> Union[Tensor, Tuple[Tensor, ...]]: ...
 
     @log_usage()
     def attribute(
@@ -357,7 +355,10 @@ class LayerConductance(LayerAttribution, GradientAttribution):
 
         # Conductance Gradients - Returns gradient of output with respect to
         # hidden layer and hidden layer evaluated at each input.
-        (layer_gradients, layer_evals,) = compute_layer_gradients_and_eval(
+        (
+            layer_gradients,
+            layer_evals,
+        ) = compute_layer_gradients_and_eval(
             forward_fn=self.forward_func,
             layer=self.layer,
             inputs=scaled_features_tpl,

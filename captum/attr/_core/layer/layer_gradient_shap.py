@@ -112,8 +112,7 @@ class LayerGradientShap(LayerAttribution, GradientAttribution):
         *,
         return_convergence_delta: Literal[True],
         attribute_to_layer_input: bool = False,
-    ) -> Tuple[Union[Tensor, Tuple[Tensor, ...]], Tensor]:
-        ...
+    ) -> Tuple[Union[Tensor, Tuple[Tensor, ...]], Tensor]: ...
 
     @typing.overload
     def attribute(
@@ -126,8 +125,7 @@ class LayerGradientShap(LayerAttribution, GradientAttribution):
         additional_forward_args: Any = None,
         return_convergence_delta: Literal[False] = False,
         attribute_to_layer_input: bool = False,
-    ) -> Union[Tensor, Tuple[Tensor, ...]]:
-        ...
+    ) -> Union[Tensor, Tuple[Tensor, ...]]: ...
 
     @log_usage()
     def attribute(
@@ -377,8 +375,7 @@ class LayerInputBaselineXGradient(LayerAttribution, GradientAttribution):
         additional_forward_args: Any = None,
         return_convergence_delta: Literal[False] = False,
         attribute_to_layer_input: bool = False,
-    ) -> Union[Tensor, Tuple[Tensor, ...]]:
-        ...
+    ) -> Union[Tensor, Tuple[Tensor, ...]]: ...
 
     @typing.overload
     def attribute(
@@ -390,8 +387,7 @@ class LayerInputBaselineXGradient(LayerAttribution, GradientAttribution):
         *,
         return_convergence_delta: Literal[True],
         attribute_to_layer_input: bool = False,
-    ) -> Tuple[Union[Tensor, Tuple[Tensor, ...]], Tensor]:
-        ...
+    ) -> Tuple[Union[Tensor, Tuple[Tensor, ...]], Tensor]: ...
 
     @log_usage()
     def attribute(  # type: ignore

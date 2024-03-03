@@ -197,7 +197,7 @@ class TestArnoldiInfluence(BaseTest):
             # basis. then check if they are actually eigenvectors
             vs_H_standard, ls_H_standard = _parameter_distill(qs, H, k, 0, 0)
 
-            for (l_H_standard, v_A) in zip(ls_H_standard[-k:], vs_A[-k:]):
+            for l_H_standard, v_A in zip(ls_H_standard[-k:], vs_A[-k:]):
                 l_H_standard_flattened = _flatten_params(l_H_standard)  # .real
                 expected = v_A * l_H_standard_flattened
                 actual = torch.matmul(A, l_H_standard_flattened)
@@ -206,7 +206,7 @@ class TestArnoldiInfluence(BaseTest):
 
             # check that the top-`k` eigenvalues of `A` as computed by
             # `_parameters_distill` are similar to those computed on `A` directly
-            for (v_H_standard, v_A) in zip(vs_H_standard[-k:], vs_A[-k:]):
+            for v_H_standard, v_A in zip(vs_H_standard[-k:], vs_A[-k:]):
                 # tol copied from original code
                 assert abs(v_H_standard - v_A) < 5
 
@@ -216,7 +216,7 @@ class TestArnoldiInfluence(BaseTest):
                 # basis, and compare with the top-`k` eigenvectors of `A`. need to
                 # flatten those from `distill` to compare
                 _, ls_H_standard = _parameter_distill(qs, H, k, 0, 0)
-                for (l_H_standard, l_A) in zip(ls_H_standard, ls_A):
+                for l_H_standard, l_A in zip(ls_H_standard, ls_A):
                     # print(l_A)
                     # print(flatten_unflattener.flatten(l_H_standard).real)
                     l_H_standard_flattened /= torch.norm(l_H_standard_flattened)
@@ -244,18 +244,22 @@ class TestArnoldiInfluence(BaseTest):
                 (
                     DataInfluenceConstructor(
                         NaiveInfluenceFunction,
-                        layers=["module.linear1"]
-                        if use_gpu == "cuda_dataparallel"
-                        else ["linear1"],
+                        layers=(
+                            ["module.linear1"]
+                            if use_gpu == "cuda_dataparallel"
+                            else ["linear1"]
+                        ),
                         projection_dim=5,
                         show_progress=False,
                         name="NaiveInfluenceFunction_linear1",
                     ),
                     DataInfluenceConstructor(
                         ArnoldiInfluenceFunction,
-                        layers=["module.linear1"]
-                        if use_gpu == "cuda_dataparallel"
-                        else ["linear1"],
+                        layers=(
+                            ["module.linear1"]
+                            if use_gpu == "cuda_dataparallel"
+                            else ["linear1"]
+                        ),
                         arnoldi_dim=50,
                         arnoldi_tol=1e-5,  # set low enough so that arnoldi subspace
                         # is large enough
@@ -347,17 +351,21 @@ class TestArnoldiInfluence(BaseTest):
                 (
                     DataInfluenceConstructor(
                         NaiveInfluenceFunction,
-                        layers=["module.linear1"]
-                        if use_gpu == "cuda_dataparallel"
-                        else ["linear1"],
+                        layers=(
+                            ["module.linear1"]
+                            if use_gpu == "cuda_dataparallel"
+                            else ["linear1"]
+                        ),
                         show_progress=False,
                         projection_dim=1,
                     ),
                     DataInfluenceConstructor(
                         ArnoldiInfluenceFunction,
-                        layers=["module.linear1"]
-                        if use_gpu == "cuda_dataparallel"
-                        else ["linear1"],
+                        layers=(
+                            ["module.linear1"]
+                            if use_gpu == "cuda_dataparallel"
+                            else ["linear1"]
+                        ),
                         show_progress=False,
                         arnoldi_dim=50,
                         arnoldi_tol=1e-6,

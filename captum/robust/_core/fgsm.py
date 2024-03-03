@@ -161,9 +161,11 @@ class FGSM(Perturbation):
         def _forward_with_loss() -> Tensor:
             additional_inputs = _format_additional_forward_args(additional_forward_args)
             outputs = self.forward_func(  # type: ignore
-                *(*inputs, *additional_inputs)  # type: ignore
-                if additional_inputs is not None
-                else inputs
+                *(
+                    (*inputs, *additional_inputs)  # type: ignore
+                    if additional_inputs is not None
+                    else inputs
+                )
             )
             if self.loss_func is not None:
                 return self.loss_func(outputs, target)

@@ -396,9 +396,9 @@ class LLMAttribution(Attribution):
 
         return LLMAttributionResult(
             attr[0],
-            attr[1:]
-            if self.include_per_token_attr
-            else None,  # shape(n_output_token, n_input_features)
+            (
+                attr[1:] if self.include_per_token_attr else None
+            ),  # shape(n_output_token, n_input_features)
             inp.values,
             self.tokenizer.convert_ids_to_tokens(target_tokens),
         )

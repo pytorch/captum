@@ -905,7 +905,7 @@ def _parameter_linear_combination(
     """
     assert len(cs.shape) == 1
     result = _parameter_multiply(paramss[0], cs[0])
-    for (params, c) in zip(paramss[1:], cs[1:]):
+    for params, c in zip(paramss[1:], cs[1:]):
         result = _parameter_add(result, _parameter_multiply(params, c))
     return result
 
@@ -1021,7 +1021,7 @@ def _model_make_functional(model, param_names, params):
 
 
 def _model_reinsert_params(model, param_names, params, register=False):
-    for (param_name, param) in zip(param_names, params):
+    for param_name, param in zip(param_names, params):
         _set_attr(
             model,
             param_name.split("."),

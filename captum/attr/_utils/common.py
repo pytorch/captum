@@ -71,15 +71,13 @@ def _validate_noise_tunnel_type(
 def _format_input_baseline(
     inputs: Union[Tensor, Tuple[Tensor, ...]],
     baselines: Union[Tensor, Tuple[Tensor, ...]],
-) -> Tuple[Tuple[Tensor, ...], Tuple[Tensor, ...]]:
-    ...
+) -> Tuple[Tuple[Tensor, ...], Tuple[Tensor, ...]]: ...
 
 
 @typing.overload
 def _format_input_baseline(
     inputs: Union[Tensor, Tuple[Tensor, ...]], baselines: BaselineType
-) -> Tuple[Tuple[Tensor, ...], Tuple[Union[Tensor, int, float], ...]]:
-    ...
+) -> Tuple[Tuple[Tensor, ...], Tuple[Union[Tensor, int, float], ...]]: ...
 
 
 def _format_input_baseline(
@@ -102,8 +100,7 @@ def _format_callable_baseline(
         Tuple[Tensor, ...],
     ],
     inputs: Union[Tensor, Tuple[Tensor, ...]],
-) -> Tuple[Tensor, ...]:
-    ...
+) -> Tuple[Tensor, ...]: ...
 
 
 @typing.overload
@@ -117,8 +114,7 @@ def _format_callable_baseline(
         Tuple[Union[Tensor, int, float], ...],
     ],
     inputs: Union[Tensor, Tuple[Tensor, ...]],
-) -> Tuple[Union[Tensor, int, float], ...]:
-    ...
+) -> Tuple[Union[Tensor, int, float], ...]: ...
 
 
 def _format_callable_baseline(
@@ -207,8 +203,7 @@ def _compute_conv_delta_and_format_attrs(
     additional_forward_args: Any,
     target: TargetType,
     is_inputs_tuple: Literal[False] = False,
-) -> Union[Tensor, Tuple[Tensor, Tensor]]:
-    ...
+) -> Union[Tensor, Tuple[Tensor, Tensor]]: ...
 
 
 @typing.overload
@@ -221,8 +216,7 @@ def _compute_conv_delta_and_format_attrs(
     additional_forward_args: Any,
     target: TargetType,
     is_inputs_tuple: Literal[True],
-) -> Union[Tuple[Tensor, ...], Tuple[Tuple[Tensor, ...], Tensor]]:
-    ...
+) -> Union[Tuple[Tensor, ...], Tuple[Tuple[Tensor, ...], Tensor]]: ...
 
 
 # FIXME: GradientAttribution is provided as a string due to a circular import.
