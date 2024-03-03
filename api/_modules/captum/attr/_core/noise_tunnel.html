@@ -224,9 +224,13 @@ src="/_sphinx/documentation_options.js"></script>
                 <span class="p">),</span> <span class="s2">"stdevs must be type float. "</span> <span class="s2">"Given: </span><span class="si">{}</span><span class="s2">"</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">stdevs</span><span class="p">))</span>
                 <span class="n">stdevs_</span> <span class="o">=</span> <span class="p">(</span><span class="n">stdevs</span><span class="p">,)</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span>
             <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span>
-                <span class="n">add_noise_to_input</span><span class="p">(</span><span class="nb">input</span><span class="p">,</span> <span class="n">stdev</span><span class="p">,</span> <span class="n">nt_samples_partition</span><span class="p">)</span><span class="o">.</span><span class="n">requires_grad_</span><span class="p">()</span>
-                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_gradient_method</span>
-                <span class="k">else</span> <span class="n">add_noise_to_input</span><span class="p">(</span><span class="nb">input</span><span class="p">,</span> <span class="n">stdev</span><span class="p">,</span> <span class="n">nt_samples_partition</span><span class="p">)</span>
+                <span class="p">(</span>
+                    <span class="n">add_noise_to_input</span><span class="p">(</span>
+                        <span class="nb">input</span><span class="p">,</span> <span class="n">stdev</span><span class="p">,</span> <span class="n">nt_samples_partition</span>
+                    <span class="p">)</span><span class="o">.</span><span class="n">requires_grad_</span><span class="p">()</span>
+                    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_gradient_method</span>
+                    <span class="k">else</span> <span class="n">add_noise_to_input</span><span class="p">(</span><span class="nb">input</span><span class="p">,</span> <span class="n">stdev</span><span class="p">,</span> <span class="n">nt_samples_partition</span><span class="p">)</span>
+                <span class="p">)</span>
                 <span class="k">for</span> <span class="p">(</span><span class="nb">input</span><span class="p">,</span> <span class="n">stdev</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">stdevs_</span><span class="p">)</span>
             <span class="p">)</span>
 
@@ -288,9 +292,11 @@ src="/_sphinx/documentation_options.js"></script>
 
             <span class="n">attributions</span> <span class="o">=</span> <span class="n">attr_func</span><span class="o">.</span><span class="n">__wrapped__</span><span class="p">(</span>  <span class="c1"># type: ignore</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">attribution_method</span><span class="p">,</span>  <span class="c1"># self</span>
-                <span class="n">inputs_with_noise_partition</span>
-                <span class="k">if</span> <span class="n">is_inputs_tuple</span>
-                <span class="k">else</span> <span class="n">inputs_with_noise_partition</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+                <span class="p">(</span>
+                    <span class="n">inputs_with_noise_partition</span>
+                    <span class="k">if</span> <span class="n">is_inputs_tuple</span>
+                    <span class="k">else</span> <span class="n">inputs_with_noise_partition</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                <span class="p">),</span>
                 <span class="o">**</span><span class="n">kwargs_partition</span><span class="p">,</span>
             <span class="p">)</span>
             <span class="n">delta</span> <span class="o">=</span> <span class="kc">None</span>

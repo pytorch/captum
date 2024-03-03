@@ -441,9 +441,9 @@ src="/_sphinx/documentation_options.js"></script>
 
         <span class="k">return</span> <span class="n">LLMAttributionResult</span><span class="p">(</span>
             <span class="n">attr</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
-            <span class="n">attr</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>
-            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">include_per_token_attr</span>
-            <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>  <span class="c1"># shape(n_output_token, n_input_features)</span>
+            <span class="p">(</span>
+                <span class="n">attr</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">include_per_token_attr</span> <span class="k">else</span> <span class="kc">None</span>
+            <span class="p">),</span>  <span class="c1"># shape(n_output_token, n_input_features)</span>
             <span class="n">inp</span><span class="o">.</span><span class="n">values</span><span class="p">,</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">tokenizer</span><span class="o">.</span><span class="n">convert_ids_to_tokens</span><span class="p">(</span><span class="n">target_tokens</span><span class="p">),</span>
         <span class="p">)</span></div>

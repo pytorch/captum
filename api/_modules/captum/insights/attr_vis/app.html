@@ -475,14 +475,16 @@ src="/_sphinx/documentation_options.js"></script>
                     <span class="n">feature_outputs</span><span class="o">=</span><span class="n">features_per_input</span><span class="p">,</span>
                     <span class="n">actual</span><span class="o">=</span><span class="n">actual_label_output</span><span class="p">,</span>
                     <span class="n">predicted</span><span class="o">=</span><span class="n">predicted_scores</span><span class="p">,</span>
-                    <span class="n">active_index</span><span class="o">=</span><span class="n">target</span>
-                    <span class="k">if</span> <span class="n">target</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
-                    <span class="k">else</span> <span class="n">actual_label_output</span><span class="o">.</span><span class="n">index</span><span class="p">,</span>
+                    <span class="n">active_index</span><span class="o">=</span><span class="p">(</span>
+                        <span class="n">target</span> <span class="k">if</span> <span class="n">target</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">actual_label_output</span><span class="o">.</span><span class="n">index</span>
+                    <span class="p">),</span>
                     <span class="c1"># Even if we only iterated over one model, the index should be fixed</span>
                     <span class="c1"># to show the index the model would have had in the list</span>
-                    <span class="n">model_index</span><span class="o">=</span><span class="n">single_model_index</span>
-                    <span class="k">if</span> <span class="n">single_model_index</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
-                    <span class="k">else</span> <span class="n">model_index</span><span class="p">,</span>
+                    <span class="n">model_index</span><span class="o">=</span><span class="p">(</span>
+                        <span class="n">single_model_index</span>
+                        <span class="k">if</span> <span class="n">single_model_index</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+                        <span class="k">else</span> <span class="n">model_index</span>
+                    <span class="p">),</span>
                 <span class="p">)</span>
             <span class="p">)</span>
 

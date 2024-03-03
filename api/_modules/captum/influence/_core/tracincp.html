@@ -957,7 +957,7 @@ src="/_sphinx/documentation_options.js"></script>
             <span class="n">input_checkpoint_jacobians</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">checkpoints</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
         <span class="p">)</span>
 
-        <span class="k">for</span> <span class="p">(</span><span class="n">input_jacobians</span><span class="p">,</span> <span class="n">checkpoint</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span>
+        <span class="k">for</span> <span class="n">input_jacobians</span><span class="p">,</span> <span class="n">checkpoint</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span>
             <span class="n">input_checkpoint_jacobians</span><span class="p">[</span><span class="mi">1</span><span class="p">:],</span> <span class="bp">self</span><span class="o">.</span><span class="n">checkpoints</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>
         <span class="p">):</span>
             <span class="n">batch_tracin_scores</span> <span class="o">+=</span> <span class="n">get_checkpoint_contribution</span><span class="p">(</span>

@@ -197,9 +197,11 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="k">def</span> <span class="nf">_forward_with_loss</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">Tensor</span><span class="p">:</span>
             <span class="n">additional_inputs</span> <span class="o">=</span> <span class="n">_format_additional_forward_args</span><span class="p">(</span><span class="n">additional_forward_args</span><span class="p">)</span>
             <span class="n">outputs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">forward_func</span><span class="p">(</span>  <span class="c1"># type: ignore</span>
-                <span class="o">*</span><span class="p">(</span><span class="o">*</span><span class="n">inputs</span><span class="p">,</span> <span class="o">*</span><span class="n">additional_inputs</span><span class="p">)</span>  <span class="c1"># type: ignore</span>
-                <span class="k">if</span> <span class="n">additional_inputs</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
-                <span class="k">else</span> <span class="n">inputs</span>
+                <span class="o">*</span><span class="p">(</span>
+                    <span class="p">(</span><span class="o">*</span><span class="n">inputs</span><span class="p">,</span> <span class="o">*</span><span class="n">additional_inputs</span><span class="p">)</span>  <span class="c1"># type: ignore</span>
+                    <span class="k">if</span> <span class="n">additional_inputs</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+                    <span class="k">else</span> <span class="n">inputs</span>
+                <span class="p">)</span>
             <span class="p">)</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">loss_func</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">loss_func</span><span class="p">(</span><span class="n">outputs</span><span class="p">,</span> <span class="n">target</span><span class="p">)</span>

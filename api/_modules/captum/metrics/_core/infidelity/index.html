@@ -110,24 +110,28 @@ src="/_sphinx/documentation_options.js"></script>
             <span class="n">baselines</span> <span class="o">=</span> <span class="n">_format_baseline</span><span class="p">(</span><span class="n">baselines</span><span class="p">,</span> <span class="n">inputs</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">baselines</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="n">perturbations</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span>
-                    <span class="n">safe_div</span><span class="p">(</span>
-                        <span class="nb">input</span> <span class="o">-</span> <span class="n">input_perturbed</span><span class="p">,</span>
-                        <span class="nb">input</span><span class="p">,</span>
-                        <span class="n">default_denom</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
+                    <span class="p">(</span>
+                        <span class="n">safe_div</span><span class="p">(</span>
+                            <span class="nb">input</span> <span class="o">-</span> <span class="n">input_perturbed</span><span class="p">,</span>
+                            <span class="nb">input</span><span class="p">,</span>
+                            <span class="n">default_denom</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
+                        <span class="p">)</span>
+                        <span class="k">if</span> <span class="n">multipy_by_inputs</span>
+                        <span class="k">else</span> <span class="nb">input</span> <span class="o">-</span> <span class="n">input_perturbed</span>
                     <span class="p">)</span>
-                    <span class="k">if</span> <span class="n">multipy_by_inputs</span>
-                    <span class="k">else</span> <span class="nb">input</span> <span class="o">-</span> <span class="n">input_perturbed</span>
                     <span class="k">for</span> <span class="nb">input</span><span class="p">,</span> <span class="n">input_perturbed</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">inputs_perturbed</span><span class="p">)</span>
                 <span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">perturbations</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span>
-                    <span class="n">safe_div</span><span class="p">(</span>
-                        <span class="nb">input</span> <span class="o">-</span> <span class="n">input_perturbed</span><span class="p">,</span>
-                        <span class="nb">input</span> <span class="o">-</span> <span class="n">baseline</span><span class="p">,</span>
-                        <span class="n">default_denom</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
+                    <span class="p">(</span>
+                        <span class="n">safe_div</span><span class="p">(</span>
+                            <span class="nb">input</span> <span class="o">-</span> <span class="n">input_perturbed</span><span class="p">,</span>
+                            <span class="nb">input</span> <span class="o">-</span> <span class="n">baseline</span><span class="p">,</span>
+                            <span class="n">default_denom</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
+                        <span class="p">)</span>
+                        <span class="k">if</span> <span class="n">multipy_by_inputs</span>
+                        <span class="k">else</span> <span class="nb">input</span> <span class="o">-</span> <span class="n">input_perturbed</span>
                     <span class="p">)</span>
-                    <span class="k">if</span> <span class="n">multipy_by_inputs</span>
-                    <span class="k">else</span> <span class="nb">input</span> <span class="o">-</span> <span class="n">input_perturbed</span>
                     <span class="k">for</span> <span class="nb">input</span><span class="p">,</span> <span class="n">input_perturbed</span><span class="p">,</span> <span class="n">baseline</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span>
                         <span class="n">inputs</span><span class="p">,</span> <span class="n">inputs_perturbed</span><span class="p">,</span> <span class="n">baselines</span>
                     <span class="p">)</span>
@@ -458,11 +462,13 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="n">baselines_expanded</span> <span class="o">=</span> <span class="n">baselines</span>
         <span class="k">if</span> <span class="n">baselines</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">baselines_expanded</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span>
-                <span class="n">baseline</span><span class="o">.</span><span class="n">repeat_interleave</span><span class="p">(</span><span class="n">current_n_perturb_samples</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
-                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">baseline</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">)</span>
-                <span class="ow">and</span> <span class="n">baseline</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="nb">input</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-                <span class="ow">and</span> <span class="n">baseline</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">1</span>
-                <span class="k">else</span> <span class="n">baseline</span>
+                <span class="p">(</span>
+                    <span class="n">baseline</span><span class="o">.</span><span class="n">repeat_interleave</span><span class="p">(</span><span class="n">current_n_perturb_samples</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">baseline</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">)</span>
+                    <span class="ow">and</span> <span class="n">baseline</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="nb">input</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                    <span class="ow">and</span> <span class="n">baseline</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">1</span>
+                    <span class="k">else</span> <span class="n">baseline</span>
+                <span class="p">)</span>
                 <span class="k">for</span> <span class="nb">input</span><span class="p">,</span> <span class="n">baseline</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">cast</span><span class="p">(</span><span class="n">Tuple</span><span class="p">,</span> <span class="n">baselines</span><span class="p">))</span>
             <span class="p">)</span>
 
