@@ -39,7 +39,7 @@ class RealFeature(BaseFeature):
         )
 
 
-def _get_classes():
+def _get_classes() -> List[str]:
     classes = [
         "Plane",
         "Car",
@@ -56,7 +56,7 @@ def _get_classes():
 
 
 class TinyCnn(nn.Module):
-    def __init__(self, feature_extraction=False) -> None:
+    def __init__(self, feature_extraction: bool = False) -> None:
         super().__init__()
         self.feature_extraction = feature_extraction
 
@@ -80,7 +80,7 @@ class TinyCnn(nn.Module):
 
 
 class TinyMultiModal(nn.Module):
-    def __init__(self, input_size=256, pretrained=False) -> None:
+    def __init__(self, input_size: int = 256, pretrained: bool = False) -> None:
         super().__init__()
         if pretrained:
             self.img_model = _get_cnn(feature_extraction=True)
@@ -97,14 +97,20 @@ class TinyMultiModal(nn.Module):
         return self.fc(x)
 
 
-def _labelled_img_data(num_samples=10, width=8, height=8, depth=3, num_labels=10):
+def _labelled_img_data(
+    num_samples: int = 10,
+    width: int = 8,
+    height: int = 8,
+    depth: int = 3,
+    num_labels: int = 10,
+):
     for _ in range(num_samples):
         yield torch.empty(depth, height, width).uniform_(0, 1), torch.randint(
             num_labels, (1,)
         )
 
 
-def _multi_modal_data(img_dataset, feature_size=256):
+def _multi_modal_data(img_dataset, feature_size: int = 256):
     def misc_data(length, feature_size=None):
         for _ in range(length):
             yield torch.randn(feature_size)
@@ -116,11 +122,11 @@ def _multi_modal_data(img_dataset, feature_size=256):
         yield ((img, misc), label)
 
 
-def _get_cnn(feature_extraction=False):
+def _get_cnn(feature_extraction: bool = False) -> TinyCnn:
     return TinyCnn(feature_extraction=feature_extraction)
 
 
-def _get_multimodal(input_size=256):
+def _get_multimodal(input_size: int = 256) -> TinyMultiModal:
     return TinyMultiModal(input_size=input_size, pretrained=True)
 
 

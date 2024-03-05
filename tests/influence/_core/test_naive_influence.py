@@ -42,7 +42,7 @@ class TestNaiveInfluence(BaseTest):
         ],
         name_func=build_test_name_func(),
     )
-    def test_flatten_unflattener(self, param_shapes: List[Tuple[int, ...]]):
+    def test_flatten_unflattener(self, param_shapes: List[Tuple[int, ...]]) -> None:
         # unflatten and flatten should be inverses of each other. check this holds.
         _unflatten_params = _unflatten_params_factory(param_shapes)
         params = tuple(torch.randn(shape) for shape in param_shapes)
@@ -113,7 +113,7 @@ class TestNaiveInfluence(BaseTest):
         mode: str,
         unpack_inputs: bool,
         use_gpu: Union[bool, str],
-    ):
+    ) -> None:
         """
         this tests that `NaiveInfluence`, the simplest implementation, agree with the
         analytically calculated solution for influence and self-influence for a model
@@ -250,7 +250,7 @@ class TestNaiveInfluence(BaseTest):
         [(_custom_functional_call,), (_functional_call,)],
         name_func=build_test_name_func(),
     )
-    def test_functional_call(self, method):
+    def test_functional_call(self, method) -> None:
         """
         tests `influence._utils.common._functional_call` for a simple case where the
         model and loss are linear regression and squared error.  `method` can either be

@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+from typing import Any, Tuple
+
 import torch
 import torch.nn as nn
 from captum.attr import LayerLRP
@@ -7,21 +9,22 @@ from captum.attr._utils.lrp_rules import Alpha1_Beta0_Rule, EpsilonRule, GammaRu
 
 from tests.helpers.basic import assertTensorAlmostEqual, BaseTest
 from tests.helpers.basic_models import BasicModel_ConvNet_One_Conv, SimpleLRPModel
+from torch._tensor import Tensor
 
 
-def _get_basic_config():
+def _get_basic_config() -> Tuple[BasicModel_ConvNet_One_Conv, Tensor]:
     input = torch.arange(16).view(1, 1, 4, 4).float()
     return BasicModel_ConvNet_One_Conv(), input
 
 
-def _get_simple_model(inplace=False):
+def _get_simple_model(inplace: bool = False) -> Tuple[SimpleLRPModel, Tensor]:
     model = SimpleLRPModel(inplace)
     inputs = torch.tensor([[1.0, 2.0, 3.0]])
 
     return model, inputs
 
 
-def _get_simple_model2(inplace=False):
+def _get_simple_model2(inplace: bool = False) -> Tuple[Any, Tensor]:
     class MyModel(nn.Module):
         def __init__(self, inplace) -> None:
             super().__init__()
@@ -50,7 +53,7 @@ class Test(BaseTest):
         lrp = LayerLRP(model, model.conv1)
         self.assertRaises(TypeError, lrp.attribute, inputs)
 
-    def test_lrp_basic_attributions(self):
+    def test_lrp_basic_attributions(self) -> None:
         model, inputs = _get_basic_config()
         logits = model(inputs)
         score, classIndex = torch.max(logits, 1)
@@ -63,7 +66,7 @@ class Test(BaseTest):
         )
         assertTensorAlmostEqual(self, delta, torch.Tensor([0]))
 
-    def test_lrp_simple_attributions(self):
+    def test_lrp_simple_attributions(self) -> None:
         model, inputs = _get_simple_model(inplace=False)
         model.eval()
         model.linear.rule = EpsilonRule()

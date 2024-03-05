@@ -9,14 +9,14 @@ from tests.helpers.basic_models import BasicModel, BasicModel_MultiLayer
 from torch import Tensor
 
 
-def float_metric(model_out: Tensor, target: int):
+def float_metric(model_out: Tensor, target: int) -> Tensor:
     return model_out[:, target]
 
 
 ModelResult = collections.namedtuple("ModelResult", "accuracy output")
 
 
-def tuple_metric(model_out: Tensor, target: int, named_tuple=False):
+def tuple_metric(model_out: Tensor, target: int, named_tuple: bool = False):
     _, pred = torch.max(model_out, dim=1)
     acc = (pred == target).float()
     output = model_out[:, target]
@@ -202,7 +202,7 @@ class Test(BaseTest):
         attack_comp.reset()
         self.assertEqual(len(attack_comp.summary()), 0)
 
-    def _compare_results(self, obtained, expected) -> None:
+    def _compare_results(self, obtained: Tensor, expected) -> None:
         if isinstance(expected, dict):
             self.assertIsInstance(obtained, dict)
             for key in expected:

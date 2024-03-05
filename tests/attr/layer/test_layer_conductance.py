@@ -170,7 +170,7 @@ class Test(BaseTest):
         target_layer: Module,
         test_input: Tensor,
         test_baseline: Union[None, Tensor] = None,
-        n_steps=300,
+        n_steps: int = 300,
     ) -> None:
         layer_output = None
 

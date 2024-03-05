@@ -140,7 +140,7 @@ class Test(BaseTest):
         ],
         additional_input: Any = None,
         attribute_to_layer_input: bool = False,
-    ):
+    ) -> None:
         layer_act = LayerActivation(model, target_layer)
         self.assertTrue(layer_act.multiplies_by_inputs)
         attributions = layer_act.attribute(
@@ -162,7 +162,7 @@ class Test(BaseTest):
         ],
         additional_input: Any = None,
         attribute_to_layer_input: bool = False,
-    ):
+    ) -> None:
         layer_act = LayerActivation(model, target_layers)
         self.assertTrue(layer_act.multiplies_by_inputs)
         attributions = layer_act.attribute(

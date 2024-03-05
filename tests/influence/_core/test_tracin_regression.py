@@ -1,6 +1,6 @@
 import os
 import tempfile
-from typing import Callable, cast, Optional
+from typing import Callable, cast, Optional, Tuple
 
 import torch
 import torch.nn as nn
@@ -314,7 +314,9 @@ class TestTracInRegression(BaseTest):
                         self, torch.sum(num), train_scores[i][j], delta=0.1
                     )
 
-    def _test_tracin_identity_regression_setup(self, tmpdir: str):
+    def _test_tracin_identity_regression_setup(
+        self, tmpdir: str
+    ) -> Tuple[IdentityDataset, CoefficientNet]:
         num_features = 7
         dataset = IdentityDataset(num_features)
         net = CoefficientNet()

@@ -11,7 +11,12 @@ from torch.utils.data import DataLoader, TensorDataset
 
 
 def sklearn_dataset_to_loaders(
-    data, train_prop=0.7, batch_size=64, num_workers=4, shuffle=False, one_hot=False
+    data,
+    train_prop: float = 0.7,
+    batch_size: int = 64,
+    num_workers: int = 4,
+    shuffle: bool = False,
+    one_hot: bool = False,
 ):
     xs, ys = data
     if one_hot and ys.dtype != float:
@@ -107,7 +112,7 @@ def compare_to_sk_learn(
     )
 
 
-def main(args):
+def main(args) -> None:
     if args.seed:
         torch.manual_seed(0)
         random.seed(0)
@@ -190,5 +195,5 @@ if __name__ == "__main__":
     parser.add_argument("--init_scheme", type=str, default="xavier")
     parser.add_argument("--norm_sklearn", default=False, action="store_true")
     parser.add_argument("--objective", type=str, default="lasso")
-    args = parser.parse_args()
+    args: argparse.Namespace = parser.parse_args()
     main(args)

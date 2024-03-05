@@ -41,7 +41,7 @@ layer_methods_to_test_with_equiv = [
 
 
 class InputLayerMeta(type):
-    def __new__(cls, name: str, bases: Tuple, attrs: Dict):
+    def __new__(metacls, name: str, bases: Tuple, attrs: Dict):
         for (
             layer_method,
             equiv_method,
@@ -58,7 +58,7 @@ class InputLayerMeta(type):
                     )
                 )
 
-        return super(InputLayerMeta, cls).__new__(cls, name, bases, attrs)
+        return super(InputLayerMeta, metacls).__new__(metacls, name, bases, attrs)
 
 
 class TestInputLayerWrapper(BaseTest, metaclass=InputLayerMeta):
@@ -114,7 +114,9 @@ class TestInputLayerWrapper(BaseTest, metaclass=InputLayerMeta):
         assertTensorTuplesAlmostEqual(self, a1, a2)
         assertTensorTuplesAlmostEqual(self, a1, real_attributions)
 
-    def forward_eval_layer_with_inputs_helper(self, model, inputs_to_test):
+    def forward_eval_layer_with_inputs_helper(
+        self, model: ModelInputWrapper, inputs_to_test
+    ) -> None:
         # hard coding for simplicity
         # 0 if using args, 1 if using kwargs
         #   => no 0s after first 1 (left to right)

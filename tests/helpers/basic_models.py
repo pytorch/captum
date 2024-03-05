@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-from typing import no_type_check, Optional, Tuple
+from typing import no_type_check, Optional, Tuple, Union
 
 import torch
 import torch.nn as nn
@@ -16,7 +16,7 @@ the relevant type hints.
 
 
 class BasicLinearReLULinear(nn.Module):
-    def __init__(self, in_features, out_features=5, bias=False) -> None:
+    def __init__(self, in_features, out_features: int = 5, bias: bool = False) -> None:
         super().__init__()
         self.fc1 = nn.Linear(in_features, out_features, bias=bias)
         self.relu1 = nn.ReLU()
@@ -43,7 +43,7 @@ class BasicModel(nn.Module):
     def __init__(self) -> None:
         super().__init__()
 
-    def forward(self, input):
+    def forward(self, input: int):
         input = 1 - F.relu(1 - input)
         return input
 
@@ -59,7 +59,7 @@ class BasicModel2(nn.Module):
     def __init__(self) -> None:
         super().__init__()
 
-    def forward(self, input1, input2):
+    def forward(self, input1: Tensor, input2: Tensor) -> Tensor:
         relu_out1 = F.relu(input1)
         relu_out2 = F.relu(input2)
         return F.relu(relu_out1 - 1 - relu_out2)
@@ -76,7 +76,7 @@ class BasicModel3(nn.Module):
     def __init__(self) -> None:
         super().__init__()
 
-    def forward(self, input1, input2):
+    def forward(self, input1, input2: Tensor) -> Tensor:
         relu_out1 = F.relu(input1 - 1)
         relu_out2 = F.relu(input2)
         return F.relu(relu_out1 - relu_out2)
@@ -92,7 +92,13 @@ class BasicModel4_MultiArgs(nn.Module):
     def __init__(self) -> None:
         super().__init__()
 
-    def forward(self, input1, input2, additional_input1, additional_input2=0):
+    def forward(
+        self,
+        input1,
+        input2: Tensor,
+        additional_input1: Union[bool, float, int, Tensor],
+        additional_input2: int = 0,
+    ) -> Tensor:
         relu_out1 = F.relu(input1 - 1)
         relu_out2 = F.relu(input2)
         relu_out2 = relu_out2.div(additional_input1)
@@ -109,7 +115,9 @@ class BasicModel5_MultiArgs(nn.Module):
     def __init__(self) -> None:
         super().__init__()
 
-    def forward(self, input1, input2, additional_input1, additional_input2=0):
+    def forward(
+        self, input1, input2: Tensor, additional_input1, additional_input2: int = 0
+    ) -> Tensor:
         relu_out1 = F.relu(input1 - 1) * additional_input1[0]
         relu_out2 = F.relu(input2)
         relu_out2 = relu_out2 * additional_input1[1]
@@ -164,7 +172,7 @@ class ReLUDeepLiftModel(nn.Module):
         self.relu1 = nn.ReLU()
         self.relu2 = nn.ReLU()
 
-    def forward(self, x1, x2, x3=2):
+    def forward(self, x1, x2, x3: int = 2):
         return 2 * self.relu1(x1) + x3 * self.relu2(x2 - 1.5)
 
 
@@ -211,14 +219,14 @@ class BasicModelWithSparseInputs(nn.Module):
         self.lin1.weight = nn.Parameter(torch.tensor([[3.0, 1.0, 2.0]]))
         self.lin1.bias = nn.Parameter(torch.zeros(1))
 
-    def forward(self, inputs, sparse_list):
+    def forward(self, inputs, sparse_list: Tensor):
         return (
             self.lin1(inputs) + (sparse_list[0] if torch.numel(sparse_list) > 0 else 0)
         ).sum()
 
 
 class BasicModel_MaxPool_ReLU(nn.Module):
-    def __init__(self, inplace=False) -> None:
+    def __init__(self, inplace: bool = False) -> None:
         super().__init__()
         self.maxpool = nn.MaxPool1d(3)
         self.relu = nn.ReLU(inplace=inplace)
@@ -292,7 +300,9 @@ class TextModule(nn.Module):
     nested embedding layers
     """
 
-    def __init__(self, num_embeddings, embedding_dim, second_embedding=False) -> None:
+    def __init__(
+        self, num_embeddings, embedding_dim, second_embedding: bool = False
+    ) -> None:
         super().__init__()
         self.inner_embedding = nn.Embedding(num_embeddings, embedding_dim)
         self.second_embedding = second_embedding
@@ -327,11 +337,11 @@ class BasicEmbeddingModel(nn.Module):
 
     def __init__(
         self,
-        num_embeddings=30,
-        embedding_dim=100,
-        hidden_dim=256,
-        output_dim=1,
-        nested_second_embedding=False,
+        num_embeddings: int = 30,
+        embedding_dim: int = 100,
+        hidden_dim: int = 256,
+        output_dim: int = 1,
+        nested_second_embedding: bool = False,
     ) -> None:
         super().__init__()
         self.embedding1 = nn.Embedding(num_embeddings, embedding_dim)
@@ -363,7 +373,7 @@ class MultiRelu(nn.Module):
 
 
 class BasicModel_MultiLayer(nn.Module):
-    def __init__(self, inplace=False, multi_input_module=False) -> None:
+    def __init__(self, inplace: bool = False, multi_input_module: bool = False) -> None:
         super().__init__()
         # Linear 0 is simply identity transform
         self.multi_input_module = multi_input_module

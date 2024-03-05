@@ -148,7 +148,7 @@ class Test(BaseTest):
         model: Module,
         output_layer: Module,
         test_input: TensorOrTupleOfTensorsGeneric,
-    ):
+    ) -> None:
         out = model(test_input)
         attrib = GuidedBackprop(model)
         self.assertFalse(attrib.multiplies_by_inputs)

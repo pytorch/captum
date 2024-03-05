@@ -142,7 +142,7 @@ class Test(BaseTest):
             for j in range(layer_attr[i].shape[1]):
                 neuron_attr = nc.attribute(
                     inp,
-                    lambda x: x[i][:, j],
+                    lambda x, i=i, j=j: x[i][:, j],
                     target=0,
                     n_steps=500,
                     method="gausslegendre",
@@ -209,7 +209,7 @@ class Test(BaseTest):
         target_layer: Module,
         test_input: TensorOrTupleOfTensorsGeneric,
         test_baseline: BaselineType = None,
-    ):
+    ) -> None:
         layer_cond = LayerConductance(model, target_layer)
         attributions = cast(
             Tensor,

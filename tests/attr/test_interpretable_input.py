@@ -4,15 +4,16 @@ import torch
 from captum.attr._utils.interpretable_input import TextTemplateInput, TextTokenInput
 from parameterized import parameterized
 from tests.helpers.basic import assertTensorAlmostEqual, BaseTest
+from torch._tensor import Tensor
 
 
 class DummyTokenizer:
-    def __init__(self, vocab_list):
+    def __init__(self, vocab_list) -> None:
         self.token_to_id = {v: i for i, v in enumerate(vocab_list)}
         self.id_to_token = vocab_list
         self.unk_idx = len(vocab_list) + 1
 
-    def encode(self, text, **kwargs):
+    def encode(self, text, **kwargs) -> Tensor:
         return torch.tensor([self.convert_tokens_to_ids(text.split(" "))])
 
     def convert_ids_to_tokens(self, ids):
@@ -107,7 +108,7 @@ class TestTextTemplateInput(BaseTest):
 
 
 class TestTextTokenInput(BaseTest):
-    def test_input(self):
+    def test_input(self) -> None:
         tokenizer = DummyTokenizer(["a", "b", "c"])
         tt_input = TextTokenInput("a c d", tokenizer)
 
@@ -123,7 +124,7 @@ class TestTextTokenInput(BaseTest):
             self, tt_input.to_model_input(perturbed_tensor), expected_perturbed_inp
         )
 
-    def test_input_with_baselines(self):
+    def test_input_with_baselines(self) -> None:
         tokenizer = DummyTokenizer(["a", "b", "c"])
 
         # int baselines
@@ -141,7 +142,7 @@ class TestTextTokenInput(BaseTest):
             self, tt_input.to_model_input(perturbed_tensor), expected_perturbed_inp
         )
 
-    def test_input_with_skip_tokens(self):
+    def test_input_with_skip_tokens(self) -> None:
         tokenizer = DummyTokenizer(["a", "b", "c"])
 
         # int skip tokens

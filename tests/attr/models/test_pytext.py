@@ -5,9 +5,10 @@ from __future__ import print_function
 import os
 import tempfile
 import unittest
-from typing import Dict, List
+from typing import Dict, List, NoReturn, Optional
 
 import torch
+from pytext.data.data_handler import CommonMetadata
 
 HAS_PYTEXT = True
 try:
@@ -19,7 +20,6 @@ try:
     from pytext.config.component import create_featurizer, create_model
     from pytext.config.doc_classification import ModelInputConfig, TargetConfig
     from pytext.config.field_config import FeatureConfig, WordFeatConfig
-    from pytext.data import CommonMetadata
     from pytext.data.doc_classification_data_handler import (  # @manual=//pytext:main_lib  # noqa
         DocClassificationDataHandler,
     )
@@ -43,7 +43,7 @@ class VocabStub:
 
 
 class TestWordEmbeddings(unittest.TestCase):
-    def setUp(self):
+    def setUp(self) -> Optional[NoReturn]:
         if not HAS_PYTEXT:
             return self.skipTest("Skip the test since PyText is not installed")
 
@@ -143,7 +143,7 @@ class TestWordEmbeddings(unittest.TestCase):
             self._create_dummy_meta_data(),
         )
 
-    def _create_dummy_meta_data(self):
+    def _create_dummy_meta_data(self) -> CommonMetadata:
         text_field_meta = FieldMeta()
         text_field_meta.vocab = VocabStub()
         text_field_meta.vocab_size = 4

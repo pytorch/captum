@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+from typing import Optional, Tuple
+
 import numpy as np
 import torch
 from captum._utils.gradient import (
@@ -8,6 +10,7 @@ from captum._utils.gradient import (
 from captum.attr._utils.approximation_methods import approximation_parameters
 from captum.attr._utils.attribution import LayerAttribution
 from captum.attr._utils.common import _reshape_and_sum
+from torch._tensor import Tensor
 
 """
 Note: This implementation of conductance follows the procedure described in the original
@@ -33,7 +36,9 @@ class ConductanceReference(LayerAttribution):
         """
         super().__init__(forward_func, layer)
 
-    def _conductance_grads(self, forward_fn, input, target_ind=None):
+    def _conductance_grads(
+        self, forward_fn, input, target_ind=None
+    ) -> Tuple[Tensor, Tensor, int]:
         with torch.autograd.set_grad_enabled(True):
             # Set a forward hook on specified module and run forward pass to
             # get output tensor size.
@@ -110,11 +115,11 @@ class ConductanceReference(LayerAttribution):
     def attribute(
         self,
         inputs,
-        baselines=None,
+        baselines: Optional[int] = None,
         target=None,
-        n_steps=500,
-        method="riemann_trapezoid",
-    ):
+        n_steps: int = 500,
+        method: str = "riemann_trapezoid",
+    ) -> Tensor:
         r"""
         Computes conductance using gradients along the path, applying
         riemann's method or gauss-legendre.

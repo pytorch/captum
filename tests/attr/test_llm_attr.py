@@ -2,7 +2,7 @@
 
 import copy
 from collections import namedtuple
-from typing import cast, List, Optional, Union
+from typing import Any, cast, Dict, List, Optional, Union
 
 import torch
 from captum.attr._core.feature_ablation import FeatureAblation
@@ -22,7 +22,9 @@ class DummyTokenizer:
     sos, unk = [0, 1]
     special_tokens = {sos: "<sos>", unk: "<unk>"}
 
-    def encode(self, text: str, return_tensors: Optional[str] = None):
+    def encode(
+        self, text: str, return_tensors: Optional[str] = None
+    ) -> Union[List[int], Tensor]:
         tokens = text.split(" ")
         tokens_ids = [ord(s[0]) if len(s) == 1 else self.unk for s in tokens]
 
@@ -40,19 +42,19 @@ class DummyTokenizer:
             for tid in token_ids
         ]
 
-    def decode(self, token_ids):
+    def decode(self, token_ids) -> str:
         return " ".join(self.convert_ids_to_tokens(token_ids))
 
 
 class DummyLLM(nn.Module):
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
         self.tokenizer = DummyTokenizer()
         self.emb = nn.Embedding(self.tokenizer.vocab_size, 10)
         self.linear = nn.Linear(10, self.tokenizer.vocab_size)
         self.trans = nn.TransformerEncoderLayer(d_model=10, nhead=2)
 
-    def forward(self, input_ids, *args, **kwargs):
+    def forward(self, input_ids, *args, **kwargs) -> Any:
         emb = self.emb(input_ids)
         if "past_key_values" in kwargs:
             emb = torch.cat((kwargs["past_key_values"], emb), dim=1)
@@ -60,7 +62,9 @@ class DummyLLM(nn.Module):
         Result = namedtuple("Result", ["logits", "past_key_values"])
         return Result(logits=logits, past_key_values=emb)
 
-    def generate(self, input_ids, *args, mock_response=None, **kwargs):
+    def generate(
+        self, input_ids, *args, mock_response: Optional[str] = None, **kwargs
+    ) -> Tensor:
         assert mock_response, "must mock response to use DummyLLM to geenrate"
         response = self.tokenizer.encode(mock_response)[1:]
         return torch.cat(
@@ -73,7 +77,9 @@ class DummyLLM(nn.Module):
             new_kwargs["past_key_values"] = outputs.past_key_values
         return new_kwargs
 
-    def prepare_inputs_for_generation(self, model_inp, **model_kwargs):
+    def prepare_inputs_for_generation(
+        self, model_inp, **model_kwargs
+    ) -> Dict[str, Any]:
         if "past_key_values" in model_kwargs:
             emb_len = model_kwargs["past_key_values"].shape[1]
             return {
@@ -83,7 +89,7 @@ class DummyLLM(nn.Module):
         return {"input_ids": model_inp}
 
     @property
-    def device(self):
+    def device(self) -> Any:
         return next(self.parameters()).device
 
 

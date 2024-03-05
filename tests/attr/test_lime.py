@@ -494,7 +494,7 @@ class Test(BaseTest):
         model: Callable,
         test_input: TensorOrTupleOfTensorsGeneric,
         expected_attr,
-        expected_coefs_only=None,
+        expected_coefs_only: Optional[Tensor] = None,
         feature_mask: Union[None, TensorOrTupleOfTensorsGeneric] = None,
         additional_input: Any = None,
         perturbations_per_eval: Tuple[int, ...] = (1,),

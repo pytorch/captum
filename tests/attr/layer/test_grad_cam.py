@@ -118,7 +118,7 @@ class Test(BaseTest):
         attribute_to_layer_input: bool = False,
         relu_attributions: bool = False,
         attr_dim_summation: bool = True,
-    ):
+    ) -> None:
         layer_gc = LayerGradCam(model, target_layer)
         self.assertFalse(layer_gc.multiplies_by_inputs)
         attributions = layer_gc.attribute(

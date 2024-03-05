@@ -15,7 +15,7 @@ from tests.helpers.basic import assertTensorAlmostEqual, BaseTest
     ]
 )
 class TestBinaryConcreteStochasticGates(BaseTest):
-    def setUp(self):
+    def setUp(self) -> None:
         super().setUp()
         if self.testing_device == "cuda" and not torch.cuda.is_available():
             raise unittest.SkipTest("Skipping GPU test since CUDA not available.")

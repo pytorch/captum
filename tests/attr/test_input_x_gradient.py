@@ -84,7 +84,7 @@ class Test(BaseTest):
                 cast(Tensor, inputs).shape, cast(Tensor, attributions).shape
             )
 
-    def _assert_attribution(self, expected_grad, input, attribution):
+    def _assert_attribution(self, expected_grad, input, attribution: Tensor) -> None:
         assertTensorAlmostEqual(
             self,
             attribution,

@@ -386,7 +386,7 @@ class Test(BaseTest):
         additional_forward_args: Any = None,
         type: str = "vanilla",
         approximation_method: str = "gausslegendre",
-        multiply_by_inputs=True,
+        multiply_by_inputs: bool = True,
         nt_samples_batch_size=None,
     ) -> Tuple[Tensor, ...]:
         r"""

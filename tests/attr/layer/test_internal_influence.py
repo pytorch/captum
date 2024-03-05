@@ -156,7 +156,7 @@ class Test(BaseTest):
         baseline: BaselineType = None,
         additional_args: Any = None,
         attribute_to_layer_input: bool = False,
-    ):
+    ) -> None:
         for internal_batch_size in [None, 5, 20]:
             int_inf = InternalInfluence(model, target_layer)
             self.assertFalse(int_inf.multiplies_by_inputs)

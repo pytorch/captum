@@ -7,6 +7,7 @@ from typing import Callable
 import numpy as np
 import torch
 from captum.log import patch_methods
+from torch._tensor import Tensor
 
 
 def deep_copy_args(func: Callable):
@@ -19,7 +20,9 @@ def deep_copy_args(func: Callable):
     return copy_args
 
 
-def assertTensorAlmostEqual(test, actual, expected, delta=0.0001, mode="sum"):
+def assertTensorAlmostEqual(
+    test, actual: Tensor, expected: Tensor, delta: float = 0.0001, mode: str = "sum"
+) -> None:
     assert isinstance(actual, torch.Tensor), (
         "Actual parameter given for " "comparison must be a tensor."
     )
@@ -57,7 +60,9 @@ def assertTensorAlmostEqual(test, actual, expected, delta=0.0001, mode="sum"):
         raise ValueError("Mode for assertion comparison must be one of `max` or `sum`.")
 
 
-def assertTensorTuplesAlmostEqual(test, actual, expected, delta=0.0001, mode="sum"):
+def assertTensorTuplesAlmostEqual(
+    test, actual, expected, delta: float = 0.0001, mode: str = "sum"
+) -> None:
     if isinstance(expected, tuple):
         assert len(actual) == len(
             expected
@@ -69,13 +74,13 @@ def assertTensorTuplesAlmostEqual(test, actual, expected, delta=0.0001, mode="su
         assertTensorAlmostEqual(test, actual, expected, delta, mode)
 
 
-def assertAttributionComparision(test, attributions1, attributions2):
+def assertAttributionComparision(test, attributions1, attributions2) -> None:
     for attribution1, attribution2 in zip(attributions1, attributions2):
         for attr_row1, attr_row2 in zip(attribution1, attribution2):
             assertTensorAlmostEqual(test, attr_row1, attr_row2, 0.05, "max")
 
 
-def assert_delta(test, delta):
+def assert_delta(test, delta) -> None:
     delta_condition = (delta.abs() < 0.00001).all()
     test.assertTrue(
         delta_condition,

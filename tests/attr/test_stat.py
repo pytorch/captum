@@ -6,7 +6,7 @@ from captum.attr import Max, Mean, Min, MSE, StdDev, Sum, Summarizer, Var
 from tests.helpers.basic import assertTensorAlmostEqual, BaseTest
 
 
-def get_values(n=100, lo=None, hi=None, integers=False):
+def get_values(n: int = 100, lo=None, hi=None, integers: bool = False):
     for _ in range(n):
         if integers:
             yield random.randint(lo, hi)
@@ -113,7 +113,7 @@ class Test(BaseTest):
             mode="max",
         )
 
-    def test_stats_random_data(self):
+    def test_stats_random_data(self) -> None:
         N = 1000
         BIG_VAL = 100000
         _values = list(get_values(lo=-BIG_VAL, hi=BIG_VAL, n=N))

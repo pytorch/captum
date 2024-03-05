@@ -45,7 +45,7 @@ class TestArnoldiInfluence(BaseTest):
         ],
         name_func=build_test_name_func(),
     )
-    def test_top_eigen(self, dim: int, rank: int):
+    def test_top_eigen(self, dim: int, rank: int) -> None:
         # generate symmetric matrix of specific rank and check can recover it using
         # the eigenvalues / eigenvectors returned by `_top_eigen`
         R = torch.randn(dim, rank)
@@ -76,7 +76,7 @@ class TestArnoldiInfluence(BaseTest):
         k: int,
         arnoldi_dim: int,
         params_shapes: List[Tuple],
-    ):
+    ) -> None:
         """
         This performs the tests of https://github.com/google-research/jax-influence/blob/74bd321156b5445bb35b9594568e4eaaec1a76a3/jax_influence/arnoldi_test.py#L96 # noqa: E501
         See `_test_parameter_arnoldi_and_distill` documentation for 'arnoldi'
@@ -109,7 +109,7 @@ class TestArnoldiInfluence(BaseTest):
         k: int,
         arnoldi_dim: int,
         params_shapes: List[Tuple],
-    ):
+    ) -> None:
         """
         This performs the tests of https://github.com/google-research/jax-influence/blob/74bd321156b5445bb35b9594568e4eaaec1a76a3/jax_influence/arnoldi_test.py#L116 # noqa: E501
         See `_test_parameter_arnoldi_and_distill` documentation for
@@ -127,7 +127,7 @@ class TestArnoldiInfluence(BaseTest):
         k: int,
         arnoldi_dim: int,
         param_shape: List[Tuple],
-    ):
+    ) -> None:
         """
         This is a helper with 2 modes. For both modes, it first generates a matrix
         with `A` with specified eigenvalues.
@@ -314,7 +314,7 @@ class TestArnoldiInfluence(BaseTest):
         mode: str,
         unpack_inputs: bool,
         use_gpu: Union[bool, str],
-    ):
+    ) -> None:
         """
         this compares 2 influence implementations on a trained 2-layer NN model.
         the implementations we compare are `NaiveInfluenceFunction` and
@@ -397,7 +397,7 @@ class TestArnoldiInfluence(BaseTest):
         mode: str,
         unpack_inputs: bool,
         use_gpu: Union[bool, str],
-    ):
+    ) -> None:
         """
         this compares 2 influence implementations on a trained 2-layer NN model.
         the implementations we compare are `NaiveInfluenceFunction` and

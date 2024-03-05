@@ -57,7 +57,7 @@ class DataParallelCompareMode(Enum):
 
 
 class DataParallelMeta(type):
-    def __new__(cls, name: str, bases: Tuple, attrs: Dict):
+    def __new__(metacls, name: str, bases: Tuple, attrs: Dict):
         for test_config in config:
             (
                 algorithms,
@@ -75,7 +75,7 @@ class DataParallelMeta(type):
                 for mode in DataParallelCompareMode:
                     # Creates test case corresponding to each algorithm and
                     # DataParallelCompareMode
-                    test_method = cls.make_single_dp_test(
+                    test_method = metacls.make_single_dp_test(
                         algorithm,
                         model,
                         layer,
@@ -98,14 +98,14 @@ class DataParallelMeta(type):
                         )
                     attrs[test_name] = test_method
 
-        return super(DataParallelMeta, cls).__new__(cls, name, bases, attrs)
+        return super(DataParallelMeta, metacls).__new__(metacls, name, bases, attrs)
 
     # Arguments are deep copied to ensure tests are independent and are not affected
     # by any modifications within a previous test.
     @classmethod
     @deep_copy_args
     def make_single_dp_test(
-        cls,
+        metacls,
         algorithm: Type[Attribution],
         model: Module,
         target_layer: Optional[str],
@@ -268,6 +268,6 @@ if torch.cuda.is_available() and torch.cuda.device_count() != 0:
 
     class DataParallelTest(BaseTest, metaclass=DataParallelMeta):
         @classmethod
-        def tearDownClass(cls):
+        def tearDownClass(cls) -> None:
             if torch.distributed.is_initialized():
                 dist.destroy_process_group()

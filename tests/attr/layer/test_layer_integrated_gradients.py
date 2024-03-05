@@ -225,7 +225,7 @@ class Test(BaseTest):
 
     def _assert_compare_with_layer_conductance(
         self, model: Module, input: Tensor, attribute_to_layer_input: bool = False
-    ):
+    ) -> None:
         lc = LayerConductance(model, cast(Module, model.linear2))
         # For large number of steps layer conductance and layer integrated gradients
         # become very close
@@ -256,7 +256,7 @@ class Test(BaseTest):
         additional_args: Union[None, Tuple[Tensor, ...]],
         multiply_by_inputs: bool = True,
         multiple_emb: bool = False,
-    ):
+    ) -> None:
         model = BasicEmbeddingModel(nested_second_embedding=True)
         if multiple_emb:
             module_list: List[Module] = [model.embedding1, model.embedding2]
@@ -341,7 +341,7 @@ class Test(BaseTest):
         test_input: Union[Tensor, Tuple[Tensor, ...]],
         expected_ig: Tuple[List[List[float]], ...],
         additional_input: Any = None,
-    ):
+    ) -> None:
         layer_ig = LayerIntegratedGradients(model, target_layer)
         attributions = layer_ig.attribute(
             test_input, target=0, additional_forward_args=additional_input

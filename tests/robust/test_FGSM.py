@@ -189,7 +189,7 @@ class Test(BaseTest):
         target: Any,
         epsilon: float,
         answer: Union[TensorLikeList, Tuple[TensorLikeList, ...]],
-        targeted=False,
+        targeted: bool = False,
         additional_inputs: Any = None,
         lower_bound: float = float("-inf"),
         upper_bound: float = float("inf"),

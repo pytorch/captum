@@ -34,7 +34,7 @@ class TestTracInShowProgress(BaseTest):
         msg: str,
         msg_multiplicity: int,
         greater_than: bool = True,
-    ):
+    ) -> None:
         """
         Checks that in `mock_stderr`, the error msg `msg` occurs `msg_multiplicity`
         times. If 'greater_than' is true, it checks that the `msg` occurs at least

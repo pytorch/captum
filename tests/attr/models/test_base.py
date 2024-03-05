@@ -113,7 +113,7 @@ class Test(unittest.TestCase):
         interpretable_embedding,
         embedding_dim=None,
         num_embeddings=None,
-    ):
+    ) -> None:
         if interpretable_embedding.embedding_dim is not None:
             self.assertEqual(embedding_dim, interpretable_embedding.embedding_dim)
             self.assertEqual(num_embeddings, interpretable_embedding.num_embeddings)

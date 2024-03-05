@@ -32,7 +32,7 @@ class SoftmaxModel(nn.Module):
     https://adventuresinmachinelearning.com/pytorch-tutorial-deep-learning/
     """
 
-    def __init__(self, num_in, num_hidden, num_out, inplace=False) -> None:
+    def __init__(self, num_in, num_hidden, num_out, inplace: bool = False) -> None:
         super().__init__()
         self.num_in = num_in
         self.num_hidden = num_hidden

@@ -72,7 +72,7 @@ class Test(BaseTest):
         inputs: Tuple[Tensor, ...],
         loss_fn: Callable,
         loss_type: str = "mean",
-    ):
+    ) -> None:
         wrapper = SampleGradientWrapper(model)
         wrapper.add_hooks()
         apply_gradient_requirements(inputs)
@@ -100,7 +100,7 @@ class Test(BaseTest):
                         mode="max",
                     )
 
-    def test_sample_grads_layer_modules(self):
+    def test_sample_grads_layer_modules(self) -> None:
         """
         tests that if `layer_modules` argument is specified for `SampleGradientWrapper`
         that only per-sample gradients for the specified layers are calculated

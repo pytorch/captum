@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+from typing import Dict, Optional, Union
+
 import torch
 from captum._utils.models.linear_model.model import (
     SGDLasso,
@@ -7,9 +9,10 @@ from captum._utils.models.linear_model.model import (
     SGDRidge,
 )
 from tests.helpers.basic import assertTensorAlmostEqual, BaseTest
+from torch._tensor import Tensor
 
 
-def _evaluate(test_data, classifier):
+def _evaluate(test_data, classifier) -> Dict[str, float]:
     classifier.eval()
 
     l1_loss = 0.0
@@ -64,16 +67,16 @@ class TestLinearModel(BaseTest):
         model_type,
         xs,
         ys,
-        expected_loss,
-        expected_reg=0.0,
-        expected_hyperplane=None,
-        norm_hyperplane=True,
+        expected_loss: Tensor,
+        expected_reg: Union[float, Tensor] = 0.0,
+        expected_hyperplane: Optional[Tensor] = None,
+        norm_hyperplane: bool = True,
         weights=None,
-        delta=0.1,
-        init_scheme="zeros",
-        objective="lasso",
-        bias=True,
-    ):
+        delta: float = 0.1,
+        init_scheme: str = "zeros",
+        objective: str = "lasso",
+        bias: bool = True,
+    ) -> None:
         assert objective in ["lasso", "ridge", "ols"]
 
         if weights is None:
