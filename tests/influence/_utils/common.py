@@ -288,7 +288,7 @@ def get_random_model_and_data(
         all_samples = (
             _move_sample_to_cuda(all_samples)
             if isinstance(all_samples, list) and use_gpu
-            else all_samples.cuda() if use_gpu else all_samples
+            else (all_samples.cuda() if use_gpu else all_samples)
         )
         train_samples = [ts[:num_train] for ts in all_samples]
         test_samples = [ts[num_train:] for ts in all_samples]
@@ -298,7 +298,7 @@ def get_random_model_and_data(
         all_samples = (
             _move_sample_to_cuda(all_samples)
             if isinstance(all_samples, list) and use_gpu
-            else all_samples.cuda() if use_gpu else all_samples
+            else (all_samples.cuda() if use_gpu else all_samples)
         )
         train_samples = all_samples[:num_train]
         test_samples = all_samples[num_train:]
@@ -425,7 +425,7 @@ def get_random_model_and_data(
         (
             _move_sample_to_cuda(hessian_samples)
             if isinstance(hessian_samples, list) and use_gpu
-            else hessian_samples.cuda() if use_gpu else hessian_samples
+            else (hessian_samples.cuda() if use_gpu else hessian_samples)
         ),
         hessian_labels.cuda() if use_gpu else hessian_labels,
     )
@@ -434,7 +434,7 @@ def get_random_model_and_data(
         (
             _move_sample_to_cuda(test_samples)
             if isinstance(test_samples, list) and use_gpu
-            else test_samples.cuda() if use_gpu else test_samples
+            else (test_samples.cuda() if use_gpu else test_samples)
         ),
         test_labels.cuda() if use_gpu else test_labels,
     )
@@ -626,8 +626,9 @@ def generate_test_name(
             if args_str.isnumeric():
                 param_strs.append(func_param_names[i])
             param_strs.append(args_str)
-    return "%s_%s" % (
+    return "%s_%s_%s" % (
         testcase_func.__name__,
+        param_num,
         parameterized.to_safe_name("_".join(param_strs)),
     )
 
