@@ -21,6 +21,9 @@ from captum.attr._core.layer.layer_deep_lift import (  # noqa
     LayerDeepLiftShap,
 )
 from captum.attr._core.layer.layer_feature_ablation import LayerFeatureAblation  # noqa
+from captum.attr._core.layer.layer_feature_permutation import (  # noqa
+    LayerFeaturePermutation,
+)
 from captum.attr._core.layer.layer_gradient_shap import LayerGradientShap  # noqa
 from captum.attr._core.layer.layer_gradient_x_activation import (  # noqa
     LayerGradientXActivation,

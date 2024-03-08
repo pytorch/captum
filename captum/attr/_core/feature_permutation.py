@@ -255,6 +255,10 @@ class FeaturePermutation(FeatureAblation):
             >>> attr = feature_perm.attribute(input, target=1,
             >>>                               feature_mask=feature_mask)
         """
+        # Remove baselines from kwargs if provided so we don't specify this field
+        # twice in the FeatureAblation.attribute call below.
+        if isinstance(kwargs, dict) and "baselines" in kwargs:
+            del kwargs["baselines"]
         return FeatureAblation.attribute.__wrapped__(
             self,
             inputs,
