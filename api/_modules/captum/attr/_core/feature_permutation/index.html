@@ -291,6 +291,10 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">            &gt;&gt;&gt; attr = feature_perm.attribute(input, target=1,</span>
 <span class="sd">            &gt;&gt;&gt;                               feature_mask=feature_mask)</span>
 <span class="sd">        """</span>
+        <span class="c1"># Remove baselines from kwargs if provided so we don't specify this field</span>
+        <span class="c1"># twice in the FeatureAblation.attribute call below.</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">kwargs</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="ow">and</span> <span class="s2">"baselines"</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
+            <span class="k">del</span> <span class="n">kwargs</span><span class="p">[</span><span class="s2">"baselines"</span><span class="p">]</span>
         <span class="k">return</span> <span class="n">FeatureAblation</span><span class="o">.</span><span class="n">attribute</span><span class="o">.</span><span class="n">__wrapped__</span><span class="p">(</span>
             <span class="bp">self</span><span class="p">,</span>
             <span class="n">inputs</span><span class="p">,</span>
