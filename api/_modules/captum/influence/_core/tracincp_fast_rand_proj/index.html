@@ -220,9 +220,6 @@ src="/_sphinx/documentation_options.js"></script>
 
         <span class="c1"># TODO: restore prior state</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">final_fc_layer</span> <span class="o">=</span> <span class="n">final_fc_layer</span>
-        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">final_fc_layer</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">final_fc_layer</span> <span class="o">=</span> <span class="n">_get_module_from_name</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">final_fc_layer</span><span class="p">)</span>
-        <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">final_fc_layer</span><span class="p">,</span> <span class="n">Module</span><span class="p">)</span>
         <span class="k">for</span> <span class="n">param</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">final_fc_layer</span><span class="o">.</span><span class="n">parameters</span><span class="p">():</span>
             <span class="n">param</span><span class="o">.</span><span class="n">requires_grad</span> <span class="o">=</span> <span class="kc">True</span>
 
@@ -236,6 +233,24 @@ src="/_sphinx/documentation_options.js"></script>
             <span class="k">if</span> <span class="n">test_loss_fn</span> <span class="ow">is</span> <span class="kc">None</span>
             <span class="k">else</span> <span class="n">_check_loss_fn</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">test_loss_fn</span><span class="p">,</span> <span class="s2">"test_loss_fn"</span><span class="p">)</span>
         <span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">final_fc_layer</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Module</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_final_fc_layer</span>
+
+    <span class="nd">@final_fc_layer</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">final_fc_layer</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">layer</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Module</span><span class="p">,</span> <span class="nb">str</span><span class="p">]):</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">layer</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_final_fc_layer</span> <span class="o">=</span> <span class="n">_get_module_from_name</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">,</span> <span class="n">layer</span><span class="p">)</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_final_fc_layer</span><span class="p">,</span> <span class="n">Module</span><span class="p">):</span>
+                    <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">"No module found for final_fc_layer"</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">ex</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s1">'Invalid final_fc_layer str: "</span><span class="si">{</span><span class="n">layer</span><span class="si">}</span><span class="s1">" provided!'</span>
+                <span class="p">)</span> <span class="kn">from</span> <span class="nn">ex</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_final_fc_layer</span> <span class="o">=</span> <span class="n">layer</span>
 
 <div class="viewcode-block" id="TracInCPFast.influence">
 <a class="viewcode-back" href="../../../../influence.html#captum.influence.TracInCPFast.influence">[docs]</a>
