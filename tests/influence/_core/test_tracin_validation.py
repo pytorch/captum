@@ -16,8 +16,7 @@ from tests.influence._utils.common import (
 
 class TestTracinValidator(BaseTest):
 
-    param_list = []
-    for reduction, constr in [
+    param_list = [
         (
             "none",
             DataInfluenceConstructor(TracInCP, name="TracInCP"),
@@ -29,8 +28,7 @@ class TestTracinValidator(BaseTest):
                 name="TracInCpFast",
             ),
         ),
-    ]:
-        param_list.append((reduction, constr))
+    ]
 
     @parameterized.expand(
         param_list,
@@ -64,3 +62,24 @@ class TestTracinValidator(BaseTest):
             )
             with self.assertRaisesRegex(AssertionError, "required."):
                 tracin.influence(None, k=None)
+
+    def test_tracincp_fast_rand_proj_inputs(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            (
+                net,
+                train_dataset,
+                test_samples,
+                test_labels,
+            ) = get_random_model_and_data(tmpdir, unpack_inputs=False)
+
+            with self.assertRaisesRegex(
+                ValueError, 'Invalid final_fc_layer str: "invalid_layer" provided!'
+            ):
+                TracInCPFast(
+                    net,
+                    "invalid_layer",
+                    train_dataset,
+                    tmpdir,
+                    loss_fn=nn.MSELoss(),
+                    batch_size=1,
+                )

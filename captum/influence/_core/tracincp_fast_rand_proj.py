@@ -186,9 +186,6 @@ class TracInCPFast(TracInCPBase):
 
         # TODO: restore prior state
         self.final_fc_layer = final_fc_layer
-        if isinstance(self.final_fc_layer, str):
-            self.final_fc_layer = _get_module_from_name(model, self.final_fc_layer)
-        assert isinstance(self.final_fc_layer, Module)
         for param in self.final_fc_layer.parameters():
             param.requires_grad = True
 
@@ -202,6 +199,24 @@ class TracInCPFast(TracInCPBase):
             if test_loss_fn is None
             else _check_loss_fn(self, test_loss_fn, "test_loss_fn")
         )
+
+    @property
+    def final_fc_layer(self) -> Module:
+        return self._final_fc_layer
+
+    @final_fc_layer.setter
+    def final_fc_layer(self, layer: Union[Module, str]):
+        if isinstance(layer, str):
+            try:
+                self._final_fc_layer = _get_module_from_name(self.model, layer)
+                if not isinstance(self._final_fc_layer, Module):
+                    raise Exception("No module found for final_fc_layer")
+            except Exception as ex:
+                raise ValueError(
+                    f'Invalid final_fc_layer str: "{layer}" provided!'
+                ) from ex
+        else:
+            self._final_fc_layer = layer
 
     @log_usage()
     def influence(  # type: ignore[override]
