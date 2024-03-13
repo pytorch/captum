@@ -5,7 +5,7 @@ set -e
 PYTORCH_NIGHTLY=false
 DEPLOY=false
 CHOSEN_TORCH_VERSION=-1
-INSTALL_MODE='test'
+INSTALL_MODE=test
 
 while getopts 'ndfv:' flag; do
   case "${flag}" in
@@ -14,7 +14,7 @@ while getopts 'ndfv:' flag; do
     f) FRAMEWORKS=true ;;
     v) CHOSEN_TORCH_VERSION=${OPTARG};;
     m) INSTALL_MODE=${OPTARG};;
-    *) echo "usage: $0 [-n] [-d] [-f] [-v version]" >&2
+    *) echo "usage: $0 [-n] [-d] [-f] [-v version] [-m install_mode]" >&2
        exit 1 ;;
     esac
   done
