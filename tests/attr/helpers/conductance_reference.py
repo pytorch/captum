@@ -10,7 +10,7 @@ from captum._utils.gradient import (
 from captum.attr._utils.approximation_methods import approximation_parameters
 from captum.attr._utils.attribution import LayerAttribution
 from captum.attr._utils.common import _reshape_and_sum
-from torch._tensor import Tensor
+from torch import Tensor
 
 """
 Note: This implementation of conductance follows the procedure described in the original

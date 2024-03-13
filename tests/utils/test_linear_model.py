@@ -9,7 +9,7 @@ from captum._utils.models.linear_model.model import (
     SGDRidge,
 )
 from tests.helpers.basic import assertTensorAlmostEqual, BaseTest
-from torch._tensor import Tensor
+from torch import Tensor
 
 
 def _evaluate(test_data, classifier) -> Dict[str, float]:
