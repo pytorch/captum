@@ -5,6 +5,7 @@ set -e
 PYTORCH_NIGHTLY=false
 DEPLOY=false
 CHOSEN_TORCH_VERSION=-1
+INSTALL_MODE='test'
 
 while getopts 'ndfv:' flag; do
   case "${flag}" in
@@ -12,6 +13,7 @@ while getopts 'ndfv:' flag; do
     d) DEPLOY=true ;;
     f) FRAMEWORKS=true ;;
     v) CHOSEN_TORCH_VERSION=${OPTARG};;
+    m) INSTALL_MODE=${OPTARG};;
     *) echo "usage: $0 [-n] [-d] [-f] [-v version]" >&2
        exit 1 ;;
     esac
@@ -38,7 +40,7 @@ export TERM=xterm
 pip install --upgrade pip --progress-bar off
 
 # install captum with dev deps
-pip install -e .[dev] --progress-bar off
+pip install -e .[INSTALL_MODE] --progress-bar off
 BUILD_INSIGHTS=1 python setup.py develop
 
 # install other frameworks if asked for and make sure this is before pytorch
