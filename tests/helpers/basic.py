@@ -7,7 +7,7 @@ from typing import Callable
 import numpy as np
 import torch
 from captum.log import patch_methods
-from torch._tensor import Tensor
+from torch import Tensor
 
 
 def deep_copy_args(func: Callable):
