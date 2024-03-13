@@ -143,7 +143,7 @@ class TestWordEmbeddings(unittest.TestCase):
             self._create_dummy_meta_data(),
         )
 
-    def _create_dummy_meta_data(self) -> CommonMetadata:
+    def _create_dummy_meta_data(self):
         text_field_meta = FieldMeta()
         text_field_meta.vocab = VocabStub()
         text_field_meta.vocab_size = 4
