@@ -19,6 +19,7 @@ try:
     from pytext.config.component import create_featurizer, create_model
     from pytext.config.doc_classification import ModelInputConfig, TargetConfig
     from pytext.config.field_config import FeatureConfig, WordFeatConfig
+    from pytext.data.data_handler import CommonMetadata
     from pytext.data.doc_classification_data_handler import (  # @manual=//pytext:main_lib  # noqa
         DocClassificationDataHandler,
     )
@@ -28,7 +29,6 @@ try:
     from pytext.models.doc_model import DocModel_Deprecated  # @manual=//pytext:main_lib
     from pytext.models.embeddings.word_embedding import WordEmbedding
     from pytext.models.representations.bilstm_doc_attention import BiLSTMDocAttention
-    from pytext.data.data_handler import CommonMetadata
 except ImportError:
     HAS_PYTEXT = False
 
