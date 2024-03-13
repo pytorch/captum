@@ -40,7 +40,7 @@ export TERM=xterm
 pip install --upgrade pip --progress-bar off
 
 # install captum with dev deps
-pip install -e .[INSTALL_MODE] --progress-bar off
+pip install -e .[test] --progress-bar off
 BUILD_INSIGHTS=1 python setup.py develop
 
 # install other frameworks if asked for and make sure this is before pytorch
