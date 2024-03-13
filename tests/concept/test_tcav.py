@@ -14,7 +14,6 @@ from typing import (
     Iterator,
     List,
     Set,
-    SupportsIndex,
     Tuple,
     Union,
 )
@@ -174,7 +173,7 @@ class CustomIterableDataset(IterableDataset):
         self,
         get_tensor_from_filename_func: Callable,
         path: str,
-        num_samples: SupportsIndex = 100,
+        num_samples: int = 100,
     ) -> None:
         r"""
         Args:

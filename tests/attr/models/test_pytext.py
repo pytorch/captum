@@ -8,7 +8,6 @@ import unittest
 from typing import Dict, List, NoReturn, Optional
 
 import torch
-from pytext.data.data_handler import CommonMetadata
 
 HAS_PYTEXT = True
 try:
@@ -29,6 +28,7 @@ try:
     from pytext.models.doc_model import DocModel_Deprecated  # @manual=//pytext:main_lib
     from pytext.models.embeddings.word_embedding import WordEmbedding
     from pytext.models.representations.bilstm_doc_attention import BiLSTMDocAttention
+    from pytext.data.data_handler import CommonMetadata
 except ImportError:
     HAS_PYTEXT = False
 
