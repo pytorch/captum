@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-from typing import Dict, Optional, Union
+from typing import cast, Dict, Optional, Union
 
 import torch
 from captum._utils.models.linear_model.model import (
@@ -15,8 +15,8 @@ from torch import Tensor
 def _evaluate(test_data, classifier) -> Dict[str, Tensor]:
     classifier.eval()
 
-    l1_loss = torch.tensor(0.0)
-    l2_loss = torch.tensor(0.0)
+    l1_loss = 0.0
+    l2_loss = 0.0
     n = 0
     l2_losses = []
     with torch.no_grad():
@@ -56,7 +56,7 @@ def _evaluate(test_data, classifier) -> Dict[str, Tensor]:
     assert ((l2_losses.mean(0) - l2_loss / n).abs() <= 0.1).all()
 
     classifier.train()
-    return {"l1": l1_loss / n, "l2": l2_loss / n}
+    return {"l1": cast(Tensor, l1_loss / n), "l2": cast(Tensor, l2_loss / n)}
 
 
 class TestLinearModel(BaseTest):
