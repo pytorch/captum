@@ -116,7 +116,7 @@ src="/_sphinx/documentation_options.js"></script>
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">model</span><span class="p">:</span> <span class="n">Module</span><span class="p">,</span>
-        <span class="n">final_fc_layer</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Module</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span>
+        <span class="n">final_fc_layer</span><span class="p">:</span> <span class="n">Module</span><span class="p">,</span>
         <span class="n">train_dataset</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Dataset</span><span class="p">,</span> <span class="n">DataLoader</span><span class="p">],</span>
         <span class="n">checkpoints</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">Iterator</span><span class="p">],</span>
         <span class="n">checkpoints_load_func</span><span class="p">:</span> <span class="n">Callable</span> <span class="o">=</span> <span class="n">_load_flexible_state_dict</span><span class="p">,</span>
@@ -130,11 +130,9 @@ src="/_sphinx/documentation_options.js"></script>
 
 <span class="sd">            model (torch.nn.Module): An instance of pytorch model. This model should</span>
 <span class="sd">                    define all of its layers as attributes of the model.</span>
-<span class="sd">            final_fc_layer (torch.nn.Module or str): The last fully connected layer in</span>
+<span class="sd">            final_fc_layer (torch.nn.Module): The last fully connected layer in</span>
 <span class="sd">                    the network for which gradients will be approximated via fast random</span>
-<span class="sd">                    projection method. Can be either the layer module itself, or the</span>
-<span class="sd">                    fully qualified name of the layer if it is a defined attribute of</span>
-<span class="sd">                    the passed `model`.</span>
+<span class="sd">                    projection method.</span>
 <span class="sd">            train_dataset (torch.utils.data.Dataset or torch.utils.data.DataLoader):</span>
 <span class="sd">                    In the `influence` method, we compute the influence score of</span>
 <span class="sd">                    training examples on examples in a test batch.</span>
@@ -912,7 +910,7 @@ src="/_sphinx/documentation_options.js"></script>
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">model</span><span class="p">:</span> <span class="n">Module</span><span class="p">,</span>
-        <span class="n">final_fc_layer</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Module</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span>
+        <span class="n">final_fc_layer</span><span class="p">:</span> <span class="n">Module</span><span class="p">,</span>
         <span class="n">train_dataset</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Dataset</span><span class="p">,</span> <span class="n">DataLoader</span><span class="p">],</span>
         <span class="n">checkpoints</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">Iterator</span><span class="p">],</span>
         <span class="n">checkpoints_load_func</span><span class="p">:</span> <span class="n">Callable</span> <span class="o">=</span> <span class="n">_load_flexible_state_dict</span><span class="p">,</span>
@@ -929,11 +927,9 @@ src="/_sphinx/documentation_options.js"></script>
 
 <span class="sd">            model (torch.nn.Module): An instance of pytorch model. This model should</span>
 <span class="sd">                    define all of its layers as attributes of the model.</span>
-<span class="sd">            final_fc_layer (torch.nn.Module or str): The last fully connected layer in</span>
+<span class="sd">            final_fc_layer (torch.nn.Module): The last fully connected layer in</span>
 <span class="sd">                    the network for which gradients will be approximated via fast random</span>
-<span class="sd">                    projection method. Can be either the layer module itself, or the</span>
-<span class="sd">                    fully qualified name of the layer if it is a defined attribute of</span>
-<span class="sd">                    the passed `model`.</span>
+<span class="sd">                    projection method.</span>
 <span class="sd">            train_dataset (torch.utils.data.Dataset or torch.utils.data.DataLoader):</span>
 <span class="sd">                    In the `influence` method, we compute the influence score of</span>
 <span class="sd">                    training examples on examples in a test batch.</span>
