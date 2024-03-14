@@ -6,6 +6,8 @@ import threading
 from time import sleep
 from typing import cast, Dict, Optional
 
+from captum.insights import AttributionVisualizer
+
 from captum.log import log_usage
 from flask import Flask, jsonify, render_template, request
 from flask.wrappers import Response
@@ -44,7 +46,7 @@ def attribute() -> Response:
     r = cast(Dict, request.get_json(force=True))
     return jsonify(
         namedtuple_to_dict(
-            visualizer._calculate_attribution_from_cache(  # type: ignore
+            cast(AttributionVisualizer, visualizer)._calculate_attribution_from_cache(
                 r["inputIndex"], r["modelIndex"], r["labelIndex"]
             )
         )
@@ -54,15 +56,15 @@ def attribute() -> Response:
 @app.route("/fetch", methods=["POST"])
 def fetch() -> Response:
     # force=True needed, see comment for "/attribute" route above
-    visualizer._update_config(request.get_json(force=True))  # type: ignore
-    visualizer_output = visualizer.visualize()  # type: ignore
+    cast(AttributionVisualizer, visualizer)._update_config(request.get_json(force=True))
+    visualizer_output = cast(AttributionVisualizer, visualizer).visualize()
     clean_output = namedtuple_to_dict(visualizer_output)
     return jsonify(clean_output)
 
 
 @app.route("/init")
 def init() -> Response:
-    return jsonify(visualizer.get_insights_config())  # type: ignore
+    return jsonify(cast(AttributionVisualizer, visualizer).get_insights_config())
 
 
 @app.route("/")
