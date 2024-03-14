@@ -5,7 +5,7 @@ from __future__ import print_function
 import os
 import tempfile
 import unittest
-from typing import Dict, List, NoReturn, Optional
+from typing import Dict, List
 
 import torch
 

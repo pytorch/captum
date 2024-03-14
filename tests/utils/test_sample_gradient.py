@@ -139,7 +139,9 @@ class Test(BaseTest):
                     # So, check that we did calculate sample grads for the desired
                     # layers via the above checking approach.
                     for parameter in module.parameters():
-                        assert not isinstance(parameter.sample_grad, int)  # type: ignore
+                        assert not isinstance(
+                            parameter.sample_grad, int  # type: ignore
+                        )
                 else:
                     # For the layers we do not want sample grads for, their
                     # `sample_grad` should still be 0, since they should not have been

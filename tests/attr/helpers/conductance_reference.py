@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-from typing import cast, Optional, Tuple, Union
+from typing import cast, Tuple, Union
 
 import numpy as np
 import torch

@@ -2,12 +2,11 @@
 import copy
 import random
 import unittest
-from typing import Callable, List, Tuple, Union
+from typing import Callable
 
 import numpy as np
 import torch
 from captum.log import patch_methods
-from torch import Tensor
 
 
 def deep_copy_args(func: Callable):

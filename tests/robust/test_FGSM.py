@@ -2,7 +2,7 @@
 from typing import Any, Callable, List, Optional, Tuple, Union
 
 import torch
-from captum._utils.typing import TensorLikeList, TensorOrTupleOfTensorsGeneric
+from captum._utils.typing import TensorOrTupleOfTensorsGeneric
 from captum.robust import FGSM
 from tests.helpers.basic import assertTensorAlmostEqual, BaseTest
 from tests.helpers.basic_models import BasicModel, BasicModel2, BasicModel_MultiLayer
