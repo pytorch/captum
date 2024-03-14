@@ -82,7 +82,7 @@ class TracInCPFast(TracInCPBase):
     def __init__(
         self,
         model: Module,
-        final_fc_layer: Union[Module, str],
+        final_fc_layer: Module,
         train_dataset: Union[Dataset, DataLoader],
         checkpoints: Union[str, List[str], Iterator],
         checkpoints_load_func: Callable = _load_flexible_state_dict,
@@ -96,11 +96,9 @@ class TracInCPFast(TracInCPBase):
 
             model (torch.nn.Module): An instance of pytorch model. This model should
                     define all of its layers as attributes of the model.
-            final_fc_layer (torch.nn.Module or str): The last fully connected layer in
+            final_fc_layer (torch.nn.Module): The last fully connected layer in
                     the network for which gradients will be approximated via fast random
-                    projection method. Can be either the layer module itself, or the
-                    fully qualified name of the layer if it is a defined attribute of
-                    the passed `model`.
+                    projection method.
             train_dataset (torch.utils.data.Dataset or torch.utils.data.DataLoader):
                     In the `influence` method, we compute the influence score of
                     training examples on examples in a test batch.
@@ -869,7 +867,7 @@ class TracInCPFastRandProj(TracInCPFast):
     def __init__(
         self,
         model: Module,
-        final_fc_layer: Union[Module, str],
+        final_fc_layer: Module,
         train_dataset: Union[Dataset, DataLoader],
         checkpoints: Union[str, List[str], Iterator],
         checkpoints_load_func: Callable = _load_flexible_state_dict,
@@ -886,11 +884,9 @@ class TracInCPFastRandProj(TracInCPFast):
 
             model (torch.nn.Module): An instance of pytorch model. This model should
                     define all of its layers as attributes of the model.
-            final_fc_layer (torch.nn.Module or str): The last fully connected layer in
+            final_fc_layer (torch.nn.Module): The last fully connected layer in
                     the network for which gradients will be approximated via fast random
-                    projection method. Can be either the layer module itself, or the
-                    fully qualified name of the layer if it is a defined attribute of
-                    the passed `model`.
+                    projection method.
             train_dataset (torch.utils.data.Dataset or torch.utils.data.DataLoader):
                     In the `influence` method, we compute the influence score of
                     training examples on examples in a test batch.

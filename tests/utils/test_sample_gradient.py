@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 import unittest
-from typing import Callable, Tuple
+from typing import Callable, List, Tuple
 
 import torch
 from captum._utils.gradient import apply_gradient_requirements
@@ -110,7 +110,11 @@ class Test(BaseTest):
 
         # possible candidates for `layer_modules`, which are the modules whose
         # parameters we want to compute sample grads for
-        layer_moduless = [[model.conv1], [model.fc1], [model.conv1, model.fc1]]
+        layer_moduless: List[List[Module]] = [
+            [model.conv1],
+            [model.fc1],
+            [model.conv1, model.fc1],
+        ]
         # hard coded all modules we want to check
         all_modules = [model.conv1, model.fc1]
 
@@ -135,10 +139,12 @@ class Test(BaseTest):
                     # So, check that we did calculate sample grads for the desired
                     # layers via the above checking approach.
                     for parameter in module.parameters():
-                        assert not isinstance(parameter.sample_grad, int)
+                        assert not isinstance(
+                            parameter.sample_grad, int  # type: ignore
+                        )
                 else:
                     # For the layers we do not want sample grads for, their
                     # `sample_grad` should still be 0, since they should not have been
                     # over-written.
                     for parameter in module.parameters():
-                        assert parameter.sample_grad == 0
+                        assert parameter.sample_grad == 0  # type: ignore

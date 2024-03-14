@@ -7,7 +7,6 @@ from typing import Callable
 import numpy as np
 import torch
 from captum.log import patch_methods
-from torch._tensor import Tensor
 
 
 def deep_copy_args(func: Callable):
@@ -21,7 +20,7 @@ def deep_copy_args(func: Callable):
 
 
 def assertTensorAlmostEqual(
-    test, actual: Tensor, expected: Tensor, delta: float = 0.0001, mode: str = "sum"
+    test, actual, expected, delta: float = 0.0001, mode: str = "sum"
 ) -> None:
     assert isinstance(actual, torch.Tensor), (
         "Actual parameter given for " "comparison must be a tensor."

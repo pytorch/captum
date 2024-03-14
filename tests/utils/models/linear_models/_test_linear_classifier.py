@@ -1,6 +1,6 @@
 import argparse
 import random
-from typing import Optional
+from typing import cast, Optional
 
 import captum._utils.models.linear_model.model as pytorch_model_module
 import numpy as np
@@ -98,9 +98,9 @@ def compare_to_sk_learn(
         o_pytorch["l1_reg"] = alpha * pytorch_h.norm(p=1, dim=-1)
         o_sklearn["l1_reg"] = alpha * sklearn_h.norm(p=1, dim=-1)
 
-    rel_diff = (sum(o_sklearn.values()) - sum(o_pytorch.values())) / abs(
-        sum(o_sklearn.values())
-    )
+    rel_diff = cast(
+        np.ndarray, (sum(o_sklearn.values()) - sum(o_pytorch.values()))
+    ) / abs(sum(o_sklearn.values()))
     return (
         {
             "objective_rel_diff": rel_diff.tolist(),

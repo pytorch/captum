@@ -131,7 +131,7 @@ class AttributionCalculation:
         )
         if "baselines" in inspect.signature(attribution_method.attribute).parameters:
             attribution_arguments["baselines"] = baseline
-        attr = attribution_method.attribute.__wrapped__(
+        attr = attribution_method.attribute.__wrapped__(  # type: ignore
             attribution_method,  # self
             data,
             additional_forward_args=additional_forward_args,

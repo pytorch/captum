@@ -77,7 +77,7 @@ class TestTracinValidator(BaseTest):
             ):
                 TracInCPFast(
                     net,
-                    "invalid_layer",
+                    "invalid_layer",  # type: ignore
                     train_dataset,
                     tmpdir,
                     loss_fn=nn.MSELoss(),

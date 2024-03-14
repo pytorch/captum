@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-from typing import Dict, Optional, Union
+from typing import cast, Dict, Optional, Union
 
 import torch
 from captum._utils.models.linear_model.model import (
@@ -9,10 +9,10 @@ from captum._utils.models.linear_model.model import (
     SGDRidge,
 )
 from tests.helpers.basic import assertTensorAlmostEqual, BaseTest
-from torch._tensor import Tensor
+from torch import Tensor
 
 
-def _evaluate(test_data, classifier) -> Dict[str, float]:
+def _evaluate(test_data, classifier) -> Dict[str, Tensor]:
     classifier.eval()
 
     l1_loss = 0.0
@@ -56,7 +56,7 @@ def _evaluate(test_data, classifier) -> Dict[str, float]:
     assert ((l2_losses.mean(0) - l2_loss / n).abs() <= 0.1).all()
 
     classifier.train()
-    return {"l1": l1_loss / n, "l2": l2_loss / n}
+    return {"l1": cast(Tensor, l1_loss / n), "l2": cast(Tensor, l2_loss / n)}
 
 
 class TestLinearModel(BaseTest):
@@ -67,7 +67,7 @@ class TestLinearModel(BaseTest):
         model_type,
         xs,
         ys,
-        expected_loss: Tensor,
+        expected_loss: Union[int, float, Tensor],
         expected_reg: Union[float, Tensor] = 0.0,
         expected_hyperplane: Optional[Tensor] = None,
         norm_hyperplane: bool = True,

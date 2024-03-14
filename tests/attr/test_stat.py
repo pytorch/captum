@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import random
+from typing import Callable, List
 
 import torch
 from captum.attr import Max, Mean, Min, MSE, StdDev, Sum, Summarizer, Var
@@ -140,7 +141,7 @@ class Test(BaseTest):
             "sum",
             "mse",
         ]
-        gt_fns = [
+        gt_fns: List[Callable] = [
             torch.mean,
             lambda x: torch.var(x, unbiased=False),
             lambda x: torch.var(x, unbiased=True),

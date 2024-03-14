@@ -8,7 +8,7 @@ from typing import Callable, List, Optional, Union
 from captum._utils.common import safe_div
 from captum.attr._utils import visualization as viz
 from captum.insights.attr_vis._utils.transforms import format_transforms
-from torch._tensor import Tensor
+from torch import Tensor
 
 FeatureOutput = namedtuple("FeatureOutput", "name base modified type contribution")
 

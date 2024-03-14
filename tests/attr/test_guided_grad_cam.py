@@ -1,14 +1,14 @@
 #!/usr/bin/env python3
 
 import unittest
-from typing import Any
+from typing import Any, List, Tuple, Union
 
 import torch
 from captum._utils.typing import TensorOrTupleOfTensorsGeneric
 from captum.attr._core.guided_grad_cam import GuidedGradCam
 from tests.helpers.basic import assertTensorAlmostEqual, BaseTest
 from tests.helpers.basic_models import BasicModel_ConvNet_One_Conv
-from torch._tensor import Tensor
+from torch import Tensor
 from torch.nn import Module
 
 
@@ -107,7 +107,7 @@ class Test(BaseTest):
         model: Module,
         target_layer: Module,
         test_input: TensorOrTupleOfTensorsGeneric,
-        expected: Tensor,
+        expected: Union[Tensor, List, Tuple],
         additional_input: Any = None,
         interpolate_mode: str = "nearest",
         attribute_to_layer_input: bool = False,

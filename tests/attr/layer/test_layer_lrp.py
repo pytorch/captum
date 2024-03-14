@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# mypy: ignore-errors
 
 from typing import Any, Tuple
 
@@ -9,7 +10,7 @@ from captum.attr._utils.lrp_rules import Alpha1_Beta0_Rule, EpsilonRule, GammaRu
 
 from tests.helpers.basic import assertTensorAlmostEqual, BaseTest
 from tests.helpers.basic_models import BasicModel_ConvNet_One_Conv, SimpleLRPModel
-from torch._tensor import Tensor
+from torch import Tensor
 
 
 def _get_basic_config() -> Tuple[BasicModel_ConvNet_One_Conv, Tensor]:

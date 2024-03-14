@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+from typing import List
+
 import torch
 from captum.attr import ClassSummarizer, CommonStats
 from tests.helpers.basic import BaseTest
@@ -45,7 +47,7 @@ class Test(BaseTest):
             ((3, 2, 10, 3), (1,)),
             # ((20,),),
         ]
-        list_of_classes = [
+        list_of_classes: List[List] = [
             list(range(100)),
             ["%d" % i for i in range(100)],
             list(range(300, 400)),

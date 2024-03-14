@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 import collections
-from typing import List
+from typing import Dict, List, Tuple, Union
 
 import torch
 from captum.robust import AttackComparator, FGSM
@@ -202,7 +202,9 @@ class Test(BaseTest):
         attack_comp.reset()
         self.assertEqual(len(attack_comp.summary()), 0)
 
-    def _compare_results(self, obtained: Tensor, expected) -> None:
+    def _compare_results(
+        self, obtained: Union[Dict, Tuple, Tensor], expected: Union[Dict, Tuple, Tensor]
+    ) -> None:
         if isinstance(expected, dict):
             self.assertIsInstance(obtained, dict)
             for key in expected:

@@ -4,7 +4,7 @@ import os
 import socket
 import threading
 from time import sleep
-from typing import Optional
+from typing import cast, Dict, Optional
 
 from captum.log import log_usage
 from flask import Flask, jsonify, render_template, request
@@ -41,10 +41,10 @@ def namedtuple_to_dict(obj):
 def attribute() -> Response:
     # force=True needed for Colab notebooks, which doesn't use the correct
     # Content-Type header when forwarding requests through the Colab proxy
-    r = request.get_json(force=True)
+    r = cast(Dict, request.get_json(force=True))
     return jsonify(
         namedtuple_to_dict(
-            visualizer._calculate_attribution_from_cache(
+            visualizer._calculate_attribution_from_cache(  # type: ignore
                 r["inputIndex"], r["modelIndex"], r["labelIndex"]
             )
         )
@@ -54,15 +54,15 @@ def attribute() -> Response:
 @app.route("/fetch", methods=["POST"])
 def fetch() -> Response:
     # force=True needed, see comment for "/attribute" route above
-    visualizer._update_config(request.get_json(force=True))
-    visualizer_output = visualizer.visualize()
+    visualizer._update_config(request.get_json(force=True))  # type: ignore
+    visualizer_output = visualizer.visualize()  # type: ignore
     clean_output = namedtuple_to_dict(visualizer_output)
     return jsonify(clean_output)
 
 
 @app.route("/init")
 def init() -> Response:
-    return jsonify(visualizer.get_insights_config())
+    return jsonify(visualizer.get_insights_config())  # type: ignore
 
 
 @app.route("/")
