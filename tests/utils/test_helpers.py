@@ -7,7 +7,7 @@ from tests.helpers.basic import assertTensorAlmostEqual, BaseTest
 class HelpersTest(BaseTest):
     def test_assert_tensor_almost_equal(self) -> None:
         with self.assertRaises(AssertionError) as cm:
-            assertTensorAlmostEqual(self, [[1.0]], [[1.0]])  # type: ignore
+            assertTensorAlmostEqual(self, [[1.0]], [[1.0]])
         self.assertEqual(
             cm.exception.args,
             ("Actual parameter given for comparison must be a tensor.",),

@@ -21,7 +21,7 @@ def deep_copy_args(func: Callable):
 
 def assertTensorAlmostEqual(
     test, actual, expected, delta: float = 0.0001, mode: str = "sum"
-):
+) -> None:
     assert isinstance(actual, torch.Tensor), (
         "Actual parameter given for " "comparison must be a tensor."
     )
@@ -61,7 +61,7 @@ def assertTensorAlmostEqual(
 
 def assertTensorTuplesAlmostEqual(
     test, actual, expected, delta: float = 0.0001, mode: str = "sum"
-):
+) -> None:
     if isinstance(expected, tuple):
         assert len(actual) == len(
             expected
