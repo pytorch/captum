@@ -188,7 +188,7 @@ class Test(BaseTest):
         inputs: TensorOrTupleOfTensorsGeneric,
         target: Any,
         epsilon: float,
-        answer: Union[TensorLikeList, Tuple[TensorLikeList, ...]],
+        answer: Union[List, Tuple[List, ...]],
         targeted: bool = False,
         additional_inputs: Any = None,
         lower_bound: float = float("-inf"),

@@ -43,7 +43,7 @@ class VocabStub:
 
 
 class TestWordEmbeddings(unittest.TestCase):
-    def setUp(self) -> Optional[NoReturn]:
+    def setUp(self) -> None:
         if not HAS_PYTEXT:
             return self.skipTest("Skip the test since PyText is not installed")
 

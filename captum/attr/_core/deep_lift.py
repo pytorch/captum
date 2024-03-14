@@ -582,9 +582,7 @@ class DeepLiftShap(DeepLift):
     def attribute(
         self,
         inputs: TensorOrTupleOfTensorsGeneric,
-        baselines: Union[
-            TensorOrTupleOfTensorsGeneric, Callable[..., TensorOrTupleOfTensorsGeneric]
-        ],
+        baselines: Union[BaselineType, Callable[..., TensorOrTupleOfTensorsGeneric]],
         target: TargetType = None,
         additional_forward_args: Any = None,
         return_convergence_delta: Literal[False] = False,
@@ -595,9 +593,7 @@ class DeepLiftShap(DeepLift):
     def attribute(
         self,
         inputs: TensorOrTupleOfTensorsGeneric,
-        baselines: Union[
-            TensorOrTupleOfTensorsGeneric, Callable[..., TensorOrTupleOfTensorsGeneric]
-        ],
+        baselines: Union[BaselineType, Callable[..., TensorOrTupleOfTensorsGeneric]],
         target: TargetType = None,
         additional_forward_args: Any = None,
         *,

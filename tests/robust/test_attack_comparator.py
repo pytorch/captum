@@ -202,7 +202,7 @@ class Test(BaseTest):
         attack_comp.reset()
         self.assertEqual(len(attack_comp.summary()), 0)
 
-    def _compare_results(self, obtained: Tensor, expected) -> None:
+    def _compare_results(self, obtained, expected) -> None:
         if isinstance(expected, dict):
             self.assertIsInstance(obtained, dict)
             for key in expected:

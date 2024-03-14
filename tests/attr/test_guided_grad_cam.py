@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 import unittest
-from typing import Any
+from typing import Any, List, Tuple, Union
 
 import torch
 from captum._utils.typing import TensorOrTupleOfTensorsGeneric
@@ -107,7 +107,7 @@ class Test(BaseTest):
         model: Module,
         target_layer: Module,
         test_input: TensorOrTupleOfTensorsGeneric,
-        expected: Tensor,
+        expected: Union[Tensor, List, Tuple],
         additional_input: Any = None,
         interpolate_mode: str = "nearest",
         attribute_to_layer_input: bool = False,

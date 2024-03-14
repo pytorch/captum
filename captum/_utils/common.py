@@ -3,7 +3,7 @@ import typing
 from enum import Enum
 from functools import reduce
 from inspect import signature
-from typing import Any, Callable, cast, Dict, List, overload, Tuple, Union
+from typing import Any, Callable, cast, Dict, List, overload, Sequence, Tuple, Union
 
 import numpy as np
 import torch
@@ -683,7 +683,7 @@ def _extract_device(
 
 
 def _reduce_list(
-    val_list: List[TupleOrTensorOrBoolGeneric],
+    val_list: Sequence[TupleOrTensorOrBoolGeneric],
     red_func: Callable[[List], Any] = torch.cat,
 ) -> TupleOrTensorOrBoolGeneric:
     """

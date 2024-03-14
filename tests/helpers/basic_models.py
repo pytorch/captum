@@ -44,7 +44,7 @@ class BasicModel(nn.Module):
         super().__init__()
 
     def forward(self, input: int):
-        input = 1 - F.relu(1 - input)
+        input = 1 - F.relu(torch.tensor(1 - input))
         return input
 
 

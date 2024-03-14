@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-from typing import Optional, Tuple
+from typing import cast, Optional, Tuple, Union
 
 import numpy as np
 import torch
@@ -11,6 +11,7 @@ from captum.attr._utils.approximation_methods import approximation_parameters
 from captum.attr._utils.attribution import LayerAttribution
 from captum.attr._utils.common import _reshape_and_sum
 from torch import Tensor
+from torch.utils.hooks import RemovableHandle
 
 """
 Note: This implementation of conductance follows the procedure described in the original
@@ -55,7 +56,7 @@ class ConductanceReference(LayerAttribution):
             # The hidden layer tensor is assumed to have dimension (num_hidden, ...)
             # where the product of the dimensions >= 1 correspond to the total
             # number of hidden neurons in the layer.
-            layer_size = tuple(saved_tensor.size())[1:]
+            layer_size = tuple(cast(Tensor, saved_tensor).size())[1:]
             layer_units = int(np.prod(layer_size))
 
             # Remove unnecessary forward hook.
@@ -101,12 +102,12 @@ class ConductanceReference(LayerAttribution):
             input_grads = torch.autograd.grad(torch.unbind(output), expanded_input)
 
             # Remove backwards hook
-            back_hook.remove()
+            cast(RemovableHandle, back_hook).remove()
 
             # Remove duplicates in gradient with respect to hidden layer,
             # choose one for each layer_units indices.
             output_mid_grads = torch.index_select(
-                saved_grads,
+                cast(Tensor, saved_grads),
                 0,
                 torch.tensor(range(0, input_grads[0].shape[0], layer_units)),
             )
@@ -115,7 +116,7 @@ class ConductanceReference(LayerAttribution):
     def attribute(
         self,
         inputs,
-        baselines: Optional[int] = None,
+        baselines: Union[None, int, Tensor] = None,
         target=None,
         n_steps: int = 500,
         method: str = "riemann_trapezoid",

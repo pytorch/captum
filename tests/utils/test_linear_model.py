@@ -12,11 +12,11 @@ from tests.helpers.basic import assertTensorAlmostEqual, BaseTest
 from torch import Tensor
 
 
-def _evaluate(test_data, classifier) -> Dict[str, float]:
+def _evaluate(test_data, classifier) -> Dict[str, Tensor]:
     classifier.eval()
 
-    l1_loss = 0.0
-    l2_loss = 0.0
+    l1_loss = torch.tensor(0.0)
+    l2_loss = torch.tensor(0.0)
     n = 0
     l2_losses = []
     with torch.no_grad():
@@ -67,7 +67,7 @@ class TestLinearModel(BaseTest):
         model_type,
         xs,
         ys,
-        expected_loss: Tensor,
+        expected_loss: Union[int, float, Tensor],
         expected_reg: Union[float, Tensor] = 0.0,
         expected_hyperplane: Optional[Tensor] = None,
         norm_hyperplane: bool = True,

@@ -27,6 +27,7 @@ from tests.helpers.basic_models import (
     BasicModel_MultiLayer_TrueMultiInput,
     MixedKwargsAndArgsModule,
 )
+from torch.nn import Module
 
 layer_methods_to_test_with_equiv = [
     # layer_method, equiv_method, whether or not to use multiple layers
@@ -115,7 +116,7 @@ class TestInputLayerWrapper(BaseTest, metaclass=InputLayerMeta):
         assertTensorTuplesAlmostEqual(self, a1, real_attributions)
 
     def forward_eval_layer_with_inputs_helper(
-        self, model: ModelInputWrapper, inputs_to_test
+        self, model: Module, inputs_to_test
     ) -> None:
         # hard coding for simplicity
         # 0 if using args, 1 if using kwargs

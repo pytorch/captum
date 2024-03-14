@@ -2,7 +2,7 @@
 import copy
 import random
 import unittest
-from typing import Callable
+from typing import Callable, List, Tuple, Union
 
 import numpy as np
 import torch
@@ -20,9 +20,7 @@ def deep_copy_args(func: Callable):
     return copy_args
 
 
-def assertTensorAlmostEqual(
-    test, actual: Tensor, expected: Tensor, delta: float = 0.0001, mode: str = "sum"
-) -> None:
+def assertTensorAlmostEqual(test, actual, expected, delta=0.0001, mode="sum"):
     assert isinstance(actual, torch.Tensor), (
         "Actual parameter given for " "comparison must be a tensor."
     )
@@ -60,9 +58,7 @@ def assertTensorAlmostEqual(
         raise ValueError("Mode for assertion comparison must be one of `max` or `sum`.")
 
 
-def assertTensorTuplesAlmostEqual(
-    test, actual, expected, delta: float = 0.0001, mode: str = "sum"
-) -> None:
+def assertTensorTuplesAlmostEqual(test, actual, expected, delta=0.0001, mode="sum"):
     if isinstance(expected, tuple):
         assert len(actual) == len(
             expected
