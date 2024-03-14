@@ -155,6 +155,11 @@ class Test(BaseTest):
         target: TargetType,
     ) -> None:
         # TODO add test cases for multiple different layers
+        if isinstance(attr_method, DeepLiftShap):
+            assert isinstance(
+                baselines, Tensor
+            ), "Non-tensor baseline not supported for DeepLiftShap"
+
         model.zero_grad()
         attributions, delta = attr_method.attribute(
             input, baselines=baselines, target=target, return_convergence_delta=True

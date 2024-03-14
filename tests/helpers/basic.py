@@ -19,7 +19,9 @@ def deep_copy_args(func: Callable):
     return copy_args
 
 
-def assertTensorAlmostEqual(test, actual, expected, delta=0.0001, mode="sum"):
+def assertTensorAlmostEqual(
+    test, actual, expected, delta: float = 0.0001, mode: str = "sum"
+):
     assert isinstance(actual, torch.Tensor), (
         "Actual parameter given for " "comparison must be a tensor."
     )
@@ -57,7 +59,9 @@ def assertTensorAlmostEqual(test, actual, expected, delta=0.0001, mode="sum"):
         raise ValueError("Mode for assertion comparison must be one of `max` or `sum`.")
 
 
-def assertTensorTuplesAlmostEqual(test, actual, expected, delta=0.0001, mode="sum"):
+def assertTensorTuplesAlmostEqual(
+    test, actual, expected, delta: float = 0.0001, mode: str = "sum"
+):
     if isinstance(expected, tuple):
         assert len(actual) == len(
             expected
