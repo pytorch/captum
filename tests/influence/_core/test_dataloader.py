@@ -8,7 +8,8 @@ from captum.influence._core.tracincp_fast_rand_proj import (
     TracInCPFastRandProj,
 )
 from parameterized import parameterized
-from tests.helpers.basic import assertTensorAlmostEqual, BaseTest
+from tests.helpers import BaseTest
+from tests.helpers.basic import assertTensorAlmostEqual
 from tests.influence._utils.common import (
     _format_batch_into_tuple,
     build_test_name_func,

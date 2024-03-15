@@ -3,7 +3,7 @@ from typing import List
 
 import torch
 from captum.attr import ClassSummarizer, CommonStats
-from tests.helpers.basic import BaseTest
+from tests.helpers import BaseTest
 
 
 class Test(BaseTest):

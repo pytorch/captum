@@ -11,7 +11,8 @@ from captum._utils.sample_gradient import (
     SUPPORTED_MODULES,
 )
 from packaging import version
-from tests.helpers.basic import assertTensorAlmostEqual, BaseTest
+from tests.helpers import BaseTest
+from tests.helpers.basic import assertTensorAlmostEqual
 from tests.helpers.basic_models import (
     BasicModel_ConvNet_One_Conv,
     BasicModel_ConvNetWithPaddingDilation,

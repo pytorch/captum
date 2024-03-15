@@ -7,7 +7,8 @@ import torch
 from captum._utils.typing import BaselineType, TensorOrTupleOfTensorsGeneric
 from captum.attr._core.layer.layer_conductance import LayerConductance
 from captum.attr._core.neuron.neuron_conductance import NeuronConductance
-from tests.helpers.basic import assertTensorAlmostEqual, BaseTest
+from tests.helpers import BaseTest
+from tests.helpers.basic import assertTensorAlmostEqual
 from tests.helpers.basic_models import (
     BasicModel_ConvNet,
     BasicModel_MultiLayer,

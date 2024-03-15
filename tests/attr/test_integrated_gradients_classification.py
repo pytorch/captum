@@ -6,7 +6,8 @@ import torch
 from captum._utils.typing import BaselineType, Tensor
 from captum.attr._core.integrated_gradients import IntegratedGradients
 from captum.attr._core.noise_tunnel import NoiseTunnel
-from tests.helpers.basic import assertTensorAlmostEqual, BaseTest
+from tests.helpers import BaseTest
+from tests.helpers.basic import assertTensorAlmostEqual
 from tests.helpers.classification_models import SigmoidModel, SoftmaxModel
 from torch.nn import Module
 

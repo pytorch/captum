@@ -6,7 +6,8 @@ import unittest
 import torch
 from captum.module.gaussian_stochastic_gates import GaussianStochasticGates
 from parameterized import parameterized_class
-from tests.helpers.basic import assertTensorAlmostEqual, BaseTest
+from tests.helpers import BaseTest
+from tests.helpers.basic import assertTensorAlmostEqual
 
 
 @parameterized_class(

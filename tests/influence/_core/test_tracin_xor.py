@@ -8,7 +8,8 @@ import torch.nn as nn
 import torch.nn.functional as F
 from captum.influence._core.tracincp import TracInCP
 from parameterized import parameterized
-from tests.helpers.basic import assertTensorAlmostEqual, BaseTest
+from tests.helpers import BaseTest
+from tests.helpers.basic import assertTensorAlmostEqual
 from tests.influence._utils.common import (
     _wrap_model_in_dataparallel,
     BasicLinearNet,

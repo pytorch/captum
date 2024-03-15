@@ -13,7 +13,8 @@ from captum.attr._core.llm_attr import LLMAttribution, LLMGradientAttribution
 from captum.attr._core.shapley_value import ShapleyValueSampling
 from captum.attr._utils.interpretable_input import TextTemplateInput, TextTokenInput
 from parameterized import parameterized, parameterized_class
-from tests.helpers.basic import assertTensorAlmostEqual, BaseTest
+from tests.helpers import BaseTest
+from tests.helpers.basic import assertTensorAlmostEqual
 from torch import nn, Tensor
 
 

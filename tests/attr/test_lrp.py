@@ -10,7 +10,8 @@ from captum.attr._utils.lrp_rules import (
     GammaRule,
     IdentityRule,
 )
-from tests.helpers.basic import assertTensorAlmostEqual, BaseTest
+from tests.helpers import BaseTest
+from tests.helpers.basic import assertTensorAlmostEqual
 from tests.helpers.basic_models import (
     BasicModel_ConvNet_One_Conv,
     BasicModel_MultiLayer,

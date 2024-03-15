@@ -10,7 +10,7 @@ from captum.insights.attr_vis.features import (
     TextFeature,
 )
 from matplotlib.figure import Figure
-from tests.helpers.basic import BaseTest
+from tests.helpers import BaseTest
 
 
 class TestTextFeature(BaseTest):

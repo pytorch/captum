@@ -14,7 +14,8 @@ from tests.attr.helpers.gen_test_utils import (
     should_create_generated_test,
 )
 from tests.attr.helpers.test_config import config
-from tests.helpers.basic import BaseTest, deep_copy_args
+from tests.helpers import BaseTest
+from tests.helpers.basic import deep_copy_args
 from torch.nn import Module
 
 """
