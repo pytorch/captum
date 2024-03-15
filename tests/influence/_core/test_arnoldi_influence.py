@@ -17,7 +17,8 @@ from captum.influence._utils.common import (
     _unflatten_params_factory,
 )
 from parameterized import parameterized
-from tests.helpers.basic import assertTensorAlmostEqual, BaseTest
+from tests.helpers import BaseTest
+from tests.helpers.basic import assertTensorAlmostEqual
 from tests.influence._utils.common import (
     _format_batch_into_tuple,
     build_test_name_func,

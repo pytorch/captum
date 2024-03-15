@@ -26,7 +26,8 @@ from captum.concept._core.tcav import TCAV
 from captum.concept._utils.classifier import Classifier
 from captum.concept._utils.common import concepts_to_str
 from captum.concept._utils.data_iterator import dataset_to_dataloader
-from tests.helpers.basic import assertTensorAlmostEqual, BaseTest
+from tests.helpers import BaseTest
+from tests.helpers.basic import assertTensorAlmostEqual
 from tests.helpers.basic_models import BasicModel_ConvNet
 from torch import Tensor
 from torch.utils.data import DataLoader, IterableDataset

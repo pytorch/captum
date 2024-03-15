@@ -8,7 +8,8 @@ from captum._utils.models.linear_model.model import (
     SGDLinearRegression,
     SGDRidge,
 )
-from tests.helpers.basic import assertTensorAlmostEqual, BaseTest
+from tests.helpers import BaseTest
+from tests.helpers.basic import assertTensorAlmostEqual
 from torch import Tensor
 
 

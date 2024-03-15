@@ -8,7 +8,8 @@ from captum.influence._core.similarity_influence import (
     euclidean_distance,
     SimilarityInfluence,
 )
-from tests.helpers.basic import assertTensorAlmostEqual, BaseTest
+from tests.helpers import BaseTest
+from tests.helpers.basic import assertTensorAlmostEqual
 from torch.utils.data import Dataset
 
 

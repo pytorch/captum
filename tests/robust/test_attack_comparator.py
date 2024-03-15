@@ -4,7 +4,8 @@ from typing import Dict, List, Tuple, Union
 
 import torch
 from captum.robust import AttackComparator, FGSM
-from tests.helpers.basic import assertTensorAlmostEqual, BaseTest
+from tests.helpers import BaseTest
+from tests.helpers.basic import assertTensorAlmostEqual
 from tests.helpers.basic_models import BasicModel, BasicModel_MultiLayer
 from torch import Tensor
 

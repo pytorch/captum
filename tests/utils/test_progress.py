@@ -5,7 +5,7 @@ import unittest
 import unittest.mock
 
 from captum._utils.progress import NullProgress, progress
-from tests.helpers.basic import BaseTest
+from tests.helpers import BaseTest
 
 
 class Test(BaseTest):

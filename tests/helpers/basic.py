@@ -2,6 +2,7 @@
 import copy
 import random
 import unittest
+
 from typing import Callable
 
 import numpy as np

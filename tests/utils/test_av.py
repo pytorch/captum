@@ -5,7 +5,8 @@ from typing import cast, List
 
 import torch
 from captum._utils.av import AV
-from tests.helpers.basic import assertTensorAlmostEqual, BaseTest
+from tests.helpers import BaseTest
+from tests.helpers.basic import assertTensorAlmostEqual
 from tests.helpers.basic_models import BasicLinearReLULinear
 from torch.utils.data import DataLoader, Dataset
 
