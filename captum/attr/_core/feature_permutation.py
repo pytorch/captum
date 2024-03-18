@@ -301,6 +301,7 @@ class FeaturePermutation(FeatureAblation):
         current_mask = torch.stack(
             [input_mask == j for j in range(start_feature, end_feature)], dim=0
         ).bool()
+        current_mask = current_mask.to(expanded_input.device)
 
         output = torch.stack(
             [
