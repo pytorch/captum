@@ -82,7 +82,7 @@ class TracInCPFast(TracInCPBase):
     def __init__(
         self,
         model: Module,
-        final_fc_layer: Module,
+        final_fc_layer: Union[Module, str],
         train_dataset: Union[Dataset, DataLoader],
         checkpoints: Union[str, List[str], Iterator],
         checkpoints_load_func: Callable = _load_flexible_state_dict,
@@ -183,7 +183,7 @@ class TracInCPFast(TracInCPBase):
         self.vectorize = vectorize
 
         # TODO: restore prior state
-        self.final_fc_layer = final_fc_layer
+        self.final_fc_layer = final_fc_layer  # type: ignore
         for param in self.final_fc_layer.parameters():
             param.requires_grad = True
 
