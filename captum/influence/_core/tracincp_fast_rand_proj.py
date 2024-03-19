@@ -720,7 +720,7 @@ def _basic_computation_tracincp_fast(
     targets: Tensor,
     loss_fn: Optional[Union[Module, Callable]] = None,
     reduction_type: Optional[str] = None,
-):
+) -> Tuple[Tensor, Tensor]:
     """
     For instances of TracInCPFast and children classes, computation of influence scores
     or self influence scores repeatedly calls this function for different checkpoints
@@ -1363,7 +1363,7 @@ class TracInCPFastRandProj(TracInCPFast):
     def _process_src_intermediate_quantities_tracincp_fast_rand_proj(
         self,
         src_intermediate_quantities: torch.Tensor,
-    ):
+    ) -> None:
         """
         Assumes `self._get_intermediate_quantities_tracin_fast_rand_proj` returns
         vector representations for each example, and that influence between a

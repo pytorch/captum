@@ -18,7 +18,7 @@ Additional helper functions to calculate similarity metrics.
 """
 
 
-def euclidean_distance(test, train) -> Tensor:
+def euclidean_distance(test: Tensor, train: Tensor) -> Tensor:
     r"""
     Calculates the pairwise euclidean distance for batches of feature vectors.
     Tensors test and train have shape (batch_size_1, *), and (batch_size_2, *).
@@ -31,7 +31,7 @@ def euclidean_distance(test, train) -> Tensor:
     return similarity
 
 
-def cosine_similarity(test, train, replace_nan=0) -> Tensor:
+def cosine_similarity(test: Tensor, train: Tensor, replace_nan: int = 0) -> Tensor:
     r"""
     Calculates the pairwise cosine similarity for batches of feature vectors.
     Tensors test and train have shape (batch_size_1, *), and (batch_size_2, *).
