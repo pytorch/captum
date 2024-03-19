@@ -596,7 +596,7 @@ def _get_dataset_embeddings_intermediate_quantities_influence_function(
     batch_embeddings_fn: Callable,
     inputs_dataset: DataLoader,
     aggregate: bool,
-):
+) -> Tensor:
     """
     given `batch_embeddings_fn`, which produces the embeddings for a given batch,
     returns either the embeddings for an entire dataset (if `aggregate` is false),

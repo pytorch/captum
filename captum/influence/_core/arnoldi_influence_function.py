@@ -157,7 +157,7 @@ def _parameter_distill(
     k: Optional[int],
     hessian_reg: float,
     hessian_inverse_tol: float,
-):
+) -> Tuple[Tensor, List[Tuple[Tensor, ...]]]:
     """
     This takes the output of `_parameter_arnoldi`, and extracts the top-k eigenvalues
     / eigenvectors of the matrix that `_parameter_arnoldi` found the Krylov subspace

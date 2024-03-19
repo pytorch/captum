@@ -4,6 +4,7 @@ from functools import reduce
 from typing import (
     Any,
     Callable,
+    Dict,
     Iterable,
     List,
     NamedTuple,
@@ -613,7 +614,7 @@ def _influence_batch_intermediate_quantities_influence_function(
     influence_inst: "IntermediateQuantitiesInfluenceFunction",
     test_batch: Tuple[Any, ...],
     train_batch: Tuple[Any, ...],
-):
+) -> Tensor:
     """
     computes influence of a test batch on a train batch, for implementations of
     `IntermediateQuantitiesInfluenceFunction`
@@ -628,7 +629,7 @@ def _influence_helper_intermediate_quantities_influence_function(
     influence_inst: "IntermediateQuantitiesInfluenceFunction",
     inputs_dataset: Union[Tuple[Any, ...], DataLoader],
     show_progress: bool,
-):
+) -> Tensor:
     """
     Helper function that computes influence scores for implementations of
     `NaiveInfluenceFunction` which implement the `compute_intermediate_quantities`
@@ -666,7 +667,7 @@ def _self_influence_helper_intermediate_quantities_influence_function(
     influence_inst: "IntermediateQuantitiesInfluenceFunction",
     inputs_dataset: Optional[Union[Tuple[Any, ...], DataLoader]],
     show_progress: bool,
-):
+) -> Tensor:
     """
     Helper function that computes self-influence scores for implementations of
     `NaiveInfluenceFunction` which implement the `compute_intermediate_quantities`
@@ -983,14 +984,14 @@ def _compute_batch_loss_influence_function_base(
         raise Exception
 
 
-def _set_attr(obj, names, val):
+def _set_attr(obj, names, val) -> None:
     if len(names) == 1:
         setattr(obj, names[0], val)
     else:
         _set_attr(getattr(obj, names[0]), names[1:], val)
 
 
-def _del_attr(obj, names):
+def _del_attr(obj, names) -> None:
     if len(names) == 1:
         delattr(obj, names[0])
     else:
@@ -1006,7 +1007,7 @@ def _model_make_functional(model, param_names, params):
     return params
 
 
-def _model_reinsert_params(model, param_names, params, register=False):
+def _model_reinsert_params(model, param_names, params, register: bool = False) -> None:
     for param_name, param in zip(param_names, params):
         _set_attr(
             model,
@@ -1024,7 +1025,7 @@ def _custom_functional_call(model, d, features):
     return out
 
 
-def _functional_call(model, d, features):
+def _functional_call(model: Module, d: Dict[str, Tensor], features):
     """
     Makes a call to `model.forward`, which is treated as a function of the parameters
     in `d`, a dict from parameter name to parameter, instead of as a function of
