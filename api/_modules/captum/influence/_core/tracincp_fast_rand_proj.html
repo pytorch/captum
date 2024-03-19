@@ -116,7 +116,7 @@ src="/_sphinx/documentation_options.js"></script>
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">model</span><span class="p">:</span> <span class="n">Module</span><span class="p">,</span>
-        <span class="n">final_fc_layer</span><span class="p">:</span> <span class="n">Module</span><span class="p">,</span>
+        <span class="n">final_fc_layer</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Module</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span>
         <span class="n">train_dataset</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Dataset</span><span class="p">,</span> <span class="n">DataLoader</span><span class="p">],</span>
         <span class="n">checkpoints</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">Iterator</span><span class="p">],</span>
         <span class="n">checkpoints_load_func</span><span class="p">:</span> <span class="n">Callable</span> <span class="o">=</span> <span class="n">_load_flexible_state_dict</span><span class="p">,</span>
@@ -217,7 +217,7 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="bp">self</span><span class="o">.</span><span class="n">vectorize</span> <span class="o">=</span> <span class="n">vectorize</span>
 
         <span class="c1"># TODO: restore prior state</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">final_fc_layer</span> <span class="o">=</span> <span class="n">final_fc_layer</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">final_fc_layer</span> <span class="o">=</span> <span class="n">final_fc_layer</span>  <span class="c1"># type: ignore</span>
         <span class="k">for</span> <span class="n">param</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">final_fc_layer</span><span class="o">.</span><span class="n">parameters</span><span class="p">():</span>
             <span class="n">param</span><span class="o">.</span><span class="n">requires_grad</span> <span class="o">=</span> <span class="kc">True</span>
 
@@ -761,7 +761,7 @@ src="/_sphinx/documentation_options.js"></script>
     <span class="n">targets</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">,</span>
     <span class="n">loss_fn</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">Module</span><span class="p">,</span> <span class="n">Callable</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">reduction_type</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-<span class="p">):</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">Tensor</span><span class="p">]:</span>
 <span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    For instances of TracInCPFast and children classes, computation of influence scores</span>
 <span class="sd">    or self influence scores repeatedly calls this function for different checkpoints</span>
@@ -1412,7 +1412,7 @@ src="/_sphinx/documentation_options.js"></script>
     <span class="k">def</span> <span class="nf">_process_src_intermediate_quantities_tracincp_fast_rand_proj</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">src_intermediate_quantities</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span>
-    <span class="p">):</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Assumes `self._get_intermediate_quantities_tracin_fast_rand_proj` returns</span>
 <span class="sd">        vector representations for each example, and that influence between a</span>

@@ -174,16 +174,9 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">                    Default: None</span>
 <span class="sd">        """</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">model</span> <span class="o">=</span> <span class="n">model</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">:</span> <span class="n">Module</span> <span class="o">=</span> <span class="n">model</span>
 
-        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">checkpoints</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">checkpoints</span> <span class="o">=</span> <span class="n">AV</span><span class="o">.</span><span class="n">sort_files</span><span class="p">(</span><span class="n">glob</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="n">join</span><span class="p">(</span><span class="n">checkpoints</span><span class="p">,</span> <span class="s2">"*"</span><span class="p">)))</span>
-        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">checkpoints</span><span class="p">,</span> <span class="n">List</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">checkpoints</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="nb">str</span><span class="p">):</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">checkpoints</span> <span class="o">=</span> <span class="n">AV</span><span class="o">.</span><span class="n">sort_files</span><span class="p">(</span><span class="n">checkpoints</span><span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">checkpoints</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">checkpoints</span><span class="p">)</span>  <span class="c1"># cast to avoid mypy error</span>
-        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">checkpoints</span><span class="p">,</span> <span class="n">List</span><span class="p">):</span>
-            <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">checkpoints</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">"No checkpoints saved!"</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">checkpoints</span> <span class="o">=</span> <span class="n">checkpoints</span>  <span class="c1"># type: ignore</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">checkpoints_load_func</span> <span class="o">=</span> <span class="n">checkpoints_load_func</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">loss_fn</span> <span class="o">=</span> <span class="n">loss_fn</span>
@@ -213,6 +206,24 @@ src="/_sphinx/documentation_options.js"></script>
                 <span class="s2">"`train_dataset`. Therefore, if showing the progress of computations, "</span>
                 <span class="s2">"only the number of batches processed can be displayed, and not the "</span>
                 <span class="s2">"percentage completion of the computation, nor any time estimates."</span>
+            <span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">checkpoints</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_checkpoints</span>
+
+    <span class="nd">@checkpoints</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">checkpoints</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">checkpoints</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">Iterator</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">checkpoints</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_checkpoints</span> <span class="o">=</span> <span class="n">AV</span><span class="o">.</span><span class="n">sort_files</span><span class="p">(</span><span class="n">glob</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="n">join</span><span class="p">(</span><span class="n">checkpoints</span><span class="p">,</span> <span class="s2">"*"</span><span class="p">)))</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">checkpoints</span><span class="p">,</span> <span class="n">List</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">checkpoints</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_checkpoints</span> <span class="o">=</span> <span class="n">AV</span><span class="o">.</span><span class="n">sort_files</span><span class="p">(</span><span class="n">checkpoints</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_checkpoints</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">checkpoints</span><span class="p">)</span>  <span class="c1"># cast to avoid mypy error</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_checkpoints</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"Invalid checkpoints provided for TracIn class: </span><span class="si">{</span><span class="n">checkpoints</span><span class="si">}</span><span class="s2">!"</span>
             <span class="p">)</span>
 
 <div class="viewcode-block" id="TracInCPBase.self_influence">
