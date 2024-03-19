@@ -140,16 +140,9 @@ class TracInCPBase(DataInfluence):
                     Default: None
         """
 
-        self.model = model
+        self.model: Module = model
 
-        if isinstance(checkpoints, str):
-            self.checkpoints = AV.sort_files(glob.glob(join(checkpoints, "*")))
-        elif isinstance(checkpoints, List) and isinstance(checkpoints[0], str):
-            self.checkpoints = AV.sort_files(checkpoints)
-        else:
-            self.checkpoints = list(checkpoints)  # cast to avoid mypy error
-        if isinstance(self.checkpoints, List):
-            assert len(self.checkpoints) > 0, "No checkpoints saved!"
+        self.checkpoints = checkpoints  # type: ignore
 
         self.checkpoints_load_func = checkpoints_load_func
         self.loss_fn = loss_fn
@@ -179,6 +172,24 @@ class TracInCPBase(DataInfluence):
                 "`train_dataset`. Therefore, if showing the progress of computations, "
                 "only the number of batches processed can be displayed, and not the "
                 "percentage completion of the computation, nor any time estimates."
+            )
+
+    @property
+    def checkpoints(self) -> List[str]:
+        return self._checkpoints
+
+    @checkpoints.setter
+    def checkpoints(self, checkpoints: Union[str, List[str], Iterator]) -> None:
+        if isinstance(checkpoints, str):
+            self._checkpoints = AV.sort_files(glob.glob(join(checkpoints, "*")))
+        elif isinstance(checkpoints, List) and isinstance(checkpoints[0], str):
+            self._checkpoints = AV.sort_files(checkpoints)
+        else:
+            self._checkpoints = list(checkpoints)  # cast to avoid mypy error
+
+        if len(self._checkpoints) <= 0:
+            raise ValueError(
+                f"Invalid checkpoints provided for TracIn class: {checkpoints}!"
             )
 
     @abstractmethod
