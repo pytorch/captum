@@ -144,38 +144,49 @@ class BinaryDataset(ExplicitDataset):
 
 
 class CoefficientNet(nn.Module):
-    def __init__(self, in_features=1) -> None:
+    def __init__(self, in_features: int = 1) -> None:
         super().__init__()
         self.fc1 = nn.Linear(in_features, 1, bias=False)
         self.fc1.weight.data.fill_(0.01)
 
-    def forward(self, x):
+    def forward(self, x: Tensor) -> Tensor:
         x = self.fc1(x)
         return x
 
 
 class BasicLinearNet(nn.Module):
-    def __init__(self, in_features, hidden_nodes, out_features) -> None:
+    def __init__(
+        self,
+        in_features: int,
+        hidden_nodes: int,
+        out_features: int,
+    ) -> None:
         super().__init__()
         self.linear1 = nn.Linear(in_features, hidden_nodes)
         self.linear2 = nn.Linear(hidden_nodes, out_features)
 
-    def forward(self, input):
+    def forward(self, input: Tensor) -> Tensor:
         x = torch.tanh(self.linear1(input))
         return torch.tanh(self.linear2(x))
 
 
 class MultLinearNet(nn.Module):
-    def __init__(self, in_features, hidden_nodes, out_features, num_inputs) -> None:
+    def __init__(
+        self,
+        in_features: int,
+        hidden_nodes: int,
+        out_features: int,
+        num_inputs: int,
+    ) -> None:
         super().__init__()
         self.pre = nn.Linear(in_features * num_inputs, in_features)
         self.linear1 = nn.Linear(in_features, hidden_nodes)
         self.linear2 = nn.Linear(hidden_nodes, out_features)
 
-    def forward(self, *inputs):
+    def forward(self, *inputs: Tensor) -> Tensor:
         """
-        The signature of inputs is List[torch.Tensor],
-        where torch.Tensor has the dimensions [num_inputs x in_features].
+        The signature of inputs is a Tuple of Tensor,
+        where the Tensor has the dimensions [num_inputs x in_features].
         It first concacenates the list and a linear layer to reduce the
         dimension.
         """
@@ -193,11 +204,11 @@ class Linear(nn.Module):
     those implementations.
     """
 
-    def __init__(self, in_features):
+    def __init__(self, in_features: int) -> None:
         super().__init__()
         self.linear = nn.Linear(in_features, 1, bias=False)
 
-    def forward(self, input):
+    def forward(self, input: Tensor) -> Tensor:
         return self.linear(input)
 
 
@@ -206,11 +217,11 @@ class UnpackLinear(nn.Module):
     the analogue of `Linear` which unpacks inputs, serving the same purpose.
     """
 
-    def __init__(self, in_features, num_inputs) -> None:
+    def __init__(self, in_features: int, num_inputs: int) -> None:
         super().__init__()
         self.linear = nn.Linear(in_features * num_inputs, 1, bias=False)
 
-    def forward(self, *inputs):
+    def forward(self, *inputs: Tensor) -> Tensor:
         return self.linear(torch.cat(inputs, dim=1))
 
 
