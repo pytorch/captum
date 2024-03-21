@@ -6,7 +6,7 @@ import captum._utils.models.linear_model.model as pytorch_model_module
 import numpy as np
 import sklearn.datasets as datasets
 import torch
-from tests.utils.test_linear_model import _evaluate
+from tests.utils.evaluate_linear_model import evaluate
 from torch.utils.data import DataLoader, TensorDataset
 
 
@@ -80,11 +80,11 @@ def compare_to_sk_learn(
         alpha=alpha,
     )
 
-    sklearn_stats.update(_evaluate(val_loader, sklearn_classifier))
-    pytorch_stats.update(_evaluate(val_loader, pytorch_classifier))
+    sklearn_stats.update(evaluate(val_loader, sklearn_classifier))
+    pytorch_stats.update(evaluate(val_loader, pytorch_classifier))
 
-    train_stats_pytorch = _evaluate(train_loader, pytorch_classifier)
-    train_stats_sklearn = _evaluate(train_loader, sklearn_classifier)
+    train_stats_pytorch = evaluate(train_loader, pytorch_classifier)
+    train_stats_sklearn = evaluate(train_loader, sklearn_classifier)
 
     o_pytorch = {"l2": train_stats_pytorch["l2"]}
     o_sklearn = {"l2": train_stats_sklearn["l2"]}
