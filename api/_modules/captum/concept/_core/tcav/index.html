@@ -41,7 +41,9 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="kn">from</span> <span class="nn">captum._utils.av</span> <span class="kn">import</span> <span class="n">AV</span>
 <span class="kn">from</span> <span class="nn">captum._utils.common</span> <span class="kn">import</span> <span class="n">_format_tensor_into_tuples</span><span class="p">,</span> <span class="n">_get_module_from_name</span>
 <span class="kn">from</span> <span class="nn">captum._utils.typing</span> <span class="kn">import</span> <span class="n">TargetType</span><span class="p">,</span> <span class="n">TensorOrTupleOfTensorsGeneric</span>
-<span class="kn">from</span> <span class="nn">captum.attr</span> <span class="kn">import</span> <span class="n">LayerActivation</span><span class="p">,</span> <span class="n">LayerAttribution</span><span class="p">,</span> <span class="n">LayerGradientXActivation</span>
+<span class="kn">from</span> <span class="nn">captum.attr._core.layer.layer_activation</span> <span class="kn">import</span> <span class="n">LayerActivation</span>
+<span class="kn">from</span> <span class="nn">captum.attr._core.layer.layer_gradient_x_activation</span> <span class="kn">import</span> <span class="n">LayerGradientXActivation</span>
+<span class="kn">from</span> <span class="nn">captum.attr._utils.attribution</span> <span class="kn">import</span> <span class="n">LayerAttribution</span>
 <span class="kn">from</span> <span class="nn">captum.concept._core.cav</span> <span class="kn">import</span> <span class="n">CAV</span>
 <span class="kn">from</span> <span class="nn">captum.concept._core.concept</span> <span class="kn">import</span> <span class="n">Concept</span><span class="p">,</span> <span class="n">ConceptInterpreter</span>
 <span class="kn">from</span> <span class="nn">captum.concept._utils.classifier</span> <span class="kn">import</span> <span class="n">Classifier</span><span class="p">,</span> <span class="n">DefaultClassifier</span>
