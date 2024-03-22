@@ -1,5 +1,5 @@
 import tempfile
-from typing import Callable, List, Tuple, Union
+from typing import Callable, List, Optional, Tuple
 
 import torch
 
@@ -27,8 +27,8 @@ from tests.influence._utils.common import (
     generate_assymetric_matrix_given_eigenvalues,
     generate_symmetric_matrix_given_eigenvalues,
     get_random_model_and_data,
+    is_gpu,
     UnpackDataset,
-    USE_GPU_LIST,
 )
 from torch import Tensor
 from torch.utils.data import DataLoader
@@ -229,6 +229,17 @@ class TestArnoldiInfluence(BaseTest):
                         "max",
                     )
 
+    # TODO: for some unknow reason, this test and the test below does not work
+    # on `cuda_data_parallel` setting. We need to investigate why.
+    # Use a local version of setting list for these two tests for now
+    # since we have changed the default setting list to includes all options.
+    # (This is also used in many other tests, which also needs to be unified later).
+    gpu_setting_list = (
+        ["", "cuda"]
+        if torch.cuda.is_available() and torch.cuda.device_count() != 0
+        else [""]
+    )
+
     @parameterized.expand(
         [
             (
@@ -237,9 +248,9 @@ class TestArnoldiInfluence(BaseTest):
                 delta,
                 mode,
                 unpack_inputs,
-                use_gpu,
+                gpu_setting,
             )
-            for use_gpu in USE_GPU_LIST
+            for gpu_setting in gpu_setting_list
             for (influence_constructor_1, influence_constructor_2, delta) in [
                 # compare implementations, when considering only 1 layer
                 (
@@ -247,7 +258,7 @@ class TestArnoldiInfluence(BaseTest):
                         NaiveInfluenceFunction,
                         layers=(
                             ["module.linear1"]
-                            if use_gpu == "cuda_dataparallel"
+                            if gpu_setting == "cuda_dataparallel"
                             else ["linear1"]
                         ),
                         projection_dim=5,
@@ -258,7 +269,7 @@ class TestArnoldiInfluence(BaseTest):
                         ArnoldiInfluenceFunction,
                         layers=(
                             ["module.linear1"]
-                            if use_gpu == "cuda_dataparallel"
+                            if gpu_setting == "cuda_dataparallel"
                             else ["linear1"]
                         ),
                         arnoldi_dim=50,
@@ -314,7 +325,7 @@ class TestArnoldiInfluence(BaseTest):
         delta: float,
         mode: str,
         unpack_inputs: bool,
-        use_gpu: Union[bool, str],
+        gpu_setting: Optional[str],
     ) -> None:
         """
         this compares 2 influence implementations on a trained 2-layer NN model.
@@ -329,7 +340,7 @@ class TestArnoldiInfluence(BaseTest):
             delta,
             mode,
             unpack_inputs,
-            use_gpu,
+            gpu_setting,
         )
 
     # this compares `ArnoldiInfluenceFunction` and `NaiveInfluenceFunction` on randomly
@@ -337,6 +348,7 @@ class TestArnoldiInfluence(BaseTest):
     # can also compare the intermediate quantities. we do not compare with
     # `NaiveInfluence` because on randomly generated data, it is not comparable,
     # conceptually, with the other implementations, due to numerical issues.
+
     @parameterized.expand(
         [
             (
@@ -345,16 +357,16 @@ class TestArnoldiInfluence(BaseTest):
                 delta,
                 mode,
                 unpack_inputs,
-                use_gpu,
+                gpu_setting,
             )
-            for use_gpu in USE_GPU_LIST
+            for gpu_setting in gpu_setting_list
             for (influence_constructor_1, influence_constructor_2, delta) in [
                 (
                     DataInfluenceConstructor(
                         NaiveInfluenceFunction,
                         layers=(
                             ["module.linear1"]
-                            if use_gpu == "cuda_dataparallel"
+                            if gpu_setting == "cuda_dataparallel"
                             else ["linear1"]
                         ),
                         show_progress=False,
@@ -364,7 +376,7 @@ class TestArnoldiInfluence(BaseTest):
                         ArnoldiInfluenceFunction,
                         layers=(
                             ["module.linear1"]
-                            if use_gpu == "cuda_dataparallel"
+                            if gpu_setting == "cuda_dataparallel"
                             else ["linear1"]
                         ),
                         show_progress=False,
@@ -397,7 +409,7 @@ class TestArnoldiInfluence(BaseTest):
         delta: float,
         mode: str,
         unpack_inputs: bool,
-        use_gpu: Union[bool, str],
+        gpu_setting: Optional[str],
     ) -> None:
         """
         this compares 2 influence implementations on a trained 2-layer NN model.
@@ -412,7 +424,7 @@ class TestArnoldiInfluence(BaseTest):
             delta,
             mode,
             unpack_inputs,
-            use_gpu,
+            gpu_setting,
         )
 
     def _test_compare_implementations(
@@ -423,7 +435,7 @@ class TestArnoldiInfluence(BaseTest):
         delta: float,
         mode: str,
         unpack_inputs: bool,
-        use_gpu: Union[bool, str],
+        gpu_setting: Optional[str],
     ) -> None:
         """
         checks that 2 implementations of `InfluenceFunctionBase` return the same
@@ -444,13 +456,14 @@ class TestArnoldiInfluence(BaseTest):
                 tmpdir,
                 unpack_inputs,
                 return_test_data=True,
-                use_gpu=use_gpu,
+                gpu_setting=gpu_setting,
                 return_hessian_data=True,
                 model_type=model_type,
             )
 
             train_dataset = DataLoader(train_dataset, batch_size=5)
 
+            use_gpu = is_gpu(gpu_setting)
             hessian_dataset = (
                 ExplicitDataset(hessian_samples, hessian_labels, use_gpu)
                 if not unpack_inputs

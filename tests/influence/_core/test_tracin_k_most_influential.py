@@ -1,5 +1,5 @@
 import tempfile
-from typing import Callable, Union
+from typing import Callable, Optional
 
 import torch
 import torch.nn as nn
@@ -13,22 +13,17 @@ from tests.influence._utils.common import (
     build_test_name_func,
     DataInfluenceConstructor,
     get_random_model_and_data,
+    GPU_SETTING_LIST,
+    is_gpu,
 )
 
 
 class TestTracInGetKMostInfluential(BaseTest):
-
-    use_gpu_list = (
-        [False, "cuda", "cuda_data_parallel"]
-        if torch.cuda.is_available() and torch.cuda.device_count() != 0
-        else [False]
-    )
-
     param_list = []
     for batch_size, k in [(4, 7), (7, 4), (40, 5), (5, 40), (40, 45)]:
         for unpack_inputs in [True, False]:
             for proponents in [True, False]:
-                for use_gpu in use_gpu_list:
+                for gpu_setting in GPU_SETTING_LIST:
                     for reduction, constr, aggregate in [
                         (
                             "none",
@@ -51,7 +46,7 @@ class TestTracInGetKMostInfluential(BaseTest):
                                 name="linear2",
                                 layers=(
                                     ["module.linear2"]
-                                    if use_gpu == "cuda_data_parallel"
+                                    if gpu_setting == "cuda_data_parallel"
                                     else ["linear2"]
                                 ),
                             ),
@@ -61,7 +56,7 @@ class TestTracInGetKMostInfluential(BaseTest):
                         if not (
                             "sample_wise_grads_per_batch" in constr.kwargs
                             and constr.kwargs["sample_wise_grads_per_batch"]
-                            and use_gpu
+                            and is_gpu(gpu_setting)
                         ):
                             param_list.append(
                                 (
@@ -71,7 +66,7 @@ class TestTracInGetKMostInfluential(BaseTest):
                                     proponents,
                                     batch_size,
                                     k,
-                                    use_gpu,
+                                    gpu_setting,
                                     aggregate,
                                 )
                             )
@@ -88,7 +83,7 @@ class TestTracInGetKMostInfluential(BaseTest):
         proponents: bool,
         batch_size: int,
         k: int,
-        use_gpu: Union[bool, str],
+        gpu_setting: Optional[str],
         aggregate: bool,
     ) -> None:
         """
@@ -107,7 +102,7 @@ class TestTracInGetKMostInfluential(BaseTest):
                 tmpdir,
                 unpack_inputs,
                 True,
-                use_gpu,
+                gpu_setting,
             )
 
             self.assertTrue(isinstance(reduction, str))

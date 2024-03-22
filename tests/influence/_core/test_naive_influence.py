@@ -1,5 +1,5 @@
 import tempfile
-from typing import Callable, List, Tuple, Union
+from typing import Callable, List, Optional, Tuple
 
 import torch
 
@@ -21,14 +21,28 @@ from tests.influence._utils.common import (
     DataInfluenceConstructor,
     ExplicitDataset,
     get_random_model_and_data,
+    is_gpu,
     Linear,
     UnpackDataset,
-    USE_GPU_LIST,
 )
 from torch.utils.data import DataLoader
 
+# TODO: for some unknow reason, this test does not work
+# on `cuda_data_parallel` setting. We need to investigate why.
+# Use a local version of setting list for these two tests for now
+# since we have changed the default setting list to includes all options.
+# (This is also used in many other tests, which also needs to be unified later).
+gpu_settings_list = (
+    ["", "cuda"]
+    if torch.cuda.is_available() and torch.cuda.device_count() != 0
+    else [""]
+)
+
 
 class TestNaiveInfluence(BaseTest):
+    def setUp(self) -> None:
+        super().setUp()
+
     @parameterized.expand(
         [
             (param_shape,)
@@ -59,17 +73,17 @@ class TestNaiveInfluence(BaseTest):
                 delta,
                 mode,
                 unpack_inputs,
-                use_gpu,
+                gpu_setting,
             )
             for reduction in ["none", "sum", "mean"]
-            for use_gpu in USE_GPU_LIST
+            for gpu_setting in gpu_settings_list
             for (influence_constructor, delta) in [
                 (
                     DataInfluenceConstructor(
                         NaiveInfluenceFunction,
                         layers=(
                             ["module.linear"]
-                            if use_gpu == "cuda_dataparallel"
+                            if gpu_setting == "cuda_dataparallel"
                             else ["linear"]
                         ),
                         projection_dim=None,
@@ -109,7 +123,7 @@ class TestNaiveInfluence(BaseTest):
         delta: float,
         mode: str,
         unpack_inputs: bool,
-        use_gpu: Union[bool, str],
+        gpu_setting: Optional[str],
     ) -> None:
         """
         this tests that `NaiveInfluence`, the simplest implementation, agree with the
@@ -129,13 +143,14 @@ class TestNaiveInfluence(BaseTest):
                 tmpdir,
                 unpack_inputs,
                 return_test_data=True,
-                use_gpu=use_gpu,
+                gpu_setting=gpu_setting,
                 return_hessian_data=True,
                 model_type="trained_linear",
             )
 
             train_dataset = DataLoader(train_dataset, batch_size=5)
 
+            use_gpu = is_gpu(gpu_setting)
             hessian_dataset = (
                 ExplicitDataset(hessian_samples, hessian_labels, use_gpu)
                 if not unpack_inputs

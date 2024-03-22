@@ -293,11 +293,41 @@ def get_random_data(
     return (train_dataset, hessian_dataset, test_dataset)
 
 
+def _adjust_model(model: Module, gpu_setting: Optional[str]) -> Module:
+    """
+    Given a model, returns a copy of the model on GPU based on the provided
+    `gpu_setting`.
+    Or returns the original model on CPU if no valid setting is provided.
+
+    Two valid settings are supported for now:
+        - `'cuda'`: returned model is on gpu
+        - `'cuda_data_parallel``: returned model is a `DataParallel` model,
+        and on gpu
+
+    The need to differentiate between `'cuda'` and `'cuda_data_parallel'`
+    is that sometimes we may want to test a model that is on gpu, but is *not*
+    wrapped in `DataParallel`.
+    """
+    if gpu_setting == "cuda_data_parallel":
+        return _wrap_model_in_dataparallel(model)
+    elif gpu_setting == "cuda":
+        return model.cuda()
+    else:
+        return model
+
+
+def is_gpu(gpu_setting: Optional[str]) -> bool:
+    """
+    Returns whether the model should be on gpu based on the given `gpu_setting` str.
+    """
+    return gpu_setting == "cuda_data_parallel" or gpu_setting == "cuda"
+
+
 def get_random_model_and_data(
     tmpdir,
     unpack_inputs,
     return_test_data=True,
-    use_gpu=False,
+    gpu_setting: Optional[str] = None,
     return_hessian_data=False,
     model_type="random",
 ):
@@ -330,16 +360,12 @@ def get_random_model_and_data(
     `InfluenceFunctionBase` can be more easily compared, due to lack of numerical
     issues.
 
-    `use_gpu` can either be
-    - `False`: returned model is on cpu
-    - `'cuda'`: returned model is on gpu
-    - `'cuda_data_parallel``: returned model is a `DataParallel` model, and on cpu
-    The need to differentiate between `'cuda'` and `'cuda_data_parallel'`
-    is that sometimes we may want to test a model that is on cpu, but is *not*
-    wrapped in `DataParallel`.
+    `gpu_setting` specify whether the model is on gpu and whether it is a `DataParallel`
+    model. More details in the `_adjust_model_for_gpu` API.
     """
     in_features, hidden_nodes = 5, 4
     num_inputs = 2
+    use_gpu = is_gpu(gpu_setting)
 
     # generate data. regardless the model, the data is always generated the same way
     # the only exception is if the `model_type` is 'trained_linear', i.e. a simple
@@ -367,22 +393,18 @@ def get_random_model_and_data(
         num_checkpoints = 5
 
         for i in range(num_checkpoints):
-            net.linear1.weight.data = torch.normal(
+            net.linear1.weight.data = torch.normal(  # type: ignore
                 3, 4, (hidden_nodes, in_features)
             ).double()
-            net.linear2.weight.data = torch.normal(
+            net.linear2.weight.data = torch.normal(  # type: ignore
                 5, 6, (out_features, hidden_nodes)
             ).double()
             if unpack_inputs:
-                net.pre.weight.data = torch.normal(
+                net.pre.weight.data = torch.normal(  # type: ignore
                     3, 4, (in_features, in_features * num_inputs)
                 ).double()
             checkpoint_name = "-".join(["checkpoint-reg", str(i + 1) + ".pt"])
-            net_adjusted = (
-                _wrap_model_in_dataparallel(net)
-                if use_gpu == "cuda_data_parallel"
-                else (net.to(device="cuda") if use_gpu == "cuda" else net)
-            )
+            net_adjusted = _adjust_model(net, gpu_setting)
             torch.save(net_adjusted.state_dict(), os.path.join(tmpdir, checkpoint_name))
 
     elif model_type == "trained_linear":
@@ -418,12 +440,8 @@ def get_random_model_and_data(
 
         # save that trained parameter as a checkpoint
         checkpoint_name = "checkpoint-final.pt"
-        net.linear.weight.data = theta.contiguous()
-        net_adjusted = (
-            _wrap_model_in_dataparallel(net)
-            if use_gpu == "cuda_data_parallel"
-            else (net.to(device="cuda") if use_gpu == "cuda" else net)
-        )
+        net.linear.weight.data = theta.contiguous()  # type: ignore
+        net_adjusted = _adjust_model(net, gpu_setting)
         torch.save(net_adjusted.state_dict(), os.path.join(tmpdir, checkpoint_name))
 
     elif model_type == "trained_NN":
@@ -433,11 +451,7 @@ def get_random_model_and_data(
             else MultLinearNet(in_features, hidden_nodes, out_features, num_inputs)
         ).double()
 
-        net_adjusted = (
-            _wrap_model_in_dataparallel(net)
-            if use_gpu == "cuda_data_parallel"
-            else (net.to(device="cuda") if use_gpu == "cuda" else net)
-        )
+        net_adjusted = _adjust_model(net, gpu_setting)
 
         # train model using several optimization steps on Hessian data
         batch = next(iter(DataLoader(hessian_dataset, batch_size=len(hessian_dataset))))
@@ -454,9 +468,6 @@ def get_random_model_and_data(
 
         # save that trained parameter as a checkpoint
         checkpoint_name = "checkpoint-final.pt"
-        net_adjusted = (
-            _wrap_model_in_dataparallel(net) if use_gpu == "cuda_data_parallel" else net
-        )
         torch.save(net_adjusted.state_dict(), os.path.join(tmpdir, checkpoint_name))
 
     training_data = (
@@ -680,8 +691,8 @@ def _format_batch_into_tuple(
         return (inputs, targets)
 
 
-USE_GPU_LIST = (
-    [False, "cuda"]
+GPU_SETTING_LIST = (
+    ["", "cuda", "cuda_data_parallel"]
     if torch.cuda.is_available() and torch.cuda.device_count() != 0
-    else [False]
+    else [""]
 )
