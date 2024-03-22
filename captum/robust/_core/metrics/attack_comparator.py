@@ -20,7 +20,8 @@ from captum._utils.common import (
     _format_additional_forward_args,
     _reduce_list,
 )
-from captum.attr import Max, Mean, Min, Summarizer
+from captum.attr._utils.stat import Max, Mean, Min
+from captum.attr._utils.summarizer import Summarizer
 from captum.log import log_usage
 from captum.robust._core.perturbation import Perturbation
 from torch import Tensor
