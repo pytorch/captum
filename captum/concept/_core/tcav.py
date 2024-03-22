@@ -9,7 +9,9 @@ import torch.multiprocessing as multiprocessing
 from captum._utils.av import AV
 from captum._utils.common import _format_tensor_into_tuples, _get_module_from_name
 from captum._utils.typing import TargetType, TensorOrTupleOfTensorsGeneric
-from captum.attr import LayerActivation, LayerAttribution, LayerGradientXActivation
+from captum.attr._core.layer.layer_activation import LayerActivation
+from captum.attr._core.layer.layer_gradient_x_activation import LayerGradientXActivation
+from captum.attr._utils.attribution import LayerAttribution
 from captum.concept._core.cav import CAV
 from captum.concept._core.concept import Concept, ConceptInterpreter
 from captum.concept._utils.classifier import Classifier, DefaultClassifier
