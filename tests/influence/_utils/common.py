@@ -45,7 +45,7 @@ class ExplicitDataset(Dataset):
         self,
         samples: Tensor,
         labels: Tensor,
-        use_gpu=False,
+        use_gpu: bool = False,
     ) -> None:
         self.samples, self.labels = samples, labels
         if use_gpu:
@@ -64,7 +64,7 @@ class UnpackDataset(Dataset):
         self,
         samples: List[Tensor],
         labels: Tensor,
-        use_gpu=False,
+        use_gpu: bool = False,
     ) -> None:
         self.samples, self.labels = samples, labels
         if use_gpu:
@@ -83,7 +83,11 @@ class UnpackDataset(Dataset):
 
 
 class IdentityDataset(ExplicitDataset):
-    def __init__(self, num_features, use_gpu=False) -> None:
+    def __init__(
+        self,
+        num_features: int,
+        use_gpu: bool = False,
+    ) -> None:
         self.samples = torch.diag(torch.ones(num_features))
         self.labels = torch.zeros(num_features).unsqueeze(1)
         if use_gpu:
@@ -92,7 +96,13 @@ class IdentityDataset(ExplicitDataset):
 
 
 class RangeDataset(ExplicitDataset):
-    def __init__(self, low, high, num_features, use_gpu=False) -> None:
+    def __init__(
+        self,
+        low: int,
+        high: int,
+        num_features: int,
+        use_gpu: bool = False,
+    ) -> None:
         self.samples = (
             torch.arange(start=low, end=high, dtype=torch.float)
             .repeat(num_features, 1)
@@ -105,7 +115,7 @@ class RangeDataset(ExplicitDataset):
 
 
 class BinaryDataset(ExplicitDataset):
-    def __init__(self, use_gpu=False) -> None:
+    def __init__(self, use_gpu: bool = False) -> None:
         self.samples = F.normalize(
             torch.stack(
                 (
@@ -249,16 +259,11 @@ def get_random_data(
     num_inputs = 2 if unpack_inputs else 1
 
     labels = torch.normal(1, 2, (num_examples, out_features)).double()
-    labels = labels.cuda() if use_gpu else labels
-
     all_samples = [
         torch.normal(0, 1, (num_examples, in_features)).double()
         for _ in range(num_inputs)
     ]
-    if use_gpu:
-        all_samples = _move_sample_list_to_cuda(all_samples)
 
-    # TODO: no need to pass use_gpu since the data format has already been moved to cuda
     train_dataset = (
         UnpackDataset(
             [samples[:num_train] for samples in all_samples],
