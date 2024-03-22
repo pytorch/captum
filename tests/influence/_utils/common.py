@@ -36,19 +36,20 @@ def _wrap_model_in_dataparallel(net):
     return torch.nn.DataParallel(net, device_ids=alt_device_ids)
 
 
-def _move_sample_to_cuda(samples):
+def _move_sample_list_to_cuda(samples: List[Tensor]) -> List[Tensor]:
     return [s.cuda() for s in samples]
 
 
 class ExplicitDataset(Dataset):
-    def __init__(self, samples, labels, use_gpu=False) -> None:
+    def __init__(
+        self,
+        samples: Tensor,
+        labels: Tensor,
+        use_gpu=False,
+    ) -> None:
         self.samples, self.labels = samples, labels
         if use_gpu:
-            self.samples = (
-                _move_sample_to_cuda(self.samples)
-                if isinstance(self.samples, list)
-                else self.samples.cuda()
-            )
+            self.samples = self.samples.cuda()
             self.labels = self.labels.cuda()
 
     def __len__(self) -> int:
@@ -59,14 +60,15 @@ class ExplicitDataset(Dataset):
 
 
 class UnpackDataset(Dataset):
-    def __init__(self, samples, labels, use_gpu=False) -> None:
+    def __init__(
+        self,
+        samples: List[Tensor],
+        labels: Tensor,
+        use_gpu=False,
+    ) -> None:
         self.samples, self.labels = samples, labels
         if use_gpu:
-            self.samples = (
-                _move_sample_to_cuda(self.samples)
-                if isinstance(self.samples, list)
-                else self.samples.cuda()
-            )
+            self.samples = _move_sample_list_to_cuda(self.samples)
             self.labels = self.labels.cuda()
 
     def __len__(self) -> int:
@@ -225,6 +227,72 @@ class UnpackLinear(nn.Module):
         return self.linear(torch.cat(inputs, dim=1))
 
 
+def get_random_data(
+    in_features: int,
+    out_features: int,
+    num_examples: int,
+    use_gpu: bool,
+    unpack_inputs: bool,
+) -> Tuple[Dataset, Dataset, Dataset]:
+    """
+    returns train_dataset, test_dataset and hessian_dataset constructed from
+    random labels and random features, with features having shape
+    [num_examples x num_features] and labels having shape [num_examples].
+
+    Note: the random labels and features for different dataset needs to be
+    generated together.
+    Otherwise, some tests will fail (https://fburl.com/testinfra/737jnpip)
+    """
+
+    num_train = 32
+    num_hessian = 22  # this needs to be high to prevent numerical issues
+    num_inputs = 2 if unpack_inputs else 1
+
+    labels = torch.normal(1, 2, (num_examples, out_features)).double()
+    labels = labels.cuda() if use_gpu else labels
+
+    all_samples = [
+        torch.normal(0, 1, (num_examples, in_features)).double()
+        for _ in range(num_inputs)
+    ]
+    if use_gpu:
+        all_samples = _move_sample_list_to_cuda(all_samples)
+
+    # TODO: no need to pass use_gpu since the data format has already been moved to cuda
+    train_dataset = (
+        UnpackDataset(
+            [samples[:num_train] for samples in all_samples],
+            labels[:num_train],
+            use_gpu,
+        )
+        if unpack_inputs
+        else ExplicitDataset(all_samples[0][:num_train], labels[:num_train], use_gpu)
+    )
+
+    hessian_dataset = (
+        UnpackDataset(
+            [samples[:num_hessian] for samples in all_samples],
+            labels[:num_hessian],
+            use_gpu,
+        )
+        if unpack_inputs
+        else ExplicitDataset(
+            all_samples[0][:num_hessian], labels[:num_hessian], use_gpu
+        )
+    )
+
+    test_dataset = (
+        UnpackDataset(
+            [samples[num_train:] for samples in all_samples],
+            labels[num_train:],
+            use_gpu,
+        )
+        if unpack_inputs
+        else ExplicitDataset(all_samples[0][num_train:], labels[num_train:], use_gpu)
+    )
+    return (train_dataset, hessian_dataset, test_dataset)
+
+
 def get_random_model_and_data(
     tmpdir,
     unpack_inputs,
@@ -283,38 +351,9 @@ def get_random_model_and_data(
         out_features = 3
 
     num_samples = 50
-    num_train = 32
-    num_hessian = 22  # this needs to be high to prevent numerical issues
-    all_labels = torch.normal(1, 2, (num_samples, out_features)).double()
-    all_labels = all_labels.cuda() if use_gpu else all_labels
-    train_labels = all_labels[:num_train]
-    test_labels = all_labels[num_train:]
-    hessian_labels = all_labels[:num_hessian]
 
-    if unpack_inputs:
-        all_samples = [
-            torch.normal(0, 1, (num_samples, in_features)).double()
-            for _ in range(num_inputs)
-        ]
-        if use_gpu:
-            all_samples = _move_sample_to_cuda(all_samples)
-
-        train_samples = [ts[:num_train] for ts in all_samples]
-        test_samples = [ts[num_train:] for ts in all_samples]
-        hessian_samples = [ts[:num_hessian] for ts in all_samples]
-    else:
-        all_samples = torch.normal(0, 1, (num_samples, in_features)).double()
-
-        if use_gpu:
-            all_samples = all_samples.cuda()
-        train_samples = all_samples[:num_train]
-        test_samples = all_samples[num_train:]
-        hessian_samples = all_samples[:num_hessian]
-
-    dataset = (
-        ExplicitDataset(train_samples, train_labels, use_gpu)
-        if not unpack_inputs
-        else UnpackDataset(train_samples, train_labels, use_gpu)
+    train_dataset, hessian_dataset, test_dataset = get_random_data(
+        in_features, out_features, num_samples, use_gpu, unpack_inputs
     )
 
     if model_type == "random":
@@ -358,15 +397,19 @@ def get_random_model_and_data(
 
         # turn input into a single tensor for use by least squares
         tensor_hessian_samples = (
-            hessian_samples if not unpack_inputs else torch.cat(hessian_samples, dim=1)
+            hessian_dataset.samples
+            if not unpack_inputs
+            else torch.cat(hessian_dataset.samples, dim=1)
         )
         version = _parse_version(torch.__version__)
         if version < (1, 9):
-            theta = torch.lstsq(tensor_hessian_samples, hessian_labels).solution[0:1]
+            theta = torch.lstsq(
+                tensor_hessian_samples, hessian_dataset.labels
+            ).solution[0:1]
         else:
             # run least squares to get optimal trained parameters
             theta = torch.linalg.lstsq(
-                hessian_labels,
+                hessian_dataset.labels,
                 tensor_hessian_samples,
             ).solution
         # the first `n` rows of `theta` contains the least squares solution, where
@@ -397,14 +440,7 @@ def get_random_model_and_data(
         )
 
         # train model using several optimization steps on Hessian data
-
-        # create entire Hessian data as a batch
-        hessian_dataset = (
-            ExplicitDataset(hessian_samples, hessian_labels, use_gpu)
-            if not unpack_inputs
-            else UnpackDataset(hessian_samples, hessian_labels, use_gpu)
-        )
-        batch = next(iter(DataLoader(hessian_dataset, batch_size=num_hessian)))
+        batch = next(iter(DataLoader(hessian_dataset, batch_size=len(hessian_dataset))))
 
         optimizer = torch.optim.Adam(net.parameters())
         num_steps = 200
@@ -425,26 +461,13 @@ def get_random_model_and_data(
 
     training_data = (
         net_adjusted,
-        dataset,
+        train_dataset,
     )
 
-    hessian_data = (
-        (
-            _move_sample_to_cuda(hessian_samples)
-            if isinstance(hessian_samples, list) and use_gpu
-            else (hessian_samples.cuda() if use_gpu else hessian_samples)
-        ),
-        hessian_labels.cuda() if use_gpu else hessian_labels,
-    )
+    hessian_data = (hessian_dataset.samples, hessian_dataset.labels)
 
-    test_data = (
-        (
-            _move_sample_to_cuda(test_samples)
-            if isinstance(test_samples, list) and use_gpu
-            else (test_samples.cuda() if use_gpu else test_samples)
-        ),
-        test_labels.cuda() if use_gpu else test_labels,
-    )
+    test_data = (test_dataset.samples, test_dataset.labels)
+
     if return_test_data:
         if not return_hessian_data:
             return (*training_data, *test_data)
