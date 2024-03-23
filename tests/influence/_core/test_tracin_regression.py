@@ -14,7 +14,7 @@ from captum.influence._core.tracincp_fast_rand_proj import (
 from parameterized import parameterized
 from tests.helpers import BaseTest
 from tests.helpers.basic import assertTensorAlmostEqual
-from tests.influence._utils.common import (
+from tests.helpers.influence.common import (
     _isSorted,
     _wrap_model_in_dataparallel,
     build_test_name_func,

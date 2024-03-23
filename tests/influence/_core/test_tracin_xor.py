@@ -10,7 +10,7 @@ from captum.influence._core.tracincp import TracInCP
 from parameterized import parameterized
 from tests.helpers import BaseTest
 from tests.helpers.basic import assertTensorAlmostEqual
-from tests.influence._utils.common import (
+from tests.helpers.influence.common import (
     _wrap_model_in_dataparallel,
     BasicLinearNet,
     BinaryDataset,

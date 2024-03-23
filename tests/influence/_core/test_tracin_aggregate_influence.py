@@ -9,7 +9,7 @@ import torch.nn as nn
 from captum.influence._core.tracincp import TracInCP
 from parameterized import parameterized
 from tests.helpers.basic import assertTensorAlmostEqual, BaseTest
-from tests.influence._utils.common import (
+from tests.helpers.influence.common import (
     build_test_name_func,
     DataInfluenceConstructor,
     get_random_model_and_data,
