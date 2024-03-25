@@ -10,7 +10,7 @@ from captum._utils.models.linear_model.model import (
 )
 from tests.helpers import BaseTest
 from tests.helpers.basic import assertTensorAlmostEqual
-from tests.utils.evaluate_linear_model import evaluate
+from tests.helpers.evaluate_linear_model import evaluate
 from torch import Tensor
 
 
