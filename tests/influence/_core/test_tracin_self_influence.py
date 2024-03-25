@@ -1,5 +1,5 @@
 import tempfile
-from typing import Callable, Union
+from typing import Callable, Optional
 
 import torch
 import torch.nn as nn
@@ -15,6 +15,8 @@ from tests.influence._utils.common import (
     build_test_name_func,
     DataInfluenceConstructor,
     get_random_model_and_data,
+    GPU_SETTING_LIST,
+    is_gpu,
 )
 from torch.utils.data import DataLoader
 
@@ -27,14 +29,9 @@ class TestTracInSelfInfluence(BaseTest):
     # implementations separately, because the latter does not support `DataParallel`
 
     # add tests for `TracInCPBase` implementations
-    use_gpu_list = (
-        [False, "cuda", "cuda_data_parallel"]
-        if torch.cuda.is_available() and torch.cuda.device_count() != 0
-        else [False]
-    )
 
     for unpack_inputs in [True, False]:
-        for use_gpu in use_gpu_list:
+        for gpu_setting in GPU_SETTING_LIST:
             for reduction, constructor in [
                 (
                     "none",
@@ -47,7 +44,7 @@ class TestTracInSelfInfluence(BaseTest):
                         name="TracInCP_linear1",
                         layers=(
                             ["module.linear1"]
-                            if use_gpu == "cuda_data_parallel"
+                            if gpu_setting == "cuda_data_parallel"
                             else ["linear1"]
                         ),
                     ),
@@ -59,7 +56,7 @@ class TestTracInSelfInfluence(BaseTest):
                         name="TracInCP_linear1_linear2",
                         layers=(
                             ["module.linear1", "module.linear2"]
-                            if use_gpu == "cuda_data_parallel"
+                            if gpu_setting == "cuda_data_parallel"
                             else ["linear1", "linear2"]
                         ),
                     ),
@@ -88,19 +85,21 @@ class TestTracInSelfInfluence(BaseTest):
                 if not (
                     "sample_wise_grads_per_batch" in constructor.kwargs
                     and constructor.kwargs["sample_wise_grads_per_batch"]
-                    and use_gpu
+                    and is_gpu(gpu_setting)
                 ):
-                    param_list.append((reduction, constructor, unpack_inputs, use_gpu))
+                    param_list.append(
+                        (reduction, constructor, unpack_inputs, gpu_setting)
+                    )
 
     # add tests for `InfluenceFunctionBase` implementations
-    use_gpu_list = (
-        [False, "cuda"]
+    gpu_setting_list = (
+        ["", "cuda"]
         if torch.cuda.is_available() and torch.cuda.device_count() != 0
-        else [False]
+        else [""]
     )
 
     for unpack_inputs in [True, False]:
-        for use_gpu in use_gpu_list:
+        for gpu_setting in gpu_setting_list:
             for reduction, constructor in [
                 (
                     "none",
@@ -115,7 +114,7 @@ class TestTracInSelfInfluence(BaseTest):
                         name="NaiveInfluenceFunction_linear1",
                         layers=(
                             ["module.linear1"]
-                            if use_gpu == "cuda_data_parallel"
+                            if gpu_setting == "cuda_data_parallel"
                             else ["linear1"]
                         ),
                     ),
@@ -134,7 +133,7 @@ class TestTracInSelfInfluence(BaseTest):
                         name="ArnoldiInfluenceFunction_linear1",
                         layers=(
                             ["module.linear1"]
-                            if use_gpu == "cuda_data_parallel"
+                            if gpu_setting == "cuda_data_parallel"
                             else ["linear1"]
                         ),
                     ),
@@ -143,9 +142,11 @@ class TestTracInSelfInfluence(BaseTest):
                 if not (
                     "sample_wise_grads_per_batch" in constructor.kwargs
                     and constructor.kwargs["sample_wise_grads_per_batch"]
-                    and use_gpu
+                    and is_gpu(gpu_setting)
                 ):
-                    param_list.append((reduction, constructor, unpack_inputs, use_gpu))
+                    param_list.append(
+                        (reduction, constructor, unpack_inputs, gpu_setting)
+                    )
 
     @parameterized.expand(
         param_list,
@@ -156,7 +157,7 @@ class TestTracInSelfInfluence(BaseTest):
         reduction: str,
         tracin_constructor: Callable,
         unpack_inputs: bool,
-        use_gpu: Union[bool, str],
+        gpu_setting: Optional[str],
     ) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
             (
@@ -166,7 +167,7 @@ class TestTracInSelfInfluence(BaseTest):
                 tmpdir,
                 unpack_inputs,
                 False,
-                use_gpu,
+                gpu_setting,
             )
 
             # compute tracin_scores of training data on training data

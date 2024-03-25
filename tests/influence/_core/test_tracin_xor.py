@@ -23,7 +23,7 @@ class TestTracInXOR(BaseTest):
 
     # TODO: Move test setup to use setUp and tearDown method overrides.
     def _test_tracin_xor_setup(self, tmpdir: str, use_gpu: bool = False):
-        net = BasicLinearNet(2, 2, 1)
+        net = BasicLinearNet(in_features=2, hidden_nodes=2, out_features=1)
 
         state = OrderedDict(
             [
