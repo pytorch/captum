@@ -6,7 +6,7 @@ import captum._utils.models.linear_model.model as pytorch_model_module
 import numpy as np
 import sklearn.datasets as datasets
 import torch
-from tests.utils.evaluate_linear_model import evaluate
+from tests.helpers.evaluate_linear_model import evaluate
 from torch.utils.data import DataLoader, TensorDataset
 
 
