@@ -8,7 +8,7 @@ from typing import Any, List, Optional, Tuple, Union
 
 import captum._utils.common as common
 import torch
-from captum.attr._core.layer.layer_activation import LayerActivation
+from captum.attr import LayerActivation
 from torch import Tensor
 from torch.nn import Module
 from torch.utils.data import DataLoader, Dataset

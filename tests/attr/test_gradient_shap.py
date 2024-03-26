@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-from typing import cast, Tuple, Union
+from typing import cast, Tuple
 
 import numpy as np
 import torch
@@ -8,6 +8,10 @@ from captum._utils.typing import Tensor
 from captum.attr._core.gradient_shap import GradientShap
 from captum.attr._core.integrated_gradients import IntegratedGradients
 from numpy import ndarray
+from tests.attr.helpers.attribution_delta_util import (
+    assert_attribution_delta,
+    assert_delta,
+)
 from tests.helpers import BaseTest
 from tests.helpers.basic import assertTensorAlmostEqual
 from tests.helpers.basic_models import BasicLinearModel, BasicModel2
@@ -48,7 +52,7 @@ class Test(BaseTest):
         )
         attributions_without_delta = gradient_shap.attribute((x1, x2), baselines)
 
-        _assert_attribution_delta(self, inputs, attributions, n_samples, delta)
+        assert_attribution_delta(self, inputs, attributions, n_samples, delta)
         # Compare with integrated gradients
         ig = IntegratedGradients(model)
         baselines = (torch.zeros(batch_size, 3), torch.zeros(batch_size, 4))
@@ -144,7 +148,7 @@ class Test(BaseTest):
             stdevs=0.009,
             return_convergence_delta=True,
         )
-        _assert_attribution_delta(self, (inputs,), (attributions,), n_samples, delta)
+        assert_attribution_delta(self, (inputs,), (attributions,), n_samples, delta)
 
         attributions, delta = gradient_shap.attribute(
             inputs,
@@ -154,7 +158,7 @@ class Test(BaseTest):
             stdevs=0.00001,
             return_convergence_delta=True,
         )
-        _assert_attribution_delta(self, (inputs,), (attributions,), n_samples, delta)
+        assert_attribution_delta(self, (inputs,), (attributions,), n_samples, delta)
 
         with self.assertRaises(AssertionError):
             attributions, delta = gradient_shap.attribute(  # type: ignore
@@ -187,7 +191,7 @@ class Test(BaseTest):
             stdevs=0.009,
             return_convergence_delta=True,
         )
-        _assert_attribution_delta(self, (inputs,), (attributions,), n_samples, delta)
+        assert_attribution_delta(self, (inputs,), (attributions,), n_samples, delta)
 
         # try to call `compute_convergence_delta` externally
         with self.assertRaises(AssertionError):
@@ -202,7 +206,7 @@ class Test(BaseTest):
         external_delta = gradient_shap.compute_convergence_delta(
             attributions, chosen_baselines, inputs, target=target_extendes
         )
-        _assert_delta(self, external_delta)
+        assert_delta(self, external_delta)
 
         # Compare with integrated gradients
         ig = IntegratedGradients(model)
@@ -232,7 +236,7 @@ class Test(BaseTest):
                 return_convergence_delta=True,
             ),
         )
-        _assert_attribution_delta(
+        assert_attribution_delta(
             self, inputs, attributions, n_samples, delta, delta_thresh=0.008
         )
 
@@ -246,36 +250,3 @@ class Test(BaseTest):
         for attribution1, attribution2 in zip(attributions1, attributions2):
             for attr_row1, attr_row2 in zip(attribution1, attribution2):
                 assertTensorAlmostEqual(self, attr_row1, attr_row2, 0.05, "max")
-
-
-def _assert_attribution_delta(
-    test: BaseTest,
-    inputs: Union[Tensor, Tuple[Tensor, ...]],
-    attributions: Union[Tensor, Tuple[Tensor, ...]],
-    n_samples: int,
-    delta: Tensor,
-    delta_thresh: Union[float, Tensor] = 0.0006,
-    is_layer: bool = False,
-) -> None:
-    if not is_layer:
-        for input, attribution in zip(inputs, attributions):
-            test.assertEqual(attribution.shape, input.shape)
-    if isinstance(inputs, tuple):
-        bsz = inputs[0].shape[0]
-    else:
-        bsz = inputs.shape[0]
-    test.assertEqual([bsz * n_samples], list(delta.shape))
-
-    delta = torch.mean(delta.reshape(bsz, -1), dim=1)
-    _assert_delta(test, delta, delta_thresh)
-
-
-def _assert_delta(
-    test: BaseTest, delta: Tensor, delta_thresh: Union[Tensor, float] = 0.0006
-) -> None:
-    delta_condition = (delta.abs() < delta_thresh).all()
-    test.assertTrue(
-        delta_condition,
-        "Sum of SHAP values {} does"
-        " not match the difference of endpoints.".format(delta),
-    )

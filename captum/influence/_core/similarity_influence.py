@@ -7,7 +7,7 @@ from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 import captum._utils.common as common
 import torch
 from captum._utils.av import AV
-from captum.attr._core.layer.layer_activation import LayerActivation
+from captum.attr import LayerActivation
 from captum.influence._core.influence import DataInfluence
 from torch import Tensor
 from torch.nn import Module

@@ -5,7 +5,7 @@ import torch
 from captum._utils.typing import TargetType, TensorOrTupleOfTensorsGeneric
 from captum.attr._core.gradient_shap import GradientShap
 from captum.attr._core.layer.layer_gradient_shap import LayerGradientShap
-from tests.attr.test_gradient_shap import _assert_attribution_delta
+from tests.attr.helpers.attribution_delta_util import assert_attribution_delta
 from tests.helpers.basic import (
     assertTensorAlmostEqual,
     assertTensorTuplesAlmostEqual,
@@ -162,7 +162,7 @@ class Test(BaseTest):
         )
         assertTensorTuplesAlmostEqual(self, attrs, expected, delta=0.005)
         if expected_delta is None:
-            _assert_attribution_delta(
+            assert_attribution_delta(
                 self, inputs, attrs, n_samples, delta, is_layer=True
             )
         else:
