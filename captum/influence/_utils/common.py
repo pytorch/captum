@@ -108,7 +108,7 @@ def _jacobian_loss_wrt_inputs(
     batch).
 
     Args:
-        loss_fn (torch.nn.Module, Callable, or None): The loss function. If a library
+        loss_fn (torch.nn.Module, Callable): The loss function. If a library
                 defined loss function is provided, it would be expected to be a
                 torch.nn.Module. If a custom loss is provided, it can be either type,
                 but must behave as a library loss function would if `reduction='sum'`
@@ -131,23 +131,20 @@ def _jacobian_loss_wrt_inputs(
                 in the batch represented by `out`. This is a 2D tensor, where the
                 first dimension is the batch dimension.
     """
-    # TODO: allow loss_fn to be Callable
-    if isinstance(loss_fn, Module) and hasattr(loss_fn, "reduction"):
-        msg0 = "Please ensure that loss_fn.reduction is set to `sum` or `mean`"
-
-        assert loss_fn.reduction != "none", msg0
-        msg1 = (
-            f"loss_fn.reduction ({loss_fn.reduction}) does not match"
-            f"reduction type ({reduction_type}). Please ensure they are"
-            " matching."
-        )
-        assert loss_fn.reduction == reduction_type, msg1
-
     if reduction_type != "sum" and reduction_type != "mean":
         raise ValueError(
-            f"{reduction_type} is not a valid value for reduction_type. "
+            f"`{reduction_type}` is not a valid value for reduction_type. "
             "Must be either 'sum' or 'mean'."
         )
+
+    # TODO: allow loss_fn to be Callable
+    if isinstance(loss_fn, Module) and hasattr(loss_fn, "reduction"):
+        msg = (
+            f"loss_fn.reduction `{loss_fn.reduction}` does not match"
+            f"reduction type `{reduction_type}`. Please ensure they are"
+            " matching."
+        )
+        assert loss_fn.reduction == reduction_type, msg
 
     if _parse_version(torch.__version__) >= (1, 8, 0):
         input_jacobians = torch.autograd.functional.jacobian(
