@@ -148,7 +148,6 @@ class TestTracInRegression(BaseTest):
         use_gpu: bool,
     ) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
-
             batch_size = 4
 
             dataset, net = self._test_tracin_regression_setup(
@@ -174,7 +173,6 @@ class TestTracInRegression(BaseTest):
             self.assertTrue(callable(tracin_constructor))
 
             if mode == "check_idx":
-
                 self.assertTrue(isinstance(reduction, str))
                 criterion = nn.MSELoss(reduction=cast(str, reduction))
 
@@ -206,7 +204,6 @@ class TestTracInRegression(BaseTest):
                     self.assertTrue(_isSorted(idx[i]))
 
             if mode == "sample_wise_trick":
-
                 criterion = nn.MSELoss(reduction="none")
 
                 tracin = tracin_constructor(
@@ -261,7 +258,6 @@ class TestTracInRegression(BaseTest):
     def test_tracin_regression_1D_numerical(
         self, reduction: str, tracin_constructor: Callable
     ) -> None:
-
         low = 1
         high = 17
         features = 1
@@ -276,7 +272,6 @@ class TestTracInRegression(BaseTest):
         train_labels = dataset.labels
 
         with tempfile.TemporaryDirectory() as tmpdir:
-
             for i, weight in enumerate(weights):
                 net.fc1.weight.data.fill_(weight)
                 checkpoint_name = "-".join(["checkpoint-reg", str(i + 1) + ".pt"])
@@ -371,7 +366,6 @@ class TestTracInRegression(BaseTest):
         """
 
         with tempfile.TemporaryDirectory() as tmpdir:
-
             batch_size = 4
 
             dataset, net = self._test_tracin_identity_regression_setup(tmpdir)
@@ -382,7 +376,6 @@ class TestTracInRegression(BaseTest):
             self.assertTrue(callable(tracin_constructor))
 
             if mode == "check_idx":
-
                 self.assertTrue(isinstance(reduction, str))
                 criterion = nn.MSELoss(reduction=cast(str, reduction))
 
@@ -406,7 +399,6 @@ class TestTracInRegression(BaseTest):
                     self.assertEqual(idx[i][0], i)
 
             if mode == "sample_wise_trick":
-
                 criterion = nn.MSELoss(reduction="none")
 
                 tracin = tracin_constructor(
@@ -483,7 +475,6 @@ class TestTracInRegression(BaseTest):
         those cases holds.
         """
         with tempfile.TemporaryDirectory() as tmpdir:
-
             batch_size = 4
 
             dataset, net = self._test_tracin_identity_regression_setup(tmpdir)

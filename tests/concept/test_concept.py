@@ -26,11 +26,9 @@ class CustomIterableDataset(IterableDataset):
         self.get_tensor_from_filename_func = get_tensor_from_filename_func
 
     def get_tensor_from_filename(self, filename):
-
         return self.get_tensor_from_filename_func(filename)
 
     def __iter__(self):
-
         mapped_itr = map(self.get_tensor_from_filename, self.file_itr)
 
         return mapped_itr

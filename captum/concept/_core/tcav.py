@@ -60,7 +60,6 @@ class LabelledDataset(Dataset):
         self.uppers = offsets[1:]
 
     def _i_to_k(self, i):
-
         left, right = 0, len(self.uppers)
         while left < right:
             mid = (left + right) // 2
@@ -150,7 +149,6 @@ def train_cav(
     cavs[concepts_key] = defaultdict()
     layers = [layers] if isinstance(layers, str) else layers
     for layer in layers:
-
         # Create data loader to initialize the trainer.
         datasets = [
             AV.load(save_path, model_id, concept.identifier, layer)
@@ -436,7 +434,6 @@ class TCAV(ConceptInterpreter):
                 or layer not in self.cavs[concepts_key]
                 or not self.cavs[concepts_key][layer]
             ):
-
                 layers.append(layer)
                 # For all concepts in this experimental_set
                 for concept in concepts:
@@ -508,7 +505,6 @@ class TCAV(ConceptInterpreter):
         concept_key_to_layers = defaultdict(list)
 
         for concepts in experimental_sets:
-
             concepts_key = concepts_to_str(concepts)
 
             # If not 'force_train', try to load a saved CAV

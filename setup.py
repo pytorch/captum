@@ -110,7 +110,6 @@ def get_package_files(root, subdirs):
 
 
 if __name__ == "__main__":
-
     if BUILD_INSIGHTS:
         build_insights()
 

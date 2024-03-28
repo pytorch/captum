@@ -20,7 +20,6 @@ from tests.helpers.influence.common import (
 
 
 class TestTracInXOR(BaseTest):
-
     # TODO: Move test setup to use setUp and tearDown method overrides.
     def _test_tracin_xor_setup(self, tmpdir: str, use_gpu: bool = False):
         net = BasicLinearNet(in_features=2, hidden_nodes=2, out_features=1)
@@ -248,7 +247,6 @@ class TestTracInXOR(BaseTest):
             self.assertTrue(callable(tracin_constructor))
 
             if mode == "check_idx":
-
                 self.assertTrue(isinstance(reduction, str))
                 criterion = nn.MSELoss(reduction=cast(str, reduction))
 
@@ -267,7 +265,6 @@ class TestTracInXOR(BaseTest):
                     self.assertTrue(torch.all(testlabels[i, 0] == influence_labels))
 
             if mode == "sample_wise_trick":
-
                 criterion = nn.MSELoss(reduction="none")
 
                 tracin = tracin_constructor(

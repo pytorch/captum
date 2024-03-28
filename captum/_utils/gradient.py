@@ -155,7 +155,8 @@ def _forward_layer_eval(
     device_ids: Union[None, List[int]] = None,
     attribute_to_layer_input: bool = False,
     grad_enabled: bool = False,
-) -> Tuple[Tensor, ...]: ...
+) -> Tuple[Tensor, ...]:
+    ...
 
 
 @typing.overload
@@ -167,7 +168,8 @@ def _forward_layer_eval(
     device_ids: Union[None, List[int]] = None,
     attribute_to_layer_input: bool = False,
     grad_enabled: bool = False,
-) -> List[Tuple[Tensor, ...]]: ...
+) -> List[Tuple[Tensor, ...]]:
+    ...
 
 
 def _forward_layer_eval(
@@ -201,7 +203,8 @@ def _forward_layer_distributed_eval(
     attribute_to_layer_input: bool = False,
     forward_hook_with_return: Literal[False] = False,
     require_layer_grads: bool = False,
-) -> Dict[Module, Dict[device, Tuple[Tensor, ...]]]: ...
+) -> Dict[Module, Dict[device, Tuple[Tensor, ...]]]:
+    ...
 
 
 @typing.overload
@@ -215,7 +218,8 @@ def _forward_layer_distributed_eval(
     *,
     forward_hook_with_return: Literal[True],
     require_layer_grads: bool = False,
-) -> Tuple[Dict[Module, Dict[device, Tuple[Tensor, ...]]], Tensor]: ...
+) -> Tuple[Dict[Module, Dict[device, Tuple[Tensor, ...]]], Tensor]:
+    ...
 
 
 def _forward_layer_distributed_eval(
@@ -373,7 +377,8 @@ def _forward_layer_eval_with_neuron_grads(
     grad_enabled: bool = False,
     device_ids: Union[None, List[int]] = None,
     attribute_to_layer_input: bool = False,
-) -> Tuple[Tuple[Tensor, ...], Tuple[Tensor, ...]]: ...
+) -> Tuple[Tuple[Tensor, ...], Tuple[Tensor, ...]]:
+    ...
 
 
 @typing.overload
@@ -386,7 +391,8 @@ def _forward_layer_eval_with_neuron_grads(
     grad_enabled: bool = False,
     device_ids: Union[None, List[int]] = None,
     attribute_to_layer_input: bool = False,
-) -> Tuple[Tensor, ...]: ...
+) -> Tuple[Tensor, ...]:
+    ...
 
 
 @typing.overload
@@ -399,7 +405,8 @@ def _forward_layer_eval_with_neuron_grads(
     grad_enabled: bool = False,
     device_ids: Union[None, List[int]] = None,
     attribute_to_layer_input: bool = False,
-) -> List[Tuple[Tensor, ...]]: ...
+) -> List[Tuple[Tensor, ...]]:
+    ...
 
 
 def _forward_layer_eval_with_neuron_grads(
@@ -482,7 +489,8 @@ def compute_layer_gradients_and_eval(
     device_ids: Union[None, List[int]] = None,
     attribute_to_layer_input: bool = False,
     output_fn: Union[None, Callable] = None,
-) -> Tuple[Tuple[Tensor, ...], Tuple[Tensor, ...], Tuple[Tensor, ...]]: ...
+) -> Tuple[Tuple[Tensor, ...], Tuple[Tensor, ...], Tuple[Tensor, ...]]:
+    ...
 
 
 @typing.overload
@@ -496,7 +504,8 @@ def compute_layer_gradients_and_eval(
     device_ids: Union[None, List[int]] = None,
     attribute_to_layer_input: bool = False,
     output_fn: Union[None, Callable] = None,
-) -> Tuple[List[Tuple[Tensor, ...]], List[Tuple[Tensor, ...]]]: ...
+) -> Tuple[List[Tuple[Tensor, ...]], List[Tuple[Tensor, ...]]]:
+    ...
 
 
 @typing.overload
@@ -510,7 +519,8 @@ def compute_layer_gradients_and_eval(
     device_ids: Union[None, List[int]] = None,
     attribute_to_layer_input: bool = False,
     output_fn: Union[None, Callable] = None,
-) -> Tuple[Tuple[Tensor, ...], Tuple[Tensor, ...]]: ...
+) -> Tuple[Tuple[Tensor, ...], Tuple[Tensor, ...]]:
+    ...
 
 
 def compute_layer_gradients_and_eval(

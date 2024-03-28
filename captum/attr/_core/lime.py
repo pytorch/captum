@@ -1203,7 +1203,8 @@ class Lime(LimeBase):
         coefs: Tensor,
         num_interp_features: int,
         is_inputs_tuple: Literal[True],
-    ) -> Tuple[Tensor, ...]: ...
+    ) -> Tuple[Tensor, ...]:
+        ...
 
     @typing.overload
     def _convert_output_shape(
@@ -1213,7 +1214,8 @@ class Lime(LimeBase):
         coefs: Tensor,
         num_interp_features: int,
         is_inputs_tuple: Literal[False],
-    ) -> Tensor: ...
+    ) -> Tensor:
+        ...
 
     def _convert_output_shape(
         self,

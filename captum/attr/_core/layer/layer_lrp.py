@@ -69,7 +69,8 @@ class LayerLRP(LRP, LayerAttribution):
         return_convergence_delta: Literal[False] = False,
         attribute_to_layer_input: bool = False,
         verbose: bool = False,
-    ) -> Union[Tensor, Tuple[Tensor, ...], List[Union[Tensor, Tuple[Tensor, ...]]]]: ...
+    ) -> Union[Tensor, Tuple[Tensor, ...], List[Union[Tensor, Tuple[Tensor, ...]]]]:
+        ...
 
     @typing.overload
     def attribute(
@@ -84,7 +85,8 @@ class LayerLRP(LRP, LayerAttribution):
     ) -> Tuple[
         Union[Tensor, Tuple[Tensor, ...], List[Union[Tensor, Tuple[Tensor, ...]]]],
         Union[Tensor, List[Tensor]],
-    ]: ...
+    ]:
+        ...
 
     def attribute(
         self,

@@ -22,7 +22,6 @@ from torch.utils.data import DataLoader
 
 
 class TestTracInSelfInfluence(BaseTest):
-
     param_list = []
 
     # add the tests for `TracInCPBase` implementations and `InfluenceFunctionBase`

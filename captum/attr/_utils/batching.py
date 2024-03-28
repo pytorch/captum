@@ -97,11 +97,13 @@ def _batch_attribution(
 
 
 @typing.overload
-def _tuple_splice_range(inputs: None, start: int, end: int) -> None: ...
+def _tuple_splice_range(inputs: None, start: int, end: int) -> None:
+    ...
 
 
 @typing.overload
-def _tuple_splice_range(inputs: Tuple, start: int, end: int) -> Tuple: ...
+def _tuple_splice_range(inputs: Tuple, start: int, end: int) -> Tuple:
+    ...
 
 
 def _tuple_splice_range(

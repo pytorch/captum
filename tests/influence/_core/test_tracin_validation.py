@@ -15,7 +15,6 @@ from tests.helpers.influence.common import (
 
 
 class TestTracinValidator(BaseTest):
-
     param_list = [
         (
             "none",

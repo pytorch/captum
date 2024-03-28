@@ -32,13 +32,15 @@ def _local_perturb_func_default(
 
 
 @typing.overload
-def _local_perturb_func(inputs: Tensor) -> Tuple[Tensor, Tensor]: ...
+def _local_perturb_func(inputs: Tensor) -> Tuple[Tensor, Tensor]:
+    ...
 
 
 @typing.overload
 def _local_perturb_func(
     inputs: Tuple[Tensor, ...]
-) -> Tuple[Tuple[Tensor, ...], Tuple[Tensor, ...]]: ...
+) -> Tuple[Tuple[Tensor, ...], Tuple[Tensor, ...]]:
+    ...
 
 
 def _local_perturb_func(
@@ -67,13 +69,15 @@ def _global_perturb_func1_default(
 
 
 @typing.overload
-def _global_perturb_func1(inputs: Tensor) -> Tuple[Tensor, Tensor]: ...
+def _global_perturb_func1(inputs: Tensor) -> Tuple[Tensor, Tensor]:
+    ...
 
 
 @typing.overload
 def _global_perturb_func1(
     inputs: Tuple[Tensor, ...]
-) -> Tuple[Tuple[Tensor, ...], Tuple[Tensor, ...]]: ...
+) -> Tuple[Tuple[Tensor, ...], Tuple[Tensor, ...]]:
+    ...
 
 
 # sensitivity-N, N = #input features

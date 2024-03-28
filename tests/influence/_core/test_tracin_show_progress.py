@@ -96,11 +96,8 @@ class TestTracInShowProgress(BaseTest):
         tracin_constructor: Callable,
         mode: str,
     ) -> None:
-
         with unittest.mock.patch("sys.stderr", new_callable=io.StringIO) as mock_stderr:
-
             with tempfile.TemporaryDirectory() as tmpdir:
-
                 batch_size = 5
 
                 (
@@ -175,7 +172,6 @@ class TestTracInShowProgress(BaseTest):
                         1,
                     )
                 elif mode == "influence":
-
                     tracin.influence(
                         (test_samples, test_labels),
                         k=None,
@@ -192,7 +188,6 @@ class TestTracInShowProgress(BaseTest):
                         1,
                     )
                 elif mode == "k-most":
-
                     tracin.influence(
                         (test_samples, test_labels),
                         k=2,

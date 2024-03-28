@@ -108,7 +108,8 @@ class LayerDeepLift(LayerAttribution, DeepLift):
         return_convergence_delta: Literal[False] = False,
         attribute_to_layer_input: bool = False,
         custom_attribution_func: Union[None, Callable[..., Tuple[Tensor, ...]]] = None,
-    ) -> Union[Tensor, Tuple[Tensor, ...]]: ...
+    ) -> Union[Tensor, Tuple[Tensor, ...]]:
+        ...
 
     @typing.overload
     def attribute(
@@ -121,7 +122,8 @@ class LayerDeepLift(LayerAttribution, DeepLift):
         return_convergence_delta: Literal[True],
         attribute_to_layer_input: bool = False,
         custom_attribution_func: Union[None, Callable[..., Tuple[Tensor, ...]]] = None,
-    ) -> Tuple[Union[Tensor, Tuple[Tensor, ...]], Tensor]: ...
+    ) -> Tuple[Union[Tensor, Tuple[Tensor, ...]], Tensor]:
+        ...
 
     @log_usage()
     def attribute(
@@ -437,7 +439,8 @@ class LayerDeepLiftShap(LayerDeepLift, DeepLiftShap):
         return_convergence_delta: Literal[False] = False,
         attribute_to_layer_input: bool = False,
         custom_attribution_func: Union[None, Callable[..., Tuple[Tensor, ...]]] = None,
-    ) -> Union[Tensor, Tuple[Tensor, ...]]: ...
+    ) -> Union[Tensor, Tuple[Tensor, ...]]:
+        ...
 
     @typing.overload
     def attribute(
@@ -452,7 +455,8 @@ class LayerDeepLiftShap(LayerDeepLift, DeepLiftShap):
         return_convergence_delta: Literal[True],
         attribute_to_layer_input: bool = False,
         custom_attribution_func: Union[None, Callable[..., Tuple[Tensor, ...]]] = None,
-    ) -> Tuple[Union[Tensor, Tuple[Tensor, ...]], Tensor]: ...
+    ) -> Tuple[Union[Tensor, Tuple[Tensor, ...]], Tensor]:
+        ...
 
     @log_usage()
     def attribute(

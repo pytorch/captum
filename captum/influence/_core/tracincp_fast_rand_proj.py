@@ -318,7 +318,6 @@ class TracInCPFast(TracInCPBase):
         """
 
         def get_checkpoint_contribution(checkpoint):
-
             assert (
                 checkpoint is not None
             ), "None returned from `checkpoints`, cannot load."
@@ -594,7 +593,6 @@ class TracInCPFast(TracInCPBase):
                 )
 
             for batch in _inputs:
-
                 batch_jacobian, batch_layer_input = _basic_computation_tracincp_fast(
                     self,
                     batch[0:-1],
@@ -1305,7 +1303,6 @@ class TracInCPFastRandProj(TracInCPFast):
         projection_quantities = None
 
         if not (projection_dim is None):
-
             # figure out original dimensions by looking at data, passing through network
             self.checkpoints_load_func(self.model, next(iter(self.checkpoints)))
 
@@ -1463,7 +1460,6 @@ class TracInCPFastRandProj(TracInCPFast):
         # the "embedding" vector is the concatenation of contributions from each
         # checkpoint, which we compute one by one
         for j, checkpoint in enumerate(self.checkpoints):
-
             assert (
                 checkpoint is not None
             ), "None returned from `checkpoints`, cannot load."
@@ -1475,7 +1471,6 @@ class TracInCPFastRandProj(TracInCPFast):
             # checkpoint, for *all* batches (instead of a single batch). this enables
             # increased efficiency.
             for batch in inputs:
-
                 # compute `input_jacobians` and `layer_inputs`, for a given checkpoint
                 # using a helper function. `input_jacobians` is a 2D tensor,
                 # where each row is the jacobian of the loss, with respect to the
@@ -1492,7 +1487,6 @@ class TracInCPFastRandProj(TracInCPFast):
 
                 # if doing projection, project those two quantities
                 if project:
-
                     input_jacobians = torch.matmul(input_jacobians, jacobian_projection)
 
                     layer_inputs = torch.matmul(layer_inputs, layer_input_projection)

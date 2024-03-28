@@ -23,7 +23,6 @@ class TestGaussianStochasticGates(BaseTest):
             raise unittest.SkipTest("Skipping GPU test since CUDA not available.")
 
     def test_gstg_1d_input(self) -> None:
-
         dim = 3
         gstg = GaussianStochasticGates(dim).to(self.testing_device)
 
@@ -70,7 +69,6 @@ class TestGaussianStochasticGates(BaseTest):
         assertTensorAlmostEqual(self, none_reg, expected_none_reg)
 
     def test_gstg_1d_input_with_n_gates_error(self) -> None:
-
         dim = 3
         gstg = GaussianStochasticGates(dim).to(self.testing_device)
         input_tensor = torch.tensor([0.0, 0.1, 0.2]).to(self.testing_device)
@@ -79,7 +77,6 @@ class TestGaussianStochasticGates(BaseTest):
             gstg(input_tensor)
 
     def test_gstg_1d_input_with_mask(self) -> None:
-
         dim = 2
         mask = torch.tensor([0, 0, 1]).to(self.testing_device)
         gstg = GaussianStochasticGates(dim, mask=mask).to(self.testing_device)
@@ -116,7 +113,6 @@ class TestGaussianStochasticGates(BaseTest):
         assert gated_input.shape == input_tensor.shape
 
     def test_gstg_2d_input(self) -> None:
-
         dim = 3 * 2
         gstg = GaussianStochasticGates(dim).to(self.testing_device)
 
@@ -154,7 +150,6 @@ class TestGaussianStochasticGates(BaseTest):
         assertTensorAlmostEqual(self, reg, expected_reg)
 
     def test_gstg_2d_input_with_n_gates_error(self) -> None:
-
         dim = 5
         gstg = GaussianStochasticGates(dim).to(self.testing_device)
         input_tensor = torch.tensor(
@@ -171,7 +166,6 @@ class TestGaussianStochasticGates(BaseTest):
             gstg(input_tensor)
 
     def test_gstg_2d_input_with_mask(self) -> None:
-
         dim = 3
         mask = torch.tensor(
             [
@@ -216,7 +210,6 @@ class TestGaussianStochasticGates(BaseTest):
         assertTensorAlmostEqual(self, reg, expected_reg)
 
     def test_get_gate_values_1d_input(self) -> None:
-
         dim = 3
         gstg = GaussianStochasticGates(dim).to(self.testing_device)
         input_tensor = torch.tensor(
@@ -233,7 +226,6 @@ class TestGaussianStochasticGates(BaseTest):
         assertTensorAlmostEqual(self, gate_values, expected_gate_values, mode="max")
 
     def test_get_gate_values_1d_input_with_mask(self) -> None:
-
         dim = 2
         mask = torch.tensor([0, 1, 1])
         gstg = GaussianStochasticGates(dim, mask=mask).to(self.testing_device)
@@ -251,7 +243,6 @@ class TestGaussianStochasticGates(BaseTest):
         assertTensorAlmostEqual(self, gate_values, expected_gate_values, mode="max")
 
     def test_get_gate_values_2d_input(self) -> None:
-
         dim = 3 * 2
         gstg = GaussianStochasticGates(dim).to(self.testing_device)
 
@@ -278,7 +269,6 @@ class TestGaussianStochasticGates(BaseTest):
         assertTensorAlmostEqual(self, gate_values, expected_gate_values, mode="max")
 
     def test_get_gate_values_2d_input_with_mask(self) -> None:
-
         dim = 3
         mask = torch.tensor(
             [
@@ -326,7 +316,6 @@ class TestGaussianStochasticGates(BaseTest):
         )
 
     def test_get_gate_active_probs_1d_input(self) -> None:
-
         dim = 3
         gstg = GaussianStochasticGates(dim).to(self.testing_device)
         input_tensor = torch.tensor(
@@ -345,7 +334,6 @@ class TestGaussianStochasticGates(BaseTest):
         )
 
     def test_get_gate_active_probs_1d_input_with_mask(self) -> None:
-
         dim = 2
         mask = torch.tensor([0, 1, 1])
         gstg = GaussianStochasticGates(dim, mask=mask).to(self.testing_device)
@@ -366,7 +354,6 @@ class TestGaussianStochasticGates(BaseTest):
         )
 
     def test_get_gate_active_probs_2d_input(self) -> None:
-
         dim = 3 * 2
         gstg = GaussianStochasticGates(dim).to(self.testing_device)
 
@@ -396,7 +383,6 @@ class TestGaussianStochasticGates(BaseTest):
         )
 
     def test_get_gate_active_probs_2d_input_with_mask(self) -> None:
-
         dim = 3
         mask = torch.tensor(
             [

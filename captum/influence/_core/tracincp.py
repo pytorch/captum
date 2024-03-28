@@ -161,7 +161,6 @@ class TracInCPBase(DataInfluence):
 
         self.train_dataloader_len: Optional[int] = None
         try:
-
             # since we will calculate the number of batches in
             # `self.train_dataloader` whenever we use progress bar, calculate
             # it once in initialization, for re-use.
@@ -892,7 +891,6 @@ class TracInCP(TracInCPBase):
         """
 
         def get_checkpoint_contribution(input_jacobians, checkpoint):
-
             assert (
                 checkpoint is not None
             ), "None returned from `checkpoints`, cannot load."
@@ -1233,7 +1231,6 @@ class TracInCP(TracInCPBase):
                 )
 
             for batch in _inputs:
-
                 layer_jacobians = self._basic_computation_tracincp(
                     batch[0:-1],
                     batch[-1],

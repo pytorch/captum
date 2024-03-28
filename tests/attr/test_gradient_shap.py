@@ -19,7 +19,6 @@ from tests.helpers.classification_models import SoftmaxModel
 
 
 class Test(BaseTest):
-
     # This test reproduces some of the test cases from the original implementation
     # https://github.com/slundberg/shap/
     # explainers/test_gradient.py

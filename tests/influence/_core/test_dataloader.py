@@ -53,9 +53,7 @@ class TestTracInDataLoader(BaseTest):
     def test_tracin_dataloader(
         self, reduction: str, tracin_constructor: Callable, unpack_inputs: bool
     ) -> None:
-
         with tempfile.TemporaryDirectory() as tmpdir:
-
             batch_size = 5
 
             (

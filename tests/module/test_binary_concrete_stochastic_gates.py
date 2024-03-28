@@ -22,7 +22,6 @@ class TestBinaryConcreteStochasticGates(BaseTest):
             raise unittest.SkipTest("Skipping GPU test since CUDA not available.")
 
     def test_bcstg_1d_input(self) -> None:
-
         dim = 3
         bcstg = BinaryConcreteStochasticGates(dim).to(self.testing_device)
         input_tensor = torch.tensor(
@@ -44,7 +43,6 @@ class TestBinaryConcreteStochasticGates(BaseTest):
         assertTensorAlmostEqual(self, reg, expected_reg)
 
     def test_bcstg_1d_input_with_reg_reduction(self) -> None:
-
         dim = 3
         mean_bcstg = BinaryConcreteStochasticGates(dim, reg_reduction="mean").to(
             self.testing_device
@@ -68,7 +66,6 @@ class TestBinaryConcreteStochasticGates(BaseTest):
         assertTensorAlmostEqual(self, none_reg, expected_none_reg)
 
     def test_bcstg_1d_input_with_n_gates_error(self) -> None:
-
         dim = 3
         bcstg = BinaryConcreteStochasticGates(dim).to(self.testing_device)
         input_tensor = torch.tensor([0.0, 0.1, 0.2]).to(self.testing_device)
@@ -98,7 +95,6 @@ class TestBinaryConcreteStochasticGates(BaseTest):
         assert gated_input.shape == input_tensor.shape
 
     def test_bcstg_1d_input_with_mask(self) -> None:
-
         dim = 2
         mask = torch.tensor([0, 0, 1]).to(self.testing_device)
         bcstg = BinaryConcreteStochasticGates(dim, mask=mask).to(self.testing_device)
@@ -121,7 +117,6 @@ class TestBinaryConcreteStochasticGates(BaseTest):
         assertTensorAlmostEqual(self, reg, expected_reg)
 
     def test_bcstg_2d_input(self) -> None:
-
         dim = 3 * 2
         bcstg = BinaryConcreteStochasticGates(dim).to(self.testing_device)
 
@@ -159,7 +154,6 @@ class TestBinaryConcreteStochasticGates(BaseTest):
         assertTensorAlmostEqual(self, reg, expected_reg)
 
     def test_bcstg_2d_input_with_n_gates_error(self) -> None:
-
         dim = 5
         bcstg = BinaryConcreteStochasticGates(dim).to(self.testing_device)
         input_tensor = torch.tensor(
@@ -176,7 +170,6 @@ class TestBinaryConcreteStochasticGates(BaseTest):
             bcstg(input_tensor)
 
     def test_bcstg_2d_input_with_mask(self) -> None:
-
         dim = 3
         mask = torch.tensor(
             [
@@ -221,7 +214,6 @@ class TestBinaryConcreteStochasticGates(BaseTest):
         assertTensorAlmostEqual(self, reg, expected_reg)
 
     def test_get_gate_values_1d_input(self) -> None:
-
         dim = 3
         bcstg = BinaryConcreteStochasticGates(dim).to(self.testing_device)
         input_tensor = torch.tensor(
@@ -239,7 +231,6 @@ class TestBinaryConcreteStochasticGates(BaseTest):
         assertTensorAlmostEqual(self, gate_values, expected_gate_values, mode="max")
 
     def test_get_gate_values_1d_input_with_mask(self) -> None:
-
         dim = 2
         mask = torch.tensor([0, 1, 1])
         bcstg = BinaryConcreteStochasticGates(dim, mask=mask).to(self.testing_device)
@@ -258,7 +249,6 @@ class TestBinaryConcreteStochasticGates(BaseTest):
         assertTensorAlmostEqual(self, gate_values, expected_gate_values, mode="max")
 
     def test_get_gate_values_2d_input(self) -> None:
-
         dim = 3 * 2
         bcstg = BinaryConcreteStochasticGates(dim).to(self.testing_device)
 
@@ -302,7 +292,6 @@ class TestBinaryConcreteStochasticGates(BaseTest):
         )
 
     def test_get_gate_values_2d_input_with_mask(self) -> None:
-
         dim = 3
         mask = torch.tensor(
             [
@@ -336,7 +325,6 @@ class TestBinaryConcreteStochasticGates(BaseTest):
         assertTensorAlmostEqual(self, gate_values, expected_gate_values, mode="max")
 
     def test_get_gate_active_probs_1d_input(self) -> None:
-
         dim = 3
         bcstg = BinaryConcreteStochasticGates(dim).to(self.testing_device)
         input_tensor = torch.tensor(
@@ -356,7 +344,6 @@ class TestBinaryConcreteStochasticGates(BaseTest):
         )
 
     def test_get_gate_active_probs_1d_input_with_mask(self) -> None:
-
         dim = 2
         mask = torch.tensor([0, 1, 1])
         bcstg = BinaryConcreteStochasticGates(dim, mask=mask).to(self.testing_device)
@@ -377,7 +364,6 @@ class TestBinaryConcreteStochasticGates(BaseTest):
         )
 
     def test_get_gate_active_probs_2d_input(self) -> None:
-
         dim = 3 * 2
         bcstg = BinaryConcreteStochasticGates(dim).to(self.testing_device)
 
@@ -407,7 +393,6 @@ class TestBinaryConcreteStochasticGates(BaseTest):
         )
 
     def test_get_gate_active_probs_2d_input_with_mask(self) -> None:
-
         dim = 3
         mask = torch.tensor(
             [

@@ -66,11 +66,13 @@ def safe_div(
 
 
 @typing.overload
-def _is_tuple(inputs: Tensor) -> Literal[False]: ...
+def _is_tuple(inputs: Tensor) -> Literal[False]:
+    ...
 
 
 @typing.overload
-def _is_tuple(inputs: Tuple[Tensor, ...]) -> Literal[True]: ...
+def _is_tuple(inputs: Tuple[Tensor, ...]) -> Literal[True]:
+    ...
 
 
 def _is_tuple(inputs: Union[Tensor, Tuple[Tensor, ...]]) -> bool:
@@ -205,13 +207,15 @@ def _format_feature_mask(
 
 
 @overload
-def _format_tensor_into_tuples(inputs: None) -> None: ...
+def _format_tensor_into_tuples(inputs: None) -> None:
+    ...
 
 
 @overload
 def _format_tensor_into_tuples(
     inputs: Union[Tensor, Tuple[Tensor, ...]]
-) -> Tuple[Tensor, ...]: ...
+) -> Tuple[Tensor, ...]:
+    ...
 
 
 def _format_tensor_into_tuples(
@@ -250,19 +254,22 @@ def _format_float_or_tensor_into_tuples(
 
 
 @overload
-def _format_additional_forward_args(additional_forward_args: None) -> None: ...
+def _format_additional_forward_args(additional_forward_args: None) -> None:
+    ...
 
 
 @overload
 def _format_additional_forward_args(
     additional_forward_args: Union[Tensor, Tuple]
-) -> Tuple: ...
+) -> Tuple:
+    ...
 
 
 @overload
 def _format_additional_forward_args(
     additional_forward_args: Any,
-) -> Union[None, Tuple]: ...
+) -> Union[None, Tuple]:
+    ...
 
 
 def _format_additional_forward_args(additional_forward_args: Any) -> Union[None, Tuple]:
@@ -444,19 +451,22 @@ def _expand_and_update_feature_mask(n_samples: int, kwargs: dict):
 @typing.overload
 def _format_output(
     is_inputs_tuple: Literal[True], output: Tuple[Tensor, ...]
-) -> Tuple[Tensor, ...]: ...
+) -> Tuple[Tensor, ...]:
+    ...
 
 
 @typing.overload
 def _format_output(
     is_inputs_tuple: Literal[False], output: Tuple[Tensor, ...]
-) -> Tensor: ...
+) -> Tensor:
+    ...
 
 
 @typing.overload
 def _format_output(
     is_inputs_tuple: bool, output: Tuple[Tensor, ...]
-) -> Union[Tensor, Tuple[Tensor, ...]]: ...
+) -> Union[Tensor, Tuple[Tensor, ...]]:
+    ...
 
 
 def _format_output(
@@ -478,19 +488,22 @@ def _format_output(
 @typing.overload
 def _format_outputs(
     is_multiple_inputs: Literal[False], outputs: List[Tuple[Tensor, ...]]
-) -> Union[Tensor, Tuple[Tensor, ...]]: ...
+) -> Union[Tensor, Tuple[Tensor, ...]]:
+    ...
 
 
 @typing.overload
 def _format_outputs(
     is_multiple_inputs: Literal[True], outputs: List[Tuple[Tensor, ...]]
-) -> List[Union[Tensor, Tuple[Tensor, ...]]]: ...
+) -> List[Union[Tensor, Tuple[Tensor, ...]]]:
+    ...
 
 
 @typing.overload
 def _format_outputs(
     is_multiple_inputs: bool, outputs: List[Tuple[Tensor, ...]]
-) -> Union[Tensor, Tuple[Tensor, ...], List[Union[Tensor, Tuple[Tensor, ...]]]]: ...
+) -> Union[Tensor, Tuple[Tensor, ...], List[Union[Tensor, Tuple[Tensor, ...]]]]:
+    ...
 
 
 def _format_outputs(

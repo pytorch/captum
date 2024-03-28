@@ -74,7 +74,6 @@ class CustomClassifier(Classifier):
         # Store the shape of 1/4 of inputs.shape[0] (sh_4) and use it
         sh_4 = x_test.shape[0] / 4
         for i in range(1, 4, 2):
-
             from_ = round(i * sh_4)
             to_ = round((i + 1) * sh_4)
 
@@ -187,11 +186,9 @@ class CustomIterableDataset(IterableDataset):
         self.get_tensor_from_filename_func = get_tensor_from_filename_func
 
     def get_tensor_from_filename(self, filename: str) -> Tensor:
-
         return self.get_tensor_from_filename_func(filename)
 
     def __iter__(self) -> Iterator:
-
         mapped_itr = map(self.get_tensor_from_filename, self.file_itr)
 
         return mapped_itr
@@ -222,7 +219,6 @@ def train_test_split(
 
 
 def get_tensor_from_filename(filename: str) -> Tensor:
-
     file_tensor = (
         torch.tensor(
             [
@@ -357,7 +353,6 @@ def get_tensor_from_filename(filename: str) -> Tensor:
 
 
 def get_inputs_tensor() -> Tensor:
-
     input_tensor = torch.tensor(
         [
             [
@@ -616,7 +611,6 @@ def get_inputs_tensor() -> Tensor:
 
 
 def create_concept(concept_name: str, concept_id: int) -> Concept:
-
     concepts_path = "./dummy/concepts/" + concept_name + "/"
     dataset = CustomIterableDataset(get_tensor_from_filename, concepts_path)
     concept_iter = dataset_to_dataloader(dataset)
@@ -627,7 +621,6 @@ def create_concept(concept_name: str, concept_id: int) -> Concept:
 
 
 def create_concepts() -> Dict[str, Concept]:
-
     # Function to create concept objects from a pre-set concept name list.
 
     concept_names = ["striped", "ceo", "random", "dotted"]
@@ -654,7 +647,6 @@ def create_TCAV(
     layers: Union[str, List[str]],
     attribute_to_layer_input: bool = False,
 ) -> TCAV:
-
     model = BasicModel_ConvNet()
     tcav = TCAV(
         model,
@@ -672,7 +664,6 @@ def init_TCAV(
     layers: Union[str, List[str]],
     attribute_to_layer_input: bool = False,
 ) -> Tuple[TCAV, Dict[str, Concept]]:
-
     # Create Concepts
     concepts_dict = create_concepts()
 
@@ -683,7 +674,6 @@ def init_TCAV(
 
 
 def remove_pkls(path: str) -> None:
-
     pkl_files = glob.glob(os.path.join(path, "*.pkl"))
     for pkl_file in pkl_files:
         os.remove(pkl_file)
@@ -879,7 +869,6 @@ class Test(BaseTest):
 
     # Init - Generate Activations
     def test_TCAV_1(self) -> None:
-
         # Create Concepts
         concepts_dict = create_concepts()
         for concept in concepts_dict.values():
@@ -937,7 +926,6 @@ class Test(BaseTest):
                     for activation in cast(
                         Iterable, DataLoader(activations, collate_fn=batch_collate)
                     ):
-
                         concept_meta[concept.id] += activation.shape[0]
 
                         layer_module = _get_module_from_name(tcav.model, layer)

@@ -158,7 +158,6 @@ class DataParallelMeta(type):
                 )
                 args_1, args_2 = cuda_args, cuda_args
             elif mode is DataParallelCompareMode.dist_data_parallel:
-
                 model_1, model_2 = (
                     cuda_model,
                     torch.nn.parallel.DistributedDataParallel(

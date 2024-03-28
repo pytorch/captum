@@ -87,7 +87,8 @@ class IntegratedGradients(GradientAttribution):
         method: str = "gausslegendre",
         internal_batch_size: Union[None, int] = None,
         return_convergence_delta: Literal[False] = False,
-    ) -> TensorOrTupleOfTensorsGeneric: ...
+    ) -> TensorOrTupleOfTensorsGeneric:
+        ...
 
     @typing.overload
     def attribute(
@@ -101,7 +102,8 @@ class IntegratedGradients(GradientAttribution):
         internal_batch_size: Union[None, int] = None,
         *,
         return_convergence_delta: Literal[True],
-    ) -> Tuple[TensorOrTupleOfTensorsGeneric, Tensor]: ...
+    ) -> Tuple[TensorOrTupleOfTensorsGeneric, Tensor]:
+        ...
 
     @log_usage()
     def attribute(  # type: ignore

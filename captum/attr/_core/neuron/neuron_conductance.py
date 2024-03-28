@@ -326,7 +326,6 @@ class NeuronConductance(NeuronAttribution, GradientAttribution):
         attribute_to_neuron_input: bool = False,
         step_sizes_and_alphas: Union[None, Tuple[List[float], List[float]]] = None,
     ) -> Tuple[Tensor, ...]:
-
         num_examples = inputs[0].shape[0]
         total_batch = num_examples * n_steps
 

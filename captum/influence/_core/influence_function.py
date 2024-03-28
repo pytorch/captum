@@ -504,7 +504,6 @@ def _flatten_forward_factory(
 
     # this is the factory that accepts a batch
     def flatten_forward_factory_given_batch(batch):
-
         # this is the function that factory returns, which is a function of flattened
         # parameters
         def flattened_forward(flattened_params):

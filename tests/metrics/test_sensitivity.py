@@ -25,11 +25,13 @@ from torch import Tensor
 
 
 @typing.overload
-def _perturb_func(inputs: Tensor) -> Tensor: ...
+def _perturb_func(inputs: Tensor) -> Tensor:
+    ...
 
 
 @typing.overload
-def _perturb_func(inputs: Tuple[Tensor, ...]) -> Tuple[Tensor, ...]: ...
+def _perturb_func(inputs: Tuple[Tensor, ...]) -> Tuple[Tensor, ...]:
+    ...
 
 
 def _perturb_func(

@@ -653,7 +653,6 @@ def visualize_timeseries_attr(
     cm_norm = colors.Normalize(vmin, vmax)
 
     def _plot_attrs_as_axvspan(attr_vals, x_vals, ax):
-
         half_col_width = (x_values[1] - x_values[0]) / 2.0
         for icol, col_center in enumerate(x_vals):
             left = col_center - half_col_width
@@ -670,9 +669,7 @@ def visualize_timeseries_attr(
         TimeseriesVisualizationMethod[method]
         == TimeseriesVisualizationMethod.overlay_individual
     ):
-
         for chan in range(num_channels):
-
             plt_axis[chan].plot(x_values, data[chan, :], **pyplot_kwargs)
             if channel_labels is not None:
                 plt_axis[chan].set_ylabel(channel_labels[chan])
@@ -685,7 +682,6 @@ def visualize_timeseries_attr(
         TimeseriesVisualizationMethod[method]
         == TimeseriesVisualizationMethod.overlay_combined
     ):
-
         # Dark colors are better in this case
         cycler = plt.cycler("color", cm.Dark2.colors)
         plt_axis[0].set_prop_cycle(cycler)
@@ -702,9 +698,7 @@ def visualize_timeseries_attr(
         TimeseriesVisualizationMethod[method]
         == TimeseriesVisualizationMethod.colored_graph
     ):
-
         for chan in range(num_channels):
-
             points = np.array([x_values, data[chan, :]]).T.reshape(-1, 1, 2)
             segments = np.concatenate([points[:-1], points[1:]], axis=1)
 

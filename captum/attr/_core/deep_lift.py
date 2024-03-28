@@ -123,7 +123,8 @@ class DeepLift(GradientAttribution):
         additional_forward_args: Any = None,
         return_convergence_delta: Literal[False] = False,
         custom_attribution_func: Union[None, Callable[..., Tuple[Tensor, ...]]] = None,
-    ) -> TensorOrTupleOfTensorsGeneric: ...
+    ) -> TensorOrTupleOfTensorsGeneric:
+        ...
 
     @typing.overload
     def attribute(
@@ -135,7 +136,8 @@ class DeepLift(GradientAttribution):
         *,
         return_convergence_delta: Literal[True],
         custom_attribution_func: Union[None, Callable[..., Tuple[Tensor, ...]]] = None,
-    ) -> Tuple[TensorOrTupleOfTensorsGeneric, Tensor]: ...
+    ) -> Tuple[TensorOrTupleOfTensorsGeneric, Tensor]:
+        ...
 
     @log_usage()
     def attribute(  # type: ignore
@@ -589,7 +591,8 @@ class DeepLiftShap(DeepLift):
         additional_forward_args: Any = None,
         return_convergence_delta: Literal[False] = False,
         custom_attribution_func: Union[None, Callable[..., Tuple[Tensor, ...]]] = None,
-    ) -> TensorOrTupleOfTensorsGeneric: ...
+    ) -> TensorOrTupleOfTensorsGeneric:
+        ...
 
     @typing.overload
     def attribute(
@@ -603,7 +606,8 @@ class DeepLiftShap(DeepLift):
         *,
         return_convergence_delta: Literal[True],
         custom_attribution_func: Union[None, Callable[..., Tuple[Tensor, ...]]] = None,
-    ) -> Tuple[TensorOrTupleOfTensorsGeneric, Tensor]: ...
+    ) -> Tuple[TensorOrTupleOfTensorsGeneric, Tensor]:
+        ...
 
     @log_usage()
     def attribute(  # type: ignore
