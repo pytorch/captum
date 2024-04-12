@@ -1,82 +1,65 @@
 #!/usr/bin/env python3
-from captum.attr._core.dataloader_attr import DataLoaderAttribution  # noqa
-from captum.attr._core.deep_lift import DeepLift, DeepLiftShap  # noqa
-from captum.attr._core.feature_ablation import FeatureAblation  # noqa
-from captum.attr._core.feature_permutation import FeaturePermutation  # noqa
-from captum.attr._core.gradient_shap import GradientShap  # noqa
-from captum.attr._core.guided_backprop_deconvnet import (  # noqa
-    Deconvolution,
-    GuidedBackprop,
-)
-from captum.attr._core.guided_grad_cam import GuidedGradCam  # noqa
-from captum.attr._core.input_x_gradient import InputXGradient  # noqa
-from captum.attr._core.integrated_gradients import IntegratedGradients  # noqa
-from captum.attr._core.kernel_shap import KernelShap  # noqa
-from captum.attr._core.layer.grad_cam import LayerGradCam  # noqa
-from captum.attr._core.layer.internal_influence import InternalInfluence  # noqa
-from captum.attr._core.layer.layer_activation import LayerActivation  # noqa
-from captum.attr._core.layer.layer_conductance import LayerConductance  # noqa
-from captum.attr._core.layer.layer_deep_lift import (  # noqa
-    LayerDeepLift,
-    LayerDeepLiftShap,
-)
-from captum.attr._core.layer.layer_feature_ablation import LayerFeatureAblation  # noqa
-from captum.attr._core.layer.layer_feature_permutation import (  # noqa
-    LayerFeaturePermutation,
-)
-from captum.attr._core.layer.layer_gradient_shap import LayerGradientShap  # noqa
-from captum.attr._core.layer.layer_gradient_x_activation import (  # noqa
-    LayerGradientXActivation,
-)
-from captum.attr._core.layer.layer_integrated_gradients import (  # noqa
-    LayerIntegratedGradients,
-)
-from captum.attr._core.layer.layer_lrp import LayerLRP  # noqa
-from captum.attr._core.lime import Lime, LimeBase  # noqa
-from captum.attr._core.llm_attr import (  # noqa
+from captum.attr._core.dataloader_attr import DataLoaderAttribution
+from captum.attr._core.deep_lift import DeepLift, DeepLiftShap
+from captum.attr._core.feature_ablation import FeatureAblation
+from captum.attr._core.feature_permutation import FeaturePermutation
+from captum.attr._core.gradient_shap import GradientShap
+from captum.attr._core.guided_backprop_deconvnet import Deconvolution, GuidedBackprop
+from captum.attr._core.guided_grad_cam import GuidedGradCam
+from captum.attr._core.input_x_gradient import InputXGradient
+from captum.attr._core.integrated_gradients import IntegratedGradients
+from captum.attr._core.kernel_shap import KernelShap
+from captum.attr._core.layer.grad_cam import LayerGradCam
+from captum.attr._core.layer.internal_influence import InternalInfluence
+from captum.attr._core.layer.layer_activation import LayerActivation
+from captum.attr._core.layer.layer_conductance import LayerConductance
+from captum.attr._core.layer.layer_deep_lift import LayerDeepLift, LayerDeepLiftShap
+from captum.attr._core.layer.layer_feature_ablation import LayerFeatureAblation
+from captum.attr._core.layer.layer_feature_permutation import LayerFeaturePermutation
+from captum.attr._core.layer.layer_gradient_shap import LayerGradientShap
+from captum.attr._core.layer.layer_gradient_x_activation import LayerGradientXActivation
+from captum.attr._core.layer.layer_integrated_gradients import LayerIntegratedGradients
+from captum.attr._core.layer.layer_lrp import LayerLRP
+from captum.attr._core.lime import Lime, LimeBase
+from captum.attr._core.llm_attr import (
     LLMAttribution,
     LLMAttributionResult,
     LLMGradientAttribution,
 )
-from captum.attr._core.lrp import LRP  # noqa
-from captum.attr._core.neuron.neuron_conductance import NeuronConductance  # noqa
-from captum.attr._core.neuron.neuron_deep_lift import (  # noqa
-    NeuronDeepLift,
-    NeuronDeepLiftShap,
-)
-from captum.attr._core.neuron.neuron_feature_ablation import (  # noqa
-    NeuronFeatureAblation,
-)
-from captum.attr._core.neuron.neuron_gradient import NeuronGradient  # noqa
-from captum.attr._core.neuron.neuron_gradient_shap import NeuronGradientShap  # noqa
-from captum.attr._core.neuron.neuron_guided_backprop_deconvnet import (  # noqa
+from captum.attr._core.lrp import LRP
+from captum.attr._core.neuron.neuron_conductance import NeuronConductance
+from captum.attr._core.neuron.neuron_deep_lift import NeuronDeepLift, NeuronDeepLiftShap
+from captum.attr._core.neuron.neuron_feature_ablation import NeuronFeatureAblation
+from captum.attr._core.neuron.neuron_gradient import NeuronGradient
+from captum.attr._core.neuron.neuron_gradient_shap import NeuronGradientShap
+from captum.attr._core.neuron.neuron_guided_backprop_deconvnet import (
     NeuronDeconvolution,
     NeuronGuidedBackprop,
 )
-from captum.attr._core.neuron.neuron_integrated_gradients import (  # noqa
+from captum.attr._core.neuron.neuron_integrated_gradients import (
     NeuronIntegratedGradients,
 )
-from captum.attr._core.noise_tunnel import NoiseTunnel  # noqa
-from captum.attr._core.occlusion import Occlusion  # noqa
-from captum.attr._core.saliency import Saliency  # noqa
-from captum.attr._core.shapley_value import ShapleyValues, ShapleyValueSampling  # noqa
-from captum.attr._models.base import (  # noqa
+from captum.attr._core.noise_tunnel import NoiseTunnel
+from captum.attr._core.occlusion import Occlusion
+from captum.attr._core.saliency import Saliency
+from captum.attr._core.shapley_value import ShapleyValues, ShapleyValueSampling
+from captum.attr._models.base import (
     configure_interpretable_embedding_layer,
     InterpretableEmbeddingBase,
     remove_interpretable_embedding_layer,
     TokenReferenceBase,
 )
-from captum.attr._utils import visualization  # noqa
-from captum.attr._utils.attribution import (  # noqa  # noqa  # noqa  # noqa  # noqa
+from captum.attr._utils import visualization
+from captum.attr._utils.attribution import (
     Attribution,
     GradientAttribution,
     LayerAttribution,
     NeuronAttribution,
     PerturbationAttribution,
 )
-from captum.attr._utils.baselines import ProductBaselines  # noqa
+from captum.attr._utils.baselines import ProductBaselines
 from captum.attr._utils.class_summarizer import ClassSummarizer
-from captum.attr._utils.interpretable_input import (  # noqa
+from captum.attr._utils.interpretable_input import (
     InterpretableInput,
     TextTemplateInput,
     TextTokenInput,
@@ -121,6 +104,7 @@ __all__ = [
     "LayerConductance",
     "LayerGradientXActivation",
     "LayerActivation",
+    "LayerFeaturePermutation",
     "LayerFeatureAblation",
     "LLMAttribution",
     "LLMAttributionResult",
