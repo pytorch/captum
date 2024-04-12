@@ -71,8 +71,9 @@ def gen_tutorials(repo_dir: str) -> None:
         # pull out html div for notebook
         soup = BeautifulSoup(html, "html.parser")
         nb_meat = soup.find("div", {"id": "notebook-container"})
-        del nb_meat.attrs["id"]
-        nb_meat.attrs["class"] = ["notebook"]
+        if nb_meat:
+            del nb_meat.attrs["id"]
+            nb_meat.attrs["class"] = ["notebook"]
         html_out = JS_SCRIPTS + str(nb_meat)
 
         # generate html file
