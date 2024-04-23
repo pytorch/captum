@@ -18,7 +18,6 @@ from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig
 import random
 import sys
 
-sys.path.append("/home/aoboyang/local/captum")
 from captum.attr import (
     FeatureAblation, 
     ShapleyValues,
