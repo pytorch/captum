@@ -288,10 +288,10 @@ class LayerFeatureAblation(LayerAttribution, PerturbationAttribution):
                 else inputs + layer_eval_len
             )
 
-            attributor = self.attributor(layer_forward_func)
+            ablator = self.attributor(layer_forward_func)
 
-            layer_attribs = attributor.attribute.__wrapped__(
-                attributor,  # self
+            layer_attribs = ablator.attribute.__wrapped__(
+                ablator,  # self
                 layer_eval,
                 baselines=layer_baselines,
                 additional_forward_args=all_inputs,
