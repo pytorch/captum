@@ -324,10 +324,10 @@ src="/_sphinx/documentation_options.js"></script>
                 <span class="k">else</span> <span class="n">inputs</span> <span class="o">+</span> <span class="n">layer_eval_len</span>
             <span class="p">)</span>
 
-            <span class="n">attributor</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">attributor</span><span class="p">(</span><span class="n">layer_forward_func</span><span class="p">)</span>
+            <span class="n">ablator</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">attributor</span><span class="p">(</span><span class="n">layer_forward_func</span><span class="p">)</span>
 
-            <span class="n">layer_attribs</span> <span class="o">=</span> <span class="n">attributor</span><span class="o">.</span><span class="n">attribute</span><span class="o">.</span><span class="n">__wrapped__</span><span class="p">(</span>
-                <span class="n">attributor</span><span class="p">,</span>  <span class="c1"># self</span>
+            <span class="n">layer_attribs</span> <span class="o">=</span> <span class="n">ablator</span><span class="o">.</span><span class="n">attribute</span><span class="o">.</span><span class="n">__wrapped__</span><span class="p">(</span>
+                <span class="n">ablator</span><span class="p">,</span>  <span class="c1"># self</span>
                 <span class="n">layer_eval</span><span class="p">,</span>
                 <span class="n">baselines</span><span class="o">=</span><span class="n">layer_baselines</span><span class="p">,</span>
                 <span class="n">additional_forward_args</span><span class="o">=</span><span class="n">all_inputs</span><span class="p">,</span>
