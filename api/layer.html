@@ -1986,6 +1986,138 @@ otherwise a single tensor is returned.</p>
 </dd></dl>
 </dd></dl>
 </section>
+<section id="layer-feature-permutation">
+<h2>Layer Feature Permutation<a class="headerlink" href="#layer-feature-permutation" title="Link to this heading">¶</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="captum.attr.LayerFeaturePermutation">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">captum.attr.</span></span><span class="sig-name descname"><span class="pre">LayerFeaturePermutation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">forward_func</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">layer</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">device_ids</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/layer/layer_feature_permutation.html#LayerFeaturePermutation"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum.attr.LayerFeaturePermutation" title="Link to this definition">¶</a></dt>
+<dd><p>A perturbation based approach to computing layer attribution similar to
+LayerFeatureAblation, but using FeaturePermutation under the hood instead
+of FeatureAblation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>forward_func</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Callable" title="(in Python v3.12)"><em>Callable</em></a>) – The forward function of the model or any
+modification of it</p></li>
+<li><p><strong>layer</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/generated/torch.nn.Module.html#torch.nn.Module" title="(in PyTorch v2.3)"><em>torch.nn.Module</em></a>) – Layer for which attributions are computed.
+Output size of attribute matches this layer’s input or
+output dimensions, depending on whether we attribute to
+the inputs or outputs of the layer, corresponding to
+attribution of each neuron in the input or output of
+this layer.</p></li>
+<li><p><strong>device_ids</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.12)"><em>list</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><em>int</em></a><em>]</em>) – Device ID list, necessary only if forward_func
+applies a DataParallel model. This allows reconstruction of
+intermediate outputs from batched results across devices.
+If forward_func is given as the DataParallel model itself
+(or otherwise has a device_ids attribute with the device
+ID list), then it is not necessary to provide this
+argument.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="captum.attr.LayerFeaturePermutation.attribute">
+<span class="sig-name descname"><span class="pre">attribute</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inputs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">additional_forward_args</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">layer_mask</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">perturbations_per_eval</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/layer/layer_feature_permutation.html#LayerFeaturePermutation.attribute"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum.attr.LayerFeaturePermutation.attribute" title="Link to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>inputs</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v2.3)"><em>Tensor</em></a><em> or </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.12)"><em>tuple</em></a><em>[</em><a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v2.3)"><em>Tensor</em></a><em>, </em><em>...</em><em>]</em>) – Input for which layer
+attributions are computed. If forward_func takes a single
+tensor as input, a single input tensor should be provided.
+If forward_func takes multiple tensors as input, a tuple
+of the input tensors should be provided. It is assumed
+that for all given input tensors, dimension 0 corresponds
+to the number of examples, and if multiple input tensors
+are provided, the examples must be aligned appropriately.</p></li>
+<li><p><strong>target</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><em>int</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.12)"><em>tuple</em></a><em>, </em><a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v2.3)"><em>Tensor</em></a><em>, or </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.12)"><em>list</em></a><em>, </em><em>optional</em>) – <p>Output indices for
+which gradients are computed (for classification cases,
+this is usually the target class).
+If the network returns a scalar value per example,
+no target index is necessary.
+For general 2D outputs, targets can be either:</p>
+<ul>
+<li><p>a single integer or a tensor containing a single
+integer, which is applied to all input examples</p></li>
+<li><p>a list of integers or a 1D tensor, with length matching
+the number of examples in inputs (dim 0). Each integer
+is applied as the target for the corresponding example.</p></li>
+</ul>
+<p>For outputs with &gt; 2 dimensions, targets can be either:</p>
+<ul>
+<li><p>A single tuple, which contains #output_dims - 1
+elements. This target index is applied to all examples.</p></li>
+<li><p>A list of tuples with length equal to the number of
+examples in inputs (dim 0), and each tuple containing
+#output_dims - 1 elements. Each tuple is applied as the
+target for the corresponding example.</p></li>
+</ul>
+<p>Default: None</p>
+</p></li>
+<li><p><strong>additional_forward_args</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.12)"><em>Any</em></a><em>, </em><em>optional</em>) – If the forward function
+requires additional arguments other than the inputs for
+which attributions should not be computed, this argument
+can be provided. It must be either a single additional
+argument of a Tensor or arbitrary (non-tuple) type or a
+tuple containing multiple additional arguments including
+tensors or any arbitrary python types. These arguments
+are provided to forward_func in order following the
+arguments in inputs.
+Note that attributions are not computed with respect
+to these arguments.
+Default: None</p></li>
+<li><p><strong>layer_mask</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v2.3)"><em>Tensor</em></a><em> or </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.12)"><em>tuple</em></a><em>[</em><a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v2.3)"><em>Tensor</em></a><em>, </em><em>...</em><em>]</em><em>, </em><em>optional</em>) – layer_mask defines a mask for the layer, grouping
+elements of the layer input / output which should be
+ablated together.
+layer_mask should be a single tensor with dimensions
+matching the input / output of the target layer (or
+broadcastable to match it), based
+on whether we are attributing to the input or output
+of the target layer. layer_mask
+should contain integers in the range 0 to num_groups
+- 1, and all elements with the same value are
+considered to be in the same group.
+If None, then a layer mask is constructed which assigns
+each neuron within the layer as a separate group, which
+is ablated independently.
+Default: None</p></li>
+<li><p><strong>perturbations_per_eval</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><em>int</em></a><em>, </em><em>optional</em>) – Allows permutation of multiple
+neuron (groups) to be processed simultaneously in one
+call to forward_fn.
+Each forward pass will contain a maximum of
+perturbations_per_eval * #examples samples.
+For DataParallel models, each batch is split among the
+available devices, so evaluations on each available
+device contain at most
+(perturbations_per_eval * #examples) / num_devices
+samples.
+Default: 1</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><ul class="simple">
+<li><dl class="simple">
+<dt><strong>attributions</strong> (<em>Tensor</em> or <em>tuple[Tensor, …]</em>):</dt><dd><p>Attribution of each neuron in given layer input or
+output. Attributions will always be the same size as
+the input or output of the given layer, depending on
+whether we attribute to the inputs or outputs
+of the layer which is decided by the input flag
+<cite>attribute_to_layer_input</cite>
+Attributions are returned in a tuple if
+the layer inputs / outputs contain multiple tensors,
+otherwise a single tensor is returned.</p>
+</dd>
+</dl>
+</li>
+</ul>
+</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><em>Tensor</em> or <em>tuple[Tensor, …]</em> of <strong>attributions</strong></p>
+</dd>
+</dl>
+</dd></dl>
+</dd></dl>
+</section>
 <section id="layer-lrp">
 <h2>Layer LRP<a class="headerlink" href="#layer-lrp" title="Link to this heading">¶</a></h2>
 <dl class="py class">
@@ -2173,6 +2305,7 @@ each layer.</p>
 <li class="toctree-l2"><a class="reference internal" href="#layer-gradientshap">Layer GradientShap</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#layer-integrated-gradients">Layer Integrated Gradients</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#layer-feature-ablation">Layer Feature Ablation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#layer-feature-permutation">Layer Feature Permutation</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#layer-lrp">Layer LRP</a></li>
 </ul>
 </li>
