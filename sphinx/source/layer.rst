@@ -62,6 +62,11 @@ Layer Feature Ablation
 .. autoclass:: captum.attr.LayerFeatureAblation
     :members:
 
+Layer Feature Permutation
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. autoclass:: captum.attr.LayerFeaturePermutation
+    :members:
 
 Layer LRP
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
