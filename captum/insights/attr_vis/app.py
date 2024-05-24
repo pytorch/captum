@@ -51,6 +51,7 @@ def _get_context() -> str:
     # returned by `IPython.get_ipython` does not have a `get_trait`
     # method.
     try:
+        # @manual # To avoid fbsource//third-party/pypi/google-cloud-pubsub:google-cloud-pubsub which will cause "Duplicate extension: grpc/_cython/cygrpc.so!"
         import google.colab  # noqa: F401
         import IPython
     except ImportError:
