@@ -563,9 +563,9 @@ def _compute_dataset_func(
     # names of each param in `params`.
     # Both are needed for calling `_flatten_forward_factory`
     _unflatten_params = _unflatten_params_factory(
-        tuple([param.shape for param in params])
+        tuple([param.shape for param in params])  # type: ignore
     )
-    param_names = _params_to_names(params, model)
+    param_names = _params_to_names(params, model)  # type: ignore
 
     # prepare factory
     factory_given_batch = _flatten_forward_factory(
@@ -578,7 +578,7 @@ def _compute_dataset_func(
 
     # the function returned by the factor is evaluated at a *flattened* version of
     # params, so need to create that
-    flattened_params = _flatten_params(params)
+    flattened_params = _flatten_params(params)  # type: ignore
 
     # define function of a single batch
     def batch_f(batch):

@@ -13,12 +13,7 @@ from captum._utils.common import (
     _verify_select_neuron,
 )
 from captum._utils.sample_gradient import SampleGradientWrapper
-from captum._utils.typing import (
-    Literal,
-    ModuleOrModuleList,
-    TargetType,
-    TensorOrTupleOfTensorsGeneric,
-)
+from captum._utils.typing import TargetType, TensorOrTupleOfTensorsGeneric
 from torch import device, Tensor
 from torch.nn import Module
 
@@ -50,13 +45,15 @@ def apply_gradient_requirements(
                     """Input Tensor %d has a dtype of %s.
                     Gradients cannot be activated
                     for these data types."""
-                    % (index, str(inputs_dtype))
+                    % (index, str(inputs_dtype)),
+                    stacklevel=2,
                 )
         elif not input.requires_grad:
             if warn:
                 warnings.warn(
                     "Input Tensor %d did not already require gradients, "
-                    "required_grads has been set automatically." % index
+                    "required_grads has been set automatically." % index,
+                    stacklevel=2,
                 )
             input.requires_grad_()
     return grad_required
@@ -173,7 +170,7 @@ def _forward_layer_eval(
 def _forward_layer_eval(
     forward_fn: Callable,
     inputs: Union[Tensor, Tuple[Tensor, ...]],
-    layer: ModuleOrModuleList,
+    layer: Union[Module, List[Module]],
     additional_forward_args: Any = None,
     device_ids: Union[None, List[int]] = None,
     attribute_to_layer_input: bool = False,
@@ -195,11 +192,11 @@ def _forward_layer_eval(
 def _forward_layer_distributed_eval(
     forward_fn: Callable,
     inputs: Any,
-    layer: ModuleOrModuleList,
+    layer: Union[Module, List[Module]],
     target_ind: TargetType = None,
     additional_forward_args: Any = None,
     attribute_to_layer_input: bool = False,
-    forward_hook_with_return: Literal[False] = False,
+    forward_hook_with_return: bool = False,
     require_layer_grads: bool = False,
 ) -> Dict[Module, Dict[device, Tuple[Tensor, ...]]]: ...
 
@@ -208,12 +205,12 @@ def _forward_layer_distributed_eval(
 def _forward_layer_distributed_eval(
     forward_fn: Callable,
     inputs: Any,
-    layer: ModuleOrModuleList,
+    layer: Union[Module, List[Module]],
     target_ind: TargetType = None,
     additional_forward_args: Any = None,
     attribute_to_layer_input: bool = False,
     *,
-    forward_hook_with_return: Literal[True],
+    forward_hook_with_return: bool = True,
     require_layer_grads: bool = False,
 ) -> Tuple[Dict[Module, Dict[device, Tuple[Tensor, ...]]], Tensor]: ...
 
@@ -221,7 +218,7 @@ def _forward_layer_distributed_eval(
 def _forward_layer_distributed_eval(
     forward_fn: Callable,
     inputs: Any,
-    layer: ModuleOrModuleList,
+    layer: Union[Module, List[Module]],
     target_ind: TargetType = None,
     additional_forward_args: Any = None,
     attribute_to_layer_input: bool = False,
@@ -330,7 +327,12 @@ def _gather_distributed_tensors(
 
 def _extract_device_ids(
     forward_fn: Callable,
-    saved_layer: Dict[Module, Dict[device, Tuple[Tensor, ...]]],
+    saved_layer: Union[
+        Tuple[Dict[Module, Dict[device, Tuple[Tensor, ...]]], Tensor],
+        Dict[Module, Dict[device, Tuple[Tensor, ...]]],
+        Tensor,
+        Module,
+    ],
     device_ids: Union[None, List[int]],
 ) -> Union[None, List[int]]:
     r"""
@@ -343,7 +345,8 @@ def _extract_device_ids(
     # device IDs if given or available from forward function
     # (DataParallel model object).
     if (
-        max(len(saved_layer[single_layer]) for single_layer in saved_layer) > 1
+        isinstance(saved_layer, dict)
+        and max(len(saved_layer[single_layer]) for single_layer in saved_layer) > 1
         and device_ids is None
     ):
         if (
@@ -405,13 +408,13 @@ def _forward_layer_eval_with_neuron_grads(
 def _forward_layer_eval_with_neuron_grads(
     forward_fn: Callable,
     inputs: Union[Tensor, Tuple[Tensor, ...]],
-    layer: ModuleOrModuleList,
+    layer: Union[Module, List[Module]],
     additional_forward_args: Any = None,
     gradient_neuron_selector: Union[
         None, int, Tuple[Union[int, slice], ...], Callable
     ] = None,
     grad_enabled: bool = False,
-    device_ids: Union[None, List[int]] = None,
+    device_ids: Optional[List[int]] = None,
     attribute_to_layer_input: bool = False,
 ) -> Union[
     Tuple[Tuple[Tensor, ...], Tuple[Tensor, ...]],
@@ -515,7 +518,7 @@ def compute_layer_gradients_and_eval(
 
 def compute_layer_gradients_and_eval(
     forward_fn: Callable,
-    layer: ModuleOrModuleList,
+    layer: Union[Module, List[Module]],
     inputs: Union[Tensor, Tuple[Tensor, ...]],
     target_ind: TargetType = None,
     additional_forward_args: Any = None,
@@ -688,7 +691,7 @@ def construct_neuron_grad_fn(
         inputs: TensorOrTupleOfTensorsGeneric,
         target_ind: TargetType = None,
         additional_forward_args: Any = None,
-    ) -> Tuple[Tensor, ...]:
+    ) -> Union[Tuple[Tensor], Tensor]:
         _, grads = _forward_layer_eval_with_neuron_grads(
             forward_fn,
             inputs,
@@ -703,7 +706,7 @@ def construct_neuron_grad_fn(
     return grad_fn
 
 
-def _extract_parameters_from_layers(layer_modules):
+def _extract_parameters_from_layers(layer_modules) -> List[Module]:
     layer_parameters = []
     if layer_modules is not None:
         layer_parameters = [
@@ -722,7 +725,7 @@ def _compute_jacobian_wrt_params(
     inputs: Tuple[Any, ...],
     labels: Optional[Tensor] = None,
     loss_fn: Optional[Union[Module, Callable]] = None,
-    layer_modules: List[Module] = None,
+    layer_modules: Optional[List[Module]] = None,
 ) -> Tuple[Tensor, ...]:
     r"""
     Computes the Jacobian of a batch of test examples given a model, and optional
@@ -769,6 +772,7 @@ def _compute_jacobian_wrt_params(
                 assert out.shape[0] == loss.shape[0], msg1
             out = loss
 
+        layer_parameters = []
         if layer_modules is not None:
             layer_parameters = _extract_parameters_from_layers(layer_modules)
         grads_list = [
@@ -794,7 +798,7 @@ def _compute_jacobian_wrt_params_with_sample_wise_trick(
     labels: Optional[Tensor] = None,
     loss_fn: Optional[Union[Module, Callable]] = None,
     reduction_type: Optional[str] = "sum",
-    layer_modules: List[Module] = None,
+    layer_modules: Optional[List[Module]] = None,
 ) -> Tuple[Any, ...]:
     r"""
     Computes the Jacobian of a batch of test examples given a model, and optional
@@ -878,6 +882,7 @@ def _compute_jacobian_wrt_params_with_sample_wise_trick(
             sample_grad_wrapper.compute_param_sample_gradients(
                 out, loss_mode=reduction_type
             )
+            layer_parameters = []
             if layer_modules is not None:
                 layer_parameters = _extract_parameters_from_layers(layer_modules)
             grads = tuple(

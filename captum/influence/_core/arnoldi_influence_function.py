@@ -535,7 +535,7 @@ class ArnoldiInfluenceFunction(IntermediateQuantitiesInfluenceFunction):
             else _extract_parameters_from_layers(self.layer_modules)
         )
         # the same position in `params` and `param_names` correspond to each other
-        param_names = _params_to_names(params, self.model)
+        param_names = _params_to_names(params, self.model)  # type: ignore
 
         # get factory that given a batch, returns a function that given params as
         # tuple of tensors, returns loss over the batch
@@ -597,7 +597,7 @@ class ArnoldiInfluenceFunction(IntermediateQuantitiesInfluenceFunction):
         # `_parameter_arnoldi` needs to know which device the model is on, and
         # will infer it through the device of this random vector
         b = _parameter_to(
-            tuple(torch.randn_like(param) for param in params),
+            tuple(torch.randn_like(param) for param in params),  # type: ignore
             device=self.model_device,
         )
 
