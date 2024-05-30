@@ -6,6 +6,7 @@ import torch
 from captum._utils.typing import ModuleOrModuleList
 from captum.attr._core.layer.layer_activation import LayerActivation
 from captum.attr._core.layer.layer_gradient_x_activation import LayerGradientXActivation
+from packaging import version
 from tests.helpers.basic import assertTensorTuplesAlmostEqual, BaseTest
 from tests.helpers.basic_models import (
     BasicEmbeddingModel,
@@ -128,6 +129,24 @@ class Test(BaseTest):
             self.assertEqual(
                 list(layer_act.attribute(inputs=(input1, input2)).shape), [4, 100]
             )
+
+    def test_simple_multi_gradient_activation_with_unused_layer(self) -> None:
+        if version.parse(torch.__version__) < version.parse("2.1.0"):
+            raise unittest.SkipTest(
+                "Skipping unused layed gradient test since it is not supported "
+                "by torch version < 2.1"
+            )
+
+        model = BasicModel_MultiLayer(multi_input_module=True)
+        test_input1 = torch.tensor([[3.0, 4.0, 0.0]], requires_grad=True)
+        # test_input2 = torch.tensor([[0.0, 4.0, 5.0]], requires_grad=True)
+        layer_act = LayerGradientXActivation(model, [model.linear1, model.relu])
+        attributions = layer_act.attribute(
+            inputs=test_input1, target=0, grad_kwargs={"materialize_grads": True}
+        )
+        self.assertEqual(len(attributions), 2)
+        self.assertEqual(list(attributions[0].shape), [1, 4])
+        self.assertEqual(list(attributions[1].shape), [1, 4])
 
     def _layer_activation_test_assert(
         self,

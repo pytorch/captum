@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-from typing import Any, Callable, List, Tuple, Union
+from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
 from captum._utils.common import (
     _format_additional_forward_args,
@@ -76,6 +76,7 @@ class LayerGradientXActivation(LayerAttribution, GradientAttribution):
         target: TargetType = None,
         additional_forward_args: Any = None,
         attribute_to_layer_input: bool = False,
+        grad_kwargs: Optional[Dict[str, Any]] = None,
     ) -> Union[Tensor, Tuple[Tensor, ...], List[Union[Tensor, Tuple[Tensor, ...]]]]:
         r"""
         Args:
@@ -132,6 +133,7 @@ class LayerGradientXActivation(LayerAttribution, GradientAttribution):
                         layer input, otherwise it will be computed with respect
                         to layer output.
                         Default: False
+            grad_kwargs: Additional keyword arguments for torch.autograd.grad
 
         Returns:
             *Tensor* or *tuple[Tensor, ...]* or list of **attributions**:
@@ -175,6 +177,7 @@ class LayerGradientXActivation(LayerAttribution, GradientAttribution):
             additional_forward_args,
             device_ids=self.device_ids,
             attribute_to_layer_input=attribute_to_layer_input,
+            grad_kwargs=grad_kwargs,
         )
         if isinstance(self.layer, Module):
             return _format_output(

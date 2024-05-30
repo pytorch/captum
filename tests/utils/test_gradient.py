@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import unittest
 from typing import List, Tuple
 
 import torch
@@ -9,6 +10,7 @@ from captum._utils.gradient import (
     compute_layer_gradients_and_eval,
     undo_gradient_requirements,
 )
+from packaging import version
 from tests.helpers import BaseTest
 from tests.helpers.basic import assertTensorAlmostEqual
 from tests.helpers.basic_models import (
@@ -243,3 +245,26 @@ class Test(BaseTest):
         )
         assertTensorAlmostEqual(self, grads[0], [[0.0, 1.0]], delta=0.01, mode="max")
         assertTensorAlmostEqual(self, eval[0], [[26.0, 28.0]], delta=0.01, mode="max")
+
+    def test_layer_gradient_unused_layer(self) -> None:
+        if version.parse(torch.__version__) < version.parse("2.1.0"):
+            raise unittest.SkipTest(
+                "Skipping unused layed gradient test since it is not supported "
+                "by torch version < 2.1"
+            )
+
+        model = BasicModel_MultiLayer(multi_input_module=True)
+        input = torch.tensor([[5.0, 2.0, 1.0]], requires_grad=True)
+        grads, eval = compute_layer_gradients_and_eval(
+            model,
+            [model.linear1, model.relu],
+            input,
+            target_ind=1,
+            grad_kwargs={"materialize_grads": True},
+        )
+        assertTensorAlmostEqual(
+            self, grads[0][0], [[0.0, 1.0, 1.0, 1.0]], delta=0, mode="max"
+        )
+        assertTensorAlmostEqual(
+            self, eval[0][0], [[-2.0, 9.0, 9.0, 9.0]], delta=0, mode="max"
+        )

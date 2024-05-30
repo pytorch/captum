@@ -407,6 +407,10 @@ class BasicModel_MultiLayer(nn.Module):
         if self.multi_input_module:
             relu_out1, relu_out2 = self.multi_relu(lin1_out, self.linear1_alt(input))
             relu_out = relu_out1 + relu_out2
+            # relu is not used when multi_input_module set to True,
+            # so this is to set an unsued layer intentionally for testing
+            # and it won't be part of return
+            self.relu(lin1_out)
         else:
             relu_out = self.relu(lin1_out)
         lin2_out = self.linear2(relu_out)
