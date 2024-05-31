@@ -50,13 +50,15 @@ def apply_gradient_requirements(
                     """Input Tensor %d has a dtype of %s.
                     Gradients cannot be activated
                     for these data types."""
-                    % (index, str(inputs_dtype))
+                    % (index, str(inputs_dtype)),
+                    stacklevel=2,
                 )
         elif not input.requires_grad:
             if warn:
                 warnings.warn(
                     "Input Tensor %d did not already require gradients, "
-                    "required_grads has been set automatically." % index
+                    "required_grads has been set automatically." % index,
+                    stacklevel=2,
                 )
             input.requires_grad_()
     return grad_required
@@ -482,6 +484,7 @@ def compute_layer_gradients_and_eval(
     device_ids: Union[None, List[int]] = None,
     attribute_to_layer_input: bool = False,
     output_fn: Union[None, Callable] = None,
+    grad_kwargs: Optional[Dict[str, Any]] = None,
 ) -> Tuple[Tuple[Tensor, ...], Tuple[Tensor, ...], Tuple[Tensor, ...]]: ...
 
 
@@ -496,6 +499,7 @@ def compute_layer_gradients_and_eval(
     device_ids: Union[None, List[int]] = None,
     attribute_to_layer_input: bool = False,
     output_fn: Union[None, Callable] = None,
+    grad_kwargs: Optional[Dict[str, Any]] = None,
 ) -> Tuple[List[Tuple[Tensor, ...]], List[Tuple[Tensor, ...]]]: ...
 
 
@@ -510,6 +514,7 @@ def compute_layer_gradients_and_eval(
     device_ids: Union[None, List[int]] = None,
     attribute_to_layer_input: bool = False,
     output_fn: Union[None, Callable] = None,
+    grad_kwargs: Optional[Dict[str, Any]] = None,
 ) -> Tuple[Tuple[Tensor, ...], Tuple[Tensor, ...]]: ...
 
 
@@ -525,6 +530,7 @@ def compute_layer_gradients_and_eval(
     device_ids: Union[None, List[int]] = None,
     attribute_to_layer_input: bool = False,
     output_fn: Union[None, Callable] = None,
+    grad_kwargs: Optional[Dict[str, Any]] = None,
 ) -> Union[
     Tuple[Tuple[Tensor, ...], Tuple[Tensor, ...]],
     Tuple[Tuple[Tensor, ...], Tuple[Tensor, ...], Tuple[Tensor, ...]],
@@ -569,6 +575,7 @@ def compute_layer_gradients_and_eval(
         args:       Additional input arguments that forward function requires.
                     It takes an empty tuple (no additional arguments) if no
                     additional arguments are required
+        grad_kwargs: Additional keyword arguments for torch.autograd.grad
 
 
     Returns:
@@ -637,7 +644,11 @@ def compute_layer_gradients_and_eval(
             for device_id in key_list
             for layer_tensor in saved_layer[single_layer][device_id]
         )
-        saved_grads = torch.autograd.grad(torch.unbind(output), grad_inputs)
+        saved_grads = torch.autograd.grad(
+            outputs=torch.unbind(output),
+            inputs=grad_inputs,
+            **grad_kwargs or {},
+        )
 
         offset = 0
         all_grads: List[Tuple[Tensor, ...]] = []
