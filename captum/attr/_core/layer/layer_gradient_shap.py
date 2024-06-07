@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 import typing
-from typing import Any, Callable, cast, List, Tuple, Union
+from typing import Any, Callable, cast, Dict, List, Optional, Tuple, Union
 
 import numpy as np
 import torch
@@ -242,6 +242,7 @@ class LayerGradientShap(LayerAttribution, GradientAttribution):
                         attribute to the input or output, is a single tensor.
                         Support for multiple tensors will be added later.
                         Default: False
+
         Returns:
             **attributions** or 2-element tuple of **attributions**, **delta**:
             - **attributions** (*Tensor* or *tuple[Tensor, ...]*):
@@ -375,6 +376,7 @@ class LayerInputBaselineXGradient(LayerAttribution, GradientAttribution):
         additional_forward_args: Any = None,
         return_convergence_delta: Literal[False] = False,
         attribute_to_layer_input: bool = False,
+        grad_kwargs: Optional[Dict[str, Any]] = None,
     ) -> Union[Tensor, Tuple[Tensor, ...]]: ...
 
     @typing.overload
@@ -387,6 +389,7 @@ class LayerInputBaselineXGradient(LayerAttribution, GradientAttribution):
         *,
         return_convergence_delta: Literal[True],
         attribute_to_layer_input: bool = False,
+        grad_kwargs: Optional[Dict[str, Any]] = None,
     ) -> Tuple[Union[Tensor, Tuple[Tensor, ...]], Tensor]: ...
 
     @log_usage()
@@ -398,6 +401,7 @@ class LayerInputBaselineXGradient(LayerAttribution, GradientAttribution):
         additional_forward_args: Any = None,
         return_convergence_delta: bool = False,
         attribute_to_layer_input: bool = False,
+        grad_kwargs: Optional[Dict[str, Any]] = None,
     ) -> Union[
         Tensor, Tuple[Tensor, ...], Tuple[Union[Tensor, Tuple[Tensor, ...]], Tensor]
     ]:
@@ -420,6 +424,7 @@ class LayerInputBaselineXGradient(LayerAttribution, GradientAttribution):
             additional_forward_args,
             device_ids=self.device_ids,
             attribute_to_layer_input=attribute_to_layer_input,
+            grad_kwargs=grad_kwargs,
         )
 
         attr_baselines = _forward_layer_eval(

@@ -7,6 +7,8 @@ import torch
 from captum._utils.typing import BaselineType, TensorOrTupleOfTensorsGeneric
 from captum.attr._core.layer.layer_conductance import LayerConductance
 from captum.attr._core.neuron.neuron_conductance import NeuronConductance
+
+from packaging import version
 from tests.helpers import BaseTest
 from tests.helpers.basic import assertTensorAlmostEqual
 from tests.helpers.basic_models import (
@@ -147,6 +149,35 @@ class Test(BaseTest):
                     target=0,
                     n_steps=500,
                     method="gausslegendre",
+                )
+                self.assertAlmostEqual(
+                    neuron_attr.sum().item(),
+                    layer_attr[i][0][j].item(),
+                    delta=0.005,
+                )
+
+    def test_relu_neuron_conductance_with_unused_layer(self) -> None:
+        if version.parse(torch.__version__) < version.parse("2.1.0"):
+            raise unittest.SkipTest(
+                "Skipping unused layed gradient test since it is not supported "
+                "by torch version < 2.1"
+            )
+
+        net = BasicModel_MultiLayer(multi_input_module=True)
+        inp = torch.tensor([[0.0, 6.0, 0.0]])
+
+        lc = LayerConductance(net, net.multi_relu)
+        layer_attr = lc.attribute(inp, target=0, n_steps=500, method="gausslegendre")
+        nc = NeuronConductance(net, net.multi_relu)
+        for i in range(len(layer_attr)):
+            for j in range(layer_attr[i].shape[1]):
+                neuron_attr = nc.attribute(
+                    inp,
+                    lambda x, i=i, j=j: x[i][:, j],
+                    target=0,
+                    n_steps=500,
+                    method="gausslegendre",
+                    grad_kwargs={"materialize_grads": True},
                 )
                 self.assertAlmostEqual(
                     neuron_attr.sum().item(),

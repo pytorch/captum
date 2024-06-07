@@ -2,10 +2,12 @@
 
 from __future__ import print_function
 
+import unittest
 from typing import cast, List, Tuple, Union
 
 import torch
 from captum.attr._core.layer.layer_deep_lift import LayerDeepLift, LayerDeepLiftShap
+from packaging import version
 from tests.attr.helpers.neuron_layer_testing_util import (
     create_inps_and_base_for_deeplift_neuron_layer_testing,
     create_inps_and_base_for_deepliftshap_neuron_layer_testing,
@@ -294,3 +296,21 @@ class TestDeepLift(BaseTest):
         )
 
         assertTensorAlmostEqual(self, attr[0], expected, 1e-19)
+
+    def test_relu_deeplift_with_unused_layer(self) -> None:
+        if version.parse(torch.__version__) < version.parse("2.1.0"):
+            raise unittest.SkipTest(
+                "Skipping unused layed gradient test since it is not supported "
+                "by torch version < 2.1"
+            )
+        model = BasicModel_MultiLayer(multi_input_module=True)
+        inp = torch.tensor([[3.0, 4.0, 5.0]], requires_grad=True)
+        dl = LayerDeepLift(model, model.relu)
+        attributions = dl.attribute(
+            inputs=inp,
+            target=0,
+            grad_kwargs={"materialize_grads": True},
+        )
+        self.assertEqual(len(attributions), 1)
+        self.assertEqual(list(attributions[0].shape), [4])
+        self.assertAlmostEqual(int(attributions[0].sum()), 0)

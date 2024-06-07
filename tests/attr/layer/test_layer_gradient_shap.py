@@ -1,10 +1,16 @@
 #!/usr/bin/env python3
+import unittest
 from typing import Any, Callable, List, Tuple, Union
 
 import torch
+
 from captum._utils.typing import TargetType, TensorOrTupleOfTensorsGeneric
 from captum.attr._core.gradient_shap import GradientShap
-from captum.attr._core.layer.layer_gradient_shap import LayerGradientShap
+from captum.attr._core.layer.layer_gradient_shap import (
+    LayerGradientShap,
+    LayerInputBaselineXGradient,
+)
+from packaging import version
 from tests.attr.helpers.attribution_delta_util import assert_attribution_delta
 from tests.helpers.basic import (
     assertTensorAlmostEqual,
@@ -127,6 +133,31 @@ class Test(BaseTest):
         expected = torch.tensor([[171.6841, 0.0]])
         self._assert_attributions(
             net, net.model.linear2, inputs, baselines, 0, expected, add_args=add_args
+        )
+
+    def test_relu_grad_shap_with_unused_layer(self) -> None:
+        if version.parse(torch.__version__) < version.parse("2.1.0"):
+            raise unittest.SkipTest(
+                "Skipping unused layed gradient test since it is not supported "
+                "by torch version < 2.1"
+            )
+
+        model = BasicModel_MultiLayer(inplace=True, multi_input_module=True)
+        model.eval()
+
+        inputs = torch.tensor([[1.0, -20.0, 10.0]], requires_grad=True)
+        baselines = torch.zeros(3, 3)
+        lgs = LayerInputBaselineXGradient(model, model.relu, multiply_by_inputs=False)
+        attrs = lgs.attribute(
+            inputs, baselines, target=0, grad_kwargs={"materialize_grads": True}
+        )
+
+        assertTensorAlmostEqual(
+            self,
+            attrs,
+            torch.tensor(
+                [[0.0, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0]]
+            ),
         )
 
     def _assert_attributions(

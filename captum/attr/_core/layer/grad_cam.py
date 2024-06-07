@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-from typing import Any, Callable, List, Tuple, Union
+from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
 import torch
 import torch.nn.functional as F
@@ -83,6 +83,7 @@ class LayerGradCam(LayerAttribution, GradientAttribution):
         attribute_to_layer_input: bool = False,
         relu_attributions: bool = False,
         attr_dim_summation: bool = True,
+        grad_kwargs: Optional[Dict[str, Any]] = None,
     ) -> Union[Tensor, Tuple[Tensor, ...]]:
         r"""
         Args:
@@ -154,6 +155,9 @@ class LayerGradCam(LayerAttribution, GradientAttribution):
                         sum attributions along dimension 1 (usually channel).
                         The default (True) means to sum along dimension 1.
                         Default: True
+            grad_kwargs (Dict[str, Any], optional): Additional keyword
+                        arguments for torch.autograd.grad.
+                        Default: None
 
         Returns:
             *Tensor* or *tuple[Tensor, ...]* of **attributions**:
@@ -200,6 +204,7 @@ class LayerGradCam(LayerAttribution, GradientAttribution):
             additional_forward_args,
             device_ids=self.device_ids,
             attribute_to_layer_input=attribute_to_layer_input,
+            grad_kwargs=grad_kwargs,
         )
 
         summed_grads = tuple(

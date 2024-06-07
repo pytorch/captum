@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 import typing
-from typing import Any, Callable, List, Tuple, Union
+from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
 import torch
 from captum._utils.common import (
@@ -82,6 +82,7 @@ class LayerConductance(LayerAttribution, GradientAttribution):
         *,
         return_convergence_delta: Literal[True],
         attribute_to_layer_input: bool = False,
+        grad_kwargs: Optional[Dict[str, Any]] = None,
     ) -> Tuple[Union[Tensor, Tuple[Tensor, ...]], Tensor]: ...
 
     @typing.overload
@@ -96,6 +97,7 @@ class LayerConductance(LayerAttribution, GradientAttribution):
         internal_batch_size: Union[None, int] = None,
         return_convergence_delta: Literal[False] = False,
         attribute_to_layer_input: bool = False,
+        grad_kwargs: Optional[Dict[str, Any]] = None,
     ) -> Union[Tensor, Tuple[Tensor, ...]]: ...
 
     @log_usage()
@@ -112,6 +114,7 @@ class LayerConductance(LayerAttribution, GradientAttribution):
         internal_batch_size: Union[None, int] = None,
         return_convergence_delta: bool = False,
         attribute_to_layer_input: bool = False,
+        grad_kwargs: Optional[Dict[str, Any]] = None,
     ) -> Union[
         Tensor, Tuple[Tensor, ...], Tuple[Union[Tensor, Tuple[Tensor, ...]], Tensor]
     ]:
@@ -230,6 +233,9 @@ class LayerConductance(LayerAttribution, GradientAttribution):
                         attribute to the input or output, is a single tensor.
                         Support for multiple tensors will be added later.
                         Default: False
+            grad_kwargs (Dict[str, Any], optional): Additional keyword
+                        arguments for torch.autograd.grad.
+                        Default: None
 
         Returns:
             **attributions** or 2-element tuple of **attributions**, **delta**:
@@ -322,6 +328,7 @@ class LayerConductance(LayerAttribution, GradientAttribution):
         method: str = "gausslegendre",
         attribute_to_layer_input: bool = False,
         step_sizes_and_alphas: Union[None, Tuple[List[float], List[float]]] = None,
+        grad_kwargs: Optional[Dict[str, Any]] = None,
     ) -> Union[Tensor, Tuple[Tensor, ...]]:
         num_examples = inputs[0].shape[0]
         if step_sizes_and_alphas is None:
@@ -366,6 +373,7 @@ class LayerConductance(LayerAttribution, GradientAttribution):
             target_ind=expanded_target,
             device_ids=self.device_ids,
             attribute_to_layer_input=attribute_to_layer_input,
+            grad_kwargs=grad_kwargs,
         )
 
         # Compute differences between consecutive evaluations of layer_eval.

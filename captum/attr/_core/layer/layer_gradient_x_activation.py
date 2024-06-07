@@ -133,8 +133,9 @@ class LayerGradientXActivation(LayerAttribution, GradientAttribution):
                         layer input, otherwise it will be computed with respect
                         to layer output.
                         Default: False
-            grad_kwargs: Additional keyword arguments for torch.autograd.grad
-
+            grad_kwargs (Dict[str, Any], optional): Additional keyword
+                        arguments for torch.autograd.grad.
+                        Default: None
         Returns:
             *Tensor* or *tuple[Tensor, ...]* or list of **attributions**:
             - **attributions** (*Tensor*, *tuple[Tensor, ...]*, or *list*):

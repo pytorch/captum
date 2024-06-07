@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 import typing
-from typing import Any, Callable, cast, Sequence, Tuple, Union
+from typing import Any, Callable, cast, Dict, Optional, Sequence, Tuple, Union
 
 import torch
 from captum._utils.common import (
@@ -108,6 +108,7 @@ class LayerDeepLift(LayerAttribution, DeepLift):
         return_convergence_delta: Literal[False] = False,
         attribute_to_layer_input: bool = False,
         custom_attribution_func: Union[None, Callable[..., Tuple[Tensor, ...]]] = None,
+        grad_kwargs: Optional[Dict[str, Any]] = None,
     ) -> Union[Tensor, Tuple[Tensor, ...]]: ...
 
     @typing.overload
@@ -121,6 +122,7 @@ class LayerDeepLift(LayerAttribution, DeepLift):
         return_convergence_delta: Literal[True],
         attribute_to_layer_input: bool = False,
         custom_attribution_func: Union[None, Callable[..., Tuple[Tensor, ...]]] = None,
+        grad_kwargs: Optional[Dict[str, Any]] = None,
     ) -> Tuple[Union[Tensor, Tuple[Tensor, ...]], Tensor]: ...
 
     @log_usage()
@@ -133,6 +135,7 @@ class LayerDeepLift(LayerAttribution, DeepLift):
         return_convergence_delta: bool = False,
         attribute_to_layer_input: bool = False,
         custom_attribution_func: Union[None, Callable[..., Tuple[Tensor, ...]]] = None,
+        grad_kwargs: Optional[Dict[str, Any]] = None,
     ) -> Union[
         Tensor, Tuple[Tensor, ...], Tuple[Union[Tensor, Tuple[Tensor, ...]], Tensor]
     ]:
@@ -248,6 +251,9 @@ class LayerDeepLift(LayerAttribution, DeepLift):
                         `custom_attribution_func` returns a tuple of attribution
                         tensors that have the same length as the `inputs`.
                         Default: None
+            grad_kwargs (Dict[str, Any], optional): Additional keyword
+                        arguments for torch.autograd.grad.
+                        Default: None
 
         Returns:
             **attributions** or 2-element tuple of **attributions**, **delta**:
@@ -273,6 +279,7 @@ class LayerDeepLift(LayerAttribution, DeepLift):
                 meaning that the `custom_attribution_func=None`, otherwise
                 it is not guaranteed and depends on the specifics of the
                 `custom_attribution_func`.
+
 
         Examples::
 
@@ -326,6 +333,7 @@ class LayerDeepLift(LayerAttribution, DeepLift):
                 inputs,
                 attribute_to_layer_input=attribute_to_layer_input,
                 output_fn=lambda out: chunk_output_fn(out),
+                grad_kwargs=grad_kwargs,
             )
 
             attr_inputs = tuple(map(lambda attr: attr[0], attrs))

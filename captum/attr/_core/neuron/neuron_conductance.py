@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 import warnings
-from typing import Any, Callable, List, Tuple, Union
+from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
 import torch
 from captum._utils.common import (
@@ -99,6 +99,7 @@ class NeuronConductance(NeuronAttribution, GradientAttribution):
         method: str = "riemann_trapezoid",
         internal_batch_size: Union[None, int] = None,
         attribute_to_neuron_input: bool = False,
+        grad_kwargs: Optional[Dict[str, Any]] = None,
     ) -> TensorOrTupleOfTensorsGeneric:
         r"""
         Args:
@@ -311,6 +312,7 @@ class NeuronConductance(NeuronAttribution, GradientAttribution):
                 n_steps=n_steps,
                 method=method,
                 attribute_to_neuron_input=attribute_to_neuron_input,
+                grad_kwargs=grad_kwargs,
             )
         return _format_output(is_inputs_tuple, attrs)
 
@@ -325,6 +327,7 @@ class NeuronConductance(NeuronAttribution, GradientAttribution):
         method: str = "riemann_trapezoid",
         attribute_to_neuron_input: bool = False,
         step_sizes_and_alphas: Union[None, Tuple[List[float], List[float]]] = None,
+        grad_kwargs: Optional[Dict[str, Any]] = None,
     ) -> Tuple[Tensor, ...]:
 
         num_examples = inputs[0].shape[0]
@@ -371,6 +374,7 @@ class NeuronConductance(NeuronAttribution, GradientAttribution):
             gradient_neuron_selector=neuron_selector,
             device_ids=self.device_ids,
             attribute_to_layer_input=attribute_to_neuron_input,
+            grad_kwargs=grad_kwargs,
         )
 
         mid_grads = _verify_select_neuron(layer_gradients, neuron_selector)
