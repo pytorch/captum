@@ -511,7 +511,7 @@ def generate_symmetric_matrix_given_eigenvalues(
     D = len(eigenvalues)
     version = _parse_version(torch.__version__)
     if version < (1, 8):
-        Q, _ = torch.qr(torch.randn((D, D)))
+        Q, _ = torch.qr(torch.randn((D, D)))  # noqa: TOR101
     else:
         Q, _ = torch.linalg.qr(torch.randn((D, D)))
     return torch.matmul(Q, torch.matmul(torch.diag(torch.tensor(eigenvalues)), Q.T))
