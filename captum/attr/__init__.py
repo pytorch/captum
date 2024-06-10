@@ -75,7 +75,7 @@ from captum.attr._utils.stat import (
     Sum,
     Var,
 )
-from captum.attr._utils.summarizer import Summarizer
+from captum.attr._utils.summarizer import Summarizer, SummarizerSingleTensor
 
 __all__ = [
     "Attribution",
@@ -147,4 +147,5 @@ __all__ = [
     "Max",
     "Sum",
     "Count",
+    "SummarizerSingleTensor",
 ]
