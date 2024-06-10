@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 import unittest
-from typing import Any, List, Tuple, Union
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 import torch
 from captum._utils.typing import BaselineType
 from captum.attr._core.layer.internal_influence import InternalInfluence
+from packaging import version
 from tests.helpers.basic import assertTensorTuplesAlmostEqual, BaseTest
 from tests.helpers.basic_models import (
     BasicModel_MultiLayer,
@@ -142,6 +143,23 @@ class Test(BaseTest):
             net, net.linear1, inp, [[0.7, 0.8, 0.8, 0.8], [0.5, 0.6, 0.6, 0.6]], base
         )
 
+    def test_simple_input_internal_inf_with_unused_layer(self) -> None:
+        if version.parse(torch.__version__) < version.parse("2.1.0"):
+            raise unittest.SkipTest(
+                "Skipping unused layed gradient test since it is not supported "
+                "by torch version < 2.1"
+            )
+        net = BasicModel_MultiLayer(multi_input_module=True)
+        inp = torch.tensor([[0.0, 100.0, 0.0]], requires_grad=True)
+        self._internal_influence_test_assert(
+            net,
+            net.multi_relu,
+            inp,
+            ([[0.9, 1.0, 1.0, 1.0]], [[0.9, 1.0, 1.0, 1.0]]),
+            attribute_to_layer_input=True,
+            grad_kwargs={"materialize_grads": True},
+        )
+
     def _internal_influence_test_assert(
         self,
         model: Module,
@@ -156,6 +174,7 @@ class Test(BaseTest):
         baseline: BaselineType = None,
         additional_args: Any = None,
         attribute_to_layer_input: bool = False,
+        grad_kwargs: Optional[Dict[str, Any]] = None,
     ) -> None:
         for internal_batch_size in [None, 5, 20]:
             int_inf = InternalInfluence(model, target_layer)
@@ -169,6 +188,7 @@ class Test(BaseTest):
                 additional_forward_args=additional_args,
                 internal_batch_size=internal_batch_size,
                 attribute_to_layer_input=attribute_to_layer_input,
+                grad_kwargs=grad_kwargs,
             )
             assertTensorTuplesAlmostEqual(
                 self, attributions, expected_activation, delta=0.01, mode="max"

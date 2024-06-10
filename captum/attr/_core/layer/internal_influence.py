@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-from typing import Any, Callable, List, Tuple, Union
+from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
 import torch
 from captum._utils.common import (
@@ -74,6 +74,7 @@ class InternalInfluence(LayerAttribution, GradientAttribution):
         method: str = "gausslegendre",
         internal_batch_size: Union[None, int] = None,
         attribute_to_layer_input: bool = False,
+        grad_kwargs: Optional[Dict[str, Any]] = None,
     ) -> Union[Tensor, Tuple[Tensor, ...]]:
         r"""
         Args:
@@ -185,6 +186,9 @@ class InternalInfluence(LayerAttribution, GradientAttribution):
                         attribute to the input or output, is a single tensor.
                         Support for multiple tensors will be added later.
                         Default: False
+            grad_kwargs (Dict[str, Any], optional): Additional keyword
+                        arguments for torch.autograd.grad.
+                        Default: None
 
         Returns:
             *Tensor* or *tuple[Tensor, ...]* of **attributions**:
@@ -236,6 +240,7 @@ class InternalInfluence(LayerAttribution, GradientAttribution):
                 n_steps=n_steps,
                 method=method,
                 attribute_to_layer_input=attribute_to_layer_input,
+                grad_kwargs=grad_kwargs,
             )
 
         return attrs
@@ -250,6 +255,7 @@ class InternalInfluence(LayerAttribution, GradientAttribution):
         method: str = "gausslegendre",
         attribute_to_layer_input: bool = False,
         step_sizes_and_alphas: Union[None, Tuple[List[float], List[float]]] = None,
+        grad_kwargs: Optional[Dict[str, Any]] = None,
     ) -> Union[Tensor, Tuple[Tensor, ...]]:
         if step_sizes_and_alphas is None:
             # retrieve step size and scaling factor for specified approximation method
@@ -290,6 +296,7 @@ class InternalInfluence(LayerAttribution, GradientAttribution):
             additional_forward_args=input_additional_args,
             device_ids=self.device_ids,
             attribute_to_layer_input=attribute_to_layer_input,
+            grad_kwargs=grad_kwargs,
         )
         # flattening grads so that we can multiply it with step-size
         # calling contiguous to avoid `memory whole` problems
