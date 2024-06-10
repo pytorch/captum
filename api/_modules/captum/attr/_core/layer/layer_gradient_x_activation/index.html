@@ -169,8 +169,9 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">                        layer input, otherwise it will be computed with respect</span>
 <span class="sd">                        to layer output.</span>
 <span class="sd">                        Default: False</span>
-<span class="sd">            grad_kwargs: Additional keyword arguments for torch.autograd.grad</span>
-
+<span class="sd">            grad_kwargs (Dict[str, Any], optional): Additional keyword</span>
+<span class="sd">                        arguments for torch.autograd.grad.</span>
+<span class="sd">                        Default: None</span>
 <span class="sd">        Returns:</span>
 <span class="sd">            *Tensor* or *tuple[Tensor, ...]* or list of **attributions**:</span>
 <span class="sd">            - **attributions** (*Tensor*, *tuple[Tensor, ...]*, or *list*):</span>
