@@ -424,19 +424,19 @@ def get_random_model_and_data(
 
         # turn input into a single tensor for use by least squares
         tensor_hessian_samples = (
-            hessian_dataset.samples
+            hessian_dataset.samples  # type: ignore
             if not unpack_inputs
-            else torch.cat(hessian_dataset.samples, dim=1)
+            else torch.cat(hessian_dataset.samples, dim=1)  # type: ignore
         )
         version = _parse_version(torch.__version__)
         if version < (1, 9):
-            theta = torch.lstsq(
-                tensor_hessian_samples, hessian_dataset.labels
+            theta = torch.lstsq(  # type: ignore
+                tensor_hessian_samples, hessian_dataset.labels  # type: ignore
             ).solution[0:1]
         else:
             # run least squares to get optimal trained parameters
             theta = torch.linalg.lstsq(
-                hessian_dataset.labels,
+                hessian_dataset.labels,  # type: ignore
                 tensor_hessian_samples,
             ).solution
         # the first `n` rows of `theta` contains the least squares solution, where
@@ -459,7 +459,7 @@ def get_random_model_and_data(
         net_adjusted = _adjust_model(net, gpu_setting)
 
         # train model using several optimization steps on Hessian data
-        batch = next(iter(DataLoader(hessian_dataset, batch_size=len(hessian_dataset))))
+        batch = next(iter(DataLoader(hessian_dataset, batch_size=len(hessian_dataset))))  # type: ignore # noqa: E501 line too long
 
         optimizer = torch.optim.Adam(net.parameters())
         num_steps = 200
@@ -480,9 +480,9 @@ def get_random_model_and_data(
         train_dataset,
     )
 
-    hessian_data = (hessian_dataset.samples, hessian_dataset.labels)
+    hessian_data = (hessian_dataset.samples, hessian_dataset.labels)  # type: ignore
 
-    test_data = (test_dataset.samples, test_dataset.labels)
+    test_data = (test_dataset.samples, test_dataset.labels)  # type: ignore
 
     if return_test_data:
         if not return_hessian_data:

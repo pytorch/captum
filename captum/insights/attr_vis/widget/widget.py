@@ -22,7 +22,7 @@ class CaptumInsights(widgets.DOMWidget):
     label_details = Dict().tag(sync=True)
     attribution = Dict().tag(sync=True)
     config = Dict().tag(sync=True)
-    output = List().tag(sync=True)
+    output = List().tag(sync=True)  # type: ignore
 
     def __init__(self, **kwargs) -> None:
         super(CaptumInsights, self).__init__(**kwargs)

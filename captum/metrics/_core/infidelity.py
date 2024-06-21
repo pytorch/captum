@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-from typing import Any, Callable, cast, Tuple, Union
+from typing import Any, Callable, cast, Optional, Tuple, Union
 
 import torch
 from captum._utils.common import (
@@ -121,7 +121,7 @@ def infidelity(
     additional_forward_args: Any = None,
     target: TargetType = None,
     n_perturb_samples: int = 10,
-    max_examples_per_batch: int = None,
+    max_examples_per_batch: Optional[int] = None,
     normalize: bool = False,
 ) -> Tensor:
     r"""

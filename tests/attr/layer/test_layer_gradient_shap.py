@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 import unittest
-from typing import Any, Callable, List, Tuple, Union
+from typing import Any, Callable, List, Optional, Tuple, Union
 
 import torch
 
@@ -175,7 +175,7 @@ class Test(BaseTest):
             Tuple[List[float], ...],
             Tuple[List[List[float]], ...],
         ],
-        expected_delta: Tensor = None,
+        expected_delta: Optional[Tensor] = None,
         n_samples: int = 5,
         attribute_to_layer_input: bool = False,
         add_args: Any = None,

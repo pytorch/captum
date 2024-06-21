@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 from inspect import signature
-from typing import Callable, List, Tuple, Union
+from typing import Callable, List, Optional, Tuple, Union
 
 import torch
 from captum.attr._core.deep_lift import DeepLift, DeepLiftShap
@@ -301,7 +301,7 @@ class Test(BaseTest):
         attr_method: Union[DeepLift, DeepLiftShap],
         inputs: Tuple[Tensor, ...],
         baselines,
-        custom_attr_func: Callable[..., Tuple[Tensor, ...]] = None,
+        custom_attr_func: Optional[Callable[..., Tuple[Tensor, ...]]] = None,
     ) -> None:
         input_bsz = len(inputs[0])
         if callable(baselines):

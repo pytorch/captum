@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 import warnings
-from typing import Callable, Tuple
+from typing import Callable, Optional, Tuple
 
 import torch
 from torch import Tensor
@@ -12,7 +12,7 @@ def _divide_and_aggregate_metrics(
     n_perturb_samples: int,
     metric_func: Callable,
     agg_func: Callable = torch.add,
-    max_examples_per_batch: int = None,
+    max_examples_per_batch: Optional[int] = None,
 ) -> Tensor:
     r"""
     This function is used to slice large number of samples `n_perturb_samples` per

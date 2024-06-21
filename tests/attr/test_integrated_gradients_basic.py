@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 import unittest
-from typing import Any, cast, Tuple, Union
+from typing import Any, cast, Optional, Tuple, Union
 
 import torch
 from captum._utils.common import _zeros
@@ -337,7 +337,7 @@ class Test(BaseTest):
         self,
         type: str,
         approximation_method: str = "gausslegendre",
-        nt_samples_batch_size: int = None,
+        nt_samples_batch_size: Optional[int] = None,
     ) -> None:
         model = BasicModel_MultiLayer()
         input = (
@@ -361,7 +361,7 @@ class Test(BaseTest):
         self,
         type: str,
         approximation_method: str = "gausslegendre",
-        nt_samples_batch_size: int = None,
+        nt_samples_batch_size: Optional[int] = None,
     ) -> None:
         model = BasicModel_MultiLayer()
         input = (

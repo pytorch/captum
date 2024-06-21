@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 from collections import defaultdict
-from typing import Any, cast, Dict, List, Set, Tuple, Union
+from typing import Any, cast, Dict, List, Optional, Set, Tuple, Union
 
 import numpy as np
 import torch
@@ -247,8 +247,8 @@ class TCAV(ConceptInterpreter):
         model: Module,
         layers: Union[str, List[str]],
         model_id: str = "default_model_id",
-        classifier: Classifier = None,
-        layer_attr_method: LayerAttribution = None,
+        classifier: Optional[Classifier] = None,
+        layer_attr_method: Optional[LayerAttribution] = None,
         attribute_to_layer_input=False,
         save_path: str = "./cav/",
         **classifier_kwargs: Any,
@@ -451,7 +451,7 @@ class TCAV(ConceptInterpreter):
         self,
         experimental_sets: List[List[Concept]],
         force_train: bool = False,
-        processes: int = None,
+        processes: Optional[int] = None,
     ):
         r"""
         This method computes CAVs for given `experiments_sets` and layers
@@ -567,7 +567,7 @@ class TCAV(ConceptInterpreter):
         experimental_sets: List[List[Concept]],
         target: TargetType = None,
         additional_forward_args: Any = None,
-        processes: int = None,
+        processes: Optional[int] = None,
         **kwargs: Any,
     ) -> Dict[str, Dict[str, Dict[str, Tensor]]]:
         r"""
@@ -747,7 +747,7 @@ class TCAV(ConceptInterpreter):
                     attribs,
                     cav_subset,
                     classes_subset,
-                    experimental_subset_sorted,
+                    experimental_subset_sorted,  # type: ignore
                 )
                 i += 1
 
