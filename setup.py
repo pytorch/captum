@@ -16,7 +16,7 @@ import sys
 from setuptools import find_packages, setup
 
 REQUIRED_MAJOR = 3
-REQUIRED_MINOR = 6
+REQUIRED_MINOR = 8
 
 # Check for python version
 if sys.version_info < (REQUIRED_MAJOR, REQUIRED_MINOR):
@@ -146,8 +146,8 @@ if __name__ == "__main__":
         ],
         long_description=long_description,
         long_description_content_type="text/markdown",
-        python_requires=">=3.6",
-        install_requires=["matplotlib", "numpy", "torch>=1.6", "tqdm"],
+        python_requires=">=3.8",
+        install_requires=["matplotlib", "numpy<2.0", "torch>=1.10", "tqdm"],
         packages=find_packages(exclude=("tests", "tests.*")),
         extras_require={
             "dev": DEV_REQUIRES,
