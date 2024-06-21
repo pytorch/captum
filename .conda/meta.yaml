@@ -13,10 +13,10 @@ build:
 
 requirements:
   host:
-    - python>=3.6
+    - python>=3.8
   run:
-    - numpy
-    - pytorch>=1.6
+    - numpy<2.0
+    - pytorch>=1.10
     - matplotlib-base
 
 test:

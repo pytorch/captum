@@ -2,5 +2,5 @@ name: captum
 channels:
   - pytorch
 dependencies:
-  - numpy
-  - pytorch>=1.6
+  - numpy<2.0
+  - pytorch>=1.10
