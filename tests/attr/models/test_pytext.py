@@ -45,7 +45,7 @@ class VocabStub:
 class TestWordEmbeddings(unittest.TestCase):
     def setUp(self) -> None:
         if not HAS_PYTEXT:
-            return self.skipTest("Skip the test since PyText is not installed")
+            raise unittest.SkipTest("Skip the test since PyText is not installed")
 
         self.embedding_file, self.embedding_path = tempfile.mkstemp()
         self.word_embedding_file, self.word_embedding_path = tempfile.mkstemp()

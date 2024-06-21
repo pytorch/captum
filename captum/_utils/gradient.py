@@ -733,7 +733,7 @@ def _compute_jacobian_wrt_params(
     inputs: Tuple[Any, ...],
     labels: Optional[Tensor] = None,
     loss_fn: Optional[Union[Module, Callable]] = None,
-    layer_modules: List[Module] = None,
+    layer_modules: Optional[List[Module]] = None,
 ) -> Tuple[Tensor, ...]:
     r"""
     Computes the Jacobian of a batch of test examples given a model, and optional
@@ -805,7 +805,7 @@ def _compute_jacobian_wrt_params_with_sample_wise_trick(
     labels: Optional[Tensor] = None,
     loss_fn: Optional[Union[Module, Callable]] = None,
     reduction_type: Optional[str] = "sum",
-    layer_modules: List[Module] = None,
+    layer_modules: Optional[List[Module]] = None,
 ) -> Tuple[Any, ...]:
     r"""
     Computes the Jacobian of a batch of test examples given a model, and optional

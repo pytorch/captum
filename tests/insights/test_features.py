@@ -17,7 +17,12 @@ class TestTextFeature(BaseTest):
     FEATURE_NAME = "question"
 
     def test_text_feature_returns_text_as_visualization_type(self) -> None:
-        feature = TextFeature(self.FEATURE_NAME, None, None, None)
+        feature = TextFeature(
+            name=self.FEATURE_NAME,
+            baseline_transforms=None,
+            input_transforms=None,
+            visualization_transform=None,
+        )
         self.assertEqual(feature.visualization_type(), "text")
 
     def test_text_feature_uses_visualization_transform_if_provided(self) -> None:

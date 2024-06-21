@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 import os
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 import torch
 from captum.concept._core.concept import Concept
@@ -21,7 +21,7 @@ class CAV:
         self,
         concepts: List[Concept],
         layer: str,
-        stats: Dict[str, Any] = None,
+        stats: Optional[Dict[str, Any]] = None,
         save_path: str = "./cav/",
         model_id: str = "default_model_id",
     ) -> None:

@@ -38,7 +38,7 @@ class PGD(Perturbation):
     def __init__(
         self,
         forward_func: Callable,
-        loss_func: Callable = None,
+        loss_func: Optional[Callable] = None,
         lower_bound: float = float("-inf"),
         upper_bound: float = float("inf"),
     ) -> None:

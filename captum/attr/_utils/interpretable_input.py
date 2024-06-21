@@ -1,3 +1,4 @@
+from abc import ABC, abstractmethod
 from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
 import torch
@@ -45,7 +46,7 @@ def _scatter_itp_attr_by_mask(
     return attr
 
 
-class InterpretableInput:
+class InterpretableInput(ABC):
     """
     InterpretableInput is an adapter for different kinds of model inputs to
     work in Captum's attribution methods. Generally, attribution methods of Captum
@@ -94,6 +95,7 @@ class InterpretableInput:
     is only allowed in certain attribution classes like LLMAttribution for now.)
     """
 
+    @abstractmethod
     def to_tensor(self) -> Tensor:
         """
         Return the interpretable representation of this input as a tensor
@@ -104,6 +106,7 @@ class InterpretableInput:
         """
         pass
 
+    @abstractmethod
     def to_model_input(self, itp_tensor: Optional[Tensor] = None) -> Any:
         """
         Get the (perturbed) input in the format required by the model

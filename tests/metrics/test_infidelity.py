@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 import typing
-from typing import Any, Callable, cast, List, Tuple, Union
+from typing import Any, Callable, cast, List, Optional, Tuple, Union
 
 import torch
 from captum._utils.typing import BaselineType, TargetType, TensorOrTupleOfTensorsGeneric
@@ -395,11 +395,11 @@ class Test(BaseTest):
         model: Module,
         inputs: TensorOrTupleOfTensorsGeneric,
         expected: Tensor,
-        n_perturb_samples: int = 10,
-        max_batch_size: int = None,
-        perturb_func: Callable = _local_perturb_func,
-        multiply_by_inputs: bool = False,
-        normalize: bool = False,
+        n_perturb_samples: Optional[int] = 10,
+        max_batch_size: Optional[int] = None,
+        perturb_func: Optional[Callable] = _local_perturb_func,
+        multiply_by_inputs: Optional[bool] = False,
+        normalize: Optional[bool] = False,
     ) -> Tensor:
         ig = IntegratedGradients(model)
         if multiply_by_inputs:
@@ -429,12 +429,12 @@ class Test(BaseTest):
         model: Module,
         inputs: TensorOrTupleOfTensorsGeneric,
         expected: Tensor,
-        additional_args: Any = None,
-        target: TargetType = None,
-        n_perturb_samples: int = 10,
-        max_batch_size: int = None,
-        perturb_func: Callable = _global_perturb_func1,
-        normalize: bool = False,
+        additional_args: Optional[Any] = None,
+        target: Optional[TargetType] = None,
+        n_perturb_samples: Optional[int] = 10,
+        max_batch_size: Optional[int] = None,
+        perturb_func: Optional[Callable] = _global_perturb_func1,
+        normalize: Optional[bool] = False,
     ) -> Tensor:
         attrs = attr_algo.attribute(
             inputs, additional_forward_args=additional_args, target=target
@@ -459,14 +459,14 @@ class Test(BaseTest):
         attributions: TensorOrTupleOfTensorsGeneric,
         inputs: TensorOrTupleOfTensorsGeneric,
         expected: Tensor,
-        additional_args: Any = None,
-        baselines: BaselineType = None,
-        n_perturb_samples: int = 10,
-        target: TargetType = None,
-        max_batch_size: int = None,
-        multi_input: bool = True,
-        perturb_func: Callable = _local_perturb_func,
-        normalize: bool = False,
+        additional_args: Optional[Any] = None,
+        baselines: Optional[BaselineType] = None,
+        n_perturb_samples: Optional[int] = 10,
+        target: Optional[TargetType] = None,
+        max_batch_size: Optional[int] = None,
+        multi_input: Optional[bool] = True,
+        perturb_func: Optional[Callable] = _local_perturb_func,
+        normalize: Optional[bool] = False,
         **kwargs: Any,
     ) -> Tensor:
         infid = infidelity(

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 from enum import Enum
-from typing import Any, cast, List, Tuple, Union
+from typing import Any, cast, List, Optional, Tuple, Union
 
 import torch
 from captum._utils.common import (
@@ -80,7 +80,7 @@ class NoiseTunnel(Attribution):
         inputs: Union[Tensor, Tuple[Tensor, ...]],
         nt_type: str = "smoothgrad",
         nt_samples: int = 5,
-        nt_samples_batch_size: int = None,
+        nt_samples_batch_size: Optional[int] = None,
         stdevs: Union[float, Tuple[float, ...]] = 1.0,
         draw_baseline_from_distrib: bool = False,
         **kwargs: Any,
