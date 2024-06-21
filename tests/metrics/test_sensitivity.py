@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 import typing
-from typing import Any, Callable, cast, List, Tuple, Union
+from typing import Any, Callable, cast, List, Optional, Tuple, Union
 
 import torch
 from captum._utils.typing import BaselineType, TargetType, TensorOrTupleOfTensorsGeneric
@@ -281,10 +281,10 @@ class Test(BaseTest):
         expected_sensitivity: Tensor,
         perturb_func: Callable = _perturb_func,
         n_perturb_samples: int = 5,
-        max_examples_per_batch: int = None,
-        baselines: BaselineType = None,
-        target: TargetType = None,
-        additional_forward_args: Any = None,
+        max_examples_per_batch: Optional[int] = None,
+        baselines: Optional[BaselineType] = None,
+        target: Optional[TargetType] = None,
+        additional_forward_args: Optional[Any] = None,
     ) -> Tensor:
         if baselines is None:
             sens = sensitivity_max(

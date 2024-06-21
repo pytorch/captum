@@ -3,7 +3,7 @@
 import sys
 import warnings
 from time import time
-from typing import cast, Iterable, Sized, TextIO
+from typing import cast, Iterable, Optional, Sized, TextIO
 
 from captum._utils.typing import Literal
 
@@ -51,7 +51,7 @@ class NullProgress:
     progress bars.
     """
 
-    def __init__(self, iterable: Iterable = None, *args, **kwargs):
+    def __init__(self, iterable: Optional[Iterable] = None, *args, **kwargs):
         del args, kwargs
         self.iterable = iterable
 
@@ -77,10 +77,10 @@ class NullProgress:
 class SimpleProgress:
     def __init__(
         self,
-        iterable: Iterable = None,
-        desc: str = None,
-        total: int = None,
-        file: TextIO = None,
+        iterable: Optional[Iterable] = None,
+        desc: Optional[str] = None,
+        total: Optional[int] = None,
+        file: Optional[TextIO] = None,
         mininterval: float = 0.5,
     ) -> None:
         """
@@ -155,11 +155,11 @@ class SimpleProgress:
 
 
 def progress(
-    iterable: Iterable = None,
-    desc: str = None,
-    total: int = None,
+    iterable: Optional[Iterable] = None,
+    desc: Optional[str] = None,
+    total: Optional[int] = None,
     use_tqdm=True,
-    file: TextIO = None,
+    file: Optional[TextIO] = None,
     mininterval: float = 0.5,
     **kwargs,
 ):

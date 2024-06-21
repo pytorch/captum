@@ -2,7 +2,7 @@
 
 from copy import deepcopy
 from inspect import signature
-from typing import Any, Callable, cast, Tuple, Union
+from typing import Any, Callable, cast, Optional, Tuple, Union
 
 import torch
 from captum._utils.common import (
@@ -64,7 +64,7 @@ def sensitivity_max(
     perturb_radius: float = 0.02,
     n_perturb_samples: int = 10,
     norm_ord: str = "fro",
-    max_examples_per_batch: int = None,
+    max_examples_per_batch: Optional[int] = None,
     **kwargs: Any,
 ) -> Tensor:
     r"""

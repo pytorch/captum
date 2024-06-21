@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 import unittest
-from typing import Callable, List, Union
+from typing import Any, Callable, Generator, List, Tuple, Union
 
 import torch
 import torch.nn as nn
@@ -9,6 +9,8 @@ from captum.insights import AttributionVisualizer, Batch
 from captum.insights.attr_vis.app import FilterConfig
 from captum.insights.attr_vis.features import BaseFeature, FeatureOutput, ImageFeature
 from tests.helpers import BaseTest
+from torch import Tensor
+from torch.utils.data import DataLoader
 
 
 class RealFeature(BaseFeature):
@@ -26,7 +28,8 @@ class RealFeature(BaseFeature):
             visualization_transform=None,
         )
 
-    def visualization_type(self) -> str:
+    @staticmethod
+    def visualization_type() -> str:
         return "real"
 
     def visualize(self, attribution, data, contribution_frac) -> FeatureOutput:
@@ -103,7 +106,7 @@ def _labelled_img_data(
     height: int = 8,
     depth: int = 3,
     num_labels: int = 10,
-):
+) -> Generator[Tuple[Tensor, Tensor], Any, Any]:
     for _ in range(num_samples):
         yield torch.empty(depth, height, width).uniform_(0, 1), torch.randint(
             num_labels, (1,)
@@ -150,8 +153,8 @@ class Test(BaseTest):
 
         # NOTE: using DataLoader to batch the inputs
         # since AttributionVisualizer requires the input to be of size `B x ...`
-        data_loader = torch.utils.data.DataLoader(
-            list(dataset), batch_size=batch_size, shuffle=False, num_workers=0
+        data_loader: DataLoader = torch.utils.data.DataLoader(
+            list(dataset), batch_size=batch_size, shuffle=False, num_workers=0  # type: ignore # noqa: E501 line too long
         )
 
         visualizer = AttributionVisualizer(
@@ -188,8 +191,8 @@ class Test(BaseTest):
         )
         # NOTE: using DataLoader to batch the inputs since
         # AttributionVisualizer requires the input to be of size `N x ...`
-        data_loader = torch.utils.data.DataLoader(
-            list(dataset), batch_size=batch_size, shuffle=False, num_workers=0
+        data_loader: DataLoader = torch.utils.data.DataLoader(
+            list(dataset), batch_size=batch_size, shuffle=False, num_workers=0  # type: ignore # noqa: E501 line too long
         )
 
         visualizer = AttributionVisualizer(

@@ -876,7 +876,7 @@ class TracInCPFastRandProj(TracInCPFast):
         test_loss_fn: Optional[Union[Module, Callable]] = None,
         vectorize: bool = False,
         nearest_neighbors: Optional[NearestNeighbors] = None,
-        projection_dim: int = None,
+        projection_dim: Optional[int] = None,
         seed: int = 0,
     ) -> None:
         r"""

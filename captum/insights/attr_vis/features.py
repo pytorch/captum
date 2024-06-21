@@ -8,12 +8,14 @@ from typing import Callable, List, Optional, Union
 from captum._utils.common import safe_div
 from captum.attr._utils import visualization as viz
 from captum.insights.attr_vis._utils.transforms import format_transforms
+from matplotlib.figure import Figure
 from torch import Tensor
+
 
 FeatureOutput = namedtuple("FeatureOutput", "name base modified type contribution")
 
 
-def _convert_figure_base64(fig) -> str:
+def _convert_figure_base64(fig: Figure) -> str:
     buff = BytesIO()
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
@@ -82,8 +84,8 @@ class ImageFeature(BaseFeature):
     def __init__(
         self,
         name: str,
-        baseline_transforms: Union[Callable, List[Callable]],
-        input_transforms: Union[Callable, List[Callable]],
+        baseline_transforms: Optional[Union[Callable, List[Callable]]],
+        input_transforms: Optional[Union[Callable, List[Callable]]],
         visualization_transform: Optional[Callable] = None,
     ) -> None:
         r"""
@@ -157,9 +159,9 @@ class TextFeature(BaseFeature):
     def __init__(
         self,
         name: str,
-        baseline_transforms: Union[Callable, List[Callable]],
-        input_transforms: Union[Callable, List[Callable]],
-        visualization_transform: Callable,
+        baseline_transforms: Optional[Union[Callable, List[Callable]]],
+        input_transforms: Optional[Union[Callable, List[Callable]]],
+        visualization_transform: Optional[Callable],
     ) -> None:
         r"""
         Args:
@@ -295,7 +297,7 @@ class EmptyFeature(BaseFeature):
     def visualization_type() -> str:
         return "empty"
 
-    def visualize(self, _attribution, _data, contribution_frac) -> FeatureOutput:
+    def visualize(self, attribution, data, contribution_frac) -> FeatureOutput:
         return FeatureOutput(
             name=self.name,
             base=None,
