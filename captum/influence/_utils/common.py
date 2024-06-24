@@ -146,14 +146,9 @@ def _jacobian_loss_wrt_inputs(
         )
         assert loss_fn.reduction == reduction_type, msg
 
-    if _parse_version(torch.__version__) >= (1, 8, 0):
-        input_jacobians = torch.autograd.functional.jacobian(
-            lambda out: loss_fn(out, targets), out, vectorize=vectorize
-        )
-    else:
-        input_jacobians = torch.autograd.functional.jacobian(
-            lambda out: loss_fn(out, targets), out
-        )
+    input_jacobians = torch.autograd.functional.jacobian(
+        lambda out: loss_fn(out, targets), out
+    )
 
     if reduction_type == "mean":
         input_jacobians = input_jacobians * len(input_jacobians)
@@ -709,13 +704,8 @@ def _eig_helper(H: Tensor):
     `torch.linalg.eig` always returns a complex tensor, which in this case would
     actually have no complex component)
     """
-    version = _parse_version(torch.__version__)
-    if version < (1, 9):
-        ls, vs = torch.eig(H, eigenvectors=True)
-        ls = ls[:, 0]
-    else:
-        ls, vs = torch.linalg.eig(H)
-        ls, vs = ls.real, vs.real
+    ls, vs = torch.linalg.eig(H)
+    ls, vs = ls.real, vs.real
 
     ls_argsort = torch.argsort(ls)
     vs = vs[:, ls_argsort]

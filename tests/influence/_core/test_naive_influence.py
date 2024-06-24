@@ -4,7 +4,6 @@ from typing import Callable, List, Optional, Tuple
 import torch
 
 import torch.nn as nn
-from captum._utils.common import _parse_version
 from captum.influence._core.influence_function import NaiveInfluenceFunction
 from captum.influence._utils.common import (
     _custom_functional_call,
@@ -191,11 +190,8 @@ class TestNaiveInfluence(BaseTest):
             hessian = hessian + (
                 torch.eye(len(hessian)).to(device=hessian.device) * 1e-4
             )
-            version = _parse_version(torch.__version__)
-            if version < (1, 8):
-                hessian_inverse = torch.pinverse(hessian, rcond=1e-4)
-            else:
-                hessian_inverse = torch.linalg.pinv(hessian, rcond=1e-4)
+
+            hessian_inverse = torch.linalg.pinv(hessian, rcond=1e-4)
 
             # gradient for an example is 2 * features * error
 

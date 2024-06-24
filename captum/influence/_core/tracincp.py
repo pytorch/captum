@@ -8,7 +8,6 @@ from typing import Any, Callable, Iterator, List, Optional, Tuple, Type, Union
 
 import torch
 from captum._utils.av import AV
-from captum._utils.common import _parse_version
 from captum._utils.progress import NullProgress, progress
 from captum.influence._core.influence import DataInfluence
 from captum.influence._utils.common import (
@@ -1199,9 +1198,6 @@ class TracInCP(TracInCPBase):
                 ** 2
             )
 
-        def calculate_via_flatten(layer_jacobian):
-            return torch.sum(layer_jacobian.flatten(start_dim=1) ** 2, dim=1)
-
         def get_checkpoint_contribution(checkpoint):
             # This function returns a 1D tensor representing the contribution to the
             # self influence score for the given checkpoint, for all batches in
@@ -1248,12 +1244,10 @@ class TracInCP(TracInCPBase):
                 # `layer_jacobian` is of shape (batch_size, *). For each layer, we need
                 # the squared jacobian for each example. So we square the jacobian and
                 # sum over all dimensions except the 0-th (the batch dimension). We then
-                # sum the contribution over all layers.  For Pytorch > 1.10 we use the
-                # optimized torch.linalg.vector_norm as opposed to the explicit flatten.
+                # sum the contribution over all layers.  We use the optimized
+                # torch.linalg.vector_norm as opposed to the explicit flatten.
 
-                calculate_fn = calculate_via_flatten
-                if _parse_version(torch.__version__) >= (1, 10, 0):
-                    calculate_fn = calculate_via_vector_norm
+                calculate_fn = calculate_via_vector_norm
 
                 checkpoint_contribution.append(
                     torch.sum(

@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 
-import unittest
 from typing import Callable, List, Tuple
 
 import torch
@@ -10,7 +9,6 @@ from captum._utils.sample_gradient import (
     SampleGradientWrapper,
     SUPPORTED_MODULES,
 )
-from packaging import version
 from tests.helpers import BaseTest
 from tests.helpers.basic import assertTensorAlmostEqual
 from tests.helpers.basic_models import (
@@ -44,12 +42,6 @@ class Test(BaseTest):
         self._compare_sample_grads_per_sample(model, inp, lambda x: torch.mean(x))
 
     def test_sample_grads_modified_conv_mean(self) -> None:
-        if version.parse(torch.__version__) < version.parse("1.8.0"):
-            raise unittest.SkipTest(
-                "Skipping sample gradient test with 3D linear module"
-                "since torch version < 1.8"
-            )
-
         model = BasicModel_ConvNetWithPaddingDilation()
         inp = (20 * torch.randn(6, 1, 5, 5),)
         self._compare_sample_grads_per_sample(
@@ -57,12 +49,6 @@ class Test(BaseTest):
         )
 
     def test_sample_grads_modified_conv_sum(self) -> None:
-        if version.parse(torch.__version__) < version.parse("1.8.0"):
-            raise unittest.SkipTest(
-                "Skipping sample gradient test with 3D linear module"
-                "since torch version < 1.8"
-            )
-
         model = BasicModel_ConvNetWithPaddingDilation()
         inp = (20 * torch.randn(6, 1, 5, 5),)
         self._compare_sample_grads_per_sample(model, inp, lambda x: torch.sum(x), "sum")
