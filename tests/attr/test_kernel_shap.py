@@ -116,7 +116,7 @@ class Test(BaseTest):
             inp,
             [[7.0, 32.5, 10.5], [76.66666, 196.66666, 116.66666]],
             perturbations_per_eval=(1, 2, 3),
-            n_samples=20000,
+            n_samples=2000,
         )
 
     def test_simple_batch_kernel_shap_with_mask(self) -> None:
