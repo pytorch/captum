@@ -175,9 +175,9 @@ class Test(BaseTest):
 
 class TestParseVersion(BaseTest):
     def test_parse_version_dev(self) -> None:
-        version_str = "1.12.0.dev20201109"
+        version_str = "2.3.0.dev20240311 "
         output = parse_version(version_str)
-        self.assertEqual(output, (1, 12, 0))
+        self.assertEqual(output, (2, 3, 0))
 
     def test_parse_version_post(self) -> None:
         version_str = "1.3.0.post2"
@@ -185,21 +185,21 @@ class TestParseVersion(BaseTest):
         self.assertEqual(output, (1, 3, 0))
 
     def test_parse_version_1_12_0(self) -> None:
-        version_str = "1.12.0"
+        version_str = "1.13.0"
         output = parse_version(version_str)
-        self.assertEqual(output, (1, 12, 0))
+        self.assertEqual(output, (1, 13, 0))
 
     def test_parse_version_1_12_2(self) -> None:
-        version_str = "1.12.2"
+        version_str = "1.13.1"
         output = parse_version(version_str)
-        self.assertEqual(output, (1, 12, 2))
+        self.assertEqual(output, (1, 13, 1))
 
-    def test_parse_version_1_6_0(self) -> None:
-        version_str = "1.6.0"
+    def test_parse_version_2_0(self) -> None:
+        version_str = "2.0.0"
         output = parse_version(version_str)
-        self.assertEqual(output, (1, 6, 0))
+        self.assertEqual(output, (2, 0, 0))
 
-    def test_parse_version_1_12(self) -> None:
-        version_str = "1.12"
+    def test_parse_version_1_13(self) -> None:
+        version_str = "1.13"
         output = parse_version(version_str)
-        self.assertEqual(output, (1, 12))
+        self.assertEqual(output, (1, 13))
