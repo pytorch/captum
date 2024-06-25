@@ -34,6 +34,9 @@ sudo apt install yarn
 # yarn needs terminal info
 export TERM=xterm
 
+# Remove all items from pip cache to avoid hash mismatch
+pip cache purge
+
 # upgrade pip
 pip install --upgrade pip --progress-bar off
 
@@ -54,7 +57,7 @@ else
   if [[ $CHOSEN_TORCH_VERSION == -1 ]]; then
     pip install --upgrade torch --progress-bar off
   else
-    pip install torch==$CHOSEN_TORCH_VERSION --progress-bar off
+    pip install torch=="$CHOSEN_TORCH_VERSION" --progress-bar off
   fi
 fi
 
