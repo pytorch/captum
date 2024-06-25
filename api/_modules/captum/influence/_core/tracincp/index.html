@@ -40,7 +40,6 @@ src="/_sphinx/documentation_options.js"></script>
 
 <span class="kn">import</span> <span class="nn">torch</span>
 <span class="kn">from</span> <span class="nn">captum._utils.av</span> <span class="kn">import</span> <span class="n">AV</span>
-<span class="kn">from</span> <span class="nn">captum._utils.common</span> <span class="kn">import</span> <span class="n">_parse_version</span>
 <span class="kn">from</span> <span class="nn">captum._utils.progress</span> <span class="kn">import</span> <span class="n">NullProgress</span><span class="p">,</span> <span class="n">progress</span>
 <span class="kn">from</span> <span class="nn">captum.influence._core.influence</span> <span class="kn">import</span> <span class="n">DataInfluence</span>
 <span class="kn">from</span> <span class="nn">captum.influence._utils.common</span> <span class="kn">import</span> <span class="p">(</span>
@@ -1251,9 +1250,6 @@ src="/_sphinx/documentation_options.js"></script>
                 <span class="o">**</span> <span class="mi">2</span>
             <span class="p">)</span>
 
-        <span class="k">def</span> <span class="nf">calculate_via_flatten</span><span class="p">(</span><span class="n">layer_jacobian</span><span class="p">):</span>
-            <span class="k">return</span> <span class="n">torch</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">layer_jacobian</span><span class="o">.</span><span class="n">flatten</span><span class="p">(</span><span class="n">start_dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
-
         <span class="k">def</span> <span class="nf">get_checkpoint_contribution</span><span class="p">(</span><span class="n">checkpoint</span><span class="p">):</span>
             <span class="c1"># This function returns a 1D tensor representing the contribution to the</span>
             <span class="c1"># self influence score for the given checkpoint, for all batches in</span>
@@ -1300,18 +1296,14 @@ src="/_sphinx/documentation_options.js"></script>
                 <span class="c1"># `layer_jacobian` is of shape (batch_size, *). For each layer, we need</span>
                 <span class="c1"># the squared jacobian for each example. So we square the jacobian and</span>
                 <span class="c1"># sum over all dimensions except the 0-th (the batch dimension). We then</span>
-                <span class="c1"># sum the contribution over all layers.  For Pytorch &gt; 1.10 we use the</span>
-                <span class="c1"># optimized torch.linalg.vector_norm as opposed to the explicit flatten.</span>
-
-                <span class="n">calculate_fn</span> <span class="o">=</span> <span class="n">calculate_via_flatten</span>
-                <span class="k">if</span> <span class="n">_parse_version</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">__version__</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">0</span><span class="p">):</span>
-                    <span class="n">calculate_fn</span> <span class="o">=</span> <span class="n">calculate_via_vector_norm</span>
+                <span class="c1"># sum the contribution over all layers.  We use the optimized</span>
+                <span class="c1"># torch.linalg.vector_norm as opposed to the explicit flatten.</span>
 
                 <span class="n">checkpoint_contribution</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
                     <span class="n">torch</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span>
                         <span class="n">torch</span><span class="o">.</span><span class="n">stack</span><span class="p">(</span>
                             <span class="p">[</span>
-                                <span class="n">calculate_fn</span><span class="p">(</span><span class="n">layer_jacobian</span><span class="p">)</span>
+                                <span class="n">calculate_via_vector_norm</span><span class="p">(</span><span class="n">layer_jacobian</span><span class="p">)</span>
                                 <span class="k">for</span> <span class="n">layer_jacobian</span> <span class="ow">in</span> <span class="n">layer_jacobians</span>
                             <span class="p">],</span>
                             <span class="n">dim</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
