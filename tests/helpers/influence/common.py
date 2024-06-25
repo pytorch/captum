@@ -8,7 +8,6 @@ from typing import Callable, List, Optional, Tuple, Union
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from captum._utils.common import _parse_version
 from captum.influence import DataInfluence
 from captum.influence._core.arnoldi_influence_function import ArnoldiInfluenceFunction
 from captum.influence._core.influence_function import NaiveInfluenceFunction
@@ -428,17 +427,12 @@ def get_random_model_and_data(
             if not unpack_inputs
             else torch.cat(hessian_dataset.samples, dim=1)  # type: ignore
         )
-        version = _parse_version(torch.__version__)
-        if version < (1, 9):
-            theta = torch.lstsq(  # type: ignore
-                tensor_hessian_samples, hessian_dataset.labels  # type: ignore
-            ).solution[0:1]
-        else:
-            # run least squares to get optimal trained parameters
-            theta = torch.linalg.lstsq(
-                hessian_dataset.labels,  # type: ignore
-                tensor_hessian_samples,
-            ).solution
+
+        # run least squares to get optimal trained parameters
+        theta = torch.linalg.lstsq(
+            hessian_dataset.labels,  # type: ignore
+            tensor_hessian_samples,
+        ).solution
         # the first `n` rows of `theta` contains the least squares solution, where
         # `n` is the number of features in `tensor_hessian_samples`
         theta = theta[: tensor_hessian_samples.shape[1]]
@@ -509,11 +503,8 @@ def generate_symmetric_matrix_given_eigenvalues(
     """
     # generate random matrix, then apply gram-schmidt to get random orthonormal basis
     D = len(eigenvalues)
-    version = _parse_version(torch.__version__)
-    if version < (1, 8):
-        Q, _ = torch.qr(torch.randn((D, D)))  # noqa: TOR101
-    else:
-        Q, _ = torch.linalg.qr(torch.randn((D, D)))
+
+    Q, _ = torch.linalg.qr(torch.randn((D, D)))
     return torch.matmul(Q, torch.matmul(torch.diag(torch.tensor(eigenvalues)), Q.T))
 
 
@@ -532,12 +523,7 @@ def generate_assymetric_matrix_given_eigenvalues(
     # or equivalently, Q'M' = LQ'.
     D = len(eigenvalues)
     Q_T = torch.randn((D, D))
-    version = _parse_version(torch.__version__)
-    if version < (1, 8):
-        X, _ = torch.solve(
-            Q_T, torch.matmul(torch.diag(torch.tensor(eigenvalues)), Q_T)
-        )
-        return X.T
+
     return torch.linalg.solve(
         Q_T, torch.matmul(torch.diag(torch.tensor(eigenvalues)), Q_T)
     ).T

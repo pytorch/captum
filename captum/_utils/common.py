@@ -18,7 +18,7 @@ from torch import device, Tensor
 from torch.nn import Module
 
 
-def _parse_version(v: str) -> Tuple[int, ...]:
+def parse_version(v: str) -> Tuple[int, ...]:
     """
     Parse version strings into tuples for comparison.
 
@@ -34,9 +34,9 @@ def _parse_version(v: str) -> Tuple[int, ...]:
         version_tuple (tuple[int]): A tuple of integer values to use for version
             comparison.
     """
-    v = [n for n in v.split(".") if n.isdigit()]
-    assert v != []
-    return tuple(map(int, v))
+    version_list = [n for n in v.split(".") if n.isdigit()]
+    assert version_list != []
+    return tuple(map(int, version_list))
 
 
 class ExpansionTypes(Enum):

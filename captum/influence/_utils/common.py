@@ -16,7 +16,7 @@ from typing import (
 
 import torch
 import torch.nn as nn
-from captum._utils.common import _get_module_from_name, _parse_version
+from captum._utils.common import _get_module_from_name, parse_version
 from captum._utils.gradient import (
     _compute_jacobian_wrt_params,
     _compute_jacobian_wrt_params_with_sample_wise_trick,
@@ -146,14 +146,9 @@ def _jacobian_loss_wrt_inputs(
         )
         assert loss_fn.reduction == reduction_type, msg
 
-    if _parse_version(torch.__version__) >= (1, 8, 0):
-        input_jacobians = torch.autograd.functional.jacobian(
-            lambda out: loss_fn(out, targets), out, vectorize=vectorize
-        )
-    else:
-        input_jacobians = torch.autograd.functional.jacobian(
-            lambda out: loss_fn(out, targets), out
-        )
+    input_jacobians = torch.autograd.functional.jacobian(
+        lambda out: loss_fn(out, targets), out
+    )
 
     if reduction_type == "mean":
         input_jacobians = input_jacobians * len(input_jacobians)
@@ -709,13 +704,8 @@ def _eig_helper(H: Tensor):
     `torch.linalg.eig` always returns a complex tensor, which in this case would
     actually have no complex component)
     """
-    version = _parse_version(torch.__version__)
-    if version < (1, 9):
-        ls, vs = torch.eig(H, eigenvectors=True)
-        ls = ls[:, 0]
-    else:
-        ls, vs = torch.linalg.eig(H)
-        ls, vs = ls.real, vs.real
+    ls, vs = torch.linalg.eig(H)
+    ls, vs = ls.real, vs.real
 
     ls_argsort = torch.argsort(ls)
     vs = vs[:, ls_argsort]
@@ -1034,7 +1024,7 @@ def _functional_call(model: Module, d: Dict[str, Tensor], features):
     """
     import torch
 
-    version = _parse_version(torch.__version__)
+    version = parse_version(torch.__version__)
     if version < (1, 12, 0):
         return _custom_functional_call(model, d, features)
     elif version >= (1, 12, 0) and version < (2, 0, 0):

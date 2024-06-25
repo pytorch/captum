@@ -6,10 +6,10 @@ import torch
 from captum._utils.common import (
     _format_feature_mask,
     _get_max_feature_index,
-    _parse_version,
     _reduce_list,
     _select_targets,
     _sort_key_list,
+    parse_version,
     safe_div,
 )
 from tests.helpers.basic import (
@@ -176,30 +176,30 @@ class Test(BaseTest):
 class TestParseVersion(BaseTest):
     def test_parse_version_dev(self) -> None:
         version_str = "1.12.0.dev20201109"
-        output = _parse_version(version_str)
+        output = parse_version(version_str)
         self.assertEqual(output, (1, 12, 0))
 
     def test_parse_version_post(self) -> None:
         version_str = "1.3.0.post2"
-        output = _parse_version(version_str)
+        output = parse_version(version_str)
         self.assertEqual(output, (1, 3, 0))
 
     def test_parse_version_1_12_0(self) -> None:
         version_str = "1.12.0"
-        output = _parse_version(version_str)
+        output = parse_version(version_str)
         self.assertEqual(output, (1, 12, 0))
 
     def test_parse_version_1_12_2(self) -> None:
         version_str = "1.12.2"
-        output = _parse_version(version_str)
+        output = parse_version(version_str)
         self.assertEqual(output, (1, 12, 2))
 
     def test_parse_version_1_6_0(self) -> None:
         version_str = "1.6.0"
-        output = _parse_version(version_str)
+        output = parse_version(version_str)
         self.assertEqual(output, (1, 6, 0))
 
     def test_parse_version_1_12(self) -> None:
         version_str = "1.12"
-        output = _parse_version(version_str)
+        output = parse_version(version_str)
         self.assertEqual(output, (1, 12))

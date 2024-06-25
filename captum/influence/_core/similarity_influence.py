@@ -40,12 +40,8 @@ def cosine_similarity(test: Tensor, train: Tensor, replace_nan: int = 0) -> Tens
     test = test.view(test.shape[0], -1)
     train = train.view(train.shape[0], -1)
 
-    if common._parse_version(torch.__version__) <= (1, 6, 0):
-        test_norm = torch.norm(test, p=None, dim=1, keepdim=True)
-        train_norm = torch.norm(train, p=None, dim=1, keepdim=True)
-    else:
-        test_norm = torch.linalg.norm(test, ord=2, dim=1, keepdim=True)
-        train_norm = torch.linalg.norm(train, ord=2, dim=1, keepdim=True)
+    test_norm = torch.linalg.norm(test, ord=2, dim=1, keepdim=True)
+    train_norm = torch.linalg.norm(train, ord=2, dim=1, keepdim=True)
 
     test = torch.where(test_norm != 0.0, test / test_norm, Tensor([replace_nan]))
     train = torch.where(train_norm != 0.0, train / train_norm, Tensor([replace_nan])).T
