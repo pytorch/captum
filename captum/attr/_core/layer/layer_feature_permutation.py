@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-from typing import Any, Callable, List, Tuple, Union
+from typing import Any, Callable, cast, List, Tuple, Union
 
 import torch
 from captum._utils.common import (
@@ -197,7 +197,11 @@ class LayerFeaturePermutation(LayerAttribution, FeaturePermutation):
             finally:
                 if hook is not None:
                     hook.remove()
-            return eval
+
+            # _run_forward may return future of Tensor,
+            # but we don't support it here now
+            # And it will fail before here.
+            return cast(Tensor, eval)
 
         with torch.no_grad():
             inputs = _format_tensor_into_tuples(inputs)

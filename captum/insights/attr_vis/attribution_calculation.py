@@ -87,6 +87,11 @@ class AttributionCalculation:
             additional_forward_args=additional_forward_args,
         )
 
+        # _run_forward may return future of Tensor,
+        # but we don't support it here now
+        # And it will fail before here.
+        outputs = cast(Tensor, outputs)
+
         if self.score_func is not None:
             outputs = self.score_func(outputs)
 

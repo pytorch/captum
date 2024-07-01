@@ -112,6 +112,10 @@ def compute_gradients(
     with torch.autograd.set_grad_enabled(True):
         # runs forward pass
         outputs = _run_forward(forward_fn, inputs, target_ind, additional_forward_args)
+        # _run_forward may return future of Tensor,
+        # but we don't support it here now
+        # And it will fail before here.
+        outputs = cast(Tensor, outputs)
         assert outputs[0].numel() == 1, (
             "Target not provided when necessary, cannot"
             " take gradient with respect to multiple outputs."
@@ -297,6 +301,10 @@ def _forward_layer_distributed_eval(
             target=target_ind,
             additional_forward_args=additional_forward_args,
         )
+        # _run_forward may return future of Tensor,
+        # but we don't support it here now
+        # And it will fail before here.
+        output = cast(Tensor, output)
     finally:
         for hook in all_hooks:
             hook.remove()
