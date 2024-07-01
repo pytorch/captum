@@ -276,17 +276,22 @@ class GradientAttribution(Attribution):
         _validate_target(num_samples, target)
 
         with torch.no_grad():
-            start_out_sum = _sum_rows(
-                _run_forward(
-                    self.forward_func, start_point, target, additional_forward_args
-                )
+            start_out_eval = _run_forward(
+                self.forward_func, start_point, target, additional_forward_args
             )
+            # _run_forward may return future of Tensor,
+            # but we don't support it here now
+            # And it will fail before here.
+            start_out_sum = _sum_rows(cast(Tensor, start_out_eval))
 
-            end_out_sum = _sum_rows(
-                _run_forward(
-                    self.forward_func, end_point, target, additional_forward_args
-                )
+            end_out_eval = _run_forward(
+                self.forward_func, end_point, target, additional_forward_args
             )
+            # _run_forward may return future of Tensor,
+            # but we don't support it here now
+            # And it will fail before here.
+            end_out_sum = _sum_rows(cast(Tensor, end_out_eval))
+
             row_sums = [_sum_rows(attribution) for attribution in attributions]
             attr_sum = torch.stack(
                 [cast(Tensor, sum(row_sum)) for row_sum in zip(*row_sums)]

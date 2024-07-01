@@ -15,6 +15,8 @@ from captum._utils.typing import (
     TupleOrTensorOrBoolGeneric,
 )
 from torch import device, Tensor
+
+from torch.futures import Future
 from torch.nn import Module
 
 
@@ -514,7 +516,7 @@ def _run_forward(
     inputs: Any,
     target: TargetType = None,
     additional_forward_args: Any = None,
-) -> Tensor:
+) -> Union[Tensor, Future[Tensor]]:
     forward_func_args = signature(forward_func).parameters
     if len(forward_func_args) == 0:
         output = forward_func()
@@ -532,6 +534,8 @@ def _run_forward(
             else inputs
         )
     )
+    if isinstance(output, torch.futures.Future):
+        return output.then(lambda x: _select_targets(x.value(), target))
     return _select_targets(output, target)
 
 
