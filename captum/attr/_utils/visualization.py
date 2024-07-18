@@ -631,7 +631,7 @@ def visualize_timeseries_attr(
         plt_fig, plt_axis = plt_fig_axis
     else:
         if use_pyplot:
-            plt_fig, plt_axis = plt.subplots(
+            plt_fig, plt_axis = plt.subplots(  # type: ignore
                 figsize=fig_size, nrows=num_subplots, sharex=True
             )
         else:
