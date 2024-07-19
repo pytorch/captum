@@ -3,7 +3,7 @@
 import itertools
 import math
 import warnings
-from typing import Any, Callable, Iterable, Sequence, Tuple, Union
+from typing import Any, Callable, cast, Iterable, Sequence, Tuple, Union
 
 import torch
 from captum._utils.common import (
@@ -27,7 +27,7 @@ from captum.attr._utils.common import (
     _tensorize_baseline,
 )
 from captum.log import log_usage
-from torch import Tensor
+from torch import dtype, Tensor
 
 
 def _all_perm_generator(num_features: int, num_samples: int) -> Iterable[Sequence[int]]:
@@ -551,7 +551,7 @@ class ShapleyValueSampling(PerturbationAttribution):
         # using python built-in type as torch dtype
         # int -> torch.int64, float -> torch.float64
         # ref: https://github.com/pytorch/pytorch/pull/21215
-        return torch.tensor([forward_output], dtype=output_type)
+        return torch.tensor([forward_output], dtype=cast(dtype, output_type))
 
 
 class ShapleyValues(ShapleyValueSampling):

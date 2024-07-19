@@ -496,6 +496,10 @@ def infidelity(
             additional_forward_args_expanded,
         )
         inputs_fwd = _run_forward(forward_func, inputs, target, additional_forward_args)
+        # _run_forward may return future of Tensor,
+        # but we don't support it here now
+        # And it will fail before here.
+        inputs_fwd = cast(Tensor, inputs_fwd)
         inputs_fwd = torch.repeat_interleave(
             inputs_fwd, current_n_perturb_samples, dim=0
         )

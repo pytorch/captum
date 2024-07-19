@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 import functools
 import warnings
-from typing import Any, Callable, List, overload, Tuple, Union
+from typing import Any, Callable, cast, List, overload, Tuple, Union
 
 import torch
 from captum._utils.common import (
@@ -102,7 +102,8 @@ class LayerIntegratedGradients(LayerAttribution, GradientAttribution):
                 "Multiple layers provided. Please ensure that each layer is"
                 "**not** solely dependent on the outputs of"
                 "another layer. Please refer to the documentation for more"
-                "detail."
+                "detail.",
+                stacklevel=2,
             )
 
     @overload
@@ -467,13 +468,17 @@ class LayerIntegratedGradients(LayerAttribution, GradientAttribution):
                     # the inputs is an empty tuple
                     # coz it is prepended into additional_forward_args
                     output = _run_forward(
-                        self.forward_func, tuple(), target_ind, additional_forward_args
+                        self.forward_func, (), target_ind, additional_forward_args
                     )
                 finally:
                     for hook in hooks:
                         if hook is not None:
                             hook.remove()
 
+                # _run_forward may return future of Tensor,
+                # but we don't support it here now
+                # And it will fail before here.
+                output = cast(Tensor, output)
                 assert output[0].numel() == 1, (
                     "Target not provided when necessary, cannot"
                     " take gradient with respect to multiple outputs."

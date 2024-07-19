@@ -358,7 +358,11 @@ class LRP(GradientAttribution):
         # adjustments as inputs to the layers with adjusted weights. This procedure
         # is important for graph generation in the 2nd forward pass.
         self._register_pre_hooks()
-        return output
+
+        # _run_forward may return future of Tensor,
+        # but we don't support it here now
+        # And it will fail before here.
+        return cast(Tensor, output)
 
     def _remove_forward_hooks(self) -> None:
         for forward_handle in self.forward_handles:
