@@ -530,6 +530,10 @@ src="/_sphinx/documentation_options.js"></script>
             <span class="n">additional_forward_args_expanded</span><span class="p">,</span>
         <span class="p">)</span>
         <span class="n">inputs_fwd</span> <span class="o">=</span> <span class="n">_run_forward</span><span class="p">(</span><span class="n">forward_func</span><span class="p">,</span> <span class="n">inputs</span><span class="p">,</span> <span class="n">target</span><span class="p">,</span> <span class="n">additional_forward_args</span><span class="p">)</span>
+        <span class="c1"># _run_forward may return future of Tensor,</span>
+        <span class="c1"># but we don't support it here now</span>
+        <span class="c1"># And it will fail before here.</span>
+        <span class="n">inputs_fwd</span> <span class="o">=</span> <span class="n">cast</span><span class="p">(</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">inputs_fwd</span><span class="p">)</span>
         <span class="n">inputs_fwd</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">repeat_interleave</span><span class="p">(</span>
             <span class="n">inputs_fwd</span><span class="p">,</span> <span class="n">current_n_perturb_samples</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">0</span>
         <span class="p">)</span>

@@ -321,17 +321,22 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="n">_validate_target</span><span class="p">(</span><span class="n">num_samples</span><span class="p">,</span> <span class="n">target</span><span class="p">)</span>
 
         <span class="k">with</span> <span class="n">torch</span><span class="o">.</span><span class="n">no_grad</span><span class="p">():</span>
-            <span class="n">start_out_sum</span> <span class="o">=</span> <span class="n">_sum_rows</span><span class="p">(</span>
-                <span class="n">_run_forward</span><span class="p">(</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">forward_func</span><span class="p">,</span> <span class="n">start_point</span><span class="p">,</span> <span class="n">target</span><span class="p">,</span> <span class="n">additional_forward_args</span>
-                <span class="p">)</span>
+            <span class="n">start_out_eval</span> <span class="o">=</span> <span class="n">_run_forward</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">forward_func</span><span class="p">,</span> <span class="n">start_point</span><span class="p">,</span> <span class="n">target</span><span class="p">,</span> <span class="n">additional_forward_args</span>
             <span class="p">)</span>
+            <span class="c1"># _run_forward may return future of Tensor,</span>
+            <span class="c1"># but we don't support it here now</span>
+            <span class="c1"># And it will fail before here.</span>
+            <span class="n">start_out_sum</span> <span class="o">=</span> <span class="n">_sum_rows</span><span class="p">(</span><span class="n">cast</span><span class="p">(</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">start_out_eval</span><span class="p">))</span>
 
-            <span class="n">end_out_sum</span> <span class="o">=</span> <span class="n">_sum_rows</span><span class="p">(</span>
-                <span class="n">_run_forward</span><span class="p">(</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">forward_func</span><span class="p">,</span> <span class="n">end_point</span><span class="p">,</span> <span class="n">target</span><span class="p">,</span> <span class="n">additional_forward_args</span>
-                <span class="p">)</span>
+            <span class="n">end_out_eval</span> <span class="o">=</span> <span class="n">_run_forward</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">forward_func</span><span class="p">,</span> <span class="n">end_point</span><span class="p">,</span> <span class="n">target</span><span class="p">,</span> <span class="n">additional_forward_args</span>
             <span class="p">)</span>
+            <span class="c1"># _run_forward may return future of Tensor,</span>
+            <span class="c1"># but we don't support it here now</span>
+            <span class="c1"># And it will fail before here.</span>
+            <span class="n">end_out_sum</span> <span class="o">=</span> <span class="n">_sum_rows</span><span class="p">(</span><span class="n">cast</span><span class="p">(</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">end_out_eval</span><span class="p">))</span>
+
             <span class="n">row_sums</span> <span class="o">=</span> <span class="p">[</span><span class="n">_sum_rows</span><span class="p">(</span><span class="n">attribution</span><span class="p">)</span> <span class="k">for</span> <span class="n">attribution</span> <span class="ow">in</span> <span class="n">attributions</span><span class="p">]</span>
             <span class="n">attr_sum</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">stack</span><span class="p">(</span>
                 <span class="p">[</span><span class="n">cast</span><span class="p">(</span><span class="n">Tensor</span><span class="p">,</span> <span class="nb">sum</span><span class="p">(</span><span class="n">row_sum</span><span class="p">))</span> <span class="k">for</span> <span class="n">row_sum</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="o">*</span><span class="n">row_sums</span><span class="p">)]</span>

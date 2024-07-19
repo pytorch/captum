@@ -401,7 +401,11 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="c1"># adjustments as inputs to the layers with adjusted weights. This procedure</span>
         <span class="c1"># is important for graph generation in the 2nd forward pass.</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_register_pre_hooks</span><span class="p">()</span>
-        <span class="k">return</span> <span class="n">output</span>
+
+        <span class="c1"># _run_forward may return future of Tensor,</span>
+        <span class="c1"># but we don't support it here now</span>
+        <span class="c1"># And it will fail before here.</span>
+        <span class="k">return</span> <span class="n">cast</span><span class="p">(</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">output</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_remove_forward_hooks</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">for</span> <span class="n">forward_handle</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">forward_handles</span><span class="p">:</span>

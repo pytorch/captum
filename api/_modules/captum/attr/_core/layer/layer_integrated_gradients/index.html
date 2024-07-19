@@ -33,7 +33,7 @@ src="/_sphinx/documentation_options.js"></script>
 <span></span><span class="ch">#!/usr/bin/env python3</span>
 <span class="kn">import</span> <span class="nn">functools</span>
 <span class="kn">import</span> <span class="nn">warnings</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">overload</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Union</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">cast</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">overload</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Union</span>
 
 <span class="kn">import</span> <span class="nn">torch</span>
 <span class="kn">from</span> <span class="nn">captum._utils.common</span> <span class="kn">import</span> <span class="p">(</span>
@@ -136,7 +136,8 @@ src="/_sphinx/documentation_options.js"></script>
                 <span class="s2">"Multiple layers provided. Please ensure that each layer is"</span>
                 <span class="s2">"**not** solely dependent on the outputs of"</span>
                 <span class="s2">"another layer. Please refer to the documentation for more"</span>
-                <span class="s2">"detail."</span>
+                <span class="s2">"detail."</span><span class="p">,</span>
+                <span class="n">stacklevel</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
             <span class="p">)</span>
 
     <span class="nd">@overload</span>
@@ -503,13 +504,17 @@ src="/_sphinx/documentation_options.js"></script>
                     <span class="c1"># the inputs is an empty tuple</span>
                     <span class="c1"># coz it is prepended into additional_forward_args</span>
                     <span class="n">output</span> <span class="o">=</span> <span class="n">_run_forward</span><span class="p">(</span>
-                        <span class="bp">self</span><span class="o">.</span><span class="n">forward_func</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">(),</span> <span class="n">target_ind</span><span class="p">,</span> <span class="n">additional_forward_args</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">forward_func</span><span class="p">,</span> <span class="p">(),</span> <span class="n">target_ind</span><span class="p">,</span> <span class="n">additional_forward_args</span>
                     <span class="p">)</span>
                 <span class="k">finally</span><span class="p">:</span>
                     <span class="k">for</span> <span class="n">hook</span> <span class="ow">in</span> <span class="n">hooks</span><span class="p">:</span>
                         <span class="k">if</span> <span class="n">hook</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
                             <span class="n">hook</span><span class="o">.</span><span class="n">remove</span><span class="p">()</span>
 
+                <span class="c1"># _run_forward may return future of Tensor,</span>
+                <span class="c1"># but we don't support it here now</span>
+                <span class="c1"># And it will fail before here.</span>
+                <span class="n">output</span> <span class="o">=</span> <span class="n">cast</span><span class="p">(</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">output</span><span class="p">)</span>
                 <span class="k">assert</span> <span class="n">output</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">numel</span><span class="p">()</span> <span class="o">==</span> <span class="mi">1</span><span class="p">,</span> <span class="p">(</span>
                     <span class="s2">"Target not provided when necessary, cannot"</span>
                     <span class="s2">" take gradient with respect to multiple outputs."</span>
