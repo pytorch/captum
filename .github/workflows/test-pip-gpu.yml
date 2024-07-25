@@ -16,7 +16,7 @@ jobs:
       fail-fast: false
     uses: pytorch/test-infra/.github/workflows/linux_job.yml@main
     with:
-      runner: linux.4xlarge.nvidia.gpu
+      runner: amz2023.linux.4xlarge.nvidia.gpu
       repository: pytorch/captum
       gpu-arch-type: cuda
       gpu-arch-version: ${{ matrix.cuda_arch_version }}
