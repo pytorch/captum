@@ -6,6 +6,7 @@ from captum._utils.typing import TargetType, TensorOrTupleOfTensorsGeneric
 from captum.attr._core.feature_ablation import FeatureAblation
 from captum.log import log_usage
 from torch import Tensor
+from torch.futures import Future
 
 
 def _permute_feature(x: Tensor, feature_mask: Tensor) -> Tensor:
@@ -86,6 +87,7 @@ class FeaturePermutation(FeatureAblation):
         """
         FeatureAblation.__init__(self, forward_func=forward_func)
         self.perm_func = perm_func
+        self.use_futures = False
 
     # suppressing error caused by the child class not having a matching
     # signature to the parent
@@ -268,6 +270,31 @@ class FeaturePermutation(FeatureAblation):
             feature_mask=feature_mask,
             perturbations_per_eval=perturbations_per_eval,
             show_progress=show_progress,
+            **kwargs,
+        )
+
+    def attribute_future(
+        self,
+        inputs: TensorOrTupleOfTensorsGeneric,
+        target: TargetType = None,
+        additional_forward_args: Any = None,
+        feature_mask: Union[None, TensorOrTupleOfTensorsGeneric] = None,
+        perturbations_per_eval: int = 1,
+        show_progress: bool = False,
+        **kwargs: Any,
+    ) -> Future[TensorOrTupleOfTensorsGeneric]:
+        if isinstance(kwargs, dict) and "baselines" in kwargs:
+            del kwargs["baselines"]
+        return FeatureAblation.attribute.__wrapped__(
+            self,
+            inputs,
+            baselines=None,
+            target=target,
+            additional_forward_args=additional_forward_args,
+            feature_mask=feature_mask,
+            perturbations_per_eval=perturbations_per_eval,
+            show_progress=show_progress,
+            use_futures=self.use_futures,
             **kwargs,
         )
 
