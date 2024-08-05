@@ -3,7 +3,6 @@ from typing import Callable, List, Tuple
 
 import torch
 from captum.attr._core.feature_permutation import _permute_feature, FeaturePermutation
-from parameterized import parameterized
 from tests.helpers import BaseTest
 from tests.helpers.basic import assertTensorAlmostEqual
 from tests.helpers.basic_models import BasicModelWithSparseInputs
@@ -86,8 +85,7 @@ class Test(BaseTest):
 
             self._check_perm_fn_with_mask(inp, mask)
 
-    @parameterized.expand([(True,), (False,)])
-    def test_single_input(self, use_futures) -> None:
+    def test_single_input(self) -> None:
         batch_size = 2
         input_size = (6,)
         constant_value = 10000
@@ -95,30 +93,51 @@ class Test(BaseTest):
         def forward_func(x: Tensor) -> Tensor:
             return x.sum(dim=-1)
 
-        if use_futures:
-            feature_importance = FeaturePermutation(
-                forward_func=self.construct_future_forward(forward_func)
-            )
-            feature_importance.use_futures = use_futures
-
-        else:
-            feature_importance = FeaturePermutation(forward_func=forward_func)
+        feature_importance = FeaturePermutation(forward_func=forward_func)
 
         inp = torch.randn((batch_size,) + input_size)
 
         inp[:, 0] = constant_value
         zeros = torch.zeros_like(inp[:, 0])
-        if use_futures:
-            attribs = feature_importance.attribute_future(inp).wait()
-        else:
-            attribs = feature_importance.attribute(inp)
+
+        attribs = feature_importance.attribute(inp)
 
         self.assertTrue(attribs.squeeze(0).size() == (batch_size,) + input_size)
         assertTensorAlmostEqual(self, attribs[:, 0], zeros, delta=0.05, mode="max")
         self.assertTrue((attribs[:, 1 : input_size[0]].abs() > 0).all())
 
-    @parameterized.expand([(True,), (False,)])
-    def test_multi_input(self, use_futures) -> None:
+    def test_single_input_with_future(
+        self,
+    ) -> None:
+        batch_size = 2
+        input_size = (6,)
+        constant_value = 10000
+
+        def forward_func(x: Tensor) -> Tensor:
+            return x.sum(dim=-1)
+
+        feature_importance = FeaturePermutation(
+            forward_func=self.construct_future_forward(forward_func)
+        )
+        feature_importance.use_futures = True
+
+        inp = torch.randn((batch_size,) + input_size)
+
+        inp[:, 0] = constant_value
+        zeros = torch.zeros_like(inp[:, 0])
+
+        attribs = feature_importance.attribute_future(inp)
+
+        self.assertTrue(type(attribs) is torch.Future)
+        attribs = attribs.wait()
+
+        self.assertTrue(attribs.squeeze(0).size() == (batch_size,) + input_size)
+        assertTensorAlmostEqual(self, attribs[:, 0], zeros, delta=0.05, mode="max")
+        self.assertTrue((attribs[:, 1 : input_size[0]].abs() > 0).all())
+
+    def test_multi_input(
+        self,
+    ) -> None:
         batch_size = 20
         inp1_size = (5, 2)
         inp2_size = (5, 3)
@@ -133,14 +152,7 @@ class Test(BaseTest):
 
             return torch.mean((y - labels) ** 2)
 
-        if use_futures:
-            feature_importance = FeaturePermutation(
-                forward_func=self.construct_future_forward(forward_func)
-            )
-            feature_importance.use_futures = use_futures
-
-        else:
-            feature_importance = FeaturePermutation(forward_func=forward_func)
+        feature_importance = FeaturePermutation(forward_func=forward_func)
 
         inp = (
             torch.randn((batch_size,) + inp1_size),
@@ -154,12 +166,7 @@ class Test(BaseTest):
 
         inp[1][:, :, 1] = 4
 
-        if use_futures:
-            attribs = feature_importance.attribute_future(
-                inp, feature_mask=feature_mask
-            ).wait()
-        else:
-            attribs = feature_importance.attribute(inp, feature_mask=feature_mask)
+        attribs = feature_importance.attribute(inp, feature_mask=feature_mask)
 
         self.assertTrue(isinstance(attribs, tuple))
         self.assertTrue(len(attribs) == 2)
@@ -173,8 +180,59 @@ class Test(BaseTest):
         self.assertTrue((attribs[0] != 0).all())
         self.assertTrue((attribs[1][:, :, 0] != 0).all())
 
-    @parameterized.expand([(True,), (False,)])
-    def test_mulitple_perturbations_per_eval(self, use_futures) -> None:
+    def test_multi_input_with_future(
+        self,
+    ) -> None:
+        batch_size = 20
+        inp1_size = (5, 2)
+        inp2_size = (5, 3)
+
+        labels = torch.randn(batch_size)
+
+        def forward_func(*x: Tensor) -> Tensor:
+            y = torch.zeros(x[0].shape[0:2])
+            for xx in x:
+                y += xx[:, :, 0] * xx[:, :, 1]
+            y = y.sum(dim=-1)
+
+            return torch.mean((y - labels) ** 2)
+
+        feature_importance = FeaturePermutation(
+            forward_func=self.construct_future_forward(forward_func)
+        )
+        feature_importance.use_futures = True
+
+        inp = (
+            torch.randn((batch_size,) + inp1_size),
+            torch.randn((batch_size,) + inp2_size),
+        )
+
+        feature_mask = (
+            torch.arange(inp[0][0].numel()).view_as(inp[0][0]).unsqueeze(0),
+            torch.arange(inp[1][0].numel()).view_as(inp[1][0]).unsqueeze(0),
+        )
+
+        inp[1][:, :, 1] = 4
+
+        attribs = feature_importance.attribute_future(inp, feature_mask=feature_mask)
+        self.assertTrue(type(attribs) is torch.Future)
+        attribs = attribs.wait()
+
+        self.assertTrue(isinstance(attribs, tuple))
+        self.assertTrue(len(attribs) == 2)
+
+        self.assertTrue(attribs[0].squeeze(0).size() == inp1_size)
+        self.assertTrue(attribs[1].squeeze(0).size() == inp2_size)
+
+        self.assertTrue((attribs[1][:, :, 1] == 0).all())
+        self.assertTrue((attribs[1][:, :, 2] == 0).all())
+
+        self.assertTrue((attribs[0] != 0).all())
+        self.assertTrue((attribs[1][:, :, 0] != 0).all())
+
+    def test_multiple_perturbations_per_eval(
+        self,
+    ) -> None:
         perturbations_per_eval = 4
         batch_size = 2
         input_size = (4,)
@@ -185,20 +243,12 @@ class Test(BaseTest):
             return 1 - x
 
         target = 1
-        if use_futures:
-            feature_importance = FeaturePermutation(
-                forward_func=self.construct_future_forward(forward_func)
-            )
-            feature_importance.use_futures = use_futures
-            attribs = feature_importance.attribute_future(
-                inp, perturbations_per_eval=perturbations_per_eval, target=target
-            ).wait()
-        else:
-            feature_importance = FeaturePermutation(forward_func=forward_func)
 
-            attribs = feature_importance.attribute(
-                inp, perturbations_per_eval=perturbations_per_eval, target=target
-            )
+        feature_importance = FeaturePermutation(forward_func=forward_func)
+
+        attribs = feature_importance.attribute(
+            inp, perturbations_per_eval=perturbations_per_eval, target=target
+        )
 
         self.assertTrue(attribs.size() == (batch_size,) + input_size)
 
@@ -213,8 +263,47 @@ class Test(BaseTest):
         actual_diff = torch.stack([(y[0] - y[1])[target], (y[1] - y[0])[target]])
         assertTensorAlmostEqual(self, attribs[:, target], actual_diff)
 
-    @parameterized.expand([(True,), (False,)])
-    def test_broadcastable_masks(self, use_futures) -> None:
+    def test_multiple_perturbations_per_eval_with_futures(
+        self,
+    ) -> None:
+        perturbations_per_eval = 4
+        batch_size = 2
+        input_size = (4,)
+
+        inp = torch.randn((batch_size,) + input_size)
+
+        def forward_func(x: Tensor) -> Tensor:
+            return 1 - x
+
+        target = 1
+
+        feature_importance = FeaturePermutation(
+            forward_func=self.construct_future_forward(forward_func)
+        )
+        feature_importance.use_futures = True
+
+        attribs = feature_importance.attribute_future(
+            inp, perturbations_per_eval=perturbations_per_eval, target=target
+        )
+        self.assertTrue(type(attribs) is torch.Future)
+        attribs = attribs.wait()
+
+        self.assertTrue(attribs.size() == (batch_size,) + input_size)
+
+        for i in range(inp.size(1)):
+            if i == target:
+                continue
+            assertTensorAlmostEqual(
+                self, attribs[:, i], torch.zeros_like(attribs[:, i])
+            )
+
+        y = forward_func(inp)
+        actual_diff = torch.stack([(y[0] - y[1])[target], (y[1] - y[0])[target]])
+        assertTensorAlmostEqual(self, attribs[:, target], actual_diff)
+
+    def test_broadcastable_masks(
+        self,
+    ) -> None:
         # integration test to ensure that
         # permutation function works with custom masks
         def forward_func(x: Tensor) -> Tensor:
@@ -222,13 +311,8 @@ class Test(BaseTest):
 
         batch_size = 2
         inp = torch.randn((batch_size,) + (3, 4, 4))
-        if use_futures:
-            feature_importance = FeaturePermutation(
-                forward_func=self.construct_future_forward(forward_func)
-            )
-            feature_importance.use_futures = use_futures
-        else:
-            feature_importance = FeaturePermutation(forward_func=forward_func)
+
+        feature_importance = FeaturePermutation(forward_func=forward_func)
 
         masks = [
             torch.tensor([0]),
@@ -237,18 +321,62 @@ class Test(BaseTest):
         ]
 
         for mask in masks:
-            if use_futures:
-                attribs = feature_importance.attribute_future(
-                    inp, feature_mask=mask
-                ).wait()
-            else:
-                attribs = feature_importance.attribute(inp, feature_mask=mask)
+
+            attribs = feature_importance.attribute(inp, feature_mask=mask)
             self.assertTrue(attribs is not None)
             self.assertTrue(attribs.shape == inp.shape)
 
             fm = mask.expand_as(inp[0])
 
             features = set(mask.flatten())
+            for feature in features:
+                m = (fm == feature).bool()
+                attribs_for_feature = attribs[:, m]
+                assertTensorAlmostEqual(
+                    self,
+                    attribs_for_feature[0],
+                    -attribs_for_feature[1],
+                    delta=0.05,
+                    mode="max",
+                )
+
+    def test_broadcastable_masks_with_future(
+        self,
+    ) -> None:
+        # integration test to ensure that
+        # permutation function works with custom masks
+        def forward_func(x: Tensor) -> Tensor:
+            return x.view(x.shape[0], -1).sum(dim=-1)
+
+        batch_size = 2
+        inp = torch.randn((batch_size,) + (3, 4, 4))
+
+        feature_importance = FeaturePermutation(
+            forward_func=self.construct_future_forward(forward_func)
+        )
+        feature_importance.use_futures = True
+
+        masks = [
+            torch.tensor([0]),
+            torch.tensor([[0, 1, 2, 3]]),
+            torch.tensor([[[0, 1, 2, 3], [3, 3, 4, 5], [6, 6, 4, 6], [7, 8, 9, 10]]]),
+        ]
+
+        results = []
+
+        for mask in masks:
+            attribs_future = feature_importance.attribute_future(inp, feature_mask=mask)
+            results.append(attribs_future)
+            self.assertTrue(attribs_future is not None)
+
+        for idx in range(len(results)):
+            attribs = results[idx].wait()
+            self.assertTrue(attribs is not None)
+            self.assertTrue(attribs.shape == inp.shape)
+
+            fm = masks[idx].expand_as(inp[0])
+
+            features = set(masks[idx].flatten())
             for feature in features:
                 m = (fm == feature).bool()
                 attribs_for_feature = attribs[:, m]
