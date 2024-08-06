@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+# pyre-strict
+
 from typing import Callable, Union
 
 import torch
@@ -56,6 +58,7 @@ class Concept:
         return "Concept(%r, %r)" % (self.id, self.name)
 
 
+# pyre-fixme[13]: Attribute `interpret` is never initialized.
 class ConceptInterpreter:
     r"""
     An abstract class that exposes an abstract interpret method
@@ -70,6 +73,7 @@ class ConceptInterpreter:
         """
         self.model = model
 
+    # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
     interpret: Callable
     r"""
     An abstract interpret method that performs concept-based model interpretability

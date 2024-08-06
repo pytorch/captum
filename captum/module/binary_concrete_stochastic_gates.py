@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+
+# pyre-strict
 import math
 from typing import Optional
 
@@ -16,6 +18,8 @@ if hasattr(torch, "fx"):
     torch.fx.wrap(_torch_empty)
 
 
+# pyre-fixme[3]: Return type must be annotated.
+# pyre-fixme[2]: Parameter must be annotated.
 def _logit(inp):
     # torch.logit is introduced in 1.7.0
     if hasattr(torch, "logit"):
@@ -59,6 +63,7 @@ class BinaryConcreteStochasticGates(StochasticGatesBase):
 
     """
 
+    # pyre-fixme[3]: Return type must be annotated.
     def __init__(
         self,
         n_gates: int,
@@ -139,6 +144,7 @@ class BinaryConcreteStochasticGates(StochasticGatesBase):
         self.eps = eps
 
         # pre-calculate the fixed term used in active prob
+        # pyre-fixme[4]: Attribute must be annotated.
         self.active_prob_offset = temperature * math.log(-lower_bound / upper_bound)
 
     def _sample_gate_values(self, batch_size: int) -> Tensor:
@@ -193,6 +199,8 @@ class BinaryConcreteStochasticGates(StochasticGatesBase):
         return torch.sigmoid(self.log_alpha_param - self.active_prob_offset)
 
     @classmethod
+    # pyre-fixme[3]: Return type must be annotated.
+    # pyre-fixme[2]: Parameter must be annotated.
     def _from_pretrained(cls, log_alpha_param: Tensor, *args, **kwargs):
         """
         Private factory method to create an instance with pretrained parameters

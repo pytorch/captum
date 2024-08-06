@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+
+# pyre-strict
 import os
 from typing import List
 
@@ -7,6 +9,9 @@ import torch.nn as nn
 import torchvision
 import torchvision.transforms as transforms
 from captum.insights import AttributionVisualizer, Batch
+
+# pyre-fixme[21]: Could not find module
+#  `captum.insights.attr_vis.example.get_pretrained_model`.
 from captum.insights.attr_vis.example.get_pretrained_model import Net
 from captum.insights.attr_vis.features import ImageFeature
 
@@ -60,10 +65,13 @@ def get_pretrained_model() -> Net:
     return net
 
 
+# pyre-fixme[3]: Return type must be annotated.
+# pyre-fixme[2]: Parameter must be annotated.
 def baseline_func(input):
     return input * 0
 
 
+# pyre-fixme[3]: Return type must be annotated.
 def formatted_data_iter():
     dataset = torchvision.datasets.CIFAR10(
         root="data/test", train=False, download=True, transform=transforms.ToTensor()

@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+# pyre-strict
+
 import glob
 import warnings
 from abc import abstractmethod
@@ -70,10 +72,14 @@ class TracInCPBase(DataInfluence):
         self,
         model: Module,
         train_dataset: Union[Dataset, DataLoader],
+        # pyre-fixme[24]: Generic type `Iterator` expects 1 type parameter.
         checkpoints: Union[str, List[str], Iterator],
+        # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
         checkpoints_load_func: Callable = _load_flexible_state_dict,
+        # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
         loss_fn: Optional[Union[Module, Callable]] = None,
         batch_size: Union[int, None] = 1,
+        # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
         test_loss_fn: Optional[Union[Module, Callable]] = None,
     ) -> None:
         r"""
@@ -146,6 +152,7 @@ class TracInCPBase(DataInfluence):
         self.checkpoints_load_func = checkpoints_load_func
         self.loss_fn = loss_fn
         # If test_loss_fn not provided, it's assumed to be same as loss_fn
+        # pyre-fixme[4]: Attribute must be annotated.
         self.test_loss_fn = loss_fn if test_loss_fn is None else test_loss_fn
         self.batch_size = batch_size
 
@@ -154,6 +161,7 @@ class TracInCPBase(DataInfluence):
                 "since the `train_dataset` argument was a `Dataset`, "
                 "`batch_size` must be an int."
             )
+            # pyre-fixme[4]: Attribute must be annotated.
             self.train_dataloader = DataLoader(train_dataset, batch_size, shuffle=False)
         else:
             self.train_dataloader = train_dataset
@@ -175,9 +183,11 @@ class TracInCPBase(DataInfluence):
 
     @property
     def checkpoints(self) -> List[str]:
+        # pyre-fixme[16]: `TracInCPBase` has no attribute `_checkpoints`.
         return self._checkpoints
 
     @checkpoints.setter
+    # pyre-fixme[24]: Generic type `Iterator` expects 1 type parameter.
     def checkpoints(self, checkpoints: Union[str, List[str], Iterator]) -> None:
         if isinstance(checkpoints, str):
             self._checkpoints = AV.sort_files(glob.glob(join(checkpoints, "*")))
@@ -194,6 +204,7 @@ class TracInCPBase(DataInfluence):
     @abstractmethod
     def self_influence(
         self,
+        # pyre-fixme[2]: Parameter annotation cannot contain `Any`.
         inputs: Optional[Union[Tuple[Any, ...], DataLoader]] = None,
         show_progress: bool = False,
     ) -> Tensor:
@@ -254,6 +265,7 @@ class TracInCPBase(DataInfluence):
     @abstractmethod
     def _get_k_most_influential(
         self,
+        # pyre-fixme[2]: Parameter annotation cannot contain `Any`.
         inputs: Union[Tuple[Any, ...], DataLoader],
         k: int = 5,
         proponents: bool = True,
@@ -305,6 +317,7 @@ class TracInCPBase(DataInfluence):
     @abstractmethod
     def _influence(
         self,
+        # pyre-fixme[2]: Parameter annotation cannot contain `Any`.
         inputs: Union[Tuple[Any, ...], DataLoader],
         show_progress: bool = False,
     ) -> Tensor:
@@ -340,6 +353,7 @@ class TracInCPBase(DataInfluence):
     @abstractmethod
     def influence(  # type: ignore[override]
         self,
+        # pyre-fixme[2]: Parameter annotation cannot contain `Any`.
         inputs: Union[Tuple[Any, ...], DataLoader],
         k: Optional[int] = None,
         proponents: bool = True,
@@ -435,11 +449,15 @@ class TracInCP(TracInCPBase):
         self,
         model: Module,
         train_dataset: Union[Dataset, DataLoader],
+        # pyre-fixme[24]: Generic type `Iterator` expects 1 type parameter.
         checkpoints: Union[str, List[str], Iterator],
+        # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
         checkpoints_load_func: Callable = _load_flexible_state_dict,
         layers: Optional[List[str]] = None,
+        # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
         loss_fn: Optional[Union[Module, Callable]] = None,
         batch_size: Union[int, None] = 1,
+        # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
         test_loss_fn: Optional[Union[Module, Callable]] = None,
         sample_wise_grads_per_batch: bool = False,
     ) -> None:
@@ -565,10 +583,12 @@ class TracInCP(TracInCPBase):
         self.sample_wise_grads_per_batch = sample_wise_grads_per_batch
 
         # check `loss_fn`
+        # pyre-fixme[4]: Attribute must be annotated.
         self.reduction_type = _check_loss_fn(
             self, loss_fn, "loss_fn", sample_wise_grads_per_batch
         )
         # check `test_loss_fn` if it was provided
+        # pyre-fixme[4]: Attribute must be annotated.
         self.test_reduction_type = (
             self.reduction_type
             if test_loss_fn is None
@@ -582,6 +602,7 @@ class TracInCP(TracInCPBase):
         within influence to restore after every influence call)? or make a copy so that
         changes to grad_requires aren't persistent after using TracIn.
         """
+        # pyre-fixme[4]: Attribute must be annotated.
         self.layer_modules = None
         if layers is not None:
             self.layer_modules = _set_active_parameters(model, layers)
@@ -589,6 +610,7 @@ class TracInCP(TracInCPBase):
     @log_usage()
     def influence(  # type: ignore[override]
         self,
+        # pyre-fixme[2]: Parameter annotation cannot contain `Any`.
         inputs: Union[Tuple[Any, ...], DataLoader],
         k: Optional[int] = None,
         proponents: bool = True,
@@ -725,6 +747,7 @@ class TracInCP(TracInCPBase):
     def _sum_jacobians(
         self,
         inputs: DataLoader,
+        # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
         loss_fn: Optional[Union[Module, Callable]] = None,
         reduction_type: Optional[str] = None,
     ) -> Tuple[Tensor, ...]:
@@ -736,6 +759,8 @@ class TracInCP(TracInCPBase):
 
         inputs_batch = next(inputs_iter)
 
+        # pyre-fixme[3]: Return type must be annotated.
+        # pyre-fixme[2]: Parameter must be annotated.
         def get_batch_contribution(inputs_batch):
             _input_jacobians = self._basic_computation_tracincp(
                 inputs_batch[0:-1],
@@ -766,6 +791,7 @@ class TracInCP(TracInCPBase):
     def _concat_jacobians(
         self,
         inputs: DataLoader,
+        # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
         loss_fn: Optional[Union[Module, Callable]] = None,
         reduction_type: Optional[str] = None,
     ) -> Tuple[Tensor, ...]:
@@ -787,6 +813,7 @@ class TracInCP(TracInCPBase):
     @log_usage()
     def compute_intermediate_quantities(
         self,
+        # pyre-fixme[2]: Parameter annotation cannot contain `Any`.
         inputs: Union[Tuple[Any, ...], DataLoader],
         aggregate: bool = False,
     ) -> Tensor:
@@ -846,6 +873,8 @@ class TracInCP(TracInCPBase):
         # If `inputs` is not a `DataLoader`, turn it into one.
         inputs = _format_inputs_dataset(inputs)
 
+        # pyre-fixme[3]: Return type must be annotated.
+        # pyre-fixme[2]: Parameter must be annotated.
         def get_checkpoint_contribution(checkpoint):
             assert (
                 checkpoint is not None
@@ -855,11 +884,21 @@ class TracInCP(TracInCPBase):
             # get jacobians as tuple of tensors
             if aggregate:
                 inputs_jacobians = self._sum_jacobians(
-                    inputs, self.loss_fn, self.reduction_type
+                    # pyre-fixme[6]: For 1st argument expected
+                    #  `DataLoader[typing.Any]` but got `Union[DataLoader[typing.Any],
+                    #  typing.Tuple[typing.Any, ...]]`.
+                    inputs,
+                    self.loss_fn,
+                    self.reduction_type,
                 )
             else:
                 inputs_jacobians = self._concat_jacobians(
-                    inputs, self.loss_fn, self.reduction_type
+                    # pyre-fixme[6]: For 1st argument expected
+                    #  `DataLoader[typing.Any]` but got `Union[DataLoader[typing.Any],
+                    #  typing.Tuple[typing.Any, ...]]`.
+                    inputs,
+                    self.loss_fn,
+                    self.reduction_type,
                 )
             # flatten into single tensor
             return learning_rate * torch.cat(
@@ -880,7 +919,9 @@ class TracInCP(TracInCPBase):
 
     def _influence_batch_tracincp(
         self,
+        # pyre-fixme[2]: Parameter annotation cannot contain `Any`.
         input_checkpoint_jacobians: List[Tuple[Any, ...]],
+        # pyre-fixme[2]: Parameter annotation cannot contain `Any`.
         train_batch: Tuple[Any, ...],
     ) -> Tensor:
         """
@@ -890,6 +931,8 @@ class TracInCP(TracInCPBase):
         computed by `_get_checkpoint_jacobians`.
         """
 
+        # pyre-fixme[3]: Return type must be annotated.
+        # pyre-fixme[2]: Parameter must be annotated.
         def get_checkpoint_contribution(input_jacobians, checkpoint):
 
             assert (
@@ -928,6 +971,7 @@ class TracInCP(TracInCPBase):
         self,
         inputs_dataset: DataLoader,
         aggregate: bool,
+        # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
         loss_fn: Optional[Union[Module, Callable]] = None,
     ) -> List[Tuple[Tensor, ...]]:
         """
@@ -952,6 +996,7 @@ class TracInCP(TracInCPBase):
 
     def _influence(
         self,
+        # pyre-fixme[2]: Parameter annotation cannot contain `Any`.
         inputs: Union[Tuple[Any, ...], DataLoader],
         show_progress: bool = False,
         aggregate: bool = False,
@@ -1029,6 +1074,7 @@ class TracInCP(TracInCPBase):
 
     def _get_k_most_influential(
         self,
+        # pyre-fixme[2]: Parameter annotation cannot contain `Any`.
         inputs: Union[Tuple[Any, ...], DataLoader],
         k: int = 5,
         proponents: bool = True,
@@ -1119,6 +1165,7 @@ class TracInCP(TracInCPBase):
 
     def _self_influence_by_checkpoints(
         self,
+        # pyre-fixme[2]: Parameter annotation cannot contain `Any`.
         inputs: Union[Tuple[Any, ...], DataLoader],
         show_progress: bool = False,
     ) -> Tensor:
@@ -1188,6 +1235,8 @@ class TracInCP(TracInCPBase):
                     "nor any time estimates."
                 )
 
+        # pyre-fixme[3]: Return type must be annotated.
+        # pyre-fixme[2]: Parameter must be annotated.
         def calculate_via_vector_norm(layer_jacobian):
             # Helper to efficiently calculate vector norm if pytorch version permits.
             return (
@@ -1198,6 +1247,9 @@ class TracInCP(TracInCPBase):
                 ** 2
             )
 
+        # pyre-fixme[53]: Captured variable `inputs_len` is not annotated.
+        # pyre-fixme[3]: Return type must be annotated.
+        # pyre-fixme[2]: Parameter must be annotated.
         def get_checkpoint_contribution(checkpoint):
             # This function returns a 1D tensor representing the contribution to the
             # self influence score for the given checkpoint, for all batches in
@@ -1293,6 +1345,7 @@ class TracInCP(TracInCPBase):
     @log_usage()
     def self_influence(
         self,
+        # pyre-fixme[2]: Parameter annotation cannot contain `Any`.
         inputs: Optional[Union[Tuple[Any, ...], DataLoader]] = None,
         show_progress: bool = False,
         outer_loop_by_checkpoints: bool = False,
@@ -1368,8 +1421,10 @@ class TracInCP(TracInCPBase):
 
     def _basic_computation_tracincp(
         self,
+        # pyre-fixme[2]: Parameter annotation cannot contain `Any`.
         inputs: Tuple[Any, ...],
         targets: Optional[Tensor] = None,
+        # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
         loss_fn: Optional[Union[Module, Callable]] = None,
         reduction_type: Optional[str] = None,
     ) -> Tuple[Tensor, ...]:

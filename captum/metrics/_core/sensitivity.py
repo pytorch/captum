@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+# pyre-strict
+
 from copy import deepcopy
 from inspect import signature
 from typing import Any, Callable, cast, Optional, Tuple, Union
@@ -45,6 +47,8 @@ def default_perturb_func(
                 original inputs.
 
     """
+    # pyre-fixme[9]: inputs has type `TensorOrTupleOfTensorsGeneric`; used as
+    #  `Tuple[Tensor, ...]`.
     inputs = _format_tensor_into_tuples(inputs)
     perturbed_input = tuple(
         input
@@ -58,8 +62,10 @@ def default_perturb_func(
 
 @log_usage()
 def sensitivity_max(
+    # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
     explanation_func: Callable,
     inputs: TensorOrTupleOfTensorsGeneric,
+    # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
     perturb_func: Callable = default_perturb_func,
     perturb_radius: float = 0.02,
     n_perturb_samples: int = 10,
@@ -223,6 +229,7 @@ def sensitivity_max(
         return torch.max(input_tnsr, dim=1).values  # type: ignore
 
     kwarg_expanded_for = None
+    # pyre-fixme[33]: Given annotation cannot be `Any`.
     kwargs_copy: Any = None
 
     def _next_sensitivity_max(current_n_perturb_samples: int) -> Tensor:
@@ -248,6 +255,8 @@ def sensitivity_max(
                 )
                 if (
                     isinstance(baselines[0], Tensor)
+                    # pyre-fixme[16]: Item `float` of `Union[float, int, Tensor]`
+                    #  has no attribute `shape`.
                     and baselines[0].shape == inputs[0].shape
                 ):
                     _expand_and_update_baselines(
@@ -270,7 +279,10 @@ def sensitivity_max(
             [
                 (expl_input - expl_perturbed).view(expl_perturbed.size(0), -1)
                 for expl_perturbed, expl_input in zip(
-                    expl_perturbed_inputs, expl_inputs_expanded
+                    # pyre-fixme[6]: For 1st argument expected
+                    #  `Iterable[Variable[_T1]]` but got `None`.
+                    expl_perturbed_inputs,
+                    expl_inputs_expanded,
                 )
             ],
             dim=1,

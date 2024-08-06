@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+# pyre-strict
+
 from typing import List
 
 from captum.concept._core.concept import Concept

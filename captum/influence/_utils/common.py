@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+
+# pyre-strict
 import warnings
 from functools import reduce
 from typing import (
@@ -84,6 +86,7 @@ def _gradient_dot_product(
 
 
 def _jacobian_loss_wrt_inputs(
+    # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
     loss_fn: Union[Module, Callable],
     out: Tensor,
     targets: Tensor,
@@ -199,7 +202,9 @@ def _load_flexible_state_dict(model: Module, path: str) -> float:
 
 def _get_k_most_influential_helper(
     influence_src_dataloader: DataLoader,
+    # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
     influence_batch_fn: Callable,
+    # pyre-fixme[2]: Parameter annotation cannot be `Any`.
     inputs: Any,
     k: int = 5,
     proponents: bool = True,
@@ -321,6 +326,7 @@ class _DatasetFromList(Dataset):
     def __init__(self, _l: List[Any]) -> None:
         self._l = _l
 
+    # pyre-fixme[3]: Return annotation cannot be `Any`.
     def __getitem__(self, i: int) -> Any:
         return self._l[i]
 
@@ -328,6 +334,8 @@ class _DatasetFromList(Dataset):
         return len(self._l)
 
 
+# pyre-fixme[3]: Return type must be annotated.
+# pyre-fixme[2]: Parameter annotation cannot contain `Any`.
 def _format_inputs_dataset(inputs_dataset: Union[Tuple[Any, ...], DataLoader]):
     # if `inputs_dataset` is not a `DataLoader`, turn it into one.
     # `_DatasetFromList` turns a list into a `Dataset` where `__getitem__`
@@ -341,8 +349,10 @@ def _format_inputs_dataset(inputs_dataset: Union[Tuple[Any, ...], DataLoader]):
 
 
 def _self_influence_by_batches_helper(
+    # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
     self_influence_batch_fn: Callable,
     instance_name: str,
+    # pyre-fixme[2]: Parameter annotation cannot contain `Any`.
     inputs_dataset: Union[Tuple[Any, ...], DataLoader],
     show_progress: bool = False,
 ) -> Tensor:
@@ -435,6 +445,7 @@ def _self_influence_by_batches_helper(
 
 def _check_loss_fn(
     influence_instance: Union["TracInCPBase", "InfluenceFunctionBase"],
+    # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
     loss_fn: Optional[Union[Module, Callable]],
     loss_fn_name: str,
     sample_wise_grads_per_batch: bool = True,
@@ -526,6 +537,7 @@ def _set_active_parameters(model: Module, layers: List[str]) -> List[Module]:
     return layer_modules
 
 
+# pyre-fixme[3]: Return type must be annotated.
 def _progress_bar_constructor(
     influence_inst: "InfluenceFunctionBase",
     inputs_dataset: DataLoader,
@@ -581,6 +593,7 @@ def _flatten_params(_params: Tuple[Tensor, ...]) -> Tensor:
     return torch.cat([_param.view(-1) for _param in _params])
 
 
+# pyre-fixme[3]: Return type must be annotated.
 def _unflatten_params_factory(
     param_shapes: Union[List[Tuple[int, ...]], Tuple[Tensor, ...]]
 ):
@@ -588,6 +601,8 @@ def _unflatten_params_factory(
     returns a function which is the inverse of `_flatten_params`
     """
 
+    # pyre-fixme[3]: Return type must be annotated.
+    # pyre-fixme[2]: Parameter must be annotated.
     def _unflatten_params(flattened_params):
         params = []
         offset = 0
@@ -604,7 +619,9 @@ def _unflatten_params_factory(
 
 def _influence_batch_intermediate_quantities_influence_function(
     influence_inst: "IntermediateQuantitiesInfluenceFunction",
+    # pyre-fixme[2]: Parameter annotation cannot contain `Any`.
     test_batch: Tuple[Any, ...],
+    # pyre-fixme[2]: Parameter annotation cannot contain `Any`.
     train_batch: Tuple[Any, ...],
 ) -> Tensor:
     """
@@ -619,6 +636,7 @@ def _influence_batch_intermediate_quantities_influence_function(
 
 def _influence_helper_intermediate_quantities_influence_function(
     influence_inst: "IntermediateQuantitiesInfluenceFunction",
+    # pyre-fixme[2]: Parameter annotation cannot contain `Any`.
     inputs_dataset: Union[Tuple[Any, ...], DataLoader],
     show_progress: bool,
 ) -> Tensor:
@@ -657,6 +675,7 @@ def _influence_helper_intermediate_quantities_influence_function(
 
 def _self_influence_helper_intermediate_quantities_influence_function(
     influence_inst: "IntermediateQuantitiesInfluenceFunction",
+    # pyre-fixme[2]: Parameter annotation cannot contain `Any`.
     inputs_dataset: Optional[Union[Tuple[Any, ...], DataLoader]],
     show_progress: bool,
 ) -> Tensor:
@@ -696,6 +715,7 @@ def _self_influence_helper_intermediate_quantities_influence_function(
     )
 
 
+# pyre-fixme[3]: Return type must be annotated.
 def _eig_helper(H: Tensor):
     """
     wrapper around `torch.linalg.eig` that sorts eigenvalues / eigenvectors by
@@ -807,9 +827,11 @@ class KMostInfluentialResults(NamedTuple):
 
 def _influence_route_to_helpers(
     influence_instance: Union["TracInCPBase", "InfluenceFunctionBase"],
+    # pyre-fixme[2]: Parameter annotation cannot contain `Any`.
     inputs: Union[Tuple[Any, ...], DataLoader],
     k: Optional[int] = None,
     proponents: bool = True,
+    # pyre-fixme[2]: Parameter must be annotated.
     **kwargs,
 ) -> Union[Tensor, KMostInfluentialResults]:
     """
@@ -863,6 +885,7 @@ def _parameter_multiply(params: Tuple[Tensor, ...], c: Tensor) -> Tuple[Tensor, 
     return tuple(param * c for param in params)
 
 
+# pyre-fixme[2]: Parameter must be annotated.
 def _parameter_to(params: Tuple[Tensor, ...], **to_kwargs) -> Tuple[Tensor, ...]:
     """
     applies the `to` method to all tensors in a tuple of tensors
@@ -886,8 +909,10 @@ def _parameter_linear_combination(
 
 def _compute_jacobian_sample_wise_grads_per_batch(
     influence_inst: Union["TracInCP", "InfluenceFunctionBase"],
+    # pyre-fixme[2]: Parameter annotation cannot contain `Any`.
     inputs: Tuple[Any, ...],
     targets: Optional[Tensor] = None,
+    # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
     loss_fn: Optional[Union[Module, Callable]] = None,
     reduction_type: Optional[str] = "none",
 ) -> Tuple[Tensor, ...]:
@@ -915,9 +940,13 @@ def _compute_jacobian_sample_wise_grads_per_batch(
     )
 
 
+# pyre-fixme[3]: Return type must be annotated.
 def _compute_batch_loss_influence_function_base(
+    # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
     loss_fn: Optional[Union[Module, Callable]],
+    # pyre-fixme[2]: Parameter annotation cannot be `Any`.
     input: Any,
+    # pyre-fixme[2]: Parameter annotation cannot be `Any`.
     target: Any,
     reduction_type: str,
 ):
@@ -971,6 +1000,7 @@ def _compute_batch_loss_influence_function_base(
         raise Exception
 
 
+# pyre-fixme[2]: Parameter must be annotated.
 def _set_attr(obj, names, val) -> None:
     if len(names) == 1:
         setattr(obj, names[0], val)
@@ -978,6 +1008,7 @@ def _set_attr(obj, names, val) -> None:
         _set_attr(getattr(obj, names[0]), names[1:], val)
 
 
+# pyre-fixme[2]: Parameter must be annotated.
 def _del_attr(obj, names) -> None:
     if len(names) == 1:
         delattr(obj, names[0])
@@ -985,6 +1016,8 @@ def _del_attr(obj, names) -> None:
         _del_attr(getattr(obj, names[0]), names[1:])
 
 
+# pyre-fixme[3]: Return type must be annotated.
+# pyre-fixme[2]: Parameter must be annotated.
 def _model_make_functional(model, param_names, params):
     params = tuple([param.detach().requires_grad_() for param in params])
 
@@ -994,6 +1027,7 @@ def _model_make_functional(model, param_names, params):
     return params
 
 
+# pyre-fixme[2]: Parameter must be annotated.
 def _model_reinsert_params(model, param_names, params, register: bool = False) -> None:
     for param_name, param in zip(param_names, params):
         _set_attr(
@@ -1003,6 +1037,8 @@ def _model_reinsert_params(model, param_names, params, register: bool = False) -
         )
 
 
+# pyre-fixme[3]: Return type must be annotated.
+# pyre-fixme[2]: Parameter must be annotated.
 def _custom_functional_call(model, d, features):
     param_names, params = zip(*list(d.items()))
     _params = _model_make_functional(model, param_names, params)
@@ -1012,6 +1048,8 @@ def _custom_functional_call(model, d, features):
     return out
 
 
+# pyre-fixme[3]: Return type must be annotated.
+# pyre-fixme[2]: Parameter must be annotated.
 def _functional_call(model: Module, d: Dict[str, Tensor], features):
     """
     Makes a call to `model.forward`, which is treated as a function of the parameters
@@ -1037,6 +1075,8 @@ def _functional_call(model: Module, d: Dict[str, Tensor], features):
         return torch.func.functional_call(model, d, features)
 
 
+# pyre-fixme[3]: Return type must be annotated.
+# pyre-fixme[2]: Parameter must be annotated.
 def _dataset_fn(dataloader, batch_fn, reduce_fn, *batch_fn_args, **batch_fn_kwargs):
     """
     Applies `batch_fn` to each batch in `dataloader`, reducing the results using
@@ -1046,6 +1086,9 @@ def _dataset_fn(dataloader, batch_fn, reduce_fn, *batch_fn_args, **batch_fn_kwar
     """
     _dataloader = iter(dataloader)
 
+    # pyre-fixme[53]: Captured variable `batch_fn` is not annotated.
+    # pyre-fixme[53]: Captured variable `reduce_fn` is not annotated.
+    # pyre-fixme[3]: Return type must be annotated.
     def _reduce_fn(_result, _batch):
         return reduce_fn(_result, batch_fn(_batch, *batch_fn_args, **batch_fn_kwargs))
 

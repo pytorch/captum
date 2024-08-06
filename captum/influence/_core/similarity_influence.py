@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+# pyre-strict
+
 import warnings
 from functools import partial
 from typing import Any, Callable, Dict, List, Optional, Tuple, Union
@@ -69,6 +71,7 @@ class SimilarityInfluence(DataInfluence):
         influence_src_dataset: Dataset,
         activation_dir: str,
         model_id: str = "",
+        # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
         similarity_metric: Callable = cosine_similarity,
         similarity_direction: str = "max",
         batch_size: int = 1,
@@ -125,6 +128,7 @@ class SimilarityInfluence(DataInfluence):
                     implementation of `DataInfluence` abstract class.
         """
         self.module = module
+        # pyre-fixme[4]: Attribute must be annotated.
         self.layers = [layers] if isinstance(layers, str) else layers
         self.influence_src_dataset = influence_src_dataset
         self.activation_dir = activation_dir
@@ -132,6 +136,7 @@ class SimilarityInfluence(DataInfluence):
         self.batch_size = batch_size
 
         if similarity_direction == "max" or similarity_direction == "min":
+            # pyre-fixme[4]: Attribute must be annotated.
             self.similarity_direction = similarity_direction
         else:
             raise ValueError(
@@ -141,6 +146,7 @@ class SimilarityInfluence(DataInfluence):
 
         if similarity_metric is cosine_similarity:
             if "replace_nan" in kwargs:
+                # pyre-fixme[4]: Attribute must be annotated.
                 self.replace_nan = kwargs["replace_nan"]
             else:
                 self.replace_nan = -2 if self.similarity_direction == "max" else 2
@@ -148,6 +154,7 @@ class SimilarityInfluence(DataInfluence):
 
         self.similarity_metric = similarity_metric
 
+        # pyre-fixme[4]: Attribute must be annotated.
         self.influence_src_dataloader = DataLoader(
             influence_src_dataset, batch_size, shuffle=False
         )
@@ -156,9 +163,12 @@ class SimilarityInfluence(DataInfluence):
         self,
         inputs: Union[Tensor, Tuple[Tensor, ...]],
         top_k: int = 1,
+        # pyre-fixme[2]: Parameter annotation cannot be `Any`.
         additional_forward_args: Optional[Any] = None,
         load_src_from_disk: bool = True,
         **kwargs: Any,
+        # pyre-fixme[24]: Generic type `dict` expects 2 type parameters, use
+        #  `typing.Dict[<key type>, <value type>]` to avoid runtime subscripting errors.
     ) -> Dict:
         r"""
         Args:

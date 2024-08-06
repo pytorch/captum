@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+
+# pyre-strict
 from typing import Any, Callable, Dict, List, NamedTuple, Optional, Tuple, Type, Union
 
 from captum.attr._core import (
@@ -44,9 +46,11 @@ SUPPORTED_ATTRIBUTION_METHODS = [
 ]
 
 
+# pyre-fixme[2]: Parameter annotation cannot contain `Any`.
 class ConfigParameters(NamedTuple):
     params: Dict[str, Config]
     help_info: Optional[str] = None  # TODO fill out help for each method
+    # pyre-fixme[4]: Attribute annotation cannot contain `Any`.
     post_process: Optional[Dict[str, Callable[[Any], Any]]] = None
 
 
@@ -70,6 +74,8 @@ ATTRIBUTION_NAMES_TO_METHODS: Dict[
 }
 
 
+# pyre-fixme[3]: Return type must be annotated.
+# pyre-fixme[2]: Parameter must be annotated.
 def _str_to_tuple(s):
     if isinstance(s, tuple):
         return s

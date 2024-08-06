@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+
+# pyre-strict
 from collections import namedtuple
 from itertools import cycle
 from typing import (
@@ -54,6 +56,7 @@ def _get_context() -> str:
         # To avoid fbsource//third-party/pypi/google-cloud-pubsub:google-cloud-pubsub
         # which will cause "Duplicate extension: grpc/_cython/cygrpc.so!"
         # @manual
+        # pyre-fixme[21]: Could not find module `google.colab`.
         import google.colab  # noqa: F401
         import IPython
     except ImportError:
@@ -78,10 +81,16 @@ def _get_context() -> str:
     return _CONTEXT_NONE
 
 
+# pyre-fixme[4]: Attribute annotation cannot be `Any`.
+# pyre-fixme[2]: Parameter annotation cannot be `Any`.
 VisualizationOutput = namedtuple(
     "VisualizationOutput", "feature_outputs actual predicted active_index model_index"
 )
+# pyre-fixme[4]: Attribute annotation cannot be `Any`.
+# pyre-fixme[2]: Parameter annotation cannot be `Any`.
 Contribution = namedtuple("Contribution", "name percent")
+# pyre-fixme[4]: Attribute annotation cannot be `Any`.
+# pyre-fixme[2]: Parameter annotation cannot be `Any`.
 SampleCache = namedtuple("SampleCache", "inputs additional_forward_args label")
 
 
@@ -104,6 +113,7 @@ class Batch:
         self,
         inputs: Union[Tensor, Tuple[Tensor, ...]],
         labels: Optional[Tensor],
+        # pyre-fixme[2]: Parameter must be annotated.
         additional_args=None,
     ) -> None:
         r"""
@@ -136,6 +146,7 @@ class Batch:
         """
         self.inputs = inputs
         self.labels = labels
+        # pyre-fixme[4]: Attribute must be annotated.
         self.additional_args = additional_args
 
 
@@ -146,6 +157,7 @@ class AttributionVisualizer:
         classes: List[str],
         features: Union[List[BaseFeature], BaseFeature],
         dataset: Iterable[Batch],
+        # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
         score_func: Optional[Callable] = None,
         use_label_for_attr: bool = True,
     ) -> None:
@@ -201,6 +213,7 @@ class AttributionVisualizer:
         )
         self._outputs: List[VisualizationOutput] = []
         self._config = FilterConfig(prediction="all", classes=[], num_examples=4)
+        # pyre-fixme[4]: Attribute must be annotated.
         self._dataset_iter = iter(dataset)
         self._dataset_cache: List[Batch] = []
 
@@ -220,6 +233,7 @@ class AttributionVisualizer:
             return None
         return result[0]
 
+    # pyre-fixme[2]: Parameter must be annotated.
     def _update_config(self, settings) -> None:
         self._config = FilterConfig(
             attribution_method=settings["attribution_method"],
@@ -240,10 +254,12 @@ class AttributionVisualizer:
             display(widget.out)
 
     @log_usage()
+    # pyre-fixme[3]: Return type must be annotated.
     def serve(
         self,
         blocking: bool = False,
         debug: bool = False,
+        # pyre-fixme[2]: Parameter must be annotated.
         port=None,
         bind_all: bool = False,
     ):
@@ -255,10 +271,12 @@ class AttributionVisualizer:
                 blocking=blocking, debug=debug, port=port, bind_all=bind_all
             )
 
+    # pyre-fixme[3]: Return type must be annotated.
     def _serve(
         self,
         blocking: bool = False,
         debug: bool = False,
+        # pyre-fixme[2]: Parameter must be annotated.
         port=None,
         bind_all: bool = False,
     ):
@@ -269,7 +287,11 @@ class AttributionVisualizer:
         )
 
     def _serve_colab(
-        self, blocking: bool = False, debug: bool = False, port=None
+        self,
+        blocking: bool = False,
+        debug: bool = False,
+        # pyre-fixme[2]: Parameter must be annotated.
+        port=None,
     ) -> None:
         import ipywidgets as widgets
         from captum.insights.attr_vis.server import start_server
@@ -367,10 +389,15 @@ class AttributionVisualizer:
 
     def _calculate_vis_output(
         self,
+        # pyre-fixme[2]: Parameter must be annotated.
         inputs,
+        # pyre-fixme[2]: Parameter must be annotated.
         additional_forward_args,
+        # pyre-fixme[2]: Parameter must be annotated.
         label,
+        # pyre-fixme[2]: Parameter must be annotated.
         target=None,
+        # pyre-fixme[2]: Parameter must be annotated.
         single_model_index=None,
     ) -> Optional[List[VisualizationOutput]]:
         # Use all models, unless the user wants to render data for a particular one
@@ -432,7 +459,13 @@ class AttributionVisualizer:
             features_per_input = [
                 feature.visualize(attr, data, contrib)
                 for feature, attr, data, contrib in zip(
-                    self.features, attrs_per_feature, inputs, net_contrib
+                    # pyre-fixme[6]: For 1st argument expected
+                    #  `Iterable[Variable[_T1]]` but got `Union[List[BaseFeature],
+                    #  BaseFeature]`.
+                    self.features,
+                    attrs_per_feature,
+                    inputs,
+                    net_contrib,
                 )
             ]
 
@@ -495,9 +528,13 @@ class AttributionVisualizer:
         return vis_outputs
 
     @log_usage()
+    # pyre-fixme[3]: Return type must be annotated.
     def visualize(self):
         self._outputs = []
         while len(self._outputs) < self._config.num_examples:
+            # pyre-fixme[6]: For 1st argument expected
+            #  `Iterable[VisualizationOutput]` but got
+            #  `List[Tuple[List[VisualizationOutput], SampleCache]]`.
             self._outputs.extend(self._get_outputs())
         return [o[0] for o in self._outputs]
 

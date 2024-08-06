@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+# pyre-strict
+
 from typing import Any, Callable, cast, Optional, Tuple, Union
 
 import torch
@@ -19,6 +21,7 @@ from captum.metrics._utils.batching import _divide_and_aggregate_metrics
 from torch import Tensor
 
 
+# pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
 def infidelity_perturb_func_decorator(multipy_by_inputs: bool = True) -> Callable:
     r"""An auxiliary, decorator function that helps with computing
     perturbations given perturbed inputs. It can be useful for cases
@@ -40,6 +43,7 @@ def infidelity_perturb_func_decorator(multipy_by_inputs: bool = True) -> Callabl
 
     """
 
+    # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
     def sub_infidelity_perturb_func_decorator(pertub_func: Callable) -> Callable:
         r"""
         Args:
@@ -64,6 +68,7 @@ def infidelity_perturb_func_decorator(multipy_by_inputs: bool = True) -> Callabl
 
         """
 
+        # pyre-fixme[3]: Return type must be annotated.
         def default_perturb_func(
             inputs: TensorOrTupleOfTensorsGeneric, baselines: BaselineType = None
         ):
@@ -74,7 +79,11 @@ def infidelity_perturb_func_decorator(multipy_by_inputs: bool = True) -> Callabl
                 else pertub_func(inputs)
             )
             inputs_perturbed = _format_tensor_into_tuples(inputs_perturbed)
+            # pyre-fixme[9]: inputs has type `TensorOrTupleOfTensorsGeneric`; used
+            #  as `Tuple[Tensor, ...]`.
             inputs = _format_tensor_into_tuples(inputs)
+            # pyre-fixme[6]: For 2nd argument expected `Tuple[Tensor, ...]` but got
+            #  `TensorOrTupleOfTensorsGeneric`.
             baselines = _format_baseline(baselines, inputs)
             if baselines is None:
                 perturbations = tuple(
@@ -87,6 +96,8 @@ def infidelity_perturb_func_decorator(multipy_by_inputs: bool = True) -> Callabl
                         if multipy_by_inputs
                         else input - input_perturbed
                     )
+                    # pyre-fixme[6]: For 2nd argument expected
+                    #  `Iterable[Variable[_T2]]` but got `None`.
                     for input, input_perturbed in zip(inputs, inputs_perturbed)
                 )
             else:
@@ -101,7 +112,11 @@ def infidelity_perturb_func_decorator(multipy_by_inputs: bool = True) -> Callabl
                         else input - input_perturbed
                     )
                     for input, input_perturbed, baseline in zip(
-                        inputs, inputs_perturbed, baselines
+                        inputs,
+                        # pyre-fixme[6]: For 2nd argument expected
+                        #  `Iterable[Variable[_T2]]` but got `None`.
+                        inputs_perturbed,
+                        baselines,
                     )
                 )
             return perturbations, inputs_perturbed
@@ -113,11 +128,14 @@ def infidelity_perturb_func_decorator(multipy_by_inputs: bool = True) -> Callabl
 
 @log_usage()
 def infidelity(
+    # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
     forward_func: Callable,
+    # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
     perturb_func: Callable,
     inputs: TensorOrTupleOfTensorsGeneric,
     attributions: TensorOrTupleOfTensorsGeneric,
     baselines: BaselineType = None,
+    # pyre-fixme[2]: Parameter annotation cannot be `Any`.
     additional_forward_args: Any = None,
     target: TargetType = None,
     n_perturb_samples: int = 10,
@@ -403,6 +421,7 @@ def infidelity(
         repeated instances per example.
         """
 
+        # pyre-fixme[3]: Return type must be annotated.
         def call_perturb_func():
             r""" """
             baselines_pert = None
@@ -410,6 +429,8 @@ def infidelity(
             if len(inputs_expanded) == 1:
                 inputs_pert = inputs_expanded[0]
                 if baselines_expanded is not None:
+                    # pyre-fixme[24]: Generic type `tuple` expects at least 1 type
+                    #  parameter.
                     baselines_pert = cast(Tuple, baselines_expanded)[0]
             else:
                 inputs_pert = inputs_expanded
@@ -435,6 +456,8 @@ def infidelity(
                     and baseline.shape[0] > 1
                     else baseline
                 )
+                # pyre-fixme[24]: Generic type `tuple` expects at least 1 type
+                #  parameter.
                 for input, baseline in zip(inputs, cast(Tuple, baselines))
             )
 
@@ -474,7 +497,9 @@ def infidelity(
 
         _validate_inputs_and_perturbations(
             cast(Tuple[Tensor, ...], inputs),
+            # pyre-fixme[22]: The cast is redundant.
             cast(Tuple[Tensor, ...], inputs_perturbed),
+            # pyre-fixme[22]: The cast is redundant.
             cast(Tuple[Tensor, ...], perturbations),
         )
 
@@ -539,6 +564,8 @@ def infidelity(
             # returns (a-b)^2 if no need to normalize
             return ((attr_times_perturb_sums - perturbed_fwd_diffs).pow(2).sum(-1),)
 
+    # pyre-fixme[3]: Return type must be annotated.
+    # pyre-fixme[2]: Parameter must be annotated.
     def _sum_infidelity_tensors(agg_tensors, tensors):
         return tuple(agg_t + t for agg_t, t in zip(agg_tensors, tensors))
 
@@ -560,6 +587,7 @@ def infidelity(
             """Inputs and attributions must have
         matching shapes. One of the input tensor's shape is {} and the
         attribution tensor's shape is: {}"""
+            # pyre-fixme[16]: Module `attr` has no attribute `shape`.
         ).format(inp.shape, attr.shape)
 
     bsz = inputs[0].size(0)
@@ -581,7 +609,11 @@ def infidelity(
         beta = safe_div(beta_num, beta_denorm)
 
         infidelity_values = (
-            beta**2 * agg_tensors[0] - 2 * beta * agg_tensors[1] + agg_tensors[2]
+            # pyre-fixme[58]: `**` is not supported for operand types `Tensor` and
+            #  `int`.
+            beta**2 * agg_tensors[0]
+            - 2 * beta * agg_tensors[1]
+            + agg_tensors[2]
         )
     else:
         infidelity_values = agg_tensors[0]
