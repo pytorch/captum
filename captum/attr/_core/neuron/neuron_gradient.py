@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+
+# pyre-strict
 from typing import Any, Callable, List, Tuple, Union
 
 from captum._utils.common import (
@@ -26,6 +28,7 @@ class NeuronGradient(NeuronAttribution, GradientAttribution):
 
     def __init__(
         self,
+        # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
         forward_func: Callable,
         layer: Module,
         device_ids: Union[None, List[int]] = None,
@@ -57,7 +60,9 @@ class NeuronGradient(NeuronAttribution, GradientAttribution):
     def attribute(
         self,
         inputs: TensorOrTupleOfTensorsGeneric,
+        # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
         neuron_selector: Union[int, Tuple[Union[int, slice], ...], Callable],
+        # pyre-fixme[2]: Parameter annotation cannot be `Any`.
         additional_forward_args: Any = None,
         attribute_to_neuron_input: bool = False,
     ) -> TensorOrTupleOfTensorsGeneric:
@@ -158,11 +163,17 @@ class NeuronGradient(NeuronAttribution, GradientAttribution):
             >>> # index (4,1,2).
             >>> attribution = neuron_ig.attribute(input, (4,1,2))
         """
+        # pyre-fixme[6]: For 1st argument expected `Tensor` but got
+        #  `TensorOrTupleOfTensorsGeneric`.
         is_inputs_tuple = _is_tuple(inputs)
+        # pyre-fixme[9]: inputs has type `TensorOrTupleOfTensorsGeneric`; used as
+        #  `Tuple[Tensor, ...]`.
         inputs = _format_tensor_into_tuples(inputs)
         additional_forward_args = _format_additional_forward_args(
             additional_forward_args
         )
+        # pyre-fixme[6]: For 1st argument expected `Tuple[Tensor, ...]` but got
+        #  `TensorOrTupleOfTensorsGeneric`.
         gradient_mask = apply_gradient_requirements(inputs)
 
         _, input_grads = _forward_layer_eval_with_neuron_grads(
@@ -175,5 +186,9 @@ class NeuronGradient(NeuronAttribution, GradientAttribution):
             attribute_to_layer_input=attribute_to_neuron_input,
         )
 
+        # pyre-fixme[6]: For 1st argument expected `Tuple[Tensor, ...]` but got
+        #  `TensorOrTupleOfTensorsGeneric`.
         undo_gradient_requirements(inputs, gradient_mask)
+        # pyre-fixme[7]: Expected `TensorOrTupleOfTensorsGeneric` but got
+        #  `Tuple[Tensor, ...]`.
         return _format_output(is_inputs_tuple, input_grads)

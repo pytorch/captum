@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+
+# pyre-strict
 import typing
 import warnings
 from typing import Any, Callable, Iterator, Tuple, Union
@@ -19,12 +21,19 @@ from captum.attr._utils.approximation_methods import approximation_parameters
 from torch import Tensor
 
 
+# pyre-fixme[3]: Return type must be annotated.
 def _batch_attribution(
+    # pyre-fixme[2]: Parameter must be annotated.
     attr_method,
+    # pyre-fixme[2]: Parameter must be annotated.
     num_examples,
+    # pyre-fixme[2]: Parameter must be annotated.
     internal_batch_size,
+    # pyre-fixme[2]: Parameter must be annotated.
     n_steps,
+    # pyre-fixme[2]: Parameter must be annotated.
     include_endpoint=False,
+    # pyre-fixme[2]: Parameter must be annotated.
     **kwargs,
 ):
     """
@@ -101,11 +110,16 @@ def _tuple_splice_range(inputs: None, start: int, end: int) -> None: ...
 
 
 @typing.overload
+# pyre-fixme[24]: Generic type `tuple` expects at least 1 type parameter.
 def _tuple_splice_range(inputs: Tuple, start: int, end: int) -> Tuple: ...
 
 
 def _tuple_splice_range(
-    inputs: Union[None, Tuple], start: int, end: int
+    # pyre-fixme[24]: Generic type `tuple` expects at least 1 type parameter.
+    inputs: Union[None, Tuple],
+    start: int,
+    end: int,
+    # pyre-fixme[24]: Generic type `tuple` expects at least 1 type parameter.
 ) -> Union[None, Tuple]:
     """
     Splices each tensor element of given tuple (inputs) from range start
@@ -123,8 +137,10 @@ def _tuple_splice_range(
     )
 
 
+# pyre-fixme[3]: Return annotation cannot contain `Any`.
 def _batched_generator(
     inputs: TensorOrTupleOfTensorsGeneric,
+    # pyre-fixme[2]: Parameter annotation cannot be `Any`.
     additional_forward_args: Any = None,
     target_ind: TargetType = None,
     internal_batch_size: Union[None, int] = None,
@@ -137,6 +153,8 @@ def _batched_generator(
     assert internal_batch_size is None or (
         isinstance(internal_batch_size, int) and internal_batch_size > 0
     ), "Batch size must be greater than 0."
+    # pyre-fixme[9]: inputs has type `TensorOrTupleOfTensorsGeneric`; used as
+    #  `Tuple[Tensor, ...]`.
     inputs = _format_tensor_into_tuples(inputs)
     additional_forward_args = _format_additional_forward_args(additional_forward_args)
     num_examples = inputs[0].shape[0]
@@ -149,13 +167,19 @@ def _batched_generator(
             requires_grad."""
         )
     if internal_batch_size is None:
+        # pyre-fixme[7]: Expected `Iterator[Tuple[typing.Tuple[Tensor, ...], typing.A...
         yield inputs, additional_forward_args, target_ind
     else:
         for current_total in range(0, num_examples, internal_batch_size):
             with torch.autograd.set_grad_enabled(True):
                 inputs_splice = _tuple_splice_range(
-                    inputs, current_total, current_total + internal_batch_size
+                    # pyre-fixme[6]: For 1st argument expected `None` but got
+                    #  `TensorOrTupleOfTensorsGeneric`.
+                    inputs,
+                    current_total,
+                    current_total + internal_batch_size,
                 )
+            # pyre-fixme[7]: Expected `Iterator[Tuple[typing.Tuple[Tensor, ...], typi...
             yield inputs_splice, _tuple_splice_range(
                 additional_forward_args,
                 current_total,
@@ -171,6 +195,7 @@ def _batched_generator(
 def _batched_operator(
     operator: Callable[..., TupleOrTensorOrBoolGeneric],
     inputs: TensorOrTupleOfTensorsGeneric,
+    # pyre-fixme[2]: Parameter annotation cannot be `Any`.
     additional_forward_args: Any = None,
     target_ind: TargetType = None,
     internal_batch_size: Union[None, int] = None,
@@ -195,6 +220,8 @@ def _batched_operator(
     return _reduce_list(all_outputs)
 
 
+# pyre-fixme[3]: Return annotation cannot be `Any`.
+# pyre-fixme[2]: Parameter annotation cannot be `Any`.
 def _select_example(curr_arg: Any, index: int, bsz: int) -> Any:
     if curr_arg is None:
         return None
@@ -210,6 +237,8 @@ def _select_example(curr_arg: Any, index: int, bsz: int) -> Any:
     return _format_output(is_tuple, tuple(selected_arg))
 
 
+# pyre-fixme[2]: Parameter must be annotated.
+# pyre-fixme[24]: Generic type `Iterator` expects 1 type parameter.
 def _batch_example_iterator(bsz: int, *args) -> Iterator:
     """
     Batches the provided argument.

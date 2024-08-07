@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+
+# pyre-strict
 from typing import Any, Callable, Tuple, Union
 
 import numpy as np
@@ -35,6 +37,7 @@ class Occlusion(FeatureAblation):
     /tensorflow/methods.py#L401
     """
 
+    # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
     def __init__(self, forward_func: Callable) -> None:
         r"""
         Args:
@@ -55,6 +58,7 @@ class Occlusion(FeatureAblation):
         ] = None,
         baselines: BaselineType = None,
         target: TargetType = None,
+        # pyre-fixme[2]: Parameter annotation cannot be `Any`.
         additional_forward_args: Any = None,
         perturbations_per_eval: int = 1,
         show_progress: bool = False,
@@ -366,6 +370,8 @@ class Occlusion(FeatureAblation):
         padded_tensor = torch.nn.functional.pad(
             sliding_window_tsr, tuple(pad_values)  # type: ignore
         )
+        # pyre-fixme[58]: `+` is not supported for operand types `Tuple[int]` and
+        #  `Size`.
         return padded_tensor.reshape((1,) + padded_tensor.shape)
 
     def _get_feature_range_and_mask(
@@ -374,6 +380,8 @@ class Occlusion(FeatureAblation):
         feature_max = np.prod(kwargs["shift_counts"])
         return 0, feature_max, None
 
+    # pyre-fixme[3]: Return type must be annotated.
+    # pyre-fixme[2]: Parameter must be annotated.
     def _get_feature_counts(self, inputs, feature_mask, **kwargs):
         """return the numbers of possible input features"""
         return tuple(np.prod(counts).astype(int) for counts in kwargs["shift_counts"])

@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+
+# pyre-strict
 from typing import Any, Callable, List, Tuple, Union
 
 import torch
@@ -18,6 +20,7 @@ class LayerActivation(LayerAttribution):
 
     def __init__(
         self,
+        # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
         forward_func: Callable,
         layer: ModuleOrModuleList,
         device_ids: Union[None, List[int]] = None,
@@ -48,6 +51,7 @@ class LayerActivation(LayerAttribution):
     def attribute(
         self,
         inputs: Union[Tensor, Tuple[Tensor, ...]],
+        # pyre-fixme[2]: Parameter annotation cannot be `Any`.
         additional_forward_args: Any = None,
         attribute_to_layer_input: bool = False,
     ) -> Union[Tensor, Tuple[Tensor, ...], List[Union[Tensor, Tuple[Tensor, ...]]]]:
@@ -127,10 +131,13 @@ class LayerActivation(LayerAttribution):
             return _format_output(len(layer_eval) > 1, layer_eval)
         else:
             return [
+                # pyre-fixme[6]: For 2nd argument expected `Tuple[Tensor, ...]` but
+                #  got `Tensor`.
                 _format_output(len(single_layer_eval) > 1, single_layer_eval)
                 for single_layer_eval in layer_eval
             ]
 
     @property
+    # pyre-fixme[3]: Return type must be annotated.
     def multiplies_by_inputs(self):
         return True

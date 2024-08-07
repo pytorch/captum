@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+
+# pyre-strict
 from typing import Any, Callable, List, Tuple, Union
 
 from captum._utils.gradient import construct_neuron_grad_fn
@@ -48,6 +50,7 @@ class NeuronGradientShap(NeuronAttribution, GradientAttribution):
 
     def __init__(
         self,
+        # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
         forward_func: Callable,
         layer: Module,
         device_ids: Union[None, List[int]] = None,
@@ -94,12 +97,14 @@ class NeuronGradientShap(NeuronAttribution, GradientAttribution):
     def attribute(
         self,
         inputs: TensorOrTupleOfTensorsGeneric,
+        # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
         neuron_selector: Union[int, Tuple[Union[int, slice], ...], Callable],
         baselines: Union[
             TensorOrTupleOfTensorsGeneric, Callable[..., TensorOrTupleOfTensorsGeneric]
         ],
         n_samples: int = 5,
         stdevs: float = 0.0,
+        # pyre-fixme[2]: Parameter annotation cannot be `Any`.
         additional_forward_args: Any = None,
         attribute_to_neuron_input: bool = False,
     ) -> TensorOrTupleOfTensorsGeneric:
@@ -253,5 +258,6 @@ class NeuronGradientShap(NeuronAttribution, GradientAttribution):
         )
 
     @property
+    # pyre-fixme[3]: Return type must be annotated.
     def multiplies_by_inputs(self):
         return self._multiply_by_inputs

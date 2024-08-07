@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+
+# pyre-strict
 from enum import Enum
 from typing import Any, cast, List, Optional, Tuple, Union
 
@@ -25,6 +27,7 @@ class NoiseTunnelType(Enum):
     vargrad = 3
 
 
+# pyre-fixme[5]: Global expression must be annotated.
 SUPPORTED_NOISE_TUNNEL_TYPES = list(NoiseTunnelType.__members__.keys())
 
 
@@ -63,14 +66,18 @@ class NoiseTunnel(Attribution):
                         Conductance or Saliency.
         """
         self.attribution_method = attribution_method
+        # pyre-fixme[4]: Attribute must be annotated.
         self.is_delta_supported = self.attribution_method.has_convergence_delta()
+        # pyre-fixme[4]: Attribute must be annotated.
         self._multiply_by_inputs = self.attribution_method.multiplies_by_inputs
+        # pyre-fixme[4]: Attribute must be annotated.
         self.is_gradient_method = isinstance(
             self.attribution_method, GradientAttribution
         )
         Attribution.__init__(self, self.attribution_method.forward_func)
 
     @property
+    # pyre-fixme[3]: Return type must be annotated.
     def multiplies_by_inputs(self):
         return self._multiply_by_inputs
 
@@ -195,6 +202,7 @@ class NoiseTunnel(Attribution):
                     if self.is_gradient_method
                     else add_noise_to_input(input, stdev, nt_samples_partition)
                 )
+                # pyre-fixme[61]: `stdevs_` is undefined, or not always defined.
                 for (input, stdev) in zip(inputs, stdevs_)
             )
 
@@ -205,6 +213,8 @@ class NoiseTunnel(Attribution):
             bsz = input.shape[0]
 
             # expand input size by the number of drawn samples
+            # pyre-fixme[58]: `+` is not supported for operand types `Tuple[int]`
+            #  and `Size`.
             input_expanded_size = (bsz * nt_samples_partition,) + input.shape[1:]
 
             # expand stdev for the shape of the input and number of drawn samples
@@ -231,10 +241,13 @@ class NoiseTunnel(Attribution):
                 Tuple[int, ...], (bsz, nt_samples_batch_size_inter)
             )
             if len(attribution.shape) > 1:
+                # pyre-fixme[22]: The cast is redundant.
                 attribution_shape += cast(Tuple[int, ...], tuple(attribution.shape[1:]))
 
             attribution = attribution.view(attribution_shape)
             current_attribution_sum = attribution.sum(dim=1, keepdim=False)
+            # pyre-fixme[58]: `**` is not supported for operand types `Tensor` and
+            #  `int`.
             current_attribution_sq = torch.sum(attribution**2, dim=1, keepdim=False)
 
             sum_attribution[i] = (
@@ -249,7 +262,9 @@ class NoiseTunnel(Attribution):
             )
 
         def compute_partial_attribution(
-            inputs_with_noise_partition: Tuple[Tensor, ...], kwargs_partition: Any
+            inputs_with_noise_partition: Tuple[Tensor, ...],
+            # pyre-fixme[2]: Parameter annotation cannot be `Any`.
+            kwargs_partition: Any,
         ) -> Tuple[Tuple[Tensor, ...], bool, Union[None, Tensor]]:
             # smoothgrad_Attr(x) = 1 / n * sum(Attr(x + N(0, sigma^2))
             # NOTE: using __wrapped__ such that it does not log the inner logs
@@ -277,6 +292,9 @@ class NoiseTunnel(Attribution):
                 delta,
             )
 
+        # pyre-fixme[24]: Generic type `dict` expects 2 type parameters, use
+        #  `typing.Dict[<key type>, <value type>]` to avoid runtime subscripting
+        #  errors.
         def expand_partial(nt_samples_partition: int, kwargs_partial: dict) -> None:
             # if the algorithm supports targets, baselines and/or
             # additional_forward_args they will be expanded based
@@ -311,6 +329,7 @@ class NoiseTunnel(Attribution):
                 )
             )
 
+            # pyre-fixme[22]: The cast is redundant.
             return cast(Tuple[Tensor, ...], vargrad)
 
         def update_partial_attribution_and_delta(
@@ -371,10 +390,15 @@ class NoiseTunnel(Attribution):
                 ) = compute_partial_attribution(inputs_with_noise, kwargs_copy)
 
                 if len(sum_attributions) == 0:
+                    # pyre-fixme[9]: sum_attributions has type
+                    #  `List[Optional[Tensor]]`; used as `List[None]`.
                     sum_attributions = [None] * len(attributions_partial)
+                    # pyre-fixme[9]: sum_attributions_sq has type
+                    #  `List[Optional[Tensor]]`; used as `List[None]`.
                     sum_attributions_sq = [None] * len(attributions_partial)
 
                 update_partial_attribution_and_delta(
+                    # pyre-fixme[22]: The cast is redundant.
                     cast(Tuple[Tensor, ...], attributions_partial),
                     cast(Tensor, delta_partial),
                     cast(List[Tensor], sum_attributions),
@@ -396,6 +420,7 @@ class NoiseTunnel(Attribution):
                 ) = compute_partial_attribution(inputs_with_noise, kwargs)
 
                 update_partial_attribution_and_delta(
+                    # pyre-fixme[22]: The cast is redundant.
                     cast(Tuple[Tensor, ...], attributions_partial),
                     cast(Tensor, delta_partial),
                     cast(List[Tensor], sum_attributions),
@@ -417,7 +442,9 @@ class NoiseTunnel(Attribution):
                 ]
             )
             attributions = compute_smoothing(
+                # pyre-fixme[22]: The cast is redundant.
                 cast(Tuple[Tensor, ...], expected_attributions),
+                # pyre-fixme[22]: The cast is redundant.
                 cast(Tuple[Tensor, ...], expected_attributions_sq),
             )
 
@@ -426,7 +453,11 @@ class NoiseTunnel(Attribution):
                 delta = torch.cat(delta_partial_list, dim=0)
 
         return self._apply_checks_and_return_attributions(
-            attributions, is_attrib_tuple, return_convergence_delta, delta
+            attributions,
+            # pyre-fixme[61]: `is_attrib_tuple` is undefined, or not always defined.
+            is_attrib_tuple,
+            return_convergence_delta,
+            delta,
         )
 
     def _apply_checks_and_return_attributions(
@@ -435,9 +466,14 @@ class NoiseTunnel(Attribution):
         is_attrib_tuple: bool,
         return_convergence_delta: bool,
         delta: Union[None, Tensor],
+        # pyre-fixme[34]: `Variable[TensorOrTupleOfTensorsGeneric <:
+        #  [torch._tensor.Tensor, typing.Tuple[torch._tensor.Tensor, ...]]]`
+        #  isn't present in the function's parameters.
     ) -> Union[
         TensorOrTupleOfTensorsGeneric, Tuple[TensorOrTupleOfTensorsGeneric, Tensor]
     ]:
+        # pyre-fixme[9]: Unable to unpack `Union[Tensor, typing.Tuple[Tensor,
+        #  ...]]`, expected a tuple.
         attributions = _format_output(is_attrib_tuple, attributions)
 
         ret = (
@@ -446,6 +482,9 @@ class NoiseTunnel(Attribution):
             else attributions
         )
         ret = cast(
+            # pyre-fixme[34]: `Variable[TensorOrTupleOfTensorsGeneric <:
+            #  [torch._tensor.Tensor, typing.Tuple[torch._tensor.Tensor, ...]]]`
+            # isn't present in the function's parameters.
             Union[
                 TensorOrTupleOfTensorsGeneric,
                 Tuple[TensorOrTupleOfTensorsGeneric, Tensor],

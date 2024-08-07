@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+
+# pyre-strict
 import functools
 import warnings
 from typing import Any, Callable, cast, List, overload, Tuple, Union
@@ -45,6 +47,7 @@ class LayerIntegratedGradients(LayerAttribution, GradientAttribution):
 
     def __init__(
         self,
+        # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
         forward_func: Callable,
         layer: ModuleOrModuleList,
         device_ids: Union[None, List[int]] = None,
@@ -107,20 +110,27 @@ class LayerIntegratedGradients(LayerAttribution, GradientAttribution):
             )
 
     @overload
+    # pyre-fixme[43]: The implementation of `attribute` does not accept all possible
+    #  arguments of overload defined on line `112`.
     def attribute(
         self,
         inputs: Union[Tensor, Tuple[Tensor, ...]],
         baselines: BaselineType,
         target: TargetType,
+        # pyre-fixme[2]: Parameter annotation cannot be `Any`.
         additional_forward_args: Any,
         n_steps: int,
         method: str,
         internal_batch_size: Union[None, int],
+        # pyre-fixme[31]: Expression `Literal[False]` is not a valid type.
+        # pyre-fixme[24]: Non-generic type `typing.Literal` cannot take parameters.
         return_convergence_delta: Literal[False],
         attribute_to_layer_input: bool,
     ) -> Union[Tensor, Tuple[Tensor, ...], List[Union[Tensor, Tuple[Tensor, ...]]]]: ...
 
     @overload
+    # pyre-fixme[43]: The implementation of `attribute` does not accept all possible
+    #  arguments of overload defined on line `126`.
     def attribute(
         self,
         inputs: Union[Tensor, Tuple[Tensor, ...]],
@@ -130,6 +140,8 @@ class LayerIntegratedGradients(LayerAttribution, GradientAttribution):
         n_steps: int,
         method: str,
         internal_batch_size: Union[None, int],
+        # pyre-fixme[31]: Expression `Literal[True]` is not a valid type.
+        # pyre-fixme[24]: Non-generic type `typing.Literal` cannot take parameters.
         return_convergence_delta: Literal[True],
         attribute_to_layer_input: bool,
     ) -> Tuple[
@@ -138,6 +150,8 @@ class LayerIntegratedGradients(LayerAttribution, GradientAttribution):
     ]: ...
 
     @overload
+    # pyre-fixme[43]: This definition does not have the same decorators as the
+    #  preceding overload(s).
     def attribute(
         self,
         inputs: Union[Tensor, Tuple[Tensor, ...]],
@@ -158,6 +172,8 @@ class LayerIntegratedGradients(LayerAttribution, GradientAttribution):
     ]: ...
 
     @log_usage()
+    # pyre-fixme[43]: This definition does not have the same decorators as the
+    #  preceding overload(s).
     def attribute(
         self,
         inputs: Union[Tensor, Tuple[Tensor, ...]],
@@ -358,6 +374,8 @@ class LayerIntegratedGradients(LayerAttribution, GradientAttribution):
             additional_forward_args
         )
 
+        # pyre-fixme[3]: Return type must be annotated.
+        # pyre-fixme[2]: Parameter must be annotated.
         def flatten_tuple(tup):
             return tuple(
                 sum((list(x) if isinstance(x, (tuple, list)) else [x] for x in tup), [])
@@ -397,9 +415,11 @@ class LayerIntegratedGradients(LayerAttribution, GradientAttribution):
 
         # inputs -> these inputs are scaled
         def gradient_func(
+            # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
             forward_fn: Callable,
             inputs: Union[Tensor, Tuple[Tensor, ...]],
             target_ind: TargetType = None,
+            # pyre-fixme[2]: Parameter annotation cannot be `Any`.
             additional_forward_args: Any = None,
         ) -> Tuple[Tensor, ...]:
             if self.device_ids is None or len(self.device_ids) == 0:
@@ -408,7 +428,10 @@ class LayerIntegratedGradients(LayerAttribution, GradientAttribution):
                 # scatter method does not have a precise enough return type in its
                 # stub, so suppress the type warning.
                 scattered_inputs = scatter(  # type:ignore
-                    inputs, target_gpus=self.device_ids
+                    # pyre-fixme[6]: For 1st argument expected `Tensor` but got
+                    #  `Union[Tensor, typing.Tuple[Tensor, ...]]`.
+                    inputs,
+                    target_gpus=self.device_ids,
                 )
 
             scattered_inputs_dict = {
@@ -418,8 +441,20 @@ class LayerIntegratedGradients(LayerAttribution, GradientAttribution):
 
             with torch.autograd.set_grad_enabled(True):
 
+                # pyre-fixme[53]: Captured variable `num_outputs_cumsum` is not
+                #  annotated.
+                # pyre-fixme[53]: Captured variable `scattered_inputs_dict` is not
+                #  annotated.
+                # pyre-fixme[3]: Return type must be annotated.
                 def layer_forward_hook(
-                    module, hook_inputs, hook_outputs=None, layer_idx=0
+                    # pyre-fixme[2]: Parameter must be annotated.
+                    module,
+                    # pyre-fixme[2]: Parameter must be annotated.
+                    hook_inputs,
+                    # pyre-fixme[2]: Parameter must be annotated.
+                    hook_outputs=None,
+                    # pyre-fixme[2]: Parameter must be annotated.
+                    layer_idx=0,
                 ):
                     device = _extract_device(module, hook_inputs, hook_outputs)
                     is_layer_tuple = (
@@ -534,5 +569,6 @@ class LayerIntegratedGradients(LayerAttribution, GradientAttribution):
         return True
 
     @property
+    # pyre-fixme[3]: Return type must be annotated.
     def multiplies_by_inputs(self):
         return self.ig.multiplies_by_inputs

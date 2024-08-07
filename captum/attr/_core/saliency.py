@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+# pyre-strict
+
 from typing import Any, Callable
 
 import torch
@@ -23,6 +25,7 @@ class Saliency(GradientAttribution):
         https://arxiv.org/abs/1312.6034
     """
 
+    # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
     def __init__(self, forward_func: Callable) -> None:
         r"""
         Args:
@@ -38,6 +41,7 @@ class Saliency(GradientAttribution):
         inputs: TensorOrTupleOfTensorsGeneric,
         target: TargetType = None,
         abs: bool = True,
+        # pyre-fixme[2]: Parameter annotation cannot be `Any`.
         additional_forward_args: Any = None,
     ) -> TensorOrTupleOfTensorsGeneric:
         r"""
@@ -120,9 +124,15 @@ class Saliency(GradientAttribution):
         """
         # Keeps track whether original input is a tuple or not before
         # converting it into a tuple.
+        # pyre-fixme[6]: For 1st argument expected `Tensor` but got
+        #  `TensorOrTupleOfTensorsGeneric`.
         is_inputs_tuple = _is_tuple(inputs)
 
+        # pyre-fixme[9]: inputs has type `TensorOrTupleOfTensorsGeneric`; used as
+        #  `Tuple[Tensor, ...]`.
         inputs = _format_tensor_into_tuples(inputs)
+        # pyre-fixme[6]: For 1st argument expected `Tuple[Tensor, ...]` but got
+        #  `TensorOrTupleOfTensorsGeneric`.
         gradient_mask = apply_gradient_requirements(inputs)
 
         # No need to format additional_forward_args here.
@@ -134,5 +144,9 @@ class Saliency(GradientAttribution):
             attributions = tuple(torch.abs(gradient) for gradient in gradients)
         else:
             attributions = gradients
+        # pyre-fixme[6]: For 1st argument expected `Tuple[Tensor, ...]` but got
+        #  `TensorOrTupleOfTensorsGeneric`.
         undo_gradient_requirements(inputs, gradient_mask)
+        # pyre-fixme[7]: Expected `TensorOrTupleOfTensorsGeneric` but got
+        #  `Tuple[Tensor, ...]`.
         return _format_output(is_inputs_tuple, attributions)

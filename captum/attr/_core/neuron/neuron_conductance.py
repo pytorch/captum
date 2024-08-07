@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+
+# pyre-strict
 import warnings
 from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
@@ -37,6 +39,7 @@ class NeuronConductance(NeuronAttribution, GradientAttribution):
 
     def __init__(
         self,
+        # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
         forward_func: Callable,
         layer: Module,
         device_ids: Union[None, List[int]] = None,
@@ -91,9 +94,11 @@ class NeuronConductance(NeuronAttribution, GradientAttribution):
     def attribute(
         self,
         inputs: TensorOrTupleOfTensorsGeneric,
+        # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
         neuron_selector: Union[int, Tuple[int, ...], Callable],
         baselines: BaselineType = None,
         target: TargetType = None,
+        # pyre-fixme[2]: Parameter annotation cannot be `Any`.
         additional_forward_args: Any = None,
         n_steps: int = 50,
         method: str = "riemann_trapezoid",
@@ -280,9 +285,15 @@ class NeuronConductance(NeuronAttribution, GradientAttribution):
                 " or performing other operations on the tensor may lead to inaccurate"
                 " results."
             )
+        # pyre-fixme[6]: For 1st argument expected `Tensor` but got
+        #  `TensorOrTupleOfTensorsGeneric`.
         is_inputs_tuple = _is_tuple(inputs)
 
+        # pyre-fixme[9]: inputs has type `TensorOrTupleOfTensorsGeneric`; used as
+        #  `Tuple[Tensor, ...]`.
         inputs, baselines = _format_input_baseline(inputs, baselines)
+        # pyre-fixme[6]: For 1st argument expected `Tuple[Tensor, ...]` but got
+        #  `TensorOrTupleOfTensorsGeneric`.
         _validate_input(inputs, baselines, n_steps, method)
 
         num_examples = inputs[0].shape[0]
@@ -304,6 +315,8 @@ class NeuronConductance(NeuronAttribution, GradientAttribution):
             )
         else:
             attrs = self._attribute(
+                # pyre-fixme[6]: For 1st argument expected `Tuple[Tensor, ...]` but
+                #  got `TensorOrTupleOfTensorsGeneric`.
                 inputs=inputs,
                 neuron_selector=neuron_selector,
                 baselines=baselines,
@@ -314,14 +327,18 @@ class NeuronConductance(NeuronAttribution, GradientAttribution):
                 attribute_to_neuron_input=attribute_to_neuron_input,
                 grad_kwargs=grad_kwargs,
             )
+        # pyre-fixme[7]: Expected `TensorOrTupleOfTensorsGeneric` but got
+        #  `Tuple[Tensor, ...]`.
         return _format_output(is_inputs_tuple, attrs)
 
     def _attribute(
         self,
         inputs: Tuple[Tensor, ...],
+        # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
         neuron_selector: Union[int, Tuple[int, ...], Callable],
         baselines: Tuple[Union[Tensor, int, float], ...],
         target: TargetType = None,
+        # pyre-fixme[2]: Parameter annotation cannot be `Any`.
         additional_forward_args: Any = None,
         n_steps: int = 50,
         method: str = "riemann_trapezoid",
@@ -393,6 +410,7 @@ class NeuronConductance(NeuronAttribution, GradientAttribution):
 
         # Aggregates across all steps for each tensor in the input tuple
         total_grads = tuple(
+            # pyre-fixme[6]: For 4th argument expected `Tuple[int, ...]` but got `Size`.
             _reshape_and_sum(scaled_grad, n_steps, num_examples, input_grad.shape[1:])
             for (scaled_grad, input_grad) in zip(scaled_grads, input_grads)
         )
@@ -410,5 +428,6 @@ class NeuronConductance(NeuronAttribution, GradientAttribution):
         return attributions
 
     @property
+    # pyre-fixme[3]: Return type must be annotated.
     def multiplies_by_inputs(self):
         return self._multiply_by_inputs

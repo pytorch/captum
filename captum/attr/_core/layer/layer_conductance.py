@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+
+# pyre-strict
 import typing
 from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
@@ -42,6 +44,7 @@ class LayerConductance(LayerAttribution, GradientAttribution):
 
     def __init__(
         self,
+        # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
         forward_func: Callable,
         layer: Module,
         device_ids: Union[None, List[int]] = None,
@@ -70,22 +73,29 @@ class LayerConductance(LayerAttribution, GradientAttribution):
         return True
 
     @typing.overload
+    # pyre-fixme[43]: The implementation of `attribute` does not accept all possible
+    #  arguments of overload defined on line `75`.
     def attribute(
         self,
         inputs: Union[Tensor, Tuple[Tensor, ...]],
         baselines: BaselineType = None,
         target: TargetType = None,
+        # pyre-fixme[2]: Parameter annotation cannot be `Any`.
         additional_forward_args: Any = None,
         n_steps: int = 50,
         method: str = "gausslegendre",
         internal_batch_size: Union[None, int] = None,
         *,
+        # pyre-fixme[31]: Expression `Literal[True]` is not a valid type.
+        # pyre-fixme[24]: Non-generic type `typing.Literal` cannot take parameters.
         return_convergence_delta: Literal[True],
         attribute_to_layer_input: bool = False,
         grad_kwargs: Optional[Dict[str, Any]] = None,
     ) -> Tuple[Union[Tensor, Tuple[Tensor, ...]], Tensor]: ...
 
     @typing.overload
+    # pyre-fixme[43]: The implementation of `attribute` does not accept all possible
+    #  arguments of overload defined on line `91`.
     def attribute(
         self,
         inputs: Union[Tensor, Tuple[Tensor, ...]],
@@ -95,12 +105,17 @@ class LayerConductance(LayerAttribution, GradientAttribution):
         n_steps: int = 50,
         method: str = "gausslegendre",
         internal_batch_size: Union[None, int] = None,
+        # pyre-fixme[9]: return_convergence_delta has type `Literal[]`; used as `bool`.
+        # pyre-fixme[31]: Expression `Literal[False]` is not a valid type.
+        # pyre-fixme[24]: Non-generic type `typing.Literal` cannot take parameters.
         return_convergence_delta: Literal[False] = False,
         attribute_to_layer_input: bool = False,
         grad_kwargs: Optional[Dict[str, Any]] = None,
     ) -> Union[Tensor, Tuple[Tensor, ...]]: ...
 
     @log_usage()
+    # pyre-fixme[43]: This definition does not have the same decorators as the
+    #  preceding overload(s).
     def attribute(
         self,
         inputs: Union[Tensor, Tuple[Tensor, ...]],
@@ -323,6 +338,7 @@ class LayerConductance(LayerAttribution, GradientAttribution):
         inputs: Tuple[Tensor, ...],
         baselines: Tuple[Union[Tensor, int, float], ...],
         target: TargetType = None,
+        # pyre-fixme[2]: Parameter annotation cannot be `Any`.
         additional_forward_args: Any = None,
         n_steps: int = 50,
         method: str = "gausslegendre",
@@ -380,6 +396,8 @@ class LayerConductance(LayerAttribution, GradientAttribution):
         # This approximates the total input gradient of each step multiplied
         # by the step size.
         grad_diffs = tuple(
+            # pyre-fixme[58]: `-` is not supported for operand types `Tuple[Tensor,
+            #  ...]` and `Tuple[Tensor, ...]`.
             layer_eval[num_examples:] - layer_eval[:-num_examples]
             for layer_eval in layer_evals
         )
@@ -392,6 +410,7 @@ class LayerConductance(LayerAttribution, GradientAttribution):
                 grad_diff * layer_gradient[:-num_examples],
                 n_steps,
                 num_examples,
+                # pyre-fixme[16]: `tuple` has no attribute `shape`.
                 layer_eval.shape[1:],
             )
             for layer_gradient, layer_eval, grad_diff in zip(
@@ -401,5 +420,6 @@ class LayerConductance(LayerAttribution, GradientAttribution):
         return _format_output(len(attributions) > 1, attributions)
 
     @property
+    # pyre-fixme[3]: Return type must be annotated.
     def multiplies_by_inputs(self):
         return True

@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+
+# pyre-strict
 from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
 from captum._utils.common import (
@@ -22,6 +24,7 @@ class LayerGradientXActivation(LayerAttribution, GradientAttribution):
 
     def __init__(
         self,
+        # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
         forward_func: Callable,
         layer: ModuleOrModuleList,
         device_ids: Union[None, List[int]] = None,
@@ -66,6 +69,7 @@ class LayerGradientXActivation(LayerAttribution, GradientAttribution):
         self._multiply_by_inputs = multiply_by_inputs
 
     @property
+    # pyre-fixme[3]: Return type must be annotated.
     def multiplies_by_inputs(self):
         return self._multiply_by_inputs
 
@@ -74,6 +78,7 @@ class LayerGradientXActivation(LayerAttribution, GradientAttribution):
         self,
         inputs: Union[Tensor, Tuple[Tensor, ...]],
         target: TargetType = None,
+        # pyre-fixme[2]: Parameter annotation cannot be `Any`.
         additional_forward_args: Any = None,
         attribute_to_layer_input: bool = False,
         grad_kwargs: Optional[Dict[str, Any]] = None,
@@ -183,6 +188,10 @@ class LayerGradientXActivation(LayerAttribution, GradientAttribution):
         if isinstance(self.layer, Module):
             return _format_output(
                 len(layer_evals) > 1,
+                # pyre-fixme[6]: For 1st argument expected `Tuple[Tensor, ...]` but
+                #  got `List[typing.Tuple[Tensor, ...]]`.
+                # pyre-fixme[6]: For 2nd argument expected `Tuple[Tensor, ...]` but
+                #  got `List[typing.Tuple[Tensor, ...]]`.
                 self.multiply_gradient_acts(layer_gradients, layer_evals),
             )
         else:

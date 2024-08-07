@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+
+# pyre-strict
 from collections import defaultdict
 from copy import copy
 from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, Union
@@ -28,6 +30,8 @@ SUPPORTED_METHODS = {FeatureAblation}
 
 
 # default reducer wehn reduce is None. Simply concat the outputs by the batch dimension
+# pyre-fixme[3]: Return type must be annotated.
+# pyre-fixme[2]: Parameter must be annotated.
 def _concat_tensors(accum, cur_output, _):
     return cur_output if accum is None else torch.cat([accum, cur_output])
 
@@ -58,7 +62,9 @@ def _create_perturbation_mask(
     return perturbation_mask
 
 
+# pyre-fixme[3]: Return annotation cannot contain `Any`.
 def _perturb_inputs(
+    # pyre-fixme[2]: Parameter annotation cannot contain `Any`.
     inputs: Iterable[Any],
     input_roles: Tuple[int],
     baselines: Tuple[Union[int, float, Tensor], ...],
@@ -113,6 +119,8 @@ def _convert_output_shape(
     for inp, mask in zip(attr_inputs, feature_mask):
         # input in shape(batch_size, *inp_feature_dims)
         # attribute in shape(*output_dims, *inp_feature_dims)
+        # pyre-fixme[60]: Concatenation not yet support for multiple variadic
+        #  tuples: `*output_dims, *inp.shape[slice(1, None, None)]`.
         attr_shape = (*output_dims, *inp.shape[1:])
 
         expanded_feature_indices = mask.expand(attr_shape)
@@ -125,7 +133,11 @@ def _convert_output_shape(
             # (*output_dims, 1..., 1, n_features)
             # then broadcast to (*output_dims, *inp.shape[1:-1], n_features)
             n_extra_dims = len(extra_inp_dims)
+            # pyre-fixme[60]: Concatenation not yet support for multiple variadic
+            #  tuples: `*output_dims, *(1).__mul__(n_extra_dims)`.
             unsqueezed_shape = (*output_dims, *(1,) * n_extra_dims, n_features)
+            # pyre-fixme[60]: Concatenation not yet support for multiple variadic
+            #  tuples: `*output_dims, *extra_inp_dims`.
             expanded_shape = (*output_dims, *extra_inp_dims, n_features)
             expanded_unqiue_attr = unique_attr.reshape(unsqueezed_shape).expand(
                 expanded_shape
@@ -168,10 +180,12 @@ class DataLoaderAttribution(Attribution):
         super().__init__(attr_method.forward_func)
 
         # shallow copy is enough to avoid modifying original instance
+        # pyre-fixme[4]: Attribute must be annotated.
         self.attr_method = copy(attr_method)
 
         self.attr_method.forward_func = self._forward_with_dataloader
 
+    # pyre-fixme[3]: Return type must be annotated.
     def _forward_with_dataloader(
         self,
         batched_perturbed_feature_indices: Tensor,
@@ -179,7 +193,9 @@ class DataLoaderAttribution(Attribution):
         input_roles: Tuple[int],
         baselines: Tuple[Union[int, float, Tensor], ...],
         feature_mask: Tuple[Tensor, ...],
+        # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
         reduce: Callable,
+        # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
         to_metric: Optional[Callable],
         show_progress: bool,
         feature_idx_to_mask_idx: Dict[int, List[int]],
@@ -250,7 +266,9 @@ class DataLoaderAttribution(Attribution):
         input_roles: Optional[Tuple[int, ...]] = None,
         baselines: BaselineType = None,
         feature_mask: Union[None, Tensor, Tuple[Tensor, ...]] = None,
+        # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
         reduce: Optional[Callable] = None,
+        # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
         to_metric: Optional[Callable] = None,
         perturbations_per_pass: int = 1,
         show_progress: bool = False,
@@ -347,6 +365,9 @@ class DataLoaderAttribution(Attribution):
             inputs = _format_tensor_into_tuples(inputs)
 
         if input_roles:
+            # pyre-fixme[6]: For 1st argument expected
+            #  `pyre_extensions.ReadOnly[Sized]` but got
+            #  `Optional[typing.Tuple[typing.Any, ...]]`.
             assert len(input_roles) == len(inputs), (
                 "input_roles must have the same size as the return of the dataloader,",
                 f"length of input_roles is {len(input_roles)} ",
@@ -359,10 +380,15 @@ class DataLoaderAttribution(Attribution):
             )
         else:
             # by default, assume every element in the dataloader needs attribution
+            # pyre-fixme[16]: `Optional` has no attribute `__iter__`.
             input_roles = tuple(InputRole.need_attr for _ in inputs)
 
         attr_inputs = tuple(
-            inp for role, inp in zip(input_roles, inputs) if role == InputRole.need_attr
+            inp
+            # pyre-fixme[6]: For 2nd argument expected `Iterable[Variable[_T2]]` but
+            #  got `Optional[typing.Tuple[typing.Any, ...]]`.
+            for role, inp in zip(input_roles, inputs)
+            if role == InputRole.need_attr
         )
 
         baselines = _format_baseline(baselines, attr_inputs)

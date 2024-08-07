@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+
+# pyre-strict
 from enum import Enum
 from typing import Callable, List, Tuple
 
@@ -19,6 +21,7 @@ SUPPORTED_RIEMANN_METHODS = [
     "riemann_trapezoid",
 ]
 
+# pyre-fixme[5]: Global expression must be annotated.
 SUPPORTED_METHODS = SUPPORTED_RIEMANN_METHODS + ["gausslegendre"]
 
 
@@ -123,11 +126,15 @@ def gauss_legendre_builders() -> (
     def step_sizes(n: int) -> List[float]:
         assert n > 0, "The number of steps has to be larger than zero"
         # Scaling from 2 to 1
+        # pyre-fixme[6]: For 1st argument expected `Iterable[Variable[_T]]` but got
+        #  `float`.
         return list(0.5 * np.polynomial.legendre.leggauss(n)[1])
 
     def alphas(n: int) -> List[float]:
         assert n > 0, "The number of steps has to be larger than zero"
         # Scaling from [-1, 1] to [0, 1]
+        # pyre-fixme[6]: For 1st argument expected `Iterable[Variable[_T]]` but got
+        #  `float`.
         return list(0.5 * (1 + np.polynomial.legendre.leggauss(n)[0]))
 
     return step_sizes, alphas

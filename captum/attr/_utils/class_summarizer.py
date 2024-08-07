@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+
+# pyre-strict
 from collections import defaultdict
 from typing import Any, Dict, List, Optional, Union
 
@@ -21,6 +23,7 @@ class ClassSummarizer(Summarizer):
     @log_usage()
     def __init__(self, stats: List[Stat]) -> None:
         Summarizer.__init__.__wrapped__(self, stats)
+        # pyre-fixme[4]: Attribute annotation cannot contain `Any`.
         self.summaries: Dict[Any, Summarizer] = defaultdict(
             lambda: Summarizer(stats=stats)
         )
@@ -50,10 +53,13 @@ class ClassSummarizer(Summarizer):
             super().update(x)
             return
 
+        # pyre-fixme[9]: x has type `TensorOrTupleOfTensorsGeneric`; used as
+        #  `Tuple[Tensor, ...]`.
         x = _format_tensor_into_tuples(x)
 
         num_labels = 1
 
+        # pyre-fixme[33]: Given annotation cannot contain `Any`.
         labels_typed: Union[List[Any], Tensor]
         if isinstance(labels, list) or isinstance(labels, Tensor):
             labels_typed = labels
@@ -82,6 +88,7 @@ class ClassSummarizer(Summarizer):
             super().update(tensors_to_summarize_copy)
 
     @property
+    # pyre-fixme[3]: Return annotation cannot contain `Any`.
     def class_summaries(
         self,
     ) -> Dict[

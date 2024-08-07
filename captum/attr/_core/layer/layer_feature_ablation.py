@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+
+# pyre-strict
 from typing import Any, Callable, List, Tuple, Union
 
 import torch
@@ -35,6 +37,7 @@ class LayerFeatureAblation(LayerAttribution, PerturbationAttribution):
 
     def __init__(
         self,
+        # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
         forward_func: Callable,
         layer: Module,
         device_ids: Union[None, List[int]] = None,
@@ -67,6 +70,7 @@ class LayerFeatureAblation(LayerAttribution, PerturbationAttribution):
         inputs: Union[Tensor, Tuple[Tensor, ...]],
         layer_baselines: BaselineType = None,
         target: TargetType = None,
+        # pyre-fixme[2]: Parameter annotation cannot be `Any`.
         additional_forward_args: Any = None,
         layer_mask: Union[None, Tensor, Tuple[Tensor, ...]] = None,
         attribute_to_layer_input: bool = False,
@@ -221,6 +225,8 @@ class LayerFeatureAblation(LayerAttribution, PerturbationAttribution):
         >>>                          layer_mask=layer_mask)
         """
 
+        # pyre-fixme[3]: Return type must be annotated.
+        # pyre-fixme[2]: Parameter must be annotated.
         def layer_forward_func(*args):
             layer_length = args[-1]
             layer_input = args[:layer_length]
@@ -238,6 +244,9 @@ class LayerFeatureAblation(LayerAttribution, PerturbationAttribution):
             else:
                 all_layer_inputs[layer_input[0].device] = layer_input
 
+            # pyre-fixme[53]: Captured variable `all_layer_inputs` is not annotated.
+            # pyre-fixme[3]: Return type must be annotated.
+            # pyre-fixme[2]: Parameter must be annotated.
             def forward_hook(module, inp, out=None):
                 device = _extract_device(module, inp, out)
                 is_layer_tuple = (
@@ -302,5 +311,6 @@ class LayerFeatureAblation(LayerAttribution, PerturbationAttribution):
         return _attr
 
     @property
+    # pyre-fixme[3]: Return type must be annotated.
     def attributor(self):
         return FeatureAblation

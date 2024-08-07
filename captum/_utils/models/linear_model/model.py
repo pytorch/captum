@@ -1,3 +1,4 @@
+# pyre-strict
 from typing import Callable, cast, List, Optional
 
 import torch.nn as nn
@@ -9,6 +10,8 @@ from torch.utils.data import DataLoader
 class LinearModel(nn.Module, Model):
     SUPPORTED_NORMS: List[Optional[str]] = [None, "batch_norm", "layer_norm"]
 
+    # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
+    # pyre-fixme[2]: Parameter must be annotated.
     def __init__(self, train_fn: Callable, **kwargs) -> None:
         r"""
         Constructs a linear model with a training function and additional
@@ -35,8 +38,10 @@ class LinearModel(nn.Module, Model):
         self.norm: Optional[nn.Module] = None
         self.linear: Optional[nn.Linear] = None
         self.train_fn = train_fn
+        # pyre-fixme[4]: Attribute must be annotated.
         self.construct_kwargs = kwargs
 
+    # pyre-fixme[3]: Return type must be annotated.
     def _construct_model_params(
         self,
         in_features: Optional[int] = None,
@@ -114,8 +119,11 @@ class LinearModel(nn.Module, Model):
             self.linear.bias.data = bias_value
 
         if classes is not None:
+            # pyre-fixme[16]: `Optional` has no attribute `classes`.
             self.linear.classes = classes
 
+    # pyre-fixme[3]: Return type must be annotated.
+    # pyre-fixme[2]: Parameter must be annotated.
     def fit(self, train_data: DataLoader, **kwargs):
         r"""
         Calls `self.train_fn`
@@ -131,6 +139,7 @@ class LinearModel(nn.Module, Model):
         assert self.linear is not None
         if self.norm is not None:
             x = self.norm(x)
+        # pyre-fixme[29]: `Optional[nn.modules.linear.Linear]` is not a function.
         return self.linear(x)
 
     def representation(self) -> Tensor:
@@ -156,6 +165,7 @@ class LinearModel(nn.Module, Model):
 
 
 class SGDLinearModel(LinearModel):
+    # pyre-fixme[2]: Parameter must be annotated.
     def __init__(self, **kwargs) -> None:
         r"""
         Factory class. Construct a a `LinearModel` with the
@@ -174,6 +184,7 @@ class SGDLinearModel(LinearModel):
 
 
 class SGDLasso(SGDLinearModel):
+    # pyre-fixme[2]: Parameter must be annotated.
     def __init__(self, **kwargs) -> None:
         r"""
         Factory class to train a `LinearModel` with SGD
@@ -186,6 +197,8 @@ class SGDLasso(SGDLinearModel):
         """
         super().__init__(**kwargs)
 
+    # pyre-fixme[3]: Return type must be annotated.
+    # pyre-fixme[2]: Parameter must be annotated.
     def fit(self, train_data: DataLoader, **kwargs):
         # avoid cycles
         from captum._utils.models.linear_model.train import l2_loss
@@ -194,6 +207,7 @@ class SGDLasso(SGDLinearModel):
 
 
 class SGDRidge(SGDLinearModel):
+    # pyre-fixme[2]: Parameter must be annotated.
     def __init__(self, **kwargs) -> None:
         r"""
         Factory class to train a `LinearModel` with SGD
@@ -203,6 +217,8 @@ class SGDRidge(SGDLinearModel):
         """
         super().__init__(**kwargs)
 
+    # pyre-fixme[3]: Return type must be annotated.
+    # pyre-fixme[2]: Parameter must be annotated.
     def fit(self, train_data: DataLoader, **kwargs):
         # avoid cycles
         from captum._utils.models.linear_model.train import l2_loss
@@ -211,6 +227,7 @@ class SGDRidge(SGDLinearModel):
 
 
 class SGDLinearRegression(SGDLinearModel):
+    # pyre-fixme[2]: Parameter must be annotated.
     def __init__(self, **kwargs) -> None:
         r"""
         Factory class to train a `LinearModel` with SGD
@@ -219,6 +236,8 @@ class SGDLinearRegression(SGDLinearModel):
         """
         super().__init__(**kwargs)
 
+    # pyre-fixme[3]: Return type must be annotated.
+    # pyre-fixme[2]: Parameter must be annotated.
     def fit(self, train_data: DataLoader, **kwargs):
         # avoid cycles
         from captum._utils.models.linear_model.train import l2_loss
@@ -229,6 +248,7 @@ class SGDLinearRegression(SGDLinearModel):
 
 
 class SkLearnLinearModel(LinearModel):
+    # pyre-fixme[2]: Parameter must be annotated.
     def __init__(self, sklearn_module: str, **kwargs) -> None:
         r"""
         Factory class to construct a `LinearModel` with sklearn training method.
@@ -259,6 +279,8 @@ class SkLearnLinearModel(LinearModel):
 
         self.sklearn_module = sklearn_module
 
+    # pyre-fixme[3]: Return type must be annotated.
+    # pyre-fixme[2]: Parameter must be annotated.
     def fit(self, train_data: DataLoader, **kwargs):
         r"""
         Args:
@@ -273,6 +295,7 @@ class SkLearnLinearModel(LinearModel):
 
 
 class SkLearnLasso(SkLearnLinearModel):
+    # pyre-fixme[2]: Parameter must be annotated.
     def __init__(self, **kwargs) -> None:
         r"""
         Factory class. Trains a `LinearModel` model with
@@ -281,11 +304,14 @@ class SkLearnLasso(SkLearnLinearModel):
         """
         super().__init__(sklearn_module="linear_model.Lasso", **kwargs)
 
+    # pyre-fixme[3]: Return type must be annotated.
+    # pyre-fixme[2]: Parameter must be annotated.
     def fit(self, train_data: DataLoader, **kwargs):
         return super().fit(train_data=train_data, **kwargs)
 
 
 class SkLearnRidge(SkLearnLinearModel):
+    # pyre-fixme[2]: Parameter must be annotated.
     def __init__(self, **kwargs) -> None:
         r"""
         Factory class. Trains a model with `sklearn.linear_model.Ridge`.
@@ -295,11 +321,14 @@ class SkLearnRidge(SkLearnLinearModel):
         """
         super().__init__(sklearn_module="linear_model.Ridge", **kwargs)
 
+    # pyre-fixme[3]: Return type must be annotated.
+    # pyre-fixme[2]: Parameter must be annotated.
     def fit(self, train_data: DataLoader, **kwargs):
         return super().fit(train_data=train_data, **kwargs)
 
 
 class SkLearnLinearRegression(SkLearnLinearModel):
+    # pyre-fixme[2]: Parameter must be annotated.
     def __init__(self, **kwargs) -> None:
         r"""
         Factory class. Trains a model with `sklearn.linear_model.LinearRegression`.
@@ -309,11 +338,14 @@ class SkLearnLinearRegression(SkLearnLinearModel):
         """
         super().__init__(sklearn_module="linear_model.LinearRegression", **kwargs)
 
+    # pyre-fixme[3]: Return type must be annotated.
+    # pyre-fixme[2]: Parameter must be annotated.
     def fit(self, train_data: DataLoader, **kwargs):
         return super().fit(train_data=train_data, **kwargs)
 
 
 class SkLearnLogisticRegression(SkLearnLinearModel):
+    # pyre-fixme[2]: Parameter must be annotated.
     def __init__(self, **kwargs) -> None:
         r"""
         Factory class. Trains a model with `sklearn.linear_model.LogisticRegression`.
@@ -323,11 +355,14 @@ class SkLearnLogisticRegression(SkLearnLinearModel):
         """
         super().__init__(sklearn_module="linear_model.LogisticRegression", **kwargs)
 
+    # pyre-fixme[3]: Return type must be annotated.
+    # pyre-fixme[2]: Parameter must be annotated.
     def fit(self, train_data: DataLoader, **kwargs):
         return super().fit(train_data=train_data, **kwargs)
 
 
 class SkLearnSGDClassifier(SkLearnLinearModel):
+    # pyre-fixme[2]: Parameter must be annotated.
     def __init__(self, **kwargs) -> None:
         r"""
         Factory class. Trains a model with `sklearn.linear_model.SGDClassifier(`.
@@ -337,5 +372,7 @@ class SkLearnSGDClassifier(SkLearnLinearModel):
         """
         super().__init__(sklearn_module="linear_model.SGDClassifier", **kwargs)
 
+    # pyre-fixme[3]: Return type must be annotated.
+    # pyre-fixme[2]: Parameter must be annotated.
     def fit(self, train_data: DataLoader, **kwargs):
         return super().fit(train_data=train_data, **kwargs)

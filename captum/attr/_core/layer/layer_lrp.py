@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+
+# pyre-strict
 import typing
 from typing import Any, cast, List, Tuple, Union
 
@@ -58,26 +60,37 @@ class LayerLRP(LRP, LayerAttribution):
         LayerAttribution.__init__(self, model, layer)
         LRP.__init__(self, model)
         if hasattr(self.model, "device_ids"):
+            # pyre-fixme[4]: Attribute must be annotated.
             self.device_ids = cast(List[int], self.model.device_ids)
 
     @typing.overload  # type: ignore
+    # pyre-fixme[43]: The implementation of `attribute` does not accept all possible
+    #  arguments of overload defined on line `66`.
     def attribute(
         self,
         inputs: TensorOrTupleOfTensorsGeneric,
         target: TargetType = None,
+        # pyre-fixme[2]: Parameter annotation cannot be `Any`.
         additional_forward_args: Any = None,
+        # pyre-fixme[9]: return_convergence_delta has type `Literal[]`; used as `bool`.
+        # pyre-fixme[31]: Expression `Literal[False]` is not a valid type.
+        # pyre-fixme[24]: Non-generic type `typing.Literal` cannot take parameters.
         return_convergence_delta: Literal[False] = False,
         attribute_to_layer_input: bool = False,
         verbose: bool = False,
     ) -> Union[Tensor, Tuple[Tensor, ...], List[Union[Tensor, Tuple[Tensor, ...]]]]: ...
 
     @typing.overload
+    # pyre-fixme[43]: The implementation of `attribute` does not accept all possible
+    #  arguments of overload defined on line `77`.
     def attribute(
         self,
         inputs: TensorOrTupleOfTensorsGeneric,
         target: TargetType = None,
         additional_forward_args: Any = None,
         *,
+        # pyre-fixme[31]: Expression `Literal[True]` is not a valid type.
+        # pyre-fixme[24]: Non-generic type `typing.Literal` cannot take parameters.
         return_convergence_delta: Literal[True],
         attribute_to_layer_input: bool = False,
         verbose: bool = False,
@@ -206,22 +219,36 @@ class LayerLRP(LRP, LayerAttribution):
                 >>> attribution = layer_lrp.attribute(input, target=5)
 
         """
+        # pyre-fixme[16]: `LayerLRP` has no attribute `verbose`.
         self.verbose = verbose
+        # pyre-fixme[16]: `LayerLRP` has no attribute `_original_state_dict`.
         self._original_state_dict = self.model.state_dict()
+        # pyre-fixme[16]: `LayerLRP` has no attribute `layers`.
         self.layers = []
         self._get_layers(self.model)
         self._check_and_attach_rules()
+        # pyre-fixme[16]: `LayerLRP` has no attribute `attribute_to_layer_input`.
         self.attribute_to_layer_input = attribute_to_layer_input
+        # pyre-fixme[16]: `LayerLRP` has no attribute `backward_handles`.
         self.backward_handles = []
+        # pyre-fixme[16]: `LayerLRP` has no attribute `forward_handles`.
         self.forward_handles = []
 
+        # pyre-fixme[9]: inputs has type `TensorOrTupleOfTensorsGeneric`; used as
+        #  `Tuple[Tensor, ...]`.
         inputs = _format_tensor_into_tuples(inputs)
+        # pyre-fixme[6]: For 1st argument expected `Tuple[Tensor, ...]` but got
+        #  `TensorOrTupleOfTensorsGeneric`.
         gradient_mask = apply_gradient_requirements(inputs)
 
         try:
             # 1. Forward pass
             output = self._compute_output_and_change_weights(
-                inputs, target, additional_forward_args
+                # pyre-fixme[6]: For 1st argument expected `Tuple[Tensor, ...]` but
+                #  got `TensorOrTupleOfTensorsGeneric`.
+                inputs,
+                target,
+                additional_forward_args,
             )
             self._register_forward_hooks()
             # 2. Forward pass + backward pass
@@ -231,6 +258,8 @@ class LayerLRP(LRP, LayerAttribution):
             relevances = self._get_output_relevance(output)
         finally:
             self._restore_model()
+        # pyre-fixme[6]: For 1st argument expected `Tuple[Tensor, ...]` but got
+        #  `TensorOrTupleOfTensorsGeneric`.
         undo_gradient_requirements(inputs, gradient_mask)
 
         if return_convergence_delta:
@@ -249,7 +278,10 @@ class LayerLRP(LRP, LayerAttribution):
         else:
             return relevances  # type: ignore
 
+    # pyre-fixme[3]: Return type must be annotated.
+    # pyre-fixme[2]: Parameter must be annotated.
     def _get_single_output_relevance(self, layer, output):
+        # pyre-fixme[16]: `LayerLRP` has no attribute `attribute_to_layer_input`.
         if self.attribute_to_layer_input:
             normalized_relevances = layer.rule.relevance_input
         else:
@@ -270,6 +302,8 @@ class LayerLRP(LRP, LayerAttribution):
                 (-1,) + (1,) * (normalized_relevances.dim() - 1)
             )
 
+    # pyre-fixme[3]: Return type must be annotated.
+    # pyre-fixme[2]: Parameter must be annotated.
     def _get_output_relevance(self, output):
         if isinstance(self.layer, list):
             relevances = []
@@ -280,7 +314,9 @@ class LayerLRP(LRP, LayerAttribution):
             return self._get_single_output_relevance(self.layer, output)
 
     @staticmethod
+    # pyre-fixme[3]: Return annotation cannot contain `Any`.
     def _convert_list_to_tuple(
+        # pyre-fixme[2]: Parameter annotation cannot contain `Any`.
         relevances: Union[List[Any], Tuple[Any, ...]]
     ) -> Tuple[Any, ...]:
         if isinstance(relevances, list):

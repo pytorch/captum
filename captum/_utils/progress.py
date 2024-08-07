@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+# pyre-strict
+
 import sys
 import warnings
 from time import time
@@ -21,10 +23,14 @@ class DisableErrorIOWrapper(object):
         """
         self._wrapped = wrapped
 
+    # pyre-fixme[3]: Return type must be annotated.
+    # pyre-fixme[2]: Parameter must be annotated.
     def __getattr__(self, name):
         return getattr(self._wrapped, name)
 
     @staticmethod
+    # pyre-fixme[3]: Return type must be annotated.
+    # pyre-fixme[2]: Parameter must be annotated.
     def _wrapped_run(func, *args, **kwargs):
         try:
             return func(*args, **kwargs)
@@ -35,9 +41,13 @@ class DisableErrorIOWrapper(object):
             if "closed" not in str(e):
                 raise
 
+    # pyre-fixme[3]: Return type must be annotated.
+    # pyre-fixme[2]: Parameter must be annotated.
     def write(self, *args, **kwargs):
         return self._wrapped_run(self._wrapped.write, *args, **kwargs)
 
+    # pyre-fixme[3]: Return type must be annotated.
+    # pyre-fixme[2]: Parameter must be annotated.
     def flush(self, *args, **kwargs):
         return self._wrapped_run(self._wrapped.flush, *args, **kwargs)
 
@@ -51,25 +61,37 @@ class NullProgress:
     progress bars.
     """
 
+    # pyre-fixme[3]: Return type must be annotated.
+    # pyre-fixme[24]: Generic type `Iterable` expects 1 type parameter.
+    # pyre-fixme[2]: Parameter must be annotated.
     def __init__(self, iterable: Optional[Iterable] = None, *args, **kwargs):
         del args, kwargs
         self.iterable = iterable
 
+    # pyre-fixme[3]: Return type must be annotated.
     def __enter__(self):
         return self
 
+    # pyre-fixme[2]: Parameter must be annotated.
+    # pyre-fixme[31]: Expression `Literal[False]` is not a valid type.
+    # pyre-fixme[24]: Non-generic type `typing.Literal` cannot take parameters.
     def __exit__(self, exc_type, exc_value, exc_traceback) -> Literal[False]:
+        # pyre-fixme[7]: Expected `Literal[]` but got `bool`.
         return False
 
+    # pyre-fixme[3]: Return type must be annotated.
     def __iter__(self):
         if not self.iterable:
             return
+        # pyre-fixme[16]: `Optional` has no attribute `__iter__`.
         for it in self.iterable:
             yield it
 
+    # pyre-fixme[3]: Return type must be annotated.
     def update(self, amount: int = 1):
         pass
 
+    # pyre-fixme[3]: Return type must be annotated.
     def close(self):
         pass
 
@@ -77,6 +99,7 @@ class NullProgress:
 class SimpleProgress:
     def __init__(
         self,
+        # pyre-fixme[24]: Generic type `Iterable` expects 1 type parameter.
         iterable: Optional[Iterable] = None,
         desc: Optional[str] = None,
         total: Optional[int] = None,
@@ -99,6 +122,8 @@ class SimpleProgress:
 
         self.desc = desc
 
+        # pyre-fixme[9]: file has type `Optional[TextIO]`; used as
+        #  `DisableErrorIOWrapper`.
         file = DisableErrorIOWrapper(file if file else sys.stderr)
         cast(TextIO, file)
         self.file = file
@@ -108,28 +133,38 @@ class SimpleProgress:
         self.closed = False
         self._is_parent = False
 
+    # pyre-fixme[3]: Return type must be annotated.
     def __enter__(self):
         self._is_parent = True
         self._refresh()
         return self
 
+    # pyre-fixme[2]: Parameter must be annotated.
+    # pyre-fixme[31]: Expression `Literal[False]` is not a valid type.
+    # pyre-fixme[24]: Non-generic type `typing.Literal` cannot take parameters.
     def __exit__(self, exc_type, exc_value, exc_traceback) -> Literal[False]:
         self.close()
+        # pyre-fixme[7]: Expected `Literal[]` but got `bool`.
         return False
 
+    # pyre-fixme[3]: Return type must be annotated.
     def __iter__(self):
         if self.closed or not self.iterable:
             return
         self._refresh()
+        # pyre-fixme[16]: `Optional` has no attribute `__iter__`.
         for it in self.iterable:
             yield it
             self.update()
         self.close()
 
+    # pyre-fixme[3]: Return type must be annotated.
     def _refresh(self):
         progress_str = self.desc + ": " if self.desc else ""
         if self.total:
             # e.g., progress: 60% 3/5
+            # pyre-fixme[58]: `//` is not supported for operand types `int` and
+            #  `Optional[int]`.
             progress_str += f"{100 * self.cur // self.total}% {self.cur}/{self.total}"
         else:
             # e.g., progress: .....
@@ -137,6 +172,7 @@ class SimpleProgress:
         end = "\n" if self._is_parent else ""
         print("\r" + progress_str, end=end, file=self.file)
 
+    # pyre-fixme[3]: Return type must be annotated.
     def update(self, amount: int = 1):
         if self.closed:
             return
@@ -147,6 +183,7 @@ class SimpleProgress:
             self._refresh()
             self.last_print_t = cur_t
 
+    # pyre-fixme[3]: Return type must be annotated.
     def close(self):
         if not self.closed and not self._is_parent:
             self._refresh()
@@ -154,13 +191,17 @@ class SimpleProgress:
             self.closed = True
 
 
+# pyre-fixme[3]: Return type must be annotated.
 def progress(
+    # pyre-fixme[24]: Generic type `Iterable` expects 1 type parameter.
     iterable: Optional[Iterable] = None,
     desc: Optional[str] = None,
     total: Optional[int] = None,
+    # pyre-fixme[2]: Parameter must be annotated.
     use_tqdm=True,
     file: Optional[TextIO] = None,
     mininterval: float = 0.5,
+    # pyre-fixme[2]: Parameter must be annotated.
     **kwargs,
 ):
     # Try to use tqdm is possible. Fall back to simple progress print

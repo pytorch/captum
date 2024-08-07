@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+# pyre-strict
+
 import glob
 import os
 import re
@@ -66,12 +68,14 @@ class AV:
                     which the activation vectors are computed
             """
 
+            # pyre-fixme[4]: Attribute must be annotated.
             self.av_filesearch = AV._construct_file_search(
                 path, model_id, identifier, layer, num_id
             )
 
             files = glob.glob(self.av_filesearch)
 
+            # pyre-fixme[4]: Attribute must be annotated.
             self.files = AV.sort_files(files)
 
         def __getitem__(self, idx: int) -> Union[Tensor, Tuple[Tensor, ...]]:
@@ -346,6 +350,7 @@ class AV:
         inputs: Union[Tensor, Tuple[Tensor, ...]],
         identifier: str,
         num_id: str,
+        # pyre-fixme[2]: Parameter annotation cannot be `Any`.
         additional_forward_args: Any = None,
         load_from_disk: bool = True,
     ) -> None:
@@ -395,6 +400,8 @@ class AV:
             AV.save(path, model_id, identifier, unsaved_layers, new_activations, num_id)
 
     @staticmethod
+    # pyre-fixme[3]: Return annotation cannot be `Any`.
+    # pyre-fixme[2]: Parameter annotation cannot be `Any`.
     def _unpack_data(data: Union[Any, Tuple[Any, Any]]) -> Any:
         r"""
         Helper to extract input from labels when getting items from a Dataset. Assumes
@@ -490,6 +497,8 @@ class AV:
         lexigraphical sort.
         """
 
+        # pyre-fixme[3]: Return type must be annotated.
+        # pyre-fixme[2]: Parameter must be annotated.
         def split_alphanum(s):
             r"""
             Splits string into a list of strings and numbers

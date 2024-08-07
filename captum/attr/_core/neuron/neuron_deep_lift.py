@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+
+# pyre-strict
 from typing import Any, Callable, cast, Tuple, Union
 
 from captum._utils.gradient import construct_neuron_grad_fn
@@ -77,8 +79,10 @@ class NeuronDeepLift(NeuronAttribution, GradientAttribution):
     def attribute(
         self,
         inputs: TensorOrTupleOfTensorsGeneric,
+        # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
         neuron_selector: Union[int, Tuple[Union[int, slice], ...], Callable],
         baselines: BaselineType = None,
+        # pyre-fixme[2]: Parameter annotation cannot be `Any`.
         additional_forward_args: Any = None,
         attribute_to_neuron_input: bool = False,
         custom_attribution_func: Union[None, Callable[..., Tuple[Tensor, ...]]] = None,
@@ -243,6 +247,7 @@ class NeuronDeepLift(NeuronAttribution, GradientAttribution):
         )
 
     @property
+    # pyre-fixme[3]: Return type must be annotated.
     def multiplies_by_inputs(self):
         return self._multiply_by_inputs
 
@@ -306,10 +311,12 @@ class NeuronDeepLiftShap(NeuronAttribution, GradientAttribution):
     def attribute(
         self,
         inputs: TensorOrTupleOfTensorsGeneric,
+        # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
         neuron_selector: Union[int, Tuple[Union[int, slice], ...], Callable],
         baselines: Union[
             TensorOrTupleOfTensorsGeneric, Callable[..., TensorOrTupleOfTensorsGeneric]
         ],
+        # pyre-fixme[2]: Parameter annotation cannot be `Any`.
         additional_forward_args: Any = None,
         attribute_to_neuron_input: bool = False,
         custom_attribution_func: Union[None, Callable[..., Tuple[Tensor, ...]]] = None,
@@ -468,5 +475,6 @@ class NeuronDeepLiftShap(NeuronAttribution, GradientAttribution):
         )
 
     @property
+    # pyre-fixme[3]: Return type must be annotated.
     def multiplies_by_inputs(self):
         return self._multiply_by_inputs

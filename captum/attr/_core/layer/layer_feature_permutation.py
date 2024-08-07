@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+
+# pyre-strict
 from typing import Any, Callable, cast, List, Tuple, Union
 
 import torch
@@ -30,6 +32,7 @@ class LayerFeaturePermutation(LayerAttribution, FeaturePermutation):
 
     def __init__(
         self,
+        # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
         forward_func: Callable,
         layer: Module,
         device_ids: Union[None, List[int]] = None,
@@ -61,6 +64,7 @@ class LayerFeaturePermutation(LayerAttribution, FeaturePermutation):
         self,
         inputs: Union[Tensor, Tuple[Tensor, ...]],
         target: TargetType = None,
+        # pyre-fixme[2]: Parameter annotation cannot be `Any`.
         additional_forward_args: Any = None,
         layer_mask: Union[None, TensorOrTupleOfTensorsGeneric] = None,
         perturbations_per_eval: int = 1,
@@ -155,6 +159,7 @@ class LayerFeaturePermutation(LayerAttribution, FeaturePermutation):
                         otherwise a single tensor is returned.
         """
 
+        # pyre-fixme[2]: Parameter must be annotated.
         def layer_forward_func(*args) -> Tensor:
             layer_length = args[-1]
             layer_input = args[:layer_length]
@@ -172,6 +177,9 @@ class LayerFeaturePermutation(LayerAttribution, FeaturePermutation):
             else:
                 all_layer_inputs[layer_input[0].device] = layer_input
 
+            # pyre-fixme[53]: Captured variable `all_layer_inputs` is not annotated.
+            # pyre-fixme[3]: Return type must be annotated.
+            # pyre-fixme[2]: Parameter must be annotated.
             def forward_hook(module, inp, out=None):
                 device = _extract_device(module, inp, out)
                 is_layer_tuple = (
@@ -237,5 +245,6 @@ class LayerFeaturePermutation(LayerAttribution, FeaturePermutation):
         return _attr
 
     @property
+    # pyre-fixme[3]: Return type must be annotated.
     def attributor(self):
         return FeaturePermutation

@@ -1,4 +1,6 @@
 # (c) Meta Platforms, Inc. and affiliates. Confidential and proprietary.
+
+# pyre-strict
 import random
 from typing import Any, Dict, List, Tuple, Union
 
@@ -18,8 +20,10 @@ class ProductBaselines:
             the corresponding values.
     """
 
+    # pyre-fixme[3]: Return type must be annotated.
     def __init__(
         self,
+        # pyre-fixme[2]: Parameter annotation cannot contain `Any`.
         baseline_values: Union[
             List[List[Any]],
             Dict[Union[str, Tuple[str, ...]], List[Any]],
@@ -31,9 +35,11 @@ class ProductBaselines:
         else:
             dict_keys = []
 
+        # pyre-fixme[4]: Attribute must be annotated.
         self.dict_keys = dict_keys
         self.baseline_values = baseline_values
 
+    # pyre-fixme[3]: Return annotation cannot contain `Any`.
     def sample(self) -> Union[List[Any], Dict[str, Any]]:
         baselines = [
             random.choice(baseline_list) for baseline_list in self.baseline_values
@@ -52,6 +58,7 @@ class ProductBaselines:
 
         return dict_baselines
 
+    # pyre-fixme[3]: Return annotation cannot contain `Any`.
     def __call__(self) -> Union[List[Any], Dict[str, Any]]:
         """
         Returns:

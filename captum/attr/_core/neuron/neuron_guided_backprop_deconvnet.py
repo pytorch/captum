@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+
+# pyre-strict
 from typing import Any, Callable, List, Tuple, Union
 
 from captum._utils.gradient import construct_neuron_grad_fn
@@ -58,7 +60,9 @@ class NeuronDeconvolution(NeuronAttribution, GradientAttribution):
     def attribute(
         self,
         inputs: TensorOrTupleOfTensorsGeneric,
+        # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
         neuron_selector: Union[int, Tuple[Union[int, slice], ...], Callable],
+        # pyre-fixme[2]: Parameter annotation cannot be `Any`.
         additional_forward_args: Any = None,
         attribute_to_neuron_input: bool = False,
     ) -> TensorOrTupleOfTensorsGeneric:
@@ -212,7 +216,9 @@ class NeuronGuidedBackprop(NeuronAttribution, GradientAttribution):
     def attribute(
         self,
         inputs: TensorOrTupleOfTensorsGeneric,
+        # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
         neuron_selector: Union[int, Tuple[Union[int, slice], ...], Callable],
+        # pyre-fixme[2]: Parameter annotation cannot be `Any`.
         additional_forward_args: Any = None,
         attribute_to_neuron_input: bool = False,
     ) -> TensorOrTupleOfTensorsGeneric:

@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+# pyre-strict
+
 from typing import Dict, List, Optional, Tuple, Type, Union
 
 import torch
@@ -35,13 +37,16 @@ class Summarizer:
         """
         self._summarizers: List[SummarizerSingleTensor] = []
         self._is_inputs_tuple: Optional[bool] = None
+        # pyre-fixme[4]: Attribute must be annotated.
         self._stats, self._summary_stats_indicies = _reorder_stats(stats)
 
+    # pyre-fixme[3]: Return type must be annotated.
     def _copy_stats(self):
         import copy
 
         return copy.deepcopy(self._stats)
 
+    # pyre-fixme[3]: Return type must be annotated.
     def update(self, x: Union[float, Tensor, Tuple[Union[float, Tensor], ...]]):
         r"""
         Calls `update` on each `Stat` object within the summarizer
@@ -121,11 +126,14 @@ def _reorder_stats(stats: List[Stat]) -> Tuple[List[Stat], List[int]]:
     dep_order = [StdDev, Var, MSE, Mean, Count]
 
     # remove dupe stats
+    # pyre-fixme[9]: stats has type `List[Stat]`; used as `Set[Stat]`.
     stats = set(stats)
     summary_stats = set(stats)
 
     from collections import defaultdict
 
+    # pyre-fixme[24]: Generic type `type` expects 1 type parameter, use
+    #  `typing.Type[<base type>]` to avoid runtime subscripting errors.
     stats_by_module: Dict[Type, List[Stat]] = defaultdict(list)
     for stat in stats:
         stats_by_module[stat.__class__].append(stat)
@@ -134,6 +142,7 @@ def _reorder_stats(stats: List[Stat]) -> Tuple[List[Stat], List[int]]:
     # for each StdDev(order) we must ensure there is an associated Var(order)
     for std_dev in stats_by_module[StdDev]:
         stat_to_add = Var(order=std_dev.order)  # type: ignore
+        # pyre-fixme[16]: `List` has no attribute `add`.
         stats.add(stat_to_add)
         stats_by_module[stat_to_add.__class__].append(stat_to_add)
 
@@ -141,14 +150,21 @@ def _reorder_stats(stats: List[Stat]) -> Tuple[List[Stat], List[int]]:
     # we want to ensure i...n-1 exists
     for i, dep in enumerate(dep_order[1:]):
         if dep in stats_by_module:
+            # pyre-fixme[16]: `List` has no attribute `update`.
             stats.update([mod() for mod in dep_order[i + 1 :]])
             break
 
     # Step 2: get the correct order
     # NOTE: we are sorting via a given topological order
     sort_order = {mod: i for i, mod in enumerate(dep_order)}
+    # pyre-fixme[6]: For 1st argument expected `Type[Union[Count, MSE, Mean, StdDev,
+    #  Var]]` but got `Type[Min]`.
     sort_order[Min] = -1
+    # pyre-fixme[6]: For 1st argument expected `Type[Union[Count, MSE, Mean, StdDev,
+    #  Var]]` but got `Type[Max]`.
     sort_order[Max] = -1
+    # pyre-fixme[6]: For 1st argument expected `Type[Union[Count, MSE, Mean, StdDev,
+    #  Var]]` but got `Type[Sum]`.
     sort_order[Sum] = -1
 
     stats = list(stats)
@@ -181,13 +197,16 @@ class SummarizerSingleTensor:
                 does not require any specific order.
         """
         self._stats = stats
+        # pyre-fixme[4]: Attribute must be annotated.
         self._stat_to_stat = {stat: stat for stat in self._stats}
+        # pyre-fixme[4]: Attribute must be annotated.
         self._summary_stats = [stats[i] for i in summary_stats_indices]
 
         for stat in stats:
             stat._other_stats = self
             stat.init()
 
+    # pyre-fixme[3]: Return type must be annotated.
     def update(self, x: Tensor):
         r"""
         Updates the summary of a given tensor `x`

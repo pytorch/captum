@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+
+# pyre-strict
 import typing
 from typing import Any, Callable, List, Tuple, Union
 
@@ -47,6 +49,7 @@ class IntegratedGradients(GradientAttribution):
 
     def __init__(
         self,
+        # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
         forward_func: Callable,
         multiply_by_inputs: bool = True,
     ) -> None:
@@ -77,19 +80,27 @@ class IntegratedGradients(GradientAttribution):
     # and when return_convergence_delta is True, the return type is
     # a tuple with both attributions and deltas.
     @typing.overload
+    # pyre-fixme[43]: The implementation of `attribute` does not accept all possible
+    #  arguments of overload defined on line `82`.
     def attribute(
         self,
         inputs: TensorOrTupleOfTensorsGeneric,
         baselines: BaselineType = None,
         target: TargetType = None,
+        # pyre-fixme[2]: Parameter annotation cannot be `Any`.
         additional_forward_args: Any = None,
         n_steps: int = 50,
         method: str = "gausslegendre",
         internal_batch_size: Union[None, int] = None,
+        # pyre-fixme[9]: return_convergence_delta has type `Literal[]`; used as `bool`.
+        # pyre-fixme[31]: Expression `Literal[False]` is not a valid type.
+        # pyre-fixme[24]: Non-generic type `typing.Literal` cannot take parameters.
         return_convergence_delta: Literal[False] = False,
     ) -> TensorOrTupleOfTensorsGeneric: ...
 
     @typing.overload
+    # pyre-fixme[43]: The implementation of `attribute` does not accept all possible
+    #  arguments of overload defined on line `95`.
     def attribute(
         self,
         inputs: TensorOrTupleOfTensorsGeneric,
@@ -100,6 +111,8 @@ class IntegratedGradients(GradientAttribution):
         method: str = "gausslegendre",
         internal_batch_size: Union[None, int] = None,
         *,
+        # pyre-fixme[31]: Expression `Literal[True]` is not a valid type.
+        # pyre-fixme[24]: Non-generic type `typing.Literal` cannot take parameters.
         return_convergence_delta: Literal[True],
     ) -> Tuple[TensorOrTupleOfTensorsGeneric, Tensor]: ...
 
@@ -261,10 +274,16 @@ class IntegratedGradients(GradientAttribution):
         """
         # Keeps track whether original input is a tuple or not before
         # converting it into a tuple.
+        # pyre-fixme[6]: For 1st argument expected `Tensor` but got
+        #  `TensorOrTupleOfTensorsGeneric`.
         is_inputs_tuple = _is_tuple(inputs)
 
+        # pyre-fixme[9]: inputs has type `TensorOrTupleOfTensorsGeneric`; used as
+        #  `Tuple[Tensor, ...]`.
         inputs, baselines = _format_input_baseline(inputs, baselines)
 
+        # pyre-fixme[6]: For 1st argument expected `Tuple[Tensor, ...]` but got
+        #  `TensorOrTupleOfTensorsGeneric`.
         _validate_input(inputs, baselines, n_steps, method)
 
         if internal_batch_size is not None:
@@ -282,6 +301,8 @@ class IntegratedGradients(GradientAttribution):
             )
         else:
             attributions = self._attribute(
+                # pyre-fixme[6]: For 1st argument expected `Tuple[Tensor, ...]` but
+                #  got `TensorOrTupleOfTensorsGeneric`.
                 inputs=inputs,
                 baselines=baselines,
                 target=target,
@@ -300,7 +321,12 @@ class IntegratedGradients(GradientAttribution):
                 additional_forward_args=additional_forward_args,
                 target=target,
             )
+            # pyre-fixme[7]: Expected `Union[Tuple[Variable[TensorOrTupleOfTensorsGen...
             return _format_output(is_inputs_tuple, attributions), delta
+        # pyre-fixme[7]: Expected
+        #  `Union[Tuple[Variable[TensorOrTupleOfTensorsGeneric <: [Tensor,
+        #  typing.Tuple[Tensor, ...]]], Tensor], Variable[TensorOrTupleOfTensorsGeneric
+        #  <: [Tensor, typing.Tuple[Tensor, ...]]]]` but got `Tuple[Tensor, ...]`.
         return _format_output(is_inputs_tuple, attributions)
 
     def _attribute(
@@ -308,6 +334,7 @@ class IntegratedGradients(GradientAttribution):
         inputs: Tuple[Tensor, ...],
         baselines: Tuple[Union[Tensor, int, float], ...],
         target: TargetType = None,
+        # pyre-fixme[2]: Parameter annotation cannot be `Any`.
         additional_forward_args: Any = None,
         n_steps: int = 50,
         method: str = "gausslegendre",
@@ -385,5 +412,6 @@ class IntegratedGradients(GradientAttribution):
         return True
 
     @property
+    # pyre-fixme[3]: Return type must be annotated.
     def multiplies_by_inputs(self):
         return self._multiply_by_inputs

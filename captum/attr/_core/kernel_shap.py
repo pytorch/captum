@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+# pyre-strict
+
 from typing import Any, Callable, Generator, Tuple, Union
 
 import torch
@@ -25,6 +27,7 @@ class KernelShap(Lime):
     https://arxiv.org/abs/1705.07874
     """
 
+    # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
     def __init__(self, forward_func: Callable) -> None:
         r"""
         Args:
@@ -47,6 +50,7 @@ class KernelShap(Lime):
         inputs: TensorOrTupleOfTensorsGeneric,
         baselines: BaselineType = None,
         target: TargetType = None,
+        # pyre-fixme[2]: Parameter annotation cannot be `Any`.
         additional_forward_args: Any = None,
         feature_mask: Union[None, Tensor, Tuple[Tensor, ...]] = None,
         n_samples: int = 25,
@@ -291,7 +295,12 @@ class KernelShap(Lime):
         )
 
     def kernel_shap_similarity_kernel(
-        self, _, __, interpretable_sample: Tensor, **kwargs
+        self,
+        _,
+        __,
+        interpretable_sample: Tensor,
+        # pyre-fixme[2]: Parameter must be annotated.
+        **kwargs,
     ) -> Tensor:
         assert (
             "num_interp_features" in kwargs
@@ -311,7 +320,10 @@ class KernelShap(Lime):
         return torch.tensor([similarities])
 
     def kernel_shap_perturb_generator(
-        self, original_inp: Union[Tensor, Tuple[Tensor, ...]], **kwargs
+        self,
+        original_inp: Union[Tensor, Tuple[Tensor, ...]],
+        # pyre-fixme[2]: Parameter must be annotated.
+        **kwargs,
     ) -> Generator[Tensor, None, None]:
         r"""
         Perturbations are sampled by the following process:

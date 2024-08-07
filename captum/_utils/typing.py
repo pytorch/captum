@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+# pyre-strict
+
 from typing import List, Tuple, TYPE_CHECKING, TypeVar, Union
 
 from torch import Tensor
@@ -13,6 +15,7 @@ else:
 TensorOrTupleOfTensorsGeneric = TypeVar(
     "TensorOrTupleOfTensorsGeneric", Tensor, Tuple[Tensor, ...]
 )
+# pyre-fixme[24]: Generic type `tuple` expects at least 1 type parameter.
 TupleOrTensorOrBoolGeneric = TypeVar("TupleOrTensorOrBoolGeneric", Tuple, Tensor, bool)
 ModuleOrModuleList = TypeVar("ModuleOrModuleList", Module, List[Module])
 TargetType = Union[None, int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]]

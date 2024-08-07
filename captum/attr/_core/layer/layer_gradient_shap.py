@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+# pyre-strict
+
 import typing
 from typing import Any, Callable, cast, Dict, List, Optional, Tuple, Union
 
@@ -59,6 +61,7 @@ class LayerGradientShap(LayerAttribution, GradientAttribution):
 
     def __init__(
         self,
+        # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
         forward_func: Callable,
         layer: Module,
         device_ids: Union[None, List[int]] = None,
@@ -101,28 +104,40 @@ class LayerGradientShap(LayerAttribution, GradientAttribution):
         self._multiply_by_inputs = multiply_by_inputs
 
     @typing.overload
+    # pyre-fixme[43]: The implementation of `attribute` does not accept all possible
+    #  arguments of overload defined on line `106`.
     def attribute(
         self,
         inputs: TensorOrTupleOfTensorsGeneric,
+        # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
         baselines: Union[TensorOrTupleOfTensorsGeneric, Callable],
         n_samples: int = 5,
         stdevs: Union[float, Tuple[float, ...]] = 0.0,
         target: TargetType = None,
+        # pyre-fixme[2]: Parameter annotation cannot be `Any`.
         additional_forward_args: Any = None,
         *,
+        # pyre-fixme[31]: Expression `Literal[True]` is not a valid type.
+        # pyre-fixme[24]: Non-generic type `typing.Literal` cannot take parameters.
         return_convergence_delta: Literal[True],
         attribute_to_layer_input: bool = False,
     ) -> Tuple[Union[Tensor, Tuple[Tensor, ...]], Tensor]: ...
 
     @typing.overload
+    # pyre-fixme[43]: The implementation of `attribute` does not accept all possible
+    #  arguments of overload defined on line `120`.
     def attribute(
         self,
         inputs: TensorOrTupleOfTensorsGeneric,
+        # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
         baselines: Union[TensorOrTupleOfTensorsGeneric, Callable],
         n_samples: int = 5,
         stdevs: Union[float, Tuple[float, ...]] = 0.0,
         target: TargetType = None,
         additional_forward_args: Any = None,
+        # pyre-fixme[9]: return_convergence_delta has type `Literal[]`; used as `bool`.
+        # pyre-fixme[31]: Expression `Literal[False]` is not a valid type.
+        # pyre-fixme[24]: Non-generic type `typing.Literal` cannot take parameters.
         return_convergence_delta: Literal[False] = False,
         attribute_to_layer_input: bool = False,
     ) -> Union[Tensor, Tuple[Tensor, ...]]: ...
@@ -131,6 +146,7 @@ class LayerGradientShap(LayerAttribution, GradientAttribution):
     def attribute(
         self,
         inputs: TensorOrTupleOfTensorsGeneric,
+        # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
         baselines: Union[TensorOrTupleOfTensorsGeneric, Callable],
         n_samples: int = 5,
         stdevs: Union[float, Tuple[float, ...]] = 0.0,
@@ -284,7 +300,12 @@ class LayerGradientShap(LayerAttribution, GradientAttribution):
         """
         # since `baselines` is a distribution, we can generate it using a function
         # rather than passing it as an input argument
+        # pyre-fixme[9]: baselines has type `Union[typing.Callable[..., typing.Any],
+        #  Variable[TensorOrTupleOfTensorsGeneric <: [Tensor, typing.Tuple[Tensor,
+        #  ...]]]]`; used as `Tuple[Tensor, ...]`.
         baselines = _format_callable_baseline(baselines, inputs)
+        # pyre-fixme[16]: Item `Callable` of `Union[(...) -> Any,
+        #  TensorOrTupleOfTensorsGeneric]` has no attribute `__getitem__`.
         assert isinstance(baselines[0], torch.Tensor), (
             "Baselines distribution has to be provided in a form "
             "of a torch.Tensor {}.".format(baselines[0])
@@ -319,6 +340,7 @@ class LayerGradientShap(LayerAttribution, GradientAttribution):
         return True
 
     @property
+    # pyre-fixme[3]: Return type must be annotated.
     def multiplies_by_inputs(self):
         return self._multiply_by_inputs
 
@@ -326,6 +348,7 @@ class LayerGradientShap(LayerAttribution, GradientAttribution):
 class LayerInputBaselineXGradient(LayerAttribution, GradientAttribution):
     def __init__(
         self,
+        # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
         forward_func: Callable,
         layer: Module,
         device_ids: Union[None, List[int]] = None,
@@ -368,18 +391,26 @@ class LayerInputBaselineXGradient(LayerAttribution, GradientAttribution):
         self._multiply_by_inputs = multiply_by_inputs
 
     @typing.overload
+    # pyre-fixme[43]: The implementation of `attribute` does not accept all possible
+    #  arguments of overload defined on line `373`.
     def attribute(
         self,
         inputs: Union[Tensor, Tuple[Tensor, ...]],
         baselines: Union[Tensor, Tuple[Tensor, ...]],
         target: TargetType = None,
+        # pyre-fixme[2]: Parameter annotation cannot be `Any`.
         additional_forward_args: Any = None,
+        # pyre-fixme[9]: return_convergence_delta has type `Literal[]`; used as `bool`.
+        # pyre-fixme[31]: Expression `Literal[False]` is not a valid type.
+        # pyre-fixme[24]: Non-generic type `typing.Literal` cannot take parameters.
         return_convergence_delta: Literal[False] = False,
         attribute_to_layer_input: bool = False,
         grad_kwargs: Optional[Dict[str, Any]] = None,
     ) -> Union[Tensor, Tuple[Tensor, ...]]: ...
 
     @typing.overload
+    # pyre-fixme[43]: The implementation of `attribute` does not accept all possible
+    #  arguments of overload defined on line `385`.
     def attribute(
         self,
         inputs: Union[Tensor, Tuple[Tensor, ...]],
@@ -387,6 +418,8 @@ class LayerInputBaselineXGradient(LayerAttribution, GradientAttribution):
         target: TargetType = None,
         additional_forward_args: Any = None,
         *,
+        # pyre-fixme[31]: Expression `Literal[True]` is not a valid type.
+        # pyre-fixme[24]: Non-generic type `typing.Literal` cannot take parameters.
         return_convergence_delta: Literal[True],
         attribute_to_layer_input: bool = False,
         grad_kwargs: Optional[Dict[str, Any]] = None,
@@ -459,11 +492,15 @@ class LayerInputBaselineXGradient(LayerAttribution, GradientAttribution):
         return _compute_conv_delta_and_format_attrs(
             self,
             return_convergence_delta,
+            # pyre-fixme[6]: For 3rd argument expected `Tuple[Tensor, ...]` but got
+            #  `Union[List[typing.Tuple[Tensor, ...]], tuple[Tensor]]`.
             attributions,
             baselines,
             inputs,
             additional_forward_args,
             target,
+            # pyre-fixme[31]: Expression `Literal[False])]` is not a valid type.
+            # pyre-fixme[24]: Non-generic type `typing.Literal` cannot take parameters.
             cast(Union[Literal[True], Literal[False]], len(attributions) > 1),
         )
 
@@ -471,5 +508,6 @@ class LayerInputBaselineXGradient(LayerAttribution, GradientAttribution):
         return True
 
     @property
+    # pyre-fixme[3]: Return type must be annotated.
     def multiplies_by_inputs(self):
         return self._multiply_by_inputs
