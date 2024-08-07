@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+
+# pyre-strict
 import typing
 from typing import Any, Callable, Tuple, Union
 
@@ -55,6 +57,7 @@ class GradientShap(GradientAttribution):
     samples and compute the expectation (smoothgrad).
     """
 
+    # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
     def __init__(self, forward_func: Callable, multiply_by_inputs: bool = True) -> None:
         r"""
         Args:
@@ -79,6 +82,8 @@ class GradientShap(GradientAttribution):
         self._multiply_by_inputs = multiply_by_inputs
 
     @typing.overload
+    # pyre-fixme[43]: The implementation of `attribute` does not accept all possible
+    #  arguments of overload defined on line `84`.
     def attribute(
         self,
         inputs: TensorOrTupleOfTensorsGeneric,
@@ -88,12 +93,17 @@ class GradientShap(GradientAttribution):
         n_samples: int = 5,
         stdevs: Union[float, Tuple[float, ...]] = 0.0,
         target: TargetType = None,
+        # pyre-fixme[2]: Parameter annotation cannot be `Any`.
         additional_forward_args: Any = None,
         *,
+        # pyre-fixme[31]: Expression `Literal[True]` is not a valid type.
+        # pyre-fixme[24]: Non-generic type `typing.Literal` cannot take parameters.
         return_convergence_delta: Literal[True],
     ) -> Tuple[TensorOrTupleOfTensorsGeneric, Tensor]: ...
 
     @typing.overload
+    # pyre-fixme[43]: The implementation of `attribute` does not accept all possible
+    #  arguments of overload defined on line `99`.
     def attribute(
         self,
         inputs: TensorOrTupleOfTensorsGeneric,
@@ -104,10 +114,15 @@ class GradientShap(GradientAttribution):
         stdevs: Union[float, Tuple[float, ...]] = 0.0,
         target: TargetType = None,
         additional_forward_args: Any = None,
+        # pyre-fixme[9]: return_convergence_delta has type `Literal[]`; used as `bool`.
+        # pyre-fixme[31]: Expression `Literal[False]` is not a valid type.
+        # pyre-fixme[24]: Non-generic type `typing.Literal` cannot take parameters.
         return_convergence_delta: Literal[False] = False,
     ) -> TensorOrTupleOfTensorsGeneric: ...
 
     @log_usage()
+    # pyre-fixme[43]: This definition does not have the same decorators as the
+    #  preceding overload(s).
     def attribute(
         self,
         inputs: TensorOrTupleOfTensorsGeneric,
@@ -250,7 +265,14 @@ class GradientShap(GradientAttribution):
         """
         # since `baselines` is a distribution, we can generate it using a function
         # rather than passing it as an input argument
+        # pyre-fixme[9]: baselines has type `Union[typing.Callable[...,
+        #  Variable[TensorOrTupleOfTensorsGeneric <: [Tensor, typing.Tuple[Tensor,
+        #  ...]]]], Variable[TensorOrTupleOfTensorsGeneric <: [Tensor,
+        #  typing.Tuple[Tensor, ...]]]]`; used as `Tuple[Tensor, ...]`.
         baselines = _format_callable_baseline(baselines, inputs)
+        # pyre-fixme[16]: Item `Callable` of `Union[(...) ->
+        #  TensorOrTupleOfTensorsGeneric, TensorOrTupleOfTensorsGeneric]` has no
+        #  attribute `__getitem__`.
         assert isinstance(baselines[0], torch.Tensor), (
             "Baselines distribution has to be provided in a form "
             "of a torch.Tensor {}.".format(baselines[0])
@@ -283,11 +305,14 @@ class GradientShap(GradientAttribution):
         return True
 
     @property
+    # pyre-fixme[3]: Return type must be annotated.
     def multiplies_by_inputs(self):
         return self._multiply_by_inputs
 
 
 class InputBaselineXGradient(GradientAttribution):
+    # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
+    # pyre-fixme[2]: Parameter must be annotated.
     def __init__(self, forward_func: Callable, multiply_by_inputs=True) -> None:
         r"""
         Args:
@@ -310,26 +335,37 @@ class InputBaselineXGradient(GradientAttribution):
 
         """
         GradientAttribution.__init__(self, forward_func)
+        # pyre-fixme[4]: Attribute must be annotated.
         self._multiply_by_inputs = multiply_by_inputs
 
     @typing.overload
+    # pyre-fixme[43]: The implementation of `attribute` does not accept all possible
+    #  arguments of overload defined on line `318`.
     def attribute(
         self,
         inputs: TensorOrTupleOfTensorsGeneric,
         baselines: BaselineType = None,
         target: TargetType = None,
+        # pyre-fixme[2]: Parameter annotation cannot be `Any`.
         additional_forward_args: Any = None,
         *,
+        # pyre-fixme[31]: Expression `Literal[True]` is not a valid type.
+        # pyre-fixme[24]: Non-generic type `typing.Literal` cannot take parameters.
         return_convergence_delta: Literal[True],
     ) -> Tuple[TensorOrTupleOfTensorsGeneric, Tensor]: ...
 
     @typing.overload
+    # pyre-fixme[43]: The implementation of `attribute` does not accept all possible
+    #  arguments of overload defined on line `329`.
     def attribute(
         self,
         inputs: TensorOrTupleOfTensorsGeneric,
         baselines: BaselineType = None,
         target: TargetType = None,
         additional_forward_args: Any = None,
+        # pyre-fixme[9]: return_convergence_delta has type `Literal[]`; used as `bool`.
+        # pyre-fixme[31]: Expression `Literal[False]` is not a valid type.
+        # pyre-fixme[24]: Non-generic type `typing.Literal` cannot take parameters.
         return_convergence_delta: Literal[False] = False,
     ) -> TensorOrTupleOfTensorsGeneric: ...
 
@@ -346,7 +382,11 @@ class InputBaselineXGradient(GradientAttribution):
     ]:
         # Keeps track whether original input is a tuple or not before
         # converting it into a tuple.
+        # pyre-fixme[6]: For 1st argument expected `Tensor` but got
+        #  `TensorOrTupleOfTensorsGeneric`.
         is_inputs_tuple = _is_tuple(inputs)
+        # pyre-fixme[9]: inputs has type `TensorOrTupleOfTensorsGeneric`; used as
+        #  `Tuple[Tensor, ...]`.
         inputs, baselines = _format_input_baseline(inputs, baselines)
 
         rand_coefficient = torch.tensor(
@@ -374,6 +414,7 @@ class InputBaselineXGradient(GradientAttribution):
         else:
             attributions = grads
 
+        # pyre-fixme[7]: Expected `Union[Tuple[Variable[TensorOrTupleOfTensorsGeneric...
         return _compute_conv_delta_and_format_attrs(
             self,
             return_convergence_delta,
@@ -389,6 +430,7 @@ class InputBaselineXGradient(GradientAttribution):
         return True
 
     @property
+    # pyre-fixme[3]: Return type must be annotated.
     def multiplies_by_inputs(self):
         return self._multiply_by_inputs
 

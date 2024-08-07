@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+
+# pyre-strict
 import typing
 from inspect import signature
 from typing import Any, Callable, List, Tuple, TYPE_CHECKING, Union
@@ -165,6 +167,9 @@ def _format_and_verify_strides(
             i, strides[i], inputs[i].shape
         )
 
+    # pyre-fixme[7]: Expected `Tuple[Union[int, typing.Tuple[int, ...]], ...]` but
+    #  got `Union[Tuple[Union[int, typing.Tuple[Union[int, typing.Tuple[int, ...]],
+    #  ...]]], typing.Tuple[Union[int, typing.Tuple[int, ...]], ...]]`.
     return strides
 
 
@@ -176,6 +181,7 @@ def _format_and_verify_sliding_window_shapes(
     # Assumes inputs is already formatted (in tuple)
     if isinstance(sliding_window_shapes[0], int):
         sliding_window_shapes = (sliding_window_shapes,)  # type: ignore
+    # pyre-fixme[35]: Target cannot be annotated.
     sliding_window_shapes: Tuple[Tuple[int, ...], ...]
     assert len(sliding_window_shapes) == len(
         inputs
@@ -194,19 +200,27 @@ def _format_and_verify_sliding_window_shapes(
 
 
 @typing.overload
+# pyre-fixme[43]: The implementation of `_compute_conv_delta_and_format_attrs` does
+#  not accept all possible arguments of overload defined on line `199`.
 def _compute_conv_delta_and_format_attrs(
     attr_algo: "GradientAttribution",
     return_convergence_delta: bool,
     attributions: Tuple[Tensor, ...],
     start_point: Union[int, float, Tensor, Tuple[Union[int, float, Tensor], ...]],
     end_point: Union[Tensor, Tuple[Tensor, ...]],
+    # pyre-fixme[2]: Parameter annotation cannot be `Any`.
     additional_forward_args: Any,
     target: TargetType,
+    # pyre-fixme[9]: is_inputs_tuple has type `Literal[]`; used as `bool`.
+    # pyre-fixme[31]: Expression `Literal[False]` is not a valid type.
+    # pyre-fixme[24]: Non-generic type `typing.Literal` cannot take parameters.
     is_inputs_tuple: Literal[False] = False,
 ) -> Union[Tensor, Tuple[Tensor, Tensor]]: ...
 
 
 @typing.overload
+# pyre-fixme[43]: The implementation of `_compute_conv_delta_and_format_attrs` does
+#  not accept all possible arguments of overload defined on line `212`.
 def _compute_conv_delta_and_format_attrs(
     attr_algo: "GradientAttribution",
     return_convergence_delta: bool,
@@ -215,6 +229,8 @@ def _compute_conv_delta_and_format_attrs(
     end_point: Union[Tensor, Tuple[Tensor, ...]],
     additional_forward_args: Any,
     target: TargetType,
+    # pyre-fixme[31]: Expression `Literal[True]` is not a valid type.
+    # pyre-fixme[24]: Non-generic type `typing.Literal` cannot take parameters.
     is_inputs_tuple: Literal[True],
 ) -> Union[Tuple[Tensor, ...], Tuple[Tuple[Tensor, ...], Tensor]]: ...
 
@@ -250,6 +266,8 @@ def _compute_conv_delta_and_format_attrs(
 def _tensorize_baseline(
     inputs: Tuple[Tensor, ...], baselines: Tuple[Union[int, float, Tensor], ...]
 ) -> Tuple[Tensor, ...]:
+    # pyre-fixme[3]: Return type must be annotated.
+    # pyre-fixme[2]: Parameter must be annotated.
     def _tensorize_single_baseline(baseline, input):
         if isinstance(baseline, (int, float)):
             return torch.full_like(input, baseline)

@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+
+# pyre-strict
 from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
 import torch
@@ -39,6 +41,7 @@ class InternalInfluence(LayerAttribution, GradientAttribution):
 
     def __init__(
         self,
+        # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
         forward_func: Callable,
         layer: Module,
         device_ids: Union[None, List[int]] = None,
@@ -69,6 +72,7 @@ class InternalInfluence(LayerAttribution, GradientAttribution):
         inputs: Union[Tensor, Tuple[Tensor, ...]],
         baselines: BaselineType = None,
         target: TargetType = None,
+        # pyre-fixme[2]: Parameter annotation cannot be `Any`.
         additional_forward_args: Any = None,
         n_steps: int = 50,
         method: str = "gausslegendre",
@@ -250,6 +254,7 @@ class InternalInfluence(LayerAttribution, GradientAttribution):
         inputs: Tuple[Tensor, ...],
         baselines: Tuple[Union[Tensor, int, float], ...],
         target: TargetType = None,
+        # pyre-fixme[2]: Parameter annotation cannot be `Any`.
         additional_forward_args: Any = None,
         n_steps: int = 50,
         method: str = "gausslegendre",
@@ -301,7 +306,9 @@ class InternalInfluence(LayerAttribution, GradientAttribution):
         # flattening grads so that we can multiply it with step-size
         # calling contiguous to avoid `memory whole` problems
         scaled_grads = tuple(
+            # pyre-fixme[16]: `tuple` has no attribute `contiguous`.
             layer_grad.contiguous().view(n_steps, -1)
+            # pyre-fixme[16]: `tuple` has no attribute `device`.
             * torch.tensor(step_sizes).view(n_steps, 1).to(layer_grad.device)
             for layer_grad in layer_gradients
         )
@@ -309,7 +316,11 @@ class InternalInfluence(LayerAttribution, GradientAttribution):
         # aggregates across all steps for each tensor in the input tuple
         attrs = tuple(
             _reshape_and_sum(
-                scaled_grad, n_steps, inputs[0].shape[0], layer_grad.shape[1:]
+                scaled_grad,
+                n_steps,
+                inputs[0].shape[0],
+                # pyre-fixme[16]: `tuple` has no attribute `shape`.
+                layer_grad.shape[1:],
             )
             for scaled_grad, layer_grad in zip(scaled_grads, layer_gradients)
         )

@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+
+# pyre-strict
 import warnings
 from enum import Enum
 from typing import Any, Iterable, List, Optional, Tuple, Union
@@ -43,10 +45,12 @@ class VisualizeSign(Enum):
     all = 4
 
 
+# pyre-fixme[3]: Return type must be annotated.
 def _prepare_image(attr_visual: ndarray):
     return np.clip(attr_visual.astype(int), 0, 255)
 
 
+# pyre-fixme[3]: Return type must be annotated.
 def _normalize_scale(attr: ndarray, scale_factor: float):
     assert scale_factor != 0, "Cannot normalize by scale factor = 0"
     if abs(scale_factor) < 1e-5:
@@ -60,6 +64,7 @@ def _normalize_scale(attr: ndarray, scale_factor: float):
     return np.clip(attr_norm, -1, 1)
 
 
+# pyre-fixme[3]: Return type must be annotated.
 def _cumulative_sum_threshold(values: ndarray, percentile: Union[int, float]):
     # given values should be non-negative
     assert percentile >= 0 and percentile <= 100, (
@@ -71,6 +76,7 @@ def _cumulative_sum_threshold(values: ndarray, percentile: Union[int, float]):
     return sorted_vals[threshold_id]
 
 
+# pyre-fixme[3]: Return type must be annotated.
 def _normalize_attr(
     attr: ndarray,
     sign: str,
@@ -346,6 +352,7 @@ def visualize_image_attr(
     return plt_fig, plt_axis
 
 
+# pyre-fixme[3]: Return type must be annotated.
 def visualize_image_attr_multiple(
     attr: ndarray,
     original_image: Union[None, ndarray],
@@ -455,6 +462,7 @@ def visualize_image_attr_multiple(
     return plt_fig, plt_axis
 
 
+# pyre-fixme[3]: Return type must be annotated.
 def visualize_timeseries_attr(
     attr: ndarray,
     data: ndarray,
@@ -471,6 +479,7 @@ def visualize_timeseries_attr(
     title: Optional[str] = None,
     fig_size: Tuple[int, int] = (6, 6),
     use_pyplot: bool = True,
+    # pyre-fixme[2]: Parameter must be annotated.
     **pyplot_kwargs,
 ):
     r"""
@@ -590,9 +599,11 @@ def visualize_timeseries_attr(
 
     # Check input dimensions
     assert len(attr.shape) == 2, "Expected attr of shape (N, C), got {}".format(
+        # pyre-fixme[16]: Module `attr` has no attribute `shape`.
         attr.shape
     )
     assert len(data.shape) == 2, "Expected data of shape (N, C), got {}".format(
+        # pyre-fixme[16]: Module `attr` has no attribute `shape`.
         attr.shape
     )
 
@@ -667,7 +678,11 @@ def visualize_timeseries_attr(
     cmap = cm.get_cmap(cmap)  # type: ignore
     cm_norm = colors.Normalize(vmin, vmax)
 
+    # pyre-fixme[53]: Captured variable `cm_norm` is not annotated.
+    # pyre-fixme[3]: Return type must be annotated.
+    # pyre-fixme[2]: Parameter must be annotated.
     def _plot_attrs_as_axvspan(attr_vals, x_vals, ax):
+        # pyre-fixme[16]: `Optional` has no attribute `__getitem__`.
         half_col_width = (x_values[1] - x_values[0]) / 2.0
         for icol, col_center in enumerate(x_vals):
             left = col_center - half_col_width
@@ -675,6 +690,7 @@ def visualize_timeseries_attr(
             ax.axvspan(
                 xmin=left,
                 xmax=right,
+                # pyre-fixme[29]: `Union[None, Colormap, str]` is not a function.
                 facecolor=(cmap(cm_norm(attr_vals[icol]))),
                 edgecolor=None,
                 alpha=alpha_overlay,
@@ -779,25 +795,43 @@ class VisualizationDataRecord:
 
     def __init__(
         self,
+        # pyre-fixme[2]: Parameter must be annotated.
         word_attributions,
+        # pyre-fixme[2]: Parameter must be annotated.
         pred_prob,
+        # pyre-fixme[2]: Parameter must be annotated.
         pred_class,
+        # pyre-fixme[2]: Parameter must be annotated.
         true_class,
+        # pyre-fixme[2]: Parameter must be annotated.
         attr_class,
+        # pyre-fixme[2]: Parameter must be annotated.
         attr_score,
+        # pyre-fixme[2]: Parameter must be annotated.
         raw_input_ids,
+        # pyre-fixme[2]: Parameter must be annotated.
         convergence_score,
     ) -> None:
+        # pyre-fixme[4]: Attribute must be annotated.
         self.word_attributions = word_attributions
+        # pyre-fixme[4]: Attribute must be annotated.
         self.pred_prob = pred_prob
+        # pyre-fixme[4]: Attribute must be annotated.
         self.pred_class = pred_class
+        # pyre-fixme[4]: Attribute must be annotated.
         self.true_class = true_class
+        # pyre-fixme[4]: Attribute must be annotated.
         self.attr_class = attr_class
+        # pyre-fixme[4]: Attribute must be annotated.
         self.attr_score = attr_score
+        # pyre-fixme[4]: Attribute must be annotated.
         self.raw_input_ids = raw_input_ids
+        # pyre-fixme[4]: Attribute must be annotated.
         self.convergence_score = convergence_score
 
 
+# pyre-fixme[3]: Return type must be annotated.
+# pyre-fixme[2]: Parameter must be annotated.
 def _get_color(attr):
     # clip values to prevent CSS errors (Values should be from [-1,1])
     attr = max(-1, min(1, attr))
@@ -812,16 +846,22 @@ def _get_color(attr):
     return "hsl({}, {}%, {}%)".format(hue, sat, lig)
 
 
+# pyre-fixme[3]: Return type must be annotated.
+# pyre-fixme[2]: Parameter must be annotated.
 def format_classname(classname):
     return '<td><text style="padding-right:2em"><b>{}</b></text></td>'.format(classname)
 
 
+# pyre-fixme[3]: Return type must be annotated.
+# pyre-fixme[2]: Parameter must be annotated.
 def format_special_tokens(token):
     if token.startswith("<") and token.endswith(">"):
         return "#" + token.strip("<>")
     return token
 
 
+# pyre-fixme[3]: Return type must be annotated.
+# pyre-fixme[2]: Parameter must be annotated.
 def format_tooltip(item, text):
     return '<div class="tooltip">{item}\
         <span class="tooltiptext">{text}</span>\
@@ -830,6 +870,8 @@ def format_tooltip(item, text):
     )
 
 
+# pyre-fixme[3]: Return type must be annotated.
+# pyre-fixme[2]: Parameter must be annotated.
 def format_word_importances(words, importances):
     if importances is None or len(importances) == 0:
         return "<td></td>"

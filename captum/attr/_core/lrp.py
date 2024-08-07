@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+# pyre-strict
+
 import typing
 from collections import defaultdict
 from typing import Any, cast, List, Tuple, Union
@@ -60,27 +62,39 @@ class LRP(GradientAttribution):
         return True
 
     @typing.overload
+    # pyre-fixme[43]: The implementation of `attribute` does not accept all possible
+    #  arguments of overload defined on line `65`.
     def attribute(
         self,
         inputs: TensorOrTupleOfTensorsGeneric,
         target: TargetType = None,
+        # pyre-fixme[2]: Parameter annotation cannot be `Any`.
         additional_forward_args: Any = None,
+        # pyre-fixme[9]: return_convergence_delta has type `Literal[]`; used as `bool`.
+        # pyre-fixme[31]: Expression `Literal[False]` is not a valid type.
+        # pyre-fixme[24]: Non-generic type `typing.Literal` cannot take parameters.
         return_convergence_delta: Literal[False] = False,
         verbose: bool = False,
     ) -> TensorOrTupleOfTensorsGeneric: ...
 
     @typing.overload
+    # pyre-fixme[43]: The implementation of `attribute` does not accept all possible
+    #  arguments of overload defined on line `75`.
     def attribute(
         self,
         inputs: TensorOrTupleOfTensorsGeneric,
         target: TargetType = None,
         additional_forward_args: Any = None,
         *,
+        # pyre-fixme[31]: Expression `Literal[True]` is not a valid type.
+        # pyre-fixme[24]: Non-generic type `typing.Literal` cannot take parameters.
         return_convergence_delta: Literal[True],
         verbose: bool = False,
     ) -> Tuple[TensorOrTupleOfTensorsGeneric, Tensor]: ...
 
     @log_usage()
+    # pyre-fixme[43]: This definition does not have the same decorators as the
+    #  preceding overload(s).
     def attribute(
         self,
         inputs: TensorOrTupleOfTensorsGeneric,
@@ -184,22 +198,37 @@ class LRP(GradientAttribution):
                 >>> attribution = lrp.attribute(input, target=5)
 
         """
+        # pyre-fixme[16]: `LRP` has no attribute `verbose`.
         self.verbose = verbose
+        # pyre-fixme[16]: `LRP` has no attribute `_original_state_dict`.
         self._original_state_dict = self.model.state_dict()
+        # pyre-fixme[16]: `LRP` has no attribute `layers`.
         self.layers: List[Module] = []
         self._get_layers(self.model)
         self._check_and_attach_rules()
+        # pyre-fixme[16]: `LRP` has no attribute `backward_handles`.
         self.backward_handles: List[RemovableHandle] = []
+        # pyre-fixme[16]: `LRP` has no attribute `forward_handles`.
         self.forward_handles: List[RemovableHandle] = []
 
+        # pyre-fixme[6]: For 1st argument expected `Tensor` but got
+        #  `TensorOrTupleOfTensorsGeneric`.
         is_inputs_tuple = _is_tuple(inputs)
+        # pyre-fixme[9]: inputs has type `TensorOrTupleOfTensorsGeneric`; used as
+        #  `Tuple[Tensor, ...]`.
         inputs = _format_tensor_into_tuples(inputs)
+        # pyre-fixme[6]: For 1st argument expected `Tuple[Tensor, ...]` but got
+        #  `TensorOrTupleOfTensorsGeneric`.
         gradient_mask = apply_gradient_requirements(inputs)
 
         try:
             # 1. Forward pass: Change weights of layers according to selected rules.
             output = self._compute_output_and_change_weights(
-                inputs, target, additional_forward_args
+                # pyre-fixme[6]: For 1st argument expected `Tuple[Tensor, ...]` but
+                #  got `TensorOrTupleOfTensorsGeneric`.
+                inputs,
+                target,
+                additional_forward_args,
             )
             # 2. Forward pass + backward pass: Register hooks to configure relevance
             # propagation and execute back-propagation.
@@ -215,9 +244,12 @@ class LRP(GradientAttribution):
         finally:
             self._restore_model()
 
+        # pyre-fixme[6]: For 1st argument expected `Tuple[Tensor, ...]` but got
+        #  `TensorOrTupleOfTensorsGeneric`.
         undo_gradient_requirements(inputs, gradient_mask)
 
         if return_convergence_delta:
+            # pyre-fixme[7]: Expected `Union[Tuple[Variable[TensorOrTupleOfTensorsGen...
             return (
                 _format_output(is_inputs_tuple, relevances),
                 self.compute_convergence_delta(relevances, output),
@@ -270,11 +302,13 @@ class LRP(GradientAttribution):
     def _get_layers(self, model: Module) -> None:
         for layer in model.children():
             if len(list(layer.children())) == 0:
+                # pyre-fixme[16]: `LRP` has no attribute `layers`.
                 self.layers.append(layer)
             else:
                 self._get_layers(layer)
 
     def _check_and_attach_rules(self) -> None:
+        # pyre-fixme[16]: `LRP` has no attribute `layers`.
         for layer in self.layers:
             if hasattr(layer, "rule"):
                 layer.activations = {}  # type: ignore
@@ -313,40 +347,49 @@ class LRP(GradientAttribution):
                     )
 
     def _register_forward_hooks(self) -> None:
+        # pyre-fixme[16]: `LRP` has no attribute `layers`.
         for layer in self.layers:
             if type(layer) in SUPPORTED_NON_LINEAR_LAYERS:
                 backward_handles = _register_backward_hook(
                     layer, PropagationRule.backward_hook_activation, self
                 )
+                # pyre-fixme[16]: `LRP` has no attribute `backward_handles`.
                 self.backward_handles.extend(backward_handles)
             else:
                 forward_handle = layer.register_forward_hook(
                     layer.rule.forward_hook  # type: ignore
                 )
+                # pyre-fixme[16]: `LRP` has no attribute `forward_handles`.
                 self.forward_handles.append(forward_handle)
+                # pyre-fixme[16]: `LRP` has no attribute `verbose`.
                 if self.verbose:
                     print(f"Applied {layer.rule} on layer {layer}")
 
     def _register_weight_hooks(self) -> None:
+        # pyre-fixme[16]: `LRP` has no attribute `layers`.
         for layer in self.layers:
             if layer.rule is not None:
                 forward_handle = layer.register_forward_hook(
                     layer.rule.forward_hook_weights  # type: ignore
                 )
+                # pyre-fixme[16]: `LRP` has no attribute `forward_handles`.
                 self.forward_handles.append(forward_handle)
 
     def _register_pre_hooks(self) -> None:
+        # pyre-fixme[16]: `LRP` has no attribute `layers`.
         for layer in self.layers:
             if layer.rule is not None:
                 forward_handle = layer.register_forward_pre_hook(
                     layer.rule.forward_pre_hook_activations  # type: ignore
                 )
+                # pyre-fixme[16]: `LRP` has no attribute `forward_handles`.
                 self.forward_handles.append(forward_handle)
 
     def _compute_output_and_change_weights(
         self,
         inputs: Tuple[Tensor, ...],
         target: TargetType,
+        # pyre-fixme[2]: Parameter annotation cannot be `Any`.
         additional_forward_args: Any,
     ) -> Tensor:
         try:
@@ -365,12 +408,15 @@ class LRP(GradientAttribution):
         return cast(Tensor, output)
 
     def _remove_forward_hooks(self) -> None:
+        # pyre-fixme[16]: `LRP` has no attribute `forward_handles`.
         for forward_handle in self.forward_handles:
             forward_handle.remove()
 
     def _remove_backward_hooks(self) -> None:
+        # pyre-fixme[16]: `LRP` has no attribute `backward_handles`.
         for backward_handle in self.backward_handles:
             backward_handle.remove()
+        # pyre-fixme[16]: `LRP` has no attribute `layers`.
         for layer in self.layers:
             if hasattr(layer.rule, "_handle_input_hooks"):
                 for handle in layer.rule._handle_input_hooks:  # type: ignore
@@ -379,11 +425,13 @@ class LRP(GradientAttribution):
                 layer.rule._handle_output_hook.remove()  # type: ignore
 
     def _remove_rules(self) -> None:
+        # pyre-fixme[16]: `LRP` has no attribute `layers`.
         for layer in self.layers:
             if hasattr(layer, "rule"):
                 del layer.rule
 
     def _clear_properties(self) -> None:
+        # pyre-fixme[16]: `LRP` has no attribute `layers`.
         for layer in self.layers:
             if hasattr(layer, "activation"):
                 del layer.activation

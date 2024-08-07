@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+
+# pyre-strict
 from typing import Any, Callable, Tuple, Union
 
 import torch
@@ -71,7 +73,11 @@ class FeaturePermutation(FeatureAblation):
     """
 
     def __init__(
-        self, forward_func: Callable, perm_func: Callable = _permute_feature
+        self,
+        # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
+        forward_func: Callable,
+        # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
+        perm_func: Callable = _permute_feature,
     ) -> None:
         r"""
         Args:
@@ -96,6 +102,7 @@ class FeaturePermutation(FeatureAblation):
         self,
         inputs: TensorOrTupleOfTensorsGeneric,
         target: TargetType = None,
+        # pyre-fixme[2]: Parameter annotation cannot be `Any`.
         additional_forward_args: Any = None,
         feature_mask: Union[None, TensorOrTupleOfTensorsGeneric] = None,
         perturbations_per_eval: int = 1,
@@ -277,6 +284,7 @@ class FeaturePermutation(FeatureAblation):
         self,
         inputs: TensorOrTupleOfTensorsGeneric,
         target: TargetType = None,
+        # pyre-fixme[2]: Parameter annotation cannot be `Any`.
         additional_forward_args: Any = None,
         feature_mask: Union[None, TensorOrTupleOfTensorsGeneric] = None,
         perturbations_per_eval: int = 1,

@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+# pyre-strict
+
 import inspect
 from typing import Any
 
@@ -19,6 +21,8 @@ class InputIdentity(nn.Module):
         super().__init__()
         self.input_name = input_name
 
+    # pyre-fixme[3]: Return type must be annotated.
+    # pyre-fixme[2]: Parameter must be annotated.
     def forward(self, x):
         return x
 
@@ -60,11 +64,14 @@ class ModelInputWrapper(nn.Module):
         self.module = module_to_wrap
 
         # ignore self
+        # pyre-fixme[4]: Attribute must be annotated.
         self.arg_name_list = inspect.getfullargspec(module_to_wrap.forward).args[1:]
         self.input_maps = nn.ModuleDict(
             {arg_name: InputIdentity(arg_name) for arg_name in self.arg_name_list}
         )
 
+    # pyre-fixme[3]: Return annotation cannot be `Any`.
+    # pyre-fixme[2]: Parameter must be annotated.
     def forward(self, *args, **kwargs) -> Any:
         args = list(args)
         for idx, (arg_name, arg) in enumerate(zip(self.arg_name_list, args)):

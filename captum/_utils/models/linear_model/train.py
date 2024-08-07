@@ -1,3 +1,4 @@
+# pyre-strict
 import time
 import warnings
 from typing import Any, Callable, Dict, List, Optional
@@ -8,6 +9,8 @@ from captum._utils.models.linear_model.model import LinearModel
 from torch.utils.data import DataLoader
 
 
+# pyre-fixme[3]: Return type must be annotated.
+# pyre-fixme[2]: Parameter must be annotated.
 def l2_loss(x1, x2, weights=None):
     if weights is None:
         return torch.mean((x1 - x2) ** 2) / 2.0
@@ -23,6 +26,7 @@ def sgd_train_linear_model(
     reduce_lr: bool = True,
     initial_lr: float = 0.01,
     alpha: float = 1.0,
+    # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
     loss_fn: Callable = l2_loss,
     reg_term: Optional[int] = 1,
     patience: int = 10,
@@ -104,6 +108,8 @@ def sgd_train_linear_model(
     convergence_counter = 0
     converged = False
 
+    # pyre-fixme[3]: Return type must be annotated.
+    # pyre-fixme[2]: Parameter must be annotated.
     def get_point(datapoint):
         if len(datapoint) == 2:
             x, y = datapoint
@@ -137,10 +143,12 @@ def sgd_train_linear_model(
 
         with torch.no_grad():
             if init_scheme == "xavier":
+                # pyre-fixme[16]: `Optional` has no attribute `weight`.
                 torch.nn.init.xavier_uniform_(model.linear.weight)
             else:
                 model.linear.weight.zero_()
 
+            # pyre-fixme[16]: `Optional` has no attribute `bias`.
             if model.linear.bias is not None:
                 model.linear.bias.zero_()
 
@@ -201,6 +209,7 @@ def sgd_train_linear_model(
                 loss.backward()
                 optim.step()
                 model.zero_grad()
+                # pyre-fixme[61]: `scheduler` is undefined, or not always defined.
                 if scheduler:
                     scheduler.step(average_loss)
 
@@ -226,22 +235,30 @@ def sgd_train_linear_model(
 
 
 class NormLayer(nn.Module):
+    # pyre-fixme[2]: Parameter must be annotated.
     def __init__(self, mean, std, n=None, eps=1e-8) -> None:
         super().__init__()
+        # pyre-fixme[4]: Attribute must be annotated.
         self.mean = mean
+        # pyre-fixme[4]: Attribute must be annotated.
         self.std = std
+        # pyre-fixme[4]: Attribute must be annotated.
         self.eps = eps
 
+    # pyre-fixme[3]: Return type must be annotated.
+    # pyre-fixme[2]: Parameter must be annotated.
     def forward(self, x):
         return (x - self.mean) / (self.std + self.eps)
 
 
+# pyre-fixme[3]: Return type must be annotated.
 def sklearn_train_linear_model(
     model: LinearModel,
     dataloader: DataLoader,
     construct_kwargs: Dict[str, Any],
     sklearn_trainer: str = "Lasso",
     norm_input: bool = False,
+    # pyre-fixme[2]: Parameter must be annotated.
     **fit_kwargs,
 ):
     r"""
@@ -320,6 +337,7 @@ def sklearn_train_linear_model(
         x /= std
 
     t1 = time.time()
+    # pyre-fixme[29]: `str` is not a function.
     sklearn_model = reduce(
         lambda val, el: getattr(val, el), [sklearn] + sklearn_trainer.split(".")
     )(**construct_kwargs)
@@ -358,6 +376,8 @@ def sklearn_train_linear_model(
     )
 
     if norm_input:
+        # pyre-fixme[61]: `mean` is undefined, or not always defined.
+        # pyre-fixme[61]: `std` is undefined, or not always defined.
         model.norm = NormLayer(mean, std)
 
     return {"train_time": t2 - t1}

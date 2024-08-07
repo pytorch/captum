@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+
+# pyre-strict
 import warnings
 from typing import Any, List, Tuple, Union
 
@@ -43,6 +45,7 @@ class ModifiedReluGradientAttribution(GradientAttribution):
         self,
         inputs: TensorOrTupleOfTensorsGeneric,
         target: TargetType = None,
+        # pyre-fixme[2]: Parameter annotation cannot be `Any`.
         additional_forward_args: Any = None,
     ) -> TensorOrTupleOfTensorsGeneric:
         r"""
@@ -55,9 +58,15 @@ class ModifiedReluGradientAttribution(GradientAttribution):
 
         # Keeps track whether original input is a tuple or not before
         # converting it into a tuple.
+        # pyre-fixme[6]: For 1st argument expected `Tensor` but got
+        #  `TensorOrTupleOfTensorsGeneric`.
         is_inputs_tuple = _is_tuple(inputs)
 
+        # pyre-fixme[9]: inputs has type `TensorOrTupleOfTensorsGeneric`; used as
+        #  `Tuple[Tensor, ...]`.
         inputs = _format_tensor_into_tuples(inputs)
+        # pyre-fixme[6]: For 1st argument expected `Tuple[Tensor, ...]` but got
+        #  `TensorOrTupleOfTensorsGeneric`.
         gradient_mask = apply_gradient_requirements(inputs)
 
         # set hooks for overriding ReLU gradients
@@ -74,14 +83,20 @@ class ModifiedReluGradientAttribution(GradientAttribution):
         finally:
             self._remove_hooks()
 
+        # pyre-fixme[6]: For 1st argument expected `Tuple[Tensor, ...]` but got
+        #  `TensorOrTupleOfTensorsGeneric`.
         undo_gradient_requirements(inputs, gradient_mask)
+        # pyre-fixme[7]: Expected `TensorOrTupleOfTensorsGeneric` but got
+        #  `Tuple[Tensor, ...]`.
         return _format_output(is_inputs_tuple, gradients)
 
+    # pyre-fixme[3]: Return type must be annotated.
     def _register_hooks(self, module: Module):
         if isinstance(module, torch.nn.ReLU):
             hooks = _register_backward_hook(module, self._backward_hook, self)
             self.backward_hooks.extend(hooks)
 
+    # pyre-fixme[3]: Return type must be annotated.
     def _backward_hook(
         self,
         module: Module,
@@ -96,6 +111,7 @@ class ModifiedReluGradientAttribution(GradientAttribution):
         else:
             return F.relu(to_override_grads)
 
+    # pyre-fixme[3]: Return type must be annotated.
     def _remove_hooks(self):
         for hook in self.backward_hooks:
             hook.remove()
@@ -132,6 +148,7 @@ class GuidedBackprop(ModifiedReluGradientAttribution):
         self,
         inputs: TensorOrTupleOfTensorsGeneric,
         target: TargetType = None,
+        # pyre-fixme[2]: Parameter annotation cannot be `Any`.
         additional_forward_args: Any = None,
     ) -> TensorOrTupleOfTensorsGeneric:
         r"""
@@ -241,6 +258,7 @@ class Deconvolution(ModifiedReluGradientAttribution):
         self,
         inputs: TensorOrTupleOfTensorsGeneric,
         target: TargetType = None,
+        # pyre-fixme[2]: Parameter annotation cannot be `Any`.
         additional_forward_args: Any = None,
     ) -> TensorOrTupleOfTensorsGeneric:
         r"""

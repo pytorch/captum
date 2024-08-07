@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+
+# pyre-strict
 import inspect
 import math
 import typing
@@ -70,12 +72,17 @@ class LimeBase(PerturbationAttribution):
 
     def __init__(
         self,
+        # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
         forward_func: Callable,
         interpretable_model: Model,
+        # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
         similarity_func: Callable,
+        # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
         perturb_func: Callable,
         perturb_interpretable_space: bool,
+        # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
         from_interp_rep_transform: Optional[Callable],
+        # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
         to_interp_rep_transform: Optional[Callable],
     ) -> None:
         r"""
@@ -240,10 +247,12 @@ class LimeBase(PerturbationAttribution):
         self,
         inputs: TensorOrTupleOfTensorsGeneric,
         target: TargetType = None,
+        # pyre-fixme[2]: Parameter annotation cannot be `Any`.
         additional_forward_args: Any = None,
         n_samples: int = 50,
         perturbations_per_eval: int = 1,
         show_progress: bool = False,
+        # pyre-fixme[2]: Parameter must be annotated.
         **kwargs,
     ) -> Tensor:
         r"""
@@ -530,15 +539,18 @@ class LimeBase(PerturbationAttribution):
             self.interpretable_model.fit(DataLoader(dataset, batch_size=batch_count))
             return self.interpretable_model.representation()
 
+    # pyre-fixme[3]: Return type must be annotated.
     def _evaluate_batch(
         self,
         curr_model_inputs: List[TensorOrTupleOfTensorsGeneric],
         expanded_target: TargetType,
+        # pyre-fixme[2]: Parameter annotation cannot be `Any`.
         expanded_additional_args: Any,
         device: torch.device,
     ):
         model_out = _run_forward(
             self.forward_func,
+            # pyre-fixme[6]: For 1st argument expected `Sequence[Variable[TupleOrTens...
             _reduce_list(curr_model_inputs),
             expanded_target,
             expanded_additional_args,
@@ -556,6 +568,7 @@ class LimeBase(PerturbationAttribution):
         return False
 
     @property
+    # pyre-fixme[3]: Return type must be annotated.
     def multiplies_by_inputs(self):
         return False
 
@@ -564,6 +577,8 @@ class LimeBase(PerturbationAttribution):
 # for Lime child implementation.
 
 
+# pyre-fixme[3]: Return type must be annotated.
+# pyre-fixme[2]: Parameter must be annotated.
 def default_from_interp_rep_transform(curr_sample, original_inputs, **kwargs):
     assert (
         "feature_mask" in kwargs
@@ -590,7 +605,9 @@ def default_from_interp_rep_transform(curr_sample, original_inputs, **kwargs):
 
 
 def get_exp_kernel_similarity_function(
-    distance_mode: str = "cosine", kernel_width: float = 1.0
+    distance_mode: str = "cosine",
+    kernel_width: float = 1.0,
+    # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
 ) -> Callable:
     r"""
     This method constructs an appropriate similarity function to compute
@@ -623,6 +640,8 @@ def get_exp_kernel_similarity_function(
             similarity_fn for Lime or LimeBase.
     """
 
+    # pyre-fixme[3]: Return type must be annotated.
+    # pyre-fixme[2]: Parameter must be annotated.
     def default_exp_kernel(original_inp, perturbed_inp, __, **kwargs):
         flattened_original_inp = _flatten_tensor_or_tuple(original_inp).float()
         flattened_perturbed_inp = _flatten_tensor_or_tuple(perturbed_inp).float()
@@ -638,6 +657,8 @@ def get_exp_kernel_similarity_function(
     return default_exp_kernel
 
 
+# pyre-fixme[3]: Return type must be annotated.
+# pyre-fixme[2]: Parameter must be annotated.
 def default_perturb_func(original_inp, **kwargs):
     assert (
         "num_interp_features" in kwargs
@@ -651,6 +672,8 @@ def default_perturb_func(original_inp, **kwargs):
     return torch.bernoulli(probs).to(device=device).long()
 
 
+# pyre-fixme[3]: Return type must be annotated.
+# pyre-fixme[2]: Parameter must be annotated.
 def construct_feature_mask(feature_mask, formatted_inputs):
     if feature_mask is None:
         feature_mask, num_interp_features = _construct_default_feature_mask(
@@ -661,6 +684,7 @@ def construct_feature_mask(feature_mask, formatted_inputs):
         min_interp_features = int(
             min(
                 torch.min(single_mask).item()
+                # pyre-fixme[16]: `None` has no attribute `__iter__`.
                 for single_mask in feature_mask
                 if single_mask.numel()
             )
@@ -674,6 +698,8 @@ def construct_feature_mask(feature_mask, formatted_inputs):
                 single_mask - min_interp_features for single_mask in feature_mask
             )
 
+        # pyre-fixme[6]: For 1st argument expected `Tuple[Tensor, ...]` but got
+        #  `Optional[typing.Tuple[typing.Any, ...]]`.
         num_interp_features = _get_max_feature_index(feature_mask) + 1
     return feature_mask, num_interp_features
 
@@ -716,9 +742,12 @@ class Lime(LimeBase):
 
     def __init__(
         self,
+        # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
         forward_func: Callable,
         interpretable_model: Optional[Model] = None,
+        # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
         similarity_func: Optional[Callable] = None,
+        # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
         perturb_func: Optional[Callable] = None,
     ) -> None:
         r"""
@@ -834,6 +863,7 @@ class Lime(LimeBase):
         inputs: TensorOrTupleOfTensorsGeneric,
         baselines: BaselineType = None,
         target: TargetType = None,
+        # pyre-fixme[2]: Parameter annotation cannot be `Any`.
         additional_forward_args: Any = None,
         feature_mask: Union[None, Tensor, Tuple[Tensor, ...]] = None,
         n_samples: int = 25,
@@ -1075,14 +1105,18 @@ class Lime(LimeBase):
         inputs: TensorOrTupleOfTensorsGeneric,
         baselines: BaselineType = None,
         target: TargetType = None,
+        # pyre-fixme[2]: Parameter annotation cannot be `Any`.
         additional_forward_args: Any = None,
         feature_mask: Union[None, Tensor, Tuple[Tensor, ...]] = None,
         n_samples: int = 25,
         perturbations_per_eval: int = 1,
         return_input_shape: bool = True,
         show_progress: bool = False,
+        # pyre-fixme[2]: Parameter must be annotated.
         **kwargs,
     ) -> TensorOrTupleOfTensorsGeneric:
+        # pyre-fixme[6]: For 1st argument expected `Tensor` but got
+        #  `TensorOrTupleOfTensorsGeneric`.
         is_inputs_tuple = _is_tuple(inputs)
         formatted_inputs, baselines = _format_input_baseline(inputs, baselines)
         bsz = formatted_inputs[0].shape[0]
@@ -1185,6 +1219,8 @@ class Lime(LimeBase):
             **kwargs,
         )
         if return_input_shape:
+            # pyre-fixme[7]: Expected `TensorOrTupleOfTensorsGeneric` but got
+            #  `Tuple[Tensor, ...]`.
             return self._convert_output_shape(
                 formatted_inputs,
                 feature_mask,
@@ -1196,22 +1232,30 @@ class Lime(LimeBase):
             return coefs
 
     @typing.overload
+    # pyre-fixme[43]: The implementation of `_convert_output_shape` does not accept
+    #  all possible arguments of overload defined on line `1201`.
     def _convert_output_shape(
         self,
         formatted_inp: Tuple[Tensor, ...],
         feature_mask: Tuple[Tensor, ...],
         coefs: Tensor,
         num_interp_features: int,
+        # pyre-fixme[31]: Expression `Literal[True]` is not a valid type.
+        # pyre-fixme[24]: Non-generic type `typing.Literal` cannot take parameters.
         is_inputs_tuple: Literal[True],
     ) -> Tuple[Tensor, ...]: ...
 
     @typing.overload
+    # pyre-fixme[43]: The implementation of `_convert_output_shape` does not accept
+    #  all possible arguments of overload defined on line `1211`.
     def _convert_output_shape(
         self,
         formatted_inp: Tuple[Tensor, ...],
         feature_mask: Tuple[Tensor, ...],
         coefs: Tensor,
         num_interp_features: int,
+        # pyre-fixme[31]: Expression `Literal[False]` is not a valid type.
+        # pyre-fixme[24]: Non-generic type `typing.Literal` cannot take parameters.
         is_inputs_tuple: Literal[False],
     ) -> Tensor: ...
 

@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+
+# pyre-strict
 from collections import defaultdict
 
 import torch
@@ -17,11 +19,16 @@ class PyTextInterpretableEmbedding(EmbeddingBase):
     layer which passes precomputed embedding vectors to lower layers.
     """
 
+    # pyre-fixme[2]: Parameter must be annotated.
     def __init__(self, embeddings) -> None:
+        # pyre-fixme[4]: Attribute must be annotated.
         self.embedding_dims = [embedding.embedding_dim for embedding in embeddings]
         super().__init__(sum(self.embedding_dims))
+        # pyre-fixme[4]: Attribute must be annotated.
         self.embeddings = embeddings
 
+    # pyre-fixme[3]: Return type must be annotated.
+    # pyre-fixme[2]: Parameter must be annotated.
     def forward(self, input):
         r"""
         The forward pass of embedding layer. This can be for the text or any
@@ -39,6 +46,8 @@ class PyTextInterpretableEmbedding(EmbeddingBase):
         """
         return input
 
+    # pyre-fixme[3]: Return type must be annotated.
+    # pyre-fixme[2]: Parameter must be annotated.
     def get_attribution_map(self, attributions):
         r"""
         After attribution scores are computed for an input embedding vector
@@ -84,21 +93,30 @@ class BaselineGenerator:
 
     PAD = "<pad>"
 
+    # pyre-fixme[2]: Parameter must be annotated.
     def __init__(self, model, data_handler, device) -> None:
+        # pyre-fixme[4]: Attribute must be annotated.
         self.model = model
+        # pyre-fixme[4]: Attribute must be annotated.
         self.data_handler = data_handler
         if "dict_feat" in data_handler.features:
+            # pyre-fixme[4]: Attribute must be annotated.
             self.vocab_dict = data_handler.features["dict_feat"].vocab
         if "word_feat" in data_handler.features:
+            # pyre-fixme[4]: Attribute must be annotated.
             self.vocab_word = data_handler.features["word_feat"].vocab
 
+        # pyre-fixme[4]: Attribute must be annotated.
         self.baseline_single_word_feature = self._generate_baseline_single_word_feature(
             device
         )
+        # pyre-fixme[4]: Attribute must be annotated.
         self.baseline_single_dict_feature = self._generate_baseline_single_dict_feature(
             device
         )
 
+    # pyre-fixme[3]: Return type must be annotated.
+    # pyre-fixme[2]: Parameter must be annotated.
     def generate_baseline(self, integ_grads_embeddings, seq_length):
         r"""
         Generates baseline for input word and dict features. In the future we
@@ -129,6 +147,8 @@ class BaselineGenerator:
                 )
         return tuple(baseline)
 
+    # pyre-fixme[3]: Return type must be annotated.
+    # pyre-fixme[2]: Parameter must be annotated.
     def _generate_baseline_single_word_feature(self, device):
         return (
             torch.tensor(
@@ -138,6 +158,8 @@ class BaselineGenerator:
             .to(device)
         )
 
+    # pyre-fixme[3]: Return type must be annotated.
+    # pyre-fixme[2]: Parameter must be annotated.
     def _generate_baseline_single_dict_feature(self, device):
         r"""Generate dict features based on Assistant's case study by using
          sia_transformer:
@@ -184,9 +206,13 @@ class BaselineGenerator:
 
         return (gazetteer_feat_id, gazetteer_feat_weights, gazetteer_feat_lengths)
 
+    # pyre-fixme[3]: Return type must be annotated.
+    # pyre-fixme[2]: Parameter must be annotated.
     def _generate_word_baseline(self, seq_length):
         return self.baseline_single_word_feature.repeat(1, seq_length)
 
+    # pyre-fixme[3]: Return type must be annotated.
+    # pyre-fixme[2]: Parameter must be annotated.
     def _generate_dict_baseline(self, seq_length):
         return (
             self.baseline_single_dict_feature[0].repeat(1, seq_length),
@@ -195,6 +221,8 @@ class BaselineGenerator:
         )
 
 
+# pyre-fixme[3]: Return type must be annotated.
+# pyre-fixme[2]: Parameter must be annotated.
 def configure_task_integ_grads_embeddings(task):
     r"""
     Wraps Pytext's DocNN model embedding with `IntegratedGradientsEmbedding` for
@@ -219,6 +247,8 @@ def configure_task_integ_grads_embeddings(task):
     return integrated_gradients_embedding_lst[0]
 
 
+# pyre-fixme[3]: Return type must be annotated.
+# pyre-fixme[2]: Parameter must be annotated.
 def configure_model_integ_grads_embeddings(model):
     r"""
     Wraps Pytext's DocNN model embedding with `IntegratedGradientsEmbedding`
@@ -240,6 +270,8 @@ def configure_model_integ_grads_embeddings(model):
     return EmbeddingList([integrated_gradients_embedding], False)
 
 
+# pyre-fixme[3]: Return type must be annotated.
+# pyre-fixme[2]: Parameter must be annotated.
 def reshape_word_features(word_features):
     r"""
      Creates one-sample batch for word features for sanity check purposes
@@ -256,8 +288,18 @@ def reshape_word_features(word_features):
     return word_features.unsqueeze(0)
 
 
+# pyre-fixme[3]: Return type must be annotated.
 def reshape_dict_features(
-    dict_feature_id_batch, dict_weight_batch, dict_seq_len_batch, seq_length, idx
+    # pyre-fixme[2]: Parameter must be annotated.
+    dict_feature_id_batch,
+    # pyre-fixme[2]: Parameter must be annotated.
+    dict_weight_batch,
+    # pyre-fixme[2]: Parameter must be annotated.
+    dict_seq_len_batch,
+    # pyre-fixme[2]: Parameter must be annotated.
+    seq_length,
+    # pyre-fixme[2]: Parameter must be annotated.
+    idx,
 ):
     r"""
     Creates one-sample batch for dict features for sanity check purposes

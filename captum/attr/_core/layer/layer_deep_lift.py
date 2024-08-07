@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+
+# pyre-strict
 import typing
 from typing import Any, Callable, cast, Dict, Optional, Sequence, Tuple, Union
 
@@ -99,12 +101,18 @@ class LayerDeepLift(LayerAttribution, DeepLift):
 
     # Ignoring mypy error for inconsistent signature with DeepLift
     @typing.overload  # type: ignore
+    # pyre-fixme[43]: The implementation of `attribute` does not accept all possible
+    #  arguments of overload defined on line `104`.
     def attribute(
         self,
         inputs: Union[Tensor, Tuple[Tensor, ...]],
         baselines: BaselineType = None,
         target: TargetType = None,
+        # pyre-fixme[2]: Parameter annotation cannot be `Any`.
         additional_forward_args: Any = None,
+        # pyre-fixme[9]: return_convergence_delta has type `Literal[]`; used as `bool`.
+        # pyre-fixme[31]: Expression `Literal[False]` is not a valid type.
+        # pyre-fixme[24]: Non-generic type `typing.Literal` cannot take parameters.
         return_convergence_delta: Literal[False] = False,
         attribute_to_layer_input: bool = False,
         custom_attribution_func: Union[None, Callable[..., Tuple[Tensor, ...]]] = None,
@@ -112,6 +120,8 @@ class LayerDeepLift(LayerAttribution, DeepLift):
     ) -> Union[Tensor, Tuple[Tensor, ...]]: ...
 
     @typing.overload
+    # pyre-fixme[43]: The implementation of `attribute` does not accept all possible
+    #  arguments of overload defined on line `117`.
     def attribute(
         self,
         inputs: Union[Tensor, Tuple[Tensor, ...]],
@@ -119,6 +129,8 @@ class LayerDeepLift(LayerAttribution, DeepLift):
         target: TargetType = None,
         additional_forward_args: Any = None,
         *,
+        # pyre-fixme[31]: Expression `Literal[True]` is not a valid type.
+        # pyre-fixme[24]: Non-generic type `typing.Literal` cannot take parameters.
         return_convergence_delta: Literal[True],
         attribute_to_layer_input: bool = False,
         custom_attribution_func: Union[None, Callable[..., Tuple[Tensor, ...]]] = None,
@@ -126,6 +138,8 @@ class LayerDeepLift(LayerAttribution, DeepLift):
     ) -> Tuple[Union[Tensor, Tuple[Tensor, ...]], Tensor]: ...
 
     @log_usage()
+    # pyre-fixme[43]: This definition does not have the same decorators as the
+    #  preceding overload(s).
     def attribute(
         self,
         inputs: Union[Tensor, Tuple[Tensor, ...]],
@@ -322,6 +336,7 @@ class LayerDeepLift(LayerAttribution, DeepLift):
                 additional_forward_args,
             )
 
+            # pyre-fixme[24]: Generic type `Sequence` expects 1 type parameter.
             def chunk_output_fn(out: TensorOrTupleOfTensorsGeneric) -> Sequence:
                 if isinstance(out, Tensor):
                     return out.chunk(2)
@@ -366,10 +381,13 @@ class LayerDeepLift(LayerAttribution, DeepLift):
             inputs,
             additional_forward_args,
             target,
+            # pyre-fixme[31]: Expression `Literal[False])]` is not a valid type.
+            # pyre-fixme[24]: Non-generic type `typing.Literal` cannot take parameters.
             cast(Union[Literal[True], Literal[False]], len(attributions) > 1),
         )
 
     @property
+    # pyre-fixme[3]: Return type must be annotated.
     def multiplies_by_inputs(self):
         return self._multiply_by_inputs
 
@@ -434,6 +452,8 @@ class LayerDeepLiftShap(LayerDeepLift, DeepLiftShap):
 
     # Ignoring mypy error for inconsistent signature with DeepLiftShap
     @typing.overload  # type: ignore
+    # pyre-fixme[43]: The implementation of `attribute` does not accept all possible
+    #  arguments of overload defined on line `439`.
     def attribute(
         self,
         inputs: Union[Tensor, Tuple[Tensor, ...]],
@@ -441,13 +461,19 @@ class LayerDeepLiftShap(LayerDeepLift, DeepLiftShap):
             Tensor, Tuple[Tensor, ...], Callable[..., Union[Tensor, Tuple[Tensor, ...]]]
         ],
         target: TargetType = None,
+        # pyre-fixme[2]: Parameter annotation cannot be `Any`.
         additional_forward_args: Any = None,
+        # pyre-fixme[9]: return_convergence_delta has type `Literal[]`; used as `bool`.
+        # pyre-fixme[31]: Expression `Literal[False]` is not a valid type.
+        # pyre-fixme[24]: Non-generic type `typing.Literal` cannot take parameters.
         return_convergence_delta: Literal[False] = False,
         attribute_to_layer_input: bool = False,
         custom_attribution_func: Union[None, Callable[..., Tuple[Tensor, ...]]] = None,
     ) -> Union[Tensor, Tuple[Tensor, ...]]: ...
 
     @typing.overload
+    # pyre-fixme[43]: The implementation of `attribute` does not accept all possible
+    #  arguments of overload defined on line `453`.
     def attribute(
         self,
         inputs: Union[Tensor, Tuple[Tensor, ...]],
@@ -457,12 +483,16 @@ class LayerDeepLiftShap(LayerDeepLift, DeepLiftShap):
         target: TargetType = None,
         additional_forward_args: Any = None,
         *,
+        # pyre-fixme[31]: Expression `Literal[True]` is not a valid type.
+        # pyre-fixme[24]: Non-generic type `typing.Literal` cannot take parameters.
         return_convergence_delta: Literal[True],
         attribute_to_layer_input: bool = False,
         custom_attribution_func: Union[None, Callable[..., Tuple[Tensor, ...]]] = None,
     ) -> Tuple[Union[Tensor, Tuple[Tensor, ...]], Tensor]: ...
 
     @log_usage()
+    # pyre-fixme[43]: This definition does not have the same decorators as the
+    #  preceding overload(s).
     def attribute(
         self,
         inputs: Union[Tensor, Tuple[Tensor, ...]],
@@ -655,7 +685,12 @@ class LayerDeepLiftShap(LayerDeepLift, DeepLiftShap):
             target=exp_target,
             additional_forward_args=exp_addit_args,
             return_convergence_delta=cast(
-                Literal[True, False], return_convergence_delta
+                # pyre-fixme[31]: Expression `Literal[(True, False)]` is not a valid
+                #  type.
+                # pyre-fixme[24]: Non-generic type `typing.Literal` cannot take
+                #  parameters.
+                Literal[True, False],
+                return_convergence_delta,
             ),
             attribute_to_layer_input=attribute_to_layer_input,
             custom_attribution_func=custom_attribution_func,
@@ -674,10 +709,15 @@ class LayerDeepLiftShap(LayerDeepLift, DeepLiftShap):
                 self, inp_bsz, base_bsz, attributions
             )
         if return_convergence_delta:
+            # pyre-fixme[61]: `delta` is undefined, or not always defined.
             return attributions, delta
         else:
+            # pyre-fixme[7]: Expected `Union[Tuple[Union[Tensor,
+            #  typing.Tuple[Tensor, ...]], Tensor], Tensor, typing.Tuple[Tensor, ...]]`
+            #  but got `Union[tuple[Tensor], Tensor]`.
             return attributions
 
     @property
+    # pyre-fixme[3]: Return type must be annotated.
     def multiplies_by_inputs(self):
         return self._multiply_by_inputs

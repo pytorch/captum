@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+
+# pyre-strict
 from typing import Any, Callable, cast, Generic, List, Tuple, Type, Union
 
 import torch
@@ -22,12 +24,15 @@ from torch import Tensor
 from torch.nn import Module
 
 
+# pyre-fixme[13]: Attribute `attribute` is never initialized.
+# pyre-fixme[13]: Attribute `compute_convergence_delta` is never initialized.
 class Attribution:
     r"""
     All attribution algorithms extend this class. It enforces its child classes
     to extend and override core `attribute` method.
     """
 
+    # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
     def __init__(self, forward_func: Callable) -> None:
         r"""
         Args:
@@ -37,6 +42,7 @@ class Attribution:
         """
         self.forward_func = forward_func
 
+    # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
     attribute: Callable
     r"""
     This method computes and returns the attribution values for each input tensor.
@@ -68,6 +74,7 @@ class Attribution:
     """
 
     @property
+    # pyre-fixme[3]: Return type must be annotated.
     def multiplies_by_inputs(self):
         return False
 
@@ -88,6 +95,7 @@ class Attribution:
         """
         return False
 
+    # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
     compute_convergence_delta: Callable
     r"""
     The attribution algorithms which derive `Attribution` class and provide
@@ -146,6 +154,7 @@ class GradientAttribution(Attribution):
     that we want to interpret or the model itself.
     """
 
+    # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
     def __init__(self, forward_func: Callable) -> None:
         r"""
         Args:
@@ -155,6 +164,7 @@ class GradientAttribution(Attribution):
                         function.
         """
         Attribution.__init__(self, forward_func)
+        # pyre-fixme[4]: Attribute must be annotated.
         self.gradient_func = compute_gradients
 
     @log_usage()
@@ -166,6 +176,7 @@ class GradientAttribution(Attribution):
         ],
         end_point: Union[Tensor, Tuple[Tensor, ...]],
         target: TargetType = None,
+        # pyre-fixme[2]: Parameter annotation cannot be `Any`.
         additional_forward_args: Any = None,
     ) -> Tensor:
         r"""
@@ -307,6 +318,7 @@ class PerturbationAttribution(Attribution):
     that we want to interpret or the model itself.
     """
 
+    # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
     def __init__(self, forward_func: Callable) -> None:
         r"""
         Args:
@@ -318,6 +330,7 @@ class PerturbationAttribution(Attribution):
         Attribution.__init__(self, forward_func)
 
     @property
+    # pyre-fixme[3]: Return type must be annotated.
     def multiplies_by_inputs(self):
         return True
 
@@ -332,6 +345,7 @@ class InternalAttribution(Attribution, Generic[ModuleOrModuleList]):
 
     def __init__(
         self,
+        # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
         forward_func: Callable,
         layer: ModuleOrModuleList,
         device_ids: Union[None, List[int]] = None,
@@ -355,6 +369,7 @@ class InternalAttribution(Attribution, Generic[ModuleOrModuleList]):
         self.device_ids = device_ids
 
 
+# pyre-fixme[24]: Generic type `InternalAttribution` expects 1 type parameter.
 class LayerAttribution(InternalAttribution):
     r"""
     Layer attribution provides attribution values for the given layer, quantifying
@@ -365,6 +380,7 @@ class LayerAttribution(InternalAttribution):
 
     def __init__(
         self,
+        # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
         forward_func: Callable,
         layer: ModuleOrModuleList,
         device_ids: Union[None, List[int]] = None,
@@ -422,6 +438,8 @@ class LayerAttribution(InternalAttribution):
         return F.interpolate(layer_attribution, interpolate_dims, mode=interpolate_mode)
 
 
+# pyre-fixme[13]: Attribute `attribute` is never initialized.
+# pyre-fixme[24]: Generic type `InternalAttribution` expects 1 type parameter.
 class NeuronAttribution(InternalAttribution):
     r"""
     Neuron attribution provides input attribution for a given neuron, quantifying
@@ -435,6 +453,7 @@ class NeuronAttribution(InternalAttribution):
 
     def __init__(
         self,
+        # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
         forward_func: Callable,
         layer: Module,
         device_ids: Union[None, List[int]] = None,
@@ -455,6 +474,7 @@ class NeuronAttribution(InternalAttribution):
         """
         InternalAttribution.__init__(self, forward_func, layer, device_ids)
 
+    # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
     attribute: Callable
     r"""
     This method computes and returns the neuron attribution values for each

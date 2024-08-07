@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+
+# pyre-strict
 from typing import Any, Callable, List, Tuple, Union
 
 import torch
@@ -28,6 +30,7 @@ class NeuronFeatureAblation(NeuronAttribution, PerturbationAttribution):
 
     def __init__(
         self,
+        # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
         forward_func: Callable,
         layer: Module,
         device_ids: Union[None, List[int]] = None,
@@ -57,8 +60,10 @@ class NeuronFeatureAblation(NeuronAttribution, PerturbationAttribution):
     def attribute(
         self,
         inputs: TensorOrTupleOfTensorsGeneric,
+        # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
         neuron_selector: Union[int, Tuple[Union[int, slice], ...], Callable],
         baselines: BaselineType = None,
+        # pyre-fixme[2]: Parameter annotation cannot be `Any`.
         additional_forward_args: Any = None,
         feature_mask: Union[None, TensorOrTupleOfTensorsGeneric] = None,
         attribute_to_neuron_input: bool = False,
@@ -245,6 +250,7 @@ class NeuronFeatureAblation(NeuronAttribution, PerturbationAttribution):
             >>>                          feature_mask=feature_mask)
         """
 
+        # pyre-fixme[3]: Return type must be annotated.
         def neuron_forward_func(*args: Any):
             with torch.no_grad():
                 layer_eval = _forward_layer_eval(

@@ -1,3 +1,4 @@
+# pyre-strict
 from abc import ABC, abstractmethod
 from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
@@ -22,6 +23,8 @@ def _scatter_itp_attr_by_mask(
 
     # input_shape in shape(batch_size, *inp_feature_dims)
     # attribute in shape(*output_dims, *inp_feature_dims)
+    # pyre-fixme[60]: Concatenation not yet support for multiple variadic tuples:
+    #  `*output_dims, *input_shape[slice(1, None, None)]`.
     attr_shape = (*output_dims, *input_shape[1:])
 
     expanded_feature_indices = mask.expand(attr_shape)
@@ -34,7 +37,11 @@ def _scatter_itp_attr_by_mask(
         # (*output_dims, 1..., 1, n_itp_features)
         # then broadcast to (*output_dims, *inp.shape[1:-1], n_itp_features)
         n_extra_dims = len(extra_inp_dims)
+        # pyre-fixme[60]: Concatenation not yet support for multiple variadic
+        #  tuples: `*output_dims, *(1).__mul__(n_extra_dims)`.
         unsqueezed_shape = (*output_dims, *(1,) * n_extra_dims, n_itp_features)
+        # pyre-fixme[60]: Concatenation not yet support for multiple variadic
+        #  tuples: `*output_dims, *extra_inp_dims`.
         expanded_shape = (*output_dims, *extra_inp_dims, n_itp_features)
         expanded_itp_attr = itp_attr.reshape(unsqueezed_shape).expand(expanded_shape)
     else:
@@ -107,6 +114,7 @@ class InterpretableInput(ABC):
         pass
 
     @abstractmethod
+    # pyre-fixme[3]: Return annotation cannot be `Any`.
     def to_model_input(self, itp_tensor: Optional[Tensor] = None) -> Any:
         """
         Get the (perturbed) input in the format required by the model
@@ -188,10 +196,13 @@ class TextTemplateInput(InterpretableInput):
 
     """
 
+    # pyre-fixme[3]: Return type must be annotated.
     def __init__(
         self,
+        # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
         template: Union[str, Callable],
         values: Union[List[str], Dict[str, str]],
+        # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
         baselines: Union[List[str], Dict[str, str], Callable, None] = None,
         mask: Union[List[int], Dict[str, int], None] = None,
     ):
@@ -206,6 +217,7 @@ class TextTemplateInput(InterpretableInput):
             dict_keys = []
 
         self.values = values
+        # pyre-fixme[4]: Attribute must be annotated.
         self.dict_keys = dict_keys
 
         n_features = len(values)
@@ -249,12 +261,15 @@ class TextTemplateInput(InterpretableInput):
 
             # internal compressed mask of continuous interpretable indices from 0
             # cannot replace original mask of ids for grouping across values externally
+            # pyre-fixme[4]: Attribute must be annotated.
             self.formatted_mask = [mask_id_to_idx[mid] for mid in mask]
 
             n_itp_features = len(mask_ids)
 
         # number of raw features and intepretable features
+        # pyre-fixme[4]: Attribute must be annotated.
         self.n_features = n_features
+        # pyre-fixme[4]: Attribute must be annotated.
         self.n_itp_features = n_itp_features
 
         if isinstance(template, str):
@@ -265,6 +280,7 @@ class TextTemplateInput(InterpretableInput):
                 f"received: {type(template)}"
             )
             template = template
+        # pyre-fixme[4]: Attribute annotation cannot contain `Any`.
         self.format_fn = template
 
         self.mask = mask
@@ -273,6 +289,8 @@ class TextTemplateInput(InterpretableInput):
         # Interpretable representation in shape(1, n_itp_features)
         return torch.tensor([[1.0] * self.n_itp_features])
 
+    # pyre-fixme[14]: `to_model_input` overrides method defined in
+    #  `InterpretableInput` inconsistently.
     def to_model_input(self, perturbed_tensor: Optional[Tensor] = None) -> str:
         values = list(self.values)  # clone
 
@@ -303,12 +321,18 @@ class TextTemplateInput(InterpretableInput):
                 itp_val = perturbed_tensor[0][itp_idx]
 
                 if not itp_val:
+                    # pyre-fixme[16]: Item `None` of `Union[None, Dict[str, str],
+                    #  List[typing.Any]]` has no attribute `__getitem__`.
                     values[i] = baselines[i]
 
         if self.dict_keys:
             dict_values = dict(zip(self.dict_keys, values))
+            # pyre-fixme[29]: `Union[typing.Callable[..., typing.Any], str]` is not
+            #  a function.
             input_str = self.format_fn(**dict_values)
         else:
+            # pyre-fixme[29]: `Union[typing.Callable[..., typing.Any], str]` is not
+            #  a function.
             input_str = self.format_fn(*values)
 
         return input_str
@@ -367,9 +391,11 @@ class TextTokenInput(InterpretableInput):
 
     """
 
+    # pyre-fixme[3]: Return type must be annotated.
     def __init__(
         self,
         text: str,
+        # pyre-fixme[2]: Parameter must be annotated.
         tokenizer,
         baselines: Union[int, str] = 0,  # usually UNK
         skip_tokens: Union[List[int], List[str], None] = None,
@@ -377,10 +403,13 @@ class TextTokenInput(InterpretableInput):
         inp_tensor = tokenizer.encode(text, return_tensors="pt")
 
         # input tensor into the model of token ids
+        # pyre-fixme[4]: Attribute must be annotated.
         self.inp_tensor = inp_tensor
         # tensor of interpretable token ids
+        # pyre-fixme[4]: Attribute must be annotated.
         self.itp_tensor = inp_tensor
         # interpretable mask
+        # pyre-fixme[4]: Attribute must be annotated.
         self.itp_mask = None
 
         if skip_tokens:
@@ -401,10 +430,14 @@ class TextTokenInput(InterpretableInput):
         self.skip_tokens = skip_tokens
 
         # features values, the tokens
+        # pyre-fixme[4]: Attribute must be annotated.
         self.values = tokenizer.convert_ids_to_tokens(self.itp_tensor[0].tolist())
+        # pyre-fixme[4]: Attribute must be annotated.
         self.tokenizer = tokenizer
+        # pyre-fixme[4]: Attribute must be annotated.
         self.n_itp_features = len(self.values)
 
+        # pyre-fixme[4]: Attribute must be annotated.
         self.baselines = (
             baselines
             if type(baselines) is int
@@ -415,6 +448,9 @@ class TextTokenInput(InterpretableInput):
         # return the perturbation indicator as interpretable tensor instead of token ids
         return torch.ones_like(self.itp_tensor)
 
+    # pyre-fixme[14]: `to_model_input` overrides method defined in
+    #  `InterpretableInput` inconsistently.
+    # pyre-fixme[2]: Parameter must be annotated.
     def to_model_input(self, perturbed_tensor=None) -> torch.Tensor:
         if perturbed_tensor is None:
             return self.inp_tensor
@@ -440,5 +476,6 @@ class TextTokenInput(InterpretableInput):
 
         return perturb_inp_tensor
 
+    # pyre-fixme[3]: Return type must be annotated.
     def format_attr(self, itp_attr: torch.Tensor):
         return itp_attr

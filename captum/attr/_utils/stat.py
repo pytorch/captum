@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+
+# pyre-strict
 from typing import Any, Callable, List, Optional, TYPE_CHECKING
 
 import torch
@@ -29,11 +31,13 @@ class Stat:
             kwargs (Any):
                 Additional arguments used to construct the statistic
         """
+        # pyre-fixme[4]: Attribute must be annotated.
         self.params = kwargs
         self._name = name
 
         self._other_stats: Optional[SummarizerSingleTensor] = None
 
+    # pyre-fixme[3]: Return type must be annotated.
     def init(self):
         pass
 
@@ -41,12 +45,14 @@ class Stat:
         assert self._other_stats is not None
         return self._other_stats.get(stat)
 
+    # pyre-fixme[3]: Return type must be annotated.
     def update(self, x: Tensor):
         raise NotImplementedError()
 
     def get(self) -> Optional[Tensor]:
         raise NotImplementedError()
 
+    # pyre-fixme[3]: Return type must be annotated.
     def __hash__(self):
         return hash((self.__class__, frozenset(self.params.items())))
 
@@ -62,6 +68,7 @@ class Stat:
         return not self.__eq__(other)
 
     @property
+    # pyre-fixme[3]: Return type must be annotated.
     def name(self):
         """
         The name of the statistic. i.e. it is the key in a .summary
@@ -85,11 +92,15 @@ class Count(Stat):
 
     def __init__(self, name: Optional[str] = None) -> None:
         super().__init__(name=name)
+        # pyre-fixme[4]: Attribute must be annotated.
         self.n = None
 
+    # pyre-fixme[3]: Return type must be annotated.
     def get(self):
         return self.n
 
+    # pyre-fixme[3]: Return type must be annotated.
+    # pyre-fixme[2]: Parameter must be annotated.
     def update(self, x):
         if self.n is None:
             self.n = 0
@@ -109,10 +120,15 @@ class Mean(Stat):
     def get(self) -> Optional[Tensor]:
         return self.rolling_mean
 
+    # pyre-fixme[3]: Return type must be annotated.
     def init(self):
+        # pyre-fixme[8]: Attribute has type `Optional[Count]`; used as `Optional[Stat]`.
         self.n = self._get_stat(Count())
 
+    # pyre-fixme[3]: Return type must be annotated.
+    # pyre-fixme[2]: Parameter must be annotated.
     def update(self, x):
+        # pyre-fixme[16]: `Optional` has no attribute `get`.
         n = self.n.get()
 
         if self.rolling_mean is None:
@@ -120,6 +136,7 @@ class Mean(Stat):
             self.rolling_mean = x.clone() if x.is_floating_point() else x.double()
         else:
             delta = x - self.rolling_mean
+            # pyre-fixme[16]: `Optional` has no attribute `__iadd__`.
             self.rolling_mean += delta / n
 
 
@@ -130,10 +147,14 @@ class MSE(Stat):
 
     def __init__(self, name: Optional[str] = None) -> None:
         super().__init__(name=name)
+        # pyre-fixme[4]: Attribute must be annotated.
         self.prev_mean = None
+        # pyre-fixme[4]: Attribute must be annotated.
         self.mse = None
 
+    # pyre-fixme[3]: Return type must be annotated.
     def init(self):
+        # pyre-fixme[16]: `MSE` has no attribute `mean`.
         self.mean = self._get_stat(Mean())
 
     def get(self) -> Optional[Tensor]:
@@ -141,7 +162,9 @@ class MSE(Stat):
             return torch.zeros_like(self.prev_mean)
         return self.mse
 
+    # pyre-fixme[3]: Return type must be annotated.
     def update(self, x: Tensor):
+        # pyre-fixme[16]: `MSE` has no attribute `mean`.
         mean = self.mean.get()
 
         if mean is not None and self.prev_mean is not None:
@@ -175,15 +198,21 @@ class Var(Stat):
         super().__init__(name=name, order=order)
         self.order = order
 
+    # pyre-fixme[3]: Return type must be annotated.
     def init(self):
+        # pyre-fixme[16]: `Var` has no attribute `mse`.
         self.mse = self._get_stat(MSE())
+        # pyre-fixme[16]: `Var` has no attribute `n`.
         self.n = self._get_stat(Count())
 
+    # pyre-fixme[3]: Return type must be annotated.
     def update(self, x: Tensor):
         pass
 
     def get(self) -> Optional[Tensor]:
+        # pyre-fixme[16]: `Var` has no attribute `mse`.
         mse = self.mse.get()
+        # pyre-fixme[16]: `Var` has no attribute `n`.
         n = self.n.get()
 
         if mse is None:
@@ -215,13 +244,17 @@ class StdDev(Stat):
         super().__init__(name=name, order=order)
         self.order = order
 
+    # pyre-fixme[3]: Return type must be annotated.
     def init(self):
+        # pyre-fixme[16]: `StdDev` has no attribute `var`.
         self.var = self._get_stat(Var(order=self.order))
 
+    # pyre-fixme[3]: Return type must be annotated.
     def update(self, x: Tensor):
         pass
 
     def get(self) -> Optional[Tensor]:
+        # pyre-fixme[16]: `StdDev` has no attribute `var`.
         var = self.var.get()
         return var**0.5 if var is not None else None
 
@@ -232,14 +265,18 @@ class GeneralAccumFn(Stat):
     where fn is a custom function
     """
 
+    # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
     def __init__(self, fn: Callable, name: Optional[str] = None) -> None:
         super().__init__(name=name)
+        # pyre-fixme[4]: Attribute must be annotated.
         self.result = None
         self.fn = fn
 
     def get(self) -> Optional[Tensor]:
         return self.result
 
+    # pyre-fixme[3]: Return type must be annotated.
+    # pyre-fixme[2]: Parameter must be annotated.
     def update(self, x):
         if self.result is None:
             self.result = x
@@ -249,21 +286,30 @@ class GeneralAccumFn(Stat):
 
 class Min(GeneralAccumFn):
     def __init__(
-        self, name: Optional[str] = None, min_fn: Callable = torch.min
+        self,
+        name: Optional[str] = None,
+        # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
+        min_fn: Callable = torch.min,
     ) -> None:
         super().__init__(name=name, fn=min_fn)
 
 
 class Max(GeneralAccumFn):
     def __init__(
-        self, name: Optional[str] = None, max_fn: Callable = torch.max
+        self,
+        name: Optional[str] = None,
+        # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
+        max_fn: Callable = torch.max,
     ) -> None:
         super().__init__(name=name, fn=max_fn)
 
 
 class Sum(GeneralAccumFn):
     def __init__(
-        self, name: Optional[str] = None, add_fn: Callable = torch.add
+        self,
+        name: Optional[str] = None,
+        # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
+        add_fn: Callable = torch.add,
     ) -> None:
         super().__init__(name=name, fn=add_fn)
 
