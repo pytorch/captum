@@ -32,6 +32,8 @@ src="/_sphinx/documentation_options.js"></script>
 <h1>Source code for captum.influence._core.tracincp</h1><div class="highlight"><pre>
 <span></span><span class="ch">#!/usr/bin/env python3</span>
 
+<span class="c1"># pyre-strict</span>
+
 <span class="kn">import</span> <span class="nn">glob</span>
 <span class="kn">import</span> <span class="nn">warnings</span>
 <span class="kn">from</span> <span class="nn">abc</span> <span class="kn">import</span> <span class="n">abstractmethod</span>
@@ -104,10 +106,14 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">model</span><span class="p">:</span> <span class="n">Module</span><span class="p">,</span>
         <span class="n">train_dataset</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Dataset</span><span class="p">,</span> <span class="n">DataLoader</span><span class="p">],</span>
+        <span class="c1"># pyre-fixme[24]: Generic type `Iterator` expects 1 type parameter.</span>
         <span class="n">checkpoints</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">Iterator</span><span class="p">],</span>
+        <span class="c1"># pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.</span>
         <span class="n">checkpoints_load_func</span><span class="p">:</span> <span class="n">Callable</span> <span class="o">=</span> <span class="n">_load_flexible_state_dict</span><span class="p">,</span>
+        <span class="c1"># pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.</span>
         <span class="n">loss_fn</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">Module</span><span class="p">,</span> <span class="n">Callable</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">batch_size</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
+        <span class="c1"># pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.</span>
         <span class="n">test_loss_fn</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">Module</span><span class="p">,</span> <span class="n">Callable</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sa">r</span><span class="sd">"""</span>
@@ -180,6 +186,7 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="bp">self</span><span class="o">.</span><span class="n">checkpoints_load_func</span> <span class="o">=</span> <span class="n">checkpoints_load_func</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">loss_fn</span> <span class="o">=</span> <span class="n">loss_fn</span>
         <span class="c1"># If test_loss_fn not provided, it's assumed to be same as loss_fn</span>
+        <span class="c1"># pyre-fixme[4]: Attribute must be annotated.</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">test_loss_fn</span> <span class="o">=</span> <span class="n">loss_fn</span> <span class="k">if</span> <span class="n">test_loss_fn</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">test_loss_fn</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">batch_size</span> <span class="o">=</span> <span class="n">batch_size</span>
 
@@ -188,6 +195,7 @@ src="/_sphinx/documentation_options.js"></script>
                 <span class="s2">"since the `train_dataset` argument was a `Dataset`, "</span>
                 <span class="s2">"`batch_size` must be an int."</span>
             <span class="p">)</span>
+            <span class="c1"># pyre-fixme[4]: Attribute must be annotated.</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">train_dataloader</span> <span class="o">=</span> <span class="n">DataLoader</span><span class="p">(</span><span class="n">train_dataset</span><span class="p">,</span> <span class="n">batch_size</span><span class="p">,</span> <span class="n">shuffle</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">train_dataloader</span> <span class="o">=</span> <span class="n">train_dataset</span>
@@ -209,9 +217,11 @@ src="/_sphinx/documentation_options.js"></script>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">checkpoints</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+        <span class="c1"># pyre-fixme[16]: `TracInCPBase` has no attribute `_checkpoints`.</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_checkpoints</span>
 
     <span class="nd">@checkpoints</span><span class="o">.</span><span class="n">setter</span>
+    <span class="c1"># pyre-fixme[24]: Generic type `Iterator` expects 1 type parameter.</span>
     <span class="k">def</span> <span class="nf">checkpoints</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">checkpoints</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">Iterator</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">checkpoints</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_checkpoints</span> <span class="o">=</span> <span class="n">AV</span><span class="o">.</span><span class="n">sort_files</span><span class="p">(</span><span class="n">glob</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="n">join</span><span class="p">(</span><span class="n">checkpoints</span><span class="p">,</span> <span class="s2">"*"</span><span class="p">)))</span>
@@ -230,6 +240,7 @@ src="/_sphinx/documentation_options.js"></script>
     <span class="nd">@abstractmethod</span>
     <span class="k">def</span> <span class="nf">self_influence</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
+        <span class="c1"># pyre-fixme[2]: Parameter annotation cannot contain `Any`.</span>
         <span class="n">inputs</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span> <span class="n">DataLoader</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">show_progress</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tensor</span><span class="p">:</span>
@@ -291,6 +302,7 @@ src="/_sphinx/documentation_options.js"></script>
     <span class="nd">@abstractmethod</span>
     <span class="k">def</span> <span class="nf">_get_k_most_influential</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
+        <span class="c1"># pyre-fixme[2]: Parameter annotation cannot contain `Any`.</span>
         <span class="n">inputs</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span> <span class="n">DataLoader</span><span class="p">],</span>
         <span class="n">k</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">5</span><span class="p">,</span>
         <span class="n">proponents</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
@@ -342,6 +354,7 @@ src="/_sphinx/documentation_options.js"></script>
     <span class="nd">@abstractmethod</span>
     <span class="k">def</span> <span class="nf">_influence</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
+        <span class="c1"># pyre-fixme[2]: Parameter annotation cannot contain `Any`.</span>
         <span class="n">inputs</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span> <span class="n">DataLoader</span><span class="p">],</span>
         <span class="n">show_progress</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tensor</span><span class="p">:</span>
@@ -379,6 +392,7 @@ src="/_sphinx/documentation_options.js"></script>
     <span class="nd">@abstractmethod</span>
     <span class="k">def</span> <span class="nf">influence</span><span class="p">(</span>  <span class="c1"># type: ignore[override]</span>
         <span class="bp">self</span><span class="p">,</span>
+        <span class="c1"># pyre-fixme[2]: Parameter annotation cannot contain `Any`.</span>
         <span class="n">inputs</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span> <span class="n">DataLoader</span><span class="p">],</span>
         <span class="n">k</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">proponents</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
@@ -481,11 +495,15 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">model</span><span class="p">:</span> <span class="n">Module</span><span class="p">,</span>
         <span class="n">train_dataset</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Dataset</span><span class="p">,</span> <span class="n">DataLoader</span><span class="p">],</span>
+        <span class="c1"># pyre-fixme[24]: Generic type `Iterator` expects 1 type parameter.</span>
         <span class="n">checkpoints</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">Iterator</span><span class="p">],</span>
+        <span class="c1"># pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.</span>
         <span class="n">checkpoints_load_func</span><span class="p">:</span> <span class="n">Callable</span> <span class="o">=</span> <span class="n">_load_flexible_state_dict</span><span class="p">,</span>
         <span class="n">layers</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="c1"># pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.</span>
         <span class="n">loss_fn</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">Module</span><span class="p">,</span> <span class="n">Callable</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">batch_size</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
+        <span class="c1"># pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.</span>
         <span class="n">test_loss_fn</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">Module</span><span class="p">,</span> <span class="n">Callable</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">sample_wise_grads_per_batch</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
@@ -611,10 +629,12 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="bp">self</span><span class="o">.</span><span class="n">sample_wise_grads_per_batch</span> <span class="o">=</span> <span class="n">sample_wise_grads_per_batch</span>
 
         <span class="c1"># check `loss_fn`</span>
+        <span class="c1"># pyre-fixme[4]: Attribute must be annotated.</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">reduction_type</span> <span class="o">=</span> <span class="n">_check_loss_fn</span><span class="p">(</span>
             <span class="bp">self</span><span class="p">,</span> <span class="n">loss_fn</span><span class="p">,</span> <span class="s2">"loss_fn"</span><span class="p">,</span> <span class="n">sample_wise_grads_per_batch</span>
         <span class="p">)</span>
         <span class="c1"># check `test_loss_fn` if it was provided</span>
+        <span class="c1"># pyre-fixme[4]: Attribute must be annotated.</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">test_reduction_type</span> <span class="o">=</span> <span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">reduction_type</span>
             <span class="k">if</span> <span class="n">test_loss_fn</span> <span class="ow">is</span> <span class="kc">None</span>
@@ -628,6 +648,7 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">        within influence to restore after every influence call)? or make a copy so that</span>
 <span class="sd">        changes to grad_requires aren't persistent after using TracIn.</span>
 <span class="sd">        """</span>
+        <span class="c1"># pyre-fixme[4]: Attribute must be annotated.</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">layer_modules</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="k">if</span> <span class="n">layers</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">layer_modules</span> <span class="o">=</span> <span class="n">_set_active_parameters</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">layers</span><span class="p">)</span>
@@ -637,6 +658,7 @@ src="/_sphinx/documentation_options.js"></script>
     <span class="nd">@log_usage</span><span class="p">()</span>
     <span class="k">def</span> <span class="nf">influence</span><span class="p">(</span>  <span class="c1"># type: ignore[override]</span>
         <span class="bp">self</span><span class="p">,</span>
+        <span class="c1"># pyre-fixme[2]: Parameter annotation cannot contain `Any`.</span>
         <span class="n">inputs</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span> <span class="n">DataLoader</span><span class="p">],</span>
         <span class="n">k</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">proponents</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
@@ -774,6 +796,7 @@ src="/_sphinx/documentation_options.js"></script>
     <span class="k">def</span> <span class="nf">_sum_jacobians</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">inputs</span><span class="p">:</span> <span class="n">DataLoader</span><span class="p">,</span>
+        <span class="c1"># pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.</span>
         <span class="n">loss_fn</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">Module</span><span class="p">,</span> <span class="n">Callable</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">reduction_type</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span>
@@ -785,6 +808,8 @@ src="/_sphinx/documentation_options.js"></script>
 
         <span class="n">inputs_batch</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="n">inputs_iter</span><span class="p">)</span>
 
+        <span class="c1"># pyre-fixme[3]: Return type must be annotated.</span>
+        <span class="c1"># pyre-fixme[2]: Parameter must be annotated.</span>
         <span class="k">def</span> <span class="nf">get_batch_contribution</span><span class="p">(</span><span class="n">inputs_batch</span><span class="p">):</span>
             <span class="n">_input_jacobians</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_basic_computation_tracincp</span><span class="p">(</span>
                 <span class="n">inputs_batch</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span>
@@ -815,6 +840,7 @@ src="/_sphinx/documentation_options.js"></script>
     <span class="k">def</span> <span class="nf">_concat_jacobians</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">inputs</span><span class="p">:</span> <span class="n">DataLoader</span><span class="p">,</span>
+        <span class="c1"># pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.</span>
         <span class="n">loss_fn</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">Module</span><span class="p">,</span> <span class="n">Callable</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">reduction_type</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span>
@@ -838,6 +864,7 @@ src="/_sphinx/documentation_options.js"></script>
     <span class="nd">@log_usage</span><span class="p">()</span>
     <span class="k">def</span> <span class="nf">compute_intermediate_quantities</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
+        <span class="c1"># pyre-fixme[2]: Parameter annotation cannot contain `Any`.</span>
         <span class="n">inputs</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span> <span class="n">DataLoader</span><span class="p">],</span>
         <span class="n">aggregate</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tensor</span><span class="p">:</span>
@@ -897,6 +924,8 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="c1"># If `inputs` is not a `DataLoader`, turn it into one.</span>
         <span class="n">inputs</span> <span class="o">=</span> <span class="n">_format_inputs_dataset</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span>
 
+        <span class="c1"># pyre-fixme[3]: Return type must be annotated.</span>
+        <span class="c1"># pyre-fixme[2]: Parameter must be annotated.</span>
         <span class="k">def</span> <span class="nf">get_checkpoint_contribution</span><span class="p">(</span><span class="n">checkpoint</span><span class="p">):</span>
             <span class="k">assert</span> <span class="p">(</span>
                 <span class="n">checkpoint</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
@@ -906,11 +935,21 @@ src="/_sphinx/documentation_options.js"></script>
             <span class="c1"># get jacobians as tuple of tensors</span>
             <span class="k">if</span> <span class="n">aggregate</span><span class="p">:</span>
                 <span class="n">inputs_jacobians</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sum_jacobians</span><span class="p">(</span>
-                    <span class="n">inputs</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">loss_fn</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">reduction_type</span>
+                    <span class="c1"># pyre-fixme[6]: For 1st argument expected</span>
+                    <span class="c1">#  `DataLoader[typing.Any]` but got `Union[DataLoader[typing.Any],</span>
+                    <span class="c1">#  typing.Tuple[typing.Any, ...]]`.</span>
+                    <span class="n">inputs</span><span class="p">,</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">loss_fn</span><span class="p">,</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">reduction_type</span><span class="p">,</span>
                 <span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">inputs_jacobians</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_concat_jacobians</span><span class="p">(</span>
-                    <span class="n">inputs</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">loss_fn</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">reduction_type</span>
+                    <span class="c1"># pyre-fixme[6]: For 1st argument expected</span>
+                    <span class="c1">#  `DataLoader[typing.Any]` but got `Union[DataLoader[typing.Any],</span>
+                    <span class="c1">#  typing.Tuple[typing.Any, ...]]`.</span>
+                    <span class="n">inputs</span><span class="p">,</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">loss_fn</span><span class="p">,</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">reduction_type</span><span class="p">,</span>
                 <span class="p">)</span>
             <span class="c1"># flatten into single tensor</span>
             <span class="k">return</span> <span class="n">learning_rate</span> <span class="o">*</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">(</span>
@@ -932,7 +971,9 @@ src="/_sphinx/documentation_options.js"></script>
 
     <span class="k">def</span> <span class="nf">_influence_batch_tracincp</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
+        <span class="c1"># pyre-fixme[2]: Parameter annotation cannot contain `Any`.</span>
         <span class="n">input_checkpoint_jacobians</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="o">...</span><span class="p">]],</span>
+        <span class="c1"># pyre-fixme[2]: Parameter annotation cannot contain `Any`.</span>
         <span class="n">train_batch</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tensor</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">"""</span>
@@ -942,6 +983,8 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">        computed by `_get_checkpoint_jacobians`.</span>
 <span class="sd">        """</span>
 
+        <span class="c1"># pyre-fixme[3]: Return type must be annotated.</span>
+        <span class="c1"># pyre-fixme[2]: Parameter must be annotated.</span>
         <span class="k">def</span> <span class="nf">get_checkpoint_contribution</span><span class="p">(</span><span class="n">input_jacobians</span><span class="p">,</span> <span class="n">checkpoint</span><span class="p">):</span>
 
             <span class="k">assert</span> <span class="p">(</span>
@@ -980,6 +1023,7 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">inputs_dataset</span><span class="p">:</span> <span class="n">DataLoader</span><span class="p">,</span>
         <span class="n">aggregate</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span>
+        <span class="c1"># pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.</span>
         <span class="n">loss_fn</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">Module</span><span class="p">,</span> <span class="n">Callable</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">]]:</span>
 <span class="w">        </span><span class="sd">"""</span>
@@ -1004,6 +1048,7 @@ src="/_sphinx/documentation_options.js"></script>
 
     <span class="k">def</span> <span class="nf">_influence</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
+        <span class="c1"># pyre-fixme[2]: Parameter annotation cannot contain `Any`.</span>
         <span class="n">inputs</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span> <span class="n">DataLoader</span><span class="p">],</span>
         <span class="n">show_progress</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
         <span class="n">aggregate</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
@@ -1081,6 +1126,7 @@ src="/_sphinx/documentation_options.js"></script>
 
     <span class="k">def</span> <span class="nf">_get_k_most_influential</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
+        <span class="c1"># pyre-fixme[2]: Parameter annotation cannot contain `Any`.</span>
         <span class="n">inputs</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span> <span class="n">DataLoader</span><span class="p">],</span>
         <span class="n">k</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">5</span><span class="p">,</span>
         <span class="n">proponents</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
@@ -1171,6 +1217,7 @@ src="/_sphinx/documentation_options.js"></script>
 
     <span class="k">def</span> <span class="nf">_self_influence_by_checkpoints</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
+        <span class="c1"># pyre-fixme[2]: Parameter annotation cannot contain `Any`.</span>
         <span class="n">inputs</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span> <span class="n">DataLoader</span><span class="p">],</span>
         <span class="n">show_progress</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tensor</span><span class="p">:</span>
@@ -1240,6 +1287,8 @@ src="/_sphinx/documentation_options.js"></script>
                     <span class="s2">"nor any time estimates."</span>
                 <span class="p">)</span>
 
+        <span class="c1"># pyre-fixme[3]: Return type must be annotated.</span>
+        <span class="c1"># pyre-fixme[2]: Parameter must be annotated.</span>
         <span class="k">def</span> <span class="nf">calculate_via_vector_norm</span><span class="p">(</span><span class="n">layer_jacobian</span><span class="p">):</span>
             <span class="c1"># Helper to efficiently calculate vector norm if pytorch version permits.</span>
             <span class="k">return</span> <span class="p">(</span>
@@ -1250,6 +1299,9 @@ src="/_sphinx/documentation_options.js"></script>
                 <span class="o">**</span> <span class="mi">2</span>
             <span class="p">)</span>
 
+        <span class="c1"># pyre-fixme[53]: Captured variable `inputs_len` is not annotated.</span>
+        <span class="c1"># pyre-fixme[3]: Return type must be annotated.</span>
+        <span class="c1"># pyre-fixme[2]: Parameter must be annotated.</span>
         <span class="k">def</span> <span class="nf">get_checkpoint_contribution</span><span class="p">(</span><span class="n">checkpoint</span><span class="p">):</span>
             <span class="c1"># This function returns a 1D tensor representing the contribution to the</span>
             <span class="c1"># self influence score for the given checkpoint, for all batches in</span>
@@ -1347,6 +1399,7 @@ src="/_sphinx/documentation_options.js"></script>
     <span class="nd">@log_usage</span><span class="p">()</span>
     <span class="k">def</span> <span class="nf">self_influence</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
+        <span class="c1"># pyre-fixme[2]: Parameter annotation cannot contain `Any`.</span>
         <span class="n">inputs</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span> <span class="n">DataLoader</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">show_progress</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
         <span class="n">outer_loop_by_checkpoints</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
@@ -1423,8 +1476,10 @@ src="/_sphinx/documentation_options.js"></script>
 
     <span class="k">def</span> <span class="nf">_basic_computation_tracincp</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
+        <span class="c1"># pyre-fixme[2]: Parameter annotation cannot contain `Any`.</span>
         <span class="n">inputs</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span>
         <span class="n">targets</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Tensor</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="c1"># pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.</span>
         <span class="n">loss_fn</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">Module</span><span class="p">,</span> <span class="n">Callable</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">reduction_type</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span>

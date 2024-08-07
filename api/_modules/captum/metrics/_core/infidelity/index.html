@@ -32,6 +32,8 @@ src="/_sphinx/documentation_options.js"></script>
 <h1>Source code for captum.metrics._core.infidelity</h1><div class="highlight"><pre>
 <span></span><span class="ch">#!/usr/bin/env python3</span>
 
+<span class="c1"># pyre-strict</span>
+
 <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">cast</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Union</span>
 
 <span class="kn">import</span> <span class="nn">torch</span>
@@ -51,6 +53,7 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="kn">from</span> <span class="nn">torch</span> <span class="kn">import</span> <span class="n">Tensor</span>
 
 
+<span class="c1"># pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.</span>
 <span class="k">def</span> <span class="nf">infidelity_perturb_func_decorator</span><span class="p">(</span><span class="n">multipy_by_inputs</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">:</span>
 <span class="w">    </span><span class="sa">r</span><span class="sd">"""An auxiliary, decorator function that helps with computing</span>
 <span class="sd">    perturbations given perturbed inputs. It can be useful for cases</span>
@@ -72,6 +75,7 @@ src="/_sphinx/documentation_options.js"></script>
 
 <span class="sd">    """</span>
 
+    <span class="c1"># pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.</span>
     <span class="k">def</span> <span class="nf">sub_infidelity_perturb_func_decorator</span><span class="p">(</span><span class="n">pertub_func</span><span class="p">:</span> <span class="n">Callable</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">:</span>
 <span class="w">        </span><span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        Args:</span>
@@ -96,6 +100,7 @@ src="/_sphinx/documentation_options.js"></script>
 
 <span class="sd">        """</span>
 
+        <span class="c1"># pyre-fixme[3]: Return type must be annotated.</span>
         <span class="k">def</span> <span class="nf">default_perturb_func</span><span class="p">(</span>
             <span class="n">inputs</span><span class="p">:</span> <span class="n">TensorOrTupleOfTensorsGeneric</span><span class="p">,</span> <span class="n">baselines</span><span class="p">:</span> <span class="n">BaselineType</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="p">):</span>
@@ -106,7 +111,11 @@ src="/_sphinx/documentation_options.js"></script>
                 <span class="k">else</span> <span class="n">pertub_func</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span>
             <span class="p">)</span>
             <span class="n">inputs_perturbed</span> <span class="o">=</span> <span class="n">_format_tensor_into_tuples</span><span class="p">(</span><span class="n">inputs_perturbed</span><span class="p">)</span>
+            <span class="c1"># pyre-fixme[9]: inputs has type `TensorOrTupleOfTensorsGeneric`; used</span>
+            <span class="c1">#  as `Tuple[Tensor, ...]`.</span>
             <span class="n">inputs</span> <span class="o">=</span> <span class="n">_format_tensor_into_tuples</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span>
+            <span class="c1"># pyre-fixme[6]: For 2nd argument expected `Tuple[Tensor, ...]` but got</span>
+            <span class="c1">#  `TensorOrTupleOfTensorsGeneric`.</span>
             <span class="n">baselines</span> <span class="o">=</span> <span class="n">_format_baseline</span><span class="p">(</span><span class="n">baselines</span><span class="p">,</span> <span class="n">inputs</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">baselines</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="n">perturbations</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span>
@@ -119,6 +128,8 @@ src="/_sphinx/documentation_options.js"></script>
                         <span class="k">if</span> <span class="n">multipy_by_inputs</span>
                         <span class="k">else</span> <span class="nb">input</span> <span class="o">-</span> <span class="n">input_perturbed</span>
                     <span class="p">)</span>
+                    <span class="c1"># pyre-fixme[6]: For 2nd argument expected</span>
+                    <span class="c1">#  `Iterable[Variable[_T2]]` but got `None`.</span>
                     <span class="k">for</span> <span class="nb">input</span><span class="p">,</span> <span class="n">input_perturbed</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">inputs_perturbed</span><span class="p">)</span>
                 <span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
@@ -133,7 +144,11 @@ src="/_sphinx/documentation_options.js"></script>
                         <span class="k">else</span> <span class="nb">input</span> <span class="o">-</span> <span class="n">input_perturbed</span>
                     <span class="p">)</span>
                     <span class="k">for</span> <span class="nb">input</span><span class="p">,</span> <span class="n">input_perturbed</span><span class="p">,</span> <span class="n">baseline</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span>
-                        <span class="n">inputs</span><span class="p">,</span> <span class="n">inputs_perturbed</span><span class="p">,</span> <span class="n">baselines</span>
+                        <span class="n">inputs</span><span class="p">,</span>
+                        <span class="c1"># pyre-fixme[6]: For 2nd argument expected</span>
+                        <span class="c1">#  `Iterable[Variable[_T2]]` but got `None`.</span>
+                        <span class="n">inputs_perturbed</span><span class="p">,</span>
+                        <span class="n">baselines</span><span class="p">,</span>
                     <span class="p">)</span>
                 <span class="p">)</span>
             <span class="k">return</span> <span class="n">perturbations</span><span class="p">,</span> <span class="n">inputs_perturbed</span>
@@ -147,11 +162,14 @@ src="/_sphinx/documentation_options.js"></script>
 <a class="viewcode-back" href="../../../../metrics.html#captum.metrics.infidelity">[docs]</a>
 <span class="nd">@log_usage</span><span class="p">()</span>
 <span class="k">def</span> <span class="nf">infidelity</span><span class="p">(</span>
+    <span class="c1"># pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.</span>
     <span class="n">forward_func</span><span class="p">:</span> <span class="n">Callable</span><span class="p">,</span>
+    <span class="c1"># pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.</span>
     <span class="n">perturb_func</span><span class="p">:</span> <span class="n">Callable</span><span class="p">,</span>
     <span class="n">inputs</span><span class="p">:</span> <span class="n">TensorOrTupleOfTensorsGeneric</span><span class="p">,</span>
     <span class="n">attributions</span><span class="p">:</span> <span class="n">TensorOrTupleOfTensorsGeneric</span><span class="p">,</span>
     <span class="n">baselines</span><span class="p">:</span> <span class="n">BaselineType</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="c1"># pyre-fixme[2]: Parameter annotation cannot be `Any`.</span>
     <span class="n">additional_forward_args</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">target</span><span class="p">:</span> <span class="n">TargetType</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">n_perturb_samples</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">10</span><span class="p">,</span>
@@ -437,6 +455,7 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">        repeated instances per example.</span>
 <span class="sd">        """</span>
 
+        <span class="c1"># pyre-fixme[3]: Return type must be annotated.</span>
         <span class="k">def</span> <span class="nf">call_perturb_func</span><span class="p">():</span>
 <span class="w">            </span><span class="sa">r</span><span class="sd">""" """</span>
             <span class="n">baselines_pert</span> <span class="o">=</span> <span class="kc">None</span>
@@ -444,6 +463,8 @@ src="/_sphinx/documentation_options.js"></script>
             <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">inputs_expanded</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
                 <span class="n">inputs_pert</span> <span class="o">=</span> <span class="n">inputs_expanded</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
                 <span class="k">if</span> <span class="n">baselines_expanded</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="c1"># pyre-fixme[24]: Generic type `tuple` expects at least 1 type</span>
+                    <span class="c1">#  parameter.</span>
                     <span class="n">baselines_pert</span> <span class="o">=</span> <span class="n">cast</span><span class="p">(</span><span class="n">Tuple</span><span class="p">,</span> <span class="n">baselines_expanded</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">inputs_pert</span> <span class="o">=</span> <span class="n">inputs_expanded</span>
@@ -469,6 +490,8 @@ src="/_sphinx/documentation_options.js"></script>
                     <span class="ow">and</span> <span class="n">baseline</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">1</span>
                     <span class="k">else</span> <span class="n">baseline</span>
                 <span class="p">)</span>
+                <span class="c1"># pyre-fixme[24]: Generic type `tuple` expects at least 1 type</span>
+                <span class="c1">#  parameter.</span>
                 <span class="k">for</span> <span class="nb">input</span><span class="p">,</span> <span class="n">baseline</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">cast</span><span class="p">(</span><span class="n">Tuple</span><span class="p">,</span> <span class="n">baselines</span><span class="p">))</span>
             <span class="p">)</span>
 
@@ -508,7 +531,9 @@ src="/_sphinx/documentation_options.js"></script>
 
         <span class="n">_validate_inputs_and_perturbations</span><span class="p">(</span>
             <span class="n">cast</span><span class="p">(</span><span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span> <span class="n">inputs</span><span class="p">),</span>
+            <span class="c1"># pyre-fixme[22]: The cast is redundant.</span>
             <span class="n">cast</span><span class="p">(</span><span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span> <span class="n">inputs_perturbed</span><span class="p">),</span>
+            <span class="c1"># pyre-fixme[22]: The cast is redundant.</span>
             <span class="n">cast</span><span class="p">(</span><span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span> <span class="n">perturbations</span><span class="p">),</span>
         <span class="p">)</span>
 
@@ -573,6 +598,8 @@ src="/_sphinx/documentation_options.js"></script>
             <span class="c1"># returns (a-b)^2 if no need to normalize</span>
             <span class="k">return</span> <span class="p">((</span><span class="n">attr_times_perturb_sums</span> <span class="o">-</span> <span class="n">perturbed_fwd_diffs</span><span class="p">)</span><span class="o">.</span><span class="n">pow</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">),)</span>
 
+    <span class="c1"># pyre-fixme[3]: Return type must be annotated.</span>
+    <span class="c1"># pyre-fixme[2]: Parameter must be annotated.</span>
     <span class="k">def</span> <span class="nf">_sum_infidelity_tensors</span><span class="p">(</span><span class="n">agg_tensors</span><span class="p">,</span> <span class="n">tensors</span><span class="p">):</span>
         <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">agg_t</span> <span class="o">+</span> <span class="n">t</span> <span class="k">for</span> <span class="n">agg_t</span><span class="p">,</span> <span class="n">t</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">agg_tensors</span><span class="p">,</span> <span class="n">tensors</span><span class="p">))</span>
 
@@ -594,6 +621,7 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="w">            </span><span class="sd">"""Inputs and attributions must have</span>
 <span class="sd">        matching shapes. One of the input tensor's shape is {} and the</span>
 <span class="sd">        attribution tensor's shape is: {}"""</span>
+            <span class="c1"># pyre-fixme[16]: Module `attr` has no attribute `shape`.</span>
         <span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">inp</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">attr</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
 
     <span class="n">bsz</span> <span class="o">=</span> <span class="n">inputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
@@ -615,7 +643,11 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="n">beta</span> <span class="o">=</span> <span class="n">safe_div</span><span class="p">(</span><span class="n">beta_num</span><span class="p">,</span> <span class="n">beta_denorm</span><span class="p">)</span>
 
         <span class="n">infidelity_values</span> <span class="o">=</span> <span class="p">(</span>
-            <span class="n">beta</span><span class="o">**</span><span class="mi">2</span> <span class="o">*</span> <span class="n">agg_tensors</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">beta</span> <span class="o">*</span> <span class="n">agg_tensors</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">agg_tensors</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+            <span class="c1"># pyre-fixme[58]: `**` is not supported for operand types `Tensor` and</span>
+            <span class="c1">#  `int`.</span>
+            <span class="n">beta</span><span class="o">**</span><span class="mi">2</span> <span class="o">*</span> <span class="n">agg_tensors</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="o">-</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">beta</span> <span class="o">*</span> <span class="n">agg_tensors</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+            <span class="o">+</span> <span class="n">agg_tensors</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
         <span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="n">infidelity_values</span> <span class="o">=</span> <span class="n">agg_tensors</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>

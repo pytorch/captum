@@ -31,6 +31,8 @@ src="/_sphinx/documentation_options.js"></script>
 <div class="body" role="main">
 <h1>Source code for captum.module.binary_concrete_stochastic_gates</h1><div class="highlight"><pre>
 <span></span><span class="ch">#!/usr/bin/env python3</span>
+
+<span class="c1"># pyre-strict</span>
 <span class="kn">import</span> <span class="nn">math</span>
 <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Optional</span>
 
@@ -48,6 +50,8 @@ src="/_sphinx/documentation_options.js"></script>
     <span class="n">torch</span><span class="o">.</span><span class="n">fx</span><span class="o">.</span><span class="n">wrap</span><span class="p">(</span><span class="n">_torch_empty</span><span class="p">)</span>
 
 
+<span class="c1"># pyre-fixme[3]: Return type must be annotated.</span>
+<span class="c1"># pyre-fixme[2]: Parameter must be annotated.</span>
 <span class="k">def</span> <span class="nf">_logit</span><span class="p">(</span><span class="n">inp</span><span class="p">):</span>
     <span class="c1"># torch.logit is introduced in 1.7.0</span>
     <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">torch</span><span class="p">,</span> <span class="s2">"logit"</span><span class="p">):</span>
@@ -93,6 +97,7 @@ src="/_sphinx/documentation_options.js"></script>
 
 <span class="sd">    """</span>
 
+    <span class="c1"># pyre-fixme[3]: Return type must be annotated.</span>
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">n_gates</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
@@ -173,6 +178,7 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="bp">self</span><span class="o">.</span><span class="n">eps</span> <span class="o">=</span> <span class="n">eps</span>
 
         <span class="c1"># pre-calculate the fixed term used in active prob</span>
+        <span class="c1"># pyre-fixme[4]: Attribute must be annotated.</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">active_prob_offset</span> <span class="o">=</span> <span class="n">temperature</span> <span class="o">*</span> <span class="n">math</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="o">-</span><span class="n">lower_bound</span> <span class="o">/</span> <span class="n">upper_bound</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_sample_gate_values</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">batch_size</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tensor</span><span class="p">:</span>
@@ -227,6 +233,8 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="k">return</span> <span class="n">torch</span><span class="o">.</span><span class="n">sigmoid</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">log_alpha_param</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">active_prob_offset</span><span class="p">)</span>
 
     <span class="nd">@classmethod</span>
+    <span class="c1"># pyre-fixme[3]: Return type must be annotated.</span>
+    <span class="c1"># pyre-fixme[2]: Parameter must be annotated.</span>
     <span class="k">def</span> <span class="nf">_from_pretrained</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">log_alpha_param</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Private factory method to create an instance with pretrained parameters</span>

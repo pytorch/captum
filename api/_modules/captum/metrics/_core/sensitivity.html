@@ -32,6 +32,8 @@ src="/_sphinx/documentation_options.js"></script>
 <h1>Source code for captum.metrics._core.sensitivity</h1><div class="highlight"><pre>
 <span></span><span class="ch">#!/usr/bin/env python3</span>
 
+<span class="c1"># pyre-strict</span>
+
 <span class="kn">from</span> <span class="nn">copy</span> <span class="kn">import</span> <span class="n">deepcopy</span>
 <span class="kn">from</span> <span class="nn">inspect</span> <span class="kn">import</span> <span class="n">signature</span>
 <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">cast</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Union</span>
@@ -77,6 +79,8 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">                original inputs.</span>
 
 <span class="sd">    """</span>
+    <span class="c1"># pyre-fixme[9]: inputs has type `TensorOrTupleOfTensorsGeneric`; used as</span>
+    <span class="c1">#  `Tuple[Tensor, ...]`.</span>
     <span class="n">inputs</span> <span class="o">=</span> <span class="n">_format_tensor_into_tuples</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span>
     <span class="n">perturbed_input</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span>
         <span class="nb">input</span>
@@ -92,8 +96,10 @@ src="/_sphinx/documentation_options.js"></script>
 <a class="viewcode-back" href="../../../../metrics.html#captum.metrics.sensitivity_max">[docs]</a>
 <span class="nd">@log_usage</span><span class="p">()</span>
 <span class="k">def</span> <span class="nf">sensitivity_max</span><span class="p">(</span>
+    <span class="c1"># pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.</span>
     <span class="n">explanation_func</span><span class="p">:</span> <span class="n">Callable</span><span class="p">,</span>
     <span class="n">inputs</span><span class="p">:</span> <span class="n">TensorOrTupleOfTensorsGeneric</span><span class="p">,</span>
+    <span class="c1"># pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.</span>
     <span class="n">perturb_func</span><span class="p">:</span> <span class="n">Callable</span> <span class="o">=</span> <span class="n">default_perturb_func</span><span class="p">,</span>
     <span class="n">perturb_radius</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.02</span><span class="p">,</span>
     <span class="n">n_perturb_samples</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">10</span><span class="p">,</span>
@@ -257,6 +263,7 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="k">return</span> <span class="n">torch</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">input_tnsr</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">values</span>  <span class="c1"># type: ignore</span>
 
     <span class="n">kwarg_expanded_for</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="c1"># pyre-fixme[33]: Given annotation cannot be `Any`.</span>
     <span class="n">kwargs_copy</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="kc">None</span>
 
     <span class="k">def</span> <span class="nf">_next_sensitivity_max</span><span class="p">(</span><span class="n">current_n_perturb_samples</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tensor</span><span class="p">:</span>
@@ -282,6 +289,8 @@ src="/_sphinx/documentation_options.js"></script>
                 <span class="p">)</span>
                 <span class="k">if</span> <span class="p">(</span>
                     <span class="nb">isinstance</span><span class="p">(</span><span class="n">baselines</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">Tensor</span><span class="p">)</span>
+                    <span class="c1"># pyre-fixme[16]: Item `float` of `Union[float, int, Tensor]`</span>
+                    <span class="c1">#  has no attribute `shape`.</span>
                     <span class="ow">and</span> <span class="n">baselines</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span> <span class="o">==</span> <span class="n">inputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span>
                 <span class="p">):</span>
                     <span class="n">_expand_and_update_baselines</span><span class="p">(</span>
@@ -304,7 +313,10 @@ src="/_sphinx/documentation_options.js"></script>
             <span class="p">[</span>
                 <span class="p">(</span><span class="n">expl_input</span> <span class="o">-</span> <span class="n">expl_perturbed</span><span class="p">)</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="n">expl_perturbed</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="mi">0</span><span class="p">),</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
                 <span class="k">for</span> <span class="n">expl_perturbed</span><span class="p">,</span> <span class="n">expl_input</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span>
-                    <span class="n">expl_perturbed_inputs</span><span class="p">,</span> <span class="n">expl_inputs_expanded</span>
+                    <span class="c1"># pyre-fixme[6]: For 1st argument expected</span>
+                    <span class="c1">#  `Iterable[Variable[_T1]]` but got `None`.</span>
+                    <span class="n">expl_perturbed_inputs</span><span class="p">,</span>
+                    <span class="n">expl_inputs_expanded</span><span class="p">,</span>
                 <span class="p">)</span>
             <span class="p">],</span>
             <span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>

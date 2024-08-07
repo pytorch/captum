@@ -31,6 +31,8 @@ src="/_sphinx/documentation_options.js"></script>
 <div class="body" role="main">
 <h1>Source code for captum.robust._core.fgsm</h1><div class="highlight"><pre>
 <span></span><span class="ch">#!/usr/bin/env python3</span>
+
+<span class="c1"># pyre-strict</span>
 <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Union</span>
 
 <span class="kn">import</span> <span class="nn">torch</span>
@@ -76,7 +78,9 @@ src="/_sphinx/documentation_options.js"></script>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
+        <span class="c1"># pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.</span>
         <span class="n">forward_func</span><span class="p">:</span> <span class="n">Callable</span><span class="p">,</span>
+        <span class="c1"># pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.</span>
         <span class="n">loss_func</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Callable</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">lower_bound</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="s2">"-inf"</span><span class="p">),</span>
         <span class="n">upper_bound</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="s2">"inf"</span><span class="p">),</span>
@@ -105,7 +109,9 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">forward_func</span> <span class="o">=</span> <span class="n">forward_func</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">loss_func</span> <span class="o">=</span> <span class="n">loss_func</span>
+        <span class="c1"># pyre-fixme[4]: Attribute must be annotated.</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">bound</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">clamp</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="nb">min</span><span class="o">=</span><span class="n">lower_bound</span><span class="p">,</span> <span class="nb">max</span><span class="o">=</span><span class="n">upper_bound</span><span class="p">)</span>
+        <span class="c1"># pyre-fixme[4]: Attribute must be annotated.</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">zero_thresh</span> <span class="o">=</span> <span class="mi">10</span><span class="o">**-</span><span class="mi">6</span>
 
 <div class="viewcode-block" id="FGSM.perturb">
@@ -115,7 +121,9 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">inputs</span><span class="p">:</span> <span class="n">TensorOrTupleOfTensorsGeneric</span><span class="p">,</span>
         <span class="n">epsilon</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+        <span class="c1"># pyre-fixme[2]: Parameter annotation cannot be `Any`.</span>
         <span class="n">target</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+        <span class="c1"># pyre-fixme[2]: Parameter annotation cannot be `Any`.</span>
         <span class="n">additional_forward_args</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">targeted</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
         <span class="n">mask</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">TensorOrTupleOfTensorsGeneric</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -185,8 +193,13 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">                        is returned. If a tuple is provided for inputs, a tuple of</span>
 <span class="sd">                        corresponding sized tensors is returned.</span>
 <span class="sd">        """</span>
+        <span class="c1"># pyre-fixme[6]: For 1st argument expected `Tensor` but got</span>
+        <span class="c1">#  `TensorOrTupleOfTensorsGeneric`.</span>
         <span class="n">is_inputs_tuple</span> <span class="o">=</span> <span class="n">_is_tuple</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span>
+        <span class="c1"># pyre-fixme[35]: Target cannot be annotated.</span>
         <span class="n">inputs</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="n">_format_tensor_into_tuples</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span>
+        <span class="c1"># pyre-fixme[9]: masks has type `Union[typing.Tuple[int, ...],</span>
+        <span class="c1">#  typing.Tuple[Tensor, ...]]`; used as `Tuple[Union[int, Tensor], ...]`.</span>
         <span class="n">masks</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">]]</span> <span class="o">=</span> <span class="p">(</span>
             <span class="n">_format_tensor_into_tuples</span><span class="p">(</span><span class="n">mask</span><span class="p">)</span>
             <span class="k">if</span> <span class="p">(</span><span class="n">mask</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">)</span>
@@ -215,16 +228,22 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="n">perturbed_inputs</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">bound</span><span class="p">(</span><span class="n">perturbed_inputs</span><span class="p">[</span><span class="n">i</span><span class="p">])</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">perturbed_inputs</span><span class="p">))</span>
         <span class="p">)</span>
+        <span class="c1"># pyre-fixme[7]: Expected `TensorOrTupleOfTensorsGeneric` but got</span>
+        <span class="c1">#  `Tuple[Tensor, ...]`.</span>
         <span class="k">return</span> <span class="n">_format_output</span><span class="p">(</span><span class="n">is_inputs_tuple</span><span class="p">,</span> <span class="n">perturbed_inputs</span><span class="p">)</span></div>
 
 
     <span class="k">def</span> <span class="nf">_perturb</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
+        <span class="c1"># pyre-fixme[24]: Generic type `tuple` expects at least 1 type parameter.</span>
         <span class="n">inputs</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">,</span>
+        <span class="c1"># pyre-fixme[24]: Generic type `tuple` expects at least 1 type parameter.</span>
         <span class="n">grads</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">,</span>
         <span class="n">epsilon</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
         <span class="n">targeted</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span>
+        <span class="c1"># pyre-fixme[24]: Generic type `tuple` expects at least 1 type parameter.</span>
         <span class="n">masks</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">,</span>
+        <span class="c1"># pyre-fixme[24]: Generic type `tuple` expects at least 1 type parameter.</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">:</span>
 <span class="w">        </span><span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        A helper function to calculate the perturbed inputs given original</span>

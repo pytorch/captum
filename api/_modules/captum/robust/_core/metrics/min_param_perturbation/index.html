@@ -31,6 +31,8 @@ src="/_sphinx/documentation_options.js"></script>
 <div class="body" role="main">
 <h1>Source code for captum.robust._core.metrics.min_param_perturbation</h1><div class="highlight"><pre>
 <span></span><span class="ch">#!/usr/bin/env python3</span>
+
+<span class="c1"># pyre-strict</span>
 <span class="kn">import</span> <span class="nn">math</span>
 <span class="kn">from</span> <span class="nn">enum</span> <span class="kn">import</span> <span class="n">Enum</span>
 <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">cast</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Generator</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Union</span>
@@ -75,7 +77,9 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="k">class</span> <span class="nc">MinParamPerturbation</span><span class="p">:</span>
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
+        <span class="c1"># pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.</span>
         <span class="n">forward_func</span><span class="p">:</span> <span class="n">Callable</span><span class="p">,</span>
+        <span class="c1"># pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.</span>
         <span class="n">attack</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Callable</span><span class="p">,</span> <span class="n">Perturbation</span><span class="p">],</span>
         <span class="n">arg_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
         <span class="n">arg_min</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">],</span>
@@ -83,8 +87,10 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="n">arg_step</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">],</span>
         <span class="n">mode</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"linear"</span><span class="p">,</span>
         <span class="n">num_attempts</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
+        <span class="c1"># pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.</span>
         <span class="n">preproc_fn</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Callable</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">apply_before_preproc</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="c1"># pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.</span>
         <span class="n">correct_fn</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Callable</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sa">r</span><span class="sd">"""</span>
@@ -166,24 +172,34 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="bp">self</span><span class="o">.</span><span class="n">arg_max</span> <span class="o">=</span> <span class="n">arg_max</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">arg_step</span> <span class="o">=</span> <span class="n">arg_step</span>
         <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">arg_max</span> <span class="o">&gt;</span> <span class="p">(</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">arg_min</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">arg_step</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">arg_min</span>
+            <span class="c1"># pyre-fixme[6]: For 1st argument expected `int` but got `Union[float,</span>
+            <span class="c1">#  int]`.</span>
+            <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">arg_step</span>
         <span class="p">),</span> <span class="s2">"Step size cannot be smaller than range between min and max"</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">num_attempts</span> <span class="o">=</span> <span class="n">num_attempts</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">preproc_fn</span> <span class="o">=</span> <span class="n">preproc_fn</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">apply_before_preproc</span> <span class="o">=</span> <span class="n">apply_before_preproc</span>
+        <span class="c1"># pyre-fixme[4]: Attribute must be annotated.</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">correct_fn</span> <span class="o">=</span> <span class="n">cast</span><span class="p">(</span>
-            <span class="n">Callable</span><span class="p">,</span> <span class="n">correct_fn</span> <span class="k">if</span> <span class="n">correct_fn</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">default_correct_fn</span>
+            <span class="c1"># pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.</span>
+            <span class="n">Callable</span><span class="p">,</span>
+            <span class="n">correct_fn</span> <span class="k">if</span> <span class="n">correct_fn</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">default_correct_fn</span><span class="p">,</span>
         <span class="p">)</span>
 
         <span class="k">assert</span> <span class="p">(</span>
             <span class="n">mode</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span> <span class="ow">in</span> <span class="n">MinParamPerturbationMode</span><span class="o">.</span><span class="n">__members__</span>
         <span class="p">),</span> <span class="sa">f</span><span class="s2">"Provided perturb mode </span><span class="si">{</span><span class="n">mode</span><span class="si">}</span><span class="s2"> is not valid - must be linear or binary"</span>
+        <span class="c1"># pyre-fixme[4]: Attribute must be annotated.</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">mode</span> <span class="o">=</span> <span class="n">MinParamPerturbationMode</span><span class="p">[</span><span class="n">mode</span><span class="o">.</span><span class="n">upper</span><span class="p">()]</span>
 
     <span class="k">def</span> <span class="nf">_evaluate_batch</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
+        <span class="c1"># pyre-fixme[24]: Generic type `list` expects 1 type parameter, use</span>
+        <span class="c1">#  `typing.List[&lt;element type&gt;]` to avoid runtime subscripting errors.</span>
         <span class="n">input_list</span><span class="p">:</span> <span class="n">List</span><span class="p">,</span>
+        <span class="c1"># pyre-fixme[2]: Parameter annotation cannot be `Any`.</span>
         <span class="n">additional_forward_args</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
         <span class="n">correct_fn_kwargs</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]],</span>
         <span class="n">target</span><span class="p">:</span> <span class="n">TargetType</span><span class="p">,</span>
@@ -219,9 +235,12 @@ src="/_sphinx/documentation_options.js"></script>
                 <span class="n">current_count</span> <span class="o">+=</span> <span class="n">batch_size</span>
             <span class="k">return</span> <span class="kc">None</span>
 
+    <span class="c1"># pyre-fixme[3]: Return annotation cannot contain `Any`.</span>
     <span class="k">def</span> <span class="nf">_apply_attack</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
+        <span class="c1"># pyre-fixme[2]: Parameter annotation cannot be `Any`.</span>
         <span class="n">inputs</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+        <span class="c1"># pyre-fixme[2]: Parameter annotation cannot be `Any`.</span>
         <span class="n">preproc_input</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
         <span class="n">attack_kwargs</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]],</span>
         <span class="n">param</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">],</span>
@@ -242,12 +261,17 @@ src="/_sphinx/documentation_options.js"></script>
             <span class="n">preproc_attacked_inp</span> <span class="o">=</span> <span class="n">attacked_inp</span>
         <span class="k">return</span> <span class="n">preproc_attacked_inp</span><span class="p">,</span> <span class="n">attacked_inp</span>
 
+    <span class="c1"># pyre-fixme[3]: Return annotation cannot contain `Any`.</span>
     <span class="k">def</span> <span class="nf">_linear_search</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
+        <span class="c1"># pyre-fixme[2]: Parameter annotation cannot be `Any`.</span>
         <span class="n">inputs</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+        <span class="c1"># pyre-fixme[2]: Parameter annotation cannot be `Any`.</span>
         <span class="n">preproc_input</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
         <span class="n">attack_kwargs</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]],</span>
+        <span class="c1"># pyre-fixme[2]: Parameter annotation cannot be `Any`.</span>
         <span class="n">additional_forward_args</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+        <span class="c1"># pyre-fixme[2]: Parameter annotation cannot be `Any`.</span>
         <span class="n">expanded_additional_args</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
         <span class="n">correct_fn_kwargs</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]],</span>
         <span class="n">target</span><span class="p">:</span> <span class="n">TargetType</span><span class="p">,</span>
@@ -299,12 +323,17 @@ src="/_sphinx/documentation_options.js"></script>
                 <span class="p">)</span>
         <span class="k">return</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span>
 
+    <span class="c1"># pyre-fixme[3]: Return annotation cannot contain `Any`.</span>
     <span class="k">def</span> <span class="nf">_binary_search</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
+        <span class="c1"># pyre-fixme[2]: Parameter annotation cannot be `Any`.</span>
         <span class="n">inputs</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+        <span class="c1"># pyre-fixme[2]: Parameter annotation cannot be `Any`.</span>
         <span class="n">preproc_input</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
         <span class="n">attack_kwargs</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]],</span>
+        <span class="c1"># pyre-fixme[2]: Parameter annotation cannot be `Any`.</span>
         <span class="n">additional_forward_args</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+        <span class="c1"># pyre-fixme[2]: Parameter annotation cannot be `Any`.</span>
         <span class="n">expanded_additional_args</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
         <span class="n">correct_fn_kwargs</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]],</span>
         <span class="n">target</span><span class="p">:</span> <span class="n">TargetType</span><span class="p">,</span>
@@ -314,11 +343,23 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="n">max_range</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">arg_max</span>
         <span class="n">min_so_far</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="n">min_input</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="c1"># pyre-fixme[58]: `&lt;` is not supported for operand types `Union[float, int]`</span>
+        <span class="c1">#  and `int`.</span>
         <span class="k">while</span> <span class="n">max_range</span> <span class="o">&gt;</span> <span class="n">min_range</span><span class="p">:</span>
+            <span class="c1"># pyre-fixme[6]: For 1st argument expected `int` but got `Union[float,</span>
+            <span class="c1">#  int]`.</span>
+            <span class="c1"># pyre-fixme[58]: `//` is not supported for operand types `int` and</span>
+            <span class="c1">#  `Union[float, int]`.</span>
             <span class="n">mid_step</span> <span class="o">=</span> <span class="p">((</span><span class="n">max_range</span> <span class="o">-</span> <span class="n">min_range</span><span class="p">)</span> <span class="o">//</span> <span class="bp">self</span><span class="o">.</span><span class="n">arg_step</span><span class="p">)</span> <span class="o">//</span> <span class="mi">2</span>
 
+            <span class="c1"># pyre-fixme[6]: For 1st argument expected `int` but got `Union[float,</span>
+            <span class="c1">#  int]`.</span>
+            <span class="c1"># pyre-fixme[58]: `&lt;` is not supported for operand types `int` and</span>
+            <span class="c1">#  `Union[float, int]`.</span>
             <span class="k">if</span> <span class="n">mid_step</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">min_range</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">arg_step</span> <span class="o">&lt;</span> <span class="n">max_range</span><span class="p">:</span>
                 <span class="n">mid_step</span> <span class="o">=</span> <span class="mi">1</span>
+            <span class="c1"># pyre-fixme[58]: `*` is not supported for operand types `int` and</span>
+            <span class="c1">#  `Union[float, int]`.</span>
             <span class="n">mid</span> <span class="o">=</span> <span class="n">min_range</span> <span class="o">+</span> <span class="p">(</span><span class="n">mid_step</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">arg_step</span><span class="p">)</span>
 
             <span class="n">input_list</span> <span class="o">=</span> <span class="p">[]</span>
@@ -373,9 +414,12 @@ src="/_sphinx/documentation_options.js"></script>
 <div class="viewcode-block" id="MinParamPerturbation.evaluate">
 <a class="viewcode-back" href="../../../../../robust.html#captum.robust.MinParamPerturbation.evaluate">[docs]</a>
     <span class="nd">@log_usage</span><span class="p">()</span>
+    <span class="c1"># pyre-fixme[3]: Return annotation cannot contain `Any`.</span>
     <span class="k">def</span> <span class="nf">evaluate</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
+        <span class="c1"># pyre-fixme[2]: Parameter annotation cannot be `Any`.</span>
         <span class="n">inputs</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+        <span class="c1"># pyre-fixme[24]: Generic type `tuple` expects at least 1 type parameter.</span>
         <span class="n">additional_forward_args</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Tuple</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">target</span><span class="p">:</span> <span class="n">TargetType</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">perturbations_per_eval</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>

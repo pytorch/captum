@@ -32,6 +32,8 @@ src="/_sphinx/documentation_options.js"></script>
 <h1>Source code for captum.influence._core.similarity_influence</h1><div class="highlight"><pre>
 <span></span><span class="ch">#!/usr/bin/env python3</span>
 
+<span class="c1"># pyre-strict</span>
+
 <span class="kn">import</span> <span class="nn">warnings</span>
 <span class="kn">from</span> <span class="nn">functools</span> <span class="kn">import</span> <span class="n">partial</span>
 <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Union</span>
@@ -103,6 +105,7 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="n">influence_src_dataset</span><span class="p">:</span> <span class="n">Dataset</span><span class="p">,</span>
         <span class="n">activation_dir</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
         <span class="n">model_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span><span class="p">,</span>
+        <span class="c1"># pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.</span>
         <span class="n">similarity_metric</span><span class="p">:</span> <span class="n">Callable</span> <span class="o">=</span> <span class="n">cosine_similarity</span><span class="p">,</span>
         <span class="n">similarity_direction</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"max"</span><span class="p">,</span>
         <span class="n">batch_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
@@ -159,6 +162,7 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">                    implementation of `DataInfluence` abstract class.</span>
 <span class="sd">        """</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">module</span> <span class="o">=</span> <span class="n">module</span>
+        <span class="c1"># pyre-fixme[4]: Attribute must be annotated.</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">layers</span> <span class="o">=</span> <span class="p">[</span><span class="n">layers</span><span class="p">]</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">layers</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="k">else</span> <span class="n">layers</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">influence_src_dataset</span> <span class="o">=</span> <span class="n">influence_src_dataset</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">activation_dir</span> <span class="o">=</span> <span class="n">activation_dir</span>
@@ -166,6 +170,7 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="bp">self</span><span class="o">.</span><span class="n">batch_size</span> <span class="o">=</span> <span class="n">batch_size</span>
 
         <span class="k">if</span> <span class="n">similarity_direction</span> <span class="o">==</span> <span class="s2">"max"</span> <span class="ow">or</span> <span class="n">similarity_direction</span> <span class="o">==</span> <span class="s2">"min"</span><span class="p">:</span>
+            <span class="c1"># pyre-fixme[4]: Attribute must be annotated.</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">similarity_direction</span> <span class="o">=</span> <span class="n">similarity_direction</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
@@ -175,6 +180,7 @@ src="/_sphinx/documentation_options.js"></script>
 
         <span class="k">if</span> <span class="n">similarity_metric</span> <span class="ow">is</span> <span class="n">cosine_similarity</span><span class="p">:</span>
             <span class="k">if</span> <span class="s2">"replace_nan"</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
+                <span class="c1"># pyre-fixme[4]: Attribute must be annotated.</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">replace_nan</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s2">"replace_nan"</span><span class="p">]</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">replace_nan</span> <span class="o">=</span> <span class="o">-</span><span class="mi">2</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">similarity_direction</span> <span class="o">==</span> <span class="s2">"max"</span> <span class="k">else</span> <span class="mi">2</span>
@@ -182,6 +188,7 @@ src="/_sphinx/documentation_options.js"></script>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">similarity_metric</span> <span class="o">=</span> <span class="n">similarity_metric</span>
 
+        <span class="c1"># pyre-fixme[4]: Attribute must be annotated.</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">influence_src_dataloader</span> <span class="o">=</span> <span class="n">DataLoader</span><span class="p">(</span>
             <span class="n">influence_src_dataset</span><span class="p">,</span> <span class="n">batch_size</span><span class="p">,</span> <span class="n">shuffle</span><span class="o">=</span><span class="kc">False</span>
         <span class="p">)</span>
@@ -192,9 +199,12 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">inputs</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">]],</span>
         <span class="n">top_k</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
+        <span class="c1"># pyre-fixme[2]: Parameter annotation cannot be `Any`.</span>
         <span class="n">additional_forward_args</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">load_src_from_disk</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
         <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+        <span class="c1"># pyre-fixme[24]: Generic type `dict` expects 2 type parameters, use</span>
+        <span class="c1">#  `typing.Dict[&lt;key type&gt;, &lt;value type&gt;]` to avoid runtime subscripting errors.</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">:</span>
 <span class="w">        </span><span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        Args:</span>

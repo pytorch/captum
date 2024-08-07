@@ -31,6 +31,8 @@ src="/_sphinx/documentation_options.js"></script>
 <div class="body" role="main">
 <h1>Source code for captum.robust._core.metrics.attack_comparator</h1><div class="highlight"><pre>
 <span></span><span class="ch">#!/usr/bin/env python3</span>
+
+<span class="c1"># pyre-strict</span>
 <span class="kn">import</span> <span class="nn">warnings</span>
 <span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">namedtuple</span>
 <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="p">(</span>
@@ -65,6 +67,7 @@ src="/_sphinx/documentation_options.js"></script>
 
 
 <span class="k">class</span> <span class="nc">AttackInfo</span><span class="p">(</span><span class="n">NamedTuple</span><span class="p">):</span>
+    <span class="c1"># pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.</span>
     <span class="n">attack_fn</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Perturbation</span><span class="p">,</span> <span class="n">Callable</span><span class="p">]</span>
     <span class="n">name</span><span class="p">:</span> <span class="nb">str</span>
     <span class="n">num_attempts</span><span class="p">:</span> <span class="nb">int</span>
@@ -73,6 +76,8 @@ src="/_sphinx/documentation_options.js"></script>
     <span class="n">additional_args</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>
 
 
+<span class="c1"># pyre-fixme[3]: Return type must be annotated.</span>
+<span class="c1"># pyre-fixme[2]: Parameter must be annotated.</span>
 <span class="k">def</span> <span class="nf">agg_metric</span><span class="p">(</span><span class="n">inp</span><span class="p">):</span>
     <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">inp</span><span class="p">,</span> <span class="n">Tensor</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">inp</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">dim</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
@@ -93,8 +98,10 @@ src="/_sphinx/documentation_options.js"></script>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
+        <span class="c1"># pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.</span>
         <span class="n">forward_func</span><span class="p">:</span> <span class="n">Callable</span><span class="p">,</span>
         <span class="n">metric</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">MetricResultType</span><span class="p">],</span>
+        <span class="c1"># pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.</span>
         <span class="n">preproc_fn</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Callable</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sa">r</span><span class="sd">"""</span>
@@ -126,20 +133,24 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">                Default: ``None``</span>
 <span class="sd">        """</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">forward_func</span> <span class="o">=</span> <span class="n">forward_func</span>
+        <span class="c1"># pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">metric</span><span class="p">:</span> <span class="n">Callable</span> <span class="o">=</span> <span class="n">metric</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">preproc_fn</span> <span class="o">=</span> <span class="n">preproc_fn</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">attacks</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">AttackInfo</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">summary_results</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Summarizer</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="c1"># pyre-fixme[4]: Attribute must be annotated.</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">metric_aggregator</span> <span class="o">=</span> <span class="n">agg_metric</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">batch_stats</span> <span class="o">=</span> <span class="p">[</span><span class="n">Mean</span><span class="p">,</span> <span class="n">Min</span><span class="p">,</span> <span class="n">Max</span><span class="p">]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">aggregate_stats</span> <span class="o">=</span> <span class="p">[</span><span class="n">Mean</span><span class="p">]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">summary_results</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="c1"># pyre-fixme[4]: Attribute must be annotated.</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">out_format</span> <span class="o">=</span> <span class="kc">None</span>
 
 <div class="viewcode-block" id="AttackComparator.add_attack">
 <a class="viewcode-back" href="../../../../../robust.html#captum.robust.AttackComparator.add_attack">[docs]</a>
     <span class="k">def</span> <span class="nf">add_attack</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
+        <span class="c1"># pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.</span>
         <span class="n">attack</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Perturbation</span><span class="p">,</span> <span class="n">Callable</span><span class="p">],</span>
         <span class="n">name</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">num_attempts</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
@@ -209,7 +220,11 @@ src="/_sphinx/documentation_options.js"></script>
 
 
     <span class="k">def</span> <span class="nf">_format_summary</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span> <span class="n">summary</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">]]</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="c1"># pyre-fixme[24]: Generic type `dict` expects 2 type parameters, use</span>
+        <span class="c1">#  `typing.Dict[&lt;key type&gt;, &lt;value type&gt;]` to avoid runtime subscripting</span>
+        <span class="c1">#  errors.</span>
+        <span class="n">summary</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">]],</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">MetricResultType</span><span class="p">]:</span>
 <span class="w">        </span><span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        This method reformats a given summary; particularly for tuples,</span>
@@ -221,6 +236,7 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">summary</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
             <span class="k">return</span> <span class="n">summary</span>
         <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># pyre-fixme[24]: Generic type `tuple` expects at least 1 type parameter.</span>
             <span class="n">summary_dict</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
             <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">summary</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
                 <span class="n">summary_dict</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">s</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">summary</span><span class="p">)</span>
@@ -242,7 +258,9 @@ src="/_sphinx/documentation_options.js"></script>
 
     <span class="k">def</span> <span class="nf">_evaluate_batch</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
+        <span class="c1"># pyre-fixme[2]: Parameter annotation cannot contain `Any`.</span>
         <span class="n">input_list</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Any</span><span class="p">],</span>
+        <span class="c1"># pyre-fixme[24]: Generic type `tuple` expects at least 1 type parameter.</span>
         <span class="n">additional_forward_args</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Tuple</span><span class="p">],</span>
         <span class="n">key_list</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
         <span class="n">batch_summarizers</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Summarizer</span><span class="p">],</span>
@@ -278,9 +296,12 @@ src="/_sphinx/documentation_options.js"></script>
     <span class="nd">@log_usage</span><span class="p">()</span>
     <span class="k">def</span> <span class="nf">evaluate</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
+        <span class="c1"># pyre-fixme[2]: Parameter annotation cannot be `Any`.</span>
         <span class="n">inputs</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+        <span class="c1"># pyre-fixme[2]: Parameter annotation cannot be `Any`.</span>
         <span class="n">additional_forward_args</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">perturbations_per_eval</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
+        <span class="c1"># pyre-fixme[2]: Parameter must be annotated.</span>
         <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Union</span><span class="p">[</span><span class="n">MetricResultType</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">MetricResultType</span><span class="p">]]]:</span>
 <span class="w">        </span><span class="sa">r</span><span class="sd">"""</span>
@@ -388,6 +409,10 @@ src="/_sphinx/documentation_options.js"></script>
                 <span class="p">[</span><span class="n">stat</span><span class="p">()</span> <span class="k">for</span> <span class="n">stat</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">aggregate_stats</span><span class="p">]</span>
             <span class="p">)</span>
 
+        <span class="c1"># pyre-fixme[53]: Captured variable `batch_summarizers` is not annotated.</span>
+        <span class="c1"># pyre-fixme[53]: Captured variable `expanded_additional_args` is not annotated.</span>
+        <span class="c1"># pyre-fixme[3]: Return type must be annotated.</span>
+        <span class="c1"># pyre-fixme[2]: Parameter must be annotated.</span>
         <span class="k">def</span> <span class="nf">_check_and_evaluate</span><span class="p">(</span><span class="n">input_list</span><span class="p">,</span> <span class="n">key_list</span><span class="p">):</span>
             <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">input_list</span><span class="p">)</span> <span class="o">==</span> <span class="n">perturbations_per_eval</span><span class="p">:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_evaluate_batch</span><span class="p">(</span>
@@ -454,6 +479,11 @@ src="/_sphinx/documentation_options.js"></script>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Union</span><span class="p">[</span><span class="n">MetricResultType</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">MetricResultType</span><span class="p">]]]:</span>
         <span class="n">results</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Union</span><span class="p">[</span><span class="n">MetricResultType</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">MetricResultType</span><span class="p">]]]</span> <span class="o">=</span> <span class="p">{</span>
             <span class="n">ORIGINAL_KEY</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_format_summary</span><span class="p">(</span>
+                <span class="c1"># pyre-fixme[24]: Generic type `dict` expects 2 type parameters, use</span>
+                <span class="c1">#  `typing.Dict[&lt;key type&gt;, &lt;value type&gt;]` to avoid runtime</span>
+                <span class="c1">#  subscripting errors.</span>
+                <span class="c1"># pyre-fixme[24]: Generic type `list` expects 1 type parameter, use</span>
+                <span class="c1">#  `typing.List[&lt;element type&gt;]` to avoid runtime subscripting errors.</span>
                 <span class="n">cast</span><span class="p">(</span><span class="n">Union</span><span class="p">[</span><span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">],</span> <span class="n">batch_summarizers</span><span class="p">[</span><span class="n">ORIGINAL_KEY</span><span class="p">]</span><span class="o">.</span><span class="n">summary</span><span class="p">)</span>
             <span class="p">)[</span><span class="s2">"mean"</span><span class="p">]</span>
         <span class="p">}</span>
@@ -463,6 +493,11 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="k">for</span> <span class="n">attack_key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">attacks</span><span class="p">:</span>
             <span class="n">attack</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">attacks</span><span class="p">[</span><span class="n">attack_key</span><span class="p">]</span>
             <span class="n">attack_results</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_format_summary</span><span class="p">(</span>
+                <span class="c1"># pyre-fixme[24]: Generic type `dict` expects 2 type parameters, use</span>
+                <span class="c1">#  `typing.Dict[&lt;key type&gt;, &lt;value type&gt;]` to avoid runtime</span>
+                <span class="c1">#  subscripting errors.</span>
+                <span class="c1"># pyre-fixme[24]: Generic type `list` expects 1 type parameter, use</span>
+                <span class="c1">#  `typing.List[&lt;element type&gt;]` to avoid runtime subscripting errors.</span>
                 <span class="n">cast</span><span class="p">(</span><span class="n">Union</span><span class="p">[</span><span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">],</span> <span class="n">batch_summarizers</span><span class="p">[</span><span class="n">attack</span><span class="o">.</span><span class="n">name</span><span class="p">]</span><span class="o">.</span><span class="n">summary</span><span class="p">)</span>
             <span class="p">)</span>
             <span class="n">results</span><span class="p">[</span><span class="n">attack</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">attack_results</span>
@@ -508,6 +543,11 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">        """</span>
         <span class="k">return</span> <span class="p">{</span>
             <span class="n">key</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_format_summary</span><span class="p">(</span>
+                <span class="c1"># pyre-fixme[24]: Generic type `dict` expects 2 type parameters, use</span>
+                <span class="c1">#  `typing.Dict[&lt;key type&gt;, &lt;value type&gt;]` to avoid runtime</span>
+                <span class="c1">#  subscripting errors.</span>
+                <span class="c1"># pyre-fixme[24]: Generic type `list` expects 1 type parameter, use</span>
+                <span class="c1">#  `typing.List[&lt;element type&gt;]` to avoid runtime subscripting errors.</span>
                 <span class="n">cast</span><span class="p">(</span><span class="n">Union</span><span class="p">[</span><span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">summary_results</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="o">.</span><span class="n">summary</span><span class="p">)</span>
             <span class="p">)</span>
             <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">summary_results</span>

@@ -32,6 +32,8 @@ src="/_sphinx/documentation_options.js"></script>
 <h1>Source code for captum.concept._core.tcav</h1><div class="highlight"><pre>
 <span></span><span class="ch">#!/usr/bin/env python3</span>
 
+<span class="c1"># pyre-strict</span>
+
 <span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">defaultdict</span>
 <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">cast</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Set</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Union</span>
 
@@ -85,12 +87,17 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="kn">from</span> <span class="nn">itertools</span> <span class="kn">import</span> <span class="n">accumulate</span>
 
         <span class="n">offsets</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="nb">list</span><span class="p">(</span><span class="n">accumulate</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">len</span><span class="p">,</span> <span class="n">datasets</span><span class="p">),</span> <span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">:</span> <span class="n">x</span> <span class="o">+</span> <span class="n">y</span><span class="p">)))</span>
+        <span class="c1"># pyre-fixme[4]: Attribute must be annotated.</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">length</span> <span class="o">=</span> <span class="n">offsets</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">datasets</span> <span class="o">=</span> <span class="n">datasets</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">labels</span> <span class="o">=</span> <span class="n">labels</span>
+        <span class="c1"># pyre-fixme[4]: Attribute must be annotated.</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">lowers</span> <span class="o">=</span> <span class="n">offsets</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="c1"># pyre-fixme[4]: Attribute must be annotated.</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">uppers</span> <span class="o">=</span> <span class="n">offsets</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>
 
+    <span class="c1"># pyre-fixme[3]: Return type must be annotated.</span>
+    <span class="c1"># pyre-fixme[2]: Parameter must be annotated.</span>
     <span class="k">def</span> <span class="nf">_i_to_k</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">i</span><span class="p">):</span>
 
         <span class="n">left</span><span class="p">,</span> <span class="n">right</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">uppers</span><span class="p">)</span>
@@ -103,6 +110,7 @@ src="/_sphinx/documentation_options.js"></script>
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">right</span> <span class="o">=</span> <span class="n">mid</span>
 
+    <span class="c1"># pyre-fixme[3]: Return type must be annotated.</span>
     <span class="k">def</span> <span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">i</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Returns a batch of activation vectors, as well as a batch of labels</span>
@@ -121,8 +129,14 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="k">assert</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">length</span>
         <span class="n">k</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_i_to_k</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
         <span class="n">inputs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">datasets</span><span class="p">[</span><span class="n">k</span><span class="p">][</span><span class="n">i</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">lowers</span><span class="p">[</span><span class="n">k</span><span class="p">]]</span>
+        <span class="c1"># pyre-fixme[16]: Item `tuple` of `Union[Tensor, Tuple[Tensor, ...]]` has no</span>
+        <span class="c1">#  attribute `shape`.</span>
         <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">inputs</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span>
 
+        <span class="c1"># pyre-fixme[16]: Item `tuple` of `Union[Tensor, Tuple[Tensor, ...]]` has no</span>
+        <span class="c1">#  attribute `size`.</span>
+        <span class="c1"># pyre-fixme[16]: Item `tuple` of `Union[Tensor, Tuple[Tensor, ...]]` has no</span>
+        <span class="c1">#  attribute `device`.</span>
         <span class="n">labels</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">labels</span><span class="p">[</span><span class="n">k</span><span class="p">]]</span> <span class="o">*</span> <span class="n">inputs</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="mi">0</span><span class="p">),</span> <span class="n">device</span><span class="o">=</span><span class="n">inputs</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">inputs</span><span class="p">,</span> <span class="n">labels</span>
 
@@ -134,11 +148,14 @@ src="/_sphinx/documentation_options.js"></script>
 
 
 <span class="k">def</span> <span class="nf">train_cav</span><span class="p">(</span>
+    <span class="c1"># pyre-fixme[2]: Parameter must be annotated.</span>
     <span class="n">model_id</span><span class="p">,</span>
     <span class="n">concepts</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Concept</span><span class="p">],</span>
     <span class="n">layers</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]],</span>
     <span class="n">classifier</span><span class="p">:</span> <span class="n">Classifier</span><span class="p">,</span>
     <span class="n">save_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="c1"># pyre-fixme[24]: Generic type `dict` expects 2 type parameters, use</span>
+    <span class="c1">#  `typing.Dict[&lt;key type&gt;, &lt;value type&gt;]` to avoid runtime subscripting errors.</span>
     <span class="n">classifier_kwargs</span><span class="p">:</span> <span class="n">Dict</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">CAV</span><span class="p">]]:</span>
 <span class="w">    </span><span class="sa">r</span><span class="sd">"""</span>
@@ -191,8 +208,11 @@ src="/_sphinx/documentation_options.js"></script>
 
         <span class="n">labels</span> <span class="o">=</span> <span class="p">[</span><span class="n">concept</span><span class="o">.</span><span class="n">id</span> <span class="k">for</span> <span class="n">concept</span> <span class="ow">in</span> <span class="n">concepts</span><span class="p">]</span>
 
+        <span class="c1"># pyre-fixme[22]: The cast is redundant.</span>
         <span class="n">labelled_dataset</span> <span class="o">=</span> <span class="n">LabelledDataset</span><span class="p">(</span><span class="n">cast</span><span class="p">(</span><span class="n">List</span><span class="p">[</span><span class="n">AV</span><span class="o">.</span><span class="n">AVDataset</span><span class="p">],</span> <span class="n">datasets</span><span class="p">),</span> <span class="n">labels</span><span class="p">)</span>
 
+        <span class="c1"># pyre-fixme[3]: Return type must be annotated.</span>
+        <span class="c1"># pyre-fixme[2]: Parameter must be annotated.</span>
         <span class="k">def</span> <span class="nf">batch_collate</span><span class="p">(</span><span class="n">batch</span><span class="p">):</span>
             <span class="n">inputs</span><span class="p">,</span> <span class="n">labels</span> <span class="o">=</span> <span class="nb">zip</span><span class="p">(</span><span class="o">*</span><span class="n">batch</span><span class="p">)</span>
             <span class="k">return</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">(</span><span class="n">inputs</span><span class="p">),</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">(</span><span class="n">labels</span><span class="p">)</span>
@@ -283,6 +303,7 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="n">model_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"default_model_id"</span><span class="p">,</span>
         <span class="n">classifier</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Classifier</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">layer_attr_method</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">LayerAttribution</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="c1"># pyre-fixme[2]: Parameter must be annotated.</span>
         <span class="n">attribute_to_layer_input</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
         <span class="n">save_path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"./cav/"</span><span class="p">,</span>
         <span class="o">**</span><span class="n">classifier_kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
@@ -334,19 +355,28 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">            For more thorough examples, please check out TCAV tutorial and test cases.</span>
 <span class="sd">        """</span>
         <span class="n">ConceptInterpreter</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model</span><span class="p">)</span>
+        <span class="c1"># pyre-fixme[4]: Attribute must be annotated.</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">layers</span> <span class="o">=</span> <span class="p">[</span><span class="n">layers</span><span class="p">]</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">layers</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="k">else</span> <span class="n">layers</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">model_id</span> <span class="o">=</span> <span class="n">model_id</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">concepts</span><span class="p">:</span> <span class="n">Set</span><span class="p">[</span><span class="n">Concept</span><span class="p">]</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">classifier</span> <span class="o">=</span> <span class="n">classifier</span>
+        <span class="c1"># pyre-fixme[4]: Attribute must be annotated.</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">classifier_kwargs</span> <span class="o">=</span> <span class="n">classifier_kwargs</span>
+        <span class="c1"># pyre-fixme[8]: Attribute has type `Dict[str, Dict[str, CAV]]`; used as</span>
+        <span class="c1">#  `DefaultDict[Variable[_KT], DefaultDict[Variable[_KT], Variable[_VT]]]`.</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">cavs</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">CAV</span><span class="p">]]</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="k">lambda</span><span class="p">:</span> <span class="n">defaultdict</span><span class="p">())</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">classifier</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">classifier</span> <span class="o">=</span> <span class="n">DefaultClassifier</span><span class="p">()</span>
         <span class="k">if</span> <span class="n">layer_attr_method</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># pyre-fixme[4]: Attribute must be annotated.</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">layer_attr_method</span> <span class="o">=</span> <span class="n">cast</span><span class="p">(</span>
                 <span class="n">LayerAttribution</span><span class="p">,</span>
                 <span class="n">LayerGradientXActivation</span><span class="p">(</span>  <span class="c1"># type: ignore</span>
-                    <span class="n">model</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="n">multiply_by_inputs</span><span class="o">=</span><span class="kc">False</span>
+                    <span class="n">model</span><span class="p">,</span>
+                    <span class="c1"># pyre-fixme[6]: For 2nd argument expected `ModuleOrModuleList`</span>
+                    <span class="c1">#  but got `None`.</span>
+                    <span class="kc">None</span><span class="p">,</span>
+                    <span class="n">multiply_by_inputs</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
                 <span class="p">),</span>
             <span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
@@ -358,6 +388,7 @@ src="/_sphinx/documentation_options.js"></script>
             <span class="s2">"will use `default_model_id` as its default value."</span>
         <span class="p">)</span>
 
+        <span class="c1"># pyre-fixme[4]: Attribute must be annotated.</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">attribute_to_layer_input</span> <span class="o">=</span> <span class="n">attribute_to_layer_input</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">save_path</span> <span class="o">=</span> <span class="n">save_path</span>
 
@@ -378,6 +409,8 @@ src="/_sphinx/documentation_options.js"></script>
             <span class="bp">self</span><span class="o">.</span><span class="n">generate_activation</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">layers</span><span class="p">,</span> <span class="n">concept</span><span class="p">)</span></div>
 
 
+    <span class="c1"># pyre-fixme[24]: Generic type `list` expects 1 type parameter, use</span>
+    <span class="c1">#  `typing.List[&lt;element type&gt;]` to avoid runtime subscripting errors.</span>
 <div class="viewcode-block" id="TCAV.generate_activation">
 <a class="viewcode-back" href="../../../../concept.html#captum.concept.TCAV.generate_activation">[docs]</a>
     <span class="k">def</span> <span class="nf">generate_activation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">layers</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">List</span><span class="p">],</span> <span class="n">concept</span><span class="p">:</span> <span class="n">Concept</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
@@ -400,6 +433,8 @@ src="/_sphinx/documentation_options.js"></script>
             <span class="s2">"Data iterator for concept id:"</span><span class="p">,</span>
             <span class="s2">"</span><span class="si">{}</span><span class="s2"> must be specified"</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">concept</span><span class="o">.</span><span class="n">id</span><span class="p">),</span>
         <span class="p">)</span>
+        <span class="c1"># pyre-fixme[6]: For 1st argument expected `Iterable[Variable[_T]]` but got</span>
+        <span class="c1">#  `Optional[DataLoader[typing.Any]]`.</span>
         <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">examples</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">concept</span><span class="o">.</span><span class="n">data_iter</span><span class="p">):</span>
             <span class="n">activations</span> <span class="o">=</span> <span class="n">layer_act</span><span class="o">.</span><span class="n">attribute</span><span class="o">.</span><span class="n">__wrapped__</span><span class="p">(</span>  <span class="c1"># type: ignore</span>
                 <span class="n">layer_act</span><span class="p">,</span>
@@ -493,6 +528,7 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="k">return</span> <span class="n">layers</span><span class="p">,</span> <span class="n">concept_layers</span></div>
 
 
+    <span class="c1"># pyre-fixme[3]: Return type must be annotated.</span>
 <div class="viewcode-block" id="TCAV.compute_cavs">
 <a class="viewcode-back" href="../../../../concept.html#captum.concept.TCAV.compute_cavs">[docs]</a>
     <span class="k">def</span> <span class="nf">compute_cavs</span><span class="p">(</span>
@@ -617,6 +653,7 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="n">inputs</span><span class="p">:</span> <span class="n">TensorOrTupleOfTensorsGeneric</span><span class="p">,</span>
         <span class="n">experimental_sets</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">Concept</span><span class="p">]],</span>
         <span class="n">target</span><span class="p">:</span> <span class="n">TargetType</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="c1"># pyre-fixme[2]: Parameter annotation cannot be `Any`.</span>
         <span class="n">additional_forward_args</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">processes</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
@@ -712,6 +749,9 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">compute_cavs</span><span class="p">(</span><span class="n">experimental_sets</span><span class="p">,</span> <span class="n">processes</span><span class="o">=</span><span class="n">processes</span><span class="p">)</span>
 
+        <span class="c1"># pyre-fixme[9]: scores has type `Dict[str, Dict[str, Dict[str, Tensor]]]`;</span>
+        <span class="c1">#  used as `DefaultDict[Variable[_KT], DefaultDict[Variable[_KT],</span>
+        <span class="c1">#  Variable[_VT]]]`.</span>
         <span class="n">scores</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Tensor</span><span class="p">]]]</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span>
             <span class="k">lambda</span><span class="p">:</span> <span class="n">defaultdict</span><span class="p">()</span>
         <span class="p">)</span>
@@ -755,6 +795,7 @@ src="/_sphinx/documentation_options.js"></script>
             <span class="n">attribs</span> <span class="o">=</span> <span class="n">_format_tensor_into_tuples</span><span class="p">(</span><span class="n">attribs</span><span class="p">)</span>
             <span class="c1"># n_inputs x n_features</span>
             <span class="n">attribs</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">(</span>
+                <span class="c1"># pyre-fixme[16]: `None` has no attribute `__iter__`.</span>
                 <span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">attrib</span><span class="p">,</span> <span class="p">(</span><span class="n">attrib</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="o">-</span><span class="mi">1</span><span class="p">))</span> <span class="k">for</span> <span class="n">attrib</span> <span class="ow">in</span> <span class="n">attribs</span><span class="p">],</span>
                 <span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
             <span class="p">)</span>
@@ -764,6 +805,7 @@ src="/_sphinx/documentation_options.js"></script>
             <span class="n">classes</span> <span class="o">=</span> <span class="p">[]</span>
             <span class="k">for</span> <span class="n">concepts</span> <span class="ow">in</span> <span class="n">experimental_sets</span><span class="p">:</span>
                 <span class="n">concepts_key</span> <span class="o">=</span> <span class="n">concepts_to_str</span><span class="p">(</span><span class="n">concepts</span><span class="p">)</span>
+                <span class="c1"># pyre-fixme[33]: Given annotation cannot contain `Any`.</span>
                 <span class="n">cavs_stats</span> <span class="o">=</span> <span class="n">cast</span><span class="p">(</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">cavs</span><span class="p">[</span><span class="n">concepts_key</span><span class="p">][</span><span class="n">layer</span><span class="p">]</span><span class="o">.</span><span class="n">stats</span><span class="p">)</span>
                 <span class="n">cavs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">cavs_stats</span><span class="p">[</span><span class="s2">"weights"</span><span class="p">]</span><span class="o">.</span><span class="n">float</span><span class="p">()</span><span class="o">.</span><span class="n">detach</span><span class="p">()</span><span class="o">.</span><span class="n">tolist</span><span class="p">())</span>
                 <span class="n">classes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">cavs_stats</span><span class="p">[</span><span class="s2">"classes"</span><span class="p">])</span>
