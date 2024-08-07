@@ -30,7 +30,8 @@ src="/_sphinx/documentation_options.js"></script>
 <div class="bodywrapper">
 <div class="body" role="main">
 <h1>Source code for captum._utils.models.linear_model.model</h1><div class="highlight"><pre>
-<span></span><span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">cast</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span>
+<span></span><span class="c1"># pyre-strict</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">cast</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span>
 
 <span class="kn">import</span> <span class="nn">torch.nn</span> <span class="k">as</span> <span class="nn">nn</span>
 <span class="kn">from</span> <span class="nn">captum._utils.models.model</span> <span class="kn">import</span> <span class="n">Model</span>
@@ -41,6 +42,8 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="k">class</span> <span class="nc">LinearModel</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">,</span> <span class="n">Model</span><span class="p">):</span>
     <span class="n">SUPPORTED_NORMS</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="s2">"batch_norm"</span><span class="p">,</span> <span class="s2">"layer_norm"</span><span class="p">]</span>
 
+    <span class="c1"># pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.</span>
+    <span class="c1"># pyre-fixme[2]: Parameter must be annotated.</span>
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">train_fn</span><span class="p">:</span> <span class="n">Callable</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        Constructs a linear model with a training function and additional</span>
@@ -67,8 +70,10 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="bp">self</span><span class="o">.</span><span class="n">norm</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">linear</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">train_fn</span> <span class="o">=</span> <span class="n">train_fn</span>
+        <span class="c1"># pyre-fixme[4]: Attribute must be annotated.</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">construct_kwargs</span> <span class="o">=</span> <span class="n">kwargs</span>
 
+    <span class="c1"># pyre-fixme[3]: Return type must be annotated.</span>
     <span class="k">def</span> <span class="nf">_construct_model_params</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">in_features</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -146,8 +151,11 @@ src="/_sphinx/documentation_options.js"></script>
             <span class="bp">self</span><span class="o">.</span><span class="n">linear</span><span class="o">.</span><span class="n">bias</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">bias_value</span>
 
         <span class="k">if</span> <span class="n">classes</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># pyre-fixme[16]: `Optional` has no attribute `classes`.</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">linear</span><span class="o">.</span><span class="n">classes</span> <span class="o">=</span> <span class="n">classes</span>
 
+    <span class="c1"># pyre-fixme[3]: Return type must be annotated.</span>
+    <span class="c1"># pyre-fixme[2]: Parameter must be annotated.</span>
     <span class="k">def</span> <span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">train_data</span><span class="p">:</span> <span class="n">DataLoader</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 <span class="w">        </span><span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        Calls `self.train_fn`</span>
@@ -163,6 +171,7 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">linear</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">norm</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="c1"># pyre-fixme[29]: `Optional[nn.modules.linear.Linear]` is not a function.</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">linear</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">representation</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tensor</span><span class="p">:</span>
@@ -190,6 +199,7 @@ src="/_sphinx/documentation_options.js"></script>
 <div class="viewcode-block" id="SGDLinearModel">
 <a class="viewcode-back" href="../../../../../utilities.html#captum._utils.models.linear_model.SGDLinearModel">[docs]</a>
 <span class="k">class</span> <span class="nc">SGDLinearModel</span><span class="p">(</span><span class="n">LinearModel</span><span class="p">):</span>
+    <span class="c1"># pyre-fixme[2]: Parameter must be annotated.</span>
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        Factory class. Construct a a `LinearModel` with the</span>
@@ -211,6 +221,7 @@ src="/_sphinx/documentation_options.js"></script>
 <div class="viewcode-block" id="SGDLasso">
 <a class="viewcode-back" href="../../../../../utilities.html#captum._utils.models.linear_model.SGDLasso">[docs]</a>
 <span class="k">class</span> <span class="nc">SGDLasso</span><span class="p">(</span><span class="n">SGDLinearModel</span><span class="p">):</span>
+    <span class="c1"># pyre-fixme[2]: Parameter must be annotated.</span>
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        Factory class to train a `LinearModel` with SGD</span>
@@ -223,6 +234,8 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">        """</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
+    <span class="c1"># pyre-fixme[3]: Return type must be annotated.</span>
+    <span class="c1"># pyre-fixme[2]: Parameter must be annotated.</span>
 <div class="viewcode-block" id="SGDLasso.fit">
 <a class="viewcode-back" href="../../../../../utilities.html#captum._utils.models.linear_model.SGDLasso.fit">[docs]</a>
     <span class="k">def</span> <span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">train_data</span><span class="p">:</span> <span class="n">DataLoader</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
@@ -237,6 +250,7 @@ src="/_sphinx/documentation_options.js"></script>
 <div class="viewcode-block" id="SGDRidge">
 <a class="viewcode-back" href="../../../../../utilities.html#captum._utils.models.linear_model.SGDRidge">[docs]</a>
 <span class="k">class</span> <span class="nc">SGDRidge</span><span class="p">(</span><span class="n">SGDLinearModel</span><span class="p">):</span>
+    <span class="c1"># pyre-fixme[2]: Parameter must be annotated.</span>
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        Factory class to train a `LinearModel` with SGD</span>
@@ -246,6 +260,8 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">        """</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
+    <span class="c1"># pyre-fixme[3]: Return type must be annotated.</span>
+    <span class="c1"># pyre-fixme[2]: Parameter must be annotated.</span>
 <div class="viewcode-block" id="SGDRidge.fit">
 <a class="viewcode-back" href="../../../../../utilities.html#captum._utils.models.linear_model.SGDRidge.fit">[docs]</a>
     <span class="k">def</span> <span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">train_data</span><span class="p">:</span> <span class="n">DataLoader</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
@@ -258,6 +274,7 @@ src="/_sphinx/documentation_options.js"></script>
 
 
 <span class="k">class</span> <span class="nc">SGDLinearRegression</span><span class="p">(</span><span class="n">SGDLinearModel</span><span class="p">):</span>
+    <span class="c1"># pyre-fixme[2]: Parameter must be annotated.</span>
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        Factory class to train a `LinearModel` with SGD</span>
@@ -266,6 +283,8 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">        """</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
+    <span class="c1"># pyre-fixme[3]: Return type must be annotated.</span>
+    <span class="c1"># pyre-fixme[2]: Parameter must be annotated.</span>
     <span class="k">def</span> <span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">train_data</span><span class="p">:</span> <span class="n">DataLoader</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="c1"># avoid cycles</span>
         <span class="kn">from</span> <span class="nn">captum._utils.models.linear_model.train</span> <span class="kn">import</span> <span class="n">l2_loss</span>
@@ -278,6 +297,7 @@ src="/_sphinx/documentation_options.js"></script>
 <div class="viewcode-block" id="SkLearnLinearModel">
 <a class="viewcode-back" href="../../../../../utilities.html#captum._utils.models.linear_model.SkLearnLinearModel">[docs]</a>
 <span class="k">class</span> <span class="nc">SkLearnLinearModel</span><span class="p">(</span><span class="n">LinearModel</span><span class="p">):</span>
+    <span class="c1"># pyre-fixme[2]: Parameter must be annotated.</span>
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sklearn_module</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        Factory class to construct a `LinearModel` with sklearn training method.</span>
@@ -308,6 +328,8 @@ src="/_sphinx/documentation_options.js"></script>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">sklearn_module</span> <span class="o">=</span> <span class="n">sklearn_module</span>
 
+    <span class="c1"># pyre-fixme[3]: Return type must be annotated.</span>
+    <span class="c1"># pyre-fixme[2]: Parameter must be annotated.</span>
 <div class="viewcode-block" id="SkLearnLinearModel.fit">
 <a class="viewcode-back" href="../../../../../utilities.html#captum._utils.models.linear_model.SkLearnLinearModel.fit">[docs]</a>
     <span class="k">def</span> <span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">train_data</span><span class="p">:</span> <span class="n">DataLoader</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
@@ -328,6 +350,7 @@ src="/_sphinx/documentation_options.js"></script>
 <div class="viewcode-block" id="SkLearnLasso">
 <a class="viewcode-back" href="../../../../../utilities.html#captum._utils.models.linear_model.SkLearnLasso">[docs]</a>
 <span class="k">class</span> <span class="nc">SkLearnLasso</span><span class="p">(</span><span class="n">SkLearnLinearModel</span><span class="p">):</span>
+    <span class="c1"># pyre-fixme[2]: Parameter must be annotated.</span>
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        Factory class. Trains a `LinearModel` model with</span>
@@ -336,6 +359,8 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">        """</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">sklearn_module</span><span class="o">=</span><span class="s2">"linear_model.Lasso"</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
+    <span class="c1"># pyre-fixme[3]: Return type must be annotated.</span>
+    <span class="c1"># pyre-fixme[2]: Parameter must be annotated.</span>
 <div class="viewcode-block" id="SkLearnLasso.fit">
 <a class="viewcode-back" href="../../../../../utilities.html#captum._utils.models.linear_model.SkLearnLasso.fit">[docs]</a>
     <span class="k">def</span> <span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">train_data</span><span class="p">:</span> <span class="n">DataLoader</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
@@ -347,6 +372,7 @@ src="/_sphinx/documentation_options.js"></script>
 <div class="viewcode-block" id="SkLearnRidge">
 <a class="viewcode-back" href="../../../../../utilities.html#captum._utils.models.linear_model.SkLearnRidge">[docs]</a>
 <span class="k">class</span> <span class="nc">SkLearnRidge</span><span class="p">(</span><span class="n">SkLearnLinearModel</span><span class="p">):</span>
+    <span class="c1"># pyre-fixme[2]: Parameter must be annotated.</span>
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        Factory class. Trains a model with `sklearn.linear_model.Ridge`.</span>
@@ -356,6 +382,8 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">        """</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">sklearn_module</span><span class="o">=</span><span class="s2">"linear_model.Ridge"</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
+    <span class="c1"># pyre-fixme[3]: Return type must be annotated.</span>
+    <span class="c1"># pyre-fixme[2]: Parameter must be annotated.</span>
 <div class="viewcode-block" id="SkLearnRidge.fit">
 <a class="viewcode-back" href="../../../../../utilities.html#captum._utils.models.linear_model.SkLearnRidge.fit">[docs]</a>
     <span class="k">def</span> <span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">train_data</span><span class="p">:</span> <span class="n">DataLoader</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
@@ -367,6 +395,7 @@ src="/_sphinx/documentation_options.js"></script>
 <div class="viewcode-block" id="SkLearnLinearRegression">
 <a class="viewcode-back" href="../../../../../utilities.html#captum._utils.models.linear_model.SkLearnLinearRegression">[docs]</a>
 <span class="k">class</span> <span class="nc">SkLearnLinearRegression</span><span class="p">(</span><span class="n">SkLearnLinearModel</span><span class="p">):</span>
+    <span class="c1"># pyre-fixme[2]: Parameter must be annotated.</span>
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        Factory class. Trains a model with `sklearn.linear_model.LinearRegression`.</span>
@@ -376,6 +405,8 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">        """</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">sklearn_module</span><span class="o">=</span><span class="s2">"linear_model.LinearRegression"</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
+    <span class="c1"># pyre-fixme[3]: Return type must be annotated.</span>
+    <span class="c1"># pyre-fixme[2]: Parameter must be annotated.</span>
 <div class="viewcode-block" id="SkLearnLinearRegression.fit">
 <a class="viewcode-back" href="../../../../../utilities.html#captum._utils.models.linear_model.SkLearnLinearRegression.fit">[docs]</a>
     <span class="k">def</span> <span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">train_data</span><span class="p">:</span> <span class="n">DataLoader</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
@@ -385,6 +416,7 @@ src="/_sphinx/documentation_options.js"></script>
 
 
 <span class="k">class</span> <span class="nc">SkLearnLogisticRegression</span><span class="p">(</span><span class="n">SkLearnLinearModel</span><span class="p">):</span>
+    <span class="c1"># pyre-fixme[2]: Parameter must be annotated.</span>
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        Factory class. Trains a model with `sklearn.linear_model.LogisticRegression`.</span>
@@ -394,11 +426,14 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">        """</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">sklearn_module</span><span class="o">=</span><span class="s2">"linear_model.LogisticRegression"</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
+    <span class="c1"># pyre-fixme[3]: Return type must be annotated.</span>
+    <span class="c1"># pyre-fixme[2]: Parameter must be annotated.</span>
     <span class="k">def</span> <span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">train_data</span><span class="p">:</span> <span class="n">DataLoader</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">train_data</span><span class="o">=</span><span class="n">train_data</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
 
 <span class="k">class</span> <span class="nc">SkLearnSGDClassifier</span><span class="p">(</span><span class="n">SkLearnLinearModel</span><span class="p">):</span>
+    <span class="c1"># pyre-fixme[2]: Parameter must be annotated.</span>
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        Factory class. Trains a model with `sklearn.linear_model.SGDClassifier(`.</span>
@@ -408,6 +443,8 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">        """</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">sklearn_module</span><span class="o">=</span><span class="s2">"linear_model.SGDClassifier"</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
+    <span class="c1"># pyre-fixme[3]: Return type must be annotated.</span>
+    <span class="c1"># pyre-fixme[2]: Parameter must be annotated.</span>
     <span class="k">def</span> <span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">train_data</span><span class="p">:</span> <span class="n">DataLoader</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">train_data</span><span class="o">=</span><span class="n">train_data</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 </pre></div>

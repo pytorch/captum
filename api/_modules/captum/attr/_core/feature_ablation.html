@@ -32,6 +32,8 @@ src="/_sphinx/documentation_options.js"></script>
 <h1>Source code for captum.attr._core.feature_ablation</h1><div class="highlight"><pre>
 <span></span><span class="ch">#!/usr/bin/env python3</span>
 
+<span class="c1"># pyre-strict</span>
+
 <span class="kn">import</span> <span class="nn">math</span>
 <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">cast</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Union</span>
 
@@ -78,6 +80,7 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">    first dimension (i.e. a feature mask requires to be applied to all inputs).</span>
 <span class="sd">    """</span>
 
+    <span class="c1"># pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.</span>
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">forward_func</span><span class="p">:</span> <span class="n">Callable</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        Args:</span>
@@ -107,6 +110,7 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="n">inputs</span><span class="p">:</span> <span class="n">TensorOrTupleOfTensorsGeneric</span><span class="p">,</span>
         <span class="n">baselines</span><span class="p">:</span> <span class="n">BaselineType</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">target</span><span class="p">:</span> <span class="n">TargetType</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="c1"># pyre-fixme[2]: Parameter annotation cannot be `Any`.</span>
         <span class="n">additional_forward_args</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">feature_mask</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="n">Tensor</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">perturbations_per_eval</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
@@ -294,12 +298,18 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">        """</span>
         <span class="c1"># Keeps track whether original input is a tuple or not before</span>
         <span class="c1"># converting it into a tuple.</span>
+        <span class="c1"># pyre-fixme[6]: For 1st argument expected `Tensor` but got</span>
+        <span class="c1">#  `TensorOrTupleOfTensorsGeneric`.</span>
         <span class="n">is_inputs_tuple</span> <span class="o">=</span> <span class="n">_is_tuple</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span>
+        <span class="c1"># pyre-fixme[9]: inputs has type `TensorOrTupleOfTensorsGeneric`; used as</span>
+        <span class="c1">#  `Tuple[Tensor, ...]`.</span>
         <span class="n">inputs</span><span class="p">,</span> <span class="n">baselines</span> <span class="o">=</span> <span class="n">_format_input_baseline</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">baselines</span><span class="p">)</span>
         <span class="n">additional_forward_args</span> <span class="o">=</span> <span class="n">_format_additional_forward_args</span><span class="p">(</span>
             <span class="n">additional_forward_args</span>
         <span class="p">)</span>
         <span class="n">num_examples</span> <span class="o">=</span> <span class="n">inputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="c1"># pyre-fixme[6]: For 2nd argument expected `Tuple[Tensor, ...]` but got</span>
+        <span class="c1">#  `TensorOrTupleOfTensorsGeneric`.</span>
         <span class="n">feature_mask</span> <span class="o">=</span> <span class="n">_format_feature_mask</span><span class="p">(</span><span class="n">feature_mask</span><span class="p">,</span> <span class="n">inputs</span><span class="p">)</span>
 
         <span class="k">assert</span> <span class="p">(</span>
@@ -372,6 +382,7 @@ src="/_sphinx/documentation_options.js"></script>
 
             <span class="c1"># The will be the same amount futures as modified_eval down there,</span>
             <span class="c1"># since we cannot add up the evaluation result adhoc under async mode.</span>
+            <span class="c1"># pyre-fixme[24]: Generic type `Future` expects 1 type parameter.</span>
             <span class="n">all_futures</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">Future</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[[]</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">inputs</span><span class="p">))]</span>
             <span class="c1"># Iterate through each feature tensor for ablation</span>
             <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">inputs</span><span class="p">)):</span>
@@ -480,15 +491,24 @@ src="/_sphinx/documentation_options.js"></script>
                 <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_generate_result</span><span class="p">(</span><span class="n">total_attrib</span><span class="p">,</span> <span class="n">weights</span><span class="p">,</span> <span class="n">is_inputs_tuple</span><span class="p">)</span>  <span class="c1"># type: ignore # noqa: E501 line too long</span></div>
 
 
+    <span class="c1"># pyre-fixme[3]: Return type must be annotated.</span>
     <span class="k">def</span> <span class="nf">_ith_input_ablation_generator</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
+        <span class="c1"># pyre-fixme[2]: Parameter must be annotated.</span>
         <span class="n">i</span><span class="p">,</span>
+        <span class="c1"># pyre-fixme[2]: Parameter must be annotated.</span>
         <span class="n">inputs</span><span class="p">,</span>
+        <span class="c1"># pyre-fixme[2]: Parameter must be annotated.</span>
         <span class="n">additional_args</span><span class="p">,</span>
+        <span class="c1"># pyre-fixme[2]: Parameter must be annotated.</span>
         <span class="n">target</span><span class="p">,</span>
+        <span class="c1"># pyre-fixme[2]: Parameter must be annotated.</span>
         <span class="n">baselines</span><span class="p">,</span>
+        <span class="c1"># pyre-fixme[2]: Parameter must be annotated.</span>
         <span class="n">input_mask</span><span class="p">,</span>
+        <span class="c1"># pyre-fixme[2]: Parameter must be annotated.</span>
         <span class="n">perturbations_per_eval</span><span class="p">,</span>
+        <span class="c1"># pyre-fixme[2]: Parameter must be annotated.</span>
         <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
     <span class="p">):</span>
 <span class="w">        </span><span class="sd">"""</span>
@@ -514,6 +534,8 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="n">perturbations_per_eval</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">perturbations_per_eval</span><span class="p">,</span> <span class="n">num_features</span><span class="p">)</span>
         <span class="n">baseline</span> <span class="o">=</span> <span class="n">baselines</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">baselines</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)</span> <span class="k">else</span> <span class="n">baselines</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">baseline</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">):</span>
+            <span class="c1"># pyre-fixme[58]: `+` is not supported for operand types `Tuple[int]`</span>
+            <span class="c1">#  and `Size`.</span>
             <span class="n">baseline</span> <span class="o">=</span> <span class="n">baseline</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="mi">1</span><span class="p">,)</span> <span class="o">+</span> <span class="n">baseline</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="n">perturbations_per_eval</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
@@ -593,8 +615,21 @@ src="/_sphinx/documentation_options.js"></script>
             <span class="n">current_features</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">original_tensor</span>
             <span class="n">num_features_processed</span> <span class="o">+=</span> <span class="n">current_num_ablated_features</span>
 
+    <span class="c1"># pyre-fixme[3]: Return type must be annotated.</span>
     <span class="k">def</span> <span class="nf">_construct_ablated_input</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span> <span class="n">expanded_input</span><span class="p">,</span> <span class="n">input_mask</span><span class="p">,</span> <span class="n">baseline</span><span class="p">,</span> <span class="n">start_feature</span><span class="p">,</span> <span class="n">end_feature</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="c1"># pyre-fixme[2]: Parameter must be annotated.</span>
+        <span class="n">expanded_input</span><span class="p">,</span>
+        <span class="c1"># pyre-fixme[2]: Parameter must be annotated.</span>
+        <span class="n">input_mask</span><span class="p">,</span>
+        <span class="c1"># pyre-fixme[2]: Parameter must be annotated.</span>
+        <span class="n">baseline</span><span class="p">,</span>
+        <span class="c1"># pyre-fixme[2]: Parameter must be annotated.</span>
+        <span class="n">start_feature</span><span class="p">,</span>
+        <span class="c1"># pyre-fixme[2]: Parameter must be annotated.</span>
+        <span class="n">end_feature</span><span class="p">,</span>
+        <span class="c1"># pyre-fixme[2]: Parameter must be annotated.</span>
+        <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
     <span class="p">):</span>
 <span class="w">        </span><span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        Ablates given expanded_input tensor with given feature mask, feature range,</span>
@@ -621,6 +656,8 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="p">)</span> <span class="o">+</span> <span class="p">(</span><span class="n">baseline</span> <span class="o">*</span> <span class="n">current_mask</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">expanded_input</span><span class="o">.</span><span class="n">dtype</span><span class="p">))</span>
         <span class="k">return</span> <span class="n">ablated_tensor</span><span class="p">,</span> <span class="n">current_mask</span>
 
+    <span class="c1"># pyre-fixme[3]: Return type must be annotated.</span>
+    <span class="c1"># pyre-fixme[2]: Parameter must be annotated.</span>
     <span class="k">def</span> <span class="nf">_get_feature_range_and_mask</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">input</span><span class="p">,</span> <span class="n">input_mask</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">input_mask</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="c1"># Obtain feature mask for selected input tensor, matches size of</span>
@@ -635,6 +672,8 @@ src="/_sphinx/documentation_options.js"></script>
             <span class="n">input_mask</span><span class="p">,</span>
         <span class="p">)</span>
 
+    <span class="c1"># pyre-fixme[3]: Return type must be annotated.</span>
+    <span class="c1"># pyre-fixme[2]: Parameter must be annotated.</span>
     <span class="k">def</span> <span class="nf">_get_feature_counts</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">,</span> <span class="n">feature_mask</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">"""return the numbers of input features"""</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">feature_mask</span><span class="p">:</span>
@@ -649,6 +688,7 @@ src="/_sphinx/documentation_options.js"></script>
             <span class="k">for</span> <span class="n">inp</span><span class="p">,</span> <span class="n">mask</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">feature_mask</span><span class="p">)</span>
         <span class="p">)</span>
 
+    <span class="c1"># pyre-fixme[2]: Parameter must be annotated.</span>
     <span class="k">def</span> <span class="nf">_parse_forward_out</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">forward_output</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tensor</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        A temp wrapper for global _run_forward util to force forward output</span>
@@ -715,18 +755,31 @@ src="/_sphinx/documentation_options.js"></script>
 
     <span class="k">def</span> <span class="nf">_process_ablated_out</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
+        <span class="c1"># pyre-fixme[2]: Parameter must be annotated.</span>
         <span class="n">modified_eval</span><span class="p">,</span>
+        <span class="c1"># pyre-fixme[2]: Parameter must be annotated.</span>
         <span class="n">current_inputs</span><span class="p">,</span>
+        <span class="c1"># pyre-fixme[2]: Parameter must be annotated.</span>
         <span class="n">current_mask</span><span class="p">,</span>
+        <span class="c1"># pyre-fixme[2]: Parameter must be annotated.</span>
         <span class="n">perturbations_per_eval</span><span class="p">,</span>
+        <span class="c1"># pyre-fixme[2]: Parameter must be annotated.</span>
         <span class="n">num_examples</span><span class="p">,</span>
+        <span class="c1"># pyre-fixme[2]: Parameter must be annotated.</span>
         <span class="n">initial_eval</span><span class="p">,</span>
+        <span class="c1"># pyre-fixme[2]: Parameter must be annotated.</span>
         <span class="n">flattened_initial_eval</span><span class="p">,</span>
+        <span class="c1"># pyre-fixme[2]: Parameter must be annotated.</span>
         <span class="n">inputs</span><span class="p">,</span>
+        <span class="c1"># pyre-fixme[2]: Parameter must be annotated.</span>
         <span class="n">n_outputs</span><span class="p">,</span>
+        <span class="c1"># pyre-fixme[2]: Parameter must be annotated.</span>
         <span class="n">total_attrib</span><span class="p">,</span>
+        <span class="c1"># pyre-fixme[2]: Parameter must be annotated.</span>
         <span class="n">weights</span><span class="p">,</span>
+        <span class="c1"># pyre-fixme[2]: Parameter must be annotated.</span>
         <span class="n">i</span><span class="p">,</span>
+        <span class="c1"># pyre-fixme[2]: Parameter must be annotated.</span>
         <span class="n">attrib_type</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">Tensor</span><span class="p">],</span> <span class="n">List</span><span class="p">[</span><span class="n">Tensor</span><span class="p">]]:</span>
         <span class="n">modified_eval</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parse_forward_out</span><span class="p">(</span><span class="n">modified_eval</span><span class="p">)</span>
@@ -786,6 +839,7 @@ src="/_sphinx/documentation_options.js"></script>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Future</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">]]]:</span>
         <span class="c1"># Each element of the 2d list contains evalutaion results for a feature</span>
         <span class="c1"># Need to add up all the results for each input</span>
+        <span class="c1"># pyre-fixme[24]: Generic type `Future` expects 1 type parameter.</span>
         <span class="n">accumulate_fut_list</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Future</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="n">total_attrib</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Tensor</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="n">weights</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Tensor</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>

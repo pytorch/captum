@@ -32,6 +32,8 @@ src="/_sphinx/documentation_options.js"></script>
 <h1>Source code for captum.attr._models.base</h1><div class="highlight"><pre>
 <span></span><span class="ch">#!/usr/bin/env python3</span>
 
+<span class="c1"># pyre-strict</span>
+
 <span class="kn">import</span> <span class="nn">warnings</span>
 <span class="kn">from</span> <span class="nn">functools</span> <span class="kn">import</span> <span class="n">reduce</span>
 
@@ -53,14 +55,21 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">    precomputed embedding vectors to the layers below.</span>
 <span class="sd">    """</span>
 
+    <span class="c1"># pyre-fixme[2]: Parameter must be annotated.</span>
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">embedding</span><span class="p">,</span> <span class="n">full_name</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">Module</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="c1"># pyre-fixme[4]: Attribute must be annotated.</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">num_embeddings</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">embedding</span><span class="p">,</span> <span class="s2">"num_embeddings"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="c1"># pyre-fixme[4]: Attribute must be annotated.</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">embedding_dim</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">embedding</span><span class="p">,</span> <span class="s2">"embedding_dim"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
 
+        <span class="c1"># pyre-fixme[4]: Attribute must be annotated.</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">embedding</span> <span class="o">=</span> <span class="n">embedding</span>
+        <span class="c1"># pyre-fixme[4]: Attribute must be annotated.</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">full_name</span> <span class="o">=</span> <span class="n">full_name</span>
 
+    <span class="c1"># pyre-fixme[3]: Return type must be annotated.</span>
+    <span class="c1"># pyre-fixme[2]: Parameter must be annotated.</span>
 <div class="viewcode-block" id="InterpretableEmbeddingBase.forward">
 <a class="viewcode-back" href="../../../../utilities.html#captum.attr.InterpretableEmbeddingBase.forward">[docs]</a>
     <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">inputs</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
@@ -107,6 +116,8 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="k">return</span> <span class="n">inputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="k">else</span> <span class="nb">list</span><span class="p">(</span><span class="n">kwargs</span><span class="o">.</span><span class="n">values</span><span class="p">())[</span><span class="mi">0</span><span class="p">]</span></div>
 
 
+    <span class="c1"># pyre-fixme[3]: Return type must be annotated.</span>
+    <span class="c1"># pyre-fixme[2]: Parameter must be annotated.</span>
 <div class="viewcode-block" id="InterpretableEmbeddingBase.indices_to_embeddings">
 <a class="viewcode-back" href="../../../../utilities.html#captum.attr.InterpretableEmbeddingBase.indices_to_embeddings">[docs]</a>
     <span class="k">def</span> <span class="nf">indices_to_embeddings</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="nb">input</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
@@ -145,6 +156,7 @@ src="/_sphinx/documentation_options.js"></script>
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">reference_token_idx</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">reference_token_idx</span> <span class="o">=</span> <span class="n">reference_token_idx</span>
 
+    <span class="c1"># pyre-fixme[2]: Parameter must be annotated.</span>
 <div class="viewcode-block" id="TokenReferenceBase.generate_reference">
 <a class="viewcode-back" href="../../../../utilities.html#captum.attr.TokenReferenceBase.generate_reference">[docs]</a>
     <span class="k">def</span> <span class="nf">generate_reference</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sequence_length</span><span class="p">,</span> <span class="n">device</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">device</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
@@ -167,6 +179,8 @@ src="/_sphinx/documentation_options.js"></script>
 
 
 
+<span class="c1"># pyre-fixme[3]: Return type must be annotated.</span>
+<span class="c1"># pyre-fixme[2]: Parameter must be annotated.</span>
 <span class="k">def</span> <span class="nf">_get_deep_layer_name</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">layer_names</span><span class="p">):</span>
 <span class="w">    </span><span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">    Traverses through the layer names that are separated by</span>
@@ -175,6 +189,8 @@ src="/_sphinx/documentation_options.js"></script>
     <span class="k">return</span> <span class="n">reduce</span><span class="p">(</span><span class="nb">getattr</span><span class="p">,</span> <span class="n">layer_names</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">"."</span><span class="p">),</span> <span class="n">obj</span><span class="p">)</span>
 
 
+<span class="c1"># pyre-fixme[3]: Return type must be annotated.</span>
+<span class="c1"># pyre-fixme[2]: Parameter must be annotated.</span>
 <span class="k">def</span> <span class="nf">_set_deep_layer_value</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">layer_names</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
 <span class="w">    </span><span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">    Traverses through the layer names that are separated by</span>

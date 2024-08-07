@@ -31,6 +31,8 @@ src="/_sphinx/documentation_options.js"></script>
 <div class="body" role="main">
 <h1>Source code for captum.attr._utils.attribution</h1><div class="highlight"><pre>
 <span></span><span class="ch">#!/usr/bin/env python3</span>
+
+<span class="c1"># pyre-strict</span>
 <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">cast</span><span class="p">,</span> <span class="n">Generic</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Type</span><span class="p">,</span> <span class="n">Union</span>
 
 <span class="kn">import</span> <span class="nn">torch</span>
@@ -54,6 +56,8 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="kn">from</span> <span class="nn">torch.nn</span> <span class="kn">import</span> <span class="n">Module</span>
 
 
+<span class="c1"># pyre-fixme[13]: Attribute `attribute` is never initialized.</span>
+<span class="c1"># pyre-fixme[13]: Attribute `compute_convergence_delta` is never initialized.</span>
 <div class="viewcode-block" id="Attribution">
 <a class="viewcode-back" href="../../../../base_classes.html#captum.attr.Attribution">[docs]</a>
 <span class="k">class</span> <span class="nc">Attribution</span><span class="p">:</span>
@@ -62,6 +66,7 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">    to extend and override core `attribute` method.</span>
 <span class="sd">    """</span>
 
+    <span class="c1"># pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.</span>
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">forward_func</span><span class="p">:</span> <span class="n">Callable</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        Args:</span>
@@ -71,6 +76,7 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">        """</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">forward_func</span> <span class="o">=</span> <span class="n">forward_func</span>
 
+    <span class="c1"># pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.</span>
     <span class="n">attribute</span><span class="p">:</span> <span class="n">Callable</span>
 <span class="w">    </span><span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">    This method computes and returns the attribution values for each input tensor.</span>
@@ -102,6 +108,7 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">    """</span>
 
     <span class="nd">@property</span>
+    <span class="c1"># pyre-fixme[3]: Return type must be annotated.</span>
     <span class="k">def</span> <span class="nf">multiplies_by_inputs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="kc">False</span>
 
@@ -125,6 +132,7 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="k">return</span> <span class="kc">False</span></div>
 
 
+    <span class="c1"># pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.</span>
     <span class="n">compute_convergence_delta</span><span class="p">:</span> <span class="n">Callable</span>
 <span class="w">    </span><span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">    The attribution algorithms which derive `Attribution` class and provide</span>
@@ -189,6 +197,7 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">    that we want to interpret or the model itself.</span>
 <span class="sd">    """</span>
 
+    <span class="c1"># pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.</span>
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">forward_func</span><span class="p">:</span> <span class="n">Callable</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        Args:</span>
@@ -198,6 +207,7 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">                        function.</span>
 <span class="sd">        """</span>
         <span class="n">Attribution</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">forward_func</span><span class="p">)</span>
+        <span class="c1"># pyre-fixme[4]: Attribute must be annotated.</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">gradient_func</span> <span class="o">=</span> <span class="n">compute_gradients</span>
 
 <div class="viewcode-block" id="GradientAttribution.compute_convergence_delta">
@@ -211,6 +221,7 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="p">],</span>
         <span class="n">end_point</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">]],</span>
         <span class="n">target</span><span class="p">:</span> <span class="n">TargetType</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="c1"># pyre-fixme[2]: Parameter annotation cannot be `Any`.</span>
         <span class="n">additional_forward_args</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tensor</span><span class="p">:</span>
 <span class="w">        </span><span class="sa">r</span><span class="sd">"""</span>
@@ -356,6 +367,7 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">    that we want to interpret or the model itself.</span>
 <span class="sd">    """</span>
 
+    <span class="c1"># pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.</span>
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">forward_func</span><span class="p">:</span> <span class="n">Callable</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        Args:</span>
@@ -367,6 +379,7 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="n">Attribution</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">forward_func</span><span class="p">)</span>
 
     <span class="nd">@property</span>
+    <span class="c1"># pyre-fixme[3]: Return type must be annotated.</span>
     <span class="k">def</span> <span class="nf">multiplies_by_inputs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="kc">True</span></div>
 
@@ -382,6 +395,7 @@ src="/_sphinx/documentation_options.js"></script>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
+        <span class="c1"># pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.</span>
         <span class="n">forward_func</span><span class="p">:</span> <span class="n">Callable</span><span class="p">,</span>
         <span class="n">layer</span><span class="p">:</span> <span class="n">ModuleOrModuleList</span><span class="p">,</span>
         <span class="n">device_ids</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -405,6 +419,7 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="bp">self</span><span class="o">.</span><span class="n">device_ids</span> <span class="o">=</span> <span class="n">device_ids</span>
 
 
+<span class="c1"># pyre-fixme[24]: Generic type `InternalAttribution` expects 1 type parameter.</span>
 <div class="viewcode-block" id="LayerAttribution">
 <a class="viewcode-back" href="../../../../base_classes.html#captum.attr.LayerAttribution">[docs]</a>
 <span class="k">class</span> <span class="nc">LayerAttribution</span><span class="p">(</span><span class="n">InternalAttribution</span><span class="p">):</span>
@@ -417,6 +432,7 @@ src="/_sphinx/documentation_options.js"></script>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
+        <span class="c1"># pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.</span>
         <span class="n">forward_func</span><span class="p">:</span> <span class="n">Callable</span><span class="p">,</span>
         <span class="n">layer</span><span class="p">:</span> <span class="n">ModuleOrModuleList</span><span class="p">,</span>
         <span class="n">device_ids</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -478,6 +494,8 @@ src="/_sphinx/documentation_options.js"></script>
 
 
 
+<span class="c1"># pyre-fixme[13]: Attribute `attribute` is never initialized.</span>
+<span class="c1"># pyre-fixme[24]: Generic type `InternalAttribution` expects 1 type parameter.</span>
 <div class="viewcode-block" id="NeuronAttribution">
 <a class="viewcode-back" href="../../../../base_classes.html#captum.attr.NeuronAttribution">[docs]</a>
 <span class="k">class</span> <span class="nc">NeuronAttribution</span><span class="p">(</span><span class="n">InternalAttribution</span><span class="p">):</span>
@@ -493,6 +511,7 @@ src="/_sphinx/documentation_options.js"></script>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
+        <span class="c1"># pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.</span>
         <span class="n">forward_func</span><span class="p">:</span> <span class="n">Callable</span><span class="p">,</span>
         <span class="n">layer</span><span class="p">:</span> <span class="n">Module</span><span class="p">,</span>
         <span class="n">device_ids</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -513,6 +532,7 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">        """</span>
         <span class="n">InternalAttribution</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">forward_func</span><span class="p">,</span> <span class="n">layer</span><span class="p">,</span> <span class="n">device_ids</span><span class="p">)</span>
 
+    <span class="c1"># pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.</span>
     <span class="n">attribute</span><span class="p">:</span> <span class="n">Callable</span>
 <span class="w">    </span><span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">    This method computes and returns the neuron attribution values for each</span>

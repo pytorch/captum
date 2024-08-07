@@ -31,6 +31,8 @@ src="/_sphinx/documentation_options.js"></script>
 <div class="body" role="main">
 <h1>Source code for captum.attr._core.noise_tunnel</h1><div class="highlight"><pre>
 <span></span><span class="ch">#!/usr/bin/env python3</span>
+
+<span class="c1"># pyre-strict</span>
 <span class="kn">from</span> <span class="nn">enum</span> <span class="kn">import</span> <span class="n">Enum</span>
 <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">cast</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Union</span>
 
@@ -57,6 +59,7 @@ src="/_sphinx/documentation_options.js"></script>
     <span class="n">vargrad</span> <span class="o">=</span> <span class="mi">3</span>
 
 
+<span class="c1"># pyre-fixme[5]: Global expression must be annotated.</span>
 <span class="n">SUPPORTED_NOISE_TUNNEL_TYPES</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">NoiseTunnelType</span><span class="o">.</span><span class="n">__members__</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
 
 
@@ -97,14 +100,18 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">                        Conductance or Saliency.</span>
 <span class="sd">        """</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">attribution_method</span> <span class="o">=</span> <span class="n">attribution_method</span>
+        <span class="c1"># pyre-fixme[4]: Attribute must be annotated.</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">is_delta_supported</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">attribution_method</span><span class="o">.</span><span class="n">has_convergence_delta</span><span class="p">()</span>
+        <span class="c1"># pyre-fixme[4]: Attribute must be annotated.</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_multiply_by_inputs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">attribution_method</span><span class="o">.</span><span class="n">multiplies_by_inputs</span>
+        <span class="c1"># pyre-fixme[4]: Attribute must be annotated.</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">is_gradient_method</span> <span class="o">=</span> <span class="nb">isinstance</span><span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">attribution_method</span><span class="p">,</span> <span class="n">GradientAttribution</span>
         <span class="p">)</span>
         <span class="n">Attribution</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">attribution_method</span><span class="o">.</span><span class="n">forward_func</span><span class="p">)</span>
 
     <span class="nd">@property</span>
+    <span class="c1"># pyre-fixme[3]: Return type must be annotated.</span>
     <span class="k">def</span> <span class="nf">multiplies_by_inputs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_multiply_by_inputs</span>
 
@@ -231,6 +238,7 @@ src="/_sphinx/documentation_options.js"></script>
                     <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_gradient_method</span>
                     <span class="k">else</span> <span class="n">add_noise_to_input</span><span class="p">(</span><span class="nb">input</span><span class="p">,</span> <span class="n">stdev</span><span class="p">,</span> <span class="n">nt_samples_partition</span><span class="p">)</span>
                 <span class="p">)</span>
+                <span class="c1"># pyre-fixme[61]: `stdevs_` is undefined, or not always defined.</span>
                 <span class="k">for</span> <span class="p">(</span><span class="nb">input</span><span class="p">,</span> <span class="n">stdev</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">stdevs_</span><span class="p">)</span>
             <span class="p">)</span>
 
@@ -241,6 +249,8 @@ src="/_sphinx/documentation_options.js"></script>
             <span class="n">bsz</span> <span class="o">=</span> <span class="nb">input</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
 
             <span class="c1"># expand input size by the number of drawn samples</span>
+            <span class="c1"># pyre-fixme[58]: `+` is not supported for operand types `Tuple[int]`</span>
+            <span class="c1">#  and `Size`.</span>
             <span class="n">input_expanded_size</span> <span class="o">=</span> <span class="p">(</span><span class="n">bsz</span> <span class="o">*</span> <span class="n">nt_samples_partition</span><span class="p">,)</span> <span class="o">+</span> <span class="nb">input</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>
 
             <span class="c1"># expand stdev for the shape of the input and number of drawn samples</span>
@@ -267,10 +277,13 @@ src="/_sphinx/documentation_options.js"></script>
                 <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span> <span class="p">(</span><span class="n">bsz</span><span class="p">,</span> <span class="n">nt_samples_batch_size_inter</span><span class="p">)</span>
             <span class="p">)</span>
             <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">attribution</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="c1"># pyre-fixme[22]: The cast is redundant.</span>
                 <span class="n">attribution_shape</span> <span class="o">+=</span> <span class="n">cast</span><span class="p">(</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">attribution</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">:]))</span>
 
             <span class="n">attribution</span> <span class="o">=</span> <span class="n">attribution</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="n">attribution_shape</span><span class="p">)</span>
             <span class="n">current_attribution_sum</span> <span class="o">=</span> <span class="n">attribution</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">keepdim</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+            <span class="c1"># pyre-fixme[58]: `**` is not supported for operand types `Tensor` and</span>
+            <span class="c1">#  `int`.</span>
             <span class="n">current_attribution_sq</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">attribution</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">keepdim</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 
             <span class="n">sum_attribution</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
@@ -285,7 +298,9 @@ src="/_sphinx/documentation_options.js"></script>
             <span class="p">)</span>
 
         <span class="k">def</span> <span class="nf">compute_partial_attribution</span><span class="p">(</span>
-            <span class="n">inputs_with_noise_partition</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span> <span class="n">kwargs_partition</span><span class="p">:</span> <span class="n">Any</span>
+            <span class="n">inputs_with_noise_partition</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span>
+            <span class="c1"># pyre-fixme[2]: Parameter annotation cannot be `Any`.</span>
+            <span class="n">kwargs_partition</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
         <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span> <span class="nb">bool</span><span class="p">,</span> <span class="n">Union</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="n">Tensor</span><span class="p">]]:</span>
             <span class="c1"># smoothgrad_Attr(x) = 1 / n * sum(Attr(x + N(0, sigma^2))</span>
             <span class="c1"># NOTE: using __wrapped__ such that it does not log the inner logs</span>
@@ -313,6 +328,9 @@ src="/_sphinx/documentation_options.js"></script>
                 <span class="n">delta</span><span class="p">,</span>
             <span class="p">)</span>
 
+        <span class="c1"># pyre-fixme[24]: Generic type `dict` expects 2 type parameters, use</span>
+        <span class="c1">#  `typing.Dict[&lt;key type&gt;, &lt;value type&gt;]` to avoid runtime subscripting</span>
+        <span class="c1">#  errors.</span>
         <span class="k">def</span> <span class="nf">expand_partial</span><span class="p">(</span><span class="n">nt_samples_partition</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">kwargs_partial</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
             <span class="c1"># if the algorithm supports targets, baselines and/or</span>
             <span class="c1"># additional_forward_args they will be expanded based</span>
@@ -347,6 +365,7 @@ src="/_sphinx/documentation_options.js"></script>
                 <span class="p">)</span>
             <span class="p">)</span>
 
+            <span class="c1"># pyre-fixme[22]: The cast is redundant.</span>
             <span class="k">return</span> <span class="n">cast</span><span class="p">(</span><span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span> <span class="n">vargrad</span><span class="p">)</span>
 
         <span class="k">def</span> <span class="nf">update_partial_attribution_and_delta</span><span class="p">(</span>
@@ -407,10 +426,15 @@ src="/_sphinx/documentation_options.js"></script>
                 <span class="p">)</span> <span class="o">=</span> <span class="n">compute_partial_attribution</span><span class="p">(</span><span class="n">inputs_with_noise</span><span class="p">,</span> <span class="n">kwargs_copy</span><span class="p">)</span>
 
                 <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">sum_attributions</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="c1"># pyre-fixme[9]: sum_attributions has type</span>
+                    <span class="c1">#  `List[Optional[Tensor]]`; used as `List[None]`.</span>
                     <span class="n">sum_attributions</span> <span class="o">=</span> <span class="p">[</span><span class="kc">None</span><span class="p">]</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">attributions_partial</span><span class="p">)</span>
+                    <span class="c1"># pyre-fixme[9]: sum_attributions_sq has type</span>
+                    <span class="c1">#  `List[Optional[Tensor]]`; used as `List[None]`.</span>
                     <span class="n">sum_attributions_sq</span> <span class="o">=</span> <span class="p">[</span><span class="kc">None</span><span class="p">]</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">attributions_partial</span><span class="p">)</span>
 
                 <span class="n">update_partial_attribution_and_delta</span><span class="p">(</span>
+                    <span class="c1"># pyre-fixme[22]: The cast is redundant.</span>
                     <span class="n">cast</span><span class="p">(</span><span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span> <span class="n">attributions_partial</span><span class="p">),</span>
                     <span class="n">cast</span><span class="p">(</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">delta_partial</span><span class="p">),</span>
                     <span class="n">cast</span><span class="p">(</span><span class="n">List</span><span class="p">[</span><span class="n">Tensor</span><span class="p">],</span> <span class="n">sum_attributions</span><span class="p">),</span>
@@ -432,6 +456,7 @@ src="/_sphinx/documentation_options.js"></script>
                 <span class="p">)</span> <span class="o">=</span> <span class="n">compute_partial_attribution</span><span class="p">(</span><span class="n">inputs_with_noise</span><span class="p">,</span> <span class="n">kwargs</span><span class="p">)</span>
 
                 <span class="n">update_partial_attribution_and_delta</span><span class="p">(</span>
+                    <span class="c1"># pyre-fixme[22]: The cast is redundant.</span>
                     <span class="n">cast</span><span class="p">(</span><span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span> <span class="n">attributions_partial</span><span class="p">),</span>
                     <span class="n">cast</span><span class="p">(</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">delta_partial</span><span class="p">),</span>
                     <span class="n">cast</span><span class="p">(</span><span class="n">List</span><span class="p">[</span><span class="n">Tensor</span><span class="p">],</span> <span class="n">sum_attributions</span><span class="p">),</span>
@@ -453,7 +478,9 @@ src="/_sphinx/documentation_options.js"></script>
                 <span class="p">]</span>
             <span class="p">)</span>
             <span class="n">attributions</span> <span class="o">=</span> <span class="n">compute_smoothing</span><span class="p">(</span>
+                <span class="c1"># pyre-fixme[22]: The cast is redundant.</span>
                 <span class="n">cast</span><span class="p">(</span><span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span> <span class="n">expected_attributions</span><span class="p">),</span>
+                <span class="c1"># pyre-fixme[22]: The cast is redundant.</span>
                 <span class="n">cast</span><span class="p">(</span><span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span> <span class="n">expected_attributions_sq</span><span class="p">),</span>
             <span class="p">)</span>
 
@@ -462,7 +489,11 @@ src="/_sphinx/documentation_options.js"></script>
                 <span class="n">delta</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">(</span><span class="n">delta_partial_list</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
 
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_apply_checks_and_return_attributions</span><span class="p">(</span>
-            <span class="n">attributions</span><span class="p">,</span> <span class="n">is_attrib_tuple</span><span class="p">,</span> <span class="n">return_convergence_delta</span><span class="p">,</span> <span class="n">delta</span>
+            <span class="n">attributions</span><span class="p">,</span>
+            <span class="c1"># pyre-fixme[61]: `is_attrib_tuple` is undefined, or not always defined.</span>
+            <span class="n">is_attrib_tuple</span><span class="p">,</span>
+            <span class="n">return_convergence_delta</span><span class="p">,</span>
+            <span class="n">delta</span><span class="p">,</span>
         <span class="p">)</span></div>
 
 
@@ -472,9 +503,14 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="n">is_attrib_tuple</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span>
         <span class="n">return_convergence_delta</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span>
         <span class="n">delta</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="n">Tensor</span><span class="p">],</span>
+        <span class="c1"># pyre-fixme[34]: `Variable[TensorOrTupleOfTensorsGeneric &lt;:</span>
+        <span class="c1">#  [torch._tensor.Tensor, typing.Tuple[torch._tensor.Tensor, ...]]]`</span>
+        <span class="c1">#  isn't present in the function's parameters.</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span>
         <span class="n">TensorOrTupleOfTensorsGeneric</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">TensorOrTupleOfTensorsGeneric</span><span class="p">,</span> <span class="n">Tensor</span><span class="p">]</span>
     <span class="p">]:</span>
+        <span class="c1"># pyre-fixme[9]: Unable to unpack `Union[Tensor, typing.Tuple[Tensor,</span>
+        <span class="c1">#  ...]]`, expected a tuple.</span>
         <span class="n">attributions</span> <span class="o">=</span> <span class="n">_format_output</span><span class="p">(</span><span class="n">is_attrib_tuple</span><span class="p">,</span> <span class="n">attributions</span><span class="p">)</span>
 
         <span class="n">ret</span> <span class="o">=</span> <span class="p">(</span>
@@ -483,6 +519,9 @@ src="/_sphinx/documentation_options.js"></script>
             <span class="k">else</span> <span class="n">attributions</span>
         <span class="p">)</span>
         <span class="n">ret</span> <span class="o">=</span> <span class="n">cast</span><span class="p">(</span>
+            <span class="c1"># pyre-fixme[34]: `Variable[TensorOrTupleOfTensorsGeneric &lt;:</span>
+            <span class="c1">#  [torch._tensor.Tensor, typing.Tuple[torch._tensor.Tensor, ...]]]`</span>
+            <span class="c1"># isn't present in the function's parameters.</span>
             <span class="n">Union</span><span class="p">[</span>
                 <span class="n">TensorOrTupleOfTensorsGeneric</span><span class="p">,</span>
                 <span class="n">Tuple</span><span class="p">[</span><span class="n">TensorOrTupleOfTensorsGeneric</span><span class="p">,</span> <span class="n">Tensor</span><span class="p">],</span>
