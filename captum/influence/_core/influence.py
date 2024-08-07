@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+# pyre-strict
+
 from abc import ABC, abstractmethod
 from typing import Any, Type
 
@@ -23,10 +25,14 @@ class DataInfluence(ABC):
             **kwargs: Additional key-value arguments that are necessary for specific
                     implementation of `DataInfluence` abstract class.
         """
+        # pyre-fixme[16]: `DataInfluence` has no attribute `model`.
         self.model = model
+        # pyre-fixme[16]: `DataInfluence` has no attribute `train_dataset`.
         self.train_dataset = train_dataset
 
     @abstractmethod
+    # pyre-fixme[3]: Return annotation cannot be `Any`.
+    # pyre-fixme[2]: Parameter annotation cannot be `Any`.
     def influence(self, inputs: Any = None, **kwargs: Any) -> Any:
         r"""
         Args:

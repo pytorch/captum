@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+# pyre-strict
+
 import warnings
 from typing import Callable, Optional, Tuple
 
@@ -10,7 +12,9 @@ from torch import Tensor
 def _divide_and_aggregate_metrics(
     inputs: Tuple[Tensor, ...],
     n_perturb_samples: int,
+    # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
     metric_func: Callable,
+    # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
     agg_func: Callable = torch.add,
     max_examples_per_batch: Optional[int] = None,
 ) -> Tensor:

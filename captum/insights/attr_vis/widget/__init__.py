@@ -1,3 +1,4 @@
+# pyre-strict
 from typing import Dict, List
 
 from captum.insights.attr_vis.widget._version import __version__, version_info

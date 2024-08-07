@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+
+# pyre-strict
 from typing import Any, Callable, Optional, Tuple, Union
 
 import torch
@@ -42,7 +44,9 @@ class FGSM(Perturbation):
 
     def __init__(
         self,
+        # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
         forward_func: Callable,
+        # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
         loss_func: Optional[Callable] = None,
         lower_bound: float = float("-inf"),
         upper_bound: float = float("inf"),
@@ -71,7 +75,9 @@ class FGSM(Perturbation):
         super().__init__()
         self.forward_func = forward_func
         self.loss_func = loss_func
+        # pyre-fixme[4]: Attribute must be annotated.
         self.bound = lambda x: torch.clamp(x, min=lower_bound, max=upper_bound)
+        # pyre-fixme[4]: Attribute must be annotated.
         self.zero_thresh = 10**-6
 
     @log_usage()
@@ -79,7 +85,9 @@ class FGSM(Perturbation):
         self,
         inputs: TensorOrTupleOfTensorsGeneric,
         epsilon: float,
+        # pyre-fixme[2]: Parameter annotation cannot be `Any`.
         target: Any,
+        # pyre-fixme[2]: Parameter annotation cannot be `Any`.
         additional_forward_args: Any = None,
         targeted: bool = False,
         mask: Optional[TensorOrTupleOfTensorsGeneric] = None,
@@ -149,8 +157,13 @@ class FGSM(Perturbation):
                         is returned. If a tuple is provided for inputs, a tuple of
                         corresponding sized tensors is returned.
         """
+        # pyre-fixme[6]: For 1st argument expected `Tensor` but got
+        #  `TensorOrTupleOfTensorsGeneric`.
         is_inputs_tuple = _is_tuple(inputs)
+        # pyre-fixme[35]: Target cannot be annotated.
         inputs: Tuple[Tensor, ...] = _format_tensor_into_tuples(inputs)
+        # pyre-fixme[9]: masks has type `Union[typing.Tuple[int, ...],
+        #  typing.Tuple[Tensor, ...]]`; used as `Tuple[Union[int, Tensor], ...]`.
         masks: Union[Tuple[int, ...], Tuple[Tensor, ...]] = (
             _format_tensor_into_tuples(mask)
             if (mask is not None)
@@ -179,15 +192,21 @@ class FGSM(Perturbation):
         perturbed_inputs = tuple(
             self.bound(perturbed_inputs[i]) for i in range(len(perturbed_inputs))
         )
+        # pyre-fixme[7]: Expected `TensorOrTupleOfTensorsGeneric` but got
+        #  `Tuple[Tensor, ...]`.
         return _format_output(is_inputs_tuple, perturbed_inputs)
 
     def _perturb(
         self,
+        # pyre-fixme[24]: Generic type `tuple` expects at least 1 type parameter.
         inputs: Tuple,
+        # pyre-fixme[24]: Generic type `tuple` expects at least 1 type parameter.
         grads: Tuple,
         epsilon: float,
         targeted: bool,
+        # pyre-fixme[24]: Generic type `tuple` expects at least 1 type parameter.
         masks: Tuple,
+        # pyre-fixme[24]: Generic type `tuple` expects at least 1 type parameter.
     ) -> Tuple:
         r"""
         A helper function to calculate the perturbed inputs given original

@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+# pyre-strict
+
 import os
 from typing import Any, Dict, List, Optional
 
@@ -87,6 +89,7 @@ class CAV:
         file_name = concepts_to_str(concepts) + "-" + layer + ".pkl"
         return os.path.join(path, model_id, file_name)
 
+    # pyre-fixme[3]: Return type must be annotated.
     def save(self):
         r"""
         Saves a dictionary of the CAV computed values into a pickle file in the
@@ -134,6 +137,7 @@ class CAV:
             os.makedirs(cav_model_id_path)
 
     @staticmethod
+    # pyre-fixme[3]: Return type must be annotated.
     def load(cavs_path: str, model_id: str, concepts: List[Concept], layer: str):
         r"""
         Loads CAV dictionary from a pickle file for given input

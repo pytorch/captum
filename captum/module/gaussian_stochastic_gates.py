@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+
+# pyre-strict
 import math
 from typing import Optional
 
@@ -39,6 +41,7 @@ class GaussianStochasticGates(StochasticGatesBase):
         >>> gated_inputs, reg = stg(mock_inputs)  # gate the inputs
     """
 
+    # pyre-fixme[3]: Return type must be annotated.
     def __init__(
         self,
         n_gates: int,
@@ -75,13 +78,20 @@ class GaussianStochasticGates(StochasticGatesBase):
                 Default: ``'sum'``
         """
         super().__init__(
-            n_gates, mask=mask, reg_weight=reg_weight, reg_reduction=reg_reduction
+            n_gates,
+            mask=mask,
+            # pyre-fixme[6]: For 3rd argument expected `float` but got
+            #  `Optional[float]`.
+            reg_weight=reg_weight,
+            reg_reduction=reg_reduction,
         )
 
         mu = torch.empty(n_gates)
         nn.init.normal_(mu, mean=0.5, std=0.01)
         self.mu = nn.Parameter(mu)
 
+        # pyre-fixme[58]: `<` is not supported for operand types `int` and
+        #  `Optional[float]`.
         assert 0 < std, f"the standard deviation should be positive, received {std}"
         self.std = std
 
@@ -98,6 +108,8 @@ class GaussianStochasticGates(StochasticGatesBase):
 
         if self.training:
             n = torch.empty(batch_size, self.n_gates, device=self.mu.device)
+            # pyre-fixme[6]: For 2nd argument expected `float` but got
+            #  `Optional[float]`.
             n.normal_(mean=0, std=self.std)
             return self.mu + n
 
@@ -126,6 +138,8 @@ class GaussianStochasticGates(StochasticGatesBase):
         return 0.5 * (1 + torch.erf(x / math.sqrt(2)))
 
     @classmethod
+    # pyre-fixme[3]: Return type must be annotated.
+    # pyre-fixme[2]: Parameter must be annotated.
     def _from_pretrained(cls, mu: Tensor, *args, **kwargs):
         """
         Private factory method to create an instance with pretrained parameters

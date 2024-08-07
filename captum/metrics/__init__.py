@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+# pyre-strict
+
 from captum.metrics._core.infidelity import (
     infidelity,
     infidelity_perturb_func_decorator,

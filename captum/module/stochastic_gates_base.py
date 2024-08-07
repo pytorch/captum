@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+
+# pyre-strict
 from abc import ABC, abstractmethod
 from typing import Optional, Tuple
 
@@ -28,6 +30,7 @@ class StochasticGatesBase(Module, ABC):
     extend this class and implement the distribution specific functions.
     """
 
+    # pyre-fixme[3]: Return type must be annotated.
     def __init__(
         self,
         n_gates: int,
