@@ -831,12 +831,12 @@ class FeatureAblation(PerturbationAttribution):
         weight: List[Tensor],
     ) -> None:
         if total_attrib:
-            total_attrib[idx] += attrib
+            total_attrib[idx] = attrib[idx]
         else:
             total_attrib.extend(attrib)
         if self.use_weights:
             if weights:
-                weights[idx] += weight
+                weights[idx] = weight[idx]
             else:
                 weights.extend(weight)
 
