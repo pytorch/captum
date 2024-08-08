@@ -472,14 +472,14 @@ class Test(BaseTest):
 
         abl = FeatureAblation(forward_func)
         abl.use_futures = True
-        inp = torch.tensor([[20.0, 50.0, 30.0]], requires_grad=True)
+        inp = torch.tensor([[20.0, 50.0, 30.0], [10.0, 40.0, 20.0]], requires_grad=True)
         self._ablation_test_assert(
             ablation_algo=abl,
             test_input=inp,
             baselines=None,
             target=0,
             perturbations_per_eval=(1,),
-            expected_ablation=torch.tensor([[80.0, 200.0, 120.0]]),
+            expected_ablation=torch.tensor([[80.0, 200.0, 120.0], [40.0, 160.0, 80.0]]),
         )
 
     def test_unassociated_output_3d_tensor(self) -> None:
