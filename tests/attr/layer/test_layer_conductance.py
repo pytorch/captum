@@ -270,7 +270,3 @@ class Test(BaseTest):
                     delta=0.01,
                     mode="max",
                 )
-
-
-if __name__ == "__main__":
-    unittest.main()

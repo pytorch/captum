@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 
-import unittest
 from typing import Any, Callable, Generator, List, Tuple, Union
 
 import torch
@@ -225,7 +224,3 @@ class Test(BaseTest):
     #
     # TODO: add test to make the attribs == 0 -- error occurs
     #       I know (through manual testing) that this breaks some existing code
-
-
-if __name__ == "__main__":
-    unittest.main()

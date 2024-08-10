@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 
 import io
-import unittest
-import unittest.mock
 from typing import Any, Callable, Tuple, Union
 
 import torch
 from captum._utils.typing import BaselineType, TensorOrTupleOfTensorsGeneric
 from captum.attr._core.shapley_value import ShapleyValues, ShapleyValueSampling
+
+from later.unittest.mock import patch
 from tests.helpers.basic import assertTensorTuplesAlmostEqual, BaseTest
 from tests.helpers.basic_models import (
     BasicModel_MultiLayer,
@@ -328,7 +328,7 @@ class Test(BaseTest):
             lambda *inp: int(torch.sum(net(*inp)).item())
         )
 
-    @unittest.mock.patch("sys.stderr", new_callable=io.StringIO)
+    @patch("sys.stderr", new_callable=io.StringIO)
     def test_shapley_sampling_with_show_progress(self, mock_stderr) -> None:
         net = BasicModel_MultiLayer()
         inp = torch.tensor([[20.0, 50.0, 30.0]], requires_grad=True)
@@ -357,7 +357,7 @@ class Test(BaseTest):
             mock_stderr.seek(0)
             mock_stderr.truncate(0)
 
-    @unittest.mock.patch("sys.stderr", new_callable=io.StringIO)
+    @patch("sys.stderr", new_callable=io.StringIO)
     def test_shapley_sampling_with_mask_and_show_progress(self, mock_stderr) -> None:
         net = BasicModel_MultiLayer()
         inp = torch.tensor([[20.0, 50.0, 30.0]], requires_grad=True)
@@ -502,7 +502,3 @@ class Test(BaseTest):
                 assertTensorTuplesAlmostEqual(
                     self, attributions, expected_attr, mode="max", delta=0.001
                 )
-
-
-if __name__ == "__main__":
-    unittest.main()

@@ -2,14 +2,15 @@
 
 import io
 import unittest
-import unittest.mock
 
+import later.unittest
 from captum._utils.progress import NullProgress, progress
+from later.unittest.mock import patch
 from tests.helpers import BaseTest
 
 
 class Test(BaseTest):
-    @unittest.mock.patch("sys.stderr", new_callable=io.StringIO)
+    @later.unittest.mock.patch("sys.stderr", new_callable=io.StringIO)
     def test_nullprogress(self, mock_stderr) -> None:
         count = 0
         with NullProgress(["x", "y", "z"]) as np:
@@ -21,7 +22,7 @@ class Test(BaseTest):
         output = mock_stderr.getvalue()
         self.assertEqual(output, "")
 
-    @unittest.mock.patch("sys.stderr", new_callable=io.StringIO)
+    @patch("sys.stderr", new_callable=io.StringIO)
     def test_nested_progress_tqdm(self, mock_stderr) -> None:
         try:
             import tqdm  # noqa: F401
@@ -39,7 +40,7 @@ class Test(BaseTest):
         for item in parent_data:
             self.assertIn(f"test progress {item}:", output)
 
-    @unittest.mock.patch("sys.stderr", new_callable=io.StringIO)
+    @patch("sys.stderr", new_callable=io.StringIO)
     def test_nested_simple_progress(self, mock_stderr) -> None:
         parent_data = ["x", "y", "z"]
         test_data = [1, 2, 3]
@@ -59,7 +60,7 @@ class Test(BaseTest):
         for item in parent_data:
             self.assertIn(f"test progress {item}:", output)
 
-    @unittest.mock.patch("sys.stderr", new_callable=io.StringIO)
+    @patch("sys.stderr", new_callable=io.StringIO)
     def test_progress_tqdm(self, mock_stderr) -> None:
         try:
             import tqdm  # noqa: F401
@@ -72,7 +73,7 @@ class Test(BaseTest):
         assert list(progressed) == test_data
         assert "test progress: " in mock_stderr.getvalue()
 
-    @unittest.mock.patch("sys.stderr", new_callable=io.StringIO)
+    @patch("sys.stderr", new_callable=io.StringIO)
     def test_simple_progress(self, mock_stderr) -> None:
         test_data = [1, 3, 5]
         desc = "test progress"
@@ -97,7 +98,7 @@ class Test(BaseTest):
         assert mock_stderr.getvalue().startswith(f"\r{desc}: 0% 0/3")
         assert mock_stderr.getvalue().endswith(f"\r{desc}: 100% 3/3\n")
 
-    @unittest.mock.patch("sys.stderr", new_callable=io.StringIO)
+    @patch("sys.stderr", new_callable=io.StringIO)
     def test_simple_progress_without_total(self, mock_stderr) -> None:
         test_data = [1, 3, 5]
         desc = "test progress"
@@ -112,7 +113,7 @@ class Test(BaseTest):
         assert mock_stderr.getvalue().startswith(f"\r{desc}: ")
         assert mock_stderr.getvalue().endswith(f"\r{desc}: ...\n")
 
-    @unittest.mock.patch("sys.stderr", new_callable=io.StringIO)
+    @patch("sys.stderr", new_callable=io.StringIO)
     def test_simple_progress_update_manually(self, mock_stderr) -> None:
         desc = "test progress"
 

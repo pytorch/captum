@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 
 import io
+
 import unittest
-import unittest.mock
 from functools import partial
 from typing import Any, Callable, Generator, List, Optional, Tuple, Union
 
@@ -17,6 +17,8 @@ from captum.attr._utils.common import (
     _format_input_baseline,
     _format_tensor_into_tuples,
 )
+
+from later.unittest.mock import patch
 from tests.helpers.basic import (
     assertTensorAlmostEqual,
     assertTensorTuplesAlmostEqual,
@@ -190,7 +192,7 @@ class Test(BaseTest):
             test_generator=True,
         )
 
-    @unittest.mock.patch("sys.stderr", new_callable=io.StringIO)
+    @patch("sys.stderr", new_callable=io.StringIO)
     def test_simple_lime_with_show_progress(self, mock_stderr) -> None:
         net = BasicModel_MultiLayer()
         inp = torch.tensor([[20.0, 50.0, 30.0]], requires_grad=True)
@@ -640,7 +642,3 @@ class Test(BaseTest):
                         delta=delta,
                         mode="max",
                     )
-
-
-if __name__ == "__main__":
-    unittest.main()

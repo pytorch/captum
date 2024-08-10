@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 
-import unittest
 from typing import Any, Callable, Tuple, Union
 
 import torch
@@ -174,7 +173,3 @@ class Test(BaseTest):
                 self, ig_vals, neuron_ig_vals, delta=0.001, mode="max"
             )
             self.assertEqual(neuron_ig_vals.shape, test_input.shape)
-
-
-if __name__ == "__main__":
-    unittest.main()

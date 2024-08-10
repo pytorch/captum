@@ -1,7 +1,8 @@
 import io
 import tempfile
-import unittest.mock
 from typing import Callable
+
+import later.unittest.mock
 
 import torch.nn as nn
 from captum.influence._core.tracincp import TracInCP
@@ -97,7 +98,9 @@ class TestTracInShowProgress(BaseTest):
         mode: str,
     ) -> None:
 
-        with unittest.mock.patch("sys.stderr", new_callable=io.StringIO) as mock_stderr:
+        with later.unittest.mock.patch(
+            "sys.stderr", new_callable=io.StringIO
+        ) as mock_stderr:
 
             with tempfile.TemporaryDirectory() as tmpdir:
 

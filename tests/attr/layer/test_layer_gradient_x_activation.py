@@ -194,7 +194,3 @@ class Test(BaseTest):
                     tuple(act * grad for act, grad in zip(acts[i], grads[i])),
                     delta=0.01,
                 )
-
-
-if __name__ == "__main__":
-    unittest.main()

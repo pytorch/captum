@@ -3,8 +3,6 @@
 import io
 import threading
 import time
-import unittest
-import unittest.mock
 from typing import Any, cast, List, Tuple, Union
 
 import torch
@@ -12,6 +10,8 @@ from captum._utils.typing import BaselineType, TargetType, TensorOrTupleOfTensor
 from captum.attr._core.feature_ablation import FeatureAblation
 from captum.attr._core.noise_tunnel import NoiseTunnel
 from captum.attr._utils.attribution import Attribution
+
+from later.unittest.mock import patch
 from tests.helpers import BaseTest
 from tests.helpers.basic import assertTensorAlmostEqual
 from tests.helpers.basic_models import (
@@ -547,7 +547,7 @@ class Test(BaseTest):
             expected_ablation=[[1.0, 1.0, 0.0], [2.0, 2.0, 0.0], [0.0, 0.0, 3.0]],
         )
 
-    @unittest.mock.patch("sys.stderr", new_callable=io.StringIO)
+    @patch("sys.stderr", new_callable=io.StringIO)
     def test_simple_ablation_with_show_progress(self, mock_stderr) -> None:
         ablation_algo = FeatureAblation(BasicModel_MultiLayer())
         inp = torch.tensor([[20.0, 50.0, 30.0]], requires_grad=True)
@@ -573,7 +573,7 @@ class Test(BaseTest):
             mock_stderr.seek(0)
             mock_stderr.truncate(0)
 
-    @unittest.mock.patch("sys.stderr", new_callable=io.StringIO)
+    @patch("sys.stderr", new_callable=io.StringIO)
     def test_simple_ablation_with_mask_and_show_progress(self, mock_stderr) -> None:
         ablation_algo = FeatureAblation(BasicModel_MultiLayer())
         inp = torch.tensor([[20.0, 50.0, 30.0]], requires_grad=True)
@@ -720,7 +720,3 @@ class Test(BaseTest):
                 self.assertEqual(attributions.shape, expected_ablation.shape)
                 self.assertEqual(attributions.dtype, expected_ablation.dtype)
                 assertTensorAlmostEqual(self, attributions, expected_ablation)
-
-
-if __name__ == "__main__":
-    unittest.main()

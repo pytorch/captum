@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 
-import unittest
 from typing import Any, List, Tuple, Union
 
 import torch
@@ -167,7 +166,3 @@ class Test(BaseTest):
                 attribute_to_layer_input=attribute_to_layer_input,
             )
             assertTensorTuplesAlmostEqual(self, attributions, expected_ablation)
-
-
-if __name__ == "__main__":
-    unittest.main()

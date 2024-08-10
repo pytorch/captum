@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 
-import unittest
 from typing import Any, cast, Optional, Tuple, Union
 
 import torch
@@ -536,7 +535,3 @@ class Test(BaseTest):
                         mode="max",
                     )
             self.assertAlmostEqual(abs(delta).sum().item(), total_delta, delta=0.005)
-
-
-if __name__ == "__main__":
-    unittest.main()

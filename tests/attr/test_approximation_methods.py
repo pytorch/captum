@@ -1,14 +1,15 @@
 #!/usr/bin/env python3
 
-import unittest
 from typing import List
+
+import later.unittest
 
 import torch
 from captum.attr._utils.approximation_methods import Riemann, riemann_builders
 from tests.helpers.basic import assertTensorAlmostEqual
 
 
-class Test(unittest.TestCase):
+class Test(later.unittest.TestCase):
     def __init__(self, methodName: str = "runTest") -> None:
         super().__init__(methodName)
 

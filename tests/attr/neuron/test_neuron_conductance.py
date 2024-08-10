@@ -271,7 +271,3 @@ class Test(BaseTest):
                             attributions[n, i, j, k].item(),
                             delta=0.005,
                         )
-
-
-if __name__ == "__main__":
-    unittest.main()

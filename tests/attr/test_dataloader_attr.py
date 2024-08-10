@@ -1,12 +1,12 @@
 #!/usr/bin/env fbpython
 import math
 from typing import cast
-from unittest.mock import Mock, patch
 
 import torch
 
 from captum.attr._core.dataloader_attr import DataLoaderAttribution, InputRole
 from captum.attr._core.feature_ablation import FeatureAblation
+from later.unittest.mock import Mock, patch
 from parameterized import parameterized
 from tests.helpers.basic import (
     assertAttributionComparision,

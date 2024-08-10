@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 
-import unittest
 from typing import Any, Callable, Tuple, Union
 
 import torch
@@ -288,7 +287,3 @@ class Test(BaseTest):
                     assertTensorAlmostEqual(self, attributions[i], expected_ablation[i])
             else:
                 assertTensorAlmostEqual(self, attributions, expected_ablation)
-
-
-if __name__ == "__main__":
-    unittest.main()

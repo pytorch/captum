@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 import io
-import unittest
-import unittest.mock
 from typing import Any, Callable, Tuple, Union
+
+import later.unittest.mock
 
 import torch
 from captum._utils.typing import (
@@ -280,7 +280,7 @@ class Test(BaseTest):
             strides=((1, 2, 1), (1, 1, 2)),
         )
 
-    @unittest.mock.patch("sys.stderr", new_callable=io.StringIO)
+    @later.unittest.mock.patch("sys.stderr", new_callable=io.StringIO)
     def test_simple_input_with_show_progress(self, mock_stderr) -> None:
         net = BasicModel_MultiLayer()
         inp = torch.tensor([[20.0, 50.0, 30.0]], requires_grad=True)
@@ -350,7 +350,3 @@ class Test(BaseTest):
                     attributions,
                     expected_ablation,
                 )
-
-
-if __name__ == "__main__":
-    unittest.main()

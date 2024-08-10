@@ -1,5 +1,3 @@
-from unittest.mock import patch
-
 import torch
 from captum.insights.attr_vis.features import (
     _convert_figure_base64,
@@ -9,6 +7,7 @@ from captum.insights.attr_vis.features import (
     ImageFeature,
     TextFeature,
 )
+from later.unittest.mock import patch
 from matplotlib.figure import Figure
 from tests.helpers import BaseTest
 

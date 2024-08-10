@@ -2,7 +2,6 @@
 
 from __future__ import print_function
 
-import unittest
 from typing import Any, Tuple, Union
 
 import torch
@@ -133,7 +132,3 @@ class Test(BaseTest):
             deconv_vals = attrib.attribute(test_input, target=i)
             neuron_deconv_vals = neuron_attrib.attribute(test_input, (i,))
             assertTensorAlmostEqual(self, deconv_vals, neuron_deconv_vals, delta=0.01)
-
-
-if __name__ == "__main__":
-    unittest.main()

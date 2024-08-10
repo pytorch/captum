@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 
-import unittest
 from typing import Any, List, Tuple, Union
 
 import torch
@@ -174,7 +173,3 @@ class Test(BaseTest):
             assertTensorTuplesAlmostEqual(
                 self, attributions[i], expected_activation[i], delta=0.01
             )
-
-
-if __name__ == "__main__":
-    unittest.main()

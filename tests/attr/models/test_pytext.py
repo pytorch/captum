@@ -7,6 +7,7 @@ import tempfile
 import unittest
 from typing import Dict, List
 
+import later.unittest
 import torch
 
 HAS_PYTEXT = True
@@ -42,7 +43,7 @@ class VocabStub:
 # TODO add more test cases for dict features
 
 
-class TestWordEmbeddings(unittest.TestCase):
+class TestWordEmbeddings(later.unittest.TestCase):
     def setUp(self) -> None:
         if not HAS_PYTEXT:
             raise unittest.SkipTest("Skip the test since PyText is not installed")

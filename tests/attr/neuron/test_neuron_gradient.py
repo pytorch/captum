@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 
-import unittest
 from typing import Any, Callable, cast, List, Tuple, Union
 
 import torch
@@ -151,7 +150,3 @@ class Test(BaseTest):
             self.assertEqual(grad_vals.shape, sal_vals.shape)
             self.assertEqual(grad_vals.shape, test_input.shape)
             assertTensorAlmostEqual(self, sal_vals, grad_vals, delta=0.001, mode="max")
-
-
-if __name__ == "__main__":
-    unittest.main()

@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 import copy
 import random
-import unittest
 
 from typing import Callable
+
+import later.unittest
 
 import numpy as np
 import torch
@@ -98,7 +99,7 @@ def set_all_random_seeds(seed: int = 1234) -> None:
     torch.backends.cudnn.deterministic = True
 
 
-class BaseTest(unittest.TestCase):
+class BaseTest(later.unittest.TestCase):
     """
     This class provides a basic framework for all Captum tests by providing
     a set up fixture, which sets a fixed random seed. Since many torch

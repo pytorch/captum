@@ -1,7 +1,5 @@
 #!/usr/bin/env python3
 
-import unittest
-
 import torch
 from captum._utils.typing import BaselineType, Tensor
 from captum.attr._core.integrated_gradients import IntegratedGradients
@@ -133,7 +131,3 @@ class Test(BaseTest):
 
         self.assertTrue((delta.abs() < 0.05).all())
         self.assertEqual(attributions.shape, input.shape)
-
-
-if __name__ == "__main__":
-    unittest.main()

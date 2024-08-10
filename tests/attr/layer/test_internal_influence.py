@@ -193,7 +193,3 @@ class Test(BaseTest):
             assertTensorTuplesAlmostEqual(
                 self, attributions, expected_activation, delta=0.01, mode="max"
             )
-
-
-if __name__ == "__main__":
-    unittest.main()

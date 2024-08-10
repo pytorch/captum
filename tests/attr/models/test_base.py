@@ -2,7 +2,7 @@
 
 from __future__ import print_function
 
-import unittest
+import later.unittest
 
 import torch
 from captum.attr._models.base import (
@@ -15,7 +15,7 @@ from tests.helpers.basic_models import BasicEmbeddingModel, TextModule
 from torch.nn import Embedding
 
 
-class Test(unittest.TestCase):
+class Test(later.unittest.TestCase):
     def test_interpretable_embedding_base(self) -> None:
         input1 = torch.tensor([2, 5, 0, 1])
         input2 = torch.tensor([3, 0, 0, 2])

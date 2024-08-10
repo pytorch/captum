@@ -154,7 +154,3 @@ class Test(BaseTest):
         self.assertEqual(len(attributions), 1)
         self.assertEqual(list(attributions[0].shape), [1])
         self.assertAlmostEqual(attributions[0].sum(), 0)
-
-
-if __name__ == "__main__":
-    unittest.main()

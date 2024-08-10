@@ -2,12 +2,12 @@
 
 import io
 import unittest
-import unittest.mock
 from typing import Any, Callable, List, Tuple, Union
 
 import torch
 from captum._utils.typing import BaselineType, TensorOrTupleOfTensorsGeneric
 from captum.attr._core.kernel_shap import KernelShap
+from later.unittest.mock import patch
 from tests.helpers.basic import (
     assertTensorAlmostEqual,
     assertTensorTuplesAlmostEqual,
@@ -70,7 +70,7 @@ class Test(BaseTest):
             expected_coefs=[[275.0, 115.0]],
         )
 
-    @unittest.mock.patch("sys.stderr", new_callable=io.StringIO)
+    @patch("sys.stderr", new_callable=io.StringIO)
     def test_simple_kernel_shap_with_show_progress(self, mock_stderr) -> None:
         net = BasicModel_MultiLayer()
         inp = torch.tensor([[20.0, 50.0, 30.0]], requires_grad=True)
@@ -403,7 +403,3 @@ class Test(BaseTest):
                 assertTensorAlmostEqual(
                     self, attributions, expected_coefs, delta=delta, mode="max"
                 )
-
-
-if __name__ == "__main__":
-    unittest.main()
