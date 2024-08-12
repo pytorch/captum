@@ -868,12 +868,12 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="n">weight</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Tensor</span><span class="p">],</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">total_attrib</span><span class="p">:</span>
-            <span class="n">total_attrib</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="o">+=</span> <span class="n">attrib</span>
+            <span class="n">total_attrib</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="o">=</span> <span class="n">attrib</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">total_attrib</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">attrib</span><span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">use_weights</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">weights</span><span class="p">:</span>
-                <span class="n">weights</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="o">+=</span> <span class="n">weight</span>
+                <span class="n">weights</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="o">=</span> <span class="n">weight</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">weights</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">weight</span><span class="p">)</span>
 
