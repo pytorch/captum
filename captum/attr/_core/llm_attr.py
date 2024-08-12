@@ -290,9 +290,12 @@ class LLMAttribution(Attribution):
         # 1st element is the total prob, rest are the target tokens
         # add a leading dim for batch even we only support single instance for now
         if self.include_per_token_attr:
-            target_log_probs = torch.stack(
-                [total_log_prob, *log_prob_list], dim=0
-            ).unsqueeze(0)
+            try:
+                target_log_probs = torch.stack(
+                    [total_log_prob, *log_prob_list], dim=0
+                ).unsqueeze(0)
+            except TypeError:
+                print("It seems like you got an empty list of target tokens. If you are attributing only one target token (a single character / word) try using the skip_bos argument in the attribute function.")
         else:
             target_log_probs = total_log_prob
         # pyre-fixme[6]: For 1st argument expected `Tensor` but got `Union[int,
