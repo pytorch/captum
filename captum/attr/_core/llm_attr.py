@@ -327,6 +327,7 @@ class LLMAttribution(Attribution):
         inp: InterpretableInput,
         target: Union[str, torch.Tensor, None] = None,
         num_trials: int = 1,
+        skip_bos: bool = True,
         # pyre-fixme[24]: Generic type `dict` expects 2 type parameters, use
         #  `typing.Dict[<key type>, <value type>]` to avoid runtime subscripting
         #  errors.
@@ -382,8 +383,11 @@ class LLMAttribution(Attribution):
             assert gen_args is None, "gen_args must be None when target is given"
 
             if type(target) is str:
-                # exclude sos
-                target_tokens = self.tokenizer.encode(target)[1:]
+                # exclude sos / bos
+                if skip_bos:
+                    target_tokens = self.tokenizer.encode(target)[1:]
+                else:
+                    target_tokens = self.tokenizer.encode(target)
                 target_tokens = torch.tensor(target_tokens)
             elif type(target) is torch.Tensor:
                 target_tokens = target
