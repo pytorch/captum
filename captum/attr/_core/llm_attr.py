@@ -295,8 +295,7 @@ class LLMAttribution(Attribution):
                     [total_log_prob, *log_prob_list], dim=0
                 ).unsqueeze(0)
             except TypeError:
-                print("It seems like you got an empty list of target tokens. If you are attributing only one target token (a single character / word) try using the skip_bos argument in the attribute function.")
-                exit()
+                raise TypeError("It seems like you got an empty list of target tokens. If you are attributing only one target token (a single character or word) try using the skip_bos argument in the attribute function.")
         else:
             target_log_probs = total_log_prob
         # pyre-fixme[6]: For 1st argument expected `Tensor` but got `Union[int,
