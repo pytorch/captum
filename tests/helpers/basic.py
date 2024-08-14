@@ -8,6 +8,7 @@ from typing import Callable
 import numpy as np
 import torch
 from captum.log import patch_methods
+from torch import Tensor
 
 
 def deep_copy_args(func: Callable):
@@ -96,6 +97,24 @@ def set_all_random_seeds(seed: int = 1234) -> None:
     torch.manual_seed(seed)
     torch.cuda.manual_seed_all(seed)
     torch.backends.cudnn.deterministic = True
+
+
+def lcg(a: int = 16843009, b: int = 3014898611, m: int = 1 << 32):
+    """Linear congruential generator"""
+    x = 1
+    while True:
+        x = (a * x + b) % m
+        yield x
+
+
+def rand_like(a: Tensor) -> Tensor:
+    """Random tensors (for dependency-free version-agnostic reproducibility).
+    PyTorch does not guarantee reproducible numbers across PyTorch releases,
+    individual commits, or different platforms. See:
+    https://pytorch.org/docs/stable/notes/randomness.html"""
+    g = lcg()
+    nums = [next(g) / (1 << 32) for _ in range(a.numel())]
+    return torch.tensor(nums, dtype=a.dtype, device=a.device).reshape(a.shape)
 
 
 class BaseTest(unittest.TestCase):
