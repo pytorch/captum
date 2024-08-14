@@ -3,7 +3,7 @@
 # pyre-strict
 
 import math
-from typing import Any, Callable, cast, List, Optional, Tuple, Union
+from typing import Any, Callable, cast, Dict, List, Optional, Tuple, Union
 
 import torch
 from captum._utils.common import (
@@ -66,7 +66,6 @@ class FeatureAblation(PerturbationAttribution):
         # input grow as expected. Once it turns to True, we will assume the model's
         # behavior stays consistent and no longer check again
         self._is_output_shape_valid = False
-        self.use_futures = False
 
     @log_usage()
     def attribute(
@@ -80,10 +79,9 @@ class FeatureAblation(PerturbationAttribution):
         perturbations_per_eval: int = 1,
         show_progress: bool = False,
         **kwargs: Any,
-    ) -> Union[TensorOrTupleOfTensorsGeneric, Future[TensorOrTupleOfTensorsGeneric]]:
+    ) -> TensorOrTupleOfTensorsGeneric:
         r"""
         Args:
-
             inputs (Tensor or tuple[Tensor, ...]): Input for which ablation
                         attributions are computed. If forward_func takes a single
                         tensor as input, a single input tensor should be provided.
@@ -265,93 +263,65 @@ class FeatureAblation(PerturbationAttribution):
         # pyre-fixme[6]: For 1st argument expected `Tensor` but got
         #  `TensorOrTupleOfTensorsGeneric`.
         is_inputs_tuple = _is_tuple(inputs)
-        # pyre-fixme[9]: inputs has type `TensorOrTupleOfTensorsGeneric`; used as
-        #  `Tuple[Tensor, ...]`.
-        inputs, baselines = _format_input_baseline(inputs, baselines)
+
+        formatted_inputs, baselines = _format_input_baseline(inputs, baselines)
         additional_forward_args = _format_additional_forward_args(
             additional_forward_args
         )
-        num_examples = inputs[0].shape[0]
+        num_examples = formatted_inputs[0].shape[0]
         # pyre-fixme[6]: For 2nd argument expected `Tuple[Tensor, ...]` but got
         #  `TensorOrTupleOfTensorsGeneric`.
-        feature_mask = _format_feature_mask(feature_mask, inputs)
+        feature_mask = _format_feature_mask(feature_mask, formatted_inputs)
 
         assert (
             isinstance(perturbations_per_eval, int) and perturbations_per_eval >= 1
         ), "Perturbations per evaluation must be an integer and at least 1."
         with torch.no_grad():
             if show_progress:
-                feature_counts = self._get_feature_counts(
-                    inputs, feature_mask, **kwargs
-                )
-                total_forwards = (
-                    sum(
-                        math.ceil(count / perturbations_per_eval)
-                        for count in feature_counts
-                    )
-                    + 1
-                )  # add 1 for the initial eval
-                attr_progress = progress(
-                    desc=f"{self.get_name()} attribution", total=total_forwards
+                attr_progress = self._attribute_progress_setup(
+                    formatted_inputs,
+                    feature_mask,
+                    **kwargs,
+                    perturbations_per_eval=perturbations_per_eval,
                 )
                 attr_progress.update(0)
 
             # Computes initial evaluation with all features, which is compared
             # to each ablated result.
             initial_eval: Union[Tensor, Future[Tensor]] = _run_forward(
-                self.forward_func, inputs, target, additional_forward_args
+                self.forward_func, formatted_inputs, target, additional_forward_args
             )
-
             if show_progress:
                 attr_progress.update()
 
-            processed_initial_eval_fut: Optional[
-                Future[Tuple[List[Tensor], List[Tensor], Tensor, Tensor, int, dtype]]
-            ] = None
             total_attrib: List[Tensor] = []
             weights: List[Tensor] = []
             flattened_initial_eval: Tensor
             n_outputs: int
             attrib_type: dtype
 
-            if self.use_futures:
-                assert isinstance(initial_eval, torch.Future), (
-                    "when use_futures is True, initial_eval should have "
-                    f"Future type rather than {type(initial_eval)}"
-                )
-
-                processed_initial_eval_fut = initial_eval.then(
-                    lambda x: self._process_initial_eval(
-                        x.value(),
-                        inputs,
-                    )
-                )
-            else:
-                assert not isinstance(initial_eval, torch.Future), (
-                    "when use_futures is False, initial_eval should have "
+            if isinstance(initial_eval, torch.Future):
+                raise AssertionError(
+                    "when using the attribute function, initial_eval should have "
                     f"non-Future type rather than {type(initial_eval)}"
                 )
 
-                (
-                    total_attrib,
-                    weights,
-                    initial_eval,
-                    flattened_initial_eval,
-                    n_outputs,
-                    attrib_type,
-                ) = self._process_initial_eval(
-                    initial_eval,
-                    inputs,
-                )
+            (
+                total_attrib,
+                weights,
+                initial_eval,
+                flattened_initial_eval,
+                n_outputs,
+                attrib_type,
+            ) = self._process_initial_eval(
+                initial_eval,
+                formatted_inputs,
+            )
 
-            # The will be the same amount futures as modified_eval down there,
-            # since we cannot add up the evaluation result adhoc under async mode.
-            # pyre-fixme[24]: Generic type `Future` expects 1 type parameter.
-            all_futures: List[List[Future]] = [[] for _ in range(len(inputs))]
             # Iterate through each feature tensor for ablation
-            for i in range(len(inputs)):
+            for i in range(len(formatted_inputs)):
                 # Skip any empty input tensors
-                if torch.numel(inputs[i]) == 0:
+                if torch.numel(formatted_inputs[i]) == 0:
                     continue
 
                 for (
@@ -361,7 +331,7 @@ class FeatureAblation(PerturbationAttribution):
                     current_mask,
                 ) in self._ith_input_ablation_generator(
                     i,
-                    inputs,
+                    formatted_inputs,
                     additional_forward_args,
                     target,
                     baselines,
@@ -384,75 +354,206 @@ class FeatureAblation(PerturbationAttribution):
                     if show_progress:
                         attr_progress.update()
 
-                    if self.use_futures:
-                        assert isinstance(modified_eval, torch.Future), (
-                            "when use_futures is True, modified_eval should have "
-                            f"Future type rather than {type(modified_eval)}"
-                        )
-                        assert (
-                            processed_initial_eval_fut is not None
-                        ), "processed_initial_eval_fut should not be None"
-
-                        # Need to collect both initial eval and modified_eval
-                        eval_futs: Future[List[Future[Tensor]]] = collect_all(
-                            [
-                                processed_initial_eval_fut,
-                                modified_eval,
-                            ]
-                        )
-
-                        ablated_out_fut: Future[Tuple[List[Tensor], List[Tensor]]] = (
-                            eval_futs.then(
-                                lambda eval_futs, current_inputs=current_inputs, current_mask=current_mask, i=i: self._process_ablated_out(  # type: ignore # noqa: E501 line too long
-                                    eval_futs.value()[1].value(),
-                                    current_inputs,
-                                    current_mask,
-                                    perturbations_per_eval,
-                                    num_examples,
-                                    # initial_eval
-                                    eval_futs.value()[0].value()[2],
-                                    # flattened_initial_eval
-                                    eval_futs.value()[0].value()[3],
-                                    inputs,
-                                    # n_outputs
-                                    eval_futs.value()[0].value()[4],
-                                    # total_attrib
-                                    eval_futs.value()[0].value()[0],
-                                    # weights
-                                    eval_futs.value()[0].value()[1],
-                                    i,
-                                    # attrib_type
-                                    eval_futs.value()[0].value()[5],
-                                )
-                            )
-                        )
-
-                        all_futures[i].append(ablated_out_fut)
-                    else:
-                        total_attrib, weights = self._process_ablated_out(
-                            modified_eval,
-                            current_inputs,
-                            current_mask,
-                            perturbations_per_eval,
-                            num_examples,
-                            initial_eval,
-                            flattened_initial_eval,
-                            inputs,
-                            n_outputs,
-                            total_attrib,
-                            weights,
-                            i,
-                            attrib_type,
-                        )
+                    total_attrib, weights = self._process_ablated_out(
+                        modified_eval,
+                        current_inputs,
+                        current_mask,
+                        perturbations_per_eval,
+                        num_examples,
+                        initial_eval,
+                        flattened_initial_eval,
+                        formatted_inputs,
+                        n_outputs,
+                        total_attrib,
+                        weights,
+                        i,
+                        attrib_type,
+                    )
 
             if show_progress:
                 attr_progress.close()
 
-            if len(all_futures) > 0 and len(all_futures[0]) > 0:
-                return self._generate_async_result(all_futures, is_inputs_tuple)  # type: ignore # noqa: E501 line too long
+            return self._generate_result(total_attrib, weights, is_inputs_tuple)  # type: ignore # noqa: E501 line too long
 
-            else:
-                return self._generate_result(total_attrib, weights, is_inputs_tuple)  # type: ignore # noqa: E501 line too long
+    @log_usage()
+    def attribute_future(
+        self,
+        inputs: TensorOrTupleOfTensorsGeneric,
+        baselines: BaselineType = None,
+        target: TargetType = None,
+        # pyre-fixme[2]: Parameter annotation cannot be `Any`.
+        additional_forward_args: Any = None,
+        feature_mask: Union[None, Tensor, Tuple[Tensor, ...]] = None,
+        perturbations_per_eval: int = 1,
+        show_progress: bool = False,
+        **kwargs: Any,
+    ) -> Future[TensorOrTupleOfTensorsGeneric]:
+        r"""
+        Almost the same as the attribute function, except that it requires a
+        forward function that returns a Future, and it returns a Future.
+        """
+
+        # Keeps track whether original input is a tuple or not before
+        # converting it into a tuple.
+        # pyre-fixme[6]: For 1st argument expected `Tensor` but got
+        #  `TensorOrTupleOfTensorsGeneric`.
+        is_inputs_tuple = _is_tuple(inputs)
+        formatted_inputs, baselines = _format_input_baseline(inputs, baselines)
+        additional_forward_args = _format_additional_forward_args(
+            additional_forward_args
+        )
+        num_examples = formatted_inputs[0].shape[0]
+        feature_mask = _format_feature_mask(feature_mask, formatted_inputs)
+
+        assert (
+            isinstance(perturbations_per_eval, int) and perturbations_per_eval >= 1
+        ), "Perturbations per evaluation must be an integer and at least 1."
+        with torch.no_grad():
+            if show_progress:
+                attr_progress = self._attribute_progress_setup(
+                    formatted_inputs,
+                    feature_mask,
+                    **kwargs,
+                    perturbations_per_eval=perturbations_per_eval,
+                )
+                attr_progress.update(0)
+
+            # Computes initial evaluation with all features, which is compared
+            # to each ablated result.
+            initial_eval: Union[Tensor, Future[Tensor]] = _run_forward(
+                self.forward_func, formatted_inputs, target, additional_forward_args
+            )
+
+            if show_progress:
+                attr_progress.update()
+
+            processed_initial_eval_fut: Optional[
+                Future[Tuple[List[Tensor], List[Tensor], Tensor, Tensor, int, dtype]]
+            ] = None
+
+            if not isinstance(initial_eval, torch.Future):
+                raise AssertionError(
+                    "when using attribute_future, initial_eval should have "
+                    f"Future type rather than {type(initial_eval)}"
+                )
+
+            processed_initial_eval_fut = initial_eval.then(
+                lambda x: self._process_initial_eval(
+                    x.value(),
+                    formatted_inputs,
+                )
+            )
+
+            # The will be the same amount futures as modified_eval down there,
+            # since we cannot add up the evaluation result adhoc under async mode.
+            # pyre-fixme[24]: Generic type `Future` expects 1 type parameter.
+            all_futures: List[List[Future]] = [[] for _ in range(len(inputs))]
+            # Iterate through each feature tensor for ablation
+            for i in range(len(formatted_inputs)):
+                # Skip any empty input tensors
+                if torch.numel(formatted_inputs[i]) == 0:
+                    continue
+
+                for (
+                    current_inputs,
+                    current_add_args,
+                    current_target,
+                    current_mask,
+                ) in self._ith_input_ablation_generator(
+                    i,
+                    formatted_inputs,
+                    additional_forward_args,
+                    target,
+                    baselines,
+                    feature_mask,
+                    perturbations_per_eval,
+                    **kwargs,
+                ):
+                    # modified_eval has (n_feature_perturbed * n_outputs) elements
+                    # shape:
+                    #   agg mode: (*initial_eval.shape)
+                    #   non-agg mode:
+                    #     (feature_perturbed * batch_size, *initial_eval.shape[1:])
+                    modified_eval: Union[Tensor, Future[Tensor]] = _run_forward(
+                        self.forward_func,
+                        current_inputs,
+                        current_target,
+                        current_add_args,
+                    )
+
+                    if show_progress:
+                        attr_progress.update()
+
+                    if not isinstance(modified_eval, torch.Future):
+                        raise AssertionError(
+                            "when using attribute_future, modified_eval should have "
+                            f"Future type rather than {type(modified_eval)}"
+                        )
+                    if processed_initial_eval_fut is None:
+                        raise AssertionError(
+                            "processed_initial_eval_fut should not be None"
+                        )
+
+                    # Need to collect both initial eval and modified_eval
+                    eval_futs: Future[List[Future[Tensor]]] = collect_all(
+                        [
+                            processed_initial_eval_fut,
+                            modified_eval,
+                        ]
+                    )
+
+                    ablated_out_fut: Future[Tuple[List[Tensor], List[Tensor]]] = (
+                        eval_futs.then(
+                            lambda eval_futs, current_inputs=current_inputs, current_mask=current_mask, i=i: self._process_ablated_out(  # type: ignore # noqa: E501 line too long
+                                eval_futs.value()[1].value(),
+                                current_inputs,
+                                current_mask,
+                                perturbations_per_eval,
+                                num_examples,
+                                # initial_eval
+                                eval_futs.value()[0].value()[2],
+                                # flattened_initial_eval
+                                eval_futs.value()[0].value()[3],
+                                formatted_inputs,
+                                # n_outputs
+                                eval_futs.value()[0].value()[4],
+                                # total_attrib
+                                eval_futs.value()[0].value()[0],
+                                # weights
+                                eval_futs.value()[0].value()[1],
+                                i,
+                                # attrib_type
+                                eval_futs.value()[0].value()[5],
+                            )
+                        )
+                    )
+
+                    all_futures[i].append(ablated_out_fut)
+
+            if show_progress:
+                attr_progress.close()
+
+            return self._generate_async_result(all_futures, is_inputs_tuple)  # type: ignore # noqa: E501 line too long
+
+    # pyre-fixme[3] return type must be annotated
+    def _attribute_progress_setup(
+        self,
+        formatted_inputs: Tuple[Tensor, ...],
+        feature_mask: Tuple[Tensor, ...],
+        perturbations_per_eval: int,
+        **kwargs: Dict[str, Any],
+    ):
+        feature_counts = self._get_feature_counts(
+            formatted_inputs, feature_mask, **kwargs
+        )
+        total_forwards = (
+            sum(math.ceil(count / perturbations_per_eval) for count in feature_counts)
+            + 1
+        )  # add 1 for the initial eval
+        attr_progress = progress(
+            desc=f"{self.get_name()} attribution", total=total_forwards
+        )
+        return attr_progress
 
     # pyre-fixme[3]: Return type must be annotated.
     def _ith_input_ablation_generator(
