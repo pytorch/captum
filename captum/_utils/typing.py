@@ -18,6 +18,9 @@ TensorOrTupleOfTensorsGeneric = TypeVar(
 # pyre-fixme[24]: Generic type `tuple` expects at least 1 type parameter.
 TupleOrTensorOrBoolGeneric = TypeVar("TupleOrTensorOrBoolGeneric", Tuple, Tensor, bool)
 ModuleOrModuleList = TypeVar("ModuleOrModuleList", Module, List[Module])
+ModuleOrModuleListOrModuleTuple = TypeVar(
+    "ModuleOrModuleListOrModuleTuple", Module, List[Module], Tuple[Module]
+)
 TargetType = Union[None, int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]]
 BaselineType = Union[None, Tensor, int, float, Tuple[Union[Tensor, int, float], ...]]
 
