@@ -119,7 +119,6 @@ class Test(BaseTest):
         feature_importance = FeaturePermutation(
             forward_func=self.construct_future_forward(forward_func)
         )
-        feature_importance.use_futures = True
 
         inp = torch.randn((batch_size,) + input_size)
 
@@ -200,7 +199,6 @@ class Test(BaseTest):
         feature_importance = FeaturePermutation(
             forward_func=self.construct_future_forward(forward_func)
         )
-        feature_importance.use_futures = True
 
         inp = (
             torch.randn((batch_size,) + inp1_size),
@@ -280,7 +278,6 @@ class Test(BaseTest):
         feature_importance = FeaturePermutation(
             forward_func=self.construct_future_forward(forward_func)
         )
-        feature_importance.use_futures = True
 
         attribs = feature_importance.attribute_future(
             inp, perturbations_per_eval=perturbations_per_eval, target=target
@@ -354,7 +351,6 @@ class Test(BaseTest):
         feature_importance = FeaturePermutation(
             forward_func=self.construct_future_forward(forward_func)
         )
-        feature_importance.use_futures = True
 
         masks = [
             torch.tensor([0]),

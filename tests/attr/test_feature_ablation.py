@@ -8,6 +8,7 @@ import unittest.mock
 from typing import Any, cast, List, Tuple, Union
 
 import torch
+from captum._utils.common import _construct_future_forward
 from captum._utils.typing import BaselineType, TargetType, TensorOrTupleOfTensorsGeneric
 from captum.attr._core.feature_ablation import FeatureAblation
 from captum.attr._core.noise_tunnel import NoiseTunnel
@@ -438,12 +439,10 @@ class Test(BaseTest):
 
     def test_future_output(self) -> None:
         def forward_func(inp):
-            fut = torch.futures.Future()
-            fut.set_result(torch.ones(1, 5, 3, 2))
-            return fut
+            dummy_output = torch.ones(1, 5, 3, 2)
+            return dummy_output
 
-        abl = FeatureAblation(forward_func)
-        abl.use_futures = True
+        abl = FeatureAblation(_construct_future_forward(forward_func))
         inp = torch.randn(10, 5)
         mask = torch.arange(5).unsqueeze(0)
         self._ablation_test_assert(
@@ -454,6 +453,7 @@ class Test(BaseTest):
             feature_mask=mask,
             perturbations_per_eval=(1,),
             expected_ablation=torch.zeros((5 * 3 * 2,) + inp[0].shape),
+            test_future=True,
         )
 
     def test_future_output_2(self) -> None:
@@ -471,7 +471,6 @@ class Test(BaseTest):
             return fut
 
         abl = FeatureAblation(forward_func)
-        abl.use_futures = True
         inp = torch.tensor([[20.0, 50.0, 30.0], [10.0, 40.0, 20.0]], requires_grad=True)
         self._ablation_test_assert(
             ablation_algo=abl,
@@ -480,7 +479,50 @@ class Test(BaseTest):
             target=0,
             perturbations_per_eval=(1,),
             expected_ablation=torch.tensor([[80.0, 200.0, 120.0], [40.0, 160.0, 80.0]]),
+            test_future=True,
         )
+
+    def test_future_wrong_usage(self) -> None:
+        def forward_func(inp):
+            dummy_output = torch.ones(1, 5, 3, 2)
+            return dummy_output
+
+        abl = FeatureAblation(_construct_future_forward(forward_func))
+        inp = torch.randn(10, 5)
+        mask = torch.arange(5).unsqueeze(0)
+        perturbations_per_eval = (1,)
+
+        with self.assertRaises(AssertionError):
+            for batch_size in perturbations_per_eval:
+                attributions = abl.attribute(  # noqa
+                    inp,
+                    target=None,
+                    feature_mask=mask,
+                    additional_forward_args=None,
+                    baselines=None,
+                    perturbations_per_eval=batch_size,
+                )
+
+    def test_future_wrong_usage_2(self) -> None:
+        def forward_func(inp):
+            dummy_output = torch.ones(1, 5, 3, 2)
+            return dummy_output
+
+        abl = FeatureAblation(forward_func)
+        inp = torch.randn(10, 5)
+        mask = torch.arange(5).unsqueeze(0)
+        perturbations_per_eval = (1,)
+
+        with self.assertRaises(AssertionError):
+            for batch_size in perturbations_per_eval:
+                attributions = abl.attribute_future(  # noqa
+                    inp,
+                    target=None,
+                    feature_mask=mask,
+                    additional_forward_args=None,
+                    baselines=None,
+                    perturbations_per_eval=batch_size,
+                )
 
     def test_unassociated_output_3d_tensor(self) -> None:
         def forward_func(inp):
@@ -680,12 +722,13 @@ class Test(BaseTest):
         perturbations_per_eval: Tuple[int, ...] = (1,),
         baselines: BaselineType = None,
         target: TargetType = 0,
+        test_future: bool = False,
         **kwargs: Any,
     ) -> None:
         for batch_size in perturbations_per_eval:
             self.assertTrue(ablation_algo.multiplies_by_inputs)
-            if isinstance(ablation_algo, FeatureAblation) and ablation_algo.use_futures:
-                attributions = ablation_algo.attribute(
+            if isinstance(ablation_algo, FeatureAblation) and test_future:
+                attributions = ablation_algo.attribute_future(
                     test_input,
                     target=target,
                     feature_mask=feature_mask,
