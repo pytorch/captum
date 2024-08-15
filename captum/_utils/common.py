@@ -16,6 +16,7 @@ from captum._utils.typing import (
     TensorOrTupleOfTensorsGeneric,
     TupleOrTensorOrBoolGeneric,
 )
+
 from torch import device, Tensor
 
 from torch.futures import Future
@@ -567,6 +568,19 @@ def _format_outputs(
         if is_multiple_inputs
         else _format_output(len(outputs[0]) > 1, outputs[0])
     )
+
+
+# pyre-fixme[24] Callable requires 2 arguments
+def _construct_future_forward(original_forward: Callable) -> Callable:
+    # pyre-fixme[3] return type not specified
+    # pyre-ignore
+    def future_forward(*args, **kwargs):
+        # pyre-ignore
+        fut = torch.futures.Future()
+        fut.set_result(original_forward(*args, **kwargs))
+        return fut
+
+    return future_forward
 
 
 def _run_forward(

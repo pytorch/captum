@@ -93,7 +93,6 @@ class FeaturePermutation(FeatureAblation):
         """
         FeatureAblation.__init__(self, forward_func=forward_func)
         self.perm_func = perm_func
-        self.use_futures = False
 
     # suppressing error caused by the child class not having a matching
     # signature to the parent
@@ -293,7 +292,7 @@ class FeaturePermutation(FeatureAblation):
     ) -> Future[TensorOrTupleOfTensorsGeneric]:
         if isinstance(kwargs, dict) and "baselines" in kwargs:
             del kwargs["baselines"]
-        return FeatureAblation.attribute.__wrapped__(
+        return FeatureAblation.attribute_future.__wrapped__(
             self,
             inputs,
             baselines=None,
@@ -302,7 +301,6 @@ class FeaturePermutation(FeatureAblation):
             feature_mask=feature_mask,
             perturbations_per_eval=perturbations_per_eval,
             show_progress=show_progress,
-            use_futures=self.use_futures,
             **kwargs,
         )
 
