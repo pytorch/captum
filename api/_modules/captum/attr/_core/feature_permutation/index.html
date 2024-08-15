@@ -127,7 +127,6 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">        """</span>
         <span class="n">FeatureAblation</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">forward_func</span><span class="o">=</span><span class="n">forward_func</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">perm_func</span> <span class="o">=</span> <span class="n">perm_func</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">use_futures</span> <span class="o">=</span> <span class="kc">False</span>
 
     <span class="c1"># suppressing error caused by the child class not having a matching</span>
     <span class="c1"># signature to the parent</span>
@@ -317,6 +316,8 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="p">)</span></div>
 
 
+<div class="viewcode-block" id="FeaturePermutation.attribute_future">
+<a class="viewcode-back" href="../../../../feature_permutation.html#captum.attr.FeaturePermutation.attribute_future">[docs]</a>
     <span class="k">def</span> <span class="nf">attribute_future</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">inputs</span><span class="p">:</span> <span class="n">TensorOrTupleOfTensorsGeneric</span><span class="p">,</span>
@@ -330,7 +331,7 @@ src="/_sphinx/documentation_options.js"></script>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Future</span><span class="p">[</span><span class="n">TensorOrTupleOfTensorsGeneric</span><span class="p">]:</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">kwargs</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="ow">and</span> <span class="s2">"baselines"</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
             <span class="k">del</span> <span class="n">kwargs</span><span class="p">[</span><span class="s2">"baselines"</span><span class="p">]</span>
-        <span class="k">return</span> <span class="n">FeatureAblation</span><span class="o">.</span><span class="n">attribute</span><span class="o">.</span><span class="n">__wrapped__</span><span class="p">(</span>
+        <span class="k">return</span> <span class="n">FeatureAblation</span><span class="o">.</span><span class="n">attribute_future</span><span class="o">.</span><span class="n">__wrapped__</span><span class="p">(</span>
             <span class="bp">self</span><span class="p">,</span>
             <span class="n">inputs</span><span class="p">,</span>
             <span class="n">baselines</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
@@ -339,9 +340,9 @@ src="/_sphinx/documentation_options.js"></script>
             <span class="n">feature_mask</span><span class="o">=</span><span class="n">feature_mask</span><span class="p">,</span>
             <span class="n">perturbations_per_eval</span><span class="o">=</span><span class="n">perturbations_per_eval</span><span class="p">,</span>
             <span class="n">show_progress</span><span class="o">=</span><span class="n">show_progress</span><span class="p">,</span>
-            <span class="n">use_futures</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">use_futures</span><span class="p">,</span>
             <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
-        <span class="p">)</span>
+        <span class="p">)</span></div>
+
 
     <span class="k">def</span> <span class="nf">_construct_ablated_input</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
