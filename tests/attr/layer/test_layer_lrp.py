@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-# mypy: ignore-errors
+
+# pyre-strict
 
 from typing import Any, Tuple
 
@@ -26,6 +27,7 @@ def _get_simple_model(inplace: bool = False) -> Tuple[SimpleLRPModel, Tensor]:
     return model, inputs
 
 
+# pyre-fixme[3]: Return type must be specified as type that does not contain `Any`.
 def _get_simple_model2(inplace: bool = False) -> Tuple[Any, Tensor]:
     class MyModel(nn.Module):
         def __init__(self, inplace) -> None:
@@ -46,7 +48,7 @@ def _get_simple_model2(inplace: bool = False) -> Tuple[Any, Tensor]:
 class Test(BaseTest):
     def test_lrp_creator(self) -> None:
         model, _ = _get_basic_config()
-        model.conv1.rule = 1
+        model.conv1.rule = 1  # type: ignore
         self.assertRaises(TypeError, LayerLRP, model, model.conv1)
 
     def test_lrp_creator_activation(self) -> None:
@@ -60,8 +62,11 @@ class Test(BaseTest):
         logits = model(inputs)
         score, classIndex = torch.max(logits, 1)
         lrp = LayerLRP(model, model.conv1)
-        relevance, delta = lrp.attribute(
-            inputs, classIndex.item(), return_convergence_delta=True
+        relevance, delta = lrp.attribute(  # type: ignore
+            inputs,
+            classIndex.item(),
+            # pyre-fixme[6]: For 3rd argument expected `Literal[]` but got `bool`.
+            return_convergence_delta=True,
         )
         assertTensorAlmostEqual(
             self, relevance[0], torch.Tensor([[[0, 4], [31, 40]], [[0, 0], [-6, -15]]])
@@ -71,22 +76,27 @@ class Test(BaseTest):
     def test_lrp_simple_attributions(self) -> None:
         model, inputs = _get_simple_model(inplace=False)
         model.eval()
-        model.linear.rule = EpsilonRule()
-        model.linear2.rule = EpsilonRule()
+        model.linear.rule = EpsilonRule()  # type: ignore
+        model.linear2.rule = EpsilonRule()  # type: ignore
         lrp_upper = LayerLRP(model, model.linear2)
         relevance_upper, delta = lrp_upper.attribute(
-            inputs, attribute_to_layer_input=True, return_convergence_delta=True
+            inputs,
+            attribute_to_layer_input=True,
+            # pyre-fixme[6]: For 3rd argument expected `Literal[]` but got `bool`.
+            return_convergence_delta=True,
         )
         lrp_lower = LayerLRP(model, model.linear)
         relevance_lower = lrp_lower.attribute(inputs)
         assertTensorAlmostEqual(self, relevance_lower[0], relevance_upper[0])
-        self.assertEqual(delta.item(), 0)
+        # pyre-fixme[16]: Item `tuple` of `Union[Tensor, Tuple[Tensor, ...]]` has no
+        #  attribute `item`.
+        self.assertEqual(delta.item(), 0)  # type: ignore
 
     def test_lrp_simple_repeat_attributions(self) -> None:
         model, inputs = _get_simple_model()
         model.eval()
-        model.linear.rule = GammaRule()
-        model.linear2.rule = Alpha1_Beta0_Rule()
+        model.linear.rule = GammaRule()  # type: ignore
+        model.linear2.rule = Alpha1_Beta0_Rule()  # type: ignore
         output = model(inputs)
         lrp = LayerLRP(model, model.linear)
         _ = lrp.attribute(inputs)
@@ -98,8 +108,8 @@ class Test(BaseTest):
         model_inplace, _ = _get_simple_model(inplace=True)
         for model in [model_default, model_inplace]:
             model.eval()
-            model.linear.rule = EpsilonRule()
-            model.linear2.rule = EpsilonRule()
+            model.linear.rule = EpsilonRule()  # type: ignore
+            model.linear2.rule = EpsilonRule()  # type: ignore
         lrp_default = LayerLRP(model_default, model_default.linear2)
         lrp_inplace = LayerLRP(model_inplace, model_inplace.linear2)
         relevance_default = lrp_default.attribute(inputs, attribute_to_layer_input=True)
@@ -132,8 +142,8 @@ class Test(BaseTest):
         with torch.no_grad():
             model.linear.weight.data[0][0] = -2
         model.eval()
-        model.linear.rule = GammaRule(gamma=1)
-        model.linear2.rule = GammaRule()
+        model.linear.rule = GammaRule(gamma=1)  # type: ignore
+        model.linear2.rule = GammaRule()  # type: ignore
         lrp = LayerLRP(model, model.linear)
         relevance = lrp.attribute(inputs)
         assertTensorAlmostEqual(self, relevance[0], torch.tensor([24.0, 36.0, 36.0]))
@@ -143,8 +153,8 @@ class Test(BaseTest):
         with torch.no_grad():
             model.linear.weight.data[0][0] = -2
         model.eval()
-        model.linear.rule = Alpha1_Beta0_Rule()
-        model.linear2.rule = Alpha1_Beta0_Rule()
+        model.linear.rule = Alpha1_Beta0_Rule()  # type: ignore
+        model.linear2.rule = Alpha1_Beta0_Rule()  # type: ignore
         lrp = LayerLRP(model, model.linear)
         relevance = lrp.attribute(inputs)
         assertTensorAlmostEqual(self, relevance[0], torch.tensor([24.0, 36.0, 36.0]))
@@ -152,10 +162,12 @@ class Test(BaseTest):
     def test_lrp_simple_attributions_all_layers(self) -> None:
         model, inputs = _get_simple_model(inplace=False)
         model.eval()
-        model.linear.rule = EpsilonRule()
-        model.linear2.rule = EpsilonRule()
+        model.linear.rule = EpsilonRule()  # type: ignore
+        model.linear2.rule = EpsilonRule()  # type: ignore
         layers = [model.linear, model.linear2]
-        lrp = LayerLRP(model, layers)
+        # pyre-fixme[6]: For 2nd argument expected `ModuleOrModuleList` but got
+        #  `List[Linear]`.
+        lrp = LayerLRP(model, layers)  # type: ignore
         relevance = lrp.attribute(inputs, attribute_to_layer_input=True)
         self.assertEqual(len(relevance), 2)
         assertTensorAlmostEqual(self, relevance[0][0], torch.tensor([18.0, 36.0, 54.0]))
@@ -163,13 +175,18 @@ class Test(BaseTest):
     def test_lrp_simple_attributions_all_layers_delta(self) -> None:
         model, inputs = _get_simple_model(inplace=False)
         model.eval()
-        model.linear.rule = EpsilonRule()
-        model.linear2.rule = EpsilonRule()
+        model.linear.rule = EpsilonRule()  # type: ignore
+        model.linear2.rule = EpsilonRule()  # type: ignore
         layers = [model.linear, model.linear2]
-        lrp = LayerLRP(model, layers)
+        # pyre-fixme[6]: For 2nd argument expected `ModuleOrModuleList` but got
+        #  `List[Linear]`.
+        lrp = LayerLRP(model, layers)  # type: ignore
         inputs = torch.cat((inputs, 2 * inputs))
         relevance, delta = lrp.attribute(
-            inputs, attribute_to_layer_input=True, return_convergence_delta=True
+            inputs,
+            attribute_to_layer_input=True,
+            # pyre-fixme[6]: For 3rd argument expected `Literal[]` but got `bool`.
+            return_convergence_delta=True,
         )
         self.assertEqual(len(relevance), len(delta))
         assertTensorAlmostEqual(

@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+# pyre-strict
+
 from typing import Any, cast, List, Tuple, Union
 
 import torch
@@ -113,6 +115,8 @@ class Test(BaseTest):
 
         net = BasicModel_MultiLayer_TrueMultiInput()
 
+        # pyre-fixme[6]: For 2nd argument expected `ModuleOrModuleList` but got
+        #  `List[Union[BasicModel_MultiLayer, BasicModel_MultiLayer_MultiInput]]`.
         lig = LayerIntegratedGradients(net, layer=[net.m1, net.m234])
         ig = IntegratedGradients(net)
 
@@ -159,6 +163,8 @@ class Test(BaseTest):
 
         net = BasicModel_MultiLayer_TrueMultiInput()
 
+        # pyre-fixme[6]: For 2nd argument expected `ModuleOrModuleList` but got
+        #  `List[Union[BasicModel_MultiLayer, BasicModel_MultiLayer_MultiInput]]`.
         lig = LayerIntegratedGradients(net, layer=[net.m1, net.m234])
         ig = IntegratedGradients(net)
 
@@ -340,6 +346,8 @@ class Test(BaseTest):
         target_layer: Module,
         test_input: Union[Tensor, Tuple[Tensor, ...]],
         expected_ig: Tuple[List[List[float]], ...],
+        # pyre-fixme[2]: Parameter `additional_input` has type `None`
+        # but type `Any` is specified.
         additional_input: Any = None,
     ) -> None:
         layer_ig = LayerIntegratedGradients(model, target_layer)

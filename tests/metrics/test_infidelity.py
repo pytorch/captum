@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+
+# pyre-strict
+
 import typing
 from typing import Any, Callable, cast, List, Optional, Tuple, Union
 
@@ -28,14 +31,21 @@ from torch.nn import Module
 def _local_perturb_func_default(
     inputs: TensorOrTupleOfTensorsGeneric,
 ) -> TensorOrTupleOfTensorsGeneric:
+    # pyre-fixme[7]: Expected `TensorOrTupleOfTensorsGeneric` but got `Tensor`.
+    # pyre-fixme[6]: For 1st argument expected `Tensor` but got
+    #  `TensorOrTupleOfTensorsGeneric`.
     return _local_perturb_func(inputs)[1]
 
 
 @typing.overload
+# pyre-fixme[43]: The implementation of `_local_perturb_func` does not accept all
+#  possible arguments of overload defined on line `35`.
 def _local_perturb_func(inputs: Tensor) -> Tuple[Tensor, Tensor]: ...
 
 
 @typing.overload
+# pyre-fixme[43]: The implementation of `_local_perturb_func` does not accept all
+#  possible arguments of overload defined on line `39`.
 def _local_perturb_func(
     inputs: Tuple[Tensor, ...]
 ) -> Tuple[Tuple[Tensor, ...], Tuple[Tensor, ...]]: ...
@@ -63,14 +73,21 @@ def _local_perturb_func(
 def _global_perturb_func1_default(
     inputs: TensorOrTupleOfTensorsGeneric,
 ) -> TensorOrTupleOfTensorsGeneric:
+    # pyre-fixme[7]: Expected `TensorOrTupleOfTensorsGeneric` but got `Tensor`.
+    # pyre-fixme[6]: For 1st argument expected `Tensor` but got
+    #  `TensorOrTupleOfTensorsGeneric`.
     return _global_perturb_func1(inputs)[1]
 
 
 @typing.overload
+# pyre-fixme[43]: The implementation of `_global_perturb_func1` does not accept all
+#  possible arguments of overload defined on line `70`.
 def _global_perturb_func1(inputs: Tensor) -> Tuple[Tensor, Tensor]: ...
 
 
 @typing.overload
+# pyre-fixme[43]: The implementation of `_global_perturb_func1` does not accept all
+#  possible arguments of overload defined on line `74`.
 def _global_perturb_func1(
     inputs: Tuple[Tensor, ...]
 ) -> Tuple[Tuple[Tensor, ...], Tuple[Tensor, ...]]: ...
@@ -205,7 +222,7 @@ class Test(BaseTest):
         model = BasicModel_MultiLayer()
         input = torch.arange(1.0, 13.0).view(4, 3)
         additional_forward_args = (torch.arange(1, 13).view(4, 3).float(), True)
-        targets: List = [(0, 1, 1), (0, 1, 1), (1, 1, 1), (0, 1, 1)]
+        targets: List[Tuple[int, ...]] = [(0, 1, 1), (0, 1, 1), (1, 1, 1), (0, 1, 1)]
         sa = Saliency(model)
 
         infid1 = self.infidelity_assert(
@@ -239,14 +256,14 @@ class Test(BaseTest):
         input = torch.arange(1.0, 13.0).view(4, 3)
         baseline = torch.ones(4, 3)
         additional_forward_args = (torch.arange(1, 13).view(4, 3).float(), True)
-        targets: List = [(0, 1, 1), (0, 1, 1), (1, 1, 1), (0, 1, 1)]
+        targets: List[Tuple[int, ...]] = [(0, 1, 1), (0, 1, 1), (1, 1, 1), (0, 1, 1)]
         ig = IntegratedGradients(model)
 
-        def perturbed_func2(inputs, baselines):
+        def perturbed_func2(inputs: Tensor, baselines: Tensor) -> Tuple[Tensor, Tensor]:
             return torch.ones(baselines.shape), baselines
 
         @infidelity_perturb_func_decorator(True)
-        def perturbed_func3(inputs, baselines):
+        def perturbed_func3(inputs: Tensor, baselines: Tensor) -> Tensor:
             return baselines
 
         attr, delta = ig.attribute(
@@ -323,17 +340,17 @@ class Test(BaseTest):
         self, attr_algo: Attribution, model: Module
     ) -> None:
         # sensitivity-2
-        def _global_perturb_func2(input):
+        def _global_perturb_func2(input: Tensor) -> Tuple[Tensor, Tensor]:
             pert = torch.tensor([[0, 1, 1], [1, 1, 0], [1, 0, 1]]).float()
             return pert, (1 - pert) * input
 
         # sensitivity-1
-        def _global_perturb_func3(input):
+        def _global_perturb_func3(input: Tensor) -> Tuple[Tensor, Tensor]:
             pert = torch.tensor([[0, 0, 1], [1, 0, 0], [0, 1, 0]]).float()
             return pert, (1 - pert) * input
 
         @infidelity_perturb_func_decorator(True)
-        def _global_perturb_func3_custom(input):
+        def _global_perturb_func3_custom(input: Tensor) -> Tensor:
             return _global_perturb_func3(input)[1]
 
         input = torch.tensor([[1.0, 2.5, 3.3]])
@@ -397,6 +414,7 @@ class Test(BaseTest):
         expected: Tensor,
         n_perturb_samples: Optional[int] = 10,
         max_batch_size: Optional[int] = None,
+        # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
         perturb_func: Optional[Callable] = _local_perturb_func,
         multiply_by_inputs: Optional[bool] = False,
         normalize: Optional[bool] = False,
@@ -429,10 +447,13 @@ class Test(BaseTest):
         model: Module,
         inputs: TensorOrTupleOfTensorsGeneric,
         expected: Tensor,
+        # pyre-fixme[2]: Parameter `additional_args` has type `None`
+        # but type `Any` is specified.
         additional_args: Optional[Any] = None,
         target: Optional[TargetType] = None,
         n_perturb_samples: Optional[int] = 10,
         max_batch_size: Optional[int] = None,
+        # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
         perturb_func: Optional[Callable] = _global_perturb_func1,
         normalize: Optional[bool] = False,
     ) -> Tensor:
@@ -459,12 +480,15 @@ class Test(BaseTest):
         attributions: TensorOrTupleOfTensorsGeneric,
         inputs: TensorOrTupleOfTensorsGeneric,
         expected: Tensor,
+        # pyre-fixme[2]: Parameter `additional_args` has type `None`
+        # but type `Any` is specified.
         additional_args: Optional[Any] = None,
         baselines: Optional[BaselineType] = None,
         n_perturb_samples: Optional[int] = 10,
         target: Optional[TargetType] = None,
         max_batch_size: Optional[int] = None,
         multi_input: Optional[bool] = True,
+        # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
         perturb_func: Optional[Callable] = _local_perturb_func,
         normalize: Optional[bool] = False,
         **kwargs: Any,

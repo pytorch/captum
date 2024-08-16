@@ -1,5 +1,7 @@
+# pyre-strict
+
 import tempfile
-from typing import Callable, Optional
+from typing import Callable, List, Optional, Tuple
 
 import torch
 import torch.nn as nn
@@ -19,7 +21,9 @@ from tests.helpers.influence.common import (
 
 
 class TestTracInGetKMostInfluential(BaseTest):
-    param_list = []
+    param_list: List[
+        Tuple[str, DataInfluenceConstructor, bool, bool, int, int, str, bool]
+    ] = []
     for batch_size, k in [(4, 7), (7, 4), (40, 5), (5, 40), (40, 45)]:
         for unpack_inputs in [True, False]:
             for proponents in [True, False]:
@@ -71,6 +75,9 @@ class TestTracInGetKMostInfluential(BaseTest):
                                 )
                             )
 
+    # pyre-fixme[56]: Pyre was not able to infer the type of argument
+    # `tests.helpers.influence.common.build_test_name_func()`
+    # to decorator factory `parameterized.parameterized.expand`.
     @parameterized.expand(
         param_list,
         name_func=build_test_name_func(),
@@ -78,6 +85,7 @@ class TestTracInGetKMostInfluential(BaseTest):
     def test_tracin_k_most_influential(
         self,
         reduction: str,
+        # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
         tracin_constructor: Callable,
         unpack_inputs: bool,
         proponents: bool,
@@ -118,6 +126,7 @@ class TestTracInGetKMostInfluential(BaseTest):
                 criterion,
             )
 
+            # pyre-fixme[16]: `object` has no attribute `influence`.
             train_scores = tracin.influence(
                 _format_batch_into_tuple(test_samples, test_labels, unpack_inputs),
                 k=None,

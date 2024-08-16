@@ -1,4 +1,6 @@
 # (c) Meta Platforms, Inc. and affiliates. Confidential and proprietary.
+
+# pyre-strict
 from typing import Any, Tuple
 
 import torch
@@ -8,6 +10,7 @@ from torch import Tensor
 from torch.nn import Module
 
 
+# pyre-fixme[3]: Return annotation cannot contain `Any`.
 def get_basic_config() -> Tuple[Module, Tensor, Tensor, Any]:
     input = torch.tensor([1.0, 2.0, 3.0, 0.0, -1.0, 7.0], requires_grad=True).T
     # manually percomputed gradients
@@ -15,6 +18,7 @@ def get_basic_config() -> Tuple[Module, Tensor, Tensor, Any]:
     return BasicModel(), input, grads, None
 
 
+# pyre-fixme[3]: Return annotation cannot contain `Any`.
 def get_multiargs_basic_config() -> (
     Tuple[Module, Tuple[Tensor, ...], Tuple[Tensor, ...], Any]
 ):
@@ -30,6 +34,7 @@ def get_multiargs_basic_config() -> (
     return model, inputs, grads, additional_forward_args
 
 
+# pyre-fixme[3]: Return annotation cannot contain `Any`.
 def get_multiargs_basic_config_large() -> (
     Tuple[Module, Tuple[Tensor, ...], Tuple[Tensor, ...], Any]
 ):
