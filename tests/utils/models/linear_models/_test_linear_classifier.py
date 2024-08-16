@@ -1,3 +1,4 @@
+# pyre-strict
 import argparse
 import random
 from typing import cast, Optional
@@ -10,7 +11,9 @@ from tests.helpers.evaluate_linear_model import evaluate
 from torch.utils.data import DataLoader, TensorDataset
 
 
+# pyre-fixme[3]: Return type must be annotated.
 def sklearn_dataset_to_loaders(
+    # pyre-fixme[2]: Parameter must be annotated.
     data,
     train_prop: float = 0.7,
     batch_size: int = 64,
@@ -46,6 +49,7 @@ def sklearn_dataset_to_loaders(
     return train_loader, val_loader, xs.shape[1], xs.shape[0]
 
 
+# pyre-fixme[3]: Return type must be annotated.
 def compare_to_sk_learn(
     max_epoch: int,
     train_loader: DataLoader,
@@ -92,14 +96,20 @@ def compare_to_sk_learn(
     pytorch_h = pytorch_classifier.representation()
     sklearn_h = sklearn_classifier.representation()
     if objective == "ridge":
+        # pyre-fixme[6]: For 2nd argument expected `Tensor` but got `float`.
         o_pytorch["l2_reg"] = alpha * pytorch_h.norm(p=2, dim=-1)
+        # pyre-fixme[6]: For 2nd argument expected `Tensor` but got `float`.
         o_sklearn["l2_reg"] = alpha * sklearn_h.norm(p=2, dim=-1)
     elif objective == "lasso":
+        # pyre-fixme[6]: For 2nd argument expected `Tensor` but got `float`.
         o_pytorch["l1_reg"] = alpha * pytorch_h.norm(p=1, dim=-1)
+        # pyre-fixme[6]: For 2nd argument expected `Tensor` but got `float`.
         o_sklearn["l1_reg"] = alpha * sklearn_h.norm(p=1, dim=-1)
 
     rel_diff = cast(
-        np.ndarray, (sum(o_sklearn.values()) - sum(o_pytorch.values()))
+        np.ndarray,
+        # pyre-fixme[6]: For 1st argument expected `int` but got `Union[int, Tensor]`.
+        (sum(o_sklearn.values()) - sum(o_pytorch.values())),
     ) / abs(sum(o_sklearn.values()))
     return (
         {
@@ -112,6 +122,7 @@ def compare_to_sk_learn(
     )
 
 
+# pyre-fixme[2]: Parameter must be annotated.
 def main(args) -> None:
     if args.seed:
         torch.manual_seed(0)

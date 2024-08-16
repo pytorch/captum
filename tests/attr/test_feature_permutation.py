@@ -1,5 +1,8 @@
 #!/usr/bin/env python3
-from typing import Callable, List, Tuple
+
+# pyre-strict
+
+from typing import Any, Callable, List, Tuple
 
 import torch
 from captum.attr._core.feature_permutation import _permute_feature, FeaturePermutation
@@ -9,11 +12,12 @@ from tests.helpers.basic_models import BasicModelWithSparseInputs
 from torch import Tensor
 
 
-# pyre-ignore Undefined attribute [13]
 class Test(BaseTest):
+    # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
     def construct_future_forward(self, original_forward: Callable) -> Callable:
-        def future_forward(*args, **kwargs):
-            fut = torch.futures.Future()
+        def future_forward(*args: Any, **kwargs: Any) -> torch.futures.Future[Tensor]:
+            # pyre-fixme[29]: `typing.Type[torch.futures.Future]` is not a function.
+            fut: torch.futures.Future[Tensor] = torch.futures.Future()
             fut.set_result(original_forward(*args, **kwargs))
             return fut
 
@@ -141,7 +145,7 @@ class Test(BaseTest):
         inp1_size = (5, 2)
         inp2_size = (5, 3)
 
-        labels = torch.randn(batch_size)
+        labels: Tensor = torch.randn(batch_size)
 
         def forward_func(*x: Tensor) -> Tensor:
             y = torch.zeros(x[0].shape[0:2])
@@ -149,6 +153,8 @@ class Test(BaseTest):
                 y += xx[:, :, 0] * xx[:, :, 1]
             y = y.sum(dim=-1)
 
+            # pyre-fixme[58]: `**` is not supported for operand types `Tensor` and
+            #  `int`.
             return torch.mean((y - labels) ** 2)
 
         feature_importance = FeaturePermutation(forward_func=forward_func)
@@ -186,7 +192,7 @@ class Test(BaseTest):
         inp1_size = (5, 2)
         inp2_size = (5, 3)
 
-        labels = torch.randn(batch_size)
+        labels: Tensor = torch.randn(batch_size)
 
         def forward_func(*x: Tensor) -> Tensor:
             y = torch.zeros(x[0].shape[0:2])
@@ -194,6 +200,8 @@ class Test(BaseTest):
                 y += xx[:, :, 0] * xx[:, :, 1]
             y = y.sum(dim=-1)
 
+            # pyre-fixme[58]: `**` is not supported for operand types `Tensor` and
+            #  `int`.
             return torch.mean((y - labels) ** 2)
 
         feature_importance = FeaturePermutation(

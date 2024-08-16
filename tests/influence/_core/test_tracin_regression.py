@@ -1,6 +1,8 @@
+# pyre-strict
+
 import os
 import tempfile
-from typing import Callable, cast, Optional, Tuple
+from typing import Any, Callable, cast, Dict, List, Optional, Tuple
 
 import torch
 import torch.nn as nn
@@ -23,12 +25,13 @@ from tests.helpers.influence.common import (
     IdentityDataset,
     RangeDataset,
 )
+from torch import Tensor
 
 
 class TestTracInRegression(BaseTest):
     def _test_tracin_regression_setup(
         self, tmpdir: str, features: int, use_gpu: bool = False
-    ):
+    ) -> Tuple[RangeDataset, Dict[str, Any]]:
         low = 1
         high = 17
         dataset = RangeDataset(low, high, features, use_gpu)
@@ -45,6 +48,7 @@ class TestTracInRegression(BaseTest):
             checkpoint_name = "-".join(["checkpoint-reg", str(i + 1) + ".pt"])
             torch.save(net_adjusted.state_dict(), os.path.join(tmpdir, checkpoint_name))
 
+        # pyre-fixme[61]: `net_adjusted` is undefined, or not always defined.
         return dataset, net_adjusted
 
     use_gpu_list = (
@@ -53,7 +57,9 @@ class TestTracInRegression(BaseTest):
         else [False]
     )
 
-    param_list = []
+    param_list: List[Tuple[Optional[str], DataInfluenceConstructor, str, int, bool]] = (
+        []
+    )
     for use_gpu in use_gpu_list:
         for dim in [1, 20]:
             for mode, reduction, constructor in [
@@ -135,6 +141,10 @@ class TestTracInRegression(BaseTest):
                 if not (mode == "sample_wise_trick" and use_gpu):
                     param_list.append((reduction, constructor, mode, dim, use_gpu))
 
+    # pyre-fixme[56]: Pyre was not able to infer the type of argument
+    # `tests.helpers.influence.common.build_test_name_func
+    # ($parameter$args_to_skip = ["reduction"])` to decorator factory
+    # `parameterized.parameterized.expand`.
     @parameterized.expand(
         param_list,
         name_func=build_test_name_func(args_to_skip=["reduction"]),
@@ -142,6 +152,7 @@ class TestTracInRegression(BaseTest):
     def test_tracin_regression(
         self,
         reduction: Optional[str],
+        # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
         tracin_constructor: Callable,
         mode: str,
         features: int,
@@ -176,6 +187,7 @@ class TestTracInRegression(BaseTest):
             if mode == "check_idx":
 
                 self.assertTrue(isinstance(reduction, str))
+                # pyre-fixme[22]: The cast is redundant.
                 criterion = nn.MSELoss(reduction=cast(str, reduction))
 
                 tracin = tracin_constructor(
@@ -186,6 +198,7 @@ class TestTracInRegression(BaseTest):
                     criterion,
                 )
 
+                # pyre-fixme[16]: `object` has no attribute `influence`.
                 train_scores = tracin.influence((train_inputs, train_labels))
                 idx, _ = tracin.influence(
                     (train_inputs, train_labels), k=len(dataset), proponents=True
@@ -245,6 +258,9 @@ class TestTracInRegression(BaseTest):
                     self, test_scores, test_scores_sample_wise_trick
                 )
 
+    # pyre-fixme[56]: Pyre was not able to infer the type of argument
+    # `tests.helpers.influence.common.build_test_name_func()`
+    # to decorator factory `parameterized.parameterized.expand`.
     @parameterized.expand(
         [
             (
@@ -259,7 +275,10 @@ class TestTracInRegression(BaseTest):
         name_func=build_test_name_func(),
     )
     def test_tracin_regression_1D_numerical(
-        self, reduction: str, tracin_constructor: Callable
+        self,
+        reduction: str,
+        # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
+        tracin_constructor: Callable,
     ) -> None:
 
         low = 1
@@ -268,6 +287,7 @@ class TestTracInRegression(BaseTest):
         dataset = RangeDataset(low, high, features)
         net = CoefficientNet()
         self.assertTrue(isinstance(reduction, str))
+        # pyre-fixme[22]: The cast is redundant.
         criterion = nn.MSELoss(reduction=cast(str, reduction))
         batch_size = 4
         weights = [0.4379, 0.1653, 0.5132, 0.3651, 0.9992]
@@ -291,6 +311,7 @@ class TestTracInRegression(BaseTest):
                 criterion,
             )
 
+            # pyre-fixme[16]: `object` has no attribute `influence`.
             train_scores = tracin.influence((train_inputs, train_labels), k=None)
 
             r"""
@@ -331,6 +352,9 @@ class TestTracInRegression(BaseTest):
 
         return dataset, net
 
+    # pyre-fixme[56]: Pyre was not able to infer the type of argument
+    # `tests.helpers.influence.common.build_test_name_func()`
+    # to decorator factory `parameterized.parameterized.expand`
     @parameterized.expand(
         [
             ("check_idx", "none", DataInfluenceConstructor(TracInCP)),
@@ -358,7 +382,11 @@ class TestTracInRegression(BaseTest):
         name_func=build_test_name_func(),
     )
     def test_tracin_identity_regression(
-        self, mode: str, reduction: Optional[str], tracin_constructor: Callable
+        self,
+        mode: str,
+        reduction: Optional[str],
+        # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
+        tracin_constructor: Callable,
     ) -> None:
         """
         This test uses a linear model with positive coefficients, where input feature
@@ -384,6 +412,7 @@ class TestTracInRegression(BaseTest):
             if mode == "check_idx":
 
                 self.assertTrue(isinstance(reduction, str))
+                # pyre-fixme[22]: The cast is redundant.
                 criterion = nn.MSELoss(reduction=cast(str, reduction))
 
                 tracin = tracin_constructor(
@@ -396,6 +425,7 @@ class TestTracInRegression(BaseTest):
 
                 # check influence scores of training data
 
+                # pyre-fixme[16]: `object` has no attribute `influence`.
                 train_scores = tracin.influence((train_inputs, train_labels))
                 idx, _ = tracin.influence(
                     (train_inputs, train_labels), k=len(dataset), proponents=True
@@ -437,6 +467,9 @@ class TestTracInRegression(BaseTest):
                     self, train_scores, train_scores_tracin_sample_wise_trick
                 )
 
+    # pyre-fixme[56]: Pyre was not able to infer the type of argument
+    # `tests.helpers.influence.common.build_test_name_func()`
+    # to decorator factory `parameterized.parameterized.expand`.
     @parameterized.expand(
         [
             ("none", "none", DataInfluenceConstructor(TracInCP)),
@@ -464,6 +497,7 @@ class TestTracInRegression(BaseTest):
         self,
         reduction: Optional[str],
         test_reduction: Optional[str],
+        # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
         tracin_constructor: Callable,
     ) -> None:
         """
@@ -494,18 +528,19 @@ class TestTracInRegression(BaseTest):
             self.assertTrue(callable(tracin_constructor))
 
             self.assertTrue(isinstance(reduction, str))
+            # pyre-fixme[22]: The cast is redundant.
             criterion = nn.MSELoss(reduction=cast(str, reduction))
 
             # the output of `net`, i.e. `input` for the loss functions below, is a
             # batch_size x 1 2D tensor
             if test_reduction == "none":
                 # loss function returns 1D tensor of all 0's, so is constant
-                def test_loss_fn(input, target):
+                def test_loss_fn(input: Tensor, target: int) -> Tensor:
                     return input.squeeze() * 0.0
 
             elif test_reduction in ["sum", "mean"]:
                 # loss function returns scalar tensor of all 0's, so is constant
-                def test_loss_fn(input, target):
+                def test_loss_fn(input: Tensor, target: int) -> Tensor:
                     return input.mean() * 0.0
 
             tracin = tracin_constructor(
@@ -514,9 +549,11 @@ class TestTracInRegression(BaseTest):
                 tmpdir,
                 batch_size,
                 criterion,
+                # pyre-fixme[61]: `test_loss_fn` is undefined, or not always defined.
                 test_loss_fn=test_loss_fn,
             )
 
             # check influence scores of training data. they should all be 0
+            # pyre-fixme[16]: `object` has no attribute `influence`.
             train_scores = tracin.influence((train_inputs, train_labels), k=None)
             assertTensorAlmostEqual(self, train_scores, torch.zeros(train_scores.shape))
