@@ -371,3 +371,12 @@ class Test(BaseTest):
         )
 
         assertAttributionComparision(self, dl_attributions, expected_attr)
+
+    def test_futures_not_implemented(self) -> None:
+        forward = sum_forward
+        fa = FeatureAblation(forward)
+        dl_fa = DataLoaderAttribution(fa)
+        attributions = None
+        with self.assertRaises(NotImplementedError):
+            attributions = dl_fa.attribute_future()
+        self.assertEqual(attributions, None)

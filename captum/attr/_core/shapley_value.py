@@ -485,6 +485,17 @@ class ShapleyValueSampling(PerturbationAttribution):
         #  `Tuple[Tensor, ...]`.
         return formatted_attr
 
+    # pyre-fixme[3]: Return type must be annotated.
+    def attribute_future(
+        self,
+    ):
+        r"""
+        This method is not implemented for ShapleyValueSampling.
+        """
+        raise NotImplementedError(
+            "attribute_future is not implemented for ShapleyValueSampling"
+        )
+
     # pyre-fixme[3]: Return annotation cannot contain `Any`.
     def _perturbation_generator(
         self,

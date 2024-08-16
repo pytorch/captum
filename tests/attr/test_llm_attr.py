@@ -330,7 +330,6 @@ class TestLLMAttr(BaseTest):
         self.assertEqual(res.token_attr, None)
         self.assertEqual(res.input_tokens, ["a", "c", "d", "f"])
         self.assertEqual(res.output_tokens, ["m", "n", "o", "p", "q"])
-
         assertTensorAlmostEqual(
             self,
             actual=res.seq_attr,
@@ -338,6 +337,17 @@ class TestLLMAttr(BaseTest):
             delta=delta,
             mode="max",
         )
+
+    def test_futures_not_implemented(self) -> None:
+        llm = DummyLLM()
+        llm.to(self.device)
+        tokenizer = DummyTokenizer()
+        fa = FeatureAblation(llm)
+        llm_fa = LLMAttribution(fa, tokenizer)
+        attributions = None
+        with self.assertRaises(NotImplementedError):
+            attributions = llm_fa.attribute_future()
+        self.assertEqual(attributions, None)
 
 
 @parameterized_class(

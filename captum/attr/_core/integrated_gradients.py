@@ -329,6 +329,17 @@ class IntegratedGradients(GradientAttribution):
         #  <: [Tensor, typing.Tuple[Tensor, ...]]]]` but got `Tuple[Tensor, ...]`.
         return _format_output(is_inputs_tuple, attributions)
 
+    # pyre-fixme[3]: Return type must be annotated.
+    def attribute_future(
+        self,
+    ):
+        r"""
+        This method is not implemented for IntegratedGradients.
+        """
+        raise NotImplementedError(
+            "attribute_future is not implemented for IntegratedGradients"
+        )
+
     def _attribute(
         self,
         inputs: Tuple[Tensor, ...],

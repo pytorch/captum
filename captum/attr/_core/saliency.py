@@ -150,3 +150,12 @@ class Saliency(GradientAttribution):
         # pyre-fixme[7]: Expected `TensorOrTupleOfTensorsGeneric` but got
         #  `Tuple[Tensor, ...]`.
         return _format_output(is_inputs_tuple, attributions)
+
+    # pyre-fixme[3]: Return type must be annotated.
+    def attribute_future(
+        self,
+    ):
+        r"""
+        This method is not implemented for Saliency.
+        """
+        raise NotImplementedError("attribute_future is not implemented for Saliency")

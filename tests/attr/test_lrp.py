@@ -327,3 +327,11 @@ class Test(BaseTest):
         lrp = LRP(model)
         with self.assertRaisesRegex(RuntimeError, "more than once"):
             lrp.attribute(inp, target=0)
+
+    def test_futures_not_implemented(self) -> None:
+        model = BasicModelWithReusedLinear()
+        lrp = LRP(model)
+        attributions = None
+        with self.assertRaises(NotImplementedError):
+            attributions = lrp.attribute_future()
+        self.assertEqual(attributions, None)

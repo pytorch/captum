@@ -386,6 +386,15 @@ class Test(BaseTest):
             mock_stderr.seek(0)
             mock_stderr.truncate(0)
 
+    def test_futures_not_implemented(self) -> None:
+        net = BasicModel_MultiLayer()
+
+        attributions = None
+        shapley_samp = ShapleyValueSampling(net)
+        with self.assertRaises(NotImplementedError):
+            attributions = shapley_samp.attribute_future()
+        self.assertEqual(attributions, None)
+
     def _single_input_one_sample_batch_scalar_shapley_assert(
         self, func: Callable
     ) -> None:

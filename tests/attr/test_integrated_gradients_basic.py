@@ -154,6 +154,14 @@ class Test(BaseTest):
     def test_batched_multi_input_smoothgrad_sq_batch_size_3(self) -> None:
         self._assert_batched_tensor_multi_input("vargrad", "riemann_trapezoid", 3)
 
+    def test_futures_not_implemented(self) -> None:
+        model = BasicModel2()
+        ig = IntegratedGradients(model, multiply_by_inputs=True)
+        attributions = None
+        with self.assertRaises(NotImplementedError):
+            attributions = ig.attribute_future()
+        self.assertEqual(attributions, None)
+
     def _assert_multi_variable(
         self,
         type: str,

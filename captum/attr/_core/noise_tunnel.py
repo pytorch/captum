@@ -460,6 +460,14 @@ class NoiseTunnel(Attribution):
             delta,
         )
 
+    def attribute_future(
+        self,
+    ) -> None:
+        r"""
+        This method is not implemented for NoiseTunnel.
+        """
+        raise NotImplementedError("attribute_future is not implemented for NoiseTunnel")
+
     def _apply_checks_and_return_attributions(
         self,
         attributions: Tuple[Tensor, ...],

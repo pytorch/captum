@@ -280,6 +280,14 @@ class Test(BaseTest):
             strides=((1, 2, 1), (1, 1, 2)),
         )
 
+    def test_futures_not_implemented(self) -> None:
+        net = BasicModel_ConvNet_One_Conv()
+        occ = Occlusion(net)
+        attributions = None
+        with self.assertRaises(NotImplementedError):
+            attributions = occ.attribute_future()
+        self.assertEqual(attributions, None)
+
     @unittest.mock.patch("sys.stderr", new_callable=io.StringIO)
     def test_simple_input_with_show_progress(self, mock_stderr) -> None:
         net = BasicModel_MultiLayer()

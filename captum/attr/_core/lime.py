@@ -540,6 +540,17 @@ class LimeBase(PerturbationAttribution):
             return self.interpretable_model.representation()
 
     # pyre-fixme[3]: Return type must be annotated.
+    def attribute_future(
+        self,
+    ):
+        r"""
+        This method is not implemented for LimeBase.
+        """
+        raise NotImplementedError(
+            "LimeBase does not support attribution of future samples."
+        )
+
+    # pyre-fixme[3]: Return type must be annotated.
     def _evaluate_batch(
         self,
         curr_model_inputs: List[TensorOrTupleOfTensorsGeneric],
@@ -1099,6 +1110,10 @@ class Lime(LimeBase):
             return_input_shape=return_input_shape,
             show_progress=show_progress,
         )
+
+    # pyre-fixme[3]: Return type must be annotated.
+    def attribute_future(self):
+        return super().attribute_future()
 
     def _attribute_kwargs(  # type: ignore
         self,

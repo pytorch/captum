@@ -435,6 +435,17 @@ class LLMAttribution(Attribution):
             self.tokenizer.convert_ids_to_tokens(target_tokens),
         )
 
+    # pyre-fixme[3]: Return type must be annotated.
+    def attribute_future(
+        self,
+    ):
+        r"""
+        This method is not implemented for LLMAttribution.
+        """
+        raise NotImplementedError(
+            "attribute_future is not implemented for LLMAttribution"
+        )
+
 
 class LLMGradientAttribution(Attribution):
     """
@@ -644,4 +655,15 @@ class LLMGradientAttribution(Attribution):
             inp.values,
             # pyre-fixme[61]: `target_tokens` is undefined, or not always defined.
             self.tokenizer.convert_ids_to_tokens(target_tokens),
+        )
+
+    # pyre-fixme[3]: Return type must be annotated.
+    def attribute_future(
+        self,
+    ):
+        r"""
+        This method is not implemented for LLMGradientAttribution.
+        """
+        raise NotImplementedError(
+            "attribute_future is not implemented for LLMGradientAttribution"
         )

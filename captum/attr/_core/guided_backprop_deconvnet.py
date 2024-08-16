@@ -90,6 +90,16 @@ class ModifiedReluGradientAttribution(GradientAttribution):
         #  `Tuple[Tensor, ...]`.
         return _format_output(is_inputs_tuple, gradients)
 
+    def attribute_future(
+        self,
+    ) -> None:
+        r"""
+        This method is not implemented for ModifiedReluGradientAttribution.
+        """
+        raise NotImplementedError(
+            "attribute_future is not implemented for ModifiedReluGradientAttribution"
+        )
+
     # pyre-fixme[3]: Return type must be annotated.
     def _register_hooks(self, module: Module):
         if isinstance(module, torch.nn.ReLU):

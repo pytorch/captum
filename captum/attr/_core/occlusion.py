@@ -271,6 +271,15 @@ class Occlusion(FeatureAblation):
             show_progress=show_progress,
         )
 
+    # pyre-fixme[3]: Return type must be annotated.
+    def attribute_future(
+        self,
+    ):
+        r"""
+        This method is not implemented for Occlusion.
+        """
+        raise NotImplementedError("attribute_future is not implemented for Occlusion")
+
     def _construct_ablated_input(
         self,
         expanded_input: Tensor,
