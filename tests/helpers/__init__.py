@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+# pyre-strict
+
 try:
     from tests.helpers.fb.internal_base import FbBaseTest as BaseTest
 

@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
 
+# pyre-strict
+
 import copy
 from collections import namedtuple
-from typing import Any, cast, Dict, List, Optional, Type, Union
+from typing import Any, cast, Dict, List, NamedTuple, Optional, Type, Union
 
 import torch
 from captum._utils.models.linear_model import (  # @manual=//pytorch/captum/captum/_utils/models/linear_model:linear_model  # noqa: E501
@@ -33,11 +35,14 @@ class DummyTokenizer:
     ) -> Union[List[int], Tensor]:
         tokens = text.split(" ")
 
+        # pyre-fixme[16]: `DummyTokenizer` has no attribute `unk`.
         tokens_ids: Union[List[int], Tensor] = [
             ord(s[0]) if len(s) == 1 else self.unk for s in tokens
         ]
 
         # start with sos
+        # pyre-fixme[35]: Target cannot be annotated.
+        # pyre-fixme[16]: `DummyTokenizer` has no attribute `sos`.
         tokens_ids = [self.sos, *tokens_ids]
 
         if return_tensors:
@@ -52,9 +57,6 @@ class DummyTokenizer:
 
     def decode(self, token_ids: List[int]) -> str:
         return " ".join(self.convert_ids_to_tokens(token_ids))
-
-
-Result = namedtuple("Result", ["logits", "past_key_values"])
 
 
 class DummyLLM(nn.Module):
@@ -87,37 +89,43 @@ class DummyLLM(nn.Module):
             self.linear.weight.data = rand_like(self.linear.weight)
             self.linear.bias.data.fill_(0.5)
 
-    def forward(self, input_ids: Tensor, *args, **kwargs) -> Result:
+    def forward(self, input_ids: Tensor, *args: Any, **kwargs: Any) -> NamedTuple:
         emb = self.emb(input_ids)
         if "past_key_values" in kwargs:
             emb = torch.cat((kwargs["past_key_values"], emb), dim=1)
         encoding = self.trans(emb)
         logits = self.linear(encoding)
+        Result = namedtuple("Result", ["logits", "past_key_values"])
         return Result(logits=logits, past_key_values=emb)
 
     def generate(
         self,
         input_ids: Tensor,
-        *args,
+        *args: Any,
         mock_response: Optional[str] = None,
-        **kwargs,
+        **kwargs: Any,
     ) -> Tensor:
         assert mock_response, "must mock response to use DummyLLM to generate"
         response = self.tokenizer.encode(mock_response)[1:]
         return torch.cat(
-            [input_ids, torch.tensor([response], device=self.device)], dim=1
+            # pyre-fixme[6]: In call `torch._C._VariableFunctions.cat`,
+            # for 1st positional argument, expected `Union[List[Tensor],
+            # typing.Tuple[Tensor, ...]]` but got `List[Union[List[int], Tensor]]`.
+            [input_ids, torch.tensor([response], device=self.device)],  # type: ignore
+            dim=1,
         )
 
     def _update_model_kwargs_for_generation(
-        self, outputs: Result, model_kwargs: Dict[str, Tensor]
-    ) -> Dict[str, Tensor]:
+        self, outputs: NamedTuple, model_kwargs: Dict[str, Any]
+    ) -> Dict[str, Any]:
         new_kwargs = copy.deepcopy(model_kwargs)
         if hasattr(outputs, "past_key_values"):
-            new_kwargs["past_key_values"] = outputs.past_key_values
+            # pyre-fixme[16]: `NamedTuple` has no attribute `past_key_values`.
+            new_kwargs["past_key_values"] = outputs.past_key_values  # type: ignore
         return new_kwargs
 
     def prepare_inputs_for_generation(
-        self, model_inp: Tensor, **model_kwargs
+        self, model_inp: Tensor, **model_kwargs: Any
     ) -> Dict[str, Tensor]:
         model_inp = model_inp.to(self.device)
         if "past_key_values" in model_kwargs:
@@ -146,11 +154,13 @@ class DummyLLM(nn.Module):
         else [("cpu", True), ("cpu", False)]
     ),
 )
-# pyre-ignore Undefined attribute [13]
+# pyre-fixme[13]: Attribute `device` is never initialized.
+# pyre-fixme[13]: Attribute `use_cached_outputs` is never initialized.
 class TestLLMAttr(BaseTest):
     device: str
     use_cached_outputs: bool
 
+    # pyre-fixme[56]: Pyre was not able to infer the type of argument `comprehension
     @parameterized.expand(
         [
             (
@@ -195,6 +205,8 @@ class TestLLMAttr(BaseTest):
             )
         ]
     )
+    # pyre-fixme[2]: Missing parameter annotation [2]: Parameter `AttrClass`
+    # has no type specified.
     def test_llm_attr(
         self,
         AttrClass: Type[PerturbationAttribution],
@@ -203,7 +215,7 @@ class TestLLMAttr(BaseTest):
         true_seq_attr: Tensor,
         true_tok_attr: Tensor,
     ) -> None:
-        attr_kws: Dict[Any, Any] = {}
+        attr_kws: Dict[str, int] = {}
         if n_samples is not None:
             attr_kws["n_samples"] = n_samples
 
@@ -215,7 +227,13 @@ class TestLLMAttr(BaseTest):
 
         inp = TextTemplateInput("{} b {} {} e {}", ["a", "c", "d", "f"])
         res = llm_attr.attribute(
-            inp, "m n o p q", use_cached_outputs=self.use_cached_outputs, **attr_kws
+            inp,
+            "m n o p q",
+            use_cached_outputs=self.use_cached_outputs,
+            # pyre-fixme[6]: In call `LLMAttribution.attribute`,
+            # for 4th positional argument, expected
+            # `Optional[typing.Callable[..., typing.Any]]` but got `int`.
+            **attr_kws,  # type: ignore
         )
 
         self.assertEqual(res.seq_attr.shape, (4,))
@@ -277,6 +295,7 @@ class TestLLMAttr(BaseTest):
         # equals to the sum of each token attr
         assertTensorAlmostEqual(self, res.seq_attr, cast(Tensor, res.token_attr).sum(0))
 
+    # pyre-fixme[56]: Pyre was not able to infer the type of argument `comprehension
     @parameterized.expand(
         [
             (
@@ -298,6 +317,8 @@ class TestLLMAttr(BaseTest):
             )
         ]
     )
+    # pyre-fixme[2]: Missing parameter annotation [2]: Parameter `AttrClass`
+    # has no type specified.
     def test_llm_attr_without_token(
         self,
         AttrClass: Type[PerturbationAttribution],
@@ -309,7 +330,7 @@ class TestLLMAttr(BaseTest):
         init_kws = {}
         if interpretable_model is not None:
             init_kws["interpretable_model"] = interpretable_model
-        attr_kws: Dict[Any, Any] = {}
+        attr_kws: Dict[str, int] = {}
         if n_samples is not None:
             attr_kws["n_samples"] = n_samples
 
@@ -322,7 +343,13 @@ class TestLLMAttr(BaseTest):
 
         inp = TextTemplateInput("{} b {} {} e {}", ["a", "c", "d", "f"])
         res = llm_fa.attribute(
-            inp, "m n o p q", use_cached_outputs=self.use_cached_outputs, **attr_kws
+            inp,
+            "m n o p q",
+            use_cached_outputs=self.use_cached_outputs,
+            # pyre-fixme[6]: In call `LLMAttribution.attribute`,
+            # for 4th positional argument, expected
+            # `Optional[typing.Callable[..., typing.Any]]` but got `int`.
+            **attr_kws,  # type: ignore
         )
 
         self.assertEqual(res.seq_attr.shape, (4,))
@@ -353,7 +380,7 @@ class TestLLMAttr(BaseTest):
 @parameterized_class(
     ("device",), [("cpu",), ("cuda",)] if torch.cuda.is_available() else [("cpu",)]
 )
-# pyre-ignore Undefined attribute [13]
+# pyre-fixme[13]: Attribute `device` is never initialized.
 class TestLLMGradAttr(BaseTest):
     device: str
 

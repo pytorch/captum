@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
+
+# pyre-strict
 import copy
 import random
 import unittest
 
-from typing import Callable
+from typing import Callable, Generator
 
 import numpy as np
 import torch
@@ -11,7 +13,11 @@ from captum.log import patch_methods
 from torch import Tensor
 
 
+# pyre-fixme[3]: Return type must be annotated.
+# pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
 def deep_copy_args(func: Callable):
+    # pyre-fixme[3]: Return type must be annotated.
+    # pyre-fixme[2]: Parameter must be annotated.
     def copy_args(*args, **kwargs):
         return func(
             *(copy.deepcopy(x) for x in args),
@@ -22,7 +28,14 @@ def deep_copy_args(func: Callable):
 
 
 def assertTensorAlmostEqual(
-    test, actual, expected, delta: float = 0.0001, mode: str = "sum"
+    # pyre-fixme[2]: Parameter must be annotated.
+    test,
+    # pyre-fixme[2]: Parameter must be annotated.
+    actual,
+    # pyre-fixme[2]: Parameter must be annotated.
+    expected,
+    delta: float = 0.0001,
+    mode: str = "sum",
 ) -> None:
     assert isinstance(actual, torch.Tensor), (
         "Actual parameter given for " "comparison must be a tensor."
@@ -62,7 +75,14 @@ def assertTensorAlmostEqual(
 
 
 def assertTensorTuplesAlmostEqual(
-    test, actual, expected, delta: float = 0.0001, mode: str = "sum"
+    # pyre-fixme[2]: Parameter must be annotated.
+    test,
+    # pyre-fixme[2]: Parameter must be annotated.
+    actual,
+    # pyre-fixme[2]: Parameter must be annotated.
+    expected,
+    delta: float = 0.0001,
+    mode: str = "sum",
 ) -> None:
     if isinstance(expected, tuple):
         assert len(actual) == len(
@@ -75,12 +95,14 @@ def assertTensorTuplesAlmostEqual(
         assertTensorAlmostEqual(test, actual, expected, delta, mode)
 
 
+# pyre-fixme[2]: Parameter must be annotated.
 def assertAttributionComparision(test, attributions1, attributions2) -> None:
     for attribution1, attribution2 in zip(attributions1, attributions2):
         for attr_row1, attr_row2 in zip(attribution1, attribution2):
             assertTensorAlmostEqual(test, attr_row1, attr_row2, 0.05, "max")
 
 
+# pyre-fixme[2]: Parameter must be annotated.
 def assert_delta(test, delta) -> None:
     delta_condition = (delta.abs() < 0.00001).all()
     test.assertTrue(
@@ -99,7 +121,9 @@ def set_all_random_seeds(seed: int = 1234) -> None:
     torch.backends.cudnn.deterministic = True
 
 
-def lcg(a: int = 16843009, b: int = 3014898611, m: int = 1 << 32):
+def lcg(
+    a: int = 16843009, b: int = 3014898611, m: int = 1 << 32
+) -> Generator[int, None, None]:
     """Linear congruential generator"""
     x = 1
     while True:

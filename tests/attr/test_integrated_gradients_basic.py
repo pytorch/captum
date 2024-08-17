@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+# pyre-strict
+
 import unittest
 from typing import Any, cast, Optional, Tuple, Union
 
@@ -392,11 +394,13 @@ class Test(BaseTest):
         inputs: TensorOrTupleOfTensorsGeneric,
         baselines: BaselineType = None,
         target: Union[None, int] = None,
+        # pyre-fixme[2]: Parameter `additional_forward_args` has type `None`
+        # but type`Any` is specified.
         additional_forward_args: Any = None,
         type: str = "vanilla",
         approximation_method: str = "gausslegendre",
         multiply_by_inputs: bool = True,
-        nt_samples_batch_size=None,
+        nt_samples_batch_size: Optional[int] = None,
     ) -> Tuple[Tensor, ...]:
         r"""
         attrib_type: 'vanilla', 'smoothgrad', 'smoothgrad_sq', 'vargrad'
@@ -405,6 +409,7 @@ class Test(BaseTest):
         self.assertEqual(ig.multiplies_by_inputs, multiply_by_inputs)
         if not isinstance(inputs, tuple):
             inputs = (inputs,)  # type: ignore
+        # pyre-fixme[35]: Target cannot be annotated.
         inputs: Tuple[Tensor, ...]
 
         if baselines is not None and not isinstance(baselines, tuple):
@@ -496,13 +501,16 @@ class Test(BaseTest):
         model: Module,
         inputs: TensorOrTupleOfTensorsGeneric,
         baselines: Union[None, Tensor, Tuple[Tensor, ...]] = None,
-        target: Union[None, int] = None,
+        target: Optional[int] = None,
+        # pyre-fixme[2]: Parameter `additional_forward_args` has type `None` but type
+        # `Any` is specified.
         additional_forward_args: Any = None,
         approximation_method: str = "gausslegendre",
     ) -> None:
         ig = IntegratedGradients(model)
         if not isinstance(inputs, tuple):
             inputs = (inputs,)  # type: ignore
+        # pyre-fixme[35]: Target cannot be annotated.
         inputs: Tuple[Tensor, ...]
 
         if baselines is not None and not isinstance(baselines, tuple):
