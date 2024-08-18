@@ -1,12 +1,15 @@
 #!/usr/bin/env python3
 # (c) Meta Platforms, Inc. and affiliates. Confidential and proprietary.
 
+# pyre-strict
+
 from typing import cast, Dict
 
 import torch
 from torch import Tensor
 
 
+# pyre-fixme[2]: Parameter must be annotated.
 def evaluate(test_data, classifier) -> Dict[str, Tensor]:
     classifier.eval()
 

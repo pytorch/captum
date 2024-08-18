@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+# pyre-strict
+
 import unittest
 from typing import Any, Callable, cast, List, Tuple, Union
 
@@ -190,8 +192,11 @@ class Test(BaseTest):
         model: Module,
         target_layer: Module,
         test_input: TensorOrTupleOfTensorsGeneric,
+        # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
         test_neuron: Union[int, Tuple[int, ...], Callable],
         expected_input_conductance: Union[List[float], Tuple[List[List[float]], ...]],
+        # pyre-fixme[2]: Parameter `additional_input` has type `None` but type
+        # `Any` is specified.
         additional_input: Any = None,
         multiply_by_inputs: bool = True,
     ) -> None:
@@ -268,7 +273,13 @@ class Test(BaseTest):
                     for n in range(attributions.shape[0]):
                         self.assertAlmostEqual(
                             torch.sum(neuron_vals[n]).item(),
+                            # pyre-fixme[6]: For 2nd argument expected
+                            #  `SupportsRSub[Variable[_T],
+                            #  SupportsAbs[SupportsRound[object]]]` but got
+                            #  `Union[bool, float, int]`.
                             attributions[n, i, j, k].item(),
+                            # pyre-fixme[6]: For 3rd argument expected `None` but
+                            #  got `float`.
                             delta=0.005,
                         )
 
