@@ -92,9 +92,9 @@ data = titanic_data.to_numpy()
 # Separate training and test sets using 
 train_indices = np.random.choice(len(labels), int(0.7*len(labels)), replace=False)
 test_indices = list(set(range(len(labels))) - set(train_indices))
-train_features = data[train_indices]
+train_features = np.array(data[train_indices], dtype=float)
 train_labels = labels[train_indices]
-test_features = data[test_indices]
+test_features = np.array(data[test_indices], dtype=float)
 test_labels = labels[test_indices]
 
 
