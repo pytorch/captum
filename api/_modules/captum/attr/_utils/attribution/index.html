@@ -107,6 +107,37 @@ src="/_sphinx/documentation_options.js"></script>
 
 <span class="sd">    """</span>
 
+    <span class="c1"># pyre-fixme[24] Callable needs 2 type parameters</span>
+    <span class="n">attribute_future</span><span class="p">:</span> <span class="n">Callable</span>
+
+<span class="w">    </span><span class="sa">r</span><span class="sd">"""</span>
+<span class="sd">    This method computes and returns a Future of attribution values for each input</span>
+<span class="sd">    tensor. Deriving classes are responsible for implementing its logic accordingly.</span>
+
+<span class="sd">    Specific attribution algorithms that extend this class take relevant</span>
+<span class="sd">    arguments.</span>
+
+<span class="sd">    Args:</span>
+
+<span class="sd">        inputs (Tensor or tuple[Tensor, ...]): Input for which attribution</span>
+<span class="sd">                    is computed. It can be provided as a single tensor or</span>
+<span class="sd">                    a tuple of multiple tensors. If multiple input tensors</span>
+<span class="sd">                    are provided, the batch sizes must be aligned across all</span>
+<span class="sd">                    tensors.</span>
+
+
+<span class="sd">    Returns:</span>
+
+<span class="sd">        *Future[Tensor]* or *Future[tuple[Tensor, ...]]* of **attributions**:</span>
+<span class="sd">        - **attributions** (*Future[Tensor]* or *Future[tuple[Tensor, ...]]*):</span>
+<span class="sd">                    Future of attribution values for each input tensor.</span>
+<span class="sd">                    The results should be the same as the attribute</span>
+<span class="sd">                    method, except that the results are returned as a Future.</span>
+<span class="sd">                    If a single tensor is provided as inputs, a single Future tensor</span>
+<span class="sd">                    is returned. If a tuple is provided for inputs, a Future of a</span>
+<span class="sd">                    tuple of corresponding sized tensors is returned.</span>
+<span class="sd">    """</span>
+
     <span class="nd">@property</span>
     <span class="c1"># pyre-fixme[3]: Return type must be annotated.</span>
     <span class="k">def</span> <span class="nf">multiplies_by_inputs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>

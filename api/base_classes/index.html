@@ -81,6 +81,41 @@ corresponding sized tensors is returned.</p>
 </dl>
 </dd></dl>
 <dl class="py attribute">
+<dt class="sig sig-object py" id="captum.attr.Attribution.attribute_future">
+<span class="sig-name descname"><span class="pre">attribute_future</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Callable" title="(in Python v3.12)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Callable</span></code></a></em><a class="headerlink" href="#captum.attr.Attribution.attribute_future" title="Link to this definition">¶</a></dt>
+<dd><p>This method computes and returns a Future of attribution values for each input
+tensor. Deriving classes are responsible for implementing its logic accordingly.</p>
+<p>Specific attribution algorithms that extend this class take relevant
+arguments.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>inputs</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v2.4)"><em>Tensor</em></a><em> or </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.12)"><em>tuple</em></a><em>[</em><a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v2.4)"><em>Tensor</em></a><em>, </em><em>...</em><em>]</em>) – Input for which attribution
+is computed. It can be provided as a single tensor or
+a tuple of multiple tensors. If multiple input tensors
+are provided, the batch sizes must be aligned across all
+tensors.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><ul class="simple">
+<li><dl class="simple">
+<dt><strong>attributions</strong> (<em>Future[Tensor]</em> or <em>Future[tuple[Tensor, …]]</em>):</dt><dd><p>Future of attribution values for each input tensor.
+The results should be the same as the attribute
+method, except that the results are returned as a Future.
+If a single tensor is provided as inputs, a single Future tensor
+is returned. If a tuple is provided for inputs, a Future of a
+tuple of corresponding sized tensors is returned.</p>
+</dd>
+</dl>
+</li>
+</ul>
+</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><em>Future[Tensor]</em> or <em>Future[tuple[Tensor, …]]</em> of <strong>attributions</strong></p>
+</dd>
+</dl>
+</dd></dl>
+<dl class="py attribute">
 <dt class="sig sig-object py" id="captum.attr.Attribution.compute_convergence_delta">
 <span class="sig-name descname"><span class="pre">compute_convergence_delta</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Callable" title="(in Python v3.12)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Callable</span></code></a></em><a class="headerlink" href="#captum.attr.Attribution.compute_convergence_delta" title="Link to this definition">¶</a></dt>
 <dd><p>The attribution algorithms which derive <cite>Attribution</cite> class and provide

@@ -577,6 +577,20 @@ src="/_sphinx/documentation_options.js"></script>
 
 
     <span class="c1"># pyre-fixme[3]: Return type must be annotated.</span>
+<div class="viewcode-block" id="LimeBase.attribute_future">
+<a class="viewcode-back" href="../../../../lime.html#captum.attr.LimeBase.attribute_future">[docs]</a>
+    <span class="k">def</span> <span class="nf">attribute_future</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">"""</span>
+<span class="sd">        This method is not implemented for LimeBase.</span>
+<span class="sd">        """</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span>
+            <span class="s2">"LimeBase does not support attribution of future samples."</span>
+        <span class="p">)</span></div>
+
+
+    <span class="c1"># pyre-fixme[3]: Return type must be annotated.</span>
     <span class="k">def</span> <span class="nf">_evaluate_batch</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">curr_model_inputs</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">TensorOrTupleOfTensorsGeneric</span><span class="p">],</span>
@@ -1147,6 +1161,13 @@ src="/_sphinx/documentation_options.js"></script>
             <span class="n">return_input_shape</span><span class="o">=</span><span class="n">return_input_shape</span><span class="p">,</span>
             <span class="n">show_progress</span><span class="o">=</span><span class="n">show_progress</span><span class="p">,</span>
         <span class="p">)</span></div>
+
+
+    <span class="c1"># pyre-fixme[3]: Return type must be annotated.</span>
+<div class="viewcode-block" id="Lime.attribute_future">
+<a class="viewcode-back" href="../../../../lime.html#captum.attr.Lime.attribute_future">[docs]</a>
+    <span class="k">def</span> <span class="nf">attribute_future</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">attribute_future</span><span class="p">()</span></div>
 
 
     <span class="k">def</span> <span class="nf">_attribute_kwargs</span><span class="p">(</span>  <span class="c1"># type: ignore</span>
