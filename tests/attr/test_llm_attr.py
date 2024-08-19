@@ -49,13 +49,13 @@ class DummyTokenizer:
             return torch.tensor([tokens_ids])
         return tokens_ids
 
-    def convert_ids_to_tokens(self, token_ids: List[int]) -> List[str]:
+    def convert_ids_to_tokens(self, token_ids: Tensor) -> List[str]:
         return [
             (self.special_tokens[tid] if tid in self.special_tokens else chr(tid))
             for tid in token_ids
         ]
 
-    def decode(self, token_ids: List[int]) -> str:
+    def decode(self, token_ids: Tensor) -> str:
         return " ".join(self.convert_ids_to_tokens(token_ids))
 
 
@@ -386,11 +386,13 @@ class TestLLMGradAttr(BaseTest):
 
         # 5 output tokens, 4 input tokens including sos
         self.assertEqual(res.seq_attr.shape, (4,))
+        assert res.token_attr is not None  # make pyre/mypy happy
         self.assertEqual(res.token_attr.shape, (5, 4))
         self.assertEqual(res.input_tokens, ["<sos>", "a", "b", "c"])
         self.assertEqual(res.output_tokens, ["m", "n", "o", "p", "q"])
 
         self.assertEqual(res.seq_attr.device.type, self.device)
+        assert res.token_attr is not None  # make pyre/mypy happy
         self.assertEqual(res.token_attr.device.type, self.device)
 
     def test_llm_attr_without_target(self) -> None:
@@ -404,11 +406,13 @@ class TestLLMGradAttr(BaseTest):
         res = llm_attr.attribute(inp, gen_args={"mock_response": "x y z"})
 
         self.assertEqual(res.seq_attr.shape, (4,))
+        assert res.token_attr is not None  # make pyre/mypy happy
         self.assertEqual(res.token_attr.shape, (3, 4))
         self.assertEqual(res.input_tokens, ["<sos>", "a", "b", "c"])
         self.assertEqual(res.output_tokens, ["x", "y", "z"])
 
         self.assertEqual(res.seq_attr.device.type, self.device)
+        assert res.token_attr is not None  # make pyre/mypy happy
         self.assertEqual(res.token_attr.device.type, self.device)
 
     def test_llm_attr_with_skip_tokens(self) -> None:
@@ -423,9 +427,11 @@ class TestLLMGradAttr(BaseTest):
 
         # 5 output tokens, 4 input tokens including sos
         self.assertEqual(res.seq_attr.shape, (3,))
+        assert res.token_attr is not None  # make pyre/mypy happy
         self.assertEqual(res.token_attr.shape, (5, 3))
         self.assertEqual(res.input_tokens, ["a", "b", "c"])
         self.assertEqual(res.output_tokens, ["m", "n", "o", "p", "q"])
 
         self.assertEqual(res.seq_attr.device.type, self.device)
+        assert res.token_attr is not None  # make pyre/mypy happy
         self.assertEqual(res.token_attr.device.type, self.device)
