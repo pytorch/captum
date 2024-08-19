@@ -1,3 +1,4 @@
+# pyre-unsafe
 from typing import cast, Dict, List, Tuple, Union
 
 from captum.attr._utils.baselines import ProductBaselines

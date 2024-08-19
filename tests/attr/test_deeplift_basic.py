@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+# pyre-unsafe
+
 from inspect import signature
 from typing import Callable, List, Optional, Tuple, Union
 

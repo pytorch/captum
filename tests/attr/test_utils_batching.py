@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+# pyre-unsafe
+
 import torch
 from captum.attr._utils.batching import (
     _batched_generator,

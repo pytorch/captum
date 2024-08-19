@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+# pyre-unsafe
+
 
 from typing import Any, Callable, cast, Dict, Optional, Tuple, Type
 

@@ -1,4 +1,6 @@
 #!/usr/bin/env fbpython
+
+# pyre-unsafe
 import math
 from typing import cast
 from unittest.mock import Mock, patch

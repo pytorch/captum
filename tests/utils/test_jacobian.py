@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+# pyre-unsafe
+
 import torch
 import torch.nn as nn
 from captum._utils.gradient import (
