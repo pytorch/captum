@@ -294,6 +294,15 @@ class KernelShap(Lime):
             show_progress=show_progress,
         )
 
+    # pyre-fixme[3]: Return type must be annotated.
+    def attribute_future(
+        self,
+    ):
+        r"""
+        This method is not implemented for KernelShap.
+        """
+        raise NotImplementedError("attribute_future is not implemented for KernelShap")
+
     def kernel_shap_similarity_kernel(
         self,
         _,

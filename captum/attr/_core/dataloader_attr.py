@@ -467,3 +467,14 @@ class DataLoaderAttribution(Attribution):
             )
 
             return _format_output(is_inputs_tuple, attr)
+
+    # pyre-fixme[3]: Return type must be annotated.
+    def attribute_future(
+        self,
+    ):
+        r"""
+        This method is not implemented for DataLoaderAttribution.
+        """
+        raise NotImplementedError(
+            "attribute_future is not implemented for DataLoaderAttribution"
+        )

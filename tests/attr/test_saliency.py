@@ -105,6 +105,14 @@ class Test(BaseTest):
         self._saliency_base_assert(model, inp, grads, add_args)
         assertTensorTuplesAlmostEqual(self, inp.grad, grad, delta=0.0)
 
+    def test_futures_not_implemented(self) -> None:
+        model, inp, grads, add_args = get_basic_config()
+        saliency = Saliency(model)
+        attributions = None
+        with self.assertRaises(NotImplementedError):
+            attributions = saliency.attribute_future()
+        self.assertEqual(attributions, None)
+
     def _saliency_base_assert(
         self,
         model: Module,

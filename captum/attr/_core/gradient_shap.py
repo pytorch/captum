@@ -301,6 +301,17 @@ class GradientShap(GradientAttribution):
 
         return attributions
 
+    # pyre-fixme[3]: Return type must be annotated.
+    def attribute_future(
+        self,
+    ):
+        r"""
+        This method is not implemented for GradientShap.
+        """
+        raise NotImplementedError(
+            "attribute_future is not implemented for GradientShap"
+        )
+
     def has_convergence_delta(self) -> bool:
         return True
 
@@ -424,6 +435,17 @@ class InputBaselineXGradient(GradientAttribution):
             additional_forward_args,
             target,
             is_inputs_tuple,
+        )
+
+    # pyre-fixme[3]: Return type must be annotated.
+    def attribute_future(
+        self,
+    ):
+        r"""
+        This method is not implemented for InputBaseLineXGradient.
+        """
+        raise NotImplementedError(
+            "attribute_future is not implemented for InputBaseLineXGradient"
         )
 
     def has_convergence_delta(self) -> bool:

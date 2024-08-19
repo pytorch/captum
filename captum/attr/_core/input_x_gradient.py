@@ -139,6 +139,17 @@ class InputXGradient(GradientAttribution):
         #  `Tuple[Tensor, ...]`.
         return _format_output(is_inputs_tuple, attributions)
 
+    # pyre-fixme[3]: Return type must be annotated.
+    def attribute_future(
+        self,
+    ):
+        r"""
+        This method is not implemented for InputXGradient.
+        """
+        raise NotImplementedError(
+            "attribute_future is not implemented for InputXGradient"
+        )
+
     @property
     # pyre-fixme[3]: Return type must be annotated.
     def multiplies_by_inputs(self):

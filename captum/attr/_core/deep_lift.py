@@ -388,6 +388,15 @@ class DeepLift(GradientAttribution):
             is_inputs_tuple,
         )
 
+    # pyre-fixme[3]: Return type must be annotated.
+    def attribute_future(
+        self,
+    ):
+        r"""
+        This method is not implemented for DeepLift.
+        """
+        raise NotImplementedError("attribute_future is not implemented for DeepLift")
+
     def _construct_forward_func(
         self,
         # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.

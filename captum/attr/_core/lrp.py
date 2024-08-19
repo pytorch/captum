@@ -257,6 +257,15 @@ class LRP(GradientAttribution):
         else:
             return _format_output(is_inputs_tuple, relevances)  # type: ignore
 
+    # pyre-fixme[3]: Return type must be annotated.
+    def attribute_future(
+        self,
+    ):
+        r"""
+        This method is not implemented for LRP.
+        """
+        raise NotImplementedError("attribute_future is not implemented for LRP")
+
     def has_convergence_delta(self) -> bool:
         return True
 

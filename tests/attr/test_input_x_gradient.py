@@ -48,6 +48,14 @@ class Test(BaseTest):
     def test_input_x_gradient_classification_vargrad(self) -> None:
         self._input_x_gradient_classification_assert(nt_type="vargrad")
 
+    def test_futures_not_implemented(self) -> None:
+        model = SoftmaxModel(5, 20, 10)
+        input_x_grad = InputXGradient(model.forward)
+        attributions = None
+        with self.assertRaises(NotImplementedError):
+            attributions = input_x_grad.attribute_future()
+        self.assertEqual(attributions, None)
+
     def _input_x_gradient_base_assert(
         self,
         model: Module,
