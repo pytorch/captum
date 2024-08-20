@@ -2,7 +2,7 @@
 
 # pyre-strict
 from enum import Enum
-from typing import Any, cast, List, Optional, Tuple, Union
+from typing import Any, Callable, cast, List, Optional, Tuple, Union
 
 import torch
 from captum._utils.common import (
@@ -460,9 +460,8 @@ class NoiseTunnel(Attribution):
             delta,
         )
 
-    def attribute_future(
-        self,
-    ) -> None:
+    # pyre-fixme[24] Generic type `Callable` expects 2 type parameters.
+    def attribute_future(self) -> Callable:
         r"""
         This method is not implemented for NoiseTunnel.
         """

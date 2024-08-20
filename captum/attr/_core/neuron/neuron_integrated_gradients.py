@@ -253,6 +253,5 @@ class NeuronIntegratedGradients(NeuronAttribution, GradientAttribution):
         )
 
     @property
-    # pyre-fixme[3]: Return type must be annotated.
-    def multiplies_by_inputs(self):
+    def multiplies_by_inputs(self) -> bool:
         return self._multiply_by_inputs

@@ -142,9 +142,8 @@ def _get_deep_layer_name(obj, layer_names):
     return reduce(getattr, layer_names.split("."), obj)
 
 
-# pyre-fixme[3]: Return type must be annotated.
 # pyre-fixme[2]: Parameter must be annotated.
-def _set_deep_layer_value(obj, layer_names, value):
+def _set_deep_layer_value(obj, layer_names, value) -> None:
     r"""
     Traverses through the layer names that are separated by
     dot in order to access the embedding layer and update its value.

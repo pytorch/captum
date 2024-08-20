@@ -139,10 +139,8 @@ class InputXGradient(GradientAttribution):
         #  `Tuple[Tensor, ...]`.
         return _format_output(is_inputs_tuple, attributions)
 
-    # pyre-fixme[3]: Return type must be annotated.
-    def attribute_future(
-        self,
-    ):
+    # pyre-fixme[24] Generic type `Callable` expects 2 type parameters.
+    def attribute_future(self) -> Callable:
         r"""
         This method is not implemented for InputXGradient.
         """
@@ -151,6 +149,5 @@ class InputXGradient(GradientAttribution):
         )
 
     @property
-    # pyre-fixme[3]: Return type must be annotated.
-    def multiplies_by_inputs(self):
+    def multiplies_by_inputs(self) -> bool:
         return True

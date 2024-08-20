@@ -1,7 +1,7 @@
 # pyre-strict
 from copy import copy
 
-from typing import Callable, cast, Dict, List, Optional, Union
+from typing import Any, Callable, cast, Dict, List, Optional, Union
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -31,27 +31,24 @@ class LLMAttributionResult:
     It also provides utilities to help present and plot the result in different forms.
     """
 
-    # pyre-fixme[3]: Return type must be annotated.
     def __init__(
         self,
         seq_attr: Tensor,
-        token_attr: Union[Tensor, None],
+        token_attr: Optional[Tensor],
         input_tokens: List[str],
         output_tokens: List[str],
-    ):
+    ) -> None:
         self.seq_attr = seq_attr
         self.token_attr = token_attr
         self.input_tokens = input_tokens
         self.output_tokens = output_tokens
 
     @property
-    # pyre-fixme[3]: Return type must be annotated.
-    def seq_attr_dict(self):
+    def seq_attr_dict(self) -> Dict[str, Any]:
         return {k: v for v, k in zip(self.seq_attr.cpu().tolist(), self.input_tokens)}
 
     # pyre-fixme[3]: Return type must be annotated.
-    # pyre-fixme[2]: Parameter must be annotated.
-    def plot_token_attr(self, show=False):
+    def plot_token_attr(self, show: bool = False):
         """
         Generate a matplotlib plot for visualising the attribution
         of the output tokens.
@@ -62,7 +59,7 @@ class LLMAttributionResult:
         """
 
         # pyre-fixme[16]: `Optional` has no attribute `cpu`.
-        token_attr = self.token_attr.cpu()
+        token_attr = self.token_attr.cpu()  # type: ignore
 
         # maximum absolute attribution value
         # used as the boundary of normalization
@@ -86,7 +83,7 @@ class LLMAttributionResult:
         )
 
         # Create colorbar
-        cbar = ax.figure.colorbar(im, ax=ax)
+        cbar = ax.figure.colorbar(im, ax=ax)  # type: ignore
         cbar.ax.set_ylabel("Token Attribuiton", rotation=-90, va="bottom")
 
         # Show all ticks and label them with the respective list entries.
@@ -120,8 +117,7 @@ class LLMAttributionResult:
             return fig, ax
 
     # pyre-fixme[3]: Return type must be annotated.
-    # pyre-fixme[2]: Parameter must be annotated.
-    def plot_seq_attr(self, show=False):
+    def plot_seq_attr(self, show: bool = False):
         """
         Generate a matplotlib plot for visualising the attribution
         of the output sequence.
@@ -183,14 +179,13 @@ class LLMAttribution(Attribution):
     )
     SUPPORTED_INPUTS = (TextTemplateInput, TextTokenInput)
 
-    # pyre-fixme[3]: Return type must be annotated.
     def __init__(
         self,
         attr_method: Attribution,
         # pyre-fixme[2]: Parameter must be annotated.
         tokenizer,
         attr_target: str = "log_prob",  # TODO: support callable attr_target
-    ):
+    ) -> None:
         """
         Args:
             attr_method (Attribution): Instance of a supported perturbation attribution
@@ -242,7 +237,6 @@ class LLMAttribution(Attribution):
         ), "attr_target should be either 'log_prob' or 'prob'"
         self.attr_target = attr_target
 
-    # pyre-fixme[3]: Return type must be annotated.
     def _forward_func(
         self,
         # pyre-fixme[2]: Parameter must be annotated.
@@ -251,10 +245,9 @@ class LLMAttribution(Attribution):
         inp,
         # pyre-fixme[2]: Parameter must be annotated.
         target_tokens,
-        # pyre-fixme[2]: Parameter must be annotated.
-        use_cached_outputs=False,
+        use_cached_outputs: bool = False,
         _inspect_forward=None,
-    ):
+    ) -> Union[int, Tensor]:
         perturbed_input = self._format_model_input(inp.to_model_input(perturbed_tensor))
         init_model_inp = perturbed_input
 
@@ -291,10 +284,10 @@ class LLMAttribution(Attribution):
         # add a leading dim for batch even we only support single instance for now
         if self.include_per_token_attr:
             target_log_probs = torch.stack(
-                [total_log_prob, *log_prob_list], dim=0
+                [total_log_prob, *log_prob_list], dim=0  # type: ignore
             ).unsqueeze(0)
         else:
-            target_log_probs = total_log_prob
+            target_log_probs = total_log_prob  # type: ignore
         # pyre-fixme[6]: For 1st argument expected `Tensor` but got `Union[int,
         #  Tensor]`.
         target_probs = torch.exp(target_log_probs)
@@ -435,10 +428,8 @@ class LLMAttribution(Attribution):
             self.tokenizer.convert_ids_to_tokens(target_tokens),
         )
 
-    # pyre-fixme[3]: Return type must be annotated.
-    def attribute_future(
-        self,
-    ):
+    # pyre-fixme[24] Generic type `Callable` expects 2 type parameters.
+    def attribute_future(self) -> Callable:
         r"""
         This method is not implemented for LLMAttribution.
         """
@@ -503,14 +494,13 @@ class LLMGradientAttribution(Attribution):
             else next(self.model.parameters()).device
         )
 
-    # pyre-fixme[3]: Return type must be annotated.
     def _forward_func(
         self,
         perturbed_tensor: Tensor,
         inp: InterpretableInput,
         target_tokens: Tensor,  # 1D tensor of target token ids
         cur_target_idx: int,  # current target index
-    ):
+    ) -> Tensor:
         perturbed_input = self._format_model_input(inp.to_model_input(perturbed_tensor))
 
         if cur_target_idx:
@@ -544,7 +534,6 @@ class LLMGradientAttribution(Attribution):
         """
         return model_input.to(self.device)
 
-    # pyre-fixme[3]: Return type must be annotated.
     def attribute(
         self,
         inp: InterpretableInput,
@@ -555,7 +544,7 @@ class LLMGradientAttribution(Attribution):
         gen_args: Optional[Dict] = None,
         # pyre-fixme[2]: Parameter must be annotated.
         **kwargs,
-    ):
+    ) -> LLMAttributionResult:
         """
         Args:
             inp (InterpretableInput): input prompt for which attributions are computed
@@ -657,10 +646,8 @@ class LLMGradientAttribution(Attribution):
             self.tokenizer.convert_ids_to_tokens(target_tokens),
         )
 
-    # pyre-fixme[3]: Return type must be annotated.
-    def attribute_future(
-        self,
-    ):
+    # pyre-fixme[24] Generic type `Callable` expects 2 type parameters.
+    def attribute_future(self) -> Callable:
         r"""
         This method is not implemented for LLMGradientAttribution.
         """

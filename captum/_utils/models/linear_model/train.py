@@ -9,9 +9,8 @@ from captum._utils.models.linear_model.model import LinearModel
 from torch.utils.data import DataLoader
 
 
-# pyre-fixme[3]: Return type must be annotated.
 # pyre-fixme[2]: Parameter must be annotated.
-def l2_loss(x1, x2, weights=None):
+def l2_loss(x1, x2, weights=None) -> torch.Tensor:
     if weights is None:
         return torch.mean((x1 - x2) ** 2) / 2.0
     else:
@@ -236,7 +235,7 @@ def sgd_train_linear_model(
 
 class NormLayer(nn.Module):
     # pyre-fixme[2]: Parameter must be annotated.
-    def __init__(self, mean, std, n=None, eps=1e-8) -> None:
+    def __init__(self, mean, std, n=None, eps: float = 1e-8) -> None:
         super().__init__()
         # pyre-fixme[4]: Attribute must be annotated.
         self.mean = mean
@@ -251,7 +250,6 @@ class NormLayer(nn.Module):
         return (x - self.mean) / (self.std + self.eps)
 
 
-# pyre-fixme[3]: Return type must be annotated.
 def sklearn_train_linear_model(
     model: LinearModel,
     dataloader: DataLoader,
@@ -260,7 +258,7 @@ def sklearn_train_linear_model(
     norm_input: bool = False,
     # pyre-fixme[2]: Parameter must be annotated.
     **fit_kwargs,
-):
+) -> Dict[str, float]:
     r"""
     Alternative method to train with sklearn. This does introduce some slight
     overhead as we convert the tensors to numpy and then convert the resulting

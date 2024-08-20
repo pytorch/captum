@@ -830,9 +830,7 @@ class VisualizationDataRecord:
         self.convergence_score = convergence_score
 
 
-# pyre-fixme[3]: Return type must be annotated.
-# pyre-fixme[2]: Parameter must be annotated.
-def _get_color(attr):
+def _get_color(attr: int) -> str:
     # clip values to prevent CSS errors (Values should be from [-1,1])
     attr = max(-1, min(1, attr))
     if attr > 0:
@@ -846,23 +844,19 @@ def _get_color(attr):
     return "hsl({}, {}%, {}%)".format(hue, sat, lig)
 
 
-# pyre-fixme[3]: Return type must be annotated.
 # pyre-fixme[2]: Parameter must be annotated.
-def format_classname(classname):
+def format_classname(classname) -> str:
     return '<td><text style="padding-right:2em"><b>{}</b></text></td>'.format(classname)
 
 
-# pyre-fixme[3]: Return type must be annotated.
-# pyre-fixme[2]: Parameter must be annotated.
-def format_special_tokens(token):
+def format_special_tokens(token: str) -> str:
     if token.startswith("<") and token.endswith(">"):
         return "#" + token.strip("<>")
     return token
 
 
-# pyre-fixme[3]: Return type must be annotated.
 # pyre-fixme[2]: Parameter must be annotated.
-def format_tooltip(item, text):
+def format_tooltip(item, text) -> str:
     return '<div class="tooltip">{item}\
         <span class="tooltiptext">{text}</span>\
         </div>'.format(
@@ -870,9 +864,8 @@ def format_tooltip(item, text):
     )
 
 
-# pyre-fixme[3]: Return type must be annotated.
 # pyre-fixme[2]: Parameter must be annotated.
-def format_word_importances(words, importances):
+def format_word_importances(words, importances) -> str:
     if importances is None or len(importances) == 0:
         return "<td></td>"
     assert len(words) <= len(importances)

@@ -37,8 +37,7 @@ class Stat:
 
         self._other_stats: Optional[SummarizerSingleTensor] = None
 
-    # pyre-fixme[3]: Return type must be annotated.
-    def init(self):
+    def init(self) -> None:
         pass
 
     def _get_stat(self, stat: "Stat") -> Optional["Stat"]:
@@ -52,8 +51,7 @@ class Stat:
     def get(self) -> Optional[Tensor]:
         raise NotImplementedError()
 
-    # pyre-fixme[3]: Return type must be annotated.
-    def __hash__(self):
+    def __hash__(self) -> int:
         return hash((self.__class__, frozenset(self.params.items())))
 
     def __eq__(self, other: object) -> bool:
@@ -68,8 +66,7 @@ class Stat:
         return not self.__eq__(other)
 
     @property
-    # pyre-fixme[3]: Return type must be annotated.
-    def name(self):
+    def name(self) -> str:
         """
         The name of the statistic. i.e. it is the key in a .summary
 
@@ -92,16 +89,15 @@ class Count(Stat):
 
     def __init__(self, name: Optional[str] = None) -> None:
         super().__init__(name=name)
-        # pyre-fixme[4]: Attribute must be annotated.
-        self.n = None
+        self.n: Optional[int] = None
 
-    # pyre-fixme[3]: Return type must be annotated.
-    def get(self):
+    # pyre-fixme[15]: `captum.attr._utils.stat.Count.get` overrides method defined
+    # in `Stat` inconsistently. Returned type `Optional[int]` is not a subtype of
+    # the overridden return `Optional[torch._tensor.Tensor]`.
+    def get(self) -> Optional[int]:  # type: ignore
         return self.n
 
-    # pyre-fixme[3]: Return type must be annotated.
-    # pyre-fixme[2]: Parameter must be annotated.
-    def update(self, x):
+    def update(self, x: Tensor) -> None:
         if self.n is None:
             self.n = 0
         self.n += 1
@@ -120,16 +116,13 @@ class Mean(Stat):
     def get(self) -> Optional[Tensor]:
         return self.rolling_mean
 
-    # pyre-fixme[3]: Return type must be annotated.
-    def init(self):
+    def init(self) -> None:
         # pyre-fixme[8]: Attribute has type `Optional[Count]`; used as `Optional[Stat]`.
-        self.n = self._get_stat(Count())
+        self.n = self._get_stat(Count())  # type: ignore
 
-    # pyre-fixme[3]: Return type must be annotated.
-    # pyre-fixme[2]: Parameter must be annotated.
-    def update(self, x):
+    def update(self, x: Tensor) -> None:
         # pyre-fixme[16]: `Optional` has no attribute `get`.
-        n = self.n.get()
+        n = self.n.get()  # type: ignore
 
         if self.rolling_mean is None:
             # Ensures rolling_mean is a float tensor
@@ -152,8 +145,7 @@ class MSE(Stat):
         # pyre-fixme[4]: Attribute must be annotated.
         self.mse = None
 
-    # pyre-fixme[3]: Return type must be annotated.
-    def init(self):
+    def init(self) -> None:
         # pyre-fixme[16]: `MSE` has no attribute `mean`.
         self.mean = self._get_stat(Mean())
 
@@ -162,10 +154,9 @@ class MSE(Stat):
             return torch.zeros_like(self.prev_mean)
         return self.mse
 
-    # pyre-fixme[3]: Return type must be annotated.
-    def update(self, x: Tensor):
+    def update(self, x: Tensor) -> None:
         # pyre-fixme[16]: `MSE` has no attribute `mean`.
-        mean = self.mean.get()
+        mean = self.mean.get()  # type: ignore
 
         if mean is not None and self.prev_mean is not None:
             rhs = (x - self.prev_mean) * (x - mean)
@@ -175,7 +166,7 @@ class MSE(Stat):
                 self.mse += rhs
 
         # do not not clone
-        self.prev_mean = mean.clone()
+        self.prev_mean = mean.clone()  # type: ignore
 
 
 class Var(Stat):
@@ -198,33 +189,31 @@ class Var(Stat):
         super().__init__(name=name, order=order)
         self.order = order
 
-    # pyre-fixme[3]: Return type must be annotated.
-    def init(self):
+    def init(self) -> None:
         # pyre-fixme[16]: `Var` has no attribute `mse`.
         self.mse = self._get_stat(MSE())
         # pyre-fixme[16]: `Var` has no attribute `n`.
         self.n = self._get_stat(Count())
 
-    # pyre-fixme[3]: Return type must be annotated.
-    def update(self, x: Tensor):
+    def update(self, x: Tensor) -> None:
         pass
 
     def get(self) -> Optional[Tensor]:
         # pyre-fixme[16]: `Var` has no attribute `mse`.
-        mse = self.mse.get()
+        mse = self.mse.get()  # type: ignore
         # pyre-fixme[16]: `Var` has no attribute `n`.
-        n = self.n.get()
+        n = self.n.get()  # type: ignore
 
         if mse is None:
             return None
 
-        if n <= self.order:
+        if n <= self.order:  # type: ignore
             return torch.zeros_like(mse)
 
         # NOTE: The following ensures mse is a float tensor.
         #   torch.true_divide is available in PyTorch 1.5 and later.
         #   This is for compatibility with 1.4.
-        return mse.to(torch.float64) / (n - self.order)
+        return mse.to(torch.float64) / (n - self.order)  # type: ignore
 
 
 class StdDev(Stat):
@@ -244,18 +233,16 @@ class StdDev(Stat):
         super().__init__(name=name, order=order)
         self.order = order
 
-    # pyre-fixme[3]: Return type must be annotated.
-    def init(self):
+    def init(self) -> None:
         # pyre-fixme[16]: `StdDev` has no attribute `var`.
         self.var = self._get_stat(Var(order=self.order))
 
-    # pyre-fixme[3]: Return type must be annotated.
-    def update(self, x: Tensor):
+    def update(self, x: Tensor) -> None:
         pass
 
     def get(self) -> Optional[Tensor]:
         # pyre-fixme[16]: `StdDev` has no attribute `var`.
-        var = self.var.get()
+        var = self.var.get()  # type: ignore
         return var**0.5 if var is not None else None
 
 
@@ -268,16 +255,13 @@ class GeneralAccumFn(Stat):
     # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
     def __init__(self, fn: Callable, name: Optional[str] = None) -> None:
         super().__init__(name=name)
-        # pyre-fixme[4]: Attribute must be annotated.
-        self.result = None
+        self.result: Optional[Tensor] = None
         self.fn = fn
 
     def get(self) -> Optional[Tensor]:
         return self.result
 
-    # pyre-fixme[3]: Return type must be annotated.
-    # pyre-fixme[2]: Parameter must be annotated.
-    def update(self, x):
+    def update(self, x: Tensor) -> None:
         if self.result is None:
             self.result = x
         else:

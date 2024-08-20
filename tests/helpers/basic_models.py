@@ -198,9 +198,8 @@ class ReLUDeepLiftModel(nn.Module):
         self.relu1 = nn.ReLU()
         self.relu2 = nn.ReLU()
 
-    # pyre-fixme[3]: Return type must be annotated.
     # pyre-fixme[2]: Parameter must be annotated.
-    def forward(self, x1, x2, x3: int = 2):
+    def forward(self, x1, x2, x3: int = 2) -> int:
         return 2 * self.relu1(x1) + x3 * self.relu2(x2 - 1.5)
 
 
@@ -284,9 +283,8 @@ class TanhDeepLiftModel(nn.Module):
         self.tanh1 = nn.Tanh()
         self.tanh2 = nn.Tanh()
 
-    # pyre-fixme[3]: Return type must be annotated.
     # pyre-fixme[2]: Parameter must be annotated.
-    def forward(self, x1, x2):
+    def forward(self, x1, x2) -> int:
         return 2 * self.tanh1(x1) + 2 * self.tanh2(x2 - 1.5)
 
 

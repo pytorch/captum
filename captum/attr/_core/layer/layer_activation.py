@@ -138,6 +138,5 @@ class LayerActivation(LayerAttribution):
             ]
 
     @property
-    # pyre-fixme[3]: Return type must be annotated.
-    def multiplies_by_inputs(self):
+    def multiplies_by_inputs(self) -> bool:
         return True

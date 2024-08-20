@@ -4,7 +4,7 @@
 
 import typing
 from collections import defaultdict
-from typing import Any, cast, List, Tuple, Union
+from typing import Any, Callable, cast, List, Tuple, Union
 
 import torch.nn as nn
 from captum._utils.common import (
@@ -257,10 +257,8 @@ class LRP(GradientAttribution):
         else:
             return _format_output(is_inputs_tuple, relevances)  # type: ignore
 
-    # pyre-fixme[3]: Return type must be annotated.
-    def attribute_future(
-        self,
-    ):
+    # pyre-fixme[24] Generic type `Callable` expects 2 type parameters.
+    def attribute_future(self) -> Callable:
         r"""
         This method is not implemented for LRP.
         """

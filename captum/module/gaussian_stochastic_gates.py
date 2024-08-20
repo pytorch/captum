@@ -2,7 +2,7 @@
 
 # pyre-strict
 import math
-from typing import Optional
+from typing import Any, Optional
 
 import torch
 from captum.module.stochastic_gates_base import StochasticGatesBase
@@ -41,7 +41,6 @@ class GaussianStochasticGates(StochasticGatesBase):
         >>> gated_inputs, reg = stg(mock_inputs)  # gate the inputs
     """
 
-    # pyre-fixme[3]: Return type must be annotated.
     def __init__(
         self,
         n_gates: int,
@@ -49,7 +48,7 @@ class GaussianStochasticGates(StochasticGatesBase):
         reg_weight: Optional[float] = 1.0,
         std: Optional[float] = 0.5,
         reg_reduction: str = "sum",
-    ):
+    ) -> None:
         """
         Args:
             n_gates (int): number of gates.
@@ -138,9 +137,9 @@ class GaussianStochasticGates(StochasticGatesBase):
         return 0.5 * (1 + torch.erf(x / math.sqrt(2)))
 
     @classmethod
-    # pyre-fixme[3]: Return type must be annotated.
-    # pyre-fixme[2]: Parameter must be annotated.
-    def _from_pretrained(cls, mu: Tensor, *args, **kwargs):
+    def _from_pretrained(
+        cls, mu: Tensor, *args: Any, **kwargs: Any
+    ) -> "GaussianStochasticGates":
         """
         Private factory method to create an instance with pretrained parameters
 

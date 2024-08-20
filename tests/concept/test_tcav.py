@@ -735,26 +735,22 @@ class Test(BaseTest):
             self.assertEqual(cavs["0-1"]["conv1"].concepts[1].id, 1)
             self.assertEqual(cavs["0-1"]["conv1"].concepts[1].name, "random")
 
-            self.assertEqual(cavs["0-1"]["conv1"].stats["classes"], [0, 1])
-            self.assertAlmostEqual(
-                cavs["0-1"]["conv1"].stats["accs"].item(), 0.4848, delta=0.001
-            )
-            self.assertEqual(
-                list(cavs["0-1"]["conv1"].stats["weights"].shape), [2, 128]
-            )
+            stats = cavs["0-1"]["conv1"].stats
+            self.assertIsNotNone(stats)
+            self.assertEqual(stats["classes"], [0, 1])  # type: ignore
+            self.assertAlmostEqual(stats["accs"].item(), 0.4848, delta=0.001)  # type: ignore # noqa: E501 line too long
+            self.assertEqual(list(stats["weights"].shape), [2, 128])  # type: ignore
 
             self.assertEqual(cavs["2-3"]["conv1"].concepts[0].id, 2)
             self.assertEqual(cavs["2-3"]["conv1"].concepts[0].name, "ceo")
             self.assertEqual(cavs["2-3"]["conv1"].concepts[1].id, 3)
             self.assertEqual(cavs["2-3"]["conv1"].concepts[1].name, "striped")
 
-            self.assertEqual(cavs["2-3"]["conv1"].stats["classes"], [2, 3])
-            self.assertAlmostEqual(
-                cavs["2-3"]["conv1"].stats["accs"].item(), 0.4848, delta=0.001
-            )
-            self.assertEqual(
-                list(cavs["2-3"]["conv1"].stats["weights"].shape), [2, 128]
-            )
+            stats = cavs["2-3"]["conv1"].stats
+            self.assertIsNotNone(stats)
+            self.assertEqual(stats["classes"], [2, 3])  # type: ignore
+            self.assertAlmostEqual(stats["accs"].item(), 0.4848, delta=0.001)  # type: ignore # noqa: E501 line too long
+            self.assertEqual(list(stats["weights"].shape), [2, 128])  # type: ignore
 
     def compute_cavs_interpret(
         self,
