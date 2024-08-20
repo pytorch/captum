@@ -35,7 +35,7 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="c1"># pyre-strict</span>
 
 <span class="kn">import</span> <span class="nn">math</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">cast</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Union</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">cast</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Generator</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Union</span>
 
 <span class="kn">import</span> <span class="nn">torch</span>
 <span class="kn">from</span> <span class="nn">captum._utils.common</span> <span class="kn">import</span> <span class="p">(</span>
@@ -301,13 +301,13 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="n">is_inputs_tuple</span> <span class="o">=</span> <span class="n">_is_tuple</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span>
 
         <span class="n">formatted_inputs</span><span class="p">,</span> <span class="n">baselines</span> <span class="o">=</span> <span class="n">_format_input_baseline</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">baselines</span><span class="p">)</span>
-        <span class="n">additional_forward_args</span> <span class="o">=</span> <span class="n">_format_additional_forward_args</span><span class="p">(</span>
+        <span class="n">formatted_additional_forward_args</span> <span class="o">=</span> <span class="n">_format_additional_forward_args</span><span class="p">(</span>
             <span class="n">additional_forward_args</span>
         <span class="p">)</span>
         <span class="n">num_examples</span> <span class="o">=</span> <span class="n">formatted_inputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
         <span class="c1"># pyre-fixme[6]: For 2nd argument expected `Tuple[Tensor, ...]` but got</span>
         <span class="c1">#  `TensorOrTupleOfTensorsGeneric`.</span>
-        <span class="n">feature_mask</span> <span class="o">=</span> <span class="n">_format_feature_mask</span><span class="p">(</span><span class="n">feature_mask</span><span class="p">,</span> <span class="n">formatted_inputs</span><span class="p">)</span>
+        <span class="n">formatted_feature_mask</span> <span class="o">=</span> <span class="n">_format_feature_mask</span><span class="p">(</span><span class="n">feature_mask</span><span class="p">,</span> <span class="n">formatted_inputs</span><span class="p">)</span>
 
         <span class="k">assert</span> <span class="p">(</span>
             <span class="nb">isinstance</span><span class="p">(</span><span class="n">perturbations_per_eval</span><span class="p">,</span> <span class="nb">int</span><span class="p">)</span> <span class="ow">and</span> <span class="n">perturbations_per_eval</span> <span class="o">&gt;=</span> <span class="mi">1</span>
@@ -316,7 +316,7 @@ src="/_sphinx/documentation_options.js"></script>
             <span class="k">if</span> <span class="n">show_progress</span><span class="p">:</span>
                 <span class="n">attr_progress</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_attribute_progress_setup</span><span class="p">(</span>
                     <span class="n">formatted_inputs</span><span class="p">,</span>
-                    <span class="n">feature_mask</span><span class="p">,</span>
+                    <span class="n">formatted_feature_mask</span><span class="p">,</span>
                     <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
                     <span class="n">perturbations_per_eval</span><span class="o">=</span><span class="n">perturbations_per_eval</span><span class="p">,</span>
                 <span class="p">)</span>
@@ -325,7 +325,10 @@ src="/_sphinx/documentation_options.js"></script>
             <span class="c1"># Computes initial evaluation with all features, which is compared</span>
             <span class="c1"># to each ablated result.</span>
             <span class="n">initial_eval</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">Future</span><span class="p">[</span><span class="n">Tensor</span><span class="p">]]</span> <span class="o">=</span> <span class="n">_run_forward</span><span class="p">(</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">forward_func</span><span class="p">,</span> <span class="n">formatted_inputs</span><span class="p">,</span> <span class="n">target</span><span class="p">,</span> <span class="n">additional_forward_args</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">forward_func</span><span class="p">,</span>
+                <span class="n">formatted_inputs</span><span class="p">,</span>
+                <span class="n">target</span><span class="p">,</span>
+                <span class="n">formatted_additional_forward_args</span><span class="p">,</span>
             <span class="p">)</span>
             <span class="k">if</span> <span class="n">show_progress</span><span class="p">:</span>
                 <span class="n">attr_progress</span><span class="o">.</span><span class="n">update</span><span class="p">()</span>
@@ -368,10 +371,10 @@ src="/_sphinx/documentation_options.js"></script>
                 <span class="p">)</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ith_input_ablation_generator</span><span class="p">(</span>
                     <span class="n">i</span><span class="p">,</span>
                     <span class="n">formatted_inputs</span><span class="p">,</span>
-                    <span class="n">additional_forward_args</span><span class="p">,</span>
+                    <span class="n">formatted_additional_forward_args</span><span class="p">,</span>
                     <span class="n">target</span><span class="p">,</span>
                     <span class="n">baselines</span><span class="p">,</span>
-                    <span class="n">feature_mask</span><span class="p">,</span>
+                    <span class="n">formatted_feature_mask</span><span class="p">,</span>
                     <span class="n">perturbations_per_eval</span><span class="p">,</span>
                     <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
                 <span class="p">):</span>
@@ -390,6 +393,10 @@ src="/_sphinx/documentation_options.js"></script>
                     <span class="k">if</span> <span class="n">show_progress</span><span class="p">:</span>
                         <span class="n">attr_progress</span><span class="o">.</span><span class="n">update</span><span class="p">()</span>
 
+                    <span class="k">assert</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">modified_eval</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Future</span><span class="p">),</span> <span class="p">(</span>
+                        <span class="s2">"when use_futures is True, modified_eval should have "</span>
+                        <span class="sa">f</span><span class="s2">"non-Future type rather than </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">modified_eval</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span>
+                    <span class="p">)</span>
                     <span class="n">total_attrib</span><span class="p">,</span> <span class="n">weights</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_process_ablated_out</span><span class="p">(</span>
                         <span class="n">modified_eval</span><span class="p">,</span>
                         <span class="n">current_inputs</span><span class="p">,</span>
@@ -409,6 +416,11 @@ src="/_sphinx/documentation_options.js"></script>
             <span class="k">if</span> <span class="n">show_progress</span><span class="p">:</span>
                 <span class="n">attr_progress</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
 
+            <span class="c1"># pyre-fixme[7]: Expected `Variable[TensorOrTupleOfTensorsGeneric &lt;:</span>
+            <span class="c1"># [Tensor, typing.Tuple[Tensor, ...]]]`</span>
+            <span class="c1"># but got `Union[Tensor, typing.Tuple[Tensor, ...]]`.</span>
+            <span class="c1"># pyre-fixme[6]: In call `FeatureAblation._generate_result`,</span>
+            <span class="c1"># for 3rd positional argument, expected `bool` but got `Literal[]`.</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_generate_result</span><span class="p">(</span><span class="n">total_attrib</span><span class="p">,</span> <span class="n">weights</span><span class="p">,</span> <span class="n">is_inputs_tuple</span><span class="p">)</span>  <span class="c1"># type: ignore # noqa: E501 line too long</span></div>
 
 
@@ -438,11 +450,11 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="c1">#  `TensorOrTupleOfTensorsGeneric`.</span>
         <span class="n">is_inputs_tuple</span> <span class="o">=</span> <span class="n">_is_tuple</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span>
         <span class="n">formatted_inputs</span><span class="p">,</span> <span class="n">baselines</span> <span class="o">=</span> <span class="n">_format_input_baseline</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">baselines</span><span class="p">)</span>
-        <span class="n">additional_forward_args</span> <span class="o">=</span> <span class="n">_format_additional_forward_args</span><span class="p">(</span>
+        <span class="n">formatted_additional_forward_args</span> <span class="o">=</span> <span class="n">_format_additional_forward_args</span><span class="p">(</span>
             <span class="n">additional_forward_args</span>
         <span class="p">)</span>
         <span class="n">num_examples</span> <span class="o">=</span> <span class="n">formatted_inputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-        <span class="n">feature_mask</span> <span class="o">=</span> <span class="n">_format_feature_mask</span><span class="p">(</span><span class="n">feature_mask</span><span class="p">,</span> <span class="n">formatted_inputs</span><span class="p">)</span>
+        <span class="n">formatted_feature_mask</span> <span class="o">=</span> <span class="n">_format_feature_mask</span><span class="p">(</span><span class="n">feature_mask</span><span class="p">,</span> <span class="n">formatted_inputs</span><span class="p">)</span>
 
         <span class="k">assert</span> <span class="p">(</span>
             <span class="nb">isinstance</span><span class="p">(</span><span class="n">perturbations_per_eval</span><span class="p">,</span> <span class="nb">int</span><span class="p">)</span> <span class="ow">and</span> <span class="n">perturbations_per_eval</span> <span class="o">&gt;=</span> <span class="mi">1</span>
@@ -451,7 +463,7 @@ src="/_sphinx/documentation_options.js"></script>
             <span class="k">if</span> <span class="n">show_progress</span><span class="p">:</span>
                 <span class="n">attr_progress</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_attribute_progress_setup</span><span class="p">(</span>
                     <span class="n">formatted_inputs</span><span class="p">,</span>
-                    <span class="n">feature_mask</span><span class="p">,</span>
+                    <span class="n">formatted_feature_mask</span><span class="p">,</span>
                     <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
                     <span class="n">perturbations_per_eval</span><span class="o">=</span><span class="n">perturbations_per_eval</span><span class="p">,</span>
                 <span class="p">)</span>
@@ -460,7 +472,10 @@ src="/_sphinx/documentation_options.js"></script>
             <span class="c1"># Computes initial evaluation with all features, which is compared</span>
             <span class="c1"># to each ablated result.</span>
             <span class="n">initial_eval</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">Future</span><span class="p">[</span><span class="n">Tensor</span><span class="p">]]</span> <span class="o">=</span> <span class="n">_run_forward</span><span class="p">(</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">forward_func</span><span class="p">,</span> <span class="n">formatted_inputs</span><span class="p">,</span> <span class="n">target</span><span class="p">,</span> <span class="n">additional_forward_args</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">forward_func</span><span class="p">,</span>
+                <span class="n">formatted_inputs</span><span class="p">,</span>
+                <span class="n">target</span><span class="p">,</span>
+                <span class="n">formatted_additional_forward_args</span><span class="p">,</span>
             <span class="p">)</span>
 
             <span class="k">if</span> <span class="n">show_progress</span><span class="p">:</span>
@@ -477,16 +492,17 @@ src="/_sphinx/documentation_options.js"></script>
                 <span class="p">)</span>
 
             <span class="n">processed_initial_eval_fut</span> <span class="o">=</span> <span class="n">initial_eval</span><span class="o">.</span><span class="n">then</span><span class="p">(</span>
-                <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_process_initial_eval</span><span class="p">(</span>
-                    <span class="n">x</span><span class="o">.</span><span class="n">value</span><span class="p">(),</span>
+                <span class="k">lambda</span> <span class="n">initial_eval</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_process_initial_eval</span><span class="p">(</span>
+                    <span class="n">initial_eval</span><span class="o">.</span><span class="n">value</span><span class="p">(),</span>
                     <span class="n">formatted_inputs</span><span class="p">,</span>
                 <span class="p">)</span>
             <span class="p">)</span>
 
             <span class="c1"># The will be the same amount futures as modified_eval down there,</span>
             <span class="c1"># since we cannot add up the evaluation result adhoc under async mode.</span>
-            <span class="c1"># pyre-fixme[24]: Generic type `Future` expects 1 type parameter.</span>
-            <span class="n">all_futures</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">Future</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[[]</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">inputs</span><span class="p">))]</span>
+            <span class="n">all_modified_eval_futures</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span>
+                <span class="n">List</span><span class="p">[</span><span class="n">Future</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">Tensor</span><span class="p">],</span> <span class="n">List</span><span class="p">[</span><span class="n">Tensor</span><span class="p">]]]]</span>
+            <span class="p">]</span> <span class="o">=</span> <span class="p">[[]</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">inputs</span><span class="p">))]</span>
             <span class="c1"># Iterate through each feature tensor for ablation</span>
             <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">formatted_inputs</span><span class="p">)):</span>
                 <span class="c1"># Skip any empty input tensors</span>
@@ -501,10 +517,10 @@ src="/_sphinx/documentation_options.js"></script>
                 <span class="p">)</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ith_input_ablation_generator</span><span class="p">(</span>
                     <span class="n">i</span><span class="p">,</span>
                     <span class="n">formatted_inputs</span><span class="p">,</span>
-                    <span class="n">additional_forward_args</span><span class="p">,</span>
+                    <span class="n">formatted_additional_forward_args</span><span class="p">,</span>
                     <span class="n">target</span><span class="p">,</span>
                     <span class="n">baselines</span><span class="p">,</span>
-                    <span class="n">feature_mask</span><span class="p">,</span>
+                    <span class="n">formatted_feature_mask</span><span class="p">,</span>
                     <span class="n">perturbations_per_eval</span><span class="p">,</span>
                     <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
                 <span class="p">):</span>
@@ -534,7 +550,23 @@ src="/_sphinx/documentation_options.js"></script>
                         <span class="p">)</span>
 
                     <span class="c1"># Need to collect both initial eval and modified_eval</span>
-                    <span class="n">eval_futs</span><span class="p">:</span> <span class="n">Future</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">Future</span><span class="p">[</span><span class="n">Tensor</span><span class="p">]]]</span> <span class="o">=</span> <span class="n">collect_all</span><span class="p">(</span>
+                    <span class="n">eval_futs</span><span class="p">:</span> <span class="n">Future</span><span class="p">[</span>
+                        <span class="n">List</span><span class="p">[</span>
+                            <span class="n">Future</span><span class="p">[</span>
+                                <span class="n">Union</span><span class="p">[</span>
+                                    <span class="n">Tuple</span><span class="p">[</span>
+                                        <span class="n">List</span><span class="p">[</span><span class="n">Tensor</span><span class="p">],</span>
+                                        <span class="n">List</span><span class="p">[</span><span class="n">Tensor</span><span class="p">],</span>
+                                        <span class="n">Tensor</span><span class="p">,</span>
+                                        <span class="n">Tensor</span><span class="p">,</span>
+                                        <span class="nb">int</span><span class="p">,</span>
+                                        <span class="n">dtype</span><span class="p">,</span>
+                                    <span class="p">],</span>
+                                    <span class="n">Tensor</span><span class="p">,</span>
+                                <span class="p">]</span>
+                            <span class="p">]</span>
+                        <span class="p">]</span>
+                    <span class="p">]</span> <span class="o">=</span> <span class="n">collect_all</span><span class="p">(</span>
                         <span class="p">[</span>
                             <span class="n">processed_initial_eval_fut</span><span class="p">,</span>
                             <span class="n">modified_eval</span><span class="p">,</span>
@@ -567,12 +599,12 @@ src="/_sphinx/documentation_options.js"></script>
                         <span class="p">)</span>
                     <span class="p">)</span>
 
-                    <span class="n">all_futures</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ablated_out_fut</span><span class="p">)</span>
+                    <span class="n">all_modified_eval_futures</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ablated_out_fut</span><span class="p">)</span>
 
             <span class="k">if</span> <span class="n">show_progress</span><span class="p">:</span>
                 <span class="n">attr_progress</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
 
-            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_generate_async_result</span><span class="p">(</span><span class="n">all_futures</span><span class="p">,</span> <span class="n">is_inputs_tuple</span><span class="p">)</span>  <span class="c1"># type: ignore # noqa: E501 line too long</span></div>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_generate_async_result</span><span class="p">(</span><span class="n">all_modified_eval_futures</span><span class="p">,</span> <span class="n">is_inputs_tuple</span><span class="p">)</span>  <span class="c1"># type: ignore # noqa: E501 line too long</span></div>
 
 
     <span class="c1"># pyre-fixme[3] return type must be annotated</span>
@@ -595,26 +627,28 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="p">)</span>
         <span class="k">return</span> <span class="n">attr_progress</span>
 
-    <span class="c1"># pyre-fixme[3]: Return type must be annotated.</span>
+    <span class="c1"># pyre-fixme[3]: Return type must be specified as type that does not contain `Any`</span>
     <span class="k">def</span> <span class="nf">_ith_input_ablation_generator</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
-        <span class="c1"># pyre-fixme[2]: Parameter must be annotated.</span>
-        <span class="n">i</span><span class="p">,</span>
-        <span class="c1"># pyre-fixme[2]: Parameter must be annotated.</span>
-        <span class="n">inputs</span><span class="p">,</span>
-        <span class="c1"># pyre-fixme[2]: Parameter must be annotated.</span>
-        <span class="n">additional_args</span><span class="p">,</span>
-        <span class="c1"># pyre-fixme[2]: Parameter must be annotated.</span>
-        <span class="n">target</span><span class="p">,</span>
-        <span class="c1"># pyre-fixme[2]: Parameter must be annotated.</span>
-        <span class="n">baselines</span><span class="p">,</span>
-        <span class="c1"># pyre-fixme[2]: Parameter must be annotated.</span>
-        <span class="n">input_mask</span><span class="p">,</span>
-        <span class="c1"># pyre-fixme[2]: Parameter must be annotated.</span>
-        <span class="n">perturbations_per_eval</span><span class="p">,</span>
-        <span class="c1"># pyre-fixme[2]: Parameter must be annotated.</span>
-        <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
-    <span class="p">):</span>
+        <span class="n">i</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">inputs</span><span class="p">:</span> <span class="n">TensorOrTupleOfTensorsGeneric</span><span class="p">,</span>
+        <span class="c1"># pyre-fixme[2]: Parameter annotation cannot be `Any`.</span>
+        <span class="n">additional_args</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+        <span class="n">target</span><span class="p">:</span> <span class="n">TargetType</span><span class="p">,</span>
+        <span class="n">baselines</span><span class="p">:</span> <span class="n">BaselineType</span><span class="p">,</span>
+        <span class="n">input_mask</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="n">Tensor</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">]],</span>
+        <span class="n">perturbations_per_eval</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Generator</span><span class="p">[</span>
+        <span class="n">Tuple</span><span class="p">[</span>
+            <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span>
+            <span class="n">Any</span><span class="p">,</span>
+            <span class="n">TargetType</span><span class="p">,</span>
+            <span class="n">Tensor</span><span class="p">,</span>
+        <span class="p">],</span>
+        <span class="kc">None</span><span class="p">,</span>
+        <span class="kc">None</span><span class="p">,</span>
+    <span class="p">]:</span>
 <span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        This method returns a generator of ablation perturbations of the i-th input</span>
 
@@ -630,9 +664,9 @@ src="/_sphinx/documentation_options.js"></script>
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">extra_args</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
 
-        <span class="n">input_mask</span> <span class="o">=</span> <span class="n">input_mask</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">if</span> <span class="n">input_mask</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="kc">None</span>
-        <span class="n">min_feature</span><span class="p">,</span> <span class="n">num_features</span><span class="p">,</span> <span class="n">input_mask</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_feature_range_and_mask</span><span class="p">(</span>
-            <span class="n">inputs</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">input_mask</span><span class="p">,</span> <span class="o">**</span><span class="n">extra_args</span>
+        <span class="n">cur_input_mask</span> <span class="o">=</span> <span class="n">input_mask</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">if</span> <span class="n">input_mask</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="kc">None</span>
+        <span class="n">min_feature</span><span class="p">,</span> <span class="n">num_features</span><span class="p">,</span> <span class="n">cur_input_mask</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_feature_range_and_mask</span><span class="p">(</span>
+            <span class="n">inputs</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">cur_input_mask</span><span class="p">,</span> <span class="o">**</span><span class="n">extra_args</span>
         <span class="p">)</span>
         <span class="n">num_examples</span> <span class="o">=</span> <span class="n">inputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
         <span class="n">perturbations_per_eval</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">perturbations_per_eval</span><span class="p">,</span> <span class="n">num_features</span><span class="p">)</span>
@@ -694,12 +728,15 @@ src="/_sphinx/documentation_options.js"></script>
             <span class="c1"># may not necessarilly be num_examples and will match the first</span>
             <span class="c1"># dimension of this tensor.</span>
             <span class="n">current_reshaped</span> <span class="o">=</span> <span class="n">current_features</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span>
-                <span class="p">(</span><span class="n">current_num_ablated_features</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="o">+</span> <span class="n">current_features</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>
+                <span class="p">(</span><span class="n">current_num_ablated_features</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+                <span class="c1"># pyre-fixme[58]: `+` is not supported for operand types</span>
+                <span class="c1"># `Tuple[int, int]` and `Size`.</span>
+                <span class="o">+</span> <span class="n">current_features</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>
             <span class="p">)</span>
 
             <span class="n">ablated_features</span><span class="p">,</span> <span class="n">current_mask</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_construct_ablated_input</span><span class="p">(</span>
                 <span class="n">current_reshaped</span><span class="p">,</span>
-                <span class="n">input_mask</span><span class="p">,</span>
+                <span class="n">cur_input_mask</span><span class="p">,</span>
                 <span class="n">baseline</span><span class="p">,</span>
                 <span class="n">num_features_processed</span><span class="p">,</span>
                 <span class="n">num_features_processed</span> <span class="o">+</span> <span class="n">current_num_ablated_features</span><span class="p">,</span>
@@ -710,7 +747,10 @@ src="/_sphinx/documentation_options.js"></script>
             <span class="c1"># (current_num_ablated_features * num_examples, inputs[i].shape[1:]),</span>
             <span class="c1"># which can be provided to the model as input.</span>
             <span class="n">current_features</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">ablated_features</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span>
-                <span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,)</span> <span class="o">+</span> <span class="n">ablated_features</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">2</span><span class="p">:]</span>
+                <span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,)</span>
+                <span class="c1"># pyre-fixme[58]: `+` is not supported for operand types</span>
+                <span class="c1"># `Tuple[int]` and `Size`.</span>
+                <span class="o">+</span> <span class="n">ablated_features</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">2</span><span class="p">:]</span>
             <span class="p">)</span>
             <span class="k">yield</span> <span class="nb">tuple</span><span class="p">(</span>
                 <span class="n">current_features</span>
@@ -719,22 +759,15 @@ src="/_sphinx/documentation_options.js"></script>
             <span class="n">current_features</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">original_tensor</span>
             <span class="n">num_features_processed</span> <span class="o">+=</span> <span class="n">current_num_ablated_features</span>
 
-    <span class="c1"># pyre-fixme[3]: Return type must be annotated.</span>
     <span class="k">def</span> <span class="nf">_construct_ablated_input</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
-        <span class="c1"># pyre-fixme[2]: Parameter must be annotated.</span>
-        <span class="n">expanded_input</span><span class="p">,</span>
-        <span class="c1"># pyre-fixme[2]: Parameter must be annotated.</span>
-        <span class="n">input_mask</span><span class="p">,</span>
-        <span class="c1"># pyre-fixme[2]: Parameter must be annotated.</span>
-        <span class="n">baseline</span><span class="p">,</span>
-        <span class="c1"># pyre-fixme[2]: Parameter must be annotated.</span>
-        <span class="n">start_feature</span><span class="p">,</span>
-        <span class="c1"># pyre-fixme[2]: Parameter must be annotated.</span>
-        <span class="n">end_feature</span><span class="p">,</span>
-        <span class="c1"># pyre-fixme[2]: Parameter must be annotated.</span>
-        <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
-    <span class="p">):</span>
+        <span class="n">expanded_input</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">,</span>
+        <span class="n">input_mask</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="n">Tensor</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">]],</span>
+        <span class="n">baseline</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="n">Tensor</span><span class="p">],</span>
+        <span class="n">start_feature</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">end_feature</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">Tensor</span><span class="p">]:</span>
 <span class="w">        </span><span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        Ablates given expanded_input tensor with given feature mask, feature range,</span>
 <span class="sd">        and baselines. expanded_input shape is (`num_features`, `num_examples`, ...)</span>
@@ -752,7 +785,10 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">        thus counted towards ablations for that feature) and 0s otherwise.</span>
 <span class="sd">        """</span>
         <span class="n">current_mask</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">stack</span><span class="p">(</span>
-            <span class="p">[</span><span class="n">input_mask</span> <span class="o">==</span> <span class="n">j</span> <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">start_feature</span><span class="p">,</span> <span class="n">end_feature</span><span class="p">)],</span> <span class="n">dim</span><span class="o">=</span><span class="mi">0</span>
+            <span class="c1"># pyre-fixme[6]: For 1st argument expected `Union[List[Tensor],</span>
+            <span class="c1"># Tuple[Tensor, ...]]` but got `List[Union[bool, Tensor]]`.</span>
+            <span class="p">[</span><span class="n">input_mask</span> <span class="o">==</span> <span class="n">j</span> <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">start_feature</span><span class="p">,</span> <span class="n">end_feature</span><span class="p">)],</span>  <span class="c1"># type: ignore # noqa: E501 line too long</span>
+            <span class="n">dim</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
         <span class="p">)</span><span class="o">.</span><span class="n">long</span><span class="p">()</span>
         <span class="n">current_mask</span> <span class="o">=</span> <span class="n">current_mask</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">expanded_input</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
         <span class="n">ablated_tensor</span> <span class="o">=</span> <span class="p">(</span>
@@ -760,9 +796,12 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="p">)</span> <span class="o">+</span> <span class="p">(</span><span class="n">baseline</span> <span class="o">*</span> <span class="n">current_mask</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">expanded_input</span><span class="o">.</span><span class="n">dtype</span><span class="p">))</span>
         <span class="k">return</span> <span class="n">ablated_tensor</span><span class="p">,</span> <span class="n">current_mask</span>
 
-    <span class="c1"># pyre-fixme[3]: Return type must be annotated.</span>
-    <span class="c1"># pyre-fixme[2]: Parameter must be annotated.</span>
-    <span class="k">def</span> <span class="nf">_get_feature_range_and_mask</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">input</span><span class="p">,</span> <span class="n">input_mask</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_get_feature_range_and_mask</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="nb">input</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">,</span>
+        <span class="n">input_mask</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Tensor</span><span class="p">],</span>
+        <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="n">Union</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="n">Tensor</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">]]]:</span>
         <span class="k">if</span> <span class="n">input_mask</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="c1"># Obtain feature mask for selected input tensor, matches size of</span>
             <span class="c1"># 1 input example, (1 x inputs[i].shape[1:])</span>
@@ -771,14 +810,17 @@ src="/_sphinx/documentation_options.js"></script>
                 <span class="nb">input</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span>
             <span class="p">)</span><span class="o">.</span><span class="n">long</span><span class="p">()</span>
         <span class="k">return</span> <span class="p">(</span>
-            <span class="n">torch</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">input_mask</span><span class="p">)</span><span class="o">.</span><span class="n">item</span><span class="p">(),</span>
-            <span class="n">torch</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">input_mask</span><span class="p">)</span><span class="o">.</span><span class="n">item</span><span class="p">()</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span>
+            <span class="nb">int</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">input_mask</span><span class="p">)</span><span class="o">.</span><span class="n">item</span><span class="p">()),</span>
+            <span class="nb">int</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">input_mask</span><span class="p">)</span><span class="o">.</span><span class="n">item</span><span class="p">()</span> <span class="o">+</span> <span class="mi">1</span><span class="p">),</span>
             <span class="n">input_mask</span><span class="p">,</span>
         <span class="p">)</span>
 
-    <span class="c1"># pyre-fixme[3]: Return type must be annotated.</span>
-    <span class="c1"># pyre-fixme[2]: Parameter must be annotated.</span>
-    <span class="k">def</span> <span class="nf">_get_feature_counts</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">,</span> <span class="n">feature_mask</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_get_feature_counts</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">inputs</span><span class="p">:</span> <span class="n">TensorOrTupleOfTensorsGeneric</span><span class="p">,</span>
+        <span class="n">feature_mask</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span>
+        <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">"""return the numbers of input features"""</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">feature_mask</span><span class="p">:</span>
             <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">inp</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">numel</span><span class="p">()</span> <span class="k">if</span> <span class="n">inp</span><span class="o">.</span><span class="n">numel</span><span class="p">()</span> <span class="k">else</span> <span class="mi">0</span> <span class="k">for</span> <span class="n">inp</span> <span class="ow">in</span> <span class="n">inputs</span><span class="p">)</span>
@@ -792,8 +834,7 @@ src="/_sphinx/documentation_options.js"></script>
             <span class="k">for</span> <span class="n">inp</span><span class="p">,</span> <span class="n">mask</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">feature_mask</span><span class="p">)</span>
         <span class="p">)</span>
 
-    <span class="c1"># pyre-fixme[2]: Parameter must be annotated.</span>
-    <span class="k">def</span> <span class="nf">_parse_forward_out</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">forward_output</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tensor</span><span class="p">:</span>
+    <span class="k">def</span> <span class="nf">_parse_forward_out</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">forward_output</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tensor</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        A temp wrapper for global _run_forward util to force forward output</span>
 <span class="sd">        type assertion &amp; conversion.</span>
@@ -859,32 +900,19 @@ src="/_sphinx/documentation_options.js"></script>
 
     <span class="k">def</span> <span class="nf">_process_ablated_out</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
-        <span class="c1"># pyre-fixme[2]: Parameter must be annotated.</span>
-        <span class="n">modified_eval</span><span class="p">,</span>
-        <span class="c1"># pyre-fixme[2]: Parameter must be annotated.</span>
-        <span class="n">current_inputs</span><span class="p">,</span>
-        <span class="c1"># pyre-fixme[2]: Parameter must be annotated.</span>
-        <span class="n">current_mask</span><span class="p">,</span>
-        <span class="c1"># pyre-fixme[2]: Parameter must be annotated.</span>
-        <span class="n">perturbations_per_eval</span><span class="p">,</span>
-        <span class="c1"># pyre-fixme[2]: Parameter must be annotated.</span>
-        <span class="n">num_examples</span><span class="p">,</span>
-        <span class="c1"># pyre-fixme[2]: Parameter must be annotated.</span>
-        <span class="n">initial_eval</span><span class="p">,</span>
-        <span class="c1"># pyre-fixme[2]: Parameter must be annotated.</span>
-        <span class="n">flattened_initial_eval</span><span class="p">,</span>
-        <span class="c1"># pyre-fixme[2]: Parameter must be annotated.</span>
-        <span class="n">inputs</span><span class="p">,</span>
-        <span class="c1"># pyre-fixme[2]: Parameter must be annotated.</span>
-        <span class="n">n_outputs</span><span class="p">,</span>
-        <span class="c1"># pyre-fixme[2]: Parameter must be annotated.</span>
-        <span class="n">total_attrib</span><span class="p">,</span>
-        <span class="c1"># pyre-fixme[2]: Parameter must be annotated.</span>
-        <span class="n">weights</span><span class="p">,</span>
-        <span class="c1"># pyre-fixme[2]: Parameter must be annotated.</span>
-        <span class="n">i</span><span class="p">,</span>
-        <span class="c1"># pyre-fixme[2]: Parameter must be annotated.</span>
-        <span class="n">attrib_type</span><span class="p">,</span>
+        <span class="n">modified_eval</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">,</span>
+        <span class="n">current_inputs</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span>
+        <span class="n">current_mask</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">,</span>
+        <span class="n">perturbations_per_eval</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">num_examples</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">initial_eval</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">,</span>
+        <span class="n">flattened_initial_eval</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">,</span>
+        <span class="n">inputs</span><span class="p">:</span> <span class="n">TensorOrTupleOfTensorsGeneric</span><span class="p">,</span>
+        <span class="n">n_outputs</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">total_attrib</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Tensor</span><span class="p">],</span>
+        <span class="n">weights</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Tensor</span><span class="p">],</span>
+        <span class="n">i</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">attrib_type</span><span class="p">:</span> <span class="n">dtype</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">Tensor</span><span class="p">],</span> <span class="n">List</span><span class="p">[</span><span class="n">Tensor</span><span class="p">]]:</span>
         <span class="n">modified_eval</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parse_forward_out</span><span class="p">(</span><span class="n">modified_eval</span><span class="p">)</span>
 
@@ -943,16 +971,19 @@ src="/_sphinx/documentation_options.js"></script>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Future</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">]]]:</span>
         <span class="c1"># Each element of the 2d list contains evalutaion results for a feature</span>
         <span class="c1"># Need to add up all the results for each input</span>
-        <span class="c1"># pyre-fixme[24]: Generic type `Future` expects 1 type parameter.</span>
-        <span class="n">accumulate_fut_list</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Future</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">accumulate_fut_list</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Future</span><span class="p">[</span><span class="kc">None</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="n">total_attrib</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Tensor</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="n">weights</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Tensor</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">fut_tuples</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">futs</span><span class="p">):</span>
             <span class="k">for</span> <span class="n">fut_tuple</span> <span class="ow">in</span> <span class="n">fut_tuples</span><span class="p">:</span>
                 <span class="n">accumulate_fut_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
                     <span class="n">fut_tuple</span><span class="o">.</span><span class="n">then</span><span class="p">(</span>
-                        <span class="k">lambda</span> <span class="n">x</span><span class="p">,</span> <span class="n">i</span><span class="o">=</span><span class="n">i</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_accumulate_for_single_input</span><span class="p">(</span>  <span class="c1"># type: ignore # noqa: E501 line too long</span>
-                            <span class="n">total_attrib</span><span class="p">,</span> <span class="n">weights</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">x</span><span class="o">.</span><span class="n">value</span><span class="p">()[</span><span class="mi">0</span><span class="p">],</span> <span class="n">x</span><span class="o">.</span><span class="n">value</span><span class="p">()[</span><span class="mi">1</span><span class="p">]</span>
+                        <span class="k">lambda</span> <span class="n">fut_tuple</span><span class="p">,</span> <span class="n">i</span><span class="o">=</span><span class="n">i</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_accumulate_for_single_input</span><span class="p">(</span>  <span class="c1"># type: ignore # noqa: E501 line too long</span>
+                            <span class="n">total_attrib</span><span class="p">,</span>
+                            <span class="n">weights</span><span class="p">,</span>
+                            <span class="n">i</span><span class="p">,</span>
+                            <span class="n">fut_tuple</span><span class="o">.</span><span class="n">value</span><span class="p">()[</span><span class="mi">0</span><span class="p">],</span>  <span class="c1"># attrib</span>
+                            <span class="n">fut_tuple</span><span class="o">.</span><span class="n">value</span><span class="p">()[</span><span class="mi">1</span><span class="p">],</span>  <span class="c1"># weight</span>
                         <span class="p">)</span>
                     <span class="p">)</span>
                 <span class="p">)</span>

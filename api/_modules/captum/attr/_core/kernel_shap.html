@@ -315,7 +315,10 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="p">)</span>
         <span class="n">num_features_list</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">num_interp_features</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">float</span><span class="p">)</span>
         <span class="n">denom</span> <span class="o">=</span> <span class="n">num_features_list</span> <span class="o">*</span> <span class="p">(</span><span class="n">num_interp_features</span> <span class="o">-</span> <span class="n">num_features_list</span><span class="p">)</span>
+        <span class="c1"># pyre-fixme[58]: `/` is not supported for operand types</span>
+        <span class="c1"># `int` and `torch._tensor.Tensor`.</span>
         <span class="n">probs</span> <span class="o">=</span> <span class="p">(</span><span class="n">num_interp_features</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">/</span> <span class="n">denom</span>
+        <span class="c1"># pyre-fixme[16]: `float` has no attribute `__setitem__`.</span>
         <span class="n">probs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.0</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_attribute_kwargs</span><span class="p">(</span>
             <span class="n">inputs</span><span class="o">=</span><span class="n">inputs</span><span class="p">,</span>
@@ -331,12 +334,10 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="p">)</span></div>
 
 
-    <span class="c1"># pyre-fixme[3]: Return type must be annotated.</span>
+    <span class="c1"># pyre-fixme[24] Generic type `Callable` expects 2 type parameters.</span>
 <div class="viewcode-block" id="KernelShap.attribute_future">
 <a class="viewcode-back" href="../../../../kernel_shap.html#captum.attr.KernelShap.attribute_future">[docs]</a>
-    <span class="k">def</span> <span class="nf">attribute_future</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span>
-    <span class="p">):</span>
+    <span class="k">def</span> <span class="nf">attribute_future</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">:</span>
 <span class="w">        </span><span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        This method is not implemented for KernelShap.</span>
 <span class="sd">        """</span>

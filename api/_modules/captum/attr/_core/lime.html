@@ -576,12 +576,10 @@ src="/_sphinx/documentation_options.js"></script>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">interpretable_model</span><span class="o">.</span><span class="n">representation</span><span class="p">()</span></div>
 
 
-    <span class="c1"># pyre-fixme[3]: Return type must be annotated.</span>
+    <span class="c1"># pyre-fixme[24] Generic type `Callable` expects 2 type parameters.</span>
 <div class="viewcode-block" id="LimeBase.attribute_future">
 <a class="viewcode-back" href="../../../../lime.html#captum.attr.LimeBase.attribute_future">[docs]</a>
-    <span class="k">def</span> <span class="nf">attribute_future</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span>
-    <span class="p">):</span>
+    <span class="k">def</span> <span class="nf">attribute_future</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">:</span>
 <span class="w">        </span><span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        This method is not implemented for LimeBase.</span>
 <span class="sd">        """</span>
@@ -590,7 +588,6 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="p">)</span></div>
 
 
-    <span class="c1"># pyre-fixme[3]: Return type must be annotated.</span>
     <span class="k">def</span> <span class="nf">_evaluate_batch</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">curr_model_inputs</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">TensorOrTupleOfTensorsGeneric</span><span class="p">],</span>
@@ -598,7 +595,7 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="c1"># pyre-fixme[2]: Parameter annotation cannot be `Any`.</span>
         <span class="n">expanded_additional_args</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
         <span class="n">device</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">device</span><span class="p">,</span>
-    <span class="p">):</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tensor</span><span class="p">:</span>
         <span class="n">model_out</span> <span class="o">=</span> <span class="n">_run_forward</span><span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">forward_func</span><span class="p">,</span>
             <span class="c1"># pyre-fixme[6]: For 1st argument expected `Sequence[Variable[TupleOrTens...</span>
@@ -622,8 +619,7 @@ src="/_sphinx/documentation_options.js"></script>
 
 
     <span class="nd">@property</span>
-    <span class="c1"># pyre-fixme[3]: Return type must be annotated.</span>
-    <span class="k">def</span> <span class="nf">multiplies_by_inputs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">multiplies_by_inputs</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
         <span class="k">return</span> <span class="kc">False</span></div>
 
 
@@ -715,9 +711,8 @@ src="/_sphinx/documentation_options.js"></script>
 
 
 
-<span class="c1"># pyre-fixme[3]: Return type must be annotated.</span>
 <span class="c1"># pyre-fixme[2]: Parameter must be annotated.</span>
-<span class="k">def</span> <span class="nf">default_perturb_func</span><span class="p">(</span><span class="n">original_inp</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">default_perturb_func</span><span class="p">(</span><span class="n">original_inp</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tensor</span><span class="p">:</span>
     <span class="k">assert</span> <span class="p">(</span>
         <span class="s2">"num_interp_features"</span> <span class="ow">in</span> <span class="n">kwargs</span>
     <span class="p">),</span> <span class="s2">"Must provide num_interp_features to use default interpretable sampling function"</span>
@@ -730,9 +725,10 @@ src="/_sphinx/documentation_options.js"></script>
     <span class="k">return</span> <span class="n">torch</span><span class="o">.</span><span class="n">bernoulli</span><span class="p">(</span><span class="n">probs</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">device</span><span class="o">=</span><span class="n">device</span><span class="p">)</span><span class="o">.</span><span class="n">long</span><span class="p">()</span>
 
 
-<span class="c1"># pyre-fixme[3]: Return type must be annotated.</span>
-<span class="c1"># pyre-fixme[2]: Parameter must be annotated.</span>
-<span class="k">def</span> <span class="nf">construct_feature_mask</span><span class="p">(</span><span class="n">feature_mask</span><span class="p">,</span> <span class="n">formatted_inputs</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">construct_feature_mask</span><span class="p">(</span>
+    <span class="n">feature_mask</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="n">Tensor</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">]],</span>
+    <span class="n">formatted_inputs</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span> <span class="nb">int</span><span class="p">]:</span>
     <span class="k">if</span> <span class="n">feature_mask</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">feature_mask</span><span class="p">,</span> <span class="n">num_interp_features</span> <span class="o">=</span> <span class="n">_construct_default_feature_mask</span><span class="p">(</span>
             <span class="n">formatted_inputs</span>
@@ -1163,10 +1159,10 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="p">)</span></div>
 
 
-    <span class="c1"># pyre-fixme[3]: Return type must be annotated.</span>
+    <span class="c1"># pyre-fixme[24] Generic type `Callable` expects 2 type parameters.</span>
 <div class="viewcode-block" id="Lime.attribute_future">
 <a class="viewcode-back" href="../../../../lime.html#captum.attr.Lime.attribute_future">[docs]</a>
-    <span class="k">def</span> <span class="nf">attribute_future</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">attribute_future</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">:</span>
         <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">attribute_future</span><span class="p">()</span></div>
 
 

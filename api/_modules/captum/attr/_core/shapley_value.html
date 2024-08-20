@@ -522,12 +522,10 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="k">return</span> <span class="n">formatted_attr</span></div>
 
 
-    <span class="c1"># pyre-fixme[3]: Return type must be annotated.</span>
+    <span class="c1"># pyre-fixme[24] Generic type `Callable` expects 2 type parameters.</span>
 <div class="viewcode-block" id="ShapleyValueSampling.attribute_future">
 <a class="viewcode-back" href="../../../../shapley_value_sampling.html#captum.attr.ShapleyValueSampling.attribute_future">[docs]</a>
-    <span class="k">def</span> <span class="nf">attribute_future</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span>
-    <span class="p">):</span>
+    <span class="k">def</span> <span class="nf">attribute_future</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">:</span>
 <span class="w">        </span><span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        This method is not implemented for ShapleyValueSampling.</span>
 <span class="sd">        """</span>
@@ -920,9 +918,9 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="p">)</span></div>
 
 
-    <span class="c1"># pyre-fixme[3]: Return type must be annotated.</span>
-    <span class="c1"># pyre-fixme[2]: Parameter must be annotated.</span>
-    <span class="k">def</span> <span class="nf">_get_n_evaluations</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">total_features</span><span class="p">,</span> <span class="n">n_samples</span><span class="p">,</span> <span class="n">perturbations_per_eval</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_get_n_evaluations</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">total_features</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">n_samples</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">perturbations_per_eval</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">"""return the total number of forward evaluations needed"""</span>
         <span class="k">return</span> <span class="n">math</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">total_features</span> <span class="o">/</span> <span class="n">perturbations_per_eval</span><span class="p">)</span> <span class="o">*</span> <span class="n">math</span><span class="o">.</span><span class="n">factorial</span><span class="p">(</span>
             <span class="n">total_features</span>

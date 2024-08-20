@@ -189,9 +189,8 @@ src="/_sphinx/documentation_options.js"></script>
     <span class="k">return</span> <span class="n">reduce</span><span class="p">(</span><span class="nb">getattr</span><span class="p">,</span> <span class="n">layer_names</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">"."</span><span class="p">),</span> <span class="n">obj</span><span class="p">)</span>
 
 
-<span class="c1"># pyre-fixme[3]: Return type must be annotated.</span>
 <span class="c1"># pyre-fixme[2]: Parameter must be annotated.</span>
-<span class="k">def</span> <span class="nf">_set_deep_layer_value</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">layer_names</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">_set_deep_layer_value</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">layer_names</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">    </span><span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">    Traverses through the layer names that are separated by</span>
 <span class="sd">    dot in order to access the embedding layer and update its value.</span>

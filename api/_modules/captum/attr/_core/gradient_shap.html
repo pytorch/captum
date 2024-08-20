@@ -338,12 +338,10 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="k">return</span> <span class="n">attributions</span></div>
 
 
-    <span class="c1"># pyre-fixme[3]: Return type must be annotated.</span>
+    <span class="c1"># pyre-fixme[24] Generic type `Callable` expects 2 type parameters.</span>
 <div class="viewcode-block" id="GradientShap.attribute_future">
 <a class="viewcode-back" href="../../../../gradient_shap.html#captum.attr.GradientShap.attribute_future">[docs]</a>
-    <span class="k">def</span> <span class="nf">attribute_future</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span>
-    <span class="p">):</span>
+    <span class="k">def</span> <span class="nf">attribute_future</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">:</span>
 <span class="w">        </span><span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        This method is not implemented for GradientShap.</span>
 <span class="sd">        """</span>
@@ -359,16 +357,14 @@ src="/_sphinx/documentation_options.js"></script>
 
 
     <span class="nd">@property</span>
-    <span class="c1"># pyre-fixme[3]: Return type must be annotated.</span>
-    <span class="k">def</span> <span class="nf">multiplies_by_inputs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">multiplies_by_inputs</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_multiply_by_inputs</span></div>
 
 
 
 <span class="k">class</span> <span class="nc">InputBaselineXGradient</span><span class="p">(</span><span class="n">GradientAttribution</span><span class="p">):</span>
     <span class="c1"># pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.</span>
-    <span class="c1"># pyre-fixme[2]: Parameter must be annotated.</span>
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">forward_func</span><span class="p">:</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">multiply_by_inputs</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">forward_func</span><span class="p">:</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">multiply_by_inputs</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        Args:</span>
 
@@ -481,10 +477,8 @@ src="/_sphinx/documentation_options.js"></script>
             <span class="n">is_inputs_tuple</span><span class="p">,</span>
         <span class="p">)</span>
 
-    <span class="c1"># pyre-fixme[3]: Return type must be annotated.</span>
-    <span class="k">def</span> <span class="nf">attribute_future</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span>
-    <span class="p">):</span>
+    <span class="c1"># pyre-fixme[24] Generic type `Callable` expects 2 type parameters.</span>
+    <span class="k">def</span> <span class="nf">attribute_future</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">:</span>
 <span class="w">        </span><span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        This method is not implemented for InputBaseLineXGradient.</span>
 <span class="sd">        """</span>
@@ -496,8 +490,7 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="k">return</span> <span class="kc">True</span>
 
     <span class="nd">@property</span>
-    <span class="c1"># pyre-fixme[3]: Return type must be annotated.</span>
-    <span class="k">def</span> <span class="nf">multiplies_by_inputs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">multiplies_by_inputs</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_multiply_by_inputs</span>
 
 

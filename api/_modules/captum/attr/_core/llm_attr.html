@@ -33,7 +33,7 @@ src="/_sphinx/documentation_options.js"></script>
 <span></span><span class="c1"># pyre-strict</span>
 <span class="kn">from</span> <span class="nn">copy</span> <span class="kn">import</span> <span class="n">copy</span>
 
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">cast</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Union</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">cast</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Union</span>
 
 <span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
@@ -65,29 +65,26 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">    It also provides utilities to help present and plot the result in different forms.</span>
 <span class="sd">    """</span>
 
-    <span class="c1"># pyre-fixme[3]: Return type must be annotated.</span>
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">seq_attr</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">,</span>
-        <span class="n">token_attr</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="kc">None</span><span class="p">],</span>
+        <span class="n">token_attr</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Tensor</span><span class="p">],</span>
         <span class="n">input_tokens</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
         <span class="n">output_tokens</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
-    <span class="p">):</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">seq_attr</span> <span class="o">=</span> <span class="n">seq_attr</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">token_attr</span> <span class="o">=</span> <span class="n">token_attr</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">input_tokens</span> <span class="o">=</span> <span class="n">input_tokens</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">output_tokens</span> <span class="o">=</span> <span class="n">output_tokens</span>
 
     <span class="nd">@property</span>
-    <span class="c1"># pyre-fixme[3]: Return type must be annotated.</span>
-    <span class="k">def</span> <span class="nf">seq_attr_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">seq_attr_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
         <span class="k">return</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">v</span> <span class="k">for</span> <span class="n">v</span><span class="p">,</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">seq_attr</span><span class="o">.</span><span class="n">cpu</span><span class="p">()</span><span class="o">.</span><span class="n">tolist</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">input_tokens</span><span class="p">)}</span>
 
     <span class="c1"># pyre-fixme[3]: Return type must be annotated.</span>
-    <span class="c1"># pyre-fixme[2]: Parameter must be annotated.</span>
 <div class="viewcode-block" id="LLMAttributionResult.plot_token_attr">
 <a class="viewcode-back" href="../../../../llm_attr.html#captum.attr.LLMAttributionResult.plot_token_attr">[docs]</a>
-    <span class="k">def</span> <span class="nf">plot_token_attr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">show</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">plot_token_attr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">show</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Generate a matplotlib plot for visualising the attribution</span>
 <span class="sd">        of the output tokens.</span>
@@ -98,7 +95,7 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">        """</span>
 
         <span class="c1"># pyre-fixme[16]: `Optional` has no attribute `cpu`.</span>
-        <span class="n">token_attr</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">token_attr</span><span class="o">.</span><span class="n">cpu</span><span class="p">()</span>
+        <span class="n">token_attr</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">token_attr</span><span class="o">.</span><span class="n">cpu</span><span class="p">()</span>  <span class="c1"># type: ignore</span>
 
         <span class="c1"># maximum absolute attribution value</span>
         <span class="c1"># used as the boundary of normalization</span>
@@ -122,7 +119,7 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="p">)</span>
 
         <span class="c1"># Create colorbar</span>
-        <span class="n">cbar</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">figure</span><span class="o">.</span><span class="n">colorbar</span><span class="p">(</span><span class="n">im</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">)</span>
+        <span class="n">cbar</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">figure</span><span class="o">.</span><span class="n">colorbar</span><span class="p">(</span><span class="n">im</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">)</span>  <span class="c1"># type: ignore</span>
         <span class="n">cbar</span><span class="o">.</span><span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">"Token Attribuiton"</span><span class="p">,</span> <span class="n">rotation</span><span class="o">=-</span><span class="mi">90</span><span class="p">,</span> <span class="n">va</span><span class="o">=</span><span class="s2">"bottom"</span><span class="p">)</span>
 
         <span class="c1"># Show all ticks and label them with the respective list entries.</span>
@@ -157,10 +154,9 @@ src="/_sphinx/documentation_options.js"></script>
 
 
     <span class="c1"># pyre-fixme[3]: Return type must be annotated.</span>
-    <span class="c1"># pyre-fixme[2]: Parameter must be annotated.</span>
 <div class="viewcode-block" id="LLMAttributionResult.plot_seq_attr">
 <a class="viewcode-back" href="../../../../llm_attr.html#captum.attr.LLMAttributionResult.plot_seq_attr">[docs]</a>
-    <span class="k">def</span> <span class="nf">plot_seq_attr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">show</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">plot_seq_attr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">show</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Generate a matplotlib plot for visualising the attribution</span>
 <span class="sd">        of the output sequence.</span>
@@ -226,14 +222,13 @@ src="/_sphinx/documentation_options.js"></script>
     <span class="p">)</span>
     <span class="n">SUPPORTED_INPUTS</span> <span class="o">=</span> <span class="p">(</span><span class="n">TextTemplateInput</span><span class="p">,</span> <span class="n">TextTokenInput</span><span class="p">)</span>
 
-    <span class="c1"># pyre-fixme[3]: Return type must be annotated.</span>
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">attr_method</span><span class="p">:</span> <span class="n">Attribution</span><span class="p">,</span>
         <span class="c1"># pyre-fixme[2]: Parameter must be annotated.</span>
         <span class="n">tokenizer</span><span class="p">,</span>
         <span class="n">attr_target</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"log_prob"</span><span class="p">,</span>  <span class="c1"># TODO: support callable attr_target</span>
-    <span class="p">):</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Args:</span>
 <span class="sd">            attr_method (Attribution): Instance of a supported perturbation attribution</span>
@@ -285,7 +280,6 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="p">),</span> <span class="s2">"attr_target should be either 'log_prob' or 'prob'"</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">attr_target</span> <span class="o">=</span> <span class="n">attr_target</span>
 
-    <span class="c1"># pyre-fixme[3]: Return type must be annotated.</span>
     <span class="k">def</span> <span class="nf">_forward_func</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="c1"># pyre-fixme[2]: Parameter must be annotated.</span>
@@ -294,10 +288,9 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="n">inp</span><span class="p">,</span>
         <span class="c1"># pyre-fixme[2]: Parameter must be annotated.</span>
         <span class="n">target_tokens</span><span class="p">,</span>
-        <span class="c1"># pyre-fixme[2]: Parameter must be annotated.</span>
-        <span class="n">use_cached_outputs</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">use_cached_outputs</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
         <span class="n">_inspect_forward</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-    <span class="p">):</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Tensor</span><span class="p">]:</span>
         <span class="n">perturbed_input</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_format_model_input</span><span class="p">(</span><span class="n">inp</span><span class="o">.</span><span class="n">to_model_input</span><span class="p">(</span><span class="n">perturbed_tensor</span><span class="p">))</span>
         <span class="n">init_model_inp</span> <span class="o">=</span> <span class="n">perturbed_input</span>
 
@@ -334,10 +327,10 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="c1"># add a leading dim for batch even we only support single instance for now</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">include_per_token_attr</span><span class="p">:</span>
             <span class="n">target_log_probs</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">stack</span><span class="p">(</span>
-                <span class="p">[</span><span class="n">total_log_prob</span><span class="p">,</span> <span class="o">*</span><span class="n">log_prob_list</span><span class="p">],</span> <span class="n">dim</span><span class="o">=</span><span class="mi">0</span>
+                <span class="p">[</span><span class="n">total_log_prob</span><span class="p">,</span> <span class="o">*</span><span class="n">log_prob_list</span><span class="p">],</span> <span class="n">dim</span><span class="o">=</span><span class="mi">0</span>  <span class="c1"># type: ignore</span>
             <span class="p">)</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="n">target_log_probs</span> <span class="o">=</span> <span class="n">total_log_prob</span>
+            <span class="n">target_log_probs</span> <span class="o">=</span> <span class="n">total_log_prob</span>  <span class="c1"># type: ignore</span>
         <span class="c1"># pyre-fixme[6]: For 1st argument expected `Tensor` but got `Union[int,</span>
         <span class="c1">#  Tensor]`.</span>
         <span class="n">target_probs</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">target_log_probs</span><span class="p">)</span>
@@ -481,12 +474,10 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="p">)</span></div>
 
 
-    <span class="c1"># pyre-fixme[3]: Return type must be annotated.</span>
+    <span class="c1"># pyre-fixme[24] Generic type `Callable` expects 2 type parameters.</span>
 <div class="viewcode-block" id="LLMAttribution.attribute_future">
 <a class="viewcode-back" href="../../../../llm_attr.html#captum.attr.LLMAttribution.attribute_future">[docs]</a>
-    <span class="k">def</span> <span class="nf">attribute_future</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span>
-    <span class="p">):</span>
+    <span class="k">def</span> <span class="nf">attribute_future</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">:</span>
 <span class="w">        </span><span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        This method is not implemented for LLMAttribution.</span>
 <span class="sd">        """</span>
@@ -555,14 +546,13 @@ src="/_sphinx/documentation_options.js"></script>
             <span class="k">else</span> <span class="nb">next</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">parameters</span><span class="p">())</span><span class="o">.</span><span class="n">device</span>
         <span class="p">)</span>
 
-    <span class="c1"># pyre-fixme[3]: Return type must be annotated.</span>
     <span class="k">def</span> <span class="nf">_forward_func</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">perturbed_tensor</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">,</span>
         <span class="n">inp</span><span class="p">:</span> <span class="n">InterpretableInput</span><span class="p">,</span>
         <span class="n">target_tokens</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">,</span>  <span class="c1"># 1D tensor of target token ids</span>
         <span class="n">cur_target_idx</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>  <span class="c1"># current target index</span>
-    <span class="p">):</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tensor</span><span class="p">:</span>
         <span class="n">perturbed_input</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_format_model_input</span><span class="p">(</span><span class="n">inp</span><span class="o">.</span><span class="n">to_model_input</span><span class="p">(</span><span class="n">perturbed_tensor</span><span class="p">))</span>
 
         <span class="k">if</span> <span class="n">cur_target_idx</span><span class="p">:</span>
@@ -596,7 +586,6 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">        """</span>
         <span class="k">return</span> <span class="n">model_input</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
 
-    <span class="c1"># pyre-fixme[3]: Return type must be annotated.</span>
 <div class="viewcode-block" id="LLMGradientAttribution.attribute">
 <a class="viewcode-back" href="../../../../llm_attr.html#captum.attr.LLMGradientAttribution.attribute">[docs]</a>
     <span class="k">def</span> <span class="nf">attribute</span><span class="p">(</span>
@@ -609,7 +598,7 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="n">gen_args</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="c1"># pyre-fixme[2]: Parameter must be annotated.</span>
         <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
-    <span class="p">):</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">LLMAttributionResult</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Args:</span>
 <span class="sd">            inp (InterpretableInput): input prompt for which attributions are computed</span>
@@ -712,12 +701,10 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="p">)</span></div>
 
 
-    <span class="c1"># pyre-fixme[3]: Return type must be annotated.</span>
+    <span class="c1"># pyre-fixme[24] Generic type `Callable` expects 2 type parameters.</span>
 <div class="viewcode-block" id="LLMGradientAttribution.attribute_future">
 <a class="viewcode-back" href="../../../../llm_attr.html#captum.attr.LLMGradientAttribution.attribute_future">[docs]</a>
-    <span class="k">def</span> <span class="nf">attribute_future</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span>
-    <span class="p">):</span>
+    <span class="k">def</span> <span class="nf">attribute_future</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">:</span>
 <span class="w">        </span><span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        This method is not implemented for LLMGradientAttribution.</span>
 <span class="sd">        """</span>

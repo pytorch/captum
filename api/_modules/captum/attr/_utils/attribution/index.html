@@ -107,7 +107,7 @@ src="/_sphinx/documentation_options.js"></script>
 
 <span class="sd">    """</span>
 
-    <span class="c1"># pyre-fixme[24] Callable needs 2 type parameters</span>
+    <span class="c1"># pyre-fixme[24] Generic type `Callable` expects 2 type parameters.</span>
     <span class="n">attribute_future</span><span class="p">:</span> <span class="n">Callable</span>
 
 <span class="w">    </span><span class="sa">r</span><span class="sd">"""</span>
@@ -139,8 +139,7 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">    """</span>
 
     <span class="nd">@property</span>
-    <span class="c1"># pyre-fixme[3]: Return type must be annotated.</span>
-    <span class="k">def</span> <span class="nf">multiplies_by_inputs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">multiplies_by_inputs</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
         <span class="k">return</span> <span class="kc">False</span>
 
 <div class="viewcode-block" id="Attribution.has_convergence_delta">
@@ -410,8 +409,7 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="n">Attribution</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">forward_func</span><span class="p">)</span>
 
     <span class="nd">@property</span>
-    <span class="c1"># pyre-fixme[3]: Return type must be annotated.</span>
-    <span class="k">def</span> <span class="nf">multiplies_by_inputs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">multiplies_by_inputs</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
         <span class="k">return</span> <span class="kc">True</span></div>
 
 
