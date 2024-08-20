@@ -55,18 +55,13 @@ class LabelledDataset(Dataset):
         from itertools import accumulate
 
         offsets = [0] + list(accumulate(map(len, datasets), (lambda x, y: x + y)))
-        # pyre-fixme[4]: Attribute must be annotated.
-        self.length = offsets[-1]
+        self.length: int = offsets[-1]
         self.datasets = datasets
         self.labels = labels
-        # pyre-fixme[4]: Attribute must be annotated.
-        self.lowers = offsets[:-1]
-        # pyre-fixme[4]: Attribute must be annotated.
-        self.uppers = offsets[1:]
+        self.lowers: List[int] = offsets[:-1]
+        self.uppers: List[int] = offsets[1:]
 
-    # pyre-fixme[3]: Return type must be annotated.
-    # pyre-fixme[2]: Parameter must be annotated.
-    def _i_to_k(self, i):
+    def _i_to_k(self, i: int) -> int:
 
         left, right = 0, len(self.uppers)
         while left < right:
@@ -77,9 +72,9 @@ class LabelledDataset(Dataset):
                 left = mid
             else:
                 right = mid
+        return -1
 
-    # pyre-fixme[3]: Return type must be annotated.
-    def __getitem__(self, i: int):
+    def __getitem__(self, i: int) -> Tuple[Union[Tensor, Tuple[Tensor, ...]], Tensor]:
         """
         Returns a batch of activation vectors, as well as a batch of labels
         indicating which concept the batch of activation vectors is associated
@@ -99,13 +94,13 @@ class LabelledDataset(Dataset):
         inputs = self.datasets[k][i - self.lowers[k]]
         # pyre-fixme[16]: Item `tuple` of `Union[Tensor, Tuple[Tensor, ...]]` has no
         #  attribute `shape`.
-        assert len(inputs.shape) == 2
+        assert len(inputs.shape) == 2  # type: ignore
 
         # pyre-fixme[16]: Item `tuple` of `Union[Tensor, Tuple[Tensor, ...]]` has no
         #  attribute `size`.
         # pyre-fixme[16]: Item `tuple` of `Union[Tensor, Tuple[Tensor, ...]]` has no
         #  attribute `device`.
-        labels = torch.tensor([self.labels[k]] * inputs.size(0), device=inputs.device)
+        labels = torch.tensor([self.labels[k]] * inputs.size(0), device=inputs.device)  # type: ignore # noqa: E501 line too long
         return inputs, labels
 
     def __len__(self) -> int:
@@ -116,16 +111,13 @@ class LabelledDataset(Dataset):
 
 
 def train_cav(
-    # pyre-fixme[2]: Parameter must be annotated.
-    model_id,
+    model_id: str,
     concepts: List[Concept],
     layers: Union[str, List[str]],
     classifier: Classifier,
     save_path: str,
-    # pyre-fixme[24]: Generic type `dict` expects 2 type parameters, use
-    #  `typing.Dict[<key type>, <value type>]` to avoid runtime subscripting errors.
-    classifier_kwargs: Dict,
-) -> Dict[str, Dict[str, CAV]]:
+    classifier_kwargs: Dict[str, Any],
+) -> Dict[str, Dict[str, Optional[CAV]]]:
     r"""
     A helper function for parallel CAV computations that can be called
     from a python process.
@@ -163,7 +155,7 @@ def train_cav(
     """
 
     concepts_key = concepts_to_str(concepts)
-    cavs: Dict[str, Dict[str, CAV]] = defaultdict()
+    cavs: Dict[str, Dict[str, Optional[CAV]]] = defaultdict()
     cavs[concepts_key] = defaultdict()
     layers = [layers] if isinstance(layers, str) else layers
     for layer in layers:
@@ -176,12 +168,10 @@ def train_cav(
 
         labels = [concept.id for concept in concepts]
 
-        # pyre-fixme[22]: The cast is redundant.
-        labelled_dataset = LabelledDataset(cast(List[AV.AVDataset], datasets), labels)
+        labelled_dataset = LabelledDataset(datasets, labels)
 
-        # pyre-fixme[3]: Return type must be annotated.
         # pyre-fixme[2]: Parameter must be annotated.
-        def batch_collate(batch):
+        def batch_collate(batch) -> Tuple[Tensor, Tensor]:
             inputs, labels = zip(*batch)
             return torch.cat(inputs), torch.cat(labels)
 
@@ -217,7 +207,8 @@ def train_cav(
             model_id,
         )
         # Saving cavs on the disk
-        cavs[concepts_key][layer].save()
+        # pyre-fixme[16]: `Optional` has no attribute `save`.
+        cavs[concepts_key][layer].save()  # type: ignore
 
     return cavs
 
@@ -269,8 +260,7 @@ class TCAV(ConceptInterpreter):
         model_id: str = "default_model_id",
         classifier: Optional[Classifier] = None,
         layer_attr_method: Optional[LayerAttribution] = None,
-        # pyre-fixme[2]: Parameter must be annotated.
-        attribute_to_layer_input=False,
+        attribute_to_layer_input: bool = False,
         save_path: str = "./cav/",
         **classifier_kwargs: Any,
     ) -> None:
@@ -321,21 +311,20 @@ class TCAV(ConceptInterpreter):
             For more thorough examples, please check out TCAV tutorial and test cases.
         """
         ConceptInterpreter.__init__(self, model)
-        # pyre-fixme[4]: Attribute must be annotated.
-        self.layers = [layers] if isinstance(layers, str) else layers
+        self.layers: List[str] = [layers] if isinstance(layers, str) else layers
         self.model_id = model_id
         self.concepts: Set[Concept] = set()
         self.classifier = classifier
-        # pyre-fixme[4]: Attribute must be annotated.
-        self.classifier_kwargs = classifier_kwargs
+        # pyre-fixme[4]: Attribute `classifier_kwargs` of class `TCAV`
+        # must have a type other than `Any`.
+        self.classifier_kwargs: Any = classifier_kwargs
         # pyre-fixme[8]: Attribute has type `Dict[str, Dict[str, CAV]]`; used as
         #  `DefaultDict[Variable[_KT], DefaultDict[Variable[_KT], Variable[_VT]]]`.
         self.cavs: Dict[str, Dict[str, CAV]] = defaultdict(lambda: defaultdict())
         if self.classifier is None:
             self.classifier = DefaultClassifier()
         if layer_attr_method is None:
-            # pyre-fixme[4]: Attribute must be annotated.
-            self.layer_attr_method = cast(
+            self.layer_attr_method: LayerAttribution = cast(
                 LayerAttribution,
                 LayerGradientXActivation(  # type: ignore
                     model,
@@ -354,8 +343,7 @@ class TCAV(ConceptInterpreter):
             "will use `default_model_id` as its default value."
         )
 
-        # pyre-fixme[4]: Attribute must be annotated.
-        self.attribute_to_layer_input = attribute_to_layer_input
+        self.attribute_to_layer_input: bool = attribute_to_layer_input
         self.save_path = save_path
 
         # Creates CAV save directory if it doesn't exist. It is created once in the
@@ -372,9 +360,9 @@ class TCAV(ConceptInterpreter):
         for concept in self.concepts:
             self.generate_activation(self.layers, concept)
 
-    # pyre-fixme[24]: Generic type `list` expects 1 type parameter, use
-    #  `typing.List[<element type>]` to avoid runtime subscripting errors.
-    def generate_activation(self, layers: Union[str, List], concept: Concept) -> None:
+    def generate_activation(
+        self, layers: Union[str, List[str]], concept: Concept
+    ) -> None:
         r"""
         Computes layer activations for the specified `concept` and
         the list of layer(s) `layers`.
@@ -390,13 +378,12 @@ class TCAV(ConceptInterpreter):
         layer_modules = [_get_module_from_name(self.model, layer) for layer in layers]
 
         layer_act = LayerActivation(self.model, layer_modules)
-        assert concept.data_iter is not None, (
+        data_iter = concept.data_iter
+        assert data_iter is not None, (
             "Data iterator for concept id:",
             "{} must be specified".format(concept.id),
         )
-        # pyre-fixme[6]: For 1st argument expected `Iterable[Variable[_T]]` but got
-        #  `Optional[DataLoader[typing.Any]]`.
-        for i, examples in enumerate(concept.data_iter):
+        for i, examples in enumerate(data_iter):
             activations = layer_act.attribute.__wrapped__(  # type: ignore
                 layer_act,
                 examples,
@@ -461,9 +448,10 @@ class TCAV(ConceptInterpreter):
         concept_layers = defaultdict(list)
 
         for layer in self.layers:
-            self.cavs[concepts_key][layer] = CAV.load(
-                self.save_path, self.model_id, concepts, layer
-            )
+            cav = CAV.load(self.save_path, self.model_id, concepts, layer)
+
+            if cav is not None:
+                self.cavs[concepts_key][layer] = cav
 
             # If CAV aren't loaded
             if (
@@ -482,13 +470,12 @@ class TCAV(ConceptInterpreter):
                         concept_layers[concept].append(layer)
         return layers, concept_layers
 
-    # pyre-fixme[3]: Return type must be annotated.
     def compute_cavs(
         self,
         experimental_sets: List[List[Concept]],
         force_train: bool = False,
         processes: Optional[int] = None,
-    ):
+    ) -> Dict[str, Dict[str, CAV]]:
         r"""
         This method computes CAVs for given `experiments_sets` and layers
         specified in `self.layers` instance variable. Internally, it
@@ -592,7 +579,7 @@ class TCAV(ConceptInterpreter):
         # list[Dict[concept, Dict[layer, list]]] => Dict[concept, Dict[layer, list]]
         for cavs in cavs_list:
             for c_key in cavs:
-                self.cavs[c_key].update(cavs[c_key])
+                self.cavs[c_key].update(cavs[c_key])  # type: ignore
 
         return self.cavs
 

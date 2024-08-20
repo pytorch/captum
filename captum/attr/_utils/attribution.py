@@ -73,7 +73,7 @@ class Attribution:
 
     """
 
-    # pyre-fixme[24] Callable needs 2 type parameters
+    # pyre-fixme[24] Generic type `Callable` expects 2 type parameters.
     attribute_future: Callable
 
     r"""
@@ -105,8 +105,7 @@ class Attribution:
     """
 
     @property
-    # pyre-fixme[3]: Return type must be annotated.
-    def multiplies_by_inputs(self):
+    def multiplies_by_inputs(self) -> bool:
         return False
 
     def has_convergence_delta(self) -> bool:
@@ -361,8 +360,7 @@ class PerturbationAttribution(Attribution):
         Attribution.__init__(self, forward_func)
 
     @property
-    # pyre-fixme[3]: Return type must be annotated.
-    def multiplies_by_inputs(self):
+    def multiplies_by_inputs(self) -> bool:
         return True
 
 

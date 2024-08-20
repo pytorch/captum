@@ -77,8 +77,7 @@ class PropagationRule(ABC):
         return _backward_hook_input
 
     # pyre-fixme[3]: Return type must be annotated.
-    # pyre-fixme[2]: Parameter must be annotated.
-    def _create_backward_hook_output(self, outputs):
+    def _create_backward_hook_output(self, outputs: torch.Tensor):
         # pyre-fixme[53]: Captured variable `outputs` is not annotated.
         # pyre-fixme[3]: Return type must be annotated.
         # pyre-fixme[2]: Parameter must be annotated.
@@ -92,9 +91,8 @@ class PropagationRule(ABC):
 
         return _backward_hook_output
 
-    # pyre-fixme[3]: Return type must be annotated.
     # pyre-fixme[2]: Parameter must be annotated.
-    def forward_hook_weights(self, module, inputs, outputs):
+    def forward_hook_weights(self, module, inputs, outputs) -> None:
         """Save initial activations a_j before modules are changed"""
         device = inputs[0].device if isinstance(inputs, tuple) else inputs.device
         if hasattr(module, "activations") and device in module.activations:
@@ -135,14 +133,12 @@ class EpsilonRule(PropagationRule):
         discriminator during propagation.
     """
 
-    # pyre-fixme[2]: Parameter must be annotated.
-    def __init__(self, epsilon=1e-9) -> None:
+    def __init__(self, epsilon: float = 1e-9) -> None:
         # pyre-fixme[4]: Attribute must be annotated.
         self.STABILITY_FACTOR = epsilon
 
-    # pyre-fixme[3]: Return type must be annotated.
     # pyre-fixme[2]: Parameter must be annotated.
-    def _manipulate_weights(self, module, inputs, outputs):
+    def _manipulate_weights(self, module, inputs, outputs) -> None:
         pass
 
 
@@ -158,16 +154,14 @@ class GammaRule(PropagationRule):
         the positive relevance is increased.
     """
 
-    # pyre-fixme[2]: Parameter must be annotated.
-    def __init__(self, gamma=0.25, set_bias_to_zero=False) -> None:
+    def __init__(self, gamma: float = 0.25, set_bias_to_zero: bool = False) -> None:
         # pyre-fixme[4]: Attribute must be annotated.
         self.gamma = gamma
         # pyre-fixme[4]: Attribute must be annotated.
         self.set_bias_to_zero = set_bias_to_zero
 
-    # pyre-fixme[3]: Return type must be annotated.
     # pyre-fixme[2]: Parameter must be annotated.
-    def _manipulate_weights(self, module, inputs, outputs):
+    def _manipulate_weights(self, module, inputs, outputs) -> None:
         if hasattr(module, "weight"):
             module.weight.data = (
                 module.weight.data + self.gamma * module.weight.data.clamp(min=0)
@@ -189,14 +183,12 @@ class Alpha1_Beta0_Rule(PropagationRule):
     Use for lower layers.
     """
 
-    # pyre-fixme[2]: Parameter must be annotated.
-    def __init__(self, set_bias_to_zero=False) -> None:
+    def __init__(self, set_bias_to_zero: bool = False) -> None:
         # pyre-fixme[4]: Attribute must be annotated.
         self.set_bias_to_zero = set_bias_to_zero
 
-    # pyre-fixme[3]: Return type must be annotated.
     # pyre-fixme[2]: Parameter must be annotated.
-    def _manipulate_weights(self, module, inputs, outputs):
+    def _manipulate_weights(self, module, inputs, outputs) -> None:
         if hasattr(module, "weight"):
             module.weight.data = module.weight.data.clamp(min=0)
         if self.set_bias_to_zero and hasattr(module, "bias"):

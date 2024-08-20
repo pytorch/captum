@@ -5,7 +5,7 @@
 import sys
 import warnings
 from time import time
-from typing import cast, Iterable, Optional, Sized, TextIO
+from typing import Any, cast, Iterable, Optional, Sized, TextIO
 
 from captum._utils.typing import Literal
 
@@ -61,15 +61,17 @@ class NullProgress:
     progress bars.
     """
 
-    # pyre-fixme[3]: Return type must be annotated.
-    # pyre-fixme[24]: Generic type `Iterable` expects 1 type parameter.
-    # pyre-fixme[2]: Parameter must be annotated.
-    def __init__(self, iterable: Optional[Iterable] = None, *args, **kwargs):
+    def __init__(
+        self,
+        # pyre-fixme[24]: Generic type `Iterable` expects 1 type parameter.
+        iterable: Optional[Iterable] = None,
+        *args: Any,
+        **kwargs: Any,
+    ) -> None:
         del args, kwargs
         self.iterable = iterable
 
-    # pyre-fixme[3]: Return type must be annotated.
-    def __enter__(self):
+    def __enter__(self) -> "NullProgress":
         return self
 
     # pyre-fixme[2]: Parameter must be annotated.
@@ -87,12 +89,10 @@ class NullProgress:
         for it in self.iterable:
             yield it
 
-    # pyre-fixme[3]: Return type must be annotated.
-    def update(self, amount: int = 1):
+    def update(self, amount: int = 1) -> None:
         pass
 
-    # pyre-fixme[3]: Return type must be annotated.
-    def close(self):
+    def close(self) -> None:
         pass
 
 
@@ -133,8 +133,7 @@ class SimpleProgress:
         self.closed = False
         self._is_parent = False
 
-    # pyre-fixme[3]: Return type must be annotated.
-    def __enter__(self):
+    def __enter__(self) -> "SimpleProgress":
         self._is_parent = True
         self._refresh()
         return self
@@ -158,8 +157,7 @@ class SimpleProgress:
             self.update()
         self.close()
 
-    # pyre-fixme[3]: Return type must be annotated.
-    def _refresh(self):
+    def _refresh(self) -> None:
         progress_str = self.desc + ": " if self.desc else ""
         if self.total:
             # e.g., progress: 60% 3/5
@@ -172,8 +170,7 @@ class SimpleProgress:
         end = "\n" if self._is_parent else ""
         print("\r" + progress_str, end=end, file=self.file)
 
-    # pyre-fixme[3]: Return type must be annotated.
-    def update(self, amount: int = 1):
+    def update(self, amount: int = 1) -> None:
         if self.closed:
             return
         self.cur += amount
@@ -183,8 +180,7 @@ class SimpleProgress:
             self._refresh()
             self.last_print_t = cur_t
 
-    # pyre-fixme[3]: Return type must be annotated.
-    def close(self):
+    def close(self) -> None:
         if not self.closed and not self._is_parent:
             self._refresh()
             print(file=self.file)  # end with new line
@@ -197,8 +193,7 @@ def progress(
     iterable: Optional[Iterable] = None,
     desc: Optional[str] = None,
     total: Optional[int] = None,
-    # pyre-fixme[2]: Parameter must be annotated.
-    use_tqdm=True,
+    use_tqdm: bool = True,
     file: Optional[TextIO] = None,
     mininterval: float = 0.5,
     # pyre-fixme[2]: Parameter must be annotated.

@@ -41,7 +41,6 @@ class LinearModel(nn.Module, Model):
         # pyre-fixme[4]: Attribute must be annotated.
         self.construct_kwargs = kwargs
 
-    # pyre-fixme[3]: Return type must be annotated.
     def _construct_model_params(
         self,
         in_features: Optional[int] = None,
@@ -52,7 +51,7 @@ class LinearModel(nn.Module, Model):
         weight_values: Optional[Tensor] = None,
         bias_value: Optional[Tensor] = None,
         classes: Optional[Tensor] = None,
-    ):
+    ) -> None:
         r"""
         Lazily initializes a linear model. This will be called for you in a
         train method.

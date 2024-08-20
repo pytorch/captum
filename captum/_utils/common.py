@@ -363,10 +363,9 @@ def _expand_target(
     return target
 
 
-# pyre-fixme[3]: Return type must be annotated.
 def _expand_feature_mask(
     feature_mask: Union[Tensor, Tuple[Tensor, ...]], n_samples: int
-):
+) -> Tuple[Tensor, ...]:
     # pyre-fixme[6]: For 1st argument expected `Tensor` but got `Union[Tensor,
     #  typing.Tuple[Tensor, ...]]`.
     is_feature_mask_tuple = _is_tuple(feature_mask)
@@ -379,10 +378,9 @@ def _expand_feature_mask(
         )
         for feature_mask_elem in feature_mask
     )
-    return _format_output(is_feature_mask_tuple, feature_mask_new)
+    return _format_output(is_feature_mask_tuple, feature_mask_new)  # type: ignore
 
 
-# pyre-fixme[3]: Return type must be annotated.
 def _expand_and_update_baselines(
     inputs: Tuple[Tensor, ...],
     n_samples: int,
@@ -390,7 +388,7 @@ def _expand_and_update_baselines(
     #  `typing.Dict[<key type>, <value type>]` to avoid runtime subscripting errors.
     kwargs: dict,
     draw_baseline_from_distrib: bool = False,
-):
+) -> None:
     # pyre-fixme[3]: Return type must be annotated.
     # pyre-fixme[2]: Parameter must be annotated.
     def get_random_baseline_indices(bsz, baseline):
@@ -432,10 +430,9 @@ def _expand_and_update_baselines(
     kwargs["baselines"] = baselines
 
 
-# pyre-fixme[3]: Return type must be annotated.
 # pyre-fixme[24]: Generic type `dict` expects 2 type parameters, use
 #  `typing.Dict[<key type>, <value type>]` to avoid runtime subscripting errors.
-def _expand_and_update_additional_forward_args(n_samples: int, kwargs: dict):
+def _expand_and_update_additional_forward_args(n_samples: int, kwargs: dict) -> None:
     if "additional_forward_args" not in kwargs:
         return
     additional_forward_args = kwargs["additional_forward_args"]
@@ -451,10 +448,9 @@ def _expand_and_update_additional_forward_args(n_samples: int, kwargs: dict):
     kwargs["additional_forward_args"] = additional_forward_args
 
 
-# pyre-fixme[3]: Return type must be annotated.
 # pyre-fixme[24]: Generic type `dict` expects 2 type parameters, use
 #  `typing.Dict[<key type>, <value type>]` to avoid runtime subscripting errors.
-def _expand_and_update_target(n_samples: int, kwargs: dict):
+def _expand_and_update_target(n_samples: int, kwargs: dict) -> None:
     if "target" not in kwargs:
         return
     target = kwargs["target"]
@@ -465,10 +461,9 @@ def _expand_and_update_target(n_samples: int, kwargs: dict):
     kwargs["target"] = target
 
 
-# pyre-fixme[3]: Return type must be annotated.
 # pyre-fixme[24]: Generic type `dict` expects 2 type parameters, use
 #  `typing.Dict[<key type>, <value type>]` to avoid runtime subscripting errors.
-def _expand_and_update_feature_mask(n_samples: int, kwargs: dict):
+def _expand_and_update_feature_mask(n_samples: int, kwargs: dict) -> None:
     if "feature_mask" not in kwargs:
         return
 
@@ -573,10 +568,9 @@ def _format_outputs(
 # pyre-fixme[24] Callable requires 2 arguments
 def _construct_future_forward(original_forward: Callable) -> Callable:
     # pyre-fixme[3] return type not specified
-    # pyre-ignore
-    def future_forward(*args, **kwargs):
-        # pyre-ignore
-        fut = torch.futures.Future()
+    def future_forward(*args: Any, **kwargs: Any):
+        # pyre-fixme[29]: `typing.Type[torch.futures.Future]` is not a function.
+        fut: torch.futures.Future[Tensor] = torch.futures.Future()
         fut.set_result(original_forward(*args, **kwargs))
         return fut
 
@@ -921,8 +915,7 @@ def _register_backward_hook(
     ]
 
 
-# pyre-fixme[3]: Return type must be annotated.
-def _get_max_feature_index(feature_mask: Tuple[Tensor, ...]):
+def _get_max_feature_index(feature_mask: Tuple[Tensor, ...]) -> int:
     """
     Returns the max feature mask index
     The feature mask should be formatted to tuple of tensors at first.

@@ -196,7 +196,6 @@ class TextTemplateInput(InterpretableInput):
 
     """
 
-    # pyre-fixme[3]: Return type must be annotated.
     def __init__(
         self,
         # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
@@ -205,7 +204,7 @@ class TextTemplateInput(InterpretableInput):
         # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
         baselines: Union[List[str], Dict[str, str], Callable, None] = None,
         mask: Union[List[int], Dict[str, int], None] = None,
-    ):
+    ) -> None:
         # convert values dict to list
         if isinstance(values, dict):
             dict_keys = list(values.keys())
@@ -391,7 +390,6 @@ class TextTokenInput(InterpretableInput):
 
     """
 
-    # pyre-fixme[3]: Return type must be annotated.
     def __init__(
         self,
         text: str,
@@ -399,7 +397,7 @@ class TextTokenInput(InterpretableInput):
         tokenizer,
         baselines: Union[int, str] = 0,  # usually UNK
         skip_tokens: Union[List[int], List[str], None] = None,
-    ):
+    ) -> None:
         inp_tensor = tokenizer.encode(text, return_tensors="pt")
 
         # input tensor into the model of token ids

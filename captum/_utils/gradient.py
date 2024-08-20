@@ -986,7 +986,11 @@ def _compute_jacobian_wrt_params_with_sample_wise_trick(
                 out = loss
 
             sample_grad_wrapper.compute_param_sample_gradients(
-                out, loss_mode=reduction_type
+                out,
+                # pyre-fixme[6]: In call `SampleGradientWrapper.
+                # compute_param_sample_gradients`, for argument `loss_mode`,
+                # expected `str` but got `Optional[str]`.
+                loss_mode=reduction_type,  # type: ignore
             )
             if layer_modules is not None:
                 layer_parameters = _extract_parameters_from_layers(layer_modules)

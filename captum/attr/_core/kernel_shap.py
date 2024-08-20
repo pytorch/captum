@@ -279,7 +279,10 @@ class KernelShap(Lime):
         )
         num_features_list = torch.arange(num_interp_features, dtype=torch.float)
         denom = num_features_list * (num_interp_features - num_features_list)
+        # pyre-fixme[58]: `/` is not supported for operand types
+        # `int` and `torch._tensor.Tensor`.
         probs = (num_interp_features - 1) / denom
+        # pyre-fixme[16]: `float` has no attribute `__setitem__`.
         probs[0] = 0.0
         return self._attribute_kwargs(
             inputs=inputs,
@@ -294,10 +297,8 @@ class KernelShap(Lime):
             show_progress=show_progress,
         )
 
-    # pyre-fixme[3]: Return type must be annotated.
-    def attribute_future(
-        self,
-    ):
+    # pyre-fixme[24] Generic type `Callable` expects 2 type parameters.
+    def attribute_future(self) -> Callable:
         r"""
         This method is not implemented for KernelShap.
         """

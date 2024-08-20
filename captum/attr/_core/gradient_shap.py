@@ -301,10 +301,8 @@ class GradientShap(GradientAttribution):
 
         return attributions
 
-    # pyre-fixme[3]: Return type must be annotated.
-    def attribute_future(
-        self,
-    ):
+    # pyre-fixme[24] Generic type `Callable` expects 2 type parameters.
+    def attribute_future(self) -> Callable:
         r"""
         This method is not implemented for GradientShap.
         """
@@ -316,15 +314,13 @@ class GradientShap(GradientAttribution):
         return True
 
     @property
-    # pyre-fixme[3]: Return type must be annotated.
-    def multiplies_by_inputs(self):
+    def multiplies_by_inputs(self) -> bool:
         return self._multiply_by_inputs
 
 
 class InputBaselineXGradient(GradientAttribution):
     # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
-    # pyre-fixme[2]: Parameter must be annotated.
-    def __init__(self, forward_func: Callable, multiply_by_inputs=True) -> None:
+    def __init__(self, forward_func: Callable, multiply_by_inputs: bool = True) -> None:
         r"""
         Args:
 
@@ -437,10 +433,8 @@ class InputBaselineXGradient(GradientAttribution):
             is_inputs_tuple,
         )
 
-    # pyre-fixme[3]: Return type must be annotated.
-    def attribute_future(
-        self,
-    ):
+    # pyre-fixme[24] Generic type `Callable` expects 2 type parameters.
+    def attribute_future(self) -> Callable:
         r"""
         This method is not implemented for InputBaseLineXGradient.
         """
@@ -452,8 +446,7 @@ class InputBaselineXGradient(GradientAttribution):
         return True
 
     @property
-    # pyre-fixme[3]: Return type must be annotated.
-    def multiplies_by_inputs(self):
+    def multiplies_by_inputs(self) -> bool:
         return self._multiply_by_inputs
 
 

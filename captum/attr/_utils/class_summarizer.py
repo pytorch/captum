@@ -32,7 +32,7 @@ class ClassSummarizer(Summarizer):
         self,
         x: TensorOrTupleOfTensorsGeneric,
         labels: TargetType = None,
-    ):
+    ) -> None:
         r"""
         Updates the stats of the summarizer, optionally associated to classes.
 
