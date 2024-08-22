@@ -15,8 +15,6 @@
 import bitsandbytes as bnb
 import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig
-import random
-import sys
 
 from captum.attr import (
     FeatureAblation, 
@@ -47,7 +45,7 @@ def load_model(model_name, bnb_config):
         device_map="auto", # dispatch efficiently the model on the available ressources
         max_memory = {i: max_memory for i in range(n_gpus)},
     )
-    tokenizer = AutoTokenizer.from_pretrained(model_name, use_auth_token=True)
+    tokenizer = AutoTokenizer.from_pretrained(model_name, token=True)
 
     # Needed for LLaMA tokenizer
     tokenizer.pad_token = tokenizer.eos_token
@@ -65,7 +63,7 @@ def create_bnb_config():
     return bnb_config
 
 
-# In[ ]:
+# In[3]:
 
 
 model_name = "meta-llama/Llama-2-13b-chat-hf" 
@@ -182,7 +180,7 @@ attr_res.plot_token_attr(show=True)
 # 
 # But more generally, we would prefer a distribution of baselines so the attribution method will sample from for generosity. Here, we can leverage the `ProductBaselines` to define a Cartesian product of different baselines values of various features. And we can specify `num_trials` in attribute to average over multiple trials
 # 
-# Another issue we notice from the above results is that there are correlated aspects of the prompt which should be ablated together to ensure that the input remain in distribution, e.g. Palm Coast, FL should be ablated with Seattle, WA. We can accomplish this using a mask as defined below, which will group (city, state) and (name, pronoun). `TextTemplateFeature` accepts the argument `mask` allwoing us to set the group indices. To make it more explicit, we can also define the template and its values in dictionary format instead of list.
+# Another issue we notice from the above results is that there are correlated aspects of the prompt which should be ablated together to ensure that the input remain in distribution, e.g. Palm Coast, FL should be ablated with Seattle, WA. We can accomplish this using a mask as defined below, which will group (city, state) and (name, pronoun). `TextTemplateFeature` accepts the argument `mask` allowing us to set the group indices. To make it more explicit, we can also define the template and its values in dictionary format instead of list.
 
 # In[11]:
 
@@ -257,3 +255,40 @@ attr_res.plot_token_attr(show=True)
 
 
 # Interestingly, we can see all these few-shot examples we choose actually make the model less likely to correctly label the given review as "Positive".
+
+# # Gradient-based Attribution
+# As an alternative to perturbation-based attribution, we can use gradient-based methods to attribute each feature's contribution to a target sequence being generated. For LLMs, the only supported method at present is `LayerIntegratedGradients`. Layer Integrated Gradients is a variant of Integrated Gradients that assigns an importance score to layer inputs or outputs. Integrated Gradients works by assigning an importance score to each input feature by approximating the integral of gradients of a function's output with respect to the inputs along the path from given references to inputs. To instantiate, we can simply wrap our gradient-based attribution method with `LLMGradientAttribution`. Here, we measure the importance of each input token to the embedding layer `model.embed_tokens` of the LLM.
+
+# In[14]:
+
+
+lig = LayerIntegratedGradients(model, model.model.embed_tokens)
+
+llm_attr = LLMGradientAttribution(lig, tokenizer)
+
+
+# Now that we have our LLM attribution object, we can similarly call `.attribute()` to obtain our gradient-based attributions. Right now, `LLMGradientAttribution` can only handle `TextTokenInput` inputs. We can visualize the attribution with respect to both the full output sequence and individual output tokens using the methods `.plot_seq_attr()` and `.plot_token_attr()`, respectively.
+
+# In[15]:
+
+
+inp = TextTokenInput(
+    eval_prompt,
+    tokenizer,
+    skip_tokens=[1],  # skip the special token for the start of the text <s>
+)
+
+attr_res = llm_attr.attribute(inp, target=target)
+
+attr_res.plot_seq_attr(show=True)
+
+
+# Layer Integrated Gradients estimates that the most important input token in the prediction of the subsequent tokens in the sentence is the word, "lives." We can visualize further token-level attribution at the embedding layer as well.
+
+# In[16]:
+
+
+attr_res.plot_token_attr(show=True)
+
+
+# Keep in mind that the token- and sequence-wise attribution will change layer to layer. We encourage you to explore how this attribution changes with alternative layers in the LLM.
