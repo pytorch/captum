@@ -2,7 +2,7 @@
 
 # pyre-strict
 
-from typing import List, Tuple, TYPE_CHECKING, TypeVar, Union
+from typing import List, Optional, Protocol, Tuple, TYPE_CHECKING, TypeVar, Union
 
 from torch import Tensor
 from torch.nn import Module
@@ -33,3 +33,14 @@ TensorLikeList = Union[
     TensorLikeList4D,
     TensorLikeList5D,
 ]
+
+
+class TokenizerLike(Protocol):
+    """A protocol for tokenizer-like objects that can be used with Captum
+    LLM attribution methods."""
+
+    def encode(
+        self, text: str, return_tensors: Optional[str] = None
+    ) -> Union[List[int], Tensor]: ...
+    def decode(self, token_ids: Tensor) -> str: ...
+    def convert_ids_to_tokens(self, token_ids: Tensor) -> List[str]: ...

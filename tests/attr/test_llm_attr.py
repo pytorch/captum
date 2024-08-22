@@ -3,7 +3,6 @@
 # pyre-strict
 
 import copy
-from collections import namedtuple
 from typing import Any, cast, Dict, List, NamedTuple, Optional, Type, Union
 
 import torch
@@ -35,28 +34,30 @@ class DummyTokenizer:
     ) -> Union[List[int], Tensor]:
         tokens = text.split(" ")
 
-        # pyre-fixme[16]: `DummyTokenizer` has no attribute `unk`.
         tokens_ids: Union[List[int], Tensor] = [
             ord(s[0]) if len(s) == 1 else self.unk for s in tokens
         ]
 
         # start with sos
-        # pyre-fixme[35]: Target cannot be annotated.
-        # pyre-fixme[16]: `DummyTokenizer` has no attribute `sos`.
         tokens_ids = [self.sos, *tokens_ids]
 
         if return_tensors:
             return torch.tensor([tokens_ids])
         return tokens_ids
 
-    def convert_ids_to_tokens(self, token_ids: List[int]) -> List[str]:
+    def convert_ids_to_tokens(self, token_ids: Tensor) -> List[str]:
         return [
             (self.special_tokens[tid] if tid in self.special_tokens else chr(tid))
             for tid in token_ids
         ]
 
-    def decode(self, token_ids: List[int]) -> str:
+    def decode(self, token_ids: Tensor) -> str:
         return " ".join(self.convert_ids_to_tokens(token_ids))
+
+
+class Result(NamedTuple):
+    logits: Tensor
+    past_key_values: Tensor
 
 
 class DummyLLM(nn.Module):
@@ -89,13 +90,12 @@ class DummyLLM(nn.Module):
             self.linear.weight.data = rand_like(self.linear.weight)
             self.linear.bias.data.fill_(0.5)
 
-    def forward(self, input_ids: Tensor, *args: Any, **kwargs: Any) -> NamedTuple:
+    def forward(self, input_ids: Tensor, *args: Any, **kwargs: Any) -> Result:
         emb = self.emb(input_ids)
         if "past_key_values" in kwargs:
             emb = torch.cat((kwargs["past_key_values"], emb), dim=1)
         encoding = self.trans(emb)
         logits = self.linear(encoding)
-        Result = namedtuple("Result", ["logits", "past_key_values"])
         return Result(logits=logits, past_key_values=emb)
 
     def generate(
@@ -116,12 +116,11 @@ class DummyLLM(nn.Module):
         )
 
     def _update_model_kwargs_for_generation(
-        self, outputs: NamedTuple, model_kwargs: Dict[str, Any]
+        self, outputs: Result, model_kwargs: Dict[str, Any]
     ) -> Dict[str, Any]:
         new_kwargs = copy.deepcopy(model_kwargs)
         if hasattr(outputs, "past_key_values"):
-            # pyre-fixme[16]: `NamedTuple` has no attribute `past_key_values`.
-            new_kwargs["past_key_values"] = outputs.past_key_values  # type: ignore
+            new_kwargs["past_key_values"] = outputs.past_key_values
         return new_kwargs
 
     def prepare_inputs_for_generation(
@@ -205,8 +204,6 @@ class TestLLMAttr(BaseTest):
             )
         ]
     )
-    # pyre-fixme[2]: Missing parameter annotation [2]: Parameter `AttrClass`
-    # has no type specified.
     def test_llm_attr(
         self,
         AttrClass: Type[PerturbationAttribution],
@@ -317,8 +314,6 @@ class TestLLMAttr(BaseTest):
             )
         ]
     )
-    # pyre-fixme[2]: Missing parameter annotation [2]: Parameter `AttrClass`
-    # has no type specified.
     def test_llm_attr_without_token(
         self,
         AttrClass: Type[PerturbationAttribution],
@@ -396,6 +391,7 @@ class TestLLMGradAttr(BaseTest):
 
         # 5 output tokens, 4 input tokens including sos
         self.assertEqual(res.seq_attr.shape, (4,))
+        assert res.token_attr is not None  # make pyre/mypy happy
         self.assertIsNotNone(res.token_attr)
         token_attr = res.token_attr
         self.assertEqual(token_attr.shape, (5, 4))  # type: ignore
@@ -403,6 +399,7 @@ class TestLLMGradAttr(BaseTest):
         self.assertEqual(res.output_tokens, ["m", "n", "o", "p", "q"])
 
         self.assertEqual(res.seq_attr.device.type, self.device)
+        assert res.token_attr is not None  # make pyre/mypy happy
         self.assertEqual(token_attr.device.type, self.device)  # type: ignore
 
     def test_llm_attr_without_target(self) -> None:
@@ -416,6 +413,7 @@ class TestLLMGradAttr(BaseTest):
         res = llm_attr.attribute(inp, gen_args={"mock_response": "x y z"})
 
         self.assertEqual(res.seq_attr.shape, (4,))
+        assert res.token_attr is not None  # make pyre/mypy happy
         self.assertIsNotNone(res.token_attr)
         token_attr = res.token_attr
         self.assertEqual(token_attr.shape, (3, 4))  # type: ignore
@@ -423,6 +421,7 @@ class TestLLMGradAttr(BaseTest):
         self.assertEqual(res.output_tokens, ["x", "y", "z"])
 
         self.assertEqual(res.seq_attr.device.type, self.device)
+        assert res.token_attr is not None  # make pyre/mypy happy
         self.assertEqual(token_attr.device.type, self.device)  # type: ignore
 
     def test_llm_attr_with_skip_tokens(self) -> None:
@@ -437,6 +436,7 @@ class TestLLMGradAttr(BaseTest):
 
         # 5 output tokens, 4 input tokens including sos
         self.assertEqual(res.seq_attr.shape, (3,))
+        assert res.token_attr is not None  # make pyre/mypy happy
         self.assertIsNotNone(res.token_attr)
         token_attr = res.token_attr
         self.assertEqual(token_attr.shape, (5, 3))  # type: ignore
@@ -444,4 +444,5 @@ class TestLLMGradAttr(BaseTest):
         self.assertEqual(res.output_tokens, ["m", "n", "o", "p", "q"])
 
         self.assertEqual(res.seq_attr.device.type, self.device)
+        assert res.token_attr is not None  # make pyre/mypy happy
         self.assertEqual(token_attr.device.type, self.device)  # type: ignore
