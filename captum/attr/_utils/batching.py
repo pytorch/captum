@@ -29,12 +29,9 @@ def _batch_attribution(
     num_examples,
     # pyre-fixme[2]: Parameter must be annotated.
     internal_batch_size,
-    # pyre-fixme[2]: Parameter must be annotated.
-    n_steps,
-    # pyre-fixme[2]: Parameter must be annotated.
-    include_endpoint=False,
-    # pyre-fixme[2]: Parameter must be annotated.
-    **kwargs,
+    n_steps: int,
+    include_endpoint: bool = False,
+    **kwargs: Any,
 ):
     """
     This method applies internal batching to given attribution method, dividing

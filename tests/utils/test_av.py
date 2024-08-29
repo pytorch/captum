@@ -1,3 +1,4 @@
+# pyre-unsafe
 import glob
 import tempfile
 from datetime import datetime

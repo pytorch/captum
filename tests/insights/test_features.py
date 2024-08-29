@@ -1,3 +1,4 @@
+# pyre-unsafe
 from unittest.mock import patch
 
 import torch

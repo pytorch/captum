@@ -539,7 +539,15 @@ class LimeBase(PerturbationAttribution):
             self.interpretable_model.fit(DataLoader(dataset, batch_size=batch_count))
             return self.interpretable_model.representation()
 
-    # pyre-fixme[3]: Return type must be annotated.
+    # pyre-fixme[24] Generic type `Callable` expects 2 type parameters.
+    def attribute_future(self) -> Callable:
+        r"""
+        This method is not implemented for LimeBase.
+        """
+        raise NotImplementedError(
+            "LimeBase does not support attribution of future samples."
+        )
+
     def _evaluate_batch(
         self,
         curr_model_inputs: List[TensorOrTupleOfTensorsGeneric],
@@ -547,7 +555,7 @@ class LimeBase(PerturbationAttribution):
         # pyre-fixme[2]: Parameter annotation cannot be `Any`.
         expanded_additional_args: Any,
         device: torch.device,
-    ):
+    ) -> Tensor:
         model_out = _run_forward(
             self.forward_func,
             # pyre-fixme[6]: For 1st argument expected `Sequence[Variable[TupleOrTens...
@@ -568,8 +576,7 @@ class LimeBase(PerturbationAttribution):
         return False
 
     @property
-    # pyre-fixme[3]: Return type must be annotated.
-    def multiplies_by_inputs(self):
+    def multiplies_by_inputs(self) -> bool:
         return False
 
 
@@ -657,9 +664,8 @@ def get_exp_kernel_similarity_function(
     return default_exp_kernel
 
 
-# pyre-fixme[3]: Return type must be annotated.
 # pyre-fixme[2]: Parameter must be annotated.
-def default_perturb_func(original_inp, **kwargs):
+def default_perturb_func(original_inp, **kwargs) -> Tensor:
     assert (
         "num_interp_features" in kwargs
     ), "Must provide num_interp_features to use default interpretable sampling function"
@@ -672,9 +678,10 @@ def default_perturb_func(original_inp, **kwargs):
     return torch.bernoulli(probs).to(device=device).long()
 
 
-# pyre-fixme[3]: Return type must be annotated.
-# pyre-fixme[2]: Parameter must be annotated.
-def construct_feature_mask(feature_mask, formatted_inputs):
+def construct_feature_mask(
+    feature_mask: Union[None, Tensor, Tuple[Tensor, ...]],
+    formatted_inputs: Tuple[Tensor, ...],
+) -> Tuple[Tuple[Tensor, ...], int]:
     if feature_mask is None:
         feature_mask, num_interp_features = _construct_default_feature_mask(
             formatted_inputs
@@ -1099,6 +1106,10 @@ class Lime(LimeBase):
             return_input_shape=return_input_shape,
             show_progress=show_progress,
         )
+
+    # pyre-fixme[24] Generic type `Callable` expects 2 type parameters.
+    def attribute_future(self) -> Callable:
+        return super().attribute_future()
 
     def _attribute_kwargs(  # type: ignore
         self,

@@ -388,6 +388,13 @@ class DeepLift(GradientAttribution):
             is_inputs_tuple,
         )
 
+    # pyre-fixme[24] Generic type `Callable` expects 2 type parameters.
+    def attribute_future(self) -> Callable:
+        r"""
+        This method is not implemented for DeepLift.
+        """
+        raise NotImplementedError("attribute_future is not implemented for DeepLift")
+
     def _construct_forward_func(
         self,
         # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
@@ -578,8 +585,7 @@ class DeepLift(GradientAttribution):
         return True
 
     @property
-    # pyre-fixme[3]: Return type must be annotated.
-    def multiplies_by_inputs(self):
+    def multiplies_by_inputs(self) -> bool:
         return self._multiply_by_inputs
 
 
@@ -976,7 +982,6 @@ def nonlinear(
     return new_grad_inp
 
 
-# pyre-fixme[3]: Return type must be annotated.
 def softmax(
     module: Module,
     inputs: Tensor,
@@ -984,7 +989,7 @@ def softmax(
     grad_input: Tensor,
     grad_output: Tensor,
     eps: float = 1e-10,
-):
+) -> Tensor:
     delta_in, delta_out = _compute_diffs(inputs, outputs)
 
     grad_input_unnorm = torch.where(
@@ -998,7 +1003,6 @@ def softmax(
     return new_grad_inp
 
 
-# pyre-fixme[3]: Return type must be annotated.
 def maxpool1d(
     module: Module,
     inputs: Tensor,
@@ -1006,7 +1010,7 @@ def maxpool1d(
     grad_input: Tensor,
     grad_output: Tensor,
     eps: float = 1e-10,
-):
+) -> Tensor:
     return maxpool(
         module,
         F.max_pool1d,
@@ -1019,7 +1023,6 @@ def maxpool1d(
     )
 
 
-# pyre-fixme[3]: Return type must be annotated.
 def maxpool2d(
     module: Module,
     inputs: Tensor,
@@ -1027,7 +1030,7 @@ def maxpool2d(
     grad_input: Tensor,
     grad_output: Tensor,
     eps: float = 1e-10,
-):
+) -> Tensor:
     return maxpool(
         module,
         F.max_pool2d,
@@ -1040,7 +1043,6 @@ def maxpool2d(
     )
 
 
-# pyre-fixme[3]: Return type must be annotated.
 def maxpool3d(
     module: Module,
     # pyre-fixme[2]: Parameter must be annotated.
@@ -1052,7 +1054,7 @@ def maxpool3d(
     # pyre-fixme[2]: Parameter must be annotated.
     grad_output,
     eps: float = 1e-10,
-):
+) -> Tensor:
     return maxpool(
         module,
         F.max_pool3d,
@@ -1065,7 +1067,6 @@ def maxpool3d(
     )
 
 
-# pyre-fixme[3]: Return type must be annotated.
 def maxpool(
     module: Module,
     # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
@@ -1081,7 +1082,7 @@ def maxpool(
     # pyre-fixme[2]: Parameter must be annotated.
     grad_output,
     eps: float = 1e-10,
-):
+) -> Tensor:
     with torch.no_grad():
         input, input_ref = inputs.chunk(2)
         output, output_ref = outputs.chunk(2)

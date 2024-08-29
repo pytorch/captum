@@ -30,14 +30,13 @@ class StochasticGatesBase(Module, ABC):
     extend this class and implement the distribution specific functions.
     """
 
-    # pyre-fixme[3]: Return type must be annotated.
     def __init__(
         self,
         n_gates: int,
         mask: Optional[Tensor] = None,
         reg_weight: float = 1.0,
         reg_reduction: str = "sum",
-    ):
+    ) -> None:
         """
         Args:
             n_gates (int): number of gates.

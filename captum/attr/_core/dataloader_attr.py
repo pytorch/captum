@@ -30,9 +30,8 @@ SUPPORTED_METHODS = {FeatureAblation}
 
 
 # default reducer wehn reduce is None. Simply concat the outputs by the batch dimension
-# pyre-fixme[3]: Return type must be annotated.
 # pyre-fixme[2]: Parameter must be annotated.
-def _concat_tensors(accum, cur_output, _):
+def _concat_tensors(accum, cur_output, _) -> Tensor:
     return cur_output if accum is None else torch.cat([accum, cur_output])
 
 
@@ -185,7 +184,6 @@ class DataLoaderAttribution(Attribution):
 
         self.attr_method.forward_func = self._forward_with_dataloader
 
-    # pyre-fixme[3]: Return type must be annotated.
     def _forward_with_dataloader(
         self,
         batched_perturbed_feature_indices: Tensor,
@@ -199,7 +197,7 @@ class DataLoaderAttribution(Attribution):
         to_metric: Optional[Callable],
         show_progress: bool,
         feature_idx_to_mask_idx: Dict[int, List[int]],
-    ):
+    ) -> Tensor:
         """
         Wrapper of the original given forward_func to be used in the attribution method
         It iterates over the dataloader with the given forward_func
@@ -467,3 +465,12 @@ class DataLoaderAttribution(Attribution):
             )
 
             return _format_output(is_inputs_tuple, attr)
+
+    # pyre-fixme[24] Generic type `Callable` expects 2 type parameters.
+    def attribute_future(self) -> Callable:
+        r"""
+        This method is not implemented for DataLoaderAttribution.
+        """
+        raise NotImplementedError(
+            "attribute_future is not implemented for DataLoaderAttribution"
+        )

@@ -46,8 +46,7 @@ class Summarizer:
 
         return copy.deepcopy(self._stats)
 
-    # pyre-fixme[3]: Return type must be annotated.
-    def update(self, x: Union[float, Tensor, Tuple[Union[float, Tensor], ...]]):
+    def update(self, x: Union[float, Tensor, Tuple[Union[float, Tensor], ...]]) -> None:
         r"""
         Calls `update` on each `Stat` object within the summarizer
 
@@ -206,8 +205,7 @@ class SummarizerSingleTensor:
             stat._other_stats = self
             stat.init()
 
-    # pyre-fixme[3]: Return type must be annotated.
-    def update(self, x: Tensor):
+    def update(self, x: Tensor) -> None:
         r"""
         Updates the summary of a given tensor `x`
 

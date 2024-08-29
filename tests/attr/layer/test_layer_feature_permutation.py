@@ -1,5 +1,7 @@
 # (c) Meta Platforms, Inc. and affiliates. Confidential and proprietary.
 
+# pyre-unsafe
+
 import torch
 from captum.attr._core.layer.layer_feature_permutation import LayerFeaturePermutation
 from tests.helpers import BaseTest

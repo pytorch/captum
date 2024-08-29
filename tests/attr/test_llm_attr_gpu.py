@@ -3,8 +3,7 @@
 # pyre-strict
 
 import copy
-from collections import namedtuple
-from typing import Any, cast, Dict, List, NamedTuple, Optional, Union
+from typing import Any, cast, Dict, List, NamedTuple, Optional, Type, Union
 
 import torch
 from captum.attr._core.feature_ablation import FeatureAblation
@@ -14,6 +13,7 @@ from captum.attr._core.layer.layer_integrated_gradients import LayerIntegratedGr
 from captum.attr._core.lime import Lime
 from captum.attr._core.llm_attr import LLMAttribution, LLMGradientAttribution
 from captum.attr._core.shapley_value import ShapleyValueSampling
+from captum.attr._utils.attribution import PerturbationAttribution
 from captum.attr._utils.interpretable_input import TextTemplateInput, TextTokenInput
 from parameterized import parameterized, parameterized_class
 
@@ -45,14 +45,19 @@ class DummyTokenizer:
 
         return tokens_ids
 
-    def convert_ids_to_tokens(self, token_ids: List[int]) -> List[str]:
+    def convert_ids_to_tokens(self, token_ids: Union[Tensor, List[int]]) -> List[str]:
         return [
             (self.special_tokens[tid] if tid in self.special_tokens else chr(tid))
             for tid in token_ids
         ]
 
-    def decode(self, token_ids: List[int]) -> str:
+    def decode(self, token_ids: Union[Tensor, List[int]]) -> str:
         return " ".join(self.convert_ids_to_tokens(token_ids))
+
+
+class Result(NamedTuple):
+    logits: Tensor
+    past_key_values: Tensor
 
 
 class DummyLLM(nn.Module):
@@ -63,7 +68,7 @@ class DummyLLM(nn.Module):
         self.linear = nn.Linear(10, self.tokenizer.vocab_size)
         self.trans = nn.TransformerEncoderLayer(d_model=10, nhead=2)
 
-    def forward(self, input_ids: Tensor, *args: Any, **kwargs: Any) -> NamedTuple:
+    def forward(self, input_ids: Tensor, *args: Any, **kwargs: Any) -> Result:
         emb = self.emb(input_ids)
         if "attention_mask" in kwargs:
             attention_mask: Tensor = kwargs["attention_mask"]
@@ -71,7 +76,6 @@ class DummyLLM(nn.Module):
         if "past_key_values" in kwargs:
             emb = torch.cat((kwargs["past_key_values"], emb), dim=1)
         logits = self.linear(self.trans(emb))
-        Result = namedtuple("Result", ["logits", "past_key_values"])
         return Result(logits=logits, past_key_values=emb)
 
     def generate(
@@ -93,8 +97,7 @@ class DummyLLM(nn.Module):
 
     def _update_model_kwargs_for_generation(
         self,
-        # pyre-fixme[2]: Parameter `outputs` must have a type other than `Any`.
-        outputs: Any,
+        outputs: Result,
         model_kwargs: Dict[str, Tensor],
     ) -> Dict[str, Tensor]:
         new_kwargs = copy.deepcopy(model_kwargs)
@@ -150,9 +153,7 @@ class TestLlmAttrGpu(BaseTest):
     use_cached_outputs: bool
 
     @parameterized.expand([(FeatureAblation,), (ShapleyValueSampling,)])
-    # pyre-fixme[2]: Missing parameter annotation [2]: Parameter `AttrClass`
-    # has no type specified.
-    def test_llm_attr_gpu(self, AttrClass) -> None:
+    def test_llm_attr_gpu(self, AttrClass: Type[PerturbationAttribution]) -> None:
         llm = DummyLLM()
         llm.to(self.device)
         tokenizer = DummyTokenizer()
@@ -207,9 +208,9 @@ class TestLlmAttrGpu(BaseTest):
         assertTensorAlmostEqual(self, res.seq_attr, cast(Tensor, res.token_attr).sum(0))
 
     @parameterized.expand([(Lime,), (KernelShap,)])
-    # pyre-fixme[2]: Missing parameter annotation [2]: Parameter `AttrClass`
-    # has no type specified.
-    def test_llm_attr_without_token_gpu(self, AttrClass) -> None:
+    def test_llm_attr_without_token_gpu(
+        self, AttrClass: Type[PerturbationAttribution]
+    ) -> None:
         llm = DummyLLM()
         llm.to(self.device)
         tokenizer = DummyTokenizer()
@@ -247,12 +248,16 @@ class TestLLMGradAttrGPU(BaseTest):
         res = llm_attr.attribute(inp, "m n o p q")
         # 5 output tokens, 4 input tokens including sos
         self.assertEqual(res.seq_attr.shape, (4,))
-        self.assertEqual(res.token_attr.shape, (5, 4))
+        assert res.token_attr is not None  # make pyre/mypy happy
+        self.assertIsNotNone(res.token_attr)
+        token_attr = res.token_attr
+        self.assertEqual(token_attr.shape, (5, 4))  # type: ignore
         self.assertEqual(res.input_tokens, ["<sos>", "a", "b", "c"])
         self.assertEqual(res.output_tokens, ["m", "n", "o", "p", "q"])
 
         self.assertEqual(res.seq_attr.device.type, self.device)
-        self.assertEqual(res.token_attr.device.type, self.device)
+        assert res.token_attr is not None  # make pyre/mypy happy
+        self.assertEqual(token_attr.device.type, self.device)  # type: ignore
 
     def test_llm_attr_without_target(self) -> None:
         llm = DummyLLM()
@@ -265,12 +270,16 @@ class TestLLMGradAttrGPU(BaseTest):
         res = llm_attr.attribute(inp, gen_args={"mock_response": "x y z"})
 
         self.assertEqual(res.seq_attr.shape, (4,))
-        self.assertEqual(res.token_attr.shape, (3, 4))
+        assert res.token_attr is not None  # make pyre/mypy happy
+        self.assertIsNotNone(res.token_attr)
+        token_attr = res.token_attr
+        self.assertEqual(token_attr.shape, (3, 4))  # type: ignore
         self.assertEqual(res.input_tokens, ["<sos>", "a", "b", "c"])
         self.assertEqual(res.output_tokens, ["x", "y", "z"])
 
-        self.assertEqual(res.seq_attr.device.type, self.device)
-        self.assertEqual(res.token_attr.device.type, self.device)
+        self.assertEqual(res.seq_attr.device.type, self.device)  # type: ignore
+        assert res.token_attr is not None  # make pyre/mypy happy
+        self.assertEqual(token_attr.device.type, self.device)  # type: ignore
 
     def test_llm_attr_with_skip_tokens(self) -> None:
         llm = DummyLLM()
@@ -284,9 +293,13 @@ class TestLLMGradAttrGPU(BaseTest):
 
         # 5 output tokens, 4 input tokens including sos
         self.assertEqual(res.seq_attr.shape, (3,))
-        self.assertEqual(res.token_attr.shape, (5, 3))
+        assert res.token_attr is not None  # make pyre/mypy happy
+        self.assertIsNotNone(res.token_attr)
+        token_attr = res.token_attr
+        self.assertEqual(token_attr.shape, (5, 3))  # type: ignore
         self.assertEqual(res.input_tokens, ["a", "b", "c"])
         self.assertEqual(res.output_tokens, ["m", "n", "o", "p", "q"])
 
         self.assertEqual(res.seq_attr.device.type, self.device)
-        self.assertEqual(res.token_attr.device.type, self.device)
+        assert res.token_attr is not None  # make pyre/mypy happy
+        self.assertEqual(token_attr.device.type, self.device)  # type: ignore

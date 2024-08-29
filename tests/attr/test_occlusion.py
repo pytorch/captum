@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+
+# pyre-unsafe
 import io
 import unittest
 import unittest.mock
@@ -279,6 +281,14 @@ class Test(BaseTest):
             sliding_window_shapes=((1, 2, 3), (1, 1, 2)),
             strides=((1, 2, 1), (1, 1, 2)),
         )
+
+    def test_futures_not_implemented(self) -> None:
+        net = BasicModel_ConvNet_One_Conv()
+        occ = Occlusion(net)
+        attributions = None
+        with self.assertRaises(NotImplementedError):
+            attributions = occ.attribute_future()
+        self.assertEqual(attributions, None)
 
     @unittest.mock.patch("sys.stderr", new_callable=io.StringIO)
     def test_simple_input_with_show_progress(self, mock_stderr) -> None:

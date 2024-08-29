@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+
+# pyre-unsafe
 import collections
 from typing import Dict, List, Tuple, Union
 

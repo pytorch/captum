@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+# pyre-unsafe
+
 from typing import cast, Tuple
 
 import numpy as np
@@ -243,6 +245,14 @@ class Test(BaseTest):
         ig = IntegratedGradients(model)
         attributions_ig = ig.attribute(inputs, baselines=baselines)
         self._assert_shap_ig_comparision(attributions, attributions_ig)
+
+    def test_futures_not_implemented(self) -> None:
+        model = BasicModel2()
+        gs = GradientShap(model)
+        attributions = None
+        with self.assertRaises(NotImplementedError):
+            attributions = gs.attribute_future()
+        self.assertEqual(attributions, None)
 
     def _assert_shap_ig_comparision(
         self, attributions1: Tuple[Tensor, ...], attributions2: Tuple[Tensor, ...]

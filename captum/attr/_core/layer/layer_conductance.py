@@ -420,6 +420,5 @@ class LayerConductance(LayerAttribution, GradientAttribution):
         return _format_output(len(attributions) > 1, attributions)
 
     @property
-    # pyre-fixme[3]: Return type must be annotated.
-    def multiplies_by_inputs(self):
+    def multiplies_by_inputs(self) -> bool:
         return True

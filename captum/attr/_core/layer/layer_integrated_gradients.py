@@ -569,6 +569,5 @@ class LayerIntegratedGradients(LayerAttribution, GradientAttribution):
         return True
 
     @property
-    # pyre-fixme[3]: Return type must be annotated.
-    def multiplies_by_inputs(self):
+    def multiplies_by_inputs(self) -> bool:
         return self.ig.multiplies_by_inputs

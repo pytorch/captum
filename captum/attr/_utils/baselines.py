@@ -20,7 +20,6 @@ class ProductBaselines:
             the corresponding values.
     """
 
-    # pyre-fixme[3]: Return type must be annotated.
     def __init__(
         self,
         # pyre-fixme[2]: Parameter annotation cannot contain `Any`.
@@ -28,7 +27,7 @@ class ProductBaselines:
             List[List[Any]],
             Dict[Union[str, Tuple[str, ...]], List[Any]],
         ],
-    ):
+    ) -> None:
         if isinstance(baseline_values, dict):
             dict_keys = list(baseline_values.keys())
             baseline_values = [baseline_values[k] for k in dict_keys]

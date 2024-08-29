@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+# pyre-unsafe
+
 import io
 import unittest
 import unittest.mock
@@ -329,6 +331,14 @@ class Test(BaseTest):
         self._multi_input_scalar_kernel_shap_assert(
             lambda *inp: torch.sum(net(*inp)).item()
         )
+
+    def test_futures_not_implemented(self) -> None:
+        net = BasicModel_MultiLayer_MultiInput()
+        kernel_shap = KernelShap(net)
+        attributions = None
+        with self.assertRaises(NotImplementedError):
+            attributions = kernel_shap.attribute_future()
+        self.assertEqual(attributions, None)
 
     def _multi_input_scalar_kernel_shap_assert(self, func: Callable) -> None:
         inp1 = torch.tensor([[23.0, 100.0, 0.0], [20.0, 50.0, 30.0]])

@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+# pyre-unsafe
+
 import functools
 import inspect
 from typing import Callable, Dict, Tuple

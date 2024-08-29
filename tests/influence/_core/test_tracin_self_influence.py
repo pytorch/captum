@@ -1,3 +1,4 @@
+# pyre-unsafe
 import tempfile
 from typing import Callable, Optional
 

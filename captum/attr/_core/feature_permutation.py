@@ -307,8 +307,8 @@ class FeaturePermutation(FeatureAblation):
     def _construct_ablated_input(
         self,
         expanded_input: Tensor,
-        input_mask: Tensor,
-        baseline: Union[int, float, Tensor],
+        input_mask: Union[None, Tensor, Tuple[Tensor, ...]],
+        baseline: Union[None, float, Tensor],
         start_feature: int,
         end_feature: int,
         **kwargs: Any,
@@ -327,7 +327,11 @@ class FeaturePermutation(FeatureAblation):
         Since `baselines` is set to None for `FeatureAblation.attribute, this
         will be the zero tensor, however, it is not used.
         """
-        assert input_mask.shape[0] == 1, (
+        assert (
+            input_mask is not None
+            and not isinstance(input_mask, tuple)
+            and input_mask.shape[0] == 1
+        ), (
             "input_mask.shape[0] != 1: pass in one mask in order to permute"
             "the same features for each input"
         )

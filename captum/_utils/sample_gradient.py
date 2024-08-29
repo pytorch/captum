@@ -103,7 +103,7 @@ class SampleGradientWrapper:
     """
 
     # pyre-fixme[2]: Parameter must be annotated.
-    def __init__(self, model, layer_modules=None) -> None:
+    def __init__(self, model, layer_modules: Optional[List[Module]] = None) -> None:
         # pyre-fixme[4]: Attribute must be annotated.
         self.model = model
         self.hooks_added = False
@@ -162,8 +162,9 @@ class SampleGradientWrapper:
         self.activation_dict = defaultdict(list)
         self.gradient_dict = defaultdict(list)
 
-    # pyre-fixme[2]: Parameter must be annotated.
-    def compute_param_sample_gradients(self, loss_blob, loss_mode="mean") -> None:
+    def compute_param_sample_gradients(
+        self, loss_blob: Tensor, loss_mode: str = "mean"
+    ) -> None:
         assert (
             loss_mode.upper() in LossMode.__members__
         ), f"Provided loss mode {loss_mode} is not valid"

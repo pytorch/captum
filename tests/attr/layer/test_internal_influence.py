@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+
+# pyre-unsafe
 import unittest
 from typing import Any, Dict, List, Optional, Tuple, Union
 

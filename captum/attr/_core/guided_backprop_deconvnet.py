@@ -2,7 +2,7 @@
 
 # pyre-strict
 import warnings
-from typing import Any, List, Tuple, Union
+from typing import Any, Callable, List, Tuple, Union
 
 import torch
 import torch.nn.functional as F
@@ -90,29 +90,35 @@ class ModifiedReluGradientAttribution(GradientAttribution):
         #  `Tuple[Tensor, ...]`.
         return _format_output(is_inputs_tuple, gradients)
 
-    # pyre-fixme[3]: Return type must be annotated.
-    def _register_hooks(self, module: Module):
+    # pyre-fixme[24] Generic type `Callable` expects 2 type parameters.
+    def attribute_future(self) -> Callable:
+        r"""
+        This method is not implemented for ModifiedReluGradientAttribution.
+        """
+        raise NotImplementedError(
+            "attribute_future is not implemented for ModifiedReluGradientAttribution"
+        )
+
+    def _register_hooks(self, module: Module) -> None:
         if isinstance(module, torch.nn.ReLU):
             hooks = _register_backward_hook(module, self._backward_hook, self)
             self.backward_hooks.extend(hooks)
 
-    # pyre-fixme[3]: Return type must be annotated.
     def _backward_hook(
         self,
         module: Module,
         grad_input: Union[Tensor, Tuple[Tensor, ...]],
         grad_output: Union[Tensor, Tuple[Tensor, ...]],
-    ):
+    ) -> Union[Tuple[Tensor], Tensor]:
         to_override_grads = grad_output if self.use_relu_grad_output else grad_input
         if isinstance(to_override_grads, tuple):
             return tuple(
-                F.relu(to_override_grad) for to_override_grad in to_override_grads
+                F.relu(to_override_grad) for to_override_grad in to_override_grads  # type: ignore # noqa: E501 line too long
             )
         else:
             return F.relu(to_override_grads)
 
-    # pyre-fixme[3]: Return type must be annotated.
-    def _remove_hooks(self):
+    def _remove_hooks(self) -> None:
         for hook in self.backward_hooks:
             hook.remove()
 

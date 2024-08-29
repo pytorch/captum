@@ -56,8 +56,8 @@ def alt_perturb_func(
         binary_mask = tuple(
             curr_sample[0][feature_mask[j]] for j in range(len(feature_mask))
         )
-        # pyre-fixme[7]: Expected `TensorOrTupleOfTensorsGeneric` but got
-        #  `Tuple[Tensor, ...]`.
+
+        # pyre-fixme[7]: incompatible return type
         return tuple(
             binary_mask[j] * original_inp[j]
             + (1 - binary_mask[j]) * kwargs["baselines"][j]
@@ -471,6 +471,19 @@ class Test(BaseTest):
     def test_multi_inp_lime_scalar_float(self) -> None:
         net = BasicModel_MultiLayer_MultiInput()
         self._multi_input_scalar_lime_assert(lambda *inp: torch.sum(net(*inp)).item())
+
+    def test_futures_not_implemented(self) -> None:
+        net = BasicLinearModel()
+        # no mask
+        lime = Lime(
+            net,
+            similarity_func=get_exp_kernel_similarity_function("cosine", 10.0),
+            interpretable_model=(SkLearnLasso(alpha=1.0)),
+        )
+        attributions = None
+        with self.assertRaises(NotImplementedError):
+            attributions = lime.attribute_future()
+        self.assertEqual(attributions, None)
 
     # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
     def _multi_input_scalar_lime_assert(self, func: Callable) -> None:
