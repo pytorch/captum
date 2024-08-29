@@ -291,10 +291,10 @@ class LLMAttribution(Attribution):
         if self.include_per_token_attr:
             try:
                 target_log_probs = torch.stack(
-                  [total_log_prob, *log_prob_list], dim=0  # type: ignore
-              ).unsqueeze(0)
+                    [total_log_prob, *log_prob_list], dim=0  # type: ignore
+                ).unsqueeze(0)
             except TypeError:
-                raise TypeError("It seems like you got an empty list of target tokens. If you are attributing only one target token (a single character or word) try using the skip_bos argument in the attribute function.")
+                raise TypeError("Try using the skip_bos argument.")
         else:
             target_log_probs = total_log_prob  # type: ignore
         target_probs = torch.exp(target_log_probs)
