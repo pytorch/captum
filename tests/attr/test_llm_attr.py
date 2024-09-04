@@ -394,10 +394,10 @@ class TestLLMGradAttr(BaseTest):
         llm = DummyLLM()
         llm.to(self.device)
         tokenizer = DummyTokenizer()
-        attr = AttrClass(llm, llm.emb)
+        attr = AttrClass(llm, llm.emb)  # type: ignore[call-arg]
         llm_attr = LLMGradientAttribution(attr, tokenizer)
 
-        attr_kws = {}
+        attr_kws: Dict[str, Any] = {}
         if baselines is not None:
             attr_kws["baselines"] = baselines
 
@@ -430,10 +430,10 @@ class TestLLMGradAttr(BaseTest):
         llm = DummyLLM()
         llm.to(self.device)
         tokenizer = DummyTokenizer()
-        attr = AttrClass(llm, llm.emb)
+        attr = AttrClass(llm, llm.emb)  # type: ignore[call-arg]
         llm_attr = LLMGradientAttribution(attr, tokenizer)
 
-        attr_kws = {}
+        attr_kws: Dict[str, Any] = {}
         if baselines is not None:
             attr_kws["baselines"] = baselines
 
@@ -465,10 +465,10 @@ class TestLLMGradAttr(BaseTest):
         llm = DummyLLM()
         llm.to(self.device)
         tokenizer = DummyTokenizer()
-        attr = AttrClass(llm, llm.emb)
+        attr = AttrClass(llm, llm.emb)  # type: ignore[call-arg]
         llm_attr = LLMGradientAttribution(attr, tokenizer)
 
-        attr_kws = {}
+        attr_kws: Dict[str, Any] = {}
         if baselines is not None:
             attr_kws["baselines"] = baselines
 
