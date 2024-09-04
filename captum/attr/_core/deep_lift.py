@@ -110,7 +110,6 @@ class DeepLift(GradientAttribution):
                         Default: 1e-10
         """
         GradientAttribution.__init__(self, model)
-        self.model = model
         self.eps = eps
         self.forward_handles: List[RemovableHandle] = []
         self.backward_handles: List[RemovableHandle] = []
@@ -333,7 +332,7 @@ class DeepLift(GradientAttribution):
         try:
             main_model_hooks = self._hook_main_model()
 
-            self.model.apply(self._register_hooks)
+            self.forward_func.apply(self._register_hooks)
 
             additional_forward_args = _format_additional_forward_args(
                 additional_forward_args
@@ -344,7 +343,7 @@ class DeepLift(GradientAttribution):
             )
 
             wrapped_forward_func = self._construct_forward_func(
-                self.model,
+                self.forward_func,
                 (inputs, baselines),
                 expanded_target,
                 additional_forward_args,
@@ -569,16 +568,16 @@ class DeepLift(GradientAttribution):
             return torch.stack(torch.chunk(outputs, 2), dim=1)
 
         if isinstance(
-            self.model, (nn.DataParallel, nn.parallel.DistributedDataParallel)
+            self.forward_func, (nn.DataParallel, nn.parallel.DistributedDataParallel)
         ):
             return [
-                self.model.module.register_forward_pre_hook(pre_hook),  # type: ignore
-                self.model.module.register_forward_hook(forward_hook),
+                self.forward_func.module.register_forward_pre_hook(pre_hook),  # type: ignore
+                self.forward_func.module.register_forward_hook(forward_hook),
             ]  # type: ignore
         else:
             return [
-                self.model.register_forward_pre_hook(pre_hook),  # type: ignore
-                self.model.register_forward_hook(forward_hook),
+                self.forward_func.register_forward_pre_hook(pre_hook),  # type: ignore
+                self.forward_func.register_forward_hook(forward_hook),
             ]  # type: ignore
 
     def has_convergence_delta(self) -> bool:

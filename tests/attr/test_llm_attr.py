@@ -3,7 +3,7 @@
 # pyre-strict
 
 import copy
-from typing import Any, cast, Dict, List, NamedTuple, Optional, Type, Union
+from typing import Any, cast, Dict, List, NamedTuple, Optional, Tuple, Type, Union
 
 import torch
 from captum._utils.models.linear_model import (  # @manual=//pytorch/captum/captum/_utils/models/linear_model:linear_model  # noqa: E501
@@ -11,11 +11,13 @@ from captum._utils.models.linear_model import (  # @manual=//pytorch/captum/capt
 )
 from captum.attr._core.feature_ablation import FeatureAblation
 from captum.attr._core.kernel_shap import KernelShap
+from captum.attr._core.layer.layer_gradient_shap import LayerGradientShap
+from captum.attr._core.layer.layer_gradient_x_activation import LayerGradientXActivation
 from captum.attr._core.layer.layer_integrated_gradients import LayerIntegratedGradients
 from captum.attr._core.lime import Lime
 from captum.attr._core.llm_attr import LLMAttribution, LLMGradientAttribution
 from captum.attr._core.shapley_value import ShapleyValues, ShapleyValueSampling
-from captum.attr._utils.attribution import PerturbationAttribution
+from captum.attr._utils.attribution import GradientAttribution, PerturbationAttribution
 from captum.attr._utils.interpretable_input import TextTemplateInput, TextTokenInput
 from parameterized import parameterized, parameterized_class
 from tests.helpers import BaseTest
@@ -379,15 +381,30 @@ class TestLLMAttr(BaseTest):
 class TestLLMGradAttr(BaseTest):
     device: str
 
-    def test_llm_attr(self) -> None:
+    @parameterized.expand(
+        [
+            (LayerIntegratedGradients, None),
+            (LayerGradientXActivation, None),
+            (LayerGradientShap, (torch.tensor([[1, 0, 1, 0]]),))
+        ]
+    )
+    def test_llm_attr(
+        self,
+        AttrClass: Type[GradientAttribution],
+        baselines: Optional[Tuple[Tensor]]
+    ) -> None:
         llm = DummyLLM()
         llm.to(self.device)
         tokenizer = DummyTokenizer()
-        attr = LayerIntegratedGradients(llm, llm.emb)
+        attr = AttrClass(llm, llm.emb)
         llm_attr = LLMGradientAttribution(attr, tokenizer)
 
+        attr_kws = {}
+        if baselines is not None:
+            attr_kws['baselines'] = baselines
+
         inp = TextTokenInput("a b c", tokenizer)
-        res = llm_attr.attribute(inp, "m n o p q")
+        res = llm_attr.attribute(inp, "m n o p q", **attr_kws)
 
         # 5 output tokens, 4 input tokens including sos
         self.assertEqual(res.seq_attr.shape, (4,))
@@ -402,15 +419,31 @@ class TestLLMGradAttr(BaseTest):
         assert res.token_attr is not None  # make pyre/mypy happy
         self.assertEqual(token_attr.device.type, self.device)  # type: ignore
 
-    def test_llm_attr_without_target(self) -> None:
+    @parameterized.expand(
+        [
+            (LayerIntegratedGradients, None),
+            (LayerGradientXActivation, None),
+            (LayerGradientShap, (torch.tensor([[1, 0, 1, 0]]),))
+        ]
+    )
+    def test_llm_attr_without_target(
+        self,
+        AttrClass: Type[GradientAttribution],
+        baselines: Optional[Tuple[Tensor]]
+    ) -> None:
         llm = DummyLLM()
         llm.to(self.device)
         tokenizer = DummyTokenizer()
-        attr = LayerIntegratedGradients(llm, llm.emb)
+        attr = AttrClass(llm, llm.emb)
         llm_attr = LLMGradientAttribution(attr, tokenizer)
 
+        attr_kws = {}
+        if baselines is not None:
+            attr_kws['baselines'] = baselines
+
         inp = TextTokenInput("a b c", tokenizer)
-        res = llm_attr.attribute(inp, gen_args={"mock_response": "x y z"})
+        res = llm_attr.attribute(inp, gen_args={"mock_response": "x y z"},
+                                 **attr_kws)
 
         self.assertEqual(res.seq_attr.shape, (4,))
         assert res.token_attr is not None  # make pyre/mypy happy
@@ -424,15 +457,31 @@ class TestLLMGradAttr(BaseTest):
         assert res.token_attr is not None  # make pyre/mypy happy
         self.assertEqual(token_attr.device.type, self.device)  # type: ignore
 
-    def test_llm_attr_with_skip_tokens(self) -> None:
+
+    @parameterized.expand(
+        [
+            (LayerIntegratedGradients, None),
+            (LayerGradientXActivation, None),
+            (LayerGradientShap, (torch.tensor([[1, 0, 1]]),))
+        ]
+    )
+    def test_llm_attr_with_skip_tokens(
+        self,
+        AttrClass: Type[GradientAttribution],
+        baselines: Optional[Tuple[Tensor]]
+    ) -> None:
         llm = DummyLLM()
         llm.to(self.device)
         tokenizer = DummyTokenizer()
-        attr = LayerIntegratedGradients(llm, llm.emb)
+        attr = AttrClass(llm, llm.emb)
         llm_attr = LLMGradientAttribution(attr, tokenizer)
 
+        attr_kws = {}
+        if baselines is not None:
+            attr_kws['baselines'] = baselines
+
         inp = TextTokenInput("a b c", tokenizer, skip_tokens=[0])
-        res = llm_attr.attribute(inp, "m n o p q")
+        res = llm_attr.attribute(inp, "m n o p q", **attr_kws)
 
         # 5 output tokens, 4 input tokens including sos
         self.assertEqual(res.seq_attr.shape, (3,))

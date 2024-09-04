@@ -10,6 +10,8 @@ import torch
 from captum._utils.typing import TokenizerLike
 from captum.attr._core.feature_ablation import FeatureAblation
 from captum.attr._core.kernel_shap import KernelShap
+from captum.attr._core.layer.layer_gradient_shap import LayerGradientShap
+from captum.attr._core.layer.layer_gradient_x_activation import LayerGradientXActivation
 from captum.attr._core.layer.layer_integrated_gradients import LayerIntegratedGradients
 from captum.attr._core.lime import Lime
 from captum.attr._core.shapley_value import ShapleyValues, ShapleyValueSampling
@@ -452,7 +454,11 @@ class LLMGradientAttribution(Attribution):
     and returns LLMAttributionResult
     """
 
-    SUPPORTED_METHODS = (LayerIntegratedGradients,)
+    SUPPORTED_METHODS = (
+        LayerGradientShap,
+        LayerGradientXActivation,
+        LayerIntegratedGradients
+    )
     SUPPORTED_INPUTS = (TextTokenInput,)
 
     def __init__(
@@ -473,13 +479,13 @@ class LLMGradientAttribution(Attribution):
 
         super().__init__(attr_method.forward_func)
 
-        # shallow copy is enough to avoid modifying original instance
-        self.attr_method: GradientAttribution = copy(attr_method)
-        self.attr_method.forward_func = self._forward_func
-
         # alias, we really need a model and don't support wrapper functions
         # coz we need call model.forward, model.generate, etc.
         self.model: nn.Module = cast(nn.Module, self.forward_func)
+
+        # shallow copy is enough to avoid modifying original instance
+        self.attr_method: GradientAttribution = copy(attr_method)
+        self.attr_method.forward_func = GradientForwardFunc(self)
 
         self.tokenizer: TokenizerLike = tokenizer
         self.device: torch.device = (
@@ -487,38 +493,6 @@ class LLMGradientAttribution(Attribution):
             if hasattr(self.model, "device")
             else next(self.model.parameters()).device
         )
-
-    def _forward_func(
-        self,
-        perturbed_tensor: Tensor,
-        inp: InterpretableInput,
-        target_tokens: Tensor,  # 1D tensor of target token ids
-        cur_target_idx: int,  # current target index
-    ) -> Tensor:
-        perturbed_input = self._format_model_input(inp.to_model_input(perturbed_tensor))
-
-        if cur_target_idx:
-            # the input batch size can be expanded by attr method
-            output_token_tensor = (
-                target_tokens[:cur_target_idx]
-                .unsqueeze(0)
-                .expand(perturbed_input.size(0), -1)
-                .to(self.device)
-            )
-            new_input_tensor = torch.cat([perturbed_input, output_token_tensor], dim=1)
-        else:
-            new_input_tensor = perturbed_input
-
-        output_logits = self.model(new_input_tensor)
-
-        new_token_logits = output_logits.logits[:, -1]
-        log_probs = torch.nn.functional.log_softmax(new_token_logits, dim=1)
-
-        target_token = target_tokens[cur_target_idx]
-        token_log_probs = log_probs[..., target_token]
-
-        # the attribution target is limited to the log probability
-        return token_log_probs
 
     def _format_model_input(self, model_input: Tensor) -> Tensor:
         """
@@ -643,3 +617,49 @@ class LLMGradientAttribution(Attribution):
         raise NotImplementedError(
             "attribute_future is not implemented for LLMGradientAttribution"
         )
+
+
+class GradientForwardFunc(nn.Module):
+    """
+    A wrapper class for the forward function of a model in LLMGradientAttribution
+    """
+
+    def __init__(
+        self,
+        attr: LLMGradientAttribution
+    ) -> None:
+        super().__init__()
+        self.attr = attr
+        self.model = attr.model
+    
+    def forward(
+        self,
+        perturbed_tensor: Tensor,
+        inp: InterpretableInput,
+        target_tokens: Tensor,  # 1D tensor of target token ids
+        cur_target_idx: int,  # current target index
+    ) -> Tensor:
+        perturbed_input = self.attr._format_model_input(inp.to_model_input(perturbed_tensor))
+
+        if cur_target_idx:
+            # the input batch size can be expanded by attr method
+            output_token_tensor = (
+                target_tokens[:cur_target_idx]
+                .unsqueeze(0)
+                .expand(perturbed_input.size(0), -1)
+                .to(self.attr.device)
+            )
+            new_input_tensor = torch.cat([perturbed_input, output_token_tensor], dim=1)
+        else:
+            new_input_tensor = perturbed_input
+
+        output_logits = self.model(new_input_tensor)
+
+        new_token_logits = output_logits.logits[:, -1]
+        log_probs = torch.nn.functional.log_softmax(new_token_logits, dim=1)
+
+        target_token = target_tokens[cur_target_idx]
+        token_log_probs = log_probs[..., target_token]
+
+        # the attribution target is limited to the log probability
+        return token_log_probs
