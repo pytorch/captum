@@ -399,7 +399,8 @@ class TestLLMGradAttr(BaseTest):
 
         attr_kws: Dict[str, Any] = {}
         if baselines is not None:
-            attr_kws["baselines"] = baselines.to(self.device)
+            attr_kws["baselines"] = tuple(
+                baseline.to(self.device) for baseline in baselines)
 
         inp = TextTokenInput("a b c", tokenizer)
         res = llm_attr.attribute(inp, "m n o p q", **attr_kws)
@@ -435,7 +436,8 @@ class TestLLMGradAttr(BaseTest):
 
         attr_kws: Dict[str, Any] = {}
         if baselines is not None:
-            attr_kws["baselines"] = baselines.to(self.device)
+            attr_kws["baselines"] = tuple(
+                baseline.to(self.device) for baseline in baselines)
 
         inp = TextTokenInput("a b c", tokenizer)
         res = llm_attr.attribute(inp, gen_args={"mock_response": "x y z"}, **attr_kws)
@@ -470,7 +472,8 @@ class TestLLMGradAttr(BaseTest):
 
         attr_kws: Dict[str, Any] = {}
         if baselines is not None:
-            attr_kws["baselines"] = baselines.to(self.device)
+            attr_kws["baselines"] = tuple(
+                baseline.to(self.device) for baseline in baselines)
 
         inp = TextTokenInput("a b c", tokenizer, skip_tokens=[0])
         res = llm_attr.attribute(inp, "m n o p q", **attr_kws)
