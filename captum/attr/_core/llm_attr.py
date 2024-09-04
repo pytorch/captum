@@ -457,7 +457,7 @@ class LLMGradientAttribution(Attribution):
     SUPPORTED_METHODS = (
         LayerGradientShap,
         LayerGradientXActivation,
-        LayerIntegratedGradients
+        LayerIntegratedGradients,
     )
     SUPPORTED_INPUTS = (TextTokenInput,)
 
@@ -624,14 +624,11 @@ class GradientForwardFunc(nn.Module):
     A wrapper class for the forward function of a model in LLMGradientAttribution
     """
 
-    def __init__(
-        self,
-        attr: LLMGradientAttribution
-    ) -> None:
+    def __init__(self, attr: LLMGradientAttribution) -> None:
         super().__init__()
         self.attr = attr
         self.model = attr.model
-    
+
     def forward(
         self,
         perturbed_tensor: Tensor,
@@ -639,7 +636,9 @@ class GradientForwardFunc(nn.Module):
         target_tokens: Tensor,  # 1D tensor of target token ids
         cur_target_idx: int,  # current target index
     ) -> Tensor:
-        perturbed_input = self.attr._format_model_input(inp.to_model_input(perturbed_tensor))
+        perturbed_input = self.attr._format_model_input(
+            inp.to_model_input(perturbed_tensor)
+        )
 
         if cur_target_idx:
             # the input batch size can be expanded by attr method
