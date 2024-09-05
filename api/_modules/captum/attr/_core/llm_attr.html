@@ -57,8 +57,20 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="p">)</span>
 <span class="kn">from</span> <span class="nn">torch</span> <span class="kn">import</span> <span class="n">nn</span><span class="p">,</span> <span class="n">Tensor</span>
 
+<span class="k">try</span><span class="p">:</span>
+    <span class="c1"># pyre-ignore[21]: Could not find a module corresponding to import</span>
+    <span class="c1">#  `transformers.cache_utils`</span>
+    <span class="kn">from</span> <span class="nn">transformers.cache_utils</span> <span class="kn">import</span> <span class="n">Cache</span><span class="p">,</span> <span class="n">DynamicCache</span>
+<span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+    <span class="n">Cache</span> <span class="o">=</span> <span class="n">DynamicCache</span> <span class="o">=</span> <span class="kc">None</span>
 
-<span class="n">DEFAULT_GEN_ARGS</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"max_new_tokens"</span><span class="p">:</span> <span class="mi">25</span><span class="p">,</span> <span class="s2">"do_sample"</span><span class="p">:</span> <span class="kc">False</span><span class="p">}</span>
+
+<span class="n">DEFAULT_GEN_ARGS</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">"max_new_tokens"</span><span class="p">:</span> <span class="mi">25</span><span class="p">,</span>
+    <span class="s2">"do_sample"</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="s2">"temperature"</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="s2">"top_p"</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">}</span>
 
 
 <div class="viewcode-block" id="LLMAttributionResult">
@@ -299,8 +311,9 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="n">init_model_inp</span> <span class="o">=</span> <span class="n">perturbed_input</span>
 
         <span class="n">model_inp</span> <span class="o">=</span> <span class="n">init_model_inp</span>
-        <span class="n">attention_mask</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">([[</span><span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="n">model_inp</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]])</span>
-        <span class="n">attention_mask</span> <span class="o">=</span> <span class="n">attention_mask</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">model_inp</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
+        <span class="n">attention_mask</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span>
+            <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="n">model_inp</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">long</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">model_inp</span><span class="o">.</span><span class="n">device</span>
+        <span class="p">)</span>
         <span class="n">model_kwargs</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"attention_mask"</span><span class="p">:</span> <span class="n">attention_mask</span><span class="p">}</span>
 
         <span class="n">log_prob_list</span> <span class="o">=</span> <span class="p">[]</span>
@@ -308,6 +321,14 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="k">for</span> <span class="n">target_token</span> <span class="ow">in</span> <span class="n">target_tokens</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">use_cached_outputs</span><span class="p">:</span>
                 <span class="k">if</span> <span class="n">outputs</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="p">(</span>
+                        <span class="n">Cache</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+                        <span class="ow">and</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">,</span> <span class="s2">"_supports_cache_class"</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+                        <span class="ow">and</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">outputs</span><span class="o">.</span><span class="n">past_key_values</span><span class="p">,</span> <span class="n">Cache</span><span class="p">)</span>
+                    <span class="p">):</span>
+                        <span class="n">outputs</span><span class="o">.</span><span class="n">past_key_values</span> <span class="o">=</span> <span class="n">DynamicCache</span><span class="o">.</span><span class="n">from_legacy_cache</span><span class="p">(</span>
+                            <span class="n">outputs</span><span class="o">.</span><span class="n">past_key_values</span>
+                        <span class="p">)</span>
                     <span class="n">model_kwargs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">_update_model_kwargs_for_generation</span><span class="p">(</span>
                         <span class="n">outputs</span><span class="p">,</span> <span class="n">model_kwargs</span>
                     <span class="p">)</span>
@@ -316,7 +337,7 @@ src="/_sphinx/documentation_options.js"></script>
                 <span class="p">)</span>
                 <span class="n">outputs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">forward</span><span class="p">(</span><span class="o">**</span><span class="n">model_inputs</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
-                <span class="n">outputs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">forward</span><span class="p">(</span><span class="n">model_inp</span><span class="p">,</span> <span class="n">attention_mask</span><span class="o">=</span><span class="n">attention_mask</span><span class="p">)</span>
+                <span class="n">outputs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">forward</span><span class="p">(</span><span class="n">model_inp</span><span class="p">,</span> <span class="o">**</span><span class="n">model_kwargs</span><span class="p">)</span>
             <span class="n">new_token_logits</span> <span class="o">=</span> <span class="n">outputs</span><span class="o">.</span><span class="n">logits</span><span class="p">[:,</span> <span class="o">-</span><span class="mi">1</span><span class="p">]</span>
             <span class="n">log_probs</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">functional</span><span class="o">.</span><span class="n">log_softmax</span><span class="p">(</span><span class="n">new_token_logits</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
 
@@ -388,7 +409,8 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">                    Defaults: 1.</span>
 <span class="sd">            gen_args (dict, optional): arguments for generating the target. Only used if</span>
 <span class="sd">                    target is not given. When None, the default arguments are used,</span>
-<span class="sd">                    {"max_length": 25, "do_sample": False}</span>
+<span class="sd">                    {"max_new_tokens": 25, "do_sample": False,</span>
+<span class="sd">                    "temperature": None, "top_p": None}</span>
 <span class="sd">                    Defaults: None</span>
 <span class="sd">            **kwargs (Any): any extra keyword arguments passed to the call of the</span>
 <span class="sd">                    underlying attribute function of the given attribution instance</span>
@@ -596,7 +618,8 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">                    Default: None</span>
 <span class="sd">            gen_args (dict, optional): arguments for generating the target. Only used if</span>
 <span class="sd">                    target is not given. When None, the default arguments are used,</span>
-<span class="sd">                    {"max_length": 25, "do_sample": False}</span>
+<span class="sd">                    {"max_new_tokens": 25, "do_sample": False,</span>
+<span class="sd">                    "temperature": None, "top_p": None}</span>
 <span class="sd">                    Defaults: None</span>
 <span class="sd">            **kwargs (Any): any extra keyword arguments passed to the call of the</span>
 <span class="sd">                    underlying attribute function of the given attribution instance</span>

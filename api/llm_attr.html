@@ -76,7 +76,8 @@ attribibutions over all the trials.
 Defaults: 1.</p></li>
 <li><p><strong>gen_args</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.12)"><em>dict</em></a><em>, </em><em>optional</em>) – arguments for generating the target. Only used if
 target is not given. When None, the default arguments are used,
-{“max_length”: 25, “do_sample”: False}
+{“max_new_tokens”: 25, “do_sample”: False,
+“temperature”: None, “top_p”: None}
 Defaults: None</p></li>
 <li><p><strong>**kwargs</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.12)"><em>Any</em></a>) – any extra keyword arguments passed to the call of the
 underlying attribute function of the given attribution instance</p></li>
@@ -143,7 +144,8 @@ to generate the target based on the input and gen_args.
 Default: None</p></li>
 <li><p><strong>gen_args</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.12)"><em>dict</em></a><em>, </em><em>optional</em>) – arguments for generating the target. Only used if
 target is not given. When None, the default arguments are used,
-{“max_length”: 25, “do_sample”: False}
+{“max_new_tokens”: 25, “do_sample”: False,
+“temperature”: None, “top_p”: None}
 Defaults: None</p></li>
 <li><p><strong>**kwargs</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.12)"><em>Any</em></a>) – any extra keyword arguments passed to the call of the
 underlying attribute function of the given attribution instance</p></li>
