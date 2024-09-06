@@ -25,20 +25,8 @@ from captum.attr._utils.interpretable_input import (
 )
 from torch import nn, Tensor
 
-try:
-    # pyre-ignore[21]: Could not find a module corresponding to import
-    #  `transformers.cache_utils`
-    from transformers.cache_utils import Cache, DynamicCache
-except ImportError:
-    Cache = DynamicCache = None
 
-
-DEFAULT_GEN_ARGS: Dict[str, Any] = {
-    "max_new_tokens": 25,
-    "do_sample": False,
-    "temperature": None,
-    "top_p": None,
-}
+DEFAULT_GEN_ARGS = {"max_new_tokens": 25, "do_sample": False}
 
 
 class LLMAttributionResult:
@@ -268,9 +256,8 @@ class LLMAttribution(Attribution):
         init_model_inp = perturbed_input
 
         model_inp = init_model_inp
-        attention_mask = torch.ones(
-            [1, model_inp.shape[1]], dtype=torch.long, device=model_inp.device
-        )
+        attention_mask = torch.tensor([[1] * model_inp.shape[1]])
+        attention_mask = attention_mask.to(model_inp.device)
         model_kwargs = {"attention_mask": attention_mask}
 
         log_prob_list = []
@@ -278,14 +265,6 @@ class LLMAttribution(Attribution):
         for target_token in target_tokens:
             if use_cached_outputs:
                 if outputs is not None:
-                    if (
-                        Cache is not None
-                        and getattr(self.model, "_supports_cache_class", False)
-                        and not isinstance(outputs.past_key_values, Cache)
-                    ):
-                        outputs.past_key_values = DynamicCache.from_legacy_cache(
-                            outputs.past_key_values
-                        )
                     model_kwargs = self.model._update_model_kwargs_for_generation(
                         outputs, model_kwargs
                     )
@@ -294,7 +273,7 @@ class LLMAttribution(Attribution):
                 )
                 outputs = self.model.forward(**model_inputs)
             else:
-                outputs = self.model.forward(model_inp, **model_kwargs)
+                outputs = self.model.forward(model_inp, attention_mask=attention_mask)
             new_token_logits = outputs.logits[:, -1]
             log_probs = torch.nn.functional.log_softmax(new_token_logits, dim=1)
 
@@ -364,8 +343,7 @@ class LLMAttribution(Attribution):
                     Defaults: 1.
             gen_args (dict, optional): arguments for generating the target. Only used if
                     target is not given. When None, the default arguments are used,
-                    {"max_new_tokens": 25, "do_sample": False,
-                    "temperature": None, "top_p": None}
+                    {"max_length": 25, "do_sample": False}
                     Defaults: None
             **kwargs (Any): any extra keyword arguments passed to the call of the
                     underlying attribute function of the given attribution instance
@@ -564,8 +542,7 @@ class LLMGradientAttribution(Attribution):
                     Default: None
             gen_args (dict, optional): arguments for generating the target. Only used if
                     target is not given. When None, the default arguments are used,
-                    {"max_new_tokens": 25, "do_sample": False,
-                    "temperature": None, "top_p": None}
+                    {"max_length": 25, "do_sample": False}
                     Defaults: None
             **kwargs (Any): any extra keyword arguments passed to the call of the
                     underlying attribute function of the given attribution instance
