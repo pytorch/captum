@@ -43,6 +43,7 @@ class Attribution:
         self.forward_func = forward_func
 
     # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
+    # pyre-fixme[13]: Attribute `attribute` is never initialized.
     attribute: Callable
     r"""
     This method computes and returns the attribution values for each input tensor.
@@ -74,6 +75,7 @@ class Attribution:
     """
 
     # pyre-fixme[24] Generic type `Callable` expects 2 type parameters.
+    # pyre-fixme[13]: Attribute `attribute_future` is never initialized.
     attribute_future: Callable
 
     r"""
@@ -126,6 +128,7 @@ class Attribution:
         return False
 
     # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
+    # pyre-fixme[13]: Attribute `compute_convergence_delta` is never initialized.
     compute_convergence_delta: Callable
     r"""
     The attribution algorithms which derive `Attribution` class and provide
@@ -504,6 +507,7 @@ class NeuronAttribution(InternalAttribution):
         InternalAttribution.__init__(self, forward_func, layer, device_ids)
 
     # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
+    # pyre-fixme[13]: Attribute `attribute` is never initialized.
     attribute: Callable
     r"""
     This method computes and returns the neuron attribution values for each

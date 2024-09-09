@@ -21,8 +21,12 @@ def drange(
     min_val: Union[int, float], max_val: Union[int, float], step_val: Union[int, float]
 ) -> Generator[Union[int, float], None, None]:
     curr = min_val
+    # pyre-fixme[58]: `>` is not supported for operand types `Union[float, int]` and
+    #  `int`.
     while curr < max_val:
         yield curr
+        # pyre-fixme[58]: `+` is not supported for operand types `Union[float, int]`
+        #  and `Union[float, int]`.
         curr += step_val
 
 

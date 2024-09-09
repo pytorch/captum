@@ -369,6 +369,9 @@ class DataLoaderAttribution(Attribution):
             assert len(input_roles) == len(inputs), (
                 "input_roles must have the same size as the return of the dataloader,",
                 f"length of input_roles is {len(input_roles)} ",
+                # pyre-fixme[6]: For 1st argument expected
+                #  `pyre_extensions.ReadOnly[Sized]` but got
+                #  `Optional[typing.Tuple[typing.Any, ...]]`.
                 f"whereas the length of dataloader return is {len(inputs)}",
             )
 
@@ -395,6 +398,9 @@ class DataLoaderAttribution(Attribution):
             "Baselines must have the same size as the return of the dataloader ",
             "that need attribution",
             f"length of baseline is {len(baselines)} ",
+            # pyre-fixme[6]: For 1st argument expected
+            #  `pyre_extensions.ReadOnly[Sized]` but got
+            #  `Optional[typing.Tuple[typing.Any, ...]]`.
             f'whereas the length of dataloader return with role "0" is {len(inputs)}',
         )
 
@@ -413,6 +419,9 @@ class DataLoaderAttribution(Attribution):
             "Feature mask must have the same size as the return of the dataloader ",
             "that need attribution",
             f"length of feature_mask is {len(feature_mask)} ",
+            # pyre-fixme[6]: For 1st argument expected
+            #  `pyre_extensions.ReadOnly[Sized]` but got
+            #  `Optional[typing.Tuple[typing.Any, ...]]`.
             f'whereas the length of dataloader return with role "0" is {len(inputs)}',
         )
 
