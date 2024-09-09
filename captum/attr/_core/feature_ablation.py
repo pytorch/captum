@@ -15,6 +15,7 @@ from captum._utils.common import (
     _is_tuple,
     _run_forward,
 )
+from captum._utils.exceptions import FeatureAblationFutureError
 from captum._utils.progress import progress
 from captum._utils.typing import BaselineType, TargetType, TensorOrTupleOfTensorsGeneric
 from captum.attr._utils.attribution import PerturbationAttribution
@@ -387,6 +388,26 @@ class FeatureAblation(PerturbationAttribution):
             # for 3rd positional argument, expected `bool` but got `Literal[]`.
             return self._generate_result(total_attrib, weights, is_inputs_tuple)  # type: ignore # noqa: E501 line too long
 
+    def _initial_eval_to_processed_initial_eval_fut(
+        self, initial_eval: Future[Tensor], formatted_inputs: Tuple[Tensor, ...]
+    ) -> Tuple[List[Tensor], List[Tensor], Tensor, Tensor, int, dtype]:
+        try:
+            initial_eval_processed = initial_eval.value()
+            if not isinstance(initial_eval_processed, Tensor):
+                raise AssertionError(
+                    "initial_eval_to_processed_initial_eval_fut: "
+                    "initial_eval should be a Tensor"
+                )
+            result = self._process_initial_eval(
+                initial_eval_processed, formatted_inputs
+            )
+
+        except FeatureAblationFutureError as e:
+            raise FeatureAblationFutureError(
+                "initial_eval_to_processed_initial_eval_fut func failed"
+            ) from e
+        return result
+
     @log_usage()
     def attribute_future(
         self,
@@ -453,8 +474,8 @@ class FeatureAblation(PerturbationAttribution):
                 )
 
             processed_initial_eval_fut = initial_eval.then(
-                lambda initial_eval: self._process_initial_eval(
-                    initial_eval.value(),
+                lambda initial_eval: self._initial_eval_to_processed_initial_eval_fut(
+                    initial_eval,
                     formatted_inputs,
                 )
             )
@@ -534,28 +555,80 @@ class FeatureAblation(PerturbationAttribution):
                         ]
                     )
 
+                    def eval_fut_to_ablated_out_fut(
+                        # pyre-ignore Invalid type parameters [24]
+                        eval_futs: Future[List[Future[List[object]]]],
+                        current_inputs: Tuple[Tensor, ...],
+                        current_mask: Tensor,
+                        i: int,
+                        perturbations_per_eval: int,
+                        num_examples: int,
+                        formatted_inputs: Tuple[Tensor, ...],
+                    ) -> Tuple[List[Tensor], List[Tensor]]:
+                        try:
+                            modified_eval = cast(Tensor, eval_futs.value()[1].value())
+                            initial_eval_tuple = cast(
+                                Tuple[
+                                    List[Tensor],
+                                    List[Tensor],
+                                    Tensor,
+                                    Tensor,
+                                    int,
+                                    dtype,
+                                ],
+                                eval_futs.value()[0].value(),
+                            )
+                            if len(initial_eval_tuple) != 6:
+                                raise AssertionError(
+                                    "eval_fut_to_ablated_out_fut: "
+                                    "initial_eval_tuple should have 6 elements: "
+                                    "total_attrib, weights, initial_eval, "
+                                    "flattened_initial_eval, n_outputs, attrib_type "
+                                )
+                            if not isinstance(modified_eval, Tensor):
+                                raise AssertionError(
+                                    "eval_fut_to_ablated_out_fut: "
+                                    "modified eval should be a Tensor"
+                                )
+                            (
+                                total_attrib,
+                                weights,
+                                initial_eval,
+                                flattened_initial_eval,
+                                n_outputs,
+                                attrib_type,
+                            ) = initial_eval_tuple
+                            result = self._process_ablated_out(  # type: ignore # noqa: E501 line too long
+                                modified_eval=modified_eval,
+                                current_inputs=current_inputs,
+                                current_mask=current_mask,
+                                perturbations_per_eval=perturbations_per_eval,
+                                num_examples=num_examples,
+                                initial_eval=initial_eval,
+                                flattened_initial_eval=flattened_initial_eval,
+                                inputs=formatted_inputs,
+                                n_outputs=n_outputs,
+                                total_attrib=total_attrib,
+                                weights=weights,
+                                i=i,
+                                attrib_type=attrib_type,
+                            )
+                        except FeatureAblationFutureError as e:
+                            raise FeatureAblationFutureError(
+                                "eval_fut_to_ablated_out_fut func failed)"
+                            ) from e
+                        return result
+
                     ablated_out_fut: Future[Tuple[List[Tensor], List[Tensor]]] = (
                         eval_futs.then(
-                            lambda eval_futs, current_inputs=current_inputs, current_mask=current_mask, i=i: self._process_ablated_out(  # type: ignore # noqa: E501 line too long
-                                eval_futs.value()[1].value(),
-                                current_inputs,
-                                current_mask,
-                                perturbations_per_eval,
-                                num_examples,
-                                # initial_eval
-                                eval_futs.value()[0].value()[2],
-                                # flattened_initial_eval
-                                eval_futs.value()[0].value()[3],
-                                formatted_inputs,
-                                # n_outputs
-                                eval_futs.value()[0].value()[4],
-                                # total_attrib
-                                eval_futs.value()[0].value()[0],
-                                # weights
-                                eval_futs.value()[0].value()[1],
-                                i,
-                                # attrib_type
-                                eval_futs.value()[0].value()[5],
+                            lambda eval_futs, current_inputs=current_inputs, current_mask=current_mask, i=i: eval_fut_to_ablated_out_fut(  # type: ignore # noqa: E501 line too long
+                                eval_futs=eval_futs,
+                                current_inputs=current_inputs,
+                                current_mask=current_mask,
+                                i=i,
+                                perturbations_per_eval=perturbations_per_eval,
+                                num_examples=num_examples,
+                                formatted_inputs=formatted_inputs,
                             )
                         )
                     )
@@ -924,6 +997,21 @@ class FeatureAblation(PerturbationAttribution):
         total_attrib[i] += (eval_diff * current_mask.to(attrib_type)).sum(dim=0)
         return total_attrib, weights
 
+    def _fut_tuple_to_accumulate_fut_list(
+        self,
+        total_attrib: List[Tensor],
+        weights: List[Tensor],
+        i: int,
+        fut_tuple: Future[Tuple[List[Tensor], List[Tensor]]],
+    ) -> None:
+        try:
+            attrib, weight = fut_tuple.value()
+            self._accumulate_for_single_input(total_attrib, weights, i, attrib, weight)
+        except FeatureAblationFutureError as e:
+            raise FeatureAblationFutureError(
+                "fut_tuple_to_accumulate_fut_list failed"
+            ) from e
+
     def _generate_async_result(
         self,
         futs: List[List[Future[Tuple[List[Tensor], List[Tensor]]]]],
@@ -934,16 +1022,14 @@ class FeatureAblation(PerturbationAttribution):
         accumulate_fut_list: List[Future[None]] = []
         total_attrib: List[Tensor] = []
         weights: List[Tensor] = []
+
         for i, fut_tuples in enumerate(futs):
             for fut_tuple in fut_tuples:
+
                 accumulate_fut_list.append(
                     fut_tuple.then(
-                        lambda fut_tuple, i=i: self._accumulate_for_single_input(  # type: ignore # noqa: E501 line too long
-                            total_attrib,
-                            weights,
-                            i,
-                            fut_tuple.value()[0],  # attrib
-                            fut_tuple.value()[1],  # weight
+                        lambda fut_tuple, i=i: self._fut_tuple_to_accumulate_fut_list(  # type: ignore # noqa: E501 line too long
+                            total_attrib, weights, i, fut_tuple
                         )
                     )
                 )
