@@ -627,7 +627,7 @@ class GradientForwardFunc(nn.Module):
     def __init__(self, attr: LLMGradientAttribution) -> None:
         super().__init__()
         self.attr = attr
-        self.model = attr.model
+        self.model: nn.Module = attr.model
 
     def forward(
         self,

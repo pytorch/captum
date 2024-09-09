@@ -110,7 +110,7 @@ class DeepLift(GradientAttribution):
                         Default: 1e-10
         """
         GradientAttribution.__init__(self, model)
-        self.model = cast(nn.Module, model)
+        self.model: nn.Module = model
         self.eps = eps
         self.forward_handles: List[RemovableHandle] = []
         self.backward_handles: List[RemovableHandle] = []
@@ -324,7 +324,8 @@ class DeepLift(GradientAttribution):
         warnings.warn(
             """Setting forward, backward hooks and attributes on non-linear
                activations. The hooks and attributes will be removed
-            after the attribution is finished"""
+            after the attribution is finished""",
+            stacklevel=2,
         )
         # pyre-fixme[6]: For 1st argument expected `Tuple[Tensor, ...]` but got
         #  `TensorOrTupleOfTensorsGeneric`.

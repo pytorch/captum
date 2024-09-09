@@ -6,9 +6,7 @@ import copy
 from typing import Any, cast, Dict, List, NamedTuple, Optional, Tuple, Type, Union
 
 import torch
-from captum._utils.models.linear_model import (  # @manual=//pytorch/captum/captum/_utils/models/linear_model:linear_model  # noqa: E501
-    SkLearnLasso,
-)
+from captum._utils.models.linear_model import SkLearnLasso
 from captum.attr._core.feature_ablation import FeatureAblation
 from captum.attr._core.kernel_shap import KernelShap
 from captum.attr._core.layer.layer_gradient_shap import LayerGradientShap
