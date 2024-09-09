@@ -42,6 +42,8 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="kn">from</span> <span class="nn">captum._utils.typing</span> <span class="kn">import</span> <span class="n">TokenizerLike</span>
 <span class="kn">from</span> <span class="nn">captum.attr._core.feature_ablation</span> <span class="kn">import</span> <span class="n">FeatureAblation</span>
 <span class="kn">from</span> <span class="nn">captum.attr._core.kernel_shap</span> <span class="kn">import</span> <span class="n">KernelShap</span>
+<span class="kn">from</span> <span class="nn">captum.attr._core.layer.layer_gradient_shap</span> <span class="kn">import</span> <span class="n">LayerGradientShap</span>
+<span class="kn">from</span> <span class="nn">captum.attr._core.layer.layer_gradient_x_activation</span> <span class="kn">import</span> <span class="n">LayerGradientXActivation</span>
 <span class="kn">from</span> <span class="nn">captum.attr._core.layer.layer_integrated_gradients</span> <span class="kn">import</span> <span class="n">LayerIntegratedGradients</span>
 <span class="kn">from</span> <span class="nn">captum.attr._core.lime</span> <span class="kn">import</span> <span class="n">Lime</span>
 <span class="kn">from</span> <span class="nn">captum.attr._core.shapley_value</span> <span class="kn">import</span> <span class="n">ShapleyValues</span><span class="p">,</span> <span class="n">ShapleyValueSampling</span>
@@ -504,7 +506,11 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">    and returns LLMAttributionResult</span>
 <span class="sd">    """</span>
 
-    <span class="n">SUPPORTED_METHODS</span> <span class="o">=</span> <span class="p">(</span><span class="n">LayerIntegratedGradients</span><span class="p">,)</span>
+    <span class="n">SUPPORTED_METHODS</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">LayerGradientShap</span><span class="p">,</span>
+        <span class="n">LayerGradientXActivation</span><span class="p">,</span>
+        <span class="n">LayerIntegratedGradients</span><span class="p">,</span>
+    <span class="p">)</span>
     <span class="n">SUPPORTED_INPUTS</span> <span class="o">=</span> <span class="p">(</span><span class="n">TextTokenInput</span><span class="p">,)</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
@@ -525,13 +531,13 @@ src="/_sphinx/documentation_options.js"></script>
 
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">attr_method</span><span class="o">.</span><span class="n">forward_func</span><span class="p">)</span>
 
-        <span class="c1"># shallow copy is enough to avoid modifying original instance</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">attr_method</span><span class="p">:</span> <span class="n">GradientAttribution</span> <span class="o">=</span> <span class="n">copy</span><span class="p">(</span><span class="n">attr_method</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">attr_method</span><span class="o">.</span><span class="n">forward_func</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_forward_func</span>
-
         <span class="c1"># alias, we really need a model and don't support wrapper functions</span>
         <span class="c1"># coz we need call model.forward, model.generate, etc.</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">:</span> <span class="n">nn</span><span class="o">.</span><span class="n">Module</span> <span class="o">=</span> <span class="n">cast</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">forward_func</span><span class="p">)</span>
+
+        <span class="c1"># shallow copy is enough to avoid modifying original instance</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">attr_method</span><span class="p">:</span> <span class="n">GradientAttribution</span> <span class="o">=</span> <span class="n">copy</span><span class="p">(</span><span class="n">attr_method</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">attr_method</span><span class="o">.</span><span class="n">forward_func</span> <span class="o">=</span> <span class="n">GradientForwardFunc</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">tokenizer</span><span class="p">:</span> <span class="n">TokenizerLike</span> <span class="o">=</span> <span class="n">tokenizer</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">device</span> <span class="o">=</span> <span class="p">(</span>
@@ -539,38 +545,6 @@ src="/_sphinx/documentation_options.js"></script>
             <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">,</span> <span class="s2">"device"</span><span class="p">)</span>
             <span class="k">else</span> <span class="nb">next</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">parameters</span><span class="p">())</span><span class="o">.</span><span class="n">device</span>
         <span class="p">)</span>
-
-    <span class="k">def</span> <span class="nf">_forward_func</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span>
-        <span class="n">perturbed_tensor</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">,</span>
-        <span class="n">inp</span><span class="p">:</span> <span class="n">InterpretableInput</span><span class="p">,</span>
-        <span class="n">target_tokens</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">,</span>  <span class="c1"># 1D tensor of target token ids</span>
-        <span class="n">cur_target_idx</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>  <span class="c1"># current target index</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tensor</span><span class="p">:</span>
-        <span class="n">perturbed_input</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_format_model_input</span><span class="p">(</span><span class="n">inp</span><span class="o">.</span><span class="n">to_model_input</span><span class="p">(</span><span class="n">perturbed_tensor</span><span class="p">))</span>
-
-        <span class="k">if</span> <span class="n">cur_target_idx</span><span class="p">:</span>
-            <span class="c1"># the input batch size can be expanded by attr method</span>
-            <span class="n">output_token_tensor</span> <span class="o">=</span> <span class="p">(</span>
-                <span class="n">target_tokens</span><span class="p">[:</span><span class="n">cur_target_idx</span><span class="p">]</span>
-                <span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
-                <span class="o">.</span><span class="n">expand</span><span class="p">(</span><span class="n">perturbed_input</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="mi">0</span><span class="p">),</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
-                <span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
-            <span class="p">)</span>
-            <span class="n">new_input_tensor</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">([</span><span class="n">perturbed_input</span><span class="p">,</span> <span class="n">output_token_tensor</span><span class="p">],</span> <span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">new_input_tensor</span> <span class="o">=</span> <span class="n">perturbed_input</span>
-
-        <span class="n">output_logits</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">(</span><span class="n">new_input_tensor</span><span class="p">)</span>
-
-        <span class="n">new_token_logits</span> <span class="o">=</span> <span class="n">output_logits</span><span class="o">.</span><span class="n">logits</span><span class="p">[:,</span> <span class="o">-</span><span class="mi">1</span><span class="p">]</span>
-        <span class="n">log_probs</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">functional</span><span class="o">.</span><span class="n">log_softmax</span><span class="p">(</span><span class="n">new_token_logits</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
-
-        <span class="n">target_token</span> <span class="o">=</span> <span class="n">target_tokens</span><span class="p">[</span><span class="n">cur_target_idx</span><span class="p">]</span>
-        <span class="n">token_log_probs</span> <span class="o">=</span> <span class="n">log_probs</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">target_token</span><span class="p">]</span>
-
-        <span class="c1"># the attribution target is limited to the log probability</span>
-        <span class="k">return</span> <span class="n">token_log_probs</span>
 
     <span class="k">def</span> <span class="nf">_format_model_input</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model_input</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tensor</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">"""</span>
@@ -702,6 +676,51 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="p">)</span></div>
 </div>
 
+
+
+<span class="k">class</span> <span class="nc">GradientForwardFunc</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    A wrapper class for the forward function of a model in LLMGradientAttribution</span>
+<span class="sd">    """</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">attr</span><span class="p">:</span> <span class="n">LLMGradientAttribution</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">attr</span> <span class="o">=</span> <span class="n">attr</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">:</span> <span class="n">nn</span><span class="o">.</span><span class="n">Module</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">model</span>
+
+    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">perturbed_tensor</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">,</span>
+        <span class="n">inp</span><span class="p">:</span> <span class="n">InterpretableInput</span><span class="p">,</span>
+        <span class="n">target_tokens</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">,</span>  <span class="c1"># 1D tensor of target token ids</span>
+        <span class="n">cur_target_idx</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>  <span class="c1"># current target index</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tensor</span><span class="p">:</span>
+        <span class="n">perturbed_input</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">attr</span><span class="o">.</span><span class="n">_format_model_input</span><span class="p">(</span>
+            <span class="n">inp</span><span class="o">.</span><span class="n">to_model_input</span><span class="p">(</span><span class="n">perturbed_tensor</span><span class="p">)</span>
+        <span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">cur_target_idx</span><span class="p">:</span>
+            <span class="c1"># the input batch size can be expanded by attr method</span>
+            <span class="n">output_token_tensor</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="n">target_tokens</span><span class="p">[:</span><span class="n">cur_target_idx</span><span class="p">]</span>
+                <span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+                <span class="o">.</span><span class="n">expand</span><span class="p">(</span><span class="n">perturbed_input</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="mi">0</span><span class="p">),</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+                <span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">attr</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
+            <span class="p">)</span>
+            <span class="n">new_input_tensor</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">([</span><span class="n">perturbed_input</span><span class="p">,</span> <span class="n">output_token_tensor</span><span class="p">],</span> <span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">new_input_tensor</span> <span class="o">=</span> <span class="n">perturbed_input</span>
+
+        <span class="n">output_logits</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">(</span><span class="n">new_input_tensor</span><span class="p">)</span>
+
+        <span class="n">new_token_logits</span> <span class="o">=</span> <span class="n">output_logits</span><span class="o">.</span><span class="n">logits</span><span class="p">[:,</span> <span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">log_probs</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">functional</span><span class="o">.</span><span class="n">log_softmax</span><span class="p">(</span><span class="n">new_token_logits</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+        <span class="n">target_token</span> <span class="o">=</span> <span class="n">target_tokens</span><span class="p">[</span><span class="n">cur_target_idx</span><span class="p">]</span>
+        <span class="n">token_log_probs</span> <span class="o">=</span> <span class="n">log_probs</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">target_token</span><span class="p">]</span>
+
+        <span class="c1"># the attribution target is limited to the log probability</span>
+        <span class="k">return</span> <span class="n">token_log_probs</span>
 </pre></div>
 </div>
 </div>
