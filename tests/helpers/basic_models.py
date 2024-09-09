@@ -148,6 +148,7 @@ class BasicModel6_MultiTensor(nn.Module):
     # pyre-fixme[2]: Parameter must be annotated.
     def forward(self, input1, input2):
         input = input1 + input2
+        # pyre-fixme[6]: For 1st argument expected `Tensor` but got `int`.
         return 1 - F.relu(1 - input)[:, 1]
 
 
