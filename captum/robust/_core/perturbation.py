@@ -12,6 +12,7 @@ class Perturbation:
     """
 
     # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
+    # pyre-fixme[13]: Attribute `perturb` is never initialized.
     perturb: Callable
     r"""
     This method computes and returns the perturbed input for each input tensor.
