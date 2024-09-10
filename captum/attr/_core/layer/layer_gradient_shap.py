@@ -308,6 +308,8 @@ class LayerGradientShap(LayerAttribution, GradientAttribution):
         #  TensorOrTupleOfTensorsGeneric]` has no attribute `__getitem__`.
         assert isinstance(baselines[0], torch.Tensor), (
             "Baselines distribution has to be provided in a form "
+            # pyre-fixme[16]: Item `Callable` of `Union[(...) -> Any,
+            #  TensorOrTupleOfTensorsGeneric]` has no attribute `__getitem__`.
             "of a torch.Tensor {}.".format(baselines[0])
         )
 
