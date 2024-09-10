@@ -7,7 +7,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 import torch
-from captum._utils.transformers_typing import Cache, DynamicCache
 from captum._utils.typing import TokenizerLike
 from captum.attr._core.feature_ablation import FeatureAblation
 from captum.attr._core.kernel_shap import KernelShap
@@ -259,6 +258,15 @@ class LLMAttribution(Attribution):
         use_cached_outputs: bool = False,
         _inspect_forward: Optional[Callable[[str, str, List[float]], None]] = None,
     ) -> Tensor:
+        # Lazily import transformers_typing to avoid importing transformers package if
+        # it isn't needed
+        from captum._utils.transformers_typing import (
+            Cache,
+            DynamicCache,
+            supports_caching,
+            update_model_kwargs,
+        )
+
         perturbed_input = self._format_model_input(inp.to_model_input(perturbed_tensor))
         init_model_inp = perturbed_input
 
@@ -267,16 +275,25 @@ class LLMAttribution(Attribution):
             [1, model_inp.shape[1]], dtype=torch.long, device=model_inp.device
         )
         model_kwargs = {"attention_mask": attention_mask}
+        # If applicable, update model kwargs for transformers models
+        update_model_kwargs(
+            model_kwargs=model_kwargs,
+            model=self.model,
+            input_ids=model_inp,
+            caching=use_cached_outputs,
+        )
 
         log_prob_list = []
         outputs = None
         for target_token in target_tokens:
             if use_cached_outputs:
                 if outputs is not None:
+                    # If applicable, convert past_key_values to DynamicCache for
+                    # transformers models
                     if (
                         Cache is not None
                         and DynamicCache is not None
-                        and getattr(self.model, "_supports_cache_class", False)
+                        and supports_caching(self.model)
                         and not isinstance(outputs.past_key_values, Cache)
                     ):
                         outputs.past_key_values = DynamicCache.from_legacy_cache(
