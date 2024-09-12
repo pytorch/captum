@@ -149,7 +149,9 @@ class DummyLLM(nn.Module):
 # pyre-fixme[13]: Attribute `use_cached_outputs` is declared in class `TestLlmAttrGpu`
 # to have type `bool` but is never initialized.
 class TestLlmAttrGpu(BaseTest):
+    # pyre-fixme[13]: Attribute `device` is never initialized.
     device: str
+    # pyre-fixme[13]: Attribute `use_cached_outputs` is never initialized.
     use_cached_outputs: bool
 
     @parameterized.expand([(FeatureAblation,), (ShapleyValueSampling,)])
@@ -235,6 +237,7 @@ class TestLlmAttrGpu(BaseTest):
 # pyre-fixme[13]: Attribute `device` is declared in class `TestLLMGradAttrGPU`
 # to have type `str` but is never initialized.
 class TestLLMGradAttrGPU(BaseTest):
+    # pyre-fixme[13]: Attribute `device` is never initialized.
     device: str
 
     def test_llm_attr(self) -> None:
