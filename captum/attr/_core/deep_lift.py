@@ -833,6 +833,9 @@ class DeepLiftShap(DeepLift):
             " with more than one example but found: {}."
             " If baselines are provided in shape of scalars or with a single"
             " baseline example, `DeepLift`"
+            # pyre-fixme[16]: Item `Callable` of `Union[(...) ->
+            #  TensorOrTupleOfTensorsGeneric, TensorOrTupleOfTensorsGeneric]` has no
+            #  attribute `__getitem__`.
             " approach can be used instead.".format(baselines[0])
         )
 
