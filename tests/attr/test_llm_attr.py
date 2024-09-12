@@ -156,7 +156,9 @@ class DummyLLM(nn.Module):
 # pyre-fixme[13]: Attribute `device` is never initialized.
 # pyre-fixme[13]: Attribute `use_cached_outputs` is never initialized.
 class TestLLMAttr(BaseTest):
+    # pyre-fixme[13]: Attribute `device` is never initialized.
     device: str
+    # pyre-fixme[13]: Attribute `use_cached_outputs` is never initialized.
     use_cached_outputs: bool
 
     # pyre-fixme[56]: Pyre was not able to infer the type of argument `comprehension
@@ -377,6 +379,7 @@ class TestLLMAttr(BaseTest):
 )
 # pyre-fixme[13]: Attribute `device` is never initialized.
 class TestLLMGradAttr(BaseTest):
+    # pyre-fixme[13]: Attribute `device` is never initialized.
     device: str
 
     @parameterized.expand(
