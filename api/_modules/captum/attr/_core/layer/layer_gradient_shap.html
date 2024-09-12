@@ -344,6 +344,8 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="c1">#  TensorOrTupleOfTensorsGeneric]` has no attribute `__getitem__`.</span>
         <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">baselines</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">),</span> <span class="p">(</span>
             <span class="s2">"Baselines distribution has to be provided in a form "</span>
+            <span class="c1"># pyre-fixme[16]: Item `Callable` of `Union[(...) -&gt; Any,</span>
+            <span class="c1">#  TensorOrTupleOfTensorsGeneric]` has no attribute `__getitem__`.</span>
             <span class="s2">"of a torch.Tensor </span><span class="si">{}</span><span class="s2">."</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">baselines</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
         <span class="p">)</span>
 

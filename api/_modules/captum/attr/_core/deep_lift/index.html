@@ -881,6 +881,9 @@ src="/_sphinx/documentation_options.js"></script>
             <span class="s2">" with more than one example but found: </span><span class="si">{}</span><span class="s2">."</span>
             <span class="s2">" If baselines are provided in shape of scalars or with a single"</span>
             <span class="s2">" baseline example, `DeepLift`"</span>
+            <span class="c1"># pyre-fixme[16]: Item `Callable` of `Union[(...) -&gt;</span>
+            <span class="c1">#  TensorOrTupleOfTensorsGeneric, TensorOrTupleOfTensorsGeneric]` has no</span>
+            <span class="c1">#  attribute `__getitem__`.</span>
             <span class="s2">" approach can be used instead."</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">baselines</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
         <span class="p">)</span>
 
