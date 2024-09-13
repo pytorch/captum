@@ -82,7 +82,9 @@ DEV_REQUIRES = (
 
 # get version string from module
 with open(os.path.join(os.path.dirname(__file__), "captum/__init__.py"), "r") as f:
-    version = re.search(r"__version__ = ['\"]([^'\"]*)['\"]", f.read(), re.M).group(1)
+    version_match = re.search(r"__version__ = ['\"]([^'\"]*)['\"]", f.read(), re.M)
+    assert version_match is not None, "Unable to find version string."
+    version = version_match.group(1)
     report("-- Building version " + version)
 
 # read in README.md as the long description
@@ -147,7 +149,13 @@ if __name__ == "__main__":
         long_description=long_description,
         long_description_content_type="text/markdown",
         python_requires=">=3.8",
-        install_requires=["matplotlib", "numpy<2.0", "torch>=1.10", "tqdm"],
+        install_requires=[
+            "matplotlib",
+            "numpy<2.0",
+            "packaging",
+            "torch>=1.10",
+            "tqdm",
+        ],
         packages=find_packages(exclude=("tests", "tests.*")),
         extras_require={
             "dev": DEV_REQUIRES,
