@@ -173,6 +173,23 @@ class LLMAttributionResult:
             return fig, ax
 
 
+def _convert_ids_to_pretty_tokens(ids: Tensor, tokenizer: TokenizerLike) -> List[str]:
+    """
+    Convert ids to tokens without ugly unicode characters (e.g., Ġ). See:
+    https://github.com/huggingface/transformers/issues/4786 and
+    https://discuss.huggingface.co/t/bpe-tokenizers-and-spaces-before-words/475/2
+
+    This is the preferred function over tokenizer.convert_ids_to_tokens() for
+    user-facing data.
+
+    Quote from links:
+    > Spaces are converted in a special character (the Ġ) in the tokenizer prior to
+    > BPE splitting mostly to avoid digesting spaces since the standard BPE algorithm
+    > used spaces in its process
+    """
+    return [tokenizer.decode(id_) for id_ in ids]
+
+
 class LLMAttribution(Attribution):
     """
     Attribution class for large language models. It wraps a perturbation-based
@@ -461,7 +478,7 @@ class LLMAttribution(Attribution):
                 attr[1:] if self.include_per_token_attr else None
             ),  # shape(n_output_token, n_input_features)
             inp.values,
-            self.tokenizer.convert_ids_to_tokens(target_tokens),
+            _convert_ids_to_pretty_tokens(target_tokens, self.tokenizer),
         )
 
     # pyre-fixme[24] Generic type `Callable` expects 2 type parameters.
@@ -641,7 +658,7 @@ class LLMGradientAttribution(Attribution):
             seq_attr,
             attr,  # shape(n_output_token, n_input_features)
             inp.values,
-            self.tokenizer.convert_ids_to_tokens(target_tokens),
+            _convert_ids_to_pretty_tokens(target_tokens, self.tokenizer),
         )
 
     # pyre-fixme[24] Generic type `Callable` expects 2 type parameters.
