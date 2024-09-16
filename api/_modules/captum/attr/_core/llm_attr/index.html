@@ -214,6 +214,23 @@ src="/_sphinx/documentation_options.js"></script>
 
 
 
+<span class="k">def</span> <span class="nf">_convert_ids_to_pretty_tokens</span><span class="p">(</span><span class="n">ids</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">,</span> <span class="n">tokenizer</span><span class="p">:</span> <span class="n">TokenizerLike</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    Convert ids to tokens without ugly unicode characters (e.g., Ġ). See:</span>
+<span class="sd">    https://github.com/huggingface/transformers/issues/4786 and</span>
+<span class="sd">    https://discuss.huggingface.co/t/bpe-tokenizers-and-spaces-before-words/475/2</span>
+
+<span class="sd">    This is the preferred function over tokenizer.convert_ids_to_tokens() for</span>
+<span class="sd">    user-facing data.</span>
+
+<span class="sd">    Quote from links:</span>
+<span class="sd">    &gt; Spaces are converted in a special character (the Ġ) in the tokenizer prior to</span>
+<span class="sd">    &gt; BPE splitting mostly to avoid digesting spaces since the standard BPE algorithm</span>
+<span class="sd">    &gt; used spaces in its process</span>
+<span class="sd">    """</span>
+    <span class="k">return</span> <span class="p">[</span><span class="n">tokenizer</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="n">id_</span><span class="p">)</span> <span class="k">for</span> <span class="n">id_</span> <span class="ow">in</span> <span class="n">ids</span><span class="p">]</span>
+
+
 <div class="viewcode-block" id="LLMAttribution">
 <a class="viewcode-back" href="../../../../llm_attr.html#captum.attr.LLMAttribution">[docs]</a>
 <span class="k">class</span> <span class="nc">LLMAttribution</span><span class="p">(</span><span class="n">Attribution</span><span class="p">):</span>
@@ -506,7 +523,7 @@ src="/_sphinx/documentation_options.js"></script>
                 <span class="n">attr</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">include_per_token_attr</span> <span class="k">else</span> <span class="kc">None</span>
             <span class="p">),</span>  <span class="c1"># shape(n_output_token, n_input_features)</span>
             <span class="n">inp</span><span class="o">.</span><span class="n">values</span><span class="p">,</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">tokenizer</span><span class="o">.</span><span class="n">convert_ids_to_tokens</span><span class="p">(</span><span class="n">target_tokens</span><span class="p">),</span>
+            <span class="n">_convert_ids_to_pretty_tokens</span><span class="p">(</span><span class="n">target_tokens</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">tokenizer</span><span class="p">),</span>
         <span class="p">)</span></div>
 
 
@@ -695,7 +712,7 @@ src="/_sphinx/documentation_options.js"></script>
             <span class="n">seq_attr</span><span class="p">,</span>
             <span class="n">attr</span><span class="p">,</span>  <span class="c1"># shape(n_output_token, n_input_features)</span>
             <span class="n">inp</span><span class="o">.</span><span class="n">values</span><span class="p">,</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">tokenizer</span><span class="o">.</span><span class="n">convert_ids_to_tokens</span><span class="p">(</span><span class="n">target_tokens</span><span class="p">),</span>
+            <span class="n">_convert_ids_to_pretty_tokens</span><span class="p">(</span><span class="n">target_tokens</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">tokenizer</span><span class="p">),</span>
         <span class="p">)</span></div>
 
 
