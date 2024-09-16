@@ -3,10 +3,22 @@
 # pyre-strict
 
 import copy
-from typing import Any, cast, Dict, List, NamedTuple, Optional, Tuple, Type, Union
+from typing import (
+    Any,
+    cast,
+    Dict,
+    List,
+    NamedTuple,
+    Optional,
+    overload,
+    Tuple,
+    Type,
+    Union,
+)
 
 import torch
 from captum._utils.models.linear_model import SkLearnLasso
+from captum._utils.typing import Literal
 from captum.attr._core.feature_ablation import FeatureAblation
 from captum.attr._core.kernel_shap import KernelShap
 from captum.attr._core.layer.layer_gradient_shap import LayerGradientShap
@@ -29,6 +41,14 @@ class DummyTokenizer:
     unk: int = 1
     special_tokens: Dict[int, str] = {sos: "<sos>", unk: "<unk>"}
 
+    @overload
+    def encode(self, text: str, return_tensors: None = None) -> List[int]: ...
+    @overload
+    # pyre-fixme[43]: Incompatible overload. The implementation of
+    # `DummyTokenizer.encode` does not accept all possible arguments of overload.
+    # pyre-ignore[11]: Annotation `pt` is not defined as a type
+    def encode(self, text: str, return_tensors: Literal["pt"]) -> Tensor: ...
+
     def encode(
         self, text: str, return_tensors: Optional[str] = None
     ) -> Union[List[int], Tensor]:
@@ -45,14 +65,37 @@ class DummyTokenizer:
             return torch.tensor([tokens_ids])
         return tokens_ids
 
-    def convert_ids_to_tokens(self, token_ids: Tensor) -> List[str]:
+    @overload
+    def convert_ids_to_tokens(self, token_ids: List[int]) -> List[str]: ...
+    @overload
+    def convert_ids_to_tokens(self, token_ids: int) -> str: ...
+
+    def convert_ids_to_tokens(
+        self, token_ids: Union[List[int], int]
+    ) -> Union[List[str], str]:
+        if isinstance(token_ids, int):
+            return (
+                self.special_tokens[token_ids]
+                if token_ids in self.special_tokens
+                else chr(token_ids)
+            )
         return [
             (self.special_tokens[tid] if tid in self.special_tokens else chr(tid))
             for tid in token_ids
         ]
 
+    @overload
+    def convert_tokens_to_ids(self, tokens: str) -> int: ...
+    @overload
+    def convert_tokens_to_ids(self, tokens: List[str]) -> List[int]: ...
+
+    def convert_tokens_to_ids(
+        self, tokens: Union[List[str], str]
+    ) -> Union[List[int], int]:
+        raise NotImplementedError
+
     def decode(self, token_ids: Tensor) -> str:
-        return " ".join(self.convert_ids_to_tokens(token_ids))
+        return " ".join(self.convert_ids_to_tokens(token_ids.tolist()))
 
 
 class Result(NamedTuple):

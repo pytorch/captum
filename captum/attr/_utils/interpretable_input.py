@@ -1,8 +1,10 @@
 # pyre-strict
 from abc import ABC, abstractmethod
-from typing import Any, Callable, Dict, List, Optional, Tuple, Union
+from typing import Any, Callable, cast, Dict, List, Optional, Tuple, Union
 
 import torch
+
+from captum._utils.typing import TokenizerLike
 from torch import Tensor
 
 
@@ -215,9 +217,8 @@ class TextTemplateInput(InterpretableInput):
             ), f"the values must be either a list or a dict, received: {type(values)}"
             dict_keys = []
 
-        self.values = values
-        # pyre-fixme[4]: Attribute must be annotated.
-        self.dict_keys = dict_keys
+        self.values: List[str] = values
+        self.dict_keys: List[str] = dict_keys
 
         n_features = len(values)
 
@@ -393,25 +394,22 @@ class TextTokenInput(InterpretableInput):
     def __init__(
         self,
         text: str,
-        # pyre-fixme[2]: Parameter must be annotated.
-        tokenizer,
+        tokenizer: TokenizerLike,
         baselines: Union[int, str] = 0,  # usually UNK
         skip_tokens: Union[List[int], List[str], None] = None,
     ) -> None:
         inp_tensor = tokenizer.encode(text, return_tensors="pt")
 
         # input tensor into the model of token ids
-        # pyre-fixme[4]: Attribute must be annotated.
-        self.inp_tensor = inp_tensor
+        self.inp_tensor: Tensor = inp_tensor
         # tensor of interpretable token ids
-        # pyre-fixme[4]: Attribute must be annotated.
-        self.itp_tensor = inp_tensor
+        self.itp_tensor: Tensor = inp_tensor
         # interpretable mask
-        # pyre-fixme[4]: Attribute must be annotated.
-        self.itp_mask = None
+        self.itp_mask: Optional[Tensor] = None
 
         if skip_tokens:
             if isinstance(skip_tokens[0], str):
+                skip_tokens = cast(List[str], skip_tokens)
                 skip_tokens = tokenizer.convert_tokens_to_ids(skip_tokens)
                 assert isinstance(skip_tokens, list)
 
@@ -428,18 +426,16 @@ class TextTokenInput(InterpretableInput):
         self.skip_tokens = skip_tokens
 
         # features values, the tokens
-        # pyre-fixme[4]: Attribute must be annotated.
-        self.values = tokenizer.convert_ids_to_tokens(self.itp_tensor[0].tolist())
-        # pyre-fixme[4]: Attribute must be annotated.
-        self.tokenizer = tokenizer
-        # pyre-fixme[4]: Attribute must be annotated.
-        self.n_itp_features = len(self.values)
+        self.values: List[str] = tokenizer.convert_ids_to_tokens(
+            self.itp_tensor[0].tolist()
+        )
+        self.tokenizer: TokenizerLike = tokenizer
+        self.n_itp_features: int = len(self.values)
 
-        # pyre-fixme[4]: Attribute must be annotated.
-        self.baselines = (
+        self.baselines: int = (
             baselines
             if type(baselines) is int
-            else tokenizer.convert_tokens_to_ids([baselines])[0]
+            else tokenizer.convert_tokens_to_ids([baselines])[0]  # type: ignore
         )
 
     def to_tensor(self) -> torch.Tensor:
@@ -448,8 +444,7 @@ class TextTokenInput(InterpretableInput):
 
     # pyre-fixme[14]: `to_model_input` overrides method defined in
     #  `InterpretableInput` inconsistently.
-    # pyre-fixme[2]: Parameter must be annotated.
-    def to_model_input(self, perturbed_tensor=None) -> torch.Tensor:
+    def to_model_input(self, perturbed_tensor: Optional[Tensor] = None) -> Tensor:
         if perturbed_tensor is None:
             return self.inp_tensor
 
@@ -467,13 +462,12 @@ class TextTokenInput(InterpretableInput):
         if self.itp_mask is None:
             return perturb_itp_tensor
 
-        perturb_inp_tensor = self.inp_tensor.expand(*expand_shape).clone().to(device)
         itp_mask = self.itp_mask.expand(*expand_shape).to(device)
+        perturb_inp_tensor = self.inp_tensor.expand(*expand_shape).clone().to(device)
 
         perturb_inp_tensor[itp_mask] = perturb_itp_tensor.view(-1)
 
         return perturb_inp_tensor
 
-    # pyre-fixme[3]: Return type must be annotated.
-    def format_attr(self, itp_attr: torch.Tensor):
+    def format_attr(self, itp_attr: Tensor) -> Tensor:
         return itp_attr
