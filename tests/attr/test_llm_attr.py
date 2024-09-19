@@ -95,7 +95,9 @@ class DummyTokenizer:
         raise NotImplementedError
 
     def decode(self, token_ids: Tensor) -> str:
-        return " ".join(self.convert_ids_to_tokens(token_ids.tolist()))
+        tokens = self.convert_ids_to_tokens(token_ids.tolist())
+        # pyre-fixme[7]: Expected `str` but got `Union[List[str], str]`.
+        return tokens if isinstance(tokens, str) else " ".join(tokens)
 
 
 class Result(NamedTuple):
@@ -271,6 +273,7 @@ class TestLLMAttr(BaseTest):
         res = llm_attr.attribute(
             inp,
             "m n o p q",
+            skip_tokens=[0],
             use_cached_outputs=self.use_cached_outputs,
             # pyre-fixme[6]: In call `LLMAttribution.attribute`,
             # for 4th positional argument, expected
@@ -330,7 +333,10 @@ class TestLLMAttr(BaseTest):
 
         inp = TextTemplateInput("{} b {} {} e {}", ["a", "c", "d", "f"])
         res = llm_fa.attribute(
-            inp, "m n o p q", use_cached_outputs=self.use_cached_outputs
+            inp,
+            "m n o p q",
+            skip_tokens=[0],
+            use_cached_outputs=self.use_cached_outputs,
         )
 
         # With FeatureAblation, the seq attr in log_prob
@@ -385,6 +391,7 @@ class TestLLMAttr(BaseTest):
         res = llm_fa.attribute(
             inp,
             "m n o p q",
+            skip_tokens=[0],
             use_cached_outputs=self.use_cached_outputs,
             # pyre-fixme[6]: In call `LLMAttribution.attribute`,
             # for 4th positional argument, expected
@@ -415,6 +422,52 @@ class TestLLMAttr(BaseTest):
         with self.assertRaises(NotImplementedError):
             attributions = llm_fa.attribute_future()
         self.assertEqual(attributions, None)
+
+    def test_llm_attr_with_no_skip_tokens(self) -> None:
+        llm = DummyLLM()
+        llm.to(self.device)
+        tokenizer = DummyTokenizer()
+        fa = FeatureAblation(llm)
+        llm_fa = LLMAttribution(fa, tokenizer)
+
+        inp = TextTokenInput("a b c", tokenizer)
+        res = llm_fa.attribute(
+            inp,
+            "m n o p q",
+            use_cached_outputs=self.use_cached_outputs,
+        )
+
+        # 5 output tokens, 4 input tokens including sos
+        self.assertEqual(res.seq_attr.shape, (4,))
+        assert res.token_attr is not None  # make pyre/mypy happy
+        self.assertIsNotNone(res.token_attr)
+        token_attr = res.token_attr
+        self.assertEqual(token_attr.shape, (6, 4))  # type: ignore
+        self.assertEqual(res.input_tokens, ["<sos>", "a", "b", "c"])
+        self.assertEqual(res.output_tokens, ["<sos>", "m", "n", "o", "p", "q"])
+
+    def test_llm_attr_with_skip_tensor_target(self) -> None:
+        llm = DummyLLM()
+        llm.to(self.device)
+        tokenizer = DummyTokenizer()
+        fa = FeatureAblation(llm)
+        llm_fa = LLMAttribution(fa, tokenizer)
+
+        inp = TextTokenInput("a b c", tokenizer)
+        res = llm_fa.attribute(
+            inp,
+            torch.tensor(tokenizer.encode("m n o p q")),
+            skip_tokens=[0],
+        )
+
+        # 5 output tokens, 4 input tokens including sos
+        self.assertEqual(res.seq_attr.shape, (4,))
+        assert res.token_attr is not None  # make pyre/mypy happy
+        self.assertIsNotNone(res.token_attr)
+        token_attr = res.token_attr
+        self.assertEqual(token_attr.shape, (5, 4))  # type: ignore
+        self.assertEqual(res.input_tokens, ["<sos>", "a", "b", "c"])
+        self.assertEqual(res.output_tokens, ["m", "n", "o", "p", "q"])
 
 
 @parameterized_class(
@@ -448,7 +501,7 @@ class TestLLMGradAttr(BaseTest):
             )
 
         inp = TextTokenInput("a b c", tokenizer)
-        res = llm_attr.attribute(inp, "m n o p q", **attr_kws)
+        res = llm_attr.attribute(inp, "m n o p q", skip_tokens=[0], **attr_kws)
 
         # 5 output tokens, 4 input tokens including sos
         self.assertEqual(res.seq_attr.shape, (4,))
@@ -523,7 +576,7 @@ class TestLLMGradAttr(BaseTest):
             )
 
         inp = TextTokenInput("a b c", tokenizer, skip_tokens=[0])
-        res = llm_attr.attribute(inp, "m n o p q", **attr_kws)
+        res = llm_attr.attribute(inp, "m n o p q", skip_tokens=[0], **attr_kws)
 
         # 5 output tokens, 4 input tokens including sos
         self.assertEqual(res.seq_attr.shape, (3,))
@@ -537,3 +590,48 @@ class TestLLMGradAttr(BaseTest):
         self.assertEqual(res.seq_attr.device.type, self.device)
         assert res.token_attr is not None  # make pyre/mypy happy
         self.assertEqual(token_attr.device.type, self.device)  # type: ignore
+
+    def test_llm_attr_with_no_skip_tokens(self) -> None:
+        llm = DummyLLM()
+        llm.to(self.device)
+        tokenizer = DummyTokenizer()
+        attr = LayerIntegratedGradients(llm, llm.emb)  # type: ignore[call-arg]
+        llm_attr = LLMGradientAttribution(attr, tokenizer)
+
+        attr_kws: Dict[str, Any] = {}
+        inp = TextTokenInput("a b c", tokenizer)
+        res = llm_attr.attribute(inp, "m n o p q", **attr_kws)
+
+        # 5 output tokens, 4 input tokens including sos
+        self.assertEqual(res.seq_attr.shape, (4,))
+        assert res.token_attr is not None  # make pyre/mypy happy
+        self.assertIsNotNone(res.token_attr)
+        token_attr = res.token_attr
+        self.assertEqual(token_attr.shape, (6, 4))  # type: ignore
+        self.assertEqual(res.input_tokens, ["<sos>", "a", "b", "c"])
+        self.assertEqual(res.output_tokens, ["<sos>", "m", "n", "o", "p", "q"])
+
+    def test_llm_attr_with_skip_tensor_target(self) -> None:
+        llm = DummyLLM()
+        llm.to(self.device)
+        tokenizer = DummyTokenizer()
+        attr = LayerIntegratedGradients(llm, llm.emb)  # type: ignore[call-arg]
+        llm_attr = LLMGradientAttribution(attr, tokenizer)
+
+        attr_kws: Dict[str, Any] = {}
+        inp = TextTokenInput("a b c", tokenizer)
+        res = llm_attr.attribute(
+            inp,
+            torch.tensor(tokenizer.encode("m n o p q")),
+            skip_tokens=[0],
+            **attr_kws,
+        )
+
+        # 5 output tokens, 4 input tokens including sos
+        self.assertEqual(res.seq_attr.shape, (4,))
+        assert res.token_attr is not None  # make pyre/mypy happy
+        self.assertIsNotNone(res.token_attr)
+        token_attr = res.token_attr
+        self.assertEqual(token_attr.shape, (5, 4))  # type: ignore
+        self.assertEqual(res.input_tokens, ["<sos>", "a", "b", "c"])
+        self.assertEqual(res.output_tokens, ["m", "n", "o", "p", "q"])
