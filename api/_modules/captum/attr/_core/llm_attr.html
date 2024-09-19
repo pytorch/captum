@@ -428,6 +428,7 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">inp</span><span class="p">:</span> <span class="n">InterpretableInput</span><span class="p">,</span>
         <span class="n">target</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">skip_tokens</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="kc">None</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">num_trials</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
         <span class="n">gen_args</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">use_cached_outputs</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
@@ -441,6 +442,12 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">            target (str or Tensor, optional): target response with respect to</span>
 <span class="sd">                    which attributions are computed. If None, it uses the model</span>
 <span class="sd">                    to generate the target based on the input and gen_args.</span>
+<span class="sd">                    Default: None</span>
+<span class="sd">            skip_tokens (List[int] or List[str], optional): the tokens to skip in the</span>
+<span class="sd">                    the output's interpretable representation. Use this argument to</span>
+<span class="sd">                    define uninterested tokens, commonly like special tokens, e.g.,</span>
+<span class="sd">                    sos, and unk. It can be a list of strings of the tokens or a list</span>
+<span class="sd">                    of integers of the token ids.</span>
 <span class="sd">                    Default: None</span>
 <span class="sd">            num_trials (int, optional): number of trials to run. Return is the average</span>
 <span class="sd">                    attribibutions over all the trials.</span>
@@ -478,13 +485,23 @@ src="/_sphinx/documentation_options.js"></script>
             <span class="n">target_tokens</span> <span class="o">=</span> <span class="n">output_tokens</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="n">model_inp</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span> <span class="p">:]</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">assert</span> <span class="n">gen_args</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">,</span> <span class="s2">"gen_args must be None when target is given"</span>
+            <span class="c1"># Encode skip tokens</span>
+            <span class="k">if</span> <span class="n">skip_tokens</span><span class="p">:</span>
+                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">skip_tokens</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="nb">str</span><span class="p">):</span>
+                    <span class="n">skip_tokens</span> <span class="o">=</span> <span class="n">cast</span><span class="p">(</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">skip_tokens</span><span class="p">)</span>
+                    <span class="n">skip_tokens</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">tokenizer</span><span class="o">.</span><span class="n">convert_tokens_to_ids</span><span class="p">(</span><span class="n">skip_tokens</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">skip_tokens</span> <span class="o">=</span> <span class="p">[]</span>
 
-            <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">target</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">str</span><span class="p">:</span>
-                <span class="c1"># exclude sos</span>
-                <span class="n">target_tokens</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">tokenizer</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="n">target</span><span class="p">)[</span><span class="mi">1</span><span class="p">:]</span>
-                <span class="n">target_tokens</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="n">target_tokens</span><span class="p">)</span>
-            <span class="k">elif</span> <span class="nb">type</span><span class="p">(</span><span class="n">target</span><span class="p">)</span> <span class="ow">is</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
-                <span class="n">target_tokens</span> <span class="o">=</span> <span class="n">target</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">target</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+                <span class="n">encoded</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">tokenizer</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="n">target</span><span class="p">)</span>
+                <span class="n">target_tokens</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span>
+                    <span class="p">[</span><span class="n">token</span> <span class="k">for</span> <span class="n">token</span> <span class="ow">in</span> <span class="n">encoded</span> <span class="k">if</span> <span class="n">token</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">skip_tokens</span><span class="p">]</span>
+                <span class="p">)</span>
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">target</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">):</span>
+                <span class="n">target_tokens</span> <span class="o">=</span> <span class="n">target</span><span class="p">[</span>
+                    <span class="o">~</span><span class="n">torch</span><span class="o">.</span><span class="n">isin</span><span class="p">(</span><span class="n">target</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="n">skip_tokens</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">target</span><span class="o">.</span><span class="n">device</span><span class="p">))</span>
+                <span class="p">]</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
                     <span class="s2">"target must either be str or Tensor, but the type of target is "</span>
@@ -616,6 +633,7 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">inp</span><span class="p">:</span> <span class="n">InterpretableInput</span><span class="p">,</span>
         <span class="n">target</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">skip_tokens</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="kc">None</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">gen_args</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">LLMAttributionResult</span><span class="p">:</span>
@@ -625,6 +643,12 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">            target (str or Tensor, optional): target response with respect to</span>
 <span class="sd">                    which attributions are computed. If None, it uses the model</span>
 <span class="sd">                    to generate the target based on the input and gen_args.</span>
+<span class="sd">                    Default: None</span>
+<span class="sd">            skip_tokens (List[int] or List[str], optional): the tokens to skip in the</span>
+<span class="sd">                    the output's interpretable representation. Use this argument to</span>
+<span class="sd">                    define uninterested tokens, commonly like special tokens, e.g.,</span>
+<span class="sd">                    sos, and unk. It can be a list of strings of the tokens or a list</span>
+<span class="sd">                    of integers of the token ids.</span>
 <span class="sd">                    Default: None</span>
 <span class="sd">            gen_args (dict, optional): arguments for generating the target. Only used if</span>
 <span class="sd">                    target is not given. When None, the default arguments are used,</span>
@@ -659,13 +683,23 @@ src="/_sphinx/documentation_options.js"></script>
                 <span class="n">target_tokens</span> <span class="o">=</span> <span class="n">output_tokens</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="n">model_inp</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span> <span class="p">:]</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">assert</span> <span class="n">gen_args</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">,</span> <span class="s2">"gen_args must be None when target is given"</span>
+            <span class="c1"># Encode skip tokens</span>
+            <span class="k">if</span> <span class="n">skip_tokens</span><span class="p">:</span>
+                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">skip_tokens</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="nb">str</span><span class="p">):</span>
+                    <span class="n">skip_tokens</span> <span class="o">=</span> <span class="n">cast</span><span class="p">(</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">skip_tokens</span><span class="p">)</span>
+                    <span class="n">skip_tokens</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">tokenizer</span><span class="o">.</span><span class="n">convert_tokens_to_ids</span><span class="p">(</span><span class="n">skip_tokens</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">skip_tokens</span> <span class="o">=</span> <span class="p">[]</span>
 
-            <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">target</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">str</span><span class="p">:</span>
-                <span class="c1"># exclude sos</span>
-                <span class="n">target_tokens</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">tokenizer</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="n">target</span><span class="p">)[</span><span class="mi">1</span><span class="p">:]</span>
-                <span class="n">target_tokens</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="n">target_tokens</span><span class="p">)</span>
-            <span class="k">elif</span> <span class="nb">type</span><span class="p">(</span><span class="n">target</span><span class="p">)</span> <span class="ow">is</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
-                <span class="n">target_tokens</span> <span class="o">=</span> <span class="n">target</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">target</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+                <span class="n">encoded</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">tokenizer</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="n">target</span><span class="p">)</span>
+                <span class="n">target_tokens</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span>
+                    <span class="p">[</span><span class="n">token</span> <span class="k">for</span> <span class="n">token</span> <span class="ow">in</span> <span class="n">encoded</span> <span class="k">if</span> <span class="n">token</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">skip_tokens</span><span class="p">]</span>
+                <span class="p">)</span>
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">target</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">):</span>
+                <span class="n">target_tokens</span> <span class="o">=</span> <span class="n">target</span><span class="p">[</span>
+                    <span class="o">~</span><span class="n">torch</span><span class="o">.</span><span class="n">isin</span><span class="p">(</span><span class="n">target</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="n">skip_tokens</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">target</span><span class="o">.</span><span class="n">device</span><span class="p">))</span>
+                <span class="p">]</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
                     <span class="s2">"target must either be str or Tensor, but the type of target is "</span>
