@@ -383,6 +383,7 @@ class LLMAttribution(Attribution):
         self,
         inp: InterpretableInput,
         target: Union[str, torch.Tensor, None] = None,
+        skip_tokens: Union[List[int], List[str], None] = None,
         num_trials: int = 1,
         gen_args: Optional[Dict[str, Any]] = None,
         use_cached_outputs: bool = True,
@@ -396,6 +397,12 @@ class LLMAttribution(Attribution):
             target (str or Tensor, optional): target response with respect to
                     which attributions are computed. If None, it uses the model
                     to generate the target based on the input and gen_args.
+                    Default: None
+            skip_tokens (List[int] or List[str], optional): the tokens to skip in the
+                    the output's interpretable representation. Use this argument to
+                    define uninterested tokens, commonly like special tokens, e.g.,
+                    sos, and unk. It can be a list of strings of the tokens or a list
+                    of integers of the token ids.
                     Default: None
             num_trials (int, optional): number of trials to run. Return is the average
                     attribibutions over all the trials.
@@ -433,13 +440,23 @@ class LLMAttribution(Attribution):
             target_tokens = output_tokens[0][model_inp.size(1) :]
         else:
             assert gen_args is None, "gen_args must be None when target is given"
+            # Encode skip tokens
+            if skip_tokens:
+                if isinstance(skip_tokens[0], str):
+                    skip_tokens = cast(List[str], skip_tokens)
+                    skip_tokens = self.tokenizer.convert_tokens_to_ids(skip_tokens)
+            else:
+                skip_tokens = []
 
-            if type(target) is str:
-                # exclude sos
-                target_tokens = self.tokenizer.encode(target)[1:]
-                target_tokens = torch.tensor(target_tokens)
-            elif type(target) is torch.Tensor:
-                target_tokens = target
+            if isinstance(target, str):
+                encoded = self.tokenizer.encode(target)
+                target_tokens = torch.tensor(
+                    [token for token in encoded if token not in skip_tokens]
+                )
+            elif isinstance(target, torch.Tensor):
+                target_tokens = target[
+                    ~torch.isin(target, torch.tensor(skip_tokens, device=target.device))
+                ]
             else:
                 raise TypeError(
                     "target must either be str or Tensor, but the type of target is "
@@ -562,6 +579,7 @@ class LLMGradientAttribution(Attribution):
         self,
         inp: InterpretableInput,
         target: Union[str, torch.Tensor, None] = None,
+        skip_tokens: Union[List[int], List[str], None] = None,
         gen_args: Optional[Dict[str, Any]] = None,
         **kwargs: Any,
     ) -> LLMAttributionResult:
@@ -571,6 +589,12 @@ class LLMGradientAttribution(Attribution):
             target (str or Tensor, optional): target response with respect to
                     which attributions are computed. If None, it uses the model
                     to generate the target based on the input and gen_args.
+                    Default: None
+            skip_tokens (List[int] or List[str], optional): the tokens to skip in the
+                    the output's interpretable representation. Use this argument to
+                    define uninterested tokens, commonly like special tokens, e.g.,
+                    sos, and unk. It can be a list of strings of the tokens or a list
+                    of integers of the token ids.
                     Default: None
             gen_args (dict, optional): arguments for generating the target. Only used if
                     target is not given. When None, the default arguments are used,
@@ -605,13 +629,23 @@ class LLMGradientAttribution(Attribution):
                 target_tokens = output_tokens[0][model_inp.size(1) :]
         else:
             assert gen_args is None, "gen_args must be None when target is given"
+            # Encode skip tokens
+            if skip_tokens:
+                if isinstance(skip_tokens[0], str):
+                    skip_tokens = cast(List[str], skip_tokens)
+                    skip_tokens = self.tokenizer.convert_tokens_to_ids(skip_tokens)
+            else:
+                skip_tokens = []
 
-            if type(target) is str:
-                # exclude sos
-                target_tokens = self.tokenizer.encode(target)[1:]
-                target_tokens = torch.tensor(target_tokens)
-            elif type(target) is torch.Tensor:
-                target_tokens = target
+            if isinstance(target, str):
+                encoded = self.tokenizer.encode(target)
+                target_tokens = torch.tensor(
+                    [token for token in encoded if token not in skip_tokens]
+                )
+            elif isinstance(target, torch.Tensor):
+                target_tokens = target[
+                    ~torch.isin(target, torch.tensor(skip_tokens, device=target.device))
+                ]
             else:
                 raise TypeError(
                     "target must either be str or Tensor, but the type of target is "

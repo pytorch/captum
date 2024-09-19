@@ -84,7 +84,9 @@ class DummyTokenizer:
         raise NotImplementedError
 
     def decode(self, token_ids: Tensor) -> str:
-        return " ".join(self.convert_ids_to_tokens(token_ids.tolist()))
+        tokens = self.convert_ids_to_tokens(token_ids.tolist())
+        # pyre-fixme[7]: Expected `str` but got `Union[List[str], str]`.
+        return tokens if isinstance(tokens, str) else " ".join(tokens)
 
 
 class Result(NamedTuple):
@@ -195,7 +197,10 @@ class TestLlmAttrGpu(BaseTest):
 
         inp = TextTemplateInput("{} b {} {} e {}", ["a", "c", "d", "f"])
         res = llm_attr.attribute(
-            inp, "m n o p q", use_cached_outputs=self.use_cached_outputs
+            inp,
+            "m n o p q",
+            skip_tokens=[0],
+            use_cached_outputs=self.use_cached_outputs,
         )
         self.assertEqual(res.seq_attr.shape, (4,))
         self.assertEqual(cast(Tensor, res.token_attr).shape, (5, 4))
@@ -234,7 +239,10 @@ class TestLlmAttrGpu(BaseTest):
 
         inp = TextTemplateInput("{} b {} {} e {}", ["a", "c", "d", "f"])
         res = llm_fa.attribute(
-            inp, "m n o p q", use_cached_outputs=self.use_cached_outputs
+            inp,
+            "m n o p q",
+            skip_tokens=[0],
+            use_cached_outputs=self.use_cached_outputs,
         )
 
         # With FeatureAblation, the seq attr in log_prob
@@ -253,7 +261,10 @@ class TestLlmAttrGpu(BaseTest):
 
         inp = TextTemplateInput("{} b {} {} e {}", ["a", "c", "d", "f"])
         res = llm_fa.attribute(
-            inp, "m n o p q", use_cached_outputs=self.use_cached_outputs
+            inp,
+            "m n o p q",
+            skip_tokens=[0],
+            use_cached_outputs=self.use_cached_outputs,
         )
 
         self.assertEqual(res.seq_attr.shape, (4,))
@@ -280,7 +291,7 @@ class TestLLMGradAttrGPU(BaseTest):
         llm_attr = LLMGradientAttribution(attr, tokenizer)
 
         inp = TextTokenInput("a b c", tokenizer)
-        res = llm_attr.attribute(inp, "m n o p q")
+        res = llm_attr.attribute(inp, "m n o p q", skip_tokens=[0])
         # 5 output tokens, 4 input tokens including sos
         self.assertEqual(res.seq_attr.shape, (4,))
         assert res.token_attr is not None  # make pyre/mypy happy
@@ -324,7 +335,7 @@ class TestLLMGradAttrGPU(BaseTest):
         llm_attr = LLMGradientAttribution(attr, tokenizer)
 
         inp = TextTokenInput("a b c", tokenizer, skip_tokens=[0])
-        res = llm_attr.attribute(inp, "m n o p q")
+        res = llm_attr.attribute(inp, "m n o p q", skip_tokens=[0])
 
         # 5 output tokens, 4 input tokens including sos
         self.assertEqual(res.seq_attr.shape, (3,))
