@@ -65,3 +65,5 @@ fi
 if [[ $DEPLOY == true ]]; then
   pip install beautifulsoup4 ipython nbconvert==5.6.1 --progress-bar off
 fi
+
+pip install transformers --progress-bar off

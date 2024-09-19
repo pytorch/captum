@@ -37,6 +37,7 @@ fi
 # install other deps
 conda install -q -y pytest ipywidgets ipython scikit-learn parameterized werkzeug==2.2.2
 conda install -q -y -c conda-forge matplotlib pytest-cov flask flask-compress
+conda install -q -y transformers
 
 # install captum
 python setup.py develop
