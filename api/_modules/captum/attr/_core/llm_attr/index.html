@@ -37,6 +37,8 @@ src="/_sphinx/documentation_options.js"></script>
 
 <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">cast</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Union</span>
 
+<span class="kn">import</span> <span class="nn">matplotlib.colors</span> <span class="k">as</span> <span class="nn">mcolors</span>
+
 <span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 
@@ -128,13 +130,28 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="n">fig</span><span class="o">.</span><span class="n">set_size_inches</span><span class="p">(</span>
             <span class="nb">max</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="mf">1.3</span><span class="p">,</span> <span class="mf">6.4</span><span class="p">),</span> <span class="nb">max</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">/</span> <span class="mf">2.5</span><span class="p">,</span> <span class="mf">4.8</span><span class="p">)</span>
         <span class="p">)</span>
+        <span class="n">colors</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="s2">"#93003a"</span><span class="p">,</span>
+            <span class="s2">"#d0365b"</span><span class="p">,</span>
+            <span class="s2">"#f57789"</span><span class="p">,</span>
+            <span class="s2">"#ffbdc3"</span><span class="p">,</span>
+            <span class="s2">"#ffffff"</span><span class="p">,</span>
+            <span class="s2">"#a4d6e1"</span><span class="p">,</span>
+            <span class="s2">"#73a3ca"</span><span class="p">,</span>
+            <span class="s2">"#4772b3"</span><span class="p">,</span>
+            <span class="s2">"#00429d"</span><span class="p">,</span>
+        <span class="p">]</span>
+
         <span class="n">im</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span>
             <span class="n">data</span><span class="p">,</span>
             <span class="n">vmax</span><span class="o">=</span><span class="n">max_abs_attr_val</span><span class="p">,</span>
             <span class="n">vmin</span><span class="o">=-</span><span class="n">max_abs_attr_val</span><span class="p">,</span>
-            <span class="n">cmap</span><span class="o">=</span><span class="s2">"RdYlGn"</span><span class="p">,</span>
+            <span class="n">cmap</span><span class="o">=</span><span class="n">mcolors</span><span class="o">.</span><span class="n">LinearSegmentedColormap</span><span class="o">.</span><span class="n">from_list</span><span class="p">(</span>
+                <span class="n">name</span><span class="o">=</span><span class="s2">"colors"</span><span class="p">,</span> <span class="n">colors</span><span class="o">=</span><span class="n">colors</span>
+            <span class="p">),</span>
             <span class="n">aspect</span><span class="o">=</span><span class="s2">"auto"</span><span class="p">,</span>
         <span class="p">)</span>
+        <span class="n">fig</span><span class="o">.</span><span class="n">set_facecolor</span><span class="p">(</span><span class="s2">"white"</span><span class="p">)</span>
 
         <span class="c1"># Create colorbar</span>
         <span class="n">cbar</span> <span class="o">=</span> <span class="n">fig</span><span class="o">.</span><span class="n">colorbar</span><span class="p">(</span><span class="n">im</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">)</span>  <span class="c1"># type: ignore</span>
@@ -193,6 +210,8 @@ src="/_sphinx/documentation_options.js"></script>
 
         <span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">seq_attr</span><span class="o">.</span><span class="n">cpu</span><span class="p">()</span><span class="o">.</span><span class="n">numpy</span><span class="p">()</span>
 
+        <span class="n">fig</span><span class="o">.</span><span class="n">set_size_inches</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span> <span class="mf">6.4</span><span class="p">),</span> <span class="nb">max</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">/</span> <span class="mi">4</span><span class="p">,</span> <span class="mf">4.8</span><span class="p">))</span>
+
         <span class="n">shortened_tokens</span> <span class="o">=</span> <span class="p">[</span>
             <span class="n">shorten</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span> <span class="n">placeholder</span><span class="o">=</span><span class="s2">"..."</span><span class="p">)</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">input_tokens</span>
         <span class="p">]</span>
@@ -200,15 +219,28 @@ src="/_sphinx/documentation_options.js"></script>
 
         <span class="n">ax</span><span class="o">.</span><span class="n">tick_params</span><span class="p">(</span><span class="n">top</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">bottom</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">labeltop</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">labelbottom</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 
-        <span class="n">plt</span><span class="o">.</span><span class="n">setp</span><span class="p">(</span><span class="n">ax</span><span class="o">.</span><span class="n">get_xticklabels</span><span class="p">(),</span> <span class="n">rotation</span><span class="o">=-</span><span class="mi">30</span><span class="p">,</span> <span class="n">ha</span><span class="o">=</span><span class="s2">"right"</span><span class="p">,</span> <span class="n">rotation_mode</span><span class="o">=</span><span class="s2">"anchor"</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">setp</span><span class="p">(</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">get_xticklabels</span><span class="p">(),</span>
+            <span class="n">rotation</span><span class="o">=-</span><span class="mi">30</span><span class="p">,</span>
+            <span class="n">ha</span><span class="o">=</span><span class="s2">"right"</span><span class="p">,</span>
+            <span class="n">rotation_mode</span><span class="o">=</span><span class="s2">"anchor"</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="n">fig</span><span class="o">.</span><span class="n">set_facecolor</span><span class="p">(</span><span class="s2">"white"</span><span class="p">)</span>
 
         <span class="c1"># pos bar</span>
         <span class="n">ax</span><span class="o">.</span><span class="n">bar</span><span class="p">(</span>
-            <span class="nb">range</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="p">[</span><span class="nb">max</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">data</span><span class="p">],</span> <span class="n">align</span><span class="o">=</span><span class="s2">"center"</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">"g"</span>
+            <span class="nb">range</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span>
+            <span class="p">[</span><span class="nb">max</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">data</span><span class="p">],</span>
+            <span class="n">align</span><span class="o">=</span><span class="s2">"center"</span><span class="p">,</span>
+            <span class="n">color</span><span class="o">=</span><span class="s2">"#4772b3"</span><span class="p">,</span>
         <span class="p">)</span>
         <span class="c1"># neg bar</span>
         <span class="n">ax</span><span class="o">.</span><span class="n">bar</span><span class="p">(</span>
-            <span class="nb">range</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="p">[</span><span class="nb">min</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">data</span><span class="p">],</span> <span class="n">align</span><span class="o">=</span><span class="s2">"center"</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">"r"</span>
+            <span class="nb">range</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span>
+            <span class="p">[</span><span class="nb">min</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">data</span><span class="p">],</span>
+            <span class="n">align</span><span class="o">=</span><span class="s2">"center"</span><span class="p">,</span>
+            <span class="n">color</span><span class="o">=</span><span class="s2">"#d0365b"</span><span class="p">,</span>
         <span class="p">)</span>
 
         <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">"Sequence Attribuiton"</span><span class="p">,</span> <span class="n">rotation</span><span class="o">=</span><span class="mi">90</span><span class="p">,</span> <span class="n">va</span><span class="o">=</span><span class="s2">"bottom"</span><span class="p">)</span>
