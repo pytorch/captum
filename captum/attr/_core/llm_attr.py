@@ -412,8 +412,6 @@ class LLMAttribution(Attribution):
         """
         # return tensor(1, n_tokens)
         if isinstance(model_input, str):
-            # pyre-ignore[9] pyre/mypy thinks return type may be List, but it will be
-            # Tensor
             return self.tokenizer.encode(  # type: ignore
                 model_input, return_tensors="pt"
             ).to(self.device)
@@ -609,10 +607,14 @@ class LLMGradientAttribution(Attribution):
             else next(self.model.parameters()).device
         )
 
-    def _format_model_input(self, model_input: Tensor) -> Tensor:
+    def _format_model_input(self, model_input: Union[Tensor, str]) -> Tensor:
         """
         Convert str to tokenized tensor
         """
+        if isinstance(model_input, str):
+            return self.tokenizer.encode(  # type: ignore
+                model_input, return_tensors="pt"
+            ).to(self.device)
         return model_input.to(self.device)
 
     def attribute(
