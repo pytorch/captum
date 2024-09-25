@@ -8,6 +8,7 @@ from typing import (
     cast,
     Dict,
     List,
+    Literal,
     NamedTuple,
     Optional,
     overload,
@@ -18,7 +19,6 @@ from typing import (
 
 import torch
 from captum._utils.models.linear_model import SkLearnLasso
-from captum._utils.typing import Literal
 from captum.attr._core.feature_ablation import FeatureAblation
 from captum.attr._core.kernel_shap import KernelShap
 from captum.attr._core.layer.layer_gradient_shap import LayerGradientShap
@@ -44,9 +44,6 @@ class DummyTokenizer:
     @overload
     def encode(self, text: str, return_tensors: None = None) -> List[int]: ...
     @overload
-    # pyre-fixme[43]: Incompatible overload. The implementation of
-    # `DummyTokenizer.encode` does not accept all possible arguments of overload.
-    # pyre-ignore[11]: Annotation `pt` is not defined as a type
     def encode(self, text: str, return_tensors: Literal["pt"]) -> Tensor: ...
 
     def encode(
@@ -393,9 +390,6 @@ class TestLLMAttr(BaseTest):
             "m n o p q",
             skip_tokens=[0],
             use_cached_outputs=self.use_cached_outputs,
-            # pyre-fixme[6]: In call `LLMAttribution.attribute`,
-            # for 4th positional argument, expected
-            # `Optional[typing.Callable[..., typing.Any]]` but got `int`.
             **attr_kws,  # type: ignore
         )
 
@@ -439,10 +433,10 @@ class TestLLMAttr(BaseTest):
 
         # 5 output tokens, 4 input tokens including sos
         self.assertEqual(res.seq_attr.shape, (4,))
-        assert res.token_attr is not None  # make pyre/mypy happy
+        assert res.token_attr is not None
         self.assertIsNotNone(res.token_attr)
         token_attr = res.token_attr
-        self.assertEqual(token_attr.shape, (6, 4))  # type: ignore
+        self.assertEqual(token_attr.shape, (6, 4))
         self.assertEqual(res.input_tokens, ["<sos>", "a", "b", "c"])
         self.assertEqual(res.output_tokens, ["<sos>", "m", "n", "o", "p", "q"])
 
@@ -462,10 +456,10 @@ class TestLLMAttr(BaseTest):
 
         # 5 output tokens, 4 input tokens including sos
         self.assertEqual(res.seq_attr.shape, (4,))
-        assert res.token_attr is not None  # make pyre/mypy happy
+        assert res.token_attr is not None
         self.assertIsNotNone(res.token_attr)
         token_attr = res.token_attr
-        self.assertEqual(token_attr.shape, (5, 4))  # type: ignore
+        self.assertEqual(token_attr.shape, (5, 4))
         self.assertEqual(res.input_tokens, ["<sos>", "a", "b", "c"])
         self.assertEqual(res.output_tokens, ["m", "n", "o", "p", "q"])
 
@@ -473,7 +467,6 @@ class TestLLMAttr(BaseTest):
 @parameterized_class(
     ("device",), [("cpu",), ("cuda",)] if torch.cuda.is_available() else [("cpu",)]
 )
-# pyre-fixme[13]: Attribute `device` is never initialized.
 class TestLLMGradAttr(BaseTest):
     # pyre-fixme[13]: Attribute `device` is never initialized.
     device: str
@@ -505,16 +498,16 @@ class TestLLMGradAttr(BaseTest):
 
         # 5 output tokens, 4 input tokens including sos
         self.assertEqual(res.seq_attr.shape, (4,))
-        assert res.token_attr is not None  # make pyre/mypy happy
+        assert res.token_attr is not None
         self.assertIsNotNone(res.token_attr)
         token_attr = res.token_attr
-        self.assertEqual(token_attr.shape, (5, 4))  # type: ignore
+        self.assertEqual(token_attr.shape, (5, 4))
         self.assertEqual(res.input_tokens, ["<sos>", "a", "b", "c"])
         self.assertEqual(res.output_tokens, ["m", "n", "o", "p", "q"])
 
         self.assertEqual(res.seq_attr.device.type, self.device)
-        assert res.token_attr is not None  # make pyre/mypy happy
-        self.assertEqual(token_attr.device.type, self.device)  # type: ignore
+        assert res.token_attr is not None
+        self.assertEqual(token_attr.device.type, self.device)
 
     @parameterized.expand(
         [
@@ -542,16 +535,16 @@ class TestLLMGradAttr(BaseTest):
         res = llm_attr.attribute(inp, gen_args={"mock_response": "x y z"}, **attr_kws)
 
         self.assertEqual(res.seq_attr.shape, (4,))
-        assert res.token_attr is not None  # make pyre/mypy happy
+        assert res.token_attr is not None
         self.assertIsNotNone(res.token_attr)
         token_attr = res.token_attr
-        self.assertEqual(token_attr.shape, (3, 4))  # type: ignore
+        self.assertEqual(token_attr.shape, (3, 4))
         self.assertEqual(res.input_tokens, ["<sos>", "a", "b", "c"])
         self.assertEqual(res.output_tokens, ["x", "y", "z"])
 
         self.assertEqual(res.seq_attr.device.type, self.device)
-        assert res.token_attr is not None  # make pyre/mypy happy
-        self.assertEqual(token_attr.device.type, self.device)  # type: ignore
+        assert res.token_attr is not None
+        self.assertEqual(token_attr.device.type, self.device)
 
     @parameterized.expand(
         [
@@ -580,16 +573,16 @@ class TestLLMGradAttr(BaseTest):
 
         # 5 output tokens, 4 input tokens including sos
         self.assertEqual(res.seq_attr.shape, (3,))
-        assert res.token_attr is not None  # make pyre/mypy happy
+        assert res.token_attr is not None
         self.assertIsNotNone(res.token_attr)
         token_attr = res.token_attr
-        self.assertEqual(token_attr.shape, (5, 3))  # type: ignore
+        self.assertEqual(token_attr.shape, (5, 3))
         self.assertEqual(res.input_tokens, ["a", "b", "c"])
         self.assertEqual(res.output_tokens, ["m", "n", "o", "p", "q"])
 
         self.assertEqual(res.seq_attr.device.type, self.device)
-        assert res.token_attr is not None  # make pyre/mypy happy
-        self.assertEqual(token_attr.device.type, self.device)  # type: ignore
+        assert res.token_attr is not None
+        self.assertEqual(token_attr.device.type, self.device)
 
     def test_llm_attr_with_no_skip_tokens(self) -> None:
         llm = DummyLLM()
@@ -602,12 +595,12 @@ class TestLLMGradAttr(BaseTest):
         inp = TextTokenInput("a b c", tokenizer)
         res = llm_attr.attribute(inp, "m n o p q", **attr_kws)
 
-        # 5 output tokens, 4 input tokens including sos
+        # 6 output tokens, 4 input tokens including sos
         self.assertEqual(res.seq_attr.shape, (4,))
-        assert res.token_attr is not None  # make pyre/mypy happy
+        assert res.token_attr is not None
         self.assertIsNotNone(res.token_attr)
         token_attr = res.token_attr
-        self.assertEqual(token_attr.shape, (6, 4))  # type: ignore
+        self.assertEqual(token_attr.shape, (6, 4))
         self.assertEqual(res.input_tokens, ["<sos>", "a", "b", "c"])
         self.assertEqual(res.output_tokens, ["<sos>", "m", "n", "o", "p", "q"])
 
@@ -629,9 +622,9 @@ class TestLLMGradAttr(BaseTest):
 
         # 5 output tokens, 4 input tokens including sos
         self.assertEqual(res.seq_attr.shape, (4,))
-        assert res.token_attr is not None  # make pyre/mypy happy
+        assert res.token_attr is not None
         self.assertIsNotNone(res.token_attr)
         token_attr = res.token_attr
-        self.assertEqual(token_attr.shape, (5, 4))  # type: ignore
+        self.assertEqual(token_attr.shape, (5, 4))
         self.assertEqual(res.input_tokens, ["<sos>", "a", "b", "c"])
         self.assertEqual(res.output_tokens, ["m", "n", "o", "p", "q"])

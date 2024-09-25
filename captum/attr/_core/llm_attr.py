@@ -79,7 +79,7 @@ class LLMAttributionResult:
                 "token_attr is None (no token-level attribution was performed), please "
                 "use plot_seq_attr instead for the sequence-level attribution plot"
             )
-        token_attr = self.token_attr.cpu()  # type: ignore
+        token_attr = self.token_attr.cpu()
 
         # maximum absolute attribution value
         # used as the boundary of normalization
@@ -343,7 +343,7 @@ class LLMAttribution(Attribution):
             caching=use_cached_outputs,
         )
 
-        log_prob_list = []
+        log_prob_list: List[Tensor] = []
         outputs = None
         for target_token in target_tokens:
             if use_cached_outputs:
@@ -382,17 +382,15 @@ class LLMAttribution(Attribution):
                 (model_inp, torch.tensor([[target_token]]).to(self.device)), dim=1
             )
 
-        # pyre-ignore[9] pyre/mypy thinks sum returns int here, but it will return
-        # Tensor
-        total_log_prob: Tensor = sum(log_prob_list)  # type: ignore
+        total_log_prob = torch.sum(torch.stack(log_prob_list), dim=0)
         # 1st element is the total prob, rest are the target tokens
         # add a leading dim for batch even we only support single instance for now
         if self.include_per_token_attr:
             target_log_probs = torch.stack(
-                [total_log_prob, *log_prob_list], dim=0  # type: ignore
+                [total_log_prob, *log_prob_list], dim=0
             ).unsqueeze(0)
         else:
-            target_log_probs = total_log_prob  # type: ignore
+            target_log_probs = total_log_prob
         target_probs = torch.exp(target_log_probs)
 
         if _inspect_forward:
@@ -412,9 +410,9 @@ class LLMAttribution(Attribution):
         """
         # return tensor(1, n_tokens)
         if isinstance(model_input, str):
-            return self.tokenizer.encode(  # type: ignore
-                model_input, return_tensors="pt"
-            ).to(self.device)
+            return self.tokenizer.encode(model_input, return_tensors="pt").to(
+                self.device
+            )
         return model_input.to(self.device)
 
     def attribute(
@@ -544,8 +542,7 @@ class LLMAttribution(Attribution):
             _convert_ids_to_pretty_tokens(target_tokens, self.tokenizer),
         )
 
-    # pyre-fixme[24] Generic type `Callable` expects 2 type parameters.
-    def attribute_future(self) -> Callable:
+    def attribute_future(self) -> Callable[[], LLMAttributionResult]:
         r"""
         This method is not implemented for LLMAttribution.
         """
@@ -612,9 +609,9 @@ class LLMGradientAttribution(Attribution):
         Convert str to tokenized tensor
         """
         if isinstance(model_input, str):
-            return self.tokenizer.encode(  # type: ignore
-                model_input, return_tensors="pt"
-            ).to(self.device)
+            return self.tokenizer.encode(model_input, return_tensors="pt").to(
+                self.device
+            )
         return model_input.to(self.device)
 
     def attribute(
@@ -745,8 +742,7 @@ class LLMGradientAttribution(Attribution):
             _convert_ids_to_pretty_tokens(target_tokens, self.tokenizer),
         )
 
-    # pyre-fixme[24] Generic type `Callable` expects 2 type parameters.
-    def attribute_future(self) -> Callable:
+    def attribute_future(self) -> Callable[[], LLMAttributionResult]:
         r"""
         This method is not implemented for LLMGradientAttribution.
         """

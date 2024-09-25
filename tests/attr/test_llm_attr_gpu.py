@@ -3,11 +3,21 @@
 # pyre-strict
 
 import copy
-from typing import Any, cast, Dict, List, NamedTuple, Optional, overload, Type, Union
+from typing import (
+    Any,
+    cast,
+    Dict,
+    List,
+    Literal,
+    NamedTuple,
+    Optional,
+    overload,
+    Type,
+    Union,
+)
 
 import torch
 
-from captum._utils.typing import Literal
 from captum.attr._core.feature_ablation import FeatureAblation
 from captum.attr._core.kernel_shap import KernelShap
 from captum.attr._core.layer.layer_integrated_gradients import LayerIntegratedGradients
@@ -32,9 +42,6 @@ class DummyTokenizer:
     @overload
     def encode(self, text: str, return_tensors: None = None) -> List[int]: ...
     @overload
-    # pyre-fixme[43]: Incompatible overload. The implementation of
-    # `DummyTokenizer.encode` does not accept all possible arguments of overload.
-    # pyre-ignore[11]: Annotation `pt` is not defined as a type
     def encode(self, text: str, return_tensors: Literal["pt"]) -> Tensor: ...
 
     def encode(
@@ -122,9 +129,6 @@ class DummyLLM(nn.Module):
         assert mock_response, "must mock response to use DummyLLM to geenrate"
         response = self.tokenizer.encode(mock_response)[1:]
         return torch.cat(
-            # pyre-fixme[6]: In call `torch._C._VariableFunctions.cat`,
-            # for 1st positional argument, expected `Union[List[Tensor],
-            # typing.Tuple[Tensor, ...]]` but got `List[Union[List[int], Tensor]]`.
             [input_ids, torch.tensor([response], device=self.device)],  # type: ignore
             dim=1,
         )
@@ -178,10 +182,6 @@ class DummyLLM(nn.Module):
         else [("cpu", True), ("cpu", False)]
     ),
 )
-# pyre-fixme[13]: Attribute `device` is declared in class `TestLlmAttrGpu`
-# to have type `str` but is never initialized.
-# pyre-fixme[13]: Attribute `use_cached_outputs` is declared in class `TestLlmAttrGpu`
-# to have type `bool` but is never initialized.
 class TestLlmAttrGpu(BaseTest):
     # pyre-fixme[13]: Attribute `device` is never initialized.
     device: str
@@ -277,8 +277,6 @@ class TestLlmAttrGpu(BaseTest):
 @parameterized_class(
     ("device",), [("cuda",)] if torch.cuda.is_available() else [("cpu",)]
 )
-# pyre-fixme[13]: Attribute `device` is declared in class `TestLLMGradAttrGPU`
-# to have type `str` but is never initialized.
 class TestLLMGradAttrGPU(BaseTest):
     # pyre-fixme[13]: Attribute `device` is never initialized.
     device: str
@@ -294,16 +292,16 @@ class TestLLMGradAttrGPU(BaseTest):
         res = llm_attr.attribute(inp, "m n o p q", skip_tokens=[0])
         # 5 output tokens, 4 input tokens including sos
         self.assertEqual(res.seq_attr.shape, (4,))
-        assert res.token_attr is not None  # make pyre/mypy happy
+        assert res.token_attr is not None
         self.assertIsNotNone(res.token_attr)
         token_attr = res.token_attr
-        self.assertEqual(token_attr.shape, (5, 4))  # type: ignore
+        self.assertEqual(token_attr.shape, (5, 4))
         self.assertEqual(res.input_tokens, ["<sos>", "a", "b", "c"])
         self.assertEqual(res.output_tokens, ["m", "n", "o", "p", "q"])
 
         self.assertEqual(res.seq_attr.device.type, self.device)
-        assert res.token_attr is not None  # make pyre/mypy happy
-        self.assertEqual(token_attr.device.type, self.device)  # type: ignore
+        assert res.token_attr is not None
+        self.assertEqual(token_attr.device.type, self.device)
 
     def test_llm_attr_without_target(self) -> None:
         llm = DummyLLM()
@@ -316,16 +314,16 @@ class TestLLMGradAttrGPU(BaseTest):
         res = llm_attr.attribute(inp, gen_args={"mock_response": "x y z"})
 
         self.assertEqual(res.seq_attr.shape, (4,))
-        assert res.token_attr is not None  # make pyre/mypy happy
+        assert res.token_attr is not None
         self.assertIsNotNone(res.token_attr)
         token_attr = res.token_attr
-        self.assertEqual(token_attr.shape, (3, 4))  # type: ignore
+        self.assertEqual(token_attr.shape, (3, 4))
         self.assertEqual(res.input_tokens, ["<sos>", "a", "b", "c"])
         self.assertEqual(res.output_tokens, ["x", "y", "z"])
 
-        self.assertEqual(res.seq_attr.device.type, self.device)  # type: ignore
-        assert res.token_attr is not None  # make pyre/mypy happy
-        self.assertEqual(token_attr.device.type, self.device)  # type: ignore
+        self.assertEqual(res.seq_attr.device.type, self.device)
+        assert res.token_attr is not None
+        self.assertEqual(token_attr.device.type, self.device)
 
     def test_llm_attr_with_skip_tokens(self) -> None:
         llm = DummyLLM()
@@ -337,15 +335,15 @@ class TestLLMGradAttrGPU(BaseTest):
         inp = TextTokenInput("a b c", tokenizer, skip_tokens=[0])
         res = llm_attr.attribute(inp, "m n o p q", skip_tokens=[0])
 
-        # 5 output tokens, 4 input tokens including sos
+        # 5 output tokens, 3 input tokens including sos
         self.assertEqual(res.seq_attr.shape, (3,))
-        assert res.token_attr is not None  # make pyre/mypy happy
+        assert res.token_attr is not None
         self.assertIsNotNone(res.token_attr)
         token_attr = res.token_attr
-        self.assertEqual(token_attr.shape, (5, 3))  # type: ignore
+        self.assertEqual(token_attr.shape, (5, 3))
         self.assertEqual(res.input_tokens, ["a", "b", "c"])
         self.assertEqual(res.output_tokens, ["m", "n", "o", "p", "q"])
 
         self.assertEqual(res.seq_attr.device.type, self.device)
-        assert res.token_attr is not None  # make pyre/mypy happy
-        self.assertEqual(token_attr.device.type, self.device)  # type: ignore
+        assert res.token_attr is not None
+        self.assertEqual(token_attr.device.type, self.device)
