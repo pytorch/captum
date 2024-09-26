@@ -271,7 +271,32 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">    &gt; BPE splitting mostly to avoid digesting spaces since the standard BPE algorithm</span>
 <span class="sd">    &gt; used spaces in its process</span>
 <span class="sd">    """</span>
-    <span class="k">return</span> <span class="p">[</span><span class="n">tokenizer</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="n">id_</span><span class="p">)</span> <span class="k">for</span> <span class="n">id_</span> <span class="ow">in</span> <span class="n">ids</span><span class="p">]</span>
+    <span class="n">pretty_tokens</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">idx</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">while</span> <span class="n">idx</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">ids</span><span class="p">):</span>
+        <span class="n">decoded</span> <span class="o">=</span> <span class="n">tokenizer</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="n">ids</span><span class="p">[</span><span class="n">idx</span><span class="p">])</span>
+        <span class="c1"># Handle case where single token (e.g. unicode) is split into multiple IDs</span>
+        <span class="c1"># NOTE: This logic will fail if a tokenizer splits a token into 3+ IDs</span>
+        <span class="k">if</span> <span class="n">decoded</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="o">==</span> <span class="s2">"�"</span> <span class="ow">and</span> <span class="n">tokenizer</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="n">decoded</span><span class="p">)</span> <span class="o">!=</span> <span class="p">[</span><span class="n">ids</span><span class="p">[</span><span class="n">idx</span><span class="p">]]:</span>
+            <span class="c1"># ID at idx is split, ensure next token is also from a split</span>
+            <span class="n">decoded_next</span> <span class="o">=</span> <span class="n">tokenizer</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="n">ids</span><span class="p">[</span><span class="n">idx</span> <span class="o">+</span> <span class="mi">1</span><span class="p">])</span>
+            <span class="k">if</span> <span class="n">decoded_next</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="o">==</span> <span class="s2">"�"</span> <span class="ow">and</span> <span class="n">tokenizer</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="n">decoded_next</span><span class="p">)</span> <span class="o">!=</span> <span class="p">[</span>
+                <span class="n">ids</span><span class="p">[</span><span class="n">idx</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span>
+            <span class="p">]:</span>
+                <span class="c1"># Both tokens are from a split, combine them</span>
+                <span class="n">decoded</span> <span class="o">=</span> <span class="n">tokenizer</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="n">ids</span><span class="p">[</span><span class="n">idx</span> <span class="p">:</span> <span class="n">idx</span> <span class="o">+</span> <span class="mi">2</span><span class="p">])</span>
+                <span class="n">pretty_tokens</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">decoded</span> <span class="o">+</span> <span class="s2">"[1/2]"</span><span class="p">)</span>
+                <span class="n">pretty_tokens</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">decoded</span> <span class="o">+</span> <span class="s2">"[2/2]"</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c1"># Treat tokens as separate</span>
+                <span class="n">pretty_tokens</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">decoded</span><span class="p">)</span>
+                <span class="n">pretty_tokens</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">decoded_next</span><span class="p">)</span>
+            <span class="n">idx</span> <span class="o">+=</span> <span class="mi">2</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># Just a normal token</span>
+            <span class="n">idx</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="n">pretty_tokens</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">decoded</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">pretty_tokens</span>
 
 
 <div class="viewcode-block" id="LLMAttribution">
