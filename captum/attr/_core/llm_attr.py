@@ -230,7 +230,32 @@ def _convert_ids_to_pretty_tokens(ids: Tensor, tokenizer: TokenizerLike) -> List
     > BPE splitting mostly to avoid digesting spaces since the standard BPE algorithm
     > used spaces in its process
     """
-    return [tokenizer.decode(id_) for id_ in ids]
+    pretty_tokens = []
+    idx = 0
+    while idx < len(ids):
+        decoded = tokenizer.decode(ids[idx])
+        # Handle case where single token (e.g. unicode) is split into multiple IDs
+        # NOTE: This logic will fail if a tokenizer splits a token into 3+ IDs
+        if decoded.strip() == "�" and tokenizer.encode(decoded) != [ids[idx]]:
+            # ID at idx is split, ensure next token is also from a split
+            decoded_next = tokenizer.decode(ids[idx + 1])
+            if decoded_next.strip() == "�" and tokenizer.encode(decoded_next) != [
+                ids[idx + 1]
+            ]:
+                # Both tokens are from a split, combine them
+                decoded = tokenizer.decode(ids[idx : idx + 2])
+                pretty_tokens.append(decoded + "[1/2]")
+                pretty_tokens.append(decoded + "[2/2]")
+            else:
+                # Treat tokens as separate
+                pretty_tokens.append(decoded)
+                pretty_tokens.append(decoded_next)
+            idx += 2
+        else:
+            # Just a normal token
+            idx += 1
+            pretty_tokens.append(decoded)
+    return pretty_tokens
 
 
 class LLMAttribution(Attribution):
