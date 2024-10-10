@@ -54,7 +54,7 @@ for the full target sequence.
 class created with the llm model that follows huggingface style
 interface convention</p></li>
 <li><p><strong>tokenizer</strong> (<em>Tokenizer</em>) – tokenizer of the llm model used in the attr_method</p></li>
-<li><p><strong>attr_target</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><em>str</em></a>) – attribute towards log probability or probability.
+<li><p><strong>attr_target</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a>) – attribute towards log probability or probability.
 Available values [“log_prob”, “prob”]
 Default: “log_prob”</p></li>
 </ul>
@@ -67,25 +67,25 @@ Default: “log_prob”</p></li>
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>inp</strong> (<a class="reference internal" href="utilities.html#captum.attr.InterpretableInput" title="captum.attr.InterpretableInput"><em>InterpretableInput</em></a>) – input prompt for which attributions are computed</p></li>
-<li><p><strong>target</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><em>str</em></a><em> or </em><a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v2.4)"><em>Tensor</em></a><em>, </em><em>optional</em>) – target response with respect to
+<li><p><strong>target</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a><em> or </em><a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v2.4)"><em>Tensor</em></a><em>, </em><em>optional</em>) – target response with respect to
 which attributions are computed. If None, it uses the model
 to generate the target based on the input and gen_args.
 Default: None</p></li>
-<li><p><strong>skip_tokens</strong> (<em>List</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><em>int</em></a><em>] or </em><em>List</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><em>str</em></a><em>]</em><em>, </em><em>optional</em>) – the tokens to skip in the
+<li><p><strong>skip_tokens</strong> (<em>List</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><em>int</em></a><em>] or </em><em>List</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a><em>]</em><em>, </em><em>optional</em>) – the tokens to skip in the
 the output’s interpretable representation. Use this argument to
 define uninterested tokens, commonly like special tokens, e.g.,
 sos, and unk. It can be a list of strings of the tokens or a list
 of integers of the token ids.
 Default: None</p></li>
-<li><p><strong>num_trials</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><em>int</em></a><em>, </em><em>optional</em>) – number of trials to run. Return is the average
+<li><p><strong>num_trials</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><em>int</em></a><em>, </em><em>optional</em>) – number of trials to run. Return is the average
 attribibutions over all the trials.
 Defaults: 1.</p></li>
-<li><p><strong>gen_args</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.12)"><em>dict</em></a><em>, </em><em>optional</em>) – arguments for generating the target. Only used if
+<li><p><strong>gen_args</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.13)"><em>dict</em></a><em>, </em><em>optional</em>) – arguments for generating the target. Only used if
 target is not given. When None, the default arguments are used,
 {“max_new_tokens”: 25, “do_sample”: False,
 “temperature”: None, “top_p”: None}
 Defaults: None</p></li>
-<li><p><strong>**kwargs</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.12)"><em>Any</em></a>) – any extra keyword arguments passed to the call of the
+<li><p><strong>**kwargs</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.13)"><em>Any</em></a>) – any extra keyword arguments passed to the call of the
 underlying attribute function of the given attribution instance</p></li>
 </ul>
 </dd>
@@ -107,7 +107,7 @@ underlying attribute function of the given attribution instance</p></li>
 <dd><p>This method is not implemented for LLMAttribution.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Callable" title="(in Python v3.12)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Callable</span></code></a>[[], <a class="reference internal" href="#captum.attr.LLMAttributionResult" title="captum.attr._core.llm_attr.LLMAttributionResult"><code class="xref py py-class docutils literal notranslate"><span class="pre">LLMAttributionResult</span></code></a>]</span></p>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Callable" title="(in Python v3.13)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Callable</span></code></a>[[], <a class="reference internal" href="#captum.attr.LLMAttributionResult" title="captum.attr._core.llm_attr.LLMAttributionResult"><code class="xref py py-class docutils literal notranslate"><span class="pre">LLMAttributionResult</span></code></a>]</span></p>
 </dd>
 </dl>
 </dd></dl>
@@ -144,22 +144,22 @@ interface convention</p></li>
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>inp</strong> (<a class="reference internal" href="utilities.html#captum.attr.InterpretableInput" title="captum.attr.InterpretableInput"><em>InterpretableInput</em></a>) – input prompt for which attributions are computed</p></li>
-<li><p><strong>target</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><em>str</em></a><em> or </em><a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v2.4)"><em>Tensor</em></a><em>, </em><em>optional</em>) – target response with respect to
+<li><p><strong>target</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a><em> or </em><a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v2.4)"><em>Tensor</em></a><em>, </em><em>optional</em>) – target response with respect to
 which attributions are computed. If None, it uses the model
 to generate the target based on the input and gen_args.
 Default: None</p></li>
-<li><p><strong>skip_tokens</strong> (<em>List</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><em>int</em></a><em>] or </em><em>List</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><em>str</em></a><em>]</em><em>, </em><em>optional</em>) – the tokens to skip in the
+<li><p><strong>skip_tokens</strong> (<em>List</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><em>int</em></a><em>] or </em><em>List</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a><em>]</em><em>, </em><em>optional</em>) – the tokens to skip in the
 the output’s interpretable representation. Use this argument to
 define uninterested tokens, commonly like special tokens, e.g.,
 sos, and unk. It can be a list of strings of the tokens or a list
 of integers of the token ids.
 Default: None</p></li>
-<li><p><strong>gen_args</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.12)"><em>dict</em></a><em>, </em><em>optional</em>) – arguments for generating the target. Only used if
+<li><p><strong>gen_args</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.13)"><em>dict</em></a><em>, </em><em>optional</em>) – arguments for generating the target. Only used if
 target is not given. When None, the default arguments are used,
 {“max_new_tokens”: 25, “do_sample”: False,
 “temperature”: None, “top_p”: None}
 Defaults: None</p></li>
-<li><p><strong>**kwargs</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.12)"><em>Any</em></a>) – any extra keyword arguments passed to the call of the
+<li><p><strong>**kwargs</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.13)"><em>Any</em></a>) – any extra keyword arguments passed to the call of the
 underlying attribute function of the given attribution instance</p></li>
 </ul>
 </dd>
@@ -177,7 +177,7 @@ underlying attribute function of the given attribution instance</p></li>
 <dd><p>This method is not implemented for LLMGradientAttribution.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Callable" title="(in Python v3.12)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Callable</span></code></a>[[], <a class="reference internal" href="#captum.attr.LLMAttributionResult" title="captum.attr._core.llm_attr.LLMAttributionResult"><code class="xref py py-class docutils literal notranslate"><span class="pre">LLMAttributionResult</span></code></a>]</span></p>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Callable" title="(in Python v3.13)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Callable</span></code></a>[[], <a class="reference internal" href="#captum.attr.LLMAttributionResult" title="captum.attr._core.llm_attr.LLMAttributionResult"><code class="xref py py-class docutils literal notranslate"><span class="pre">LLMAttributionResult</span></code></a>]</span></p>
 </dd>
 </dl>
 </dd></dl>
@@ -198,11 +198,11 @@ It also provides utilities to help present and plot the result in different form
 of the output sequence.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>show</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.12)"><em>bool</em></a>) – whether to show the plot directly or return the figure and axis
+<dd class="field-odd"><p><strong>show</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.13)"><em>bool</em></a>) – whether to show the plot directly or return the figure and axis
 Default: False</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Optional" title="(in Python v3.12)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Tuple" title="(in Python v3.12)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Tuple</span></code></a>[<code class="xref py py-class docutils literal notranslate"><span class="pre">Figure</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Axes</span></code>]]</span></p>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Optional" title="(in Python v3.13)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Tuple" title="(in Python v3.13)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Tuple</span></code></a>[<code class="xref py py-class docutils literal notranslate"><span class="pre">Figure</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Axes</span></code>]]</span></p>
 </dd>
 </dl>
 </dd></dl>
@@ -213,11 +213,11 @@ Default: False</p>
 of the output tokens.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>show</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.12)"><em>bool</em></a>) – whether to show the plot directly or return the figure and axis
+<dd class="field-odd"><p><strong>show</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.13)"><em>bool</em></a>) – whether to show the plot directly or return the figure and axis
 Default: False</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Optional" title="(in Python v3.12)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Tuple" title="(in Python v3.12)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Tuple</span></code></a>[<code class="xref py py-class docutils literal notranslate"><span class="pre">Figure</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Axes</span></code>]]</span></p>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Optional" title="(in Python v3.13)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Tuple" title="(in Python v3.13)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Tuple</span></code></a>[<code class="xref py py-class docutils literal notranslate"><span class="pre">Figure</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Axes</span></code>]]</span></p>
 </dd>
 </dl>
 </dd></dl>

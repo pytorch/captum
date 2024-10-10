@@ -59,8 +59,8 @@ attribution-based interpretability methods as well.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>forward_func</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Callable" title="(in Python v3.12)"><em>Callable</em></a>) – The forward function of the model or any modification of it.</p></li>
-<li><p><strong>perturb_func</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Callable" title="(in Python v3.12)"><em>Callable</em></a>) – <p>The perturbation function of model inputs. This function takes
+<li><p><strong>forward_func</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Callable" title="(in Python v3.13)"><em>Callable</em></a>) – The forward function of the model or any modification of it.</p></li>
+<li><p><strong>perturb_func</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Callable" title="(in Python v3.13)"><em>Callable</em></a>) – <p>The perturbation function of model inputs. This function takes
 model inputs and optionally baselines as input arguments and returns
 either a tuple of perturbations and perturbed inputs or just
 perturbed inputs. For example:</p>
@@ -120,7 +120,7 @@ isn’t called for each example individually but on a batch of
 input examples that are repeated <cite>max_examples_per_batch / batch_size</cite>
 times within the batch.</p>
 </p></li>
-<li><p><strong>inputs</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v2.4)"><em>Tensor</em></a><em> or </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.12)"><em>tuple</em></a><em>[</em><a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v2.4)"><em>Tensor</em></a><em>, </em><em>...</em><em>]</em>) – Input for which
+<li><p><strong>inputs</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v2.4)"><em>Tensor</em></a><em> or </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.13)"><em>tuple</em></a><em>[</em><a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v2.4)"><em>Tensor</em></a><em>, </em><em>...</em><em>]</em>) – Input for which
 attributions are computed. If forward_func takes a single
 tensor as input, a single input tensor should be provided.
 If forward_func takes multiple tensors as input, a tuple
@@ -129,7 +129,7 @@ that for all given input tensors, dimension 0 corresponds
 to the number of examples (aka batch size), and if
 multiple input tensors are provided, the examples must
 be aligned appropriately.</p></li>
-<li><p><strong>baselines</strong> (<em>scalar</em><em>, </em><a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v2.4)"><em>Tensor</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.12)"><em>tuple</em></a><em> of </em><em>scalar</em><em>, or </em><a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v2.4)"><em>Tensor</em></a><em>, </em><em>optional</em>) – <p>Baselines define reference values which sometimes represent ablated
+<li><p><strong>baselines</strong> (<em>scalar</em><em>, </em><a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v2.4)"><em>Tensor</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.13)"><em>tuple</em></a><em> of </em><em>scalar</em><em>, or </em><a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v2.4)"><em>Tensor</em></a><em>, </em><em>optional</em>) – <p>Baselines define reference values which sometimes represent ablated
 values and are used to compare with the actual inputs to compute
 importance scores in attribution algorithms. They can be represented
 as:</p>
@@ -153,7 +153,7 @@ for corresponding input tensor.</p></li>
 </ul>
 <p>Default: None</p>
 </p></li>
-<li><p><strong>attributions</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v2.4)"><em>Tensor</em></a><em> or </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.12)"><em>tuple</em></a><em>[</em><a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v2.4)"><em>Tensor</em></a><em>, </em><em>...</em><em>]</em>) – <p>Attribution scores computed based on an attribution algorithm.
+<li><p><strong>attributions</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v2.4)"><em>Tensor</em></a><em> or </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.13)"><em>tuple</em></a><em>[</em><a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v2.4)"><em>Tensor</em></a><em>, </em><em>...</em><em>]</em>) – <p>Attribution scores computed based on an attribution algorithm.
 This attribution scores can be computed using the implementations
 provided in the <cite>captum.attr</cite> package. Some of those attribution
 approaches are so called global methods, which means that
@@ -188,7 +188,7 @@ If inputs is a single tensor then the attributions is a single
 tensor as well. If inputs is provided as a tuple of tensors
 then attributions will be tuples of tensors as well.</p>
 </p></li>
-<li><p><strong>additional_forward_args</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.12)"><em>Any</em></a><em>, </em><em>optional</em>) – <p>If the forward function
+<li><p><strong>additional_forward_args</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.13)"><em>Any</em></a><em>, </em><em>optional</em>) – <p>If the forward function
 requires additional arguments other than the inputs for
 which attributions should not be computed, this argument
 can be provided. It must be either a single additional
@@ -201,7 +201,7 @@ to these arguments. This means that these arguments aren’t
 being passed to <cite>perturb_func</cite> as an input argument.</p>
 <p>Default: None</p>
 </p></li>
-<li><p><strong>target</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><em>int</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.12)"><em>tuple</em></a><em>, </em><a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v2.4)"><em>Tensor</em></a><em>, or </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.12)"><em>list</em></a><em>, </em><em>optional</em>) – <p>Indices for selecting
+<li><p><strong>target</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><em>int</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.13)"><em>tuple</em></a><em>, </em><a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v2.4)"><em>Tensor</em></a><em>, or </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.13)"><em>list</em></a><em>, </em><em>optional</em>) – <p>Indices for selecting
 predictions from output(for classification cases,
 this is usually the target class).
 If the network returns a scalar value per example, no target
@@ -224,13 +224,13 @@ target for the corresponding example.</p></li>
 </ul>
 <p>Default: None</p>
 </p></li>
-<li><p><strong>n_perturb_samples</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><em>int</em></a><em>, </em><em>optional</em>) – <p>The number of times input tensors
+<li><p><strong>n_perturb_samples</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><em>int</em></a><em>, </em><em>optional</em>) – <p>The number of times input tensors
 are perturbed. Each input example in the inputs tensor is expanded
 <cite>n_perturb_samples</cite>
 times before calling <cite>perturb_func</cite> function.</p>
 <p>Default: 10</p>
 </p></li>
-<li><p><strong>max_examples_per_batch</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><em>int</em></a><em>, </em><em>optional</em>) – <p>The number of maximum input
+<li><p><strong>max_examples_per_batch</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><em>int</em></a><em>, </em><em>optional</em>) – <p>The number of maximum input
 examples that are processed together. In case the number of
 examples (<cite>input batch size * n_perturb_samples</cite>) exceeds
 <cite>max_examples_per_batch</cite>, they will be sliced
@@ -241,7 +241,7 @@ at least be equal <cite>input batch size</cite> and at most
 <cite>input batch size * n_perturb_samples</cite>.</p>
 <p>Default: None</p>
 </p></li>
-<li><p><strong>normalize</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.12)"><em>bool</em></a><em>, </em><em>optional</em>) – <p>Normalize the dot product of the input
+<li><p><strong>normalize</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.13)"><em>bool</em></a><em>, </em><em>optional</em>) – <p>Normalize the dot product of the input
 perturbation and the attribution so the infidelity value is invariant
 to constant scaling of the attribution values. The normalization factor
 beta is defined as the ratio of two mean values:</p>
@@ -328,10 +328,10 @@ with-self-explaining-neural-networks.pdf</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>explanation_func</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Callable" title="(in Python v3.12)"><em>Callable</em></a>) – This function can be the <cite>attribute</cite> method of an
+<li><p><strong>explanation_func</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Callable" title="(in Python v3.13)"><em>Callable</em></a>) – This function can be the <cite>attribute</cite> method of an
 attribution algorithm or any other explanation method
 that returns the explanations.</p></li>
-<li><p><strong>inputs</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v2.4)"><em>Tensor</em></a><em> or </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.12)"><em>tuple</em></a><em>[</em><a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v2.4)"><em>Tensor</em></a><em>, </em><em>...</em><em>]</em>) – Input for which
+<li><p><strong>inputs</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v2.4)"><em>Tensor</em></a><em> or </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.13)"><em>tuple</em></a><em>[</em><a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v2.4)"><em>Tensor</em></a><em>, </em><em>...</em><em>]</em>) – Input for which
 explanations are computed. If <cite>explanation_func</cite> takes a
 single tensor as input, a single input tensor should
 be provided.
@@ -341,7 +341,7 @@ that for all given input tensors, dimension 0 corresponds
 to the number of examples (aka batch size), and if
 multiple input tensors are provided, the examples must
 be aligned appropriately.</p></li>
-<li><p><strong>perturb_func</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Callable" title="(in Python v3.12)"><em>Callable</em></a>) – <dl>
+<li><p><strong>perturb_func</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Callable" title="(in Python v3.13)"><em>Callable</em></a>) – <dl>
 <dt>The perturbation function of model inputs. This function takes</dt><dd><p>model inputs and optionally <cite>perturb_radius</cite> if
 the function takes more than one argument and returns
 perturbed inputs.</p>
@@ -356,7 +356,7 @@ times within the batch.</p>
 </dl>
 <p>Default: default_perturb_func</p>
 </p></li>
-<li><p><strong>perturb_radius</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.12)"><em>float</em></a><em>, </em><em>optional</em>) – <p>The epsilon radius used for sampling.
+<li><p><strong>perturb_radius</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><em>float</em></a><em>, </em><em>optional</em>) – <p>The epsilon radius used for sampling.
 In the <cite>default_perturb_func</cite> it is used as the radius of
 the L-Infinity ball. In a general case it can serve as a radius of
 any L_p norm.
@@ -364,13 +364,13 @@ This argument is passed to <cite>perturb_func</cite> if it takes more than
 one argument.</p>
 <p>Default: 0.02</p>
 </p></li>
-<li><p><strong>n_perturb_samples</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><em>int</em></a><em>, </em><em>optional</em>) – <p>The number of times input tensors
+<li><p><strong>n_perturb_samples</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><em>int</em></a><em>, </em><em>optional</em>) – <p>The number of times input tensors
 are perturbed. Each input example in the inputs tensor is
 expanded <cite>n_perturb_samples</cite> times before calling
 <cite>perturb_func</cite> function.</p>
 <p>Default: 10</p>
 </p></li>
-<li><p><strong>norm_ord</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><em>int</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.12)"><em>float</em></a><em>, or </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><em>str</em></a><em>, </em><em>optional</em>) – <p>The type of norm that is used to
+<li><p><strong>norm_ord</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><em>int</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><em>float</em></a><em>, or </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a><em>, </em><em>optional</em>) – <p>The type of norm that is used to
 compute the norm of the sensitivity matrix which is defined as the
 difference between the explanation function at its input and perturbed
 input. Acceptable values are either a string of ‘fro’ or ‘nuc’, or a
@@ -378,7 +378,7 @@ number in the range of [-inf, inf] (including float(“-inf”) &amp;
 float(“inf”)).</p>
 <p>Default: ‘fro’</p>
 </p></li>
-<li><p><strong>max_examples_per_batch</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><em>int</em></a><em>, </em><em>optional</em>) – <p>The number of maximum input
+<li><p><strong>max_examples_per_batch</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><em>int</em></a><em>, </em><em>optional</em>) – <p>The number of maximum input
 examples that are processed together. In case the number of
 examples (<cite>input batch size * n_perturb_samples</cite>) exceeds
 <cite>max_examples_per_batch</cite>, they will be sliced
@@ -389,7 +389,7 @@ at least be equal <cite>input batch size</cite> and at most
 <cite>input batch size * n_perturb_samples</cite>.</p>
 <p>Default: None</p>
 </p></li>
-<li><p><strong>**kwargs</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.12)"><em>Any</em></a><em>, </em><em>optional</em>) – Contains a list of arguments that are passed
+<li><p><strong>**kwargs</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.13)"><em>Any</em></a><em>, </em><em>optional</em>) – Contains a list of arguments that are passed
 to <cite>explanation_func</cite> explanation function which in some cases
 could be the <cite>attribute</cite> function of an attribution algorithm.
 Any additional arguments that need be passed to the explanation

@@ -40,7 +40,7 @@ src="/_sphinx/documentation_options.js"></script>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>inputs</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v2.4)"><em>Tensor</em></a><em> or </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.12)"><em>tuple</em></a><em>[</em><a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v2.4)"><em>Tensor</em></a><em>, </em><em>...</em><em>]</em>) – Batch of inputs for a model.
+<li><p><strong>inputs</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v2.4)"><em>Tensor</em></a><em> or </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.13)"><em>tuple</em></a><em>[</em><a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v2.4)"><em>Tensor</em></a><em>, </em><em>...</em><em>]</em>) – Batch of inputs for a model.
 These may be either a Tensor or tuple of tensors. Each tensor
 must correspond to a feature for AttributionVisualizer, and
 the corresponding input transform function of the feature
@@ -51,7 +51,7 @@ input tensor corresponds to the number of examples
 <li><p><strong>labels</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v2.4)"><em>Tensor</em></a>) – Tensor containing correct labels for input examples.
 This must be a 1D tensor with length matching the first
 dimension of each input tensor.</p></li>
-<li><p><strong>additional_args</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.12)"><em>tuple</em></a><em>, </em><em>optional</em>) – If the forward function
+<li><p><strong>additional_args</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.13)"><em>tuple</em></a><em>, </em><em>optional</em>) – If the forward function
 requires additional arguments other than the inputs for
 which attributions should not be computed, this argument
 can be provided. It must be either a single additional
@@ -77,9 +77,9 @@ correspond to the number of examples.</p></li>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>models</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/generated/torch.nn.Module.html#torch.nn.Module" title="(in PyTorch v2.4)"><em>torch.nn.Module</em></a>) – One or more PyTorch modules (models) for
 attribution visualization.</p></li>
-<li><p><strong>classes</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.12)"><em>list</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><em>str</em></a><em>]</em>) – List of strings corresponding to the names of
+<li><p><strong>classes</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.13)"><em>list</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a><em>]</em>) – List of strings corresponding to the names of
 classes for classification.</p></li>
-<li><p><strong>features</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.12)"><em>list</em></a><em>[</em><a class="reference internal" href="#captum.insights.features.BaseFeature" title="captum.insights.features.BaseFeature"><em>BaseFeature</em></a><em>]</em>) – List of BaseFeatures, which correspond
+<li><p><strong>features</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.13)"><em>list</em></a><em>[</em><a class="reference internal" href="#captum.insights.features.BaseFeature" title="captum.insights.features.BaseFeature"><em>BaseFeature</em></a><em>]</em>) – List of BaseFeatures, which correspond
 to input arguments to the model. Each feature object defines
 relevant transformations for converting to model input,
 constructing baselines, and visualizing. The length of the
@@ -89,10 +89,10 @@ For instance, an image classifier should only provide
 a single BaseFeature, while a multimodal classifier may
 provide a list of features, each corresponding to a different
 tensor input and potentially different modalities.</p></li>
-<li><p><strong>dataset</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Iterable" title="(in Python v3.12)"><em>Iterable</em></a><em> of </em><a class="reference internal" href="#captum.insights.Batch" title="captum.insights.Batch"><em>Batch</em></a>) – Defines the dataset to visualize attributions
+<li><p><strong>dataset</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Iterable" title="(in Python v3.13)"><em>Iterable</em></a><em> of </em><a class="reference internal" href="#captum.insights.Batch" title="captum.insights.Batch"><em>Batch</em></a>) – Defines the dataset to visualize attributions
 for. This must be an iterable of batch objects, each of which
 may contain multiple input examples.</p></li>
-<li><p><strong>score_func</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Callable" title="(in Python v3.12)"><em>Callable</em></a><em>, </em><em>optional</em>) – This function is applied to the model
+<li><p><strong>score_func</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Callable" title="(in Python v3.13)"><em>Callable</em></a><em>, </em><em>optional</em>) – This function is applied to the model
 output to obtain the score for each class. For instance,
 this function could be the softmax or final non-linearity
 of the network, applied to the model output. The indices
@@ -101,7 +101,7 @@ to the class names provided. If None, the model outputs
 are taken directly and assumed to correspond to the
 class scores.
 Default: None</p></li>
-<li><p><strong>use_label_for_attr</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.12)"><em>bool</em></a><em>, </em><em>optional</em>) – If true, the class index is passed
+<li><p><strong>use_label_for_attr</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.13)"><em>bool</em></a><em>, </em><em>optional</em>) – If true, the class index is passed
 to the relevant attribution method. This is necessary in most
 cases where there is an output neuron corresponding to each
 class. When the model output is a scalar and class index
@@ -128,18 +128,18 @@ methods.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><em>str</em></a>) – The label of the specific feature. For example, an
+<li><p><strong>name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a>) – The label of the specific feature. For example, an
 ImageFeature’s name can be “Photo”.</p></li>
-<li><p><strong>baseline_transforms</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.12)"><em>list</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Callable" title="(in Python v3.12)"><em>Callable</em></a><em>, </em><em>optional</em>) – Optional list of
+<li><p><strong>baseline_transforms</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.13)"><em>list</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Callable" title="(in Python v3.13)"><em>Callable</em></a><em>, </em><em>optional</em>) – Optional list of
 callables (e.g. functions) to be called on the input tensor
 to construct multiple baselines. Currently only one baseline
 is supported. See
 <a class="reference internal" href="integrated_gradients.html#captum.attr.IntegratedGradients" title="captum.attr.IntegratedGradients"><code class="xref py py-class docutils literal notranslate"><span class="pre">IntegratedGradients</span></code></a> for more
 information about baselines.</p></li>
-<li><p><strong>input_transforms</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.12)"><em>list</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Callable" title="(in Python v3.12)"><em>Callable</em></a><em>, </em><em>optional</em>) – Optional list of callables
+<li><p><strong>input_transforms</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.13)"><em>list</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Callable" title="(in Python v3.13)"><em>Callable</em></a><em>, </em><em>optional</em>) – Optional list of callables
 (e.g. functions) called on the input tensor sequentially to
 convert it into the format expected by the model.</p></li>
-<li><p><strong>visualization_transform</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Callable" title="(in Python v3.12)"><em>Callable</em></a><em>, </em><em>optional</em>) – Optional callable (e.g.
+<li><p><strong>visualization_transform</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Callable" title="(in Python v3.13)"><em>Callable</em></a><em>, </em><em>optional</em>) – Optional callable (e.g.
 function) applied as a postprocessing step of the original
 input data (before <code class="docutils literal notranslate"><span class="pre">input_transforms</span></code>) to convert it to a
 format to be understood by the frontend visualizer as
@@ -161,9 +161,9 @@ where N is the number of samples and C is the number of categories.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><em>str</em></a>) – The label of the specific feature. For example, an
+<li><p><strong>name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a>) – The label of the specific feature. For example, an
 ImageFeature’s name can be “Photo”.</p></li>
-<li><p><strong>categories</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.12)"><em>list</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><em>str</em></a><em>]</em>) – Category labels for the general feature. The
+<li><p><strong>categories</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.13)"><em>list</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a><em>]</em>) – Category labels for the general feature. The
 order and size should match the second dimension of the
 <code class="docutils literal notranslate"><span class="pre">data</span></code> tensor parameter in <code class="docutils literal notranslate"><span class="pre">visualize</span></code>.</p></li>
 </ul>
@@ -182,9 +182,9 @@ string) to the raw text.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><em>str</em></a>) – The label of the specific feature. For example, an
+<li><p><strong>name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a>) – The label of the specific feature. For example, an
 ImageFeature’s name can be “Photo”.</p></li>
-<li><p><strong>baseline_transforms</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.12)"><em>list</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Callable" title="(in Python v3.12)"><em>Callable</em></a><em>, </em><em>optional</em>) – Optional list of
+<li><p><strong>baseline_transforms</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.13)"><em>list</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Callable" title="(in Python v3.13)"><em>Callable</em></a><em>, </em><em>optional</em>) – Optional list of
 callables (e.g. functions) to be called on the input tensor
 to construct multiple baselines. Currently only one baseline
 is supported. See
@@ -194,7 +194,7 @@ For text features, a common baseline is a tensor of indices
 corresponding to PAD with the same size as the input
 tensor. See <a class="reference internal" href="utilities.html#captum.attr.TokenReferenceBase" title="captum.attr.TokenReferenceBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">TokenReferenceBase</span></code></a> for more
 information.</p></li>
-<li><p><strong>input_transforms</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.12)"><em>list</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Callable" title="(in Python v3.12)"><em>Callable</em></a><em>, </em><em>optional</em>) – A list of transforms
+<li><p><strong>input_transforms</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.13)"><em>list</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Callable" title="(in Python v3.13)"><em>Callable</em></a><em>, </em><em>optional</em>) – A list of transforms
 or transform to be applied to the input. For text, a common
 transform is to convert the tokenized input tensor into an
 interpretable embedding. See
@@ -202,7 +202,7 @@ interpretable embedding. See
 and
 <a class="reference internal" href="utilities.html#captum.attr.configure_interpretable_embedding_layer" title="captum.attr.configure_interpretable_embedding_layer"><code class="xref py py-func docutils literal notranslate"><span class="pre">configure_interpretable_embedding_layer()</span></code></a>
 for more information.</p></li>
-<li><p><strong>visualization_transform</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Callable" title="(in Python v3.12)"><em>Callable</em></a><em>, </em><em>optional</em>) – Optional callable (e.g.
+<li><p><strong>visualization_transform</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Callable" title="(in Python v3.13)"><em>Callable</em></a><em>, </em><em>optional</em>) – Optional callable (e.g.
 function) applied as a postprocessing step of the original
 input data (before <code class="docutils literal notranslate"><span class="pre">input_transforms</span></code>) to convert it to a
 suitable format for visualization. For text features,
@@ -224,18 +224,18 @@ If it has a dimension of 3, its expected to be in RGB format.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><em>str</em></a>) – The label of the specific feature. For example, an
+<li><p><strong>name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a>) – The label of the specific feature. For example, an
 ImageFeature’s name can be “Photo”.</p></li>
-<li><p><strong>baseline_transforms</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.12)"><em>list</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Callable" title="(in Python v3.12)"><em>Callable</em></a><em>, </em><em>optional</em>) – Optional list of
+<li><p><strong>baseline_transforms</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.13)"><em>list</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Callable" title="(in Python v3.13)"><em>Callable</em></a><em>, </em><em>optional</em>) – Optional list of
 callables (e.g. functions) to be called on the input tensor
 to construct multiple baselines. Currently only one baseline
 is supported. See
 <a class="reference internal" href="integrated_gradients.html#captum.attr.IntegratedGradients" title="captum.attr.IntegratedGradients"><code class="xref py py-class docutils literal notranslate"><span class="pre">IntegratedGradients</span></code></a> for more
 information about baselines.</p></li>
-<li><p><strong>input_transforms</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.12)"><em>list</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Callable" title="(in Python v3.12)"><em>Callable</em></a><em>, </em><em>optional</em>) – A list of transforms
+<li><p><strong>input_transforms</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.13)"><em>list</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Callable" title="(in Python v3.13)"><em>Callable</em></a><em>, </em><em>optional</em>) – A list of transforms
 or transform to be applied to the input. For images,
 normalization is often applied here.</p></li>
-<li><p><strong>visualization_transform</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Callable" title="(in Python v3.12)"><em>Callable</em></a><em>, </em><em>optional</em>) – Optional callable (e.g.
+<li><p><strong>visualization_transform</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Callable" title="(in Python v3.13)"><em>Callable</em></a><em>, </em><em>optional</em>) – Optional callable (e.g.
 function) applied as a postprocessing step of the original
 input data (before input_transforms) to convert it to a
 format to be visualized.</p></li>
