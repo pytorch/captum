@@ -16,13 +16,14 @@ from captum._utils.common import (
     _run_forward,
 )
 from captum._utils.exceptions import FeatureAblationFutureError
-from captum._utils.progress import progress
+from captum._utils.progress import NullProgress, progress, SimpleProgress
 from captum._utils.typing import BaselineType, TargetType, TensorOrTupleOfTensorsGeneric
 from captum.attr._utils.attribution import PerturbationAttribution
 from captum.attr._utils.common import _format_input_baseline
 from captum.log import log_usage
 from torch import dtype, Tensor
 from torch.futures import collect_all, Future
+from tqdm.auto import tqdm
 
 
 class FeatureAblation(PerturbationAttribution):
@@ -261,8 +262,6 @@ class FeatureAblation(PerturbationAttribution):
         """
         # Keeps track whether original input is a tuple or not before
         # converting it into a tuple.
-        # pyre-fixme[6]: For 1st argument expected `Tensor` but got
-        #  `TensorOrTupleOfTensorsGeneric`.
         is_inputs_tuple = _is_tuple(inputs)
 
         formatted_inputs, baselines = _format_input_baseline(inputs, baselines)
@@ -270,8 +269,6 @@ class FeatureAblation(PerturbationAttribution):
             additional_forward_args
         )
         num_examples = formatted_inputs[0].shape[0]
-        # pyre-fixme[6]: For 2nd argument expected `Tuple[Tensor, ...]` but got
-        #  `TensorOrTupleOfTensorsGeneric`.
         formatted_feature_mask = _format_feature_mask(feature_mask, formatted_inputs)
 
         assert (
@@ -381,12 +378,10 @@ class FeatureAblation(PerturbationAttribution):
             if show_progress:
                 attr_progress.close()
 
-            # pyre-fixme[7]: Expected `Variable[TensorOrTupleOfTensorsGeneric <:
-            # [Tensor, typing.Tuple[Tensor, ...]]]`
-            # but got `Union[Tensor, typing.Tuple[Tensor, ...]]`.
-            # pyre-fixme[6]: In call `FeatureAblation._generate_result`,
-            # for 3rd positional argument, expected `bool` but got `Literal[]`.
-            return self._generate_result(total_attrib, weights, is_inputs_tuple)  # type: ignore # noqa: E501 line too long
+            return cast(
+                TensorOrTupleOfTensorsGeneric,
+                self._generate_result(total_attrib, weights, is_inputs_tuple),
+            )
 
     def _initial_eval_to_processed_initial_eval_fut(
         self, initial_eval: Future[Tensor], formatted_inputs: Tuple[Tensor, ...]
@@ -640,14 +635,13 @@ class FeatureAblation(PerturbationAttribution):
 
             return self._generate_async_result(all_modified_eval_futures, is_inputs_tuple)  # type: ignore # noqa: E501 line too long
 
-    # pyre-fixme[3] return type must be annotated
     def _attribute_progress_setup(
         self,
         formatted_inputs: Tuple[Tensor, ...],
         feature_mask: Tuple[Tensor, ...],
         perturbations_per_eval: int,
         **kwargs: Dict[str, Any],
-    ):
+    ) -> Union[NullProgress, SimpleProgress, tqdm]:
         feature_counts = self._get_feature_counts(
             formatted_inputs, feature_mask, **kwargs
         )
@@ -780,10 +774,7 @@ class FeatureAblation(PerturbationAttribution):
             # (current_num_ablated_features * num_examples, inputs[i].shape[1:]),
             # which can be provided to the model as input.
             current_features[i] = ablated_features.reshape(
-                (-1,)
-                # pyre-fixme[58]: `+` is not supported for operand types
-                # `Tuple[int]` and `Size`.
-                + ablated_features.shape[2:]
+                (-1,) + cast(Tuple[int], ablated_features.shape[2:])
             )
             yield tuple(
                 current_features
