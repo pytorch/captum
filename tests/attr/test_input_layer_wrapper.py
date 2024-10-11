@@ -45,6 +45,7 @@ layer_methods_to_test_with_equiv = [
 
 class InputLayerMeta(type):
     def __new__(metacls, name: str, bases: Tuple, attrs: Dict):
+        global layer_methods_to_test_with_equiv
         for (
             layer_method,
             equiv_method,
@@ -56,7 +57,7 @@ class InputLayerMeta(type):
                     + f"_{equiv_method.__name__}_{multi_layer}"
                 )
                 attrs[test_name] = (
-                    lambda self: self.layer_method_with_input_layer_patches(
+                    lambda self, layer_method=layer_method, equiv_method=equiv_method, multi_layer=multi_layer: self.layer_method_with_input_layer_patches(
                         layer_method, equiv_method, multi_layer
                     )
                 )
