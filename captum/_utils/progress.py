@@ -5,9 +5,7 @@
 import sys
 import warnings
 from time import time
-from typing import Any, cast, Iterable, Optional, Sized, TextIO
-
-from captum._utils.typing import Literal
+from typing import Any, cast, Iterable, Literal, Optional, Sized, TextIO, Union
 
 try:
     from tqdm.auto import tqdm
@@ -75,10 +73,7 @@ class NullProgress:
         return self
 
     # pyre-fixme[2]: Parameter must be annotated.
-    # pyre-fixme[31]: Expression `Literal[False]` is not a valid type.
-    # pyre-fixme[24]: Non-generic type `typing.Literal` cannot take parameters.
     def __exit__(self, exc_type, exc_value, exc_traceback) -> Literal[False]:
-        # pyre-fixme[7]: Expected `Literal[]` but got `bool`.
         return False
 
     # pyre-fixme[3]: Return type must be annotated.
@@ -114,19 +109,17 @@ class SimpleProgress:
         (i.e. with statement) and the nested progress bar should be
         created inside this context.
         """
-        self.cur = 0
-        self.iterable = iterable
-        self.total = total
+        self.cur: int = 0
+        # pyre-fixme[24]: Generic type `Iterable` expects 1 type parameter.
+        self.iterable: Union[Iterable, None] = iterable
+        self.total: Union[int, None] = total
         if total is None and hasattr(iterable, "__len__"):
             self.total = len(cast(Sized, iterable))
 
         self.desc = desc
 
-        # pyre-fixme[9]: file has type `Optional[TextIO]`; used as
-        #  `DisableErrorIOWrapper`.
-        file = DisableErrorIOWrapper(file if file else sys.stderr)
-        cast(TextIO, file)
-        self.file = file
+        f = DisableErrorIOWrapper(file if file else sys.stderr)
+        self.file: TextIO = cast(TextIO, f)
 
         self.mininterval = mininterval
         self.last_print_t = 0.0
@@ -139,11 +132,9 @@ class SimpleProgress:
         return self
 
     # pyre-fixme[2]: Parameter must be annotated.
-    # pyre-fixme[31]: Expression `Literal[False]` is not a valid type.
     # pyre-fixme[24]: Non-generic type `typing.Literal` cannot take parameters.
     def __exit__(self, exc_type, exc_value, exc_traceback) -> Literal[False]:
         self.close()
-        # pyre-fixme[7]: Expected `Literal[]` but got `bool`.
         return False
 
     # pyre-fixme[3]: Return type must be annotated.
@@ -187,7 +178,6 @@ class SimpleProgress:
             self.closed = True
 
 
-# pyre-fixme[3]: Return type must be annotated.
 def progress(
     # pyre-fixme[24]: Generic type `Iterable` expects 1 type parameter.
     iterable: Optional[Iterable] = None,
@@ -196,9 +186,8 @@ def progress(
     use_tqdm: bool = True,
     file: Optional[TextIO] = None,
     mininterval: float = 0.5,
-    # pyre-fixme[2]: Parameter must be annotated.
-    **kwargs,
-):
+    **kwargs: Any,
+) -> Union[NullProgress, SimpleProgress, tqdm]:
     # Try to use tqdm is possible. Fall back to simple progress print
     if tqdm and use_tqdm:
         return tqdm(
@@ -214,7 +203,8 @@ def progress(
             warnings.warn(
                 "Tried to show progress with tqdm "
                 "but tqdm is not installed. "
-                "Fall back to simply print out the progress."
+                "Fall back to simply print out the progress.",
+                stacklevel=2,
             )
         return SimpleProgress(
             iterable, desc=desc, total=total, file=file, mininterval=mininterval
