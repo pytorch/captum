@@ -31,7 +31,7 @@ from torch import Tensor
 class TestTracInRegression(BaseTest):
     def _test_tracin_regression_setup(
         self, tmpdir: str, features: int, use_gpu: bool = False
-    ) -> Tuple[RangeDataset, Dict[str, Any]]:
+    ) -> Tuple[RangeDataset, Dict[str, Any]]:  # fixme (return type)
         low = 1
         high = 17
         dataset = RangeDataset(low, high, features, use_gpu)
@@ -49,7 +49,7 @@ class TestTracInRegression(BaseTest):
             torch.save(net_adjusted.state_dict(), os.path.join(tmpdir, checkpoint_name))
 
         # pyre-fixme[61]: `net_adjusted` is undefined, or not always defined.
-        return dataset, net_adjusted
+        return dataset, net_adjusted  # type: ignore
 
     use_gpu_list = (
         [True, False]

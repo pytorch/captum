@@ -19,6 +19,9 @@ from tests.helpers.basic import assertTensorAlmostEqual
     ]
 )
 class TestGaussianStochasticGates(BaseTest):
+    # pyre-fixme[13]: Attribute `testing_device` is never initialized.
+    testing_device: str
+
     def setUp(self) -> None:
         super().setUp()
         # pyre-fixme[16]: `TestGaussianStochasticGates` has no attribute

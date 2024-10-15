@@ -3,7 +3,7 @@
 # pyre-strict
 from collections import defaultdict
 from copy import copy
-from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, Union
+from typing import Any, Callable, cast, Dict, Iterable, List, Optional, Tuple, Union
 
 import torch
 from captum._utils.common import (
@@ -193,8 +193,7 @@ class DataLoaderAttribution(Attribution):
         feature_mask: Tuple[Tensor, ...],
         # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
         reduce: Callable,
-        # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
-        to_metric: Optional[Callable],
+        to_metric: Optional[Callable[[Tensor], Tensor]],
         show_progress: bool,
         feature_idx_to_mask_idx: Dict[int, List[int]],
     ) -> Tensor:
@@ -243,7 +242,8 @@ class DataLoaderAttribution(Attribution):
 
                 accum_states[i] = reduce(accum_states[i], output, perturbed_inputs)
 
-        accum_results = [
+        accum_states = cast(List[Tensor], accum_states)
+        accum_results: List[Tensor] = [
             to_metric(accum) if to_metric else accum for accum in accum_states
         ]
 
@@ -276,7 +276,7 @@ class DataLoaderAttribution(Attribution):
         Args:
 
             dataloader (torch.Dataloader): the dataloader to attribute, which should
-                        return a tuple of consistant size for every iteration
+                        return a tuple of consistent size for every iteration
             input_roles (tuple[int, ...], optional): a tuple of integers to define the
                         role of each element returned from the dataloader. It should
                         have the same size as the return of the dataloader.
@@ -326,7 +326,7 @@ class DataLoaderAttribution(Attribution):
                         traverses needed is
                         ceil(n_perturbations / perturbations_per_pass).
 
-                        This arguement offers control of the trade-off between memory
+                        This argument offers control of the trade-off between memory
                         and efficiency. If the dataloader involves slow operations like
                         remote request or file I/O, multiple traversals can be
                         inefficient. On the other hand, each perturbation needs to

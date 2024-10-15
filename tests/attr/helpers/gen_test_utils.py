@@ -41,7 +41,7 @@ def parse_test_config(
     baseline_distr = (
         test_config["baseline_distr"] if "baseline_distr" in test_config else False
     )
-    return algorithms, model, args, layer, noise_tunnel, baseline_distr
+    return algorithms, model, args, layer, noise_tunnel, baseline_distr  # type: ignore
 
 
 def should_create_generated_test(algorithm: Type[Attribution]) -> bool:
