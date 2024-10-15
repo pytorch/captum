@@ -594,73 +594,9 @@ src="/_sphinx/documentation_options.js"></script>
                         <span class="p">]</span>
                     <span class="p">)</span>
 
-                    <span class="k">def</span> <span class="nf">eval_fut_to_ablated_out_fut</span><span class="p">(</span>
-                        <span class="c1"># pyre-ignore Invalid type parameters [24]</span>
-                        <span class="n">eval_futs</span><span class="p">:</span> <span class="n">Future</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">Future</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">object</span><span class="p">]]]],</span>
-                        <span class="n">current_inputs</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span>
-                        <span class="n">current_mask</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">,</span>
-                        <span class="n">i</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
-                        <span class="n">perturbations_per_eval</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
-                        <span class="n">num_examples</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
-                        <span class="n">formatted_inputs</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span>
-                    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">Tensor</span><span class="p">],</span> <span class="n">List</span><span class="p">[</span><span class="n">Tensor</span><span class="p">]]:</span>
-                        <span class="k">try</span><span class="p">:</span>
-                            <span class="n">modified_eval</span> <span class="o">=</span> <span class="n">cast</span><span class="p">(</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">eval_futs</span><span class="o">.</span><span class="n">value</span><span class="p">()[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">value</span><span class="p">())</span>
-                            <span class="n">initial_eval_tuple</span> <span class="o">=</span> <span class="n">cast</span><span class="p">(</span>
-                                <span class="n">Tuple</span><span class="p">[</span>
-                                    <span class="n">List</span><span class="p">[</span><span class="n">Tensor</span><span class="p">],</span>
-                                    <span class="n">List</span><span class="p">[</span><span class="n">Tensor</span><span class="p">],</span>
-                                    <span class="n">Tensor</span><span class="p">,</span>
-                                    <span class="n">Tensor</span><span class="p">,</span>
-                                    <span class="nb">int</span><span class="p">,</span>
-                                    <span class="n">dtype</span><span class="p">,</span>
-                                <span class="p">],</span>
-                                <span class="n">eval_futs</span><span class="o">.</span><span class="n">value</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">value</span><span class="p">(),</span>
-                            <span class="p">)</span>
-                            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">initial_eval_tuple</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">6</span><span class="p">:</span>
-                                <span class="k">raise</span> <span class="ne">AssertionError</span><span class="p">(</span>
-                                    <span class="s2">"eval_fut_to_ablated_out_fut: "</span>
-                                    <span class="s2">"initial_eval_tuple should have 6 elements: "</span>
-                                    <span class="s2">"total_attrib, weights, initial_eval, "</span>
-                                    <span class="s2">"flattened_initial_eval, n_outputs, attrib_type "</span>
-                                <span class="p">)</span>
-                            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">modified_eval</span><span class="p">,</span> <span class="n">Tensor</span><span class="p">):</span>
-                                <span class="k">raise</span> <span class="ne">AssertionError</span><span class="p">(</span>
-                                    <span class="s2">"eval_fut_to_ablated_out_fut: "</span>
-                                    <span class="s2">"modified eval should be a Tensor"</span>
-                                <span class="p">)</span>
-                            <span class="p">(</span>
-                                <span class="n">total_attrib</span><span class="p">,</span>
-                                <span class="n">weights</span><span class="p">,</span>
-                                <span class="n">initial_eval</span><span class="p">,</span>
-                                <span class="n">flattened_initial_eval</span><span class="p">,</span>
-                                <span class="n">n_outputs</span><span class="p">,</span>
-                                <span class="n">attrib_type</span><span class="p">,</span>
-                            <span class="p">)</span> <span class="o">=</span> <span class="n">initial_eval_tuple</span>
-                            <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_process_ablated_out</span><span class="p">(</span>  <span class="c1"># type: ignore # noqa: E501 line too long</span>
-                                <span class="n">modified_eval</span><span class="o">=</span><span class="n">modified_eval</span><span class="p">,</span>
-                                <span class="n">current_inputs</span><span class="o">=</span><span class="n">current_inputs</span><span class="p">,</span>
-                                <span class="n">current_mask</span><span class="o">=</span><span class="n">current_mask</span><span class="p">,</span>
-                                <span class="n">perturbations_per_eval</span><span class="o">=</span><span class="n">perturbations_per_eval</span><span class="p">,</span>
-                                <span class="n">num_examples</span><span class="o">=</span><span class="n">num_examples</span><span class="p">,</span>
-                                <span class="n">initial_eval</span><span class="o">=</span><span class="n">initial_eval</span><span class="p">,</span>
-                                <span class="n">flattened_initial_eval</span><span class="o">=</span><span class="n">flattened_initial_eval</span><span class="p">,</span>
-                                <span class="n">inputs</span><span class="o">=</span><span class="n">formatted_inputs</span><span class="p">,</span>
-                                <span class="n">n_outputs</span><span class="o">=</span><span class="n">n_outputs</span><span class="p">,</span>
-                                <span class="n">total_attrib</span><span class="o">=</span><span class="n">total_attrib</span><span class="p">,</span>
-                                <span class="n">weights</span><span class="o">=</span><span class="n">weights</span><span class="p">,</span>
-                                <span class="n">i</span><span class="o">=</span><span class="n">i</span><span class="p">,</span>
-                                <span class="n">attrib_type</span><span class="o">=</span><span class="n">attrib_type</span><span class="p">,</span>
-                            <span class="p">)</span>
-                        <span class="k">except</span> <span class="n">FeatureAblationFutureError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-                            <span class="k">raise</span> <span class="n">FeatureAblationFutureError</span><span class="p">(</span>
-                                <span class="s2">"eval_fut_to_ablated_out_fut func failed)"</span>
-                            <span class="p">)</span> <span class="kn">from</span> <span class="nn">e</span>
-                        <span class="k">return</span> <span class="n">result</span>
-
                     <span class="n">ablated_out_fut</span><span class="p">:</span> <span class="n">Future</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">Tensor</span><span class="p">],</span> <span class="n">List</span><span class="p">[</span><span class="n">Tensor</span><span class="p">]]]</span> <span class="o">=</span> <span class="p">(</span>
                         <span class="n">eval_futs</span><span class="o">.</span><span class="n">then</span><span class="p">(</span>
-                            <span class="k">lambda</span> <span class="n">eval_futs</span><span class="p">,</span> <span class="n">current_inputs</span><span class="o">=</span><span class="n">current_inputs</span><span class="p">,</span> <span class="n">current_mask</span><span class="o">=</span><span class="n">current_mask</span><span class="p">,</span> <span class="n">i</span><span class="o">=</span><span class="n">i</span><span class="p">:</span> <span class="n">eval_fut_to_ablated_out_fut</span><span class="p">(</span>  <span class="c1"># type: ignore # noqa: E501 line too long</span>
+                            <span class="k">lambda</span> <span class="n">eval_futs</span><span class="p">,</span> <span class="n">current_inputs</span><span class="o">=</span><span class="n">current_inputs</span><span class="p">,</span> <span class="n">current_mask</span><span class="o">=</span><span class="n">current_mask</span><span class="p">,</span> <span class="n">i</span><span class="o">=</span><span class="n">i</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_eval_fut_to_ablated_out_fut</span><span class="p">(</span>  <span class="c1"># type: ignore # noqa: E501 line too long</span>
                                 <span class="n">eval_futs</span><span class="o">=</span><span class="n">eval_futs</span><span class="p">,</span>
                                 <span class="n">current_inputs</span><span class="o">=</span><span class="n">current_inputs</span><span class="p">,</span>
                                 <span class="n">current_mask</span><span class="o">=</span><span class="n">current_mask</span><span class="p">,</span>
@@ -699,6 +635,70 @@ src="/_sphinx/documentation_options.js"></script>
             <span class="n">desc</span><span class="o">=</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">get_name</span><span class="p">()</span><span class="si">}</span><span class="s2"> attribution"</span><span class="p">,</span> <span class="n">total</span><span class="o">=</span><span class="n">total_forwards</span>
         <span class="p">)</span>
         <span class="k">return</span> <span class="n">attr_progress</span>
+
+    <span class="k">def</span> <span class="nf">_eval_fut_to_ablated_out_fut</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="c1"># pyre-ignore Invalid type parameters [24]</span>
+        <span class="n">eval_futs</span><span class="p">:</span> <span class="n">Future</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">Future</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">object</span><span class="p">]]]],</span>
+        <span class="n">current_inputs</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span>
+        <span class="n">current_mask</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">,</span>
+        <span class="n">i</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">perturbations_per_eval</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">num_examples</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">formatted_inputs</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">Tensor</span><span class="p">],</span> <span class="n">List</span><span class="p">[</span><span class="n">Tensor</span><span class="p">]]:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">modified_eval</span> <span class="o">=</span> <span class="n">cast</span><span class="p">(</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">eval_futs</span><span class="o">.</span><span class="n">value</span><span class="p">()[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">value</span><span class="p">())</span>
+            <span class="n">initial_eval_tuple</span> <span class="o">=</span> <span class="n">cast</span><span class="p">(</span>
+                <span class="n">Tuple</span><span class="p">[</span>
+                    <span class="n">List</span><span class="p">[</span><span class="n">Tensor</span><span class="p">],</span>
+                    <span class="n">List</span><span class="p">[</span><span class="n">Tensor</span><span class="p">],</span>
+                    <span class="n">Tensor</span><span class="p">,</span>
+                    <span class="n">Tensor</span><span class="p">,</span>
+                    <span class="nb">int</span><span class="p">,</span>
+                    <span class="n">dtype</span><span class="p">,</span>
+                <span class="p">],</span>
+                <span class="n">eval_futs</span><span class="o">.</span><span class="n">value</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">value</span><span class="p">(),</span>
+            <span class="p">)</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">initial_eval_tuple</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">6</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">AssertionError</span><span class="p">(</span>
+                    <span class="s2">"eval_fut_to_ablated_out_fut: "</span>
+                    <span class="s2">"initial_eval_tuple should have 6 elements: "</span>
+                    <span class="s2">"total_attrib, weights, initial_eval, "</span>
+                    <span class="s2">"flattened_initial_eval, n_outputs, attrib_type "</span>
+                <span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">modified_eval</span><span class="p">,</span> <span class="n">Tensor</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">AssertionError</span><span class="p">(</span>
+                    <span class="s2">"eval_fut_to_ablated_out_fut: "</span> <span class="s2">"modified eval should be a Tensor"</span>
+                <span class="p">)</span>
+            <span class="p">(</span>
+                <span class="n">total_attrib</span><span class="p">,</span>
+                <span class="n">weights</span><span class="p">,</span>
+                <span class="n">initial_eval</span><span class="p">,</span>
+                <span class="n">flattened_initial_eval</span><span class="p">,</span>
+                <span class="n">n_outputs</span><span class="p">,</span>
+                <span class="n">attrib_type</span><span class="p">,</span>
+            <span class="p">)</span> <span class="o">=</span> <span class="n">initial_eval_tuple</span>
+            <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_process_ablated_out</span><span class="p">(</span>  <span class="c1"># type: ignore # noqa: E501 line too long</span>
+                <span class="n">modified_eval</span><span class="o">=</span><span class="n">modified_eval</span><span class="p">,</span>
+                <span class="n">current_inputs</span><span class="o">=</span><span class="n">current_inputs</span><span class="p">,</span>
+                <span class="n">current_mask</span><span class="o">=</span><span class="n">current_mask</span><span class="p">,</span>
+                <span class="n">perturbations_per_eval</span><span class="o">=</span><span class="n">perturbations_per_eval</span><span class="p">,</span>
+                <span class="n">num_examples</span><span class="o">=</span><span class="n">num_examples</span><span class="p">,</span>
+                <span class="n">initial_eval</span><span class="o">=</span><span class="n">initial_eval</span><span class="p">,</span>
+                <span class="n">flattened_initial_eval</span><span class="o">=</span><span class="n">flattened_initial_eval</span><span class="p">,</span>
+                <span class="n">inputs</span><span class="o">=</span><span class="n">formatted_inputs</span><span class="p">,</span>
+                <span class="n">n_outputs</span><span class="o">=</span><span class="n">n_outputs</span><span class="p">,</span>
+                <span class="n">total_attrib</span><span class="o">=</span><span class="n">total_attrib</span><span class="p">,</span>
+                <span class="n">weights</span><span class="o">=</span><span class="n">weights</span><span class="p">,</span>
+                <span class="n">i</span><span class="o">=</span><span class="n">i</span><span class="p">,</span>
+                <span class="n">attrib_type</span><span class="o">=</span><span class="n">attrib_type</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="k">except</span> <span class="n">FeatureAblationFutureError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">FeatureAblationFutureError</span><span class="p">(</span>
+                <span class="s2">"eval_fut_to_ablated_out_fut func failed)"</span>
+            <span class="p">)</span> <span class="kn">from</span> <span class="nn">e</span>
+        <span class="k">return</span> <span class="n">result</span>
 
     <span class="c1"># pyre-fixme[3]: Return type must be specified as type that does not contain `Any`</span>
     <span class="k">def</span> <span class="nf">_ith_input_ablation_generator</span><span class="p">(</span>
