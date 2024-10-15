@@ -24,7 +24,7 @@ try:
 except ImportError:
     from functools import wraps
 
-    def log(*args: Any, **kwargs: Any) -> None:
+    def log(*args: Any, **kwargs: Any) -> None:  # type: ignore
         pass
 
     # bug with mypy: https://github.com/python/mypy/issues/1153
@@ -56,12 +56,12 @@ except ImportError:
         return _log_usage
 
     # pyre-fixme[2]: Parameter must be annotated.
-    def set_environment(env) -> None:
+    def set_environment(env) -> None:  # type: ignore
         pass
 
     def disable_detailed_logging() -> None:
         pass
 
     # pyre-fixme[2]: Parameter must be annotated.
-    def patch_methods(tester, patch_log: bool = True) -> None:
+    def patch_methods(tester, patch_log: bool = True) -> None:  # type: ignore
         pass

@@ -522,7 +522,10 @@ class LimeBase(PerturbationAttribution):
             if show_progress:
                 attr_progress.close()
 
-            combined_interp_inps = torch.cat(interpretable_inps).float()
+            # Argument 1 to "cat" has incompatible type
+            # "list[Tensor | tuple[Tensor, ...]]";
+            # expected "tuple[Tensor, ...] | list[Tensor]"  [arg-type]
+            combined_interp_inps = torch.cat(interpretable_inps).float()  # type: ignore
             combined_outputs = (
                 torch.cat(outputs)
                 if len(outputs[0].shape) > 0

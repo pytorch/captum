@@ -201,7 +201,7 @@ class Test(BaseTest):
         if expected_delta is None:
             assert_attribution_delta(
                 # pyre-fixme[6]: For 1st argument expected `FbBaseTest` but got `Test`.
-                self,
+                self,  # type: ignore
                 inputs,
                 attrs,
                 n_samples,
