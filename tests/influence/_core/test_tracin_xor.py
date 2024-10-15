@@ -167,7 +167,7 @@ class TestTracInXOR(BaseTest):
 
         dataset = BinaryDataset(use_gpu)
 
-        return net_adjusted, dataset
+        return net_adjusted, dataset  # type: ignore
 
     parametrized_list: List[
         Tuple[Optional[str], DataInfluenceConstructor, str, bool]

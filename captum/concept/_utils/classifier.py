@@ -186,7 +186,9 @@ class DefaultClassifier(Classifier):
         x_train, x_test, y_train, y_test = _train_test_split(
             torch.cat(inputs), torch.cat(labels), test_split=test_split_ratio
         )
-        self.lm.device = device
+        # error: Incompatible types in assignment (expression has type "str | Any",
+        # variable has type "Tensor | Module")  [assignment]
+        self.lm.device = device  # type: ignore
         self.lm.fit(DataLoader(TensorDataset(x_train, y_train)))
 
         predict = self.lm(x_test)

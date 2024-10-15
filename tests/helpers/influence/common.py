@@ -409,6 +409,7 @@ def get_random_model_and_data(
         in_features, out_features, num_samples, use_gpu, unpack_inputs
     )
 
+    net: Union[BasicLinearNet, MultLinearNet, Linear, UnpackLinear]
     if model_type == "random":
         net = (
             BasicLinearNet(in_features, hidden_nodes, out_features)
