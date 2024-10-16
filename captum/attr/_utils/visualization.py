@@ -3,7 +3,7 @@
 # pyre-strict
 import warnings
 from enum import Enum
-from typing import Any, Iterable, List, Optional, Tuple, Union
+from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, Union
 
 import matplotlib
 
@@ -13,6 +13,7 @@ from matplotlib.axes import Axes
 from matplotlib.collections import LineCollection
 from matplotlib.colors import Colormap, LinearSegmentedColormap
 from matplotlib.figure import Figure
+from matplotlib.image import AxesImage
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 from numpy import ndarray
 
@@ -88,24 +89,127 @@ def _normalize_attr(
         attr_combined = np.sum(attr, axis=reduction_axis)
 
     # Choose appropriate signed values and rescale, removing given outlier percentage.
-    if VisualizeSign[sign] == VisualizeSign.all:
+    if VisualizeSign[sign].value == VisualizeSign.all.value:
         threshold = _cumulative_sum_threshold(
             np.abs(attr_combined), 100.0 - outlier_perc
         )
-    elif VisualizeSign[sign] == VisualizeSign.positive:
+    elif VisualizeSign[sign].value == VisualizeSign.positive.value:
         attr_combined = (attr_combined > 0) * attr_combined
         threshold = _cumulative_sum_threshold(attr_combined, 100.0 - outlier_perc)
-    elif VisualizeSign[sign] == VisualizeSign.negative:
+    elif VisualizeSign[sign].value == VisualizeSign.negative.value:
         attr_combined = (attr_combined < 0) * attr_combined
         threshold = -1 * _cumulative_sum_threshold(
             np.abs(attr_combined), 100.0 - outlier_perc
         )
-    elif VisualizeSign[sign] == VisualizeSign.absolute_value:
+    elif VisualizeSign[sign].value == VisualizeSign.absolute_value.value:
         attr_combined = np.abs(attr_combined)
         threshold = _cumulative_sum_threshold(attr_combined, 100.0 - outlier_perc)
     else:
         raise AssertionError("Visualize Sign type is not valid.")
     return _normalize_scale(attr_combined, threshold)
+
+
+def _initialize_cmap_and_vmin_vmax(
+    sign: str,
+) -> Tuple[Union[str, Colormap], float, float]:
+    if VisualizeSign[sign].value == VisualizeSign.all.value:
+        default_cmap: Union[str, LinearSegmentedColormap] = (
+            LinearSegmentedColormap.from_list("RdWhGn", ["red", "white", "green"])
+        )
+        vmin, vmax = -1, 1
+    elif VisualizeSign[sign].value == VisualizeSign.positive.value:
+        default_cmap = "Greens"
+        vmin, vmax = 0, 1
+    elif VisualizeSign[sign].value == VisualizeSign.negative.value:
+        default_cmap = "Reds"
+        vmin, vmax = 0, 1
+    elif VisualizeSign[sign].value == VisualizeSign.absolute_value.value:
+        default_cmap = "Blues"
+        vmin, vmax = 0, 1
+    else:
+        raise AssertionError("Visualize Sign type is not valid.")
+    return default_cmap, vmin, vmax
+
+
+def _visualize_original_image(
+    plt_axis: Axes,
+    original_image: Optional[ndarray],
+    **kwargs: Any,
+) -> None:
+    assert (
+        original_image is not None
+    ), "Original image expected for original_image method."
+    if len(original_image.shape) > 2 and original_image.shape[2] == 1:
+        original_image = np.squeeze(original_image, axis=2)
+    plt_axis.imshow(original_image)
+
+
+def _visualize_heat_map(
+    plt_axis: Axes,
+    norm_attr: ndarray,
+    cmap: Union[str, Colormap],
+    vmin: float,
+    vmax: float,
+    **kwargs: Any,
+) -> AxesImage:
+    heat_map = plt_axis.imshow(norm_attr, cmap=cmap, vmin=vmin, vmax=vmax)
+    return heat_map
+
+
+def _visualize_blended_heat_map(
+    plt_axis: Axes,
+    original_image: ndarray,
+    norm_attr: ndarray,
+    cmap: Union[str, Colormap],
+    vmin: float,
+    vmax: float,
+    alpha_overlay: float,
+    **kwargs: Any,
+) -> AxesImage:
+    assert (
+        original_image is not None
+    ), "Original Image expected for blended_heat_map method."
+    plt_axis.imshow(np.mean(original_image, axis=2), cmap="gray")
+    heat_map = plt_axis.imshow(
+        norm_attr, cmap=cmap, vmin=vmin, vmax=vmax, alpha=alpha_overlay
+    )
+    return heat_map
+
+
+def _visualize_masked_image(
+    plt_axis: Axes,
+    sign: str,
+    original_image: ndarray,
+    norm_attr: ndarray,
+    **kwargs: Any,
+) -> None:
+    assert VisualizeSign[sign].value != VisualizeSign.all.value, (
+        "Cannot display masked image with both positive and negative "
+        "attributions, choose a different sign option."
+    )
+    plt_axis.imshow(_prepare_image(original_image * np.expand_dims(norm_attr, 2)))
+
+
+def _visualize_alpha_scaling(
+    plt_axis: Axes,
+    sign: str,
+    original_image: ndarray,
+    norm_attr: ndarray,
+    **kwargs: Any,
+) -> None:
+    assert VisualizeSign[sign].value != VisualizeSign.all.value, (
+        "Cannot display alpha scaling with both positive and negative "
+        "attributions, choose a different sign option."
+    )
+    plt_axis.imshow(
+        np.concatenate(
+            [
+                original_image,
+                _prepare_image(np.expand_dims(norm_attr, 2) * 255),
+            ],
+            axis=2,
+        )
+    )
 
 
 def visualize_image_attr(
@@ -242,15 +346,18 @@ def visualize_image_attr(
             plt_fig, plt_axis = plt.subplots(figsize=fig_size)
         else:
             plt_fig = Figure(figsize=fig_size)
-            plt_axis = plt_fig.subplots()  # type: ignore
+            plt_axis = plt_fig.subplots()
             # Figure.subplots returns Axes or array of Axes
 
     if original_image is not None:
         if np.max(original_image) <= 1.0:
             original_image = _prepare_image(original_image * 255)
-    elif ImageVisualizationMethod[method] != ImageVisualizationMethod.heat_map:
+    elif (
+        ImageVisualizationMethod[method].value
+        != ImageVisualizationMethod.heat_map.value
+    ):
         raise ValueError(
-            "Original Image must be provided for"
+            "Original Image must be provided for "
             "any visualization other than heatmap."
         )
 
@@ -261,76 +368,37 @@ def visualize_image_attr(
     plt_axis.set_xticklabels([])
     plt_axis.grid(visible=False)
 
-    heat_map = None
-    # Show original image
-    if ImageVisualizationMethod[method] == ImageVisualizationMethod.original_image:
-        assert (
-            original_image is not None
-        ), "Original image expected for original_image method."
-        if len(original_image.shape) > 2 and original_image.shape[2] == 1:
-            original_image = np.squeeze(original_image, axis=2)
-        plt_axis.imshow(original_image)
+    heat_map: Optional[AxesImage] = None
+
+    # pyre-ignore[33]: prohibited Any
+    visualization_methods: Dict[str, Callable[..., Any]] = {
+        "heat_map": _visualize_heat_map,
+        "blended_heat_map": _visualize_blended_heat_map,
+        "masked_image": _visualize_masked_image,
+        "alpha_scaling": _visualize_alpha_scaling,
+        "original_image": _visualize_original_image,
+    }
+    # Choose appropriate signed attributions and normalize.
+    norm_attr = _normalize_attr(attr, sign, outlier_perc, reduction_axis=2)
+
+    # Set default colormap and bounds based on sign.
+    default_cmap, vmin, vmax = _initialize_cmap_and_vmin_vmax(sign)
+    cmap = cmap if cmap is not None else default_cmap
+
+    kwargs = {
+        "plt_axis": plt_axis,
+        "original_image": original_image,
+        "sign": sign,
+        "cmap": cmap,
+        "alpha_overlay": alpha_overlay,
+        "vmin": vmin,
+        "vmax": vmax,
+        "norm_attr": norm_attr,
+    }
+    if method in visualization_methods:
+        heat_map = visualization_methods[method](**kwargs)
     else:
-        # Choose appropriate signed attributions and normalize.
-        norm_attr = _normalize_attr(attr, sign, outlier_perc, reduction_axis=2)
-
-        # Set default colormap and bounds based on sign.
-        if VisualizeSign[sign] == VisualizeSign.all:
-            default_cmap: Union[str, LinearSegmentedColormap] = (
-                LinearSegmentedColormap.from_list("RdWhGn", ["red", "white", "green"])
-            )
-            vmin, vmax = -1, 1
-        elif VisualizeSign[sign] == VisualizeSign.positive:
-            default_cmap = "Greens"
-            vmin, vmax = 0, 1
-        elif VisualizeSign[sign] == VisualizeSign.negative:
-            default_cmap = "Reds"
-            vmin, vmax = 0, 1
-        elif VisualizeSign[sign] == VisualizeSign.absolute_value:
-            default_cmap = "Blues"
-            vmin, vmax = 0, 1
-        else:
-            raise AssertionError("Visualize Sign type is not valid.")
-        cmap = cmap if cmap is not None else default_cmap
-
-        # Show appropriate image visualization.
-        if ImageVisualizationMethod[method] == ImageVisualizationMethod.heat_map:
-            heat_map = plt_axis.imshow(norm_attr, cmap=cmap, vmin=vmin, vmax=vmax)
-        elif (
-            ImageVisualizationMethod[method]
-            == ImageVisualizationMethod.blended_heat_map
-        ):
-            assert (
-                original_image is not None
-            ), "Original Image expected for blended_heat_map method."
-            plt_axis.imshow(np.mean(original_image, axis=2), cmap="gray")
-            heat_map = plt_axis.imshow(
-                norm_attr, cmap=cmap, vmin=vmin, vmax=vmax, alpha=alpha_overlay
-            )
-        elif ImageVisualizationMethod[method] == ImageVisualizationMethod.masked_image:
-            assert VisualizeSign[sign] != VisualizeSign.all, (
-                "Cannot display masked image with both positive and negative "
-                "attributions, choose a different sign option."
-            )
-            plt_axis.imshow(
-                _prepare_image(original_image * np.expand_dims(norm_attr, 2))
-            )
-        elif ImageVisualizationMethod[method] == ImageVisualizationMethod.alpha_scaling:
-            assert VisualizeSign[sign] != VisualizeSign.all, (
-                "Cannot display alpha scaling with both positive and negative "
-                "attributions, choose a different sign option."
-            )
-            plt_axis.imshow(
-                np.concatenate(
-                    [
-                        original_image,
-                        _prepare_image(np.expand_dims(norm_attr, 2) * 255),
-                    ],
-                    axis=2,
-                )
-            )
-        else:
-            raise AssertionError("Visualize Method type is not valid.")
+        raise AssertionError("Visualize Method type is not valid.")
 
     # Add colorbar. If given method is not a heatmap and no colormap is relevant,
     # then a colormap axis is created and hidden. This is necessary for appropriate
