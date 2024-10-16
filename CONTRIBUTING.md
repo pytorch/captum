@@ -109,7 +109,7 @@ The following command will both build the docs and serve the site locally:
 ## Pull Requests
 We actively welcome your pull requests.
 
-1. Fork the repo and create your branch from `master`.
+1. Fork the repo and create your branch from `main`.
 2. If you have added code that should be tested, add unit tests.
    In other words, add unit tests.
 3. If you have changed APIs, update the documentation. Make sure the
