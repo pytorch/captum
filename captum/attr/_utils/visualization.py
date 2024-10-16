@@ -16,6 +16,7 @@ from matplotlib.figure import Figure
 from matplotlib.image import AxesImage
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 from numpy import ndarray
+from torch import Tensor
 
 try:
     from IPython.display import display, HTML
@@ -46,13 +47,11 @@ class VisualizeSign(Enum):
     all = 4
 
 
-# pyre-fixme[3]: Return type must be annotated.
-def _prepare_image(attr_visual: ndarray):
+def _prepare_image(attr_visual: ndarray) -> ndarray:
     return np.clip(attr_visual.astype(int), 0, 255)
 
 
-# pyre-fixme[3]: Return type must be annotated.
-def _normalize_scale(attr: ndarray, scale_factor: float):
+def _normalize_scale(attr: ndarray, scale_factor: float) -> ndarray:
     assert scale_factor != 0, "Cannot normalize by scale factor = 0"
     if abs(scale_factor) < 1e-5:
         warnings.warn(
@@ -65,8 +64,7 @@ def _normalize_scale(attr: ndarray, scale_factor: float):
     return np.clip(attr_norm, -1, 1)
 
 
-# pyre-fixme[3]: Return type must be annotated.
-def _cumulative_sum_threshold(values: ndarray, percentile: Union[int, float]):
+def _cumulative_sum_threshold(values: ndarray, percentile: Union[int, float]) -> float:
     # given values should be non-negative
     assert percentile >= 0 and percentile <= 100, (
         "Percentile for thresholding must be " "between 0 and 100 inclusive."
@@ -77,13 +75,12 @@ def _cumulative_sum_threshold(values: ndarray, percentile: Union[int, float]):
     return sorted_vals[threshold_id]
 
 
-# pyre-fixme[3]: Return type must be annotated.
 def _normalize_attr(
     attr: ndarray,
     sign: str,
     outlier_perc: Union[int, float] = 2,
     reduction_axis: Optional[int] = None,
-):
+) -> ndarray:
     attr_combined = attr
     if reduction_axis is not None:
         attr_combined = np.sum(attr, axis=reduction_axis)
@@ -370,8 +367,7 @@ def visualize_image_attr(
 
     heat_map: Optional[AxesImage] = None
 
-    # pyre-ignore[33]: prohibited Any
-    visualization_methods: Dict[str, Callable[..., Any]] = {
+    visualization_methods: Dict[str, Callable[..., Union[None, AxesImage]]] = {
         "heat_map": _visualize_heat_map,
         "blended_heat_map": _visualize_blended_heat_map,
         "masked_image": _visualize_masked_image,
@@ -420,7 +416,6 @@ def visualize_image_attr(
     return plt_fig, plt_axis
 
 
-# pyre-fixme[3]: Return type must be annotated.
 def visualize_image_attr_multiple(
     attr: ndarray,
     original_image: Union[None, ndarray],
@@ -430,7 +425,7 @@ def visualize_image_attr_multiple(
     fig_size: Tuple[int, int] = (8, 6),
     use_pyplot: bool = True,
     **kwargs: Any,
-):
+) -> Tuple[Figure, Axes]:
     r"""
     Visualizes attribution using multiple visualization methods displayed
     in a 1 x k grid, where k is the number of desired visualizations.
@@ -530,7 +525,6 @@ def visualize_image_attr_multiple(
     return plt_fig, plt_axis
 
 
-# pyre-fixme[3]: Return type must be annotated.
 def visualize_timeseries_attr(
     attr: ndarray,
     data: ndarray,
@@ -547,9 +541,8 @@ def visualize_timeseries_attr(
     title: Optional[str] = None,
     fig_size: Tuple[int, int] = (6, 6),
     use_pyplot: bool = True,
-    # pyre-fixme[2]: Parameter must be annotated.
-    **pyplot_kwargs,
-):
+    **pyplot_kwargs: Any,
+) -> Tuple[Figure, Union[Axes, List[Axes]]]:
     r"""
     Visualizes attribution for a given timeseries data by normalizing
     attribution values of the desired sign (positive, negative, absolute value,
@@ -667,11 +660,9 @@ def visualize_timeseries_attr(
 
     # Check input dimensions
     assert len(attr.shape) == 2, "Expected attr of shape (N, C), got {}".format(
-        # pyre-fixme[16]: Module `attr` has no attribute `shape`.
         attr.shape
     )
     assert len(data.shape) == 2, "Expected data of shape (N, C), got {}".format(
-        # pyre-fixme[16]: Module `attr` has no attribute `shape`.
         attr.shape
     )
 
@@ -747,9 +738,8 @@ def visualize_timeseries_attr(
     cm_norm = colors.Normalize(vmin, vmax)
 
     # pyre-fixme[53]: Captured variable `cm_norm` is not annotated.
-    # pyre-fixme[3]: Return type must be annotated.
     # pyre-fixme[2]: Parameter must be annotated.
-    def _plot_attrs_as_axvspan(attr_vals, x_vals, ax):
+    def _plot_attrs_as_axvspan(attr_vals, x_vals, ax) -> None:
         # pyre-fixme[16]: `Optional` has no attribute `__getitem__`.
         half_col_width = (x_values[1] - x_values[0]) / 2.0
         for icol, col_center in enumerate(x_vals):
@@ -759,7 +749,7 @@ def visualize_timeseries_attr(
                 xmin=left,
                 xmax=right,
                 # pyre-fixme[29]: `Union[None, Colormap, str]` is not a function.
-                facecolor=(cmap(cm_norm(attr_vals[icol]))),
+                facecolor=(cmap(cm_norm(attr_vals[icol]))),  # type: ignore
                 edgecolor=None,
                 alpha=alpha_overlay,
             )
@@ -863,39 +853,31 @@ class VisualizationDataRecord:
 
     def __init__(
         self,
-        # pyre-fixme[2]: Parameter must be annotated.
-        word_attributions,
-        # pyre-fixme[2]: Parameter must be annotated.
-        pred_prob,
-        # pyre-fixme[2]: Parameter must be annotated.
-        pred_class,
-        # pyre-fixme[2]: Parameter must be annotated.
-        true_class,
-        # pyre-fixme[2]: Parameter must be annotated.
-        attr_class,
-        # pyre-fixme[2]: Parameter must be annotated.
-        attr_score,
-        # pyre-fixme[2]: Parameter must be annotated.
-        raw_input_ids,
-        # pyre-fixme[2]: Parameter must be annotated.
-        convergence_score,
+        word_attributions: Tensor,
+        pred_prob: float,
+        pred_class: int,
+        true_class: int,
+        attr_class: int,
+        attr_score: float,
+        raw_input_ids: List[str],
+        convergence_score: float,
     ) -> None:
-        # pyre-fixme[4]: Attribute must be annotated.
-        self.word_attributions = word_attributions
-        # pyre-fixme[4]: Attribute must be annotated.
-        self.pred_prob = pred_prob
-        # pyre-fixme[4]: Attribute must be annotated.
-        self.pred_class = pred_class
-        # pyre-fixme[4]: Attribute must be annotated.
-        self.true_class = true_class
-        # pyre-fixme[4]: Attribute must be annotated.
-        self.attr_class = attr_class
-        # pyre-fixme[4]: Attribute must be annotated.
-        self.attr_score = attr_score
-        # pyre-fixme[4]: Attribute must be annotated.
-        self.raw_input_ids = raw_input_ids
-        # pyre-fixme[4]: Attribute must be annotated.
-        self.convergence_score = convergence_score
+
+        self.word_attributions: Tensor = word_attributions
+
+        self.pred_prob: float = pred_prob
+
+        self.pred_class: int = pred_class
+
+        self.true_class: int = true_class
+
+        self.attr_class: int = attr_class
+
+        self.attr_score: float = attr_score
+
+        self.raw_input_ids: List[str] = raw_input_ids
+
+        self.convergence_score: float = convergence_score
 
 
 def _get_color(attr: int) -> str:
