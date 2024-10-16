@@ -115,7 +115,7 @@ src="/_sphinx/documentation_options.js"></script>
             <span class="n">mask</span><span class="o">=</span><span class="n">mask</span><span class="p">,</span>
             <span class="c1"># pyre-fixme[6]: For 3rd argument expected `float` but got</span>
             <span class="c1">#  `Optional[float]`.</span>
-            <span class="n">reg_weight</span><span class="o">=</span><span class="n">reg_weight</span><span class="p">,</span>
+            <span class="n">reg_weight</span><span class="o">=</span><span class="n">reg_weight</span><span class="p">,</span>  <span class="c1"># type: ignore</span>
             <span class="n">reg_reduction</span><span class="o">=</span><span class="n">reg_reduction</span><span class="p">,</span>
         <span class="p">)</span>
 
@@ -125,7 +125,7 @@ src="/_sphinx/documentation_options.js"></script>
 
         <span class="c1"># pyre-fixme[58]: `&lt;` is not supported for operand types `int` and</span>
         <span class="c1">#  `Optional[float]`.</span>
-        <span class="k">assert</span> <span class="mi">0</span> <span class="o">&lt;</span> <span class="n">std</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"the standard deviation should be positive, received </span><span class="si">{</span><span class="n">std</span><span class="si">}</span><span class="s2">"</span>
+        <span class="k">assert</span> <span class="mi">0</span> <span class="o">&lt;</span> <span class="n">std</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"the standard deviation should be positive, received </span><span class="si">{</span><span class="n">std</span><span class="si">}</span><span class="s2">"</span>  <span class="c1"># type: ignore  # noqa: E501 line too long</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">std</span> <span class="o">=</span> <span class="n">std</span>
 
     <span class="k">def</span> <span class="nf">_sample_gate_values</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">batch_size</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tensor</span><span class="p">:</span>
@@ -143,7 +143,7 @@ src="/_sphinx/documentation_options.js"></script>
             <span class="n">n</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="n">batch_size</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_gates</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">mu</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
             <span class="c1"># pyre-fixme[6]: For 2nd argument expected `float` but got</span>
             <span class="c1">#  `Optional[float]`.</span>
-            <span class="n">n</span><span class="o">.</span><span class="n">normal_</span><span class="p">(</span><span class="n">mean</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">std</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">std</span><span class="p">)</span>
+            <span class="n">n</span><span class="o">.</span><span class="n">normal_</span><span class="p">(</span><span class="n">mean</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">std</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">std</span><span class="p">)</span>  <span class="c1"># type: ignore</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">mu</span> <span class="o">+</span> <span class="n">n</span>
 
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">mu</span><span class="o">.</span><span class="n">expand</span><span class="p">(</span><span class="n">batch_size</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_gates</span><span class="p">)</span>

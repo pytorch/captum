@@ -230,7 +230,9 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="n">x_train</span><span class="p">,</span> <span class="n">x_test</span><span class="p">,</span> <span class="n">y_train</span><span class="p">,</span> <span class="n">y_test</span> <span class="o">=</span> <span class="n">_train_test_split</span><span class="p">(</span>
             <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">(</span><span class="n">inputs</span><span class="p">),</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">(</span><span class="n">labels</span><span class="p">),</span> <span class="n">test_split</span><span class="o">=</span><span class="n">test_split_ratio</span>
         <span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">lm</span><span class="o">.</span><span class="n">device</span> <span class="o">=</span> <span class="n">device</span>
+        <span class="c1"># error: Incompatible types in assignment (expression has type "str | Any",</span>
+        <span class="c1"># variable has type "Tensor | Module")  [assignment]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lm</span><span class="o">.</span><span class="n">device</span> <span class="o">=</span> <span class="n">device</span>  <span class="c1"># type: ignore</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">lm</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">DataLoader</span><span class="p">(</span><span class="n">TensorDataset</span><span class="p">(</span><span class="n">x_train</span><span class="p">,</span> <span class="n">y_train</span><span class="p">)))</span>
 
         <span class="n">predict</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">lm</span><span class="p">(</span><span class="n">x_test</span><span class="p">)</span>
