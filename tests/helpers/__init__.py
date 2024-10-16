@@ -10,4 +10,7 @@ try:
     ]
 
 except ImportError:
-    from tests.helpers.basic import BaseTest
+    # tests/helpers/__init__.py:13: error: Incompatible import of "BaseTest"
+    # (imported name has type "type[BaseTest]", local name has type
+    # "type[FbBaseTest]")  [assignment]
+    from tests.helpers.basic import BaseTest  # type: ignore

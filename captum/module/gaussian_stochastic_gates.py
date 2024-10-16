@@ -81,7 +81,7 @@ class GaussianStochasticGates(StochasticGatesBase):
             mask=mask,
             # pyre-fixme[6]: For 3rd argument expected `float` but got
             #  `Optional[float]`.
-            reg_weight=reg_weight,
+            reg_weight=reg_weight,  # type: ignore
             reg_reduction=reg_reduction,
         )
 
@@ -91,7 +91,7 @@ class GaussianStochasticGates(StochasticGatesBase):
 
         # pyre-fixme[58]: `<` is not supported for operand types `int` and
         #  `Optional[float]`.
-        assert 0 < std, f"the standard deviation should be positive, received {std}"
+        assert 0 < std, f"the standard deviation should be positive, received {std}"  # type: ignore  # noqa: E501 line too long
         self.std = std
 
     def _sample_gate_values(self, batch_size: int) -> Tensor:
@@ -109,7 +109,7 @@ class GaussianStochasticGates(StochasticGatesBase):
             n = torch.empty(batch_size, self.n_gates, device=self.mu.device)
             # pyre-fixme[6]: For 2nd argument expected `float` but got
             #  `Optional[float]`.
-            n.normal_(mean=0, std=self.std)
+            n.normal_(mean=0, std=self.std)  # type: ignore
             return self.mu + n
 
         return self.mu.expand(batch_size, self.n_gates)
