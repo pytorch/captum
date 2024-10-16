@@ -5,6 +5,7 @@ import inspect
 import math
 import typing
 import warnings
+from collections.abc import Iterator
 from typing import Any, Callable, cast, List, Optional, Tuple, Union
 
 import torch
@@ -243,6 +244,7 @@ class LimeBase(PerturbationAttribution):
             ), "Must provide transform from original input space to interpretable space"
 
     @log_usage()
+    @torch.no_grad()
     def attribute(
         self,
         inputs: TensorOrTupleOfTensorsGeneric,
@@ -422,125 +424,136 @@ class LimeBase(PerturbationAttribution):
             >>> # model.
             >>> attr_coefs = lime_attr.attribute(input, target=1, kernel_width=1.1)
         """
-        with torch.no_grad():
-            inp_tensor = (
-                cast(Tensor, inputs) if isinstance(inputs, Tensor) else inputs[0]
+        inp_tensor = cast(Tensor, inputs) if isinstance(inputs, Tensor) else inputs[0]
+        device = inp_tensor.device
+
+        interpretable_inps = []
+        similarities = []
+        outputs = []
+
+        curr_model_inputs = []
+        expanded_additional_args = None
+        expanded_target = None
+        gen_perturb_func = self._get_perturb_generator_func(inputs, **kwargs)
+
+        if show_progress:
+            attr_progress = progress(
+                total=math.ceil(n_samples / perturbations_per_eval),
+                desc=f"{self.get_name()} attribution",
             )
-            device = inp_tensor.device
+            attr_progress.update(0)
 
-            interpretable_inps = []
-            similarities = []
-            outputs = []
-
-            curr_model_inputs = []
-            expanded_additional_args = None
-            expanded_target = None
-            perturb_generator = None
-            if inspect.isgeneratorfunction(self.perturb_func):
-                perturb_generator = self.perturb_func(inputs, **kwargs)
-
-            if show_progress:
-                attr_progress = progress(
-                    total=math.ceil(n_samples / perturbations_per_eval),
-                    desc=f"{self.get_name()} attribution",
+        batch_count = 0
+        for _ in range(n_samples):
+            try:
+                interpretable_inp, curr_model_input = gen_perturb_func()
+            except StopIteration:
+                warnings.warn(
+                    "Generator completed prior to given n_samples iterations!",
+                    stacklevel=1,
                 )
-                attr_progress.update(0)
+                break
+            batch_count += 1
+            interpretable_inps.append(interpretable_inp)
+            curr_model_inputs.append(curr_model_input)
 
-            batch_count = 0
-            for _ in range(n_samples):
-                if perturb_generator:
-                    try:
-                        curr_sample = next(perturb_generator)
-                    except StopIteration:
-                        warnings.warn(
-                            "Generator completed prior to given n_samples iterations!"
-                        )
-                        break
-                else:
-                    curr_sample = self.perturb_func(inputs, **kwargs)
-                batch_count += 1
-                if self.perturb_interpretable_space:
-                    interpretable_inps.append(curr_sample)
-                    curr_model_inputs.append(
-                        self.from_interp_rep_transform(  # type: ignore
-                            curr_sample, inputs, **kwargs
-                        )
+            curr_sim = self.similarity_func(
+                inputs, curr_model_input, interpretable_inp, **kwargs
+            )
+            similarities.append(
+                curr_sim.flatten()
+                if isinstance(curr_sim, Tensor)
+                else torch.tensor([curr_sim], device=device)
+            )
+
+            if len(curr_model_inputs) == perturbations_per_eval:
+                if expanded_additional_args is None:
+                    expanded_additional_args = _expand_additional_forward_args(
+                        additional_forward_args, len(curr_model_inputs)
                     )
-                else:
-                    curr_model_inputs.append(curr_sample)
-                    interpretable_inps.append(
-                        self.to_interp_rep_transform(  # type: ignore
-                            curr_sample, inputs, **kwargs
-                        )
-                    )
-                curr_sim = self.similarity_func(
-                    inputs, curr_model_inputs[-1], interpretable_inps[-1], **kwargs
-                )
-                similarities.append(
-                    curr_sim.flatten()
-                    if isinstance(curr_sim, Tensor)
-                    else torch.tensor([curr_sim], device=device)
-                )
+                if expanded_target is None:
+                    expanded_target = _expand_target(target, len(curr_model_inputs))
 
-                if len(curr_model_inputs) == perturbations_per_eval:
-                    if expanded_additional_args is None:
-                        expanded_additional_args = _expand_additional_forward_args(
-                            additional_forward_args, len(curr_model_inputs)
-                        )
-                    if expanded_target is None:
-                        expanded_target = _expand_target(target, len(curr_model_inputs))
-
-                    model_out = self._evaluate_batch(
-                        curr_model_inputs,
-                        expanded_target,
-                        expanded_additional_args,
-                        device,
-                    )
-
-                    if show_progress:
-                        attr_progress.update()
-
-                    outputs.append(model_out)
-
-                    curr_model_inputs = []
-
-            if len(curr_model_inputs) > 0:
-                expanded_additional_args = _expand_additional_forward_args(
-                    additional_forward_args, len(curr_model_inputs)
-                )
-                expanded_target = _expand_target(target, len(curr_model_inputs))
                 model_out = self._evaluate_batch(
                     curr_model_inputs,
                     expanded_target,
                     expanded_additional_args,
                     device,
                 )
+
                 if show_progress:
                     attr_progress.update()
+
                 outputs.append(model_out)
 
-            if show_progress:
-                attr_progress.close()
+                curr_model_inputs = []
 
-            # Argument 1 to "cat" has incompatible type
-            # "list[Tensor | tuple[Tensor, ...]]";
-            # expected "tuple[Tensor, ...] | list[Tensor]"  [arg-type]
-            combined_interp_inps = torch.cat(interpretable_inps).float()  # type: ignore
-            combined_outputs = (
-                torch.cat(outputs)
-                if len(outputs[0].shape) > 0
-                else torch.stack(outputs)
-            ).float()
-            combined_sim = (
-                torch.cat(similarities)
-                if len(similarities[0].shape) > 0
-                else torch.stack(similarities)
-            ).float()
-            dataset = TensorDataset(
-                combined_interp_inps, combined_outputs, combined_sim
+        if len(curr_model_inputs) > 0:
+            expanded_additional_args = _expand_additional_forward_args(
+                additional_forward_args, len(curr_model_inputs)
             )
-            self.interpretable_model.fit(DataLoader(dataset, batch_size=batch_count))
-            return self.interpretable_model.representation()
+            expanded_target = _expand_target(target, len(curr_model_inputs))
+            model_out = self._evaluate_batch(
+                curr_model_inputs,
+                expanded_target,
+                expanded_additional_args,
+                device,
+            )
+            if show_progress:
+                attr_progress.update()
+            outputs.append(model_out)
+
+        if show_progress:
+            attr_progress.close()
+
+        # Argument 1 to "cat" has incompatible type
+        # "list[Tensor | tuple[Tensor, ...]]";
+        # expected "tuple[Tensor, ...] | list[Tensor]"  [arg-type]
+        combined_interp_inps = torch.cat(interpretable_inps).float()  # type: ignore
+        combined_outputs = (
+            torch.cat(outputs) if len(outputs[0].shape) > 0 else torch.stack(outputs)
+        ).float()
+        combined_sim = (
+            torch.cat(similarities)
+            if len(similarities[0].shape) > 0
+            else torch.stack(similarities)
+        ).float()
+        dataset = TensorDataset(combined_interp_inps, combined_outputs, combined_sim)
+        self.interpretable_model.fit(DataLoader(dataset, batch_size=batch_count))
+        return self.interpretable_model.representation()
+
+    def _get_perturb_generator_func(
+        self, inputs: TensorOrTupleOfTensorsGeneric, **kwargs: Any
+    ) -> Callable[
+        [], Tuple[TensorOrTupleOfTensorsGeneric, TensorOrTupleOfTensorsGeneric]
+    ]:
+        perturb_generator: Optional[Iterator[TensorOrTupleOfTensorsGeneric]]
+        perturb_generator = None
+        if inspect.isgeneratorfunction(self.perturb_func):
+            perturb_generator = self.perturb_func(inputs, **kwargs)
+
+        def generate_perturbation() -> (
+            Tuple[TensorOrTupleOfTensorsGeneric, TensorOrTupleOfTensorsGeneric]
+        ):
+            if perturb_generator:
+                curr_sample = next(perturb_generator)
+            else:
+                curr_sample = self.perturb_func(inputs, **kwargs)
+
+            if self.perturb_interpretable_space:
+                interpretable_inp = curr_sample
+                curr_model_input = self.from_interp_rep_transform(  # type: ignore
+                    curr_sample, inputs, **kwargs
+                )
+            else:
+                curr_model_input = curr_sample
+                interpretable_inp = self.to_interp_rep_transform(  # type: ignore
+                    curr_sample, inputs, **kwargs
+                )
+
+            return interpretable_inp, curr_model_input
+
+        return generate_perturbation
 
     # pyre-fixme[24] Generic type `Callable` expects 2 type parameters.
     def attribute_future(self) -> Callable:
