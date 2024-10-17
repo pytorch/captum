@@ -102,6 +102,25 @@ class LayerDeepLift(LayerAttribution, DeepLift):
     # Ignoring mypy error for inconsistent signature with DeepLift
     @typing.overload  # type: ignore
     # pyre-fixme[43]: The implementation of `attribute` does not accept all possible
+    #  arguments of overload defined on line `117`.
+    def attribute(
+        self,
+        inputs: Union[Tensor, Tuple[Tensor, ...]],
+        baselines: BaselineType = None,
+        target: TargetType = None,
+        # pyre-fixme[2]: Parameter annotation cannot be `Any`.
+        additional_forward_args: Any = None,
+        *,
+        # pyre-fixme[31]: Expression `Literal[True]` is not a valid type.
+        # pyre-fixme[24]: Non-generic type `typing.Literal` cannot take parameters.
+        return_convergence_delta: Literal[True],
+        attribute_to_layer_input: bool = False,
+        custom_attribution_func: Union[None, Callable[..., Tuple[Tensor, ...]]] = None,
+        grad_kwargs: Optional[Dict[str, Any]] = None,
+    ) -> Tuple[Union[Tensor, Tuple[Tensor, ...]], Tensor]: ...
+
+    @typing.overload
+    # pyre-fixme[43]: The implementation of `attribute` does not accept all possible
     #  arguments of overload defined on line `104`.
     def attribute(
         self,
@@ -118,24 +137,6 @@ class LayerDeepLift(LayerAttribution, DeepLift):
         custom_attribution_func: Union[None, Callable[..., Tuple[Tensor, ...]]] = None,
         grad_kwargs: Optional[Dict[str, Any]] = None,
     ) -> Union[Tensor, Tuple[Tensor, ...]]: ...
-
-    @typing.overload
-    # pyre-fixme[43]: The implementation of `attribute` does not accept all possible
-    #  arguments of overload defined on line `117`.
-    def attribute(
-        self,
-        inputs: Union[Tensor, Tuple[Tensor, ...]],
-        baselines: BaselineType = None,
-        target: TargetType = None,
-        additional_forward_args: Any = None,
-        *,
-        # pyre-fixme[31]: Expression `Literal[True]` is not a valid type.
-        # pyre-fixme[24]: Non-generic type `typing.Literal` cannot take parameters.
-        return_convergence_delta: Literal[True],
-        attribute_to_layer_input: bool = False,
-        custom_attribution_func: Union[None, Callable[..., Tuple[Tensor, ...]]] = None,
-        grad_kwargs: Optional[Dict[str, Any]] = None,
-    ) -> Tuple[Union[Tensor, Tuple[Tensor, ...]], Tensor]: ...
 
     @log_usage()
     # pyre-fixme[43]: This definition does not have the same decorators as the
@@ -452,6 +453,26 @@ class LayerDeepLiftShap(LayerDeepLift, DeepLiftShap):
     # Ignoring mypy error for inconsistent signature with DeepLiftShap
     @typing.overload  # type: ignore
     # pyre-fixme[43]: The implementation of `attribute` does not accept all possible
+    #  arguments of overload defined on line `453`.
+    def attribute(
+        self,
+        inputs: Union[Tensor, Tuple[Tensor, ...]],
+        baselines: Union[
+            Tensor, Tuple[Tensor, ...], Callable[..., Union[Tensor, Tuple[Tensor, ...]]]
+        ],
+        target: TargetType = None,
+        # pyre-fixme[2]: Parameter annotation cannot be `Any`.
+        additional_forward_args: Any = None,
+        *,
+        # pyre-fixme[31]: Expression `Literal[True]` is not a valid type.
+        # pyre-fixme[24]: Non-generic type `typing.Literal` cannot take parameters.
+        return_convergence_delta: Literal[True],
+        attribute_to_layer_input: bool = False,
+        custom_attribution_func: Union[None, Callable[..., Tuple[Tensor, ...]]] = None,
+    ) -> Tuple[Union[Tensor, Tuple[Tensor, ...]], Tensor]: ...
+
+    @typing.overload
+    # pyre-fixme[43]: The implementation of `attribute` does not accept all possible
     #  arguments of overload defined on line `439`.
     def attribute(
         self,
@@ -469,25 +490,6 @@ class LayerDeepLiftShap(LayerDeepLift, DeepLiftShap):
         attribute_to_layer_input: bool = False,
         custom_attribution_func: Union[None, Callable[..., Tuple[Tensor, ...]]] = None,
     ) -> Union[Tensor, Tuple[Tensor, ...]]: ...
-
-    @typing.overload
-    # pyre-fixme[43]: The implementation of `attribute` does not accept all possible
-    #  arguments of overload defined on line `453`.
-    def attribute(
-        self,
-        inputs: Union[Tensor, Tuple[Tensor, ...]],
-        baselines: Union[
-            Tensor, Tuple[Tensor, ...], Callable[..., Union[Tensor, Tuple[Tensor, ...]]]
-        ],
-        target: TargetType = None,
-        additional_forward_args: Any = None,
-        *,
-        # pyre-fixme[31]: Expression `Literal[True]` is not a valid type.
-        # pyre-fixme[24]: Non-generic type `typing.Literal` cannot take parameters.
-        return_convergence_delta: Literal[True],
-        attribute_to_layer_input: bool = False,
-        custom_attribution_func: Union[None, Callable[..., Tuple[Tensor, ...]]] = None,
-    ) -> Tuple[Union[Tensor, Tuple[Tensor, ...]], Tensor]: ...
 
     @log_usage()
     # pyre-fixme[43]: This definition does not have the same decorators as the
