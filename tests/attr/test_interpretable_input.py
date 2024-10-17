@@ -25,7 +25,7 @@ class DummyTokenizer:
     # pyre-fixme[43]: Incompatible overload. The implementation of
     # `DummyTokenizer.encode` does not accept all possible arguments of overload.
     # pyre-ignore[11]: Annotation `pt` is not defined as a type
-    def encode(self, text: str, return_tensors: Literal["pt"]) -> Tensor: ...
+    def encode(self, text: str, return_tensors: Literal["pt"]) -> Tensor: ...  # type: ignore  # noqa: E501 line too long
 
     def encode(
         self, text: str, return_tensors: Optional[str] = "pt"

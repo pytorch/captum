@@ -384,7 +384,7 @@ class Occlusion(FeatureAblation):
     def _get_feature_range_and_mask(
         self, input: Tensor, input_mask: Optional[Tensor], **kwargs: Any
     ) -> Tuple[int, int, Union[None, Tensor, Tuple[Tensor, ...]]]:
-        feature_max = np.prod(kwargs["shift_counts"])
+        feature_max = int(np.prod(kwargs["shift_counts"]))
         return 0, feature_max, None
 
     def _get_feature_counts(
