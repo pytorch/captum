@@ -214,7 +214,8 @@ def progress(
             warnings.warn(
                 "Tried to show progress with tqdm "
                 "but tqdm is not installed. "
-                "Fall back to simply print out the progress."
+                "Fall back to simply print out the progress.",
+                stacklevel=1,
             )
         return SimpleProgress(
             iterable, desc=desc, total=total, file=file, mininterval=mininterval
