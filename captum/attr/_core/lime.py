@@ -1275,7 +1275,7 @@ class Lime(LimeBase):
     @typing.overload
     # pyre-fixme[43]: The implementation of `_convert_output_shape` does not accept
     #  all possible arguments of overload defined on line `1211`.
-    def _convert_output_shape(
+    def _convert_output_shape(  # type: ignore
         self,
         formatted_inp: Tuple[Tensor, ...],
         feature_mask: Tuple[Tensor, ...],
