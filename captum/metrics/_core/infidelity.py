@@ -408,88 +408,175 @@ def infidelity(
         >>> # Computes infidelity score for saliency maps
         >>> infid = infidelity(net, perturb_fn, input, attribution)
     """
+    # perform argument formattings
+    inputs = _format_tensor_into_tuples(inputs)  # type: ignore
+    if baselines is not None:
+        baselines = _format_baseline(baselines, cast(Tuple[Tensor, ...], inputs))
+    additional_forward_args = _format_additional_forward_args(additional_forward_args)
+    attributions = _format_tensor_into_tuples(attributions)  # type: ignore
 
-    def _generate_perturbations(
-        current_n_perturb_samples: int,
-    ) -> Tuple[TensorOrTupleOfTensorsGeneric, TensorOrTupleOfTensorsGeneric]:
-        r"""
-        The perturbations are generated for each example
-        `current_n_perturb_samples` times.
+    # Make sure that inputs and corresponding attributions have matching sizes.
+    assert len(inputs) == len(attributions), (
+        """The number of tensors in the inputs and
+        attributions must match. Found number of tensors in the inputs is: {} and in the
+        attributions: {}"""
+    ).format(len(inputs), len(attributions))
+    for inp, attr in zip(inputs, attributions):
+        assert inp.shape == attr.shape, (
+            """Inputs and attributions must have
+        matching shapes. One of the input tensor's shape is {} and the
+        attribution tensor's shape is: {}"""
+            # pyre-fixme[16]: Module `attr` has no attribute `shape`.
+        ).format(inp.shape, attr.shape)
 
-        For performance reasons we are not calling `perturb_func` on each example but
-        on a batch that contains `current_n_perturb_samples`
-        repeated instances per example.
-        """
+    bsz = inputs[0].size(0)
 
-        # pyre-fixme[3]: Return type must be annotated.
-        def call_perturb_func():
-            r""" """
-            baselines_pert = None
-            inputs_pert: Union[Tensor, Tuple[Tensor, ...]]
-            if len(inputs_expanded) == 1:
-                inputs_pert = inputs_expanded[0]
-                if baselines_expanded is not None:
-                    # pyre-fixme[24]: Generic type `tuple` expects at least 1 type
-                    #  parameter.
-                    baselines_pert = cast(Tuple, baselines_expanded)[0]
-            else:
-                inputs_pert = inputs_expanded
-                baselines_pert = baselines_expanded
-            return (
-                perturb_func(inputs_pert, baselines_pert)
-                if baselines_pert is not None
-                else perturb_func(inputs_pert)
-            )
+    _next_infidelity_tensors = _make_next_infidelity_tensors_func(
+        forward_func,
+        bsz,
+        perturb_func,
+        inputs,
+        baselines,
+        attributions,
+        additional_forward_args,
+        target,
+        normalize,
+    )
 
-        inputs_expanded = tuple(
-            torch.repeat_interleave(input, current_n_perturb_samples, dim=0)
-            for input in inputs
+    with torch.no_grad():
+        # if not normalize, directly return aggrgated MSE ((a-b)^2,)
+        # else return aggregated MSE's polynomial expansion tensors (a^2, ab, b^2)
+        agg_tensors = _divide_and_aggregate_metrics(
+            cast(Tuple[Tensor, ...], inputs),
+            n_perturb_samples,
+            _next_infidelity_tensors,
+            agg_func=_sum_infidelity_tensors,
+            max_examples_per_batch=max_examples_per_batch,
         )
 
-        baselines_expanded = baselines
-        if baselines is not None:
-            baselines_expanded = tuple(
-                (
-                    baseline.repeat_interleave(current_n_perturb_samples, dim=0)
-                    if isinstance(baseline, torch.Tensor)
-                    and baseline.shape[0] == input.shape[0]
-                    and baseline.shape[0] > 1
-                    else baseline
-                )
+    if normalize:
+        beta_num = agg_tensors[1]
+        beta_denorm = agg_tensors[0]
+
+        beta = safe_div(beta_num, beta_denorm)
+
+        infidelity_values = (
+            # pyre-fixme[58]: `**` is not supported for operand types `Tensor` and
+            #  `int`.
+            beta**2 * agg_tensors[0]
+            - 2 * beta * agg_tensors[1]
+            + agg_tensors[2]
+        )
+    else:
+        infidelity_values = agg_tensors[0]
+
+    infidelity_values /= n_perturb_samples
+
+    return infidelity_values
+
+
+def _generate_perturbations(
+    current_n_perturb_samples: int,
+    # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
+    perturb_func: Callable,
+    inputs: TensorOrTupleOfTensorsGeneric,
+    baselines: BaselineType,
+) -> Tuple[TensorOrTupleOfTensorsGeneric, TensorOrTupleOfTensorsGeneric]:
+    r"""
+    The perturbations are generated for each example
+    `current_n_perturb_samples` times.
+
+    For performance reasons we are not calling `perturb_func` on each example but
+    on a batch that contains `current_n_perturb_samples`
+    repeated instances per example.
+    """
+
+    # pyre-fixme[3]: Return type must be annotated.
+    def call_perturb_func():
+        r""" """
+        baselines_pert = None
+        inputs_pert: Union[Tensor, Tuple[Tensor, ...]]
+        if len(inputs_expanded) == 1:
+            inputs_pert = inputs_expanded[0]
+            if baselines_expanded is not None:
                 # pyre-fixme[24]: Generic type `tuple` expects at least 1 type
                 #  parameter.
-                for input, baseline in zip(inputs, cast(Tuple, baselines))
+                baselines_pert = cast(Tuple, baselines_expanded)[0]
+        else:
+            inputs_pert = inputs_expanded
+            baselines_pert = baselines_expanded
+        return (
+            perturb_func(inputs_pert, baselines_pert)
+            if baselines_pert is not None
+            else perturb_func(inputs_pert)
+        )
+
+    inputs_expanded = tuple(
+        torch.repeat_interleave(input, current_n_perturb_samples, dim=0)
+        for input in inputs
+    )
+
+    baselines_expanded = baselines
+    if baselines is not None:
+        baselines_expanded = tuple(
+            (
+                baseline.repeat_interleave(current_n_perturb_samples, dim=0)
+                if isinstance(baseline, torch.Tensor)
+                and baseline.shape[0] == input.shape[0]
+                and baseline.shape[0] > 1
+                else baseline
             )
+            # pyre-fixme[24]: Generic type `tuple` expects at least 1 type
+            #  parameter.
+            for input, baseline in zip(inputs, cast(Tuple, baselines))
+        )
 
-        return call_perturb_func()
+    return call_perturb_func()
 
-    def _validate_inputs_and_perturbations(
-        inputs: Tuple[Tensor, ...],
-        inputs_perturbed: Tuple[Tensor, ...],
-        perturbations: Tuple[Tensor, ...],
-    ) -> None:
-        # asserts the sizes of the perturbations and inputs
-        assert len(perturbations) == len(inputs), (
-            """The number of perturbed
-            inputs and corresponding perturbations must have the same number of
-            elements. Found number of inputs is: {} and perturbations:
-            {}"""
-        ).format(len(perturbations), len(inputs))
 
-        # asserts the shapes of the perturbations and perturbed inputs
-        for perturb, input_perturbed in zip(perturbations, inputs_perturbed):
-            assert perturb[0].shape == input_perturbed[0].shape, (
-                """Perturbed input
-                and corresponding perturbation must have the same shape and
-                dimensionality. Found perturbation shape is: {} and the input shape
-                is: {}"""
-            ).format(perturb[0].shape, input_perturbed[0].shape)
+def _validate_inputs_and_perturbations(
+    inputs: Tuple[Tensor, ...],
+    inputs_perturbed: Tuple[Tensor, ...],
+    perturbations: Tuple[Tensor, ...],
+) -> None:
+    # asserts the sizes of the perturbations and inputs
+    assert len(perturbations) == len(inputs), (
+        """The number of perturbed
+        inputs and corresponding perturbations must have the same number of
+        elements. Found number of inputs is: {} and perturbations:
+        {}"""
+    ).format(len(perturbations), len(inputs))
+
+    # asserts the shapes of the perturbations and perturbed inputs
+    for perturb, input_perturbed in zip(perturbations, inputs_perturbed):
+        assert perturb[0].shape == input_perturbed[0].shape, (
+            """Perturbed input
+            and corresponding perturbation must have the same shape and
+            dimensionality. Found perturbation shape is: {} and the input shape
+            is: {}"""
+        ).format(perturb[0].shape, input_perturbed[0].shape)
+
+
+def _make_next_infidelity_tensors_func(
+    # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
+    forward_func: Callable,
+    bsz: int,
+    # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
+    perturb_func: Callable,
+    inputs: TensorOrTupleOfTensorsGeneric,
+    baselines: BaselineType,
+    attributions: TensorOrTupleOfTensorsGeneric,
+    # pyre-fixme[2]: Parameter annotation cannot be `Any`.
+    additional_forward_args: Any = None,
+    target: TargetType = None,
+    normalize: bool = False,
+) -> Callable[[int], Union[Tuple[Tensor], Tuple[Tensor, Tensor, Tensor]]]:
 
     def _next_infidelity_tensors(
         current_n_perturb_samples: int,
     ) -> Union[Tuple[Tensor], Tuple[Tensor, Tensor, Tensor]]:
         perturbations, inputs_perturbed = _generate_perturbations(
-            current_n_perturb_samples
+            current_n_perturb_samples, perturb_func, inputs, baselines
         )
 
         perturbations = _format_tensor_into_tuples(perturbations)
@@ -564,60 +651,10 @@ def infidelity(
             # returns (a-b)^2 if no need to normalize
             return ((attr_times_perturb_sums - perturbed_fwd_diffs).pow(2).sum(-1),)
 
-    # pyre-fixme[3]: Return type must be annotated.
-    # pyre-fixme[2]: Parameter must be annotated.
-    def _sum_infidelity_tensors(agg_tensors, tensors):
-        return tuple(agg_t + t for agg_t, t in zip(agg_tensors, tensors))
+    return _next_infidelity_tensors
 
-    # perform argument formattings
-    inputs = _format_tensor_into_tuples(inputs)  # type: ignore
-    if baselines is not None:
-        baselines = _format_baseline(baselines, cast(Tuple[Tensor, ...], inputs))
-    additional_forward_args = _format_additional_forward_args(additional_forward_args)
-    attributions = _format_tensor_into_tuples(attributions)  # type: ignore
 
-    # Make sure that inputs and corresponding attributions have matching sizes.
-    assert len(inputs) == len(attributions), (
-        """The number of tensors in the inputs and
-        attributions must match. Found number of tensors in the inputs is: {} and in the
-        attributions: {}"""
-    ).format(len(inputs), len(attributions))
-    for inp, attr in zip(inputs, attributions):
-        assert inp.shape == attr.shape, (
-            """Inputs and attributions must have
-        matching shapes. One of the input tensor's shape is {} and the
-        attribution tensor's shape is: {}"""
-            # pyre-fixme[16]: Module `attr` has no attribute `shape`.
-        ).format(inp.shape, attr.shape)
-
-    bsz = inputs[0].size(0)
-    with torch.no_grad():
-        # if not normalize, directly return aggrgated MSE ((a-b)^2,)
-        # else return aggregated MSE's polynomial expansion tensors (a^2, ab, b^2)
-        agg_tensors = _divide_and_aggregate_metrics(
-            cast(Tuple[Tensor, ...], inputs),
-            n_perturb_samples,
-            _next_infidelity_tensors,
-            agg_func=_sum_infidelity_tensors,
-            max_examples_per_batch=max_examples_per_batch,
-        )
-
-    if normalize:
-        beta_num = agg_tensors[1]
-        beta_denorm = agg_tensors[0]
-
-        beta = safe_div(beta_num, beta_denorm)
-
-        infidelity_values = (
-            # pyre-fixme[58]: `**` is not supported for operand types `Tensor` and
-            #  `int`.
-            beta**2 * agg_tensors[0]
-            - 2 * beta * agg_tensors[1]
-            + agg_tensors[2]
-        )
-    else:
-        infidelity_values = agg_tensors[0]
-
-    infidelity_values /= n_perturb_samples
-
-    return infidelity_values
+# pyre-fixme[3]: Return type must be annotated.
+# pyre-fixme[2]: Parameter must be annotated.
+def _sum_infidelity_tensors(agg_tensors, tensors):
+    return tuple(agg_t + t for agg_t, t in zip(agg_tensors, tensors))
