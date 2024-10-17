@@ -37,6 +37,7 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="kn">import</span> <span class="nn">math</span>
 <span class="kn">import</span> <span class="nn">typing</span>
 <span class="kn">import</span> <span class="nn">warnings</span>
+<span class="kn">from</span> <span class="nn">collections.abc</span> <span class="kn">import</span> <span class="n">Iterator</span>
 <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">cast</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Union</span>
 
 <span class="kn">import</span> <span class="nn">torch</span>
@@ -279,6 +280,7 @@ src="/_sphinx/documentation_options.js"></script>
 <div class="viewcode-block" id="LimeBase.attribute">
 <a class="viewcode-back" href="../../../../lime.html#captum.attr.LimeBase.attribute">[docs]</a>
     <span class="nd">@log_usage</span><span class="p">()</span>
+    <span class="nd">@torch</span><span class="o">.</span><span class="n">no_grad</span><span class="p">()</span>
     <span class="k">def</span> <span class="nf">attribute</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">inputs</span><span class="p">:</span> <span class="n">TensorOrTupleOfTensorsGeneric</span><span class="p">,</span>
@@ -458,126 +460,137 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">            &gt;&gt;&gt; # model.</span>
 <span class="sd">            &gt;&gt;&gt; attr_coefs = lime_attr.attribute(input, target=1, kernel_width=1.1)</span>
 <span class="sd">        """</span>
-        <span class="k">with</span> <span class="n">torch</span><span class="o">.</span><span class="n">no_grad</span><span class="p">():</span>
-            <span class="n">inp_tensor</span> <span class="o">=</span> <span class="p">(</span>
-                <span class="n">cast</span><span class="p">(</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">inputs</span><span class="p">)</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">Tensor</span><span class="p">)</span> <span class="k">else</span> <span class="n">inputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">inp_tensor</span> <span class="o">=</span> <span class="n">cast</span><span class="p">(</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">inputs</span><span class="p">)</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">Tensor</span><span class="p">)</span> <span class="k">else</span> <span class="n">inputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">device</span> <span class="o">=</span> <span class="n">inp_tensor</span><span class="o">.</span><span class="n">device</span>
+
+        <span class="n">interpretable_inps</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">similarities</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">outputs</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="n">curr_model_inputs</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">expanded_additional_args</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">expanded_target</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">gen_perturb_func</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_perturb_generator_func</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">show_progress</span><span class="p">:</span>
+            <span class="n">attr_progress</span> <span class="o">=</span> <span class="n">progress</span><span class="p">(</span>
+                <span class="n">total</span><span class="o">=</span><span class="n">math</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">n_samples</span> <span class="o">/</span> <span class="n">perturbations_per_eval</span><span class="p">),</span>
+                <span class="n">desc</span><span class="o">=</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">get_name</span><span class="p">()</span><span class="si">}</span><span class="s2"> attribution"</span><span class="p">,</span>
             <span class="p">)</span>
-            <span class="n">device</span> <span class="o">=</span> <span class="n">inp_tensor</span><span class="o">.</span><span class="n">device</span>
+            <span class="n">attr_progress</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
 
-            <span class="n">interpretable_inps</span> <span class="o">=</span> <span class="p">[]</span>
-            <span class="n">similarities</span> <span class="o">=</span> <span class="p">[]</span>
-            <span class="n">outputs</span> <span class="o">=</span> <span class="p">[]</span>
-
-            <span class="n">curr_model_inputs</span> <span class="o">=</span> <span class="p">[]</span>
-            <span class="n">expanded_additional_args</span> <span class="o">=</span> <span class="kc">None</span>
-            <span class="n">expanded_target</span> <span class="o">=</span> <span class="kc">None</span>
-            <span class="n">perturb_generator</span> <span class="o">=</span> <span class="kc">None</span>
-            <span class="k">if</span> <span class="n">inspect</span><span class="o">.</span><span class="n">isgeneratorfunction</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">perturb_func</span><span class="p">):</span>
-                <span class="n">perturb_generator</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">perturb_func</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-
-            <span class="k">if</span> <span class="n">show_progress</span><span class="p">:</span>
-                <span class="n">attr_progress</span> <span class="o">=</span> <span class="n">progress</span><span class="p">(</span>
-                    <span class="n">total</span><span class="o">=</span><span class="n">math</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">n_samples</span> <span class="o">/</span> <span class="n">perturbations_per_eval</span><span class="p">),</span>
-                    <span class="n">desc</span><span class="o">=</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">get_name</span><span class="p">()</span><span class="si">}</span><span class="s2"> attribution"</span><span class="p">,</span>
+        <span class="n">batch_count</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_samples</span><span class="p">):</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">interpretable_inp</span><span class="p">,</span> <span class="n">curr_model_input</span> <span class="o">=</span> <span class="n">gen_perturb_func</span><span class="p">()</span>
+            <span class="k">except</span> <span class="ne">StopIteration</span><span class="p">:</span>
+                <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+                    <span class="s2">"Generator completed prior to given n_samples iterations!"</span><span class="p">,</span>
+                    <span class="n">stacklevel</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
                 <span class="p">)</span>
-                <span class="n">attr_progress</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+                <span class="k">break</span>
+            <span class="n">batch_count</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="n">interpretable_inps</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">interpretable_inp</span><span class="p">)</span>
+            <span class="n">curr_model_inputs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">curr_model_input</span><span class="p">)</span>
 
-            <span class="n">batch_count</span> <span class="o">=</span> <span class="mi">0</span>
-            <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_samples</span><span class="p">):</span>
-                <span class="k">if</span> <span class="n">perturb_generator</span><span class="p">:</span>
-                    <span class="k">try</span><span class="p">:</span>
-                        <span class="n">curr_sample</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="n">perturb_generator</span><span class="p">)</span>
-                    <span class="k">except</span> <span class="ne">StopIteration</span><span class="p">:</span>
-                        <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
-                            <span class="s2">"Generator completed prior to given n_samples iterations!"</span>
-                        <span class="p">)</span>
-                        <span class="k">break</span>
-                <span class="k">else</span><span class="p">:</span>
-                    <span class="n">curr_sample</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">perturb_func</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-                <span class="n">batch_count</span> <span class="o">+=</span> <span class="mi">1</span>
-                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">perturb_interpretable_space</span><span class="p">:</span>
-                    <span class="n">interpretable_inps</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">curr_sample</span><span class="p">)</span>
-                    <span class="n">curr_model_inputs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
-                        <span class="bp">self</span><span class="o">.</span><span class="n">from_interp_rep_transform</span><span class="p">(</span>  <span class="c1"># type: ignore</span>
-                            <span class="n">curr_sample</span><span class="p">,</span> <span class="n">inputs</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span>
-                        <span class="p">)</span>
+            <span class="n">curr_sim</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">similarity_func</span><span class="p">(</span>
+                <span class="n">inputs</span><span class="p">,</span> <span class="n">curr_model_input</span><span class="p">,</span> <span class="n">interpretable_inp</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span>
+            <span class="p">)</span>
+            <span class="n">similarities</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="n">curr_sim</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span>
+                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">curr_sim</span><span class="p">,</span> <span class="n">Tensor</span><span class="p">)</span>
+                <span class="k">else</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">([</span><span class="n">curr_sim</span><span class="p">],</span> <span class="n">device</span><span class="o">=</span><span class="n">device</span><span class="p">)</span>
+            <span class="p">)</span>
+
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">curr_model_inputs</span><span class="p">)</span> <span class="o">==</span> <span class="n">perturbations_per_eval</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">expanded_additional_args</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">expanded_additional_args</span> <span class="o">=</span> <span class="n">_expand_additional_forward_args</span><span class="p">(</span>
+                        <span class="n">additional_forward_args</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">curr_model_inputs</span><span class="p">)</span>
                     <span class="p">)</span>
-                <span class="k">else</span><span class="p">:</span>
-                    <span class="n">curr_model_inputs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">curr_sample</span><span class="p">)</span>
-                    <span class="n">interpretable_inps</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
-                        <span class="bp">self</span><span class="o">.</span><span class="n">to_interp_rep_transform</span><span class="p">(</span>  <span class="c1"># type: ignore</span>
-                            <span class="n">curr_sample</span><span class="p">,</span> <span class="n">inputs</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span>
-                        <span class="p">)</span>
-                    <span class="p">)</span>
-                <span class="n">curr_sim</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">similarity_func</span><span class="p">(</span>
-                    <span class="n">inputs</span><span class="p">,</span> <span class="n">curr_model_inputs</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">interpretable_inps</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="o">**</span><span class="n">kwargs</span>
-                <span class="p">)</span>
-                <span class="n">similarities</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
-                    <span class="n">curr_sim</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span>
-                    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">curr_sim</span><span class="p">,</span> <span class="n">Tensor</span><span class="p">)</span>
-                    <span class="k">else</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">([</span><span class="n">curr_sim</span><span class="p">],</span> <span class="n">device</span><span class="o">=</span><span class="n">device</span><span class="p">)</span>
-                <span class="p">)</span>
+                <span class="k">if</span> <span class="n">expanded_target</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">expanded_target</span> <span class="o">=</span> <span class="n">_expand_target</span><span class="p">(</span><span class="n">target</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">curr_model_inputs</span><span class="p">))</span>
 
-                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">curr_model_inputs</span><span class="p">)</span> <span class="o">==</span> <span class="n">perturbations_per_eval</span><span class="p">:</span>
-                    <span class="k">if</span> <span class="n">expanded_additional_args</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-                        <span class="n">expanded_additional_args</span> <span class="o">=</span> <span class="n">_expand_additional_forward_args</span><span class="p">(</span>
-                            <span class="n">additional_forward_args</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">curr_model_inputs</span><span class="p">)</span>
-                        <span class="p">)</span>
-                    <span class="k">if</span> <span class="n">expanded_target</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-                        <span class="n">expanded_target</span> <span class="o">=</span> <span class="n">_expand_target</span><span class="p">(</span><span class="n">target</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">curr_model_inputs</span><span class="p">))</span>
-
-                    <span class="n">model_out</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_evaluate_batch</span><span class="p">(</span>
-                        <span class="n">curr_model_inputs</span><span class="p">,</span>
-                        <span class="n">expanded_target</span><span class="p">,</span>
-                        <span class="n">expanded_additional_args</span><span class="p">,</span>
-                        <span class="n">device</span><span class="p">,</span>
-                    <span class="p">)</span>
-
-                    <span class="k">if</span> <span class="n">show_progress</span><span class="p">:</span>
-                        <span class="n">attr_progress</span><span class="o">.</span><span class="n">update</span><span class="p">()</span>
-
-                    <span class="n">outputs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">model_out</span><span class="p">)</span>
-
-                    <span class="n">curr_model_inputs</span> <span class="o">=</span> <span class="p">[]</span>
-
-            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">curr_model_inputs</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
-                <span class="n">expanded_additional_args</span> <span class="o">=</span> <span class="n">_expand_additional_forward_args</span><span class="p">(</span>
-                    <span class="n">additional_forward_args</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">curr_model_inputs</span><span class="p">)</span>
-                <span class="p">)</span>
-                <span class="n">expanded_target</span> <span class="o">=</span> <span class="n">_expand_target</span><span class="p">(</span><span class="n">target</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">curr_model_inputs</span><span class="p">))</span>
                 <span class="n">model_out</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_evaluate_batch</span><span class="p">(</span>
                     <span class="n">curr_model_inputs</span><span class="p">,</span>
                     <span class="n">expanded_target</span><span class="p">,</span>
                     <span class="n">expanded_additional_args</span><span class="p">,</span>
                     <span class="n">device</span><span class="p">,</span>
                 <span class="p">)</span>
+
                 <span class="k">if</span> <span class="n">show_progress</span><span class="p">:</span>
                     <span class="n">attr_progress</span><span class="o">.</span><span class="n">update</span><span class="p">()</span>
+
                 <span class="n">outputs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">model_out</span><span class="p">)</span>
 
-            <span class="k">if</span> <span class="n">show_progress</span><span class="p">:</span>
-                <span class="n">attr_progress</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+                <span class="n">curr_model_inputs</span> <span class="o">=</span> <span class="p">[]</span>
 
-            <span class="c1"># Argument 1 to "cat" has incompatible type</span>
-            <span class="c1"># "list[Tensor | tuple[Tensor, ...]]";</span>
-            <span class="c1"># expected "tuple[Tensor, ...] | list[Tensor]"  [arg-type]</span>
-            <span class="n">combined_interp_inps</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">(</span><span class="n">interpretable_inps</span><span class="p">)</span><span class="o">.</span><span class="n">float</span><span class="p">()</span>  <span class="c1"># type: ignore</span>
-            <span class="n">combined_outputs</span> <span class="o">=</span> <span class="p">(</span>
-                <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">(</span><span class="n">outputs</span><span class="p">)</span>
-                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">outputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span>
-                <span class="k">else</span> <span class="n">torch</span><span class="o">.</span><span class="n">stack</span><span class="p">(</span><span class="n">outputs</span><span class="p">)</span>
-            <span class="p">)</span><span class="o">.</span><span class="n">float</span><span class="p">()</span>
-            <span class="n">combined_sim</span> <span class="o">=</span> <span class="p">(</span>
-                <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">(</span><span class="n">similarities</span><span class="p">)</span>
-                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">similarities</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span>
-                <span class="k">else</span> <span class="n">torch</span><span class="o">.</span><span class="n">stack</span><span class="p">(</span><span class="n">similarities</span><span class="p">)</span>
-            <span class="p">)</span><span class="o">.</span><span class="n">float</span><span class="p">()</span>
-            <span class="n">dataset</span> <span class="o">=</span> <span class="n">TensorDataset</span><span class="p">(</span>
-                <span class="n">combined_interp_inps</span><span class="p">,</span> <span class="n">combined_outputs</span><span class="p">,</span> <span class="n">combined_sim</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">curr_model_inputs</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">expanded_additional_args</span> <span class="o">=</span> <span class="n">_expand_additional_forward_args</span><span class="p">(</span>
+                <span class="n">additional_forward_args</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">curr_model_inputs</span><span class="p">)</span>
             <span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">interpretable_model</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">DataLoader</span><span class="p">(</span><span class="n">dataset</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="n">batch_count</span><span class="p">))</span>
-            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">interpretable_model</span><span class="o">.</span><span class="n">representation</span><span class="p">()</span></div>
+            <span class="n">expanded_target</span> <span class="o">=</span> <span class="n">_expand_target</span><span class="p">(</span><span class="n">target</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">curr_model_inputs</span><span class="p">))</span>
+            <span class="n">model_out</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_evaluate_batch</span><span class="p">(</span>
+                <span class="n">curr_model_inputs</span><span class="p">,</span>
+                <span class="n">expanded_target</span><span class="p">,</span>
+                <span class="n">expanded_additional_args</span><span class="p">,</span>
+                <span class="n">device</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="k">if</span> <span class="n">show_progress</span><span class="p">:</span>
+                <span class="n">attr_progress</span><span class="o">.</span><span class="n">update</span><span class="p">()</span>
+            <span class="n">outputs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">model_out</span><span class="p">)</span>
 
+        <span class="k">if</span> <span class="n">show_progress</span><span class="p">:</span>
+            <span class="n">attr_progress</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+        <span class="c1"># Argument 1 to "cat" has incompatible type</span>
+        <span class="c1"># "list[Tensor | tuple[Tensor, ...]]";</span>
+        <span class="c1"># expected "tuple[Tensor, ...] | list[Tensor]"  [arg-type]</span>
+        <span class="n">combined_interp_inps</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">(</span><span class="n">interpretable_inps</span><span class="p">)</span><span class="o">.</span><span class="n">float</span><span class="p">()</span>  <span class="c1"># type: ignore</span>
+        <span class="n">combined_outputs</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">(</span><span class="n">outputs</span><span class="p">)</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">outputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="k">else</span> <span class="n">torch</span><span class="o">.</span><span class="n">stack</span><span class="p">(</span><span class="n">outputs</span><span class="p">)</span>
+        <span class="p">)</span><span class="o">.</span><span class="n">float</span><span class="p">()</span>
+        <span class="n">combined_sim</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">(</span><span class="n">similarities</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">similarities</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span>
+            <span class="k">else</span> <span class="n">torch</span><span class="o">.</span><span class="n">stack</span><span class="p">(</span><span class="n">similarities</span><span class="p">)</span>
+        <span class="p">)</span><span class="o">.</span><span class="n">float</span><span class="p">()</span>
+        <span class="n">dataset</span> <span class="o">=</span> <span class="n">TensorDataset</span><span class="p">(</span><span class="n">combined_interp_inps</span><span class="p">,</span> <span class="n">combined_outputs</span><span class="p">,</span> <span class="n">combined_sim</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">interpretable_model</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">DataLoader</span><span class="p">(</span><span class="n">dataset</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="n">batch_count</span><span class="p">))</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">interpretable_model</span><span class="o">.</span><span class="n">representation</span><span class="p">()</span></div>
+
+
+    <span class="k">def</span> <span class="nf">_get_perturb_generator_func</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">:</span> <span class="n">TensorOrTupleOfTensorsGeneric</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">[</span>
+        <span class="p">[],</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">TensorOrTupleOfTensorsGeneric</span><span class="p">,</span> <span class="n">TensorOrTupleOfTensorsGeneric</span><span class="p">]</span>
+    <span class="p">]:</span>
+        <span class="n">perturb_generator</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Iterator</span><span class="p">[</span><span class="n">TensorOrTupleOfTensorsGeneric</span><span class="p">]]</span>
+        <span class="n">perturb_generator</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="n">inspect</span><span class="o">.</span><span class="n">isgeneratorfunction</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">perturb_func</span><span class="p">):</span>
+            <span class="n">perturb_generator</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">perturb_func</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+        <span class="k">def</span> <span class="nf">generate_perturbation</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="p">(</span>
+            <span class="n">Tuple</span><span class="p">[</span><span class="n">TensorOrTupleOfTensorsGeneric</span><span class="p">,</span> <span class="n">TensorOrTupleOfTensorsGeneric</span><span class="p">]</span>
+        <span class="p">):</span>
+            <span class="k">if</span> <span class="n">perturb_generator</span><span class="p">:</span>
+                <span class="n">curr_sample</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="n">perturb_generator</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">curr_sample</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">perturb_func</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">perturb_interpretable_space</span><span class="p">:</span>
+                <span class="n">interpretable_inp</span> <span class="o">=</span> <span class="n">curr_sample</span>
+                <span class="n">curr_model_input</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">from_interp_rep_transform</span><span class="p">(</span>  <span class="c1"># type: ignore</span>
+                    <span class="n">curr_sample</span><span class="p">,</span> <span class="n">inputs</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span>
+                <span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">curr_model_input</span> <span class="o">=</span> <span class="n">curr_sample</span>
+                <span class="n">interpretable_inp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">to_interp_rep_transform</span><span class="p">(</span>  <span class="c1"># type: ignore</span>
+                    <span class="n">curr_sample</span><span class="p">,</span> <span class="n">inputs</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span>
+                <span class="p">)</span>
+
+            <span class="k">return</span> <span class="n">interpretable_inp</span><span class="p">,</span> <span class="n">curr_model_input</span>
+
+        <span class="k">return</span> <span class="n">generate_perturbation</span>
 
     <span class="c1"># pyre-fixme[24] Generic type `Callable` expects 2 type parameters.</span>
 <div class="viewcode-block" id="LimeBase.attribute_future">

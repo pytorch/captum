@@ -34,7 +34,7 @@ src="/_sphinx/documentation_options.js"></script>
 
 <span class="c1"># pyre-strict</span>
 <span class="kn">from</span> <span class="nn">enum</span> <span class="kn">import</span> <span class="n">Enum</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">cast</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Union</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">cast</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Union</span>
 
 <span class="kn">import</span> <span class="nn">torch</span>
 <span class="kn">from</span> <span class="nn">captum._utils.common</span> <span class="kn">import</span> <span class="p">(</span>
@@ -216,179 +216,7 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">            &gt;&gt;&gt; attribution = nt.attribute(input, nt_type='smoothgrad',</span>
 <span class="sd">            &gt;&gt;&gt;                            nt_samples=10, target=3)</span>
 <span class="sd">        """</span>
-
-        <span class="k">def</span> <span class="nf">add_noise_to_inputs</span><span class="p">(</span><span class="n">nt_samples_partition</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span>
-            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">stdevs</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">):</span>
-                <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">stdevs</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">inputs</span><span class="p">),</span> <span class="p">(</span>
-                    <span class="s2">"The number of input tensors "</span>
-                    <span class="s2">"in </span><span class="si">{}</span><span class="s2"> must be equal to the number of stdevs values </span><span class="si">{}</span><span class="s2">"</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
-                        <span class="nb">len</span><span class="p">(</span><span class="n">inputs</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">stdevs</span><span class="p">)</span>
-                    <span class="p">)</span>
-                <span class="p">)</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span>
-                    <span class="n">stdevs</span><span class="p">,</span> <span class="nb">float</span>
-                <span class="p">),</span> <span class="s2">"stdevs must be type float. "</span> <span class="s2">"Given: </span><span class="si">{}</span><span class="s2">"</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">stdevs</span><span class="p">))</span>
-                <span class="n">stdevs_</span> <span class="o">=</span> <span class="p">(</span><span class="n">stdevs</span><span class="p">,)</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span>
-            <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span>
-                <span class="p">(</span>
-                    <span class="n">add_noise_to_input</span><span class="p">(</span>
-                        <span class="nb">input</span><span class="p">,</span> <span class="n">stdev</span><span class="p">,</span> <span class="n">nt_samples_partition</span>
-                    <span class="p">)</span><span class="o">.</span><span class="n">requires_grad_</span><span class="p">()</span>
-                    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_gradient_method</span>
-                    <span class="k">else</span> <span class="n">add_noise_to_input</span><span class="p">(</span><span class="nb">input</span><span class="p">,</span> <span class="n">stdev</span><span class="p">,</span> <span class="n">nt_samples_partition</span><span class="p">)</span>
-                <span class="p">)</span>
-                <span class="c1"># pyre-fixme[61]: `stdevs_` is undefined, or not always defined.</span>
-                <span class="k">for</span> <span class="p">(</span><span class="nb">input</span><span class="p">,</span> <span class="n">stdev</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">stdevs_</span><span class="p">)</span>
-            <span class="p">)</span>
-
-        <span class="k">def</span> <span class="nf">add_noise_to_input</span><span class="p">(</span>
-            <span class="nb">input</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">,</span> <span class="n">stdev</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">nt_samples_partition</span><span class="p">:</span> <span class="nb">int</span>
-        <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tensor</span><span class="p">:</span>
-            <span class="c1"># batch size</span>
-            <span class="n">bsz</span> <span class="o">=</span> <span class="nb">input</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-
-            <span class="c1"># expand input size by the number of drawn samples</span>
-            <span class="c1"># pyre-fixme[58]: `+` is not supported for operand types `Tuple[int]`</span>
-            <span class="c1">#  and `Size`.</span>
-            <span class="n">input_expanded_size</span> <span class="o">=</span> <span class="p">(</span><span class="n">bsz</span> <span class="o">*</span> <span class="n">nt_samples_partition</span><span class="p">,)</span> <span class="o">+</span> <span class="nb">input</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>
-
-            <span class="c1"># expand stdev for the shape of the input and number of drawn samples</span>
-            <span class="n">stdev_expanded</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="n">stdev</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="nb">input</span><span class="o">.</span><span class="n">device</span><span class="p">)</span><span class="o">.</span><span class="n">repeat</span><span class="p">(</span>
-                <span class="n">input_expanded_size</span>
-            <span class="p">)</span>
-
-            <span class="c1"># draws `np.prod(input_expanded_size)` samples from normal distribution</span>
-            <span class="c1"># with given input parametrization</span>
-            <span class="c1"># FIXME it look like it is very difficult to make torch.normal</span>
-            <span class="c1"># deterministic this needs an investigation</span>
-            <span class="n">noise</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">stdev_expanded</span><span class="p">)</span>
-            <span class="k">return</span> <span class="nb">input</span><span class="o">.</span><span class="n">repeat_interleave</span><span class="p">(</span><span class="n">nt_samples_partition</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span> <span class="o">+</span> <span class="n">noise</span>
-
-        <span class="k">def</span> <span class="nf">update_sum_attribution_and_sq</span><span class="p">(</span>
-            <span class="n">sum_attribution</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Tensor</span><span class="p">],</span>
-            <span class="n">sum_attribution_sq</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Tensor</span><span class="p">],</span>
-            <span class="n">attribution</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">,</span>
-            <span class="n">i</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
-            <span class="n">nt_samples_batch_size_inter</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
-        <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">bsz</span> <span class="o">=</span> <span class="n">attribution</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">//</span> <span class="n">nt_samples_batch_size_inter</span>
-            <span class="n">attribution_shape</span> <span class="o">=</span> <span class="n">cast</span><span class="p">(</span>
-                <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span> <span class="p">(</span><span class="n">bsz</span><span class="p">,</span> <span class="n">nt_samples_batch_size_inter</span><span class="p">)</span>
-            <span class="p">)</span>
-            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">attribution</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
-                <span class="c1"># pyre-fixme[22]: The cast is redundant.</span>
-                <span class="n">attribution_shape</span> <span class="o">+=</span> <span class="n">cast</span><span class="p">(</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">attribution</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">:]))</span>
-
-            <span class="n">attribution</span> <span class="o">=</span> <span class="n">attribution</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="n">attribution_shape</span><span class="p">)</span>
-            <span class="n">current_attribution_sum</span> <span class="o">=</span> <span class="n">attribution</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">keepdim</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
-            <span class="c1"># pyre-fixme[58]: `**` is not supported for operand types `Tensor` and</span>
-            <span class="c1">#  `int`.</span>
-            <span class="n">current_attribution_sq</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">attribution</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">keepdim</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
-
-            <span class="n">sum_attribution</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
-                <span class="n">current_attribution_sum</span>
-                <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">sum_attribution</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">)</span>
-                <span class="k">else</span> <span class="n">sum_attribution</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">+</span> <span class="n">current_attribution_sum</span>
-            <span class="p">)</span>
-            <span class="n">sum_attribution_sq</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
-                <span class="n">current_attribution_sq</span>
-                <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">sum_attribution_sq</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">)</span>
-                <span class="k">else</span> <span class="n">sum_attribution_sq</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">+</span> <span class="n">current_attribution_sq</span>
-            <span class="p">)</span>
-
-        <span class="k">def</span> <span class="nf">compute_partial_attribution</span><span class="p">(</span>
-            <span class="n">inputs_with_noise_partition</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span>
-            <span class="c1"># pyre-fixme[2]: Parameter annotation cannot be `Any`.</span>
-            <span class="n">kwargs_partition</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
-        <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span> <span class="nb">bool</span><span class="p">,</span> <span class="n">Union</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="n">Tensor</span><span class="p">]]:</span>
-            <span class="c1"># smoothgrad_Attr(x) = 1 / n * sum(Attr(x + N(0, sigma^2))</span>
-            <span class="c1"># NOTE: using __wrapped__ such that it does not log the inner logs</span>
-
-            <span class="n">attributions</span> <span class="o">=</span> <span class="n">attr_func</span><span class="o">.</span><span class="n">__wrapped__</span><span class="p">(</span>  <span class="c1"># type: ignore</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">attribution_method</span><span class="p">,</span>  <span class="c1"># self</span>
-                <span class="p">(</span>
-                    <span class="n">inputs_with_noise_partition</span>
-                    <span class="k">if</span> <span class="n">is_inputs_tuple</span>
-                    <span class="k">else</span> <span class="n">inputs_with_noise_partition</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-                <span class="p">),</span>
-                <span class="o">**</span><span class="n">kwargs_partition</span><span class="p">,</span>
-            <span class="p">)</span>
-            <span class="n">delta</span> <span class="o">=</span> <span class="kc">None</span>
-
-            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_delta_supported</span> <span class="ow">and</span> <span class="n">return_convergence_delta</span><span class="p">:</span>
-                <span class="n">attributions</span><span class="p">,</span> <span class="n">delta</span> <span class="o">=</span> <span class="n">attributions</span>
-
-            <span class="n">is_attrib_tuple</span> <span class="o">=</span> <span class="n">_is_tuple</span><span class="p">(</span><span class="n">attributions</span><span class="p">)</span>
-            <span class="n">attributions</span> <span class="o">=</span> <span class="n">_format_tensor_into_tuples</span><span class="p">(</span><span class="n">attributions</span><span class="p">)</span>
-
-            <span class="k">return</span> <span class="p">(</span>
-                <span class="n">cast</span><span class="p">(</span><span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span> <span class="n">attributions</span><span class="p">),</span>
-                <span class="n">cast</span><span class="p">(</span><span class="nb">bool</span><span class="p">,</span> <span class="n">is_attrib_tuple</span><span class="p">),</span>
-                <span class="n">delta</span><span class="p">,</span>
-            <span class="p">)</span>
-
-        <span class="c1"># pyre-fixme[24]: Generic type `dict` expects 2 type parameters, use</span>
-        <span class="c1">#  `typing.Dict[&lt;key type&gt;, &lt;value type&gt;]` to avoid runtime subscripting</span>
-        <span class="c1">#  errors.</span>
-        <span class="k">def</span> <span class="nf">expand_partial</span><span class="p">(</span><span class="n">nt_samples_partition</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">kwargs_partial</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="c1"># if the algorithm supports targets, baselines and/or</span>
-            <span class="c1"># additional_forward_args they will be expanded based</span>
-            <span class="c1"># on the nt_samples_partition and corresponding kwargs</span>
-            <span class="c1"># variables will be updated accordingly</span>
-            <span class="n">_expand_and_update_additional_forward_args</span><span class="p">(</span>
-                <span class="n">nt_samples_partition</span><span class="p">,</span> <span class="n">kwargs_partial</span>
-            <span class="p">)</span>
-            <span class="n">_expand_and_update_target</span><span class="p">(</span><span class="n">nt_samples_partition</span><span class="p">,</span> <span class="n">kwargs_partial</span><span class="p">)</span>
-            <span class="n">_expand_and_update_baselines</span><span class="p">(</span>
-                <span class="n">cast</span><span class="p">(</span><span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span> <span class="n">inputs</span><span class="p">),</span>
-                <span class="n">nt_samples_partition</span><span class="p">,</span>
-                <span class="n">kwargs_partial</span><span class="p">,</span>
-                <span class="n">draw_baseline_from_distrib</span><span class="o">=</span><span class="n">draw_baseline_from_distrib</span><span class="p">,</span>
-            <span class="p">)</span>
-            <span class="n">_expand_and_update_feature_mask</span><span class="p">(</span><span class="n">nt_samples_partition</span><span class="p">,</span> <span class="n">kwargs_partial</span><span class="p">)</span>
-
-        <span class="k">def</span> <span class="nf">compute_smoothing</span><span class="p">(</span>
-            <span class="n">expected_attributions</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">Tensor</span><span class="p">],</span> <span class="o">...</span><span class="p">],</span>
-            <span class="n">expected_attributions_sq</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">Tensor</span><span class="p">],</span> <span class="o">...</span><span class="p">],</span>
-        <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span>
-            <span class="k">if</span> <span class="n">NoiseTunnelType</span><span class="p">[</span><span class="n">nt_type</span><span class="p">]</span> <span class="o">==</span> <span class="n">NoiseTunnelType</span><span class="o">.</span><span class="n">smoothgrad</span><span class="p">:</span>
-                <span class="k">return</span> <span class="n">expected_attributions</span>
-
-            <span class="k">if</span> <span class="n">NoiseTunnelType</span><span class="p">[</span><span class="n">nt_type</span><span class="p">]</span> <span class="o">==</span> <span class="n">NoiseTunnelType</span><span class="o">.</span><span class="n">smoothgrad_sq</span><span class="p">:</span>
-                <span class="k">return</span> <span class="n">expected_attributions_sq</span>
-
-            <span class="n">vargrad</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span>
-                <span class="n">expected_attribution_sq</span> <span class="o">-</span> <span class="n">expected_attribution</span> <span class="o">*</span> <span class="n">expected_attribution</span>
-                <span class="k">for</span> <span class="n">expected_attribution</span><span class="p">,</span> <span class="n">expected_attribution_sq</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span>
-                    <span class="n">expected_attributions</span><span class="p">,</span> <span class="n">expected_attributions_sq</span>
-                <span class="p">)</span>
-            <span class="p">)</span>
-
-            <span class="c1"># pyre-fixme[22]: The cast is redundant.</span>
-            <span class="k">return</span> <span class="n">cast</span><span class="p">(</span><span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span> <span class="n">vargrad</span><span class="p">)</span>
-
-        <span class="k">def</span> <span class="nf">update_partial_attribution_and_delta</span><span class="p">(</span>
-            <span class="n">attributions_partial</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span>
-            <span class="n">delta_partial</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">,</span>
-            <span class="n">sum_attributions</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Tensor</span><span class="p">],</span>
-            <span class="n">sum_attributions_sq</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Tensor</span><span class="p">],</span>
-            <span class="n">delta_partial_list</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Tensor</span><span class="p">],</span>
-            <span class="n">nt_samples_partial</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
-        <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">attribution_partial</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">attributions_partial</span><span class="p">):</span>
-                <span class="n">update_sum_attribution_and_sq</span><span class="p">(</span>
-                    <span class="n">sum_attributions</span><span class="p">,</span>
-                    <span class="n">sum_attributions_sq</span><span class="p">,</span>
-                    <span class="n">attribution_partial</span><span class="p">,</span>
-                    <span class="n">i</span><span class="p">,</span>
-                    <span class="n">nt_samples_partial</span><span class="p">,</span>
-                <span class="p">)</span>
-            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_delta_supported</span> <span class="ow">and</span> <span class="n">return_convergence_delta</span><span class="p">:</span>
-                <span class="n">delta_partial_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">delta_partial</span><span class="p">)</span>
-
-        <span class="n">return_convergence_delta</span><span class="p">:</span> <span class="nb">bool</span>
-        <span class="n">return_convergence_delta</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">return_convergence_delta</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="p">(</span>
             <span class="s2">"return_convergence_delta"</span> <span class="ow">in</span> <span class="n">kwargs</span> <span class="ow">and</span> <span class="n">kwargs</span><span class="p">[</span><span class="s2">"return_convergence_delta"</span><span class="p">]</span>
         <span class="p">)</span>
         <span class="k">with</span> <span class="n">torch</span><span class="o">.</span><span class="n">no_grad</span><span class="p">():</span>
@@ -409,21 +237,28 @@ src="/_sphinx/documentation_options.js"></script>
             <span class="n">_validate_noise_tunnel_type</span><span class="p">(</span><span class="n">nt_type</span><span class="p">,</span> <span class="n">SUPPORTED_NOISE_TUNNEL_TYPES</span><span class="p">)</span>
 
             <span class="n">kwargs_copy</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
-            <span class="n">expand_partial</span><span class="p">(</span><span class="n">nt_samples_batch_size</span><span class="p">,</span> <span class="n">kwargs_copy</span><span class="p">)</span>
-
-            <span class="n">attr_func</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">attribution_method</span><span class="o">.</span><span class="n">attribute</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_expand_partial</span><span class="p">(</span>
+                <span class="n">nt_samples_batch_size</span><span class="p">,</span> <span class="n">kwargs_copy</span><span class="p">,</span> <span class="n">inputs</span><span class="p">,</span> <span class="n">draw_baseline_from_distrib</span>
+            <span class="p">)</span>
 
             <span class="n">sum_attributions</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="n">Tensor</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[]</span>
             <span class="n">sum_attributions_sq</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="n">Tensor</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[]</span>
             <span class="n">delta_partial_list</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Tensor</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
 
             <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nt_samples_partition</span><span class="p">):</span>
-                <span class="n">inputs_with_noise</span> <span class="o">=</span> <span class="n">add_noise_to_inputs</span><span class="p">(</span><span class="n">nt_samples_batch_size</span><span class="p">)</span>
+                <span class="n">inputs_with_noise</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_add_noise_to_inputs</span><span class="p">(</span>
+                    <span class="n">nt_samples_batch_size</span><span class="p">,</span> <span class="n">inputs</span><span class="p">,</span> <span class="n">stdevs</span>
+                <span class="p">)</span>
                 <span class="p">(</span>
                     <span class="n">attributions_partial</span><span class="p">,</span>
                     <span class="n">is_attrib_tuple</span><span class="p">,</span>
                     <span class="n">delta_partial</span><span class="p">,</span>
-                <span class="p">)</span> <span class="o">=</span> <span class="n">compute_partial_attribution</span><span class="p">(</span><span class="n">inputs_with_noise</span><span class="p">,</span> <span class="n">kwargs_copy</span><span class="p">)</span>
+                <span class="p">)</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_compute_partial_attribution</span><span class="p">(</span>
+                    <span class="n">inputs_with_noise</span><span class="p">,</span>
+                    <span class="n">kwargs_copy</span><span class="p">,</span>
+                    <span class="n">is_inputs_tuple</span><span class="p">,</span>
+                    <span class="n">return_convergence_delta</span><span class="p">,</span>
+                <span class="p">)</span>
 
                 <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">sum_attributions</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
                     <span class="c1"># pyre-fixme[9]: sum_attributions has type</span>
@@ -433,36 +268,45 @@ src="/_sphinx/documentation_options.js"></script>
                     <span class="c1">#  `List[Optional[Tensor]]`; used as `List[None]`.</span>
                     <span class="n">sum_attributions_sq</span> <span class="o">=</span> <span class="p">[</span><span class="kc">None</span><span class="p">]</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">attributions_partial</span><span class="p">)</span>
 
-                <span class="n">update_partial_attribution_and_delta</span><span class="p">(</span>
-                    <span class="c1"># pyre-fixme[22]: The cast is redundant.</span>
-                    <span class="n">cast</span><span class="p">(</span><span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span> <span class="n">attributions_partial</span><span class="p">),</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_update_partial_attribution_and_delta</span><span class="p">(</span>
+                    <span class="n">attributions_partial</span><span class="p">,</span>
                     <span class="n">cast</span><span class="p">(</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">delta_partial</span><span class="p">),</span>
                     <span class="n">cast</span><span class="p">(</span><span class="n">List</span><span class="p">[</span><span class="n">Tensor</span><span class="p">],</span> <span class="n">sum_attributions</span><span class="p">),</span>
                     <span class="n">cast</span><span class="p">(</span><span class="n">List</span><span class="p">[</span><span class="n">Tensor</span><span class="p">],</span> <span class="n">sum_attributions_sq</span><span class="p">),</span>
                     <span class="n">delta_partial_list</span><span class="p">,</span>
                     <span class="n">nt_samples_batch_size</span><span class="p">,</span>
+                    <span class="n">return_convergence_delta</span><span class="p">,</span>
                 <span class="p">)</span>
 
             <span class="n">nt_samples_remaining</span> <span class="o">=</span> <span class="p">(</span>
                 <span class="n">nt_samples</span> <span class="o">-</span> <span class="n">nt_samples_partition</span> <span class="o">*</span> <span class="n">nt_samples_batch_size</span>
             <span class="p">)</span>
             <span class="k">if</span> <span class="n">nt_samples_remaining</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
-                <span class="n">inputs_with_noise</span> <span class="o">=</span> <span class="n">add_noise_to_inputs</span><span class="p">(</span><span class="n">nt_samples_remaining</span><span class="p">)</span>
-                <span class="n">expand_partial</span><span class="p">(</span><span class="n">nt_samples_remaining</span><span class="p">,</span> <span class="n">kwargs</span><span class="p">)</span>
+                <span class="n">inputs_with_noise</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_add_noise_to_inputs</span><span class="p">(</span>
+                    <span class="n">nt_samples_remaining</span><span class="p">,</span> <span class="n">inputs</span><span class="p">,</span> <span class="n">stdevs</span>
+                <span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_expand_partial</span><span class="p">(</span>
+                    <span class="n">nt_samples_remaining</span><span class="p">,</span> <span class="n">kwargs</span><span class="p">,</span> <span class="n">inputs</span><span class="p">,</span> <span class="n">draw_baseline_from_distrib</span>
+                <span class="p">)</span>
                 <span class="p">(</span>
                     <span class="n">attributions_partial</span><span class="p">,</span>
                     <span class="n">is_attrib_tuple</span><span class="p">,</span>
                     <span class="n">delta_partial</span><span class="p">,</span>
-                <span class="p">)</span> <span class="o">=</span> <span class="n">compute_partial_attribution</span><span class="p">(</span><span class="n">inputs_with_noise</span><span class="p">,</span> <span class="n">kwargs</span><span class="p">)</span>
+                <span class="p">)</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_compute_partial_attribution</span><span class="p">(</span>
+                    <span class="n">inputs_with_noise</span><span class="p">,</span>
+                    <span class="n">kwargs</span><span class="p">,</span>
+                    <span class="n">is_inputs_tuple</span><span class="p">,</span>
+                    <span class="n">return_convergence_delta</span><span class="p">,</span>
+                <span class="p">)</span>
 
-                <span class="n">update_partial_attribution_and_delta</span><span class="p">(</span>
-                    <span class="c1"># pyre-fixme[22]: The cast is redundant.</span>
-                    <span class="n">cast</span><span class="p">(</span><span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span> <span class="n">attributions_partial</span><span class="p">),</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_update_partial_attribution_and_delta</span><span class="p">(</span>
+                    <span class="n">attributions_partial</span><span class="p">,</span>
                     <span class="n">cast</span><span class="p">(</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">delta_partial</span><span class="p">),</span>
                     <span class="n">cast</span><span class="p">(</span><span class="n">List</span><span class="p">[</span><span class="n">Tensor</span><span class="p">],</span> <span class="n">sum_attributions</span><span class="p">),</span>
                     <span class="n">cast</span><span class="p">(</span><span class="n">List</span><span class="p">[</span><span class="n">Tensor</span><span class="p">],</span> <span class="n">sum_attributions_sq</span><span class="p">),</span>
                     <span class="n">delta_partial_list</span><span class="p">,</span>
                     <span class="n">nt_samples_remaining</span><span class="p">,</span>
+                    <span class="n">return_convergence_delta</span><span class="p">,</span>
                 <span class="p">)</span>
 
             <span class="n">expected_attributions</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span>
@@ -477,11 +321,10 @@ src="/_sphinx/documentation_options.js"></script>
                     <span class="k">for</span> <span class="n">sum_attribution_sq</span> <span class="ow">in</span> <span class="n">sum_attributions_sq</span>
                 <span class="p">]</span>
             <span class="p">)</span>
-            <span class="n">attributions</span> <span class="o">=</span> <span class="n">compute_smoothing</span><span class="p">(</span>
-                <span class="c1"># pyre-fixme[22]: The cast is redundant.</span>
-                <span class="n">cast</span><span class="p">(</span><span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span> <span class="n">expected_attributions</span><span class="p">),</span>
-                <span class="c1"># pyre-fixme[22]: The cast is redundant.</span>
-                <span class="n">cast</span><span class="p">(</span><span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span> <span class="n">expected_attributions_sq</span><span class="p">),</span>
+            <span class="n">attributions</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_compute_smoothing</span><span class="p">(</span>
+                <span class="n">expected_attributions</span><span class="p">,</span>
+                <span class="n">expected_attributions_sq</span><span class="p">,</span>
+                <span class="n">nt_type</span><span class="p">,</span>
             <span class="p">)</span>
 
             <span class="n">delta</span> <span class="o">=</span> <span class="kc">None</span>
@@ -506,6 +349,189 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">        """</span>
         <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">"attribute_future is not implemented for NoiseTunnel"</span><span class="p">)</span></div>
 
+
+    <span class="k">def</span> <span class="nf">_add_noise_to_inputs</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">nt_samples_partition</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">inputs</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span>
+        <span class="n">stdevs</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="o">...</span><span class="p">]],</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">stdevs</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">):</span>
+            <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">stdevs</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">inputs</span><span class="p">),</span> <span class="p">(</span>
+                <span class="s2">"The number of input tensors "</span>
+                <span class="s2">"in </span><span class="si">{}</span><span class="s2"> must be equal to the number of stdevs values </span><span class="si">{}</span><span class="s2">"</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                    <span class="nb">len</span><span class="p">(</span><span class="n">inputs</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">stdevs</span><span class="p">)</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+            <span class="n">stdevs_</span> <span class="o">=</span> <span class="n">stdevs</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span>
+                <span class="n">stdevs</span><span class="p">,</span> <span class="nb">float</span>
+            <span class="p">),</span> <span class="s2">"stdevs must be type float. "</span> <span class="s2">"Given: </span><span class="si">{}</span><span class="s2">"</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">stdevs</span><span class="p">))</span>
+            <span class="n">stdevs_</span> <span class="o">=</span> <span class="p">(</span><span class="n">stdevs</span><span class="p">,)</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span>
+        <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span>
+            <span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_add_noise_to_input</span><span class="p">(</span>
+                    <span class="nb">input</span><span class="p">,</span> <span class="n">stdev</span><span class="p">,</span> <span class="n">nt_samples_partition</span>
+                <span class="p">)</span><span class="o">.</span><span class="n">requires_grad_</span><span class="p">()</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_gradient_method</span>
+                <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">_add_noise_to_input</span><span class="p">(</span><span class="nb">input</span><span class="p">,</span> <span class="n">stdev</span><span class="p">,</span> <span class="n">nt_samples_partition</span><span class="p">)</span>
+            <span class="p">)</span>
+            <span class="k">for</span> <span class="p">(</span><span class="nb">input</span><span class="p">,</span> <span class="n">stdev</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">stdevs_</span><span class="p">)</span>
+        <span class="p">)</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_add_noise_to_input</span><span class="p">(</span>
+        <span class="nb">input</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">,</span> <span class="n">stdev</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">nt_samples_partition</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tensor</span><span class="p">:</span>
+        <span class="c1"># batch size</span>
+        <span class="n">bsz</span> <span class="o">=</span> <span class="nb">input</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="c1"># expand input size by the number of drawn samples</span>
+        <span class="c1"># pyre-fixme[58]: `+` is not supported for operand types `Tuple[int]`</span>
+        <span class="c1">#  and `Size`.</span>
+        <span class="n">input_expanded_size</span> <span class="o">=</span> <span class="p">(</span><span class="n">bsz</span> <span class="o">*</span> <span class="n">nt_samples_partition</span><span class="p">,)</span> <span class="o">+</span> <span class="nb">input</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>
+
+        <span class="c1"># expand stdev for the shape of the input and number of drawn samples</span>
+        <span class="n">stdev_expanded</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="n">stdev</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="nb">input</span><span class="o">.</span><span class="n">device</span><span class="p">)</span><span class="o">.</span><span class="n">repeat</span><span class="p">(</span>
+            <span class="n">input_expanded_size</span>
+        <span class="p">)</span>
+
+        <span class="c1"># draws `np.prod(input_expanded_size)` samples from normal distribution</span>
+        <span class="c1"># with given input parametrization</span>
+        <span class="c1"># FIXME it look like it is very difficult to make torch.normal</span>
+        <span class="c1"># deterministic this needs an investigation</span>
+        <span class="n">noise</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">stdev_expanded</span><span class="p">)</span>
+        <span class="k">return</span> <span class="nb">input</span><span class="o">.</span><span class="n">repeat_interleave</span><span class="p">(</span><span class="n">nt_samples_partition</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span> <span class="o">+</span> <span class="n">noise</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_update_sum_attribution_and_sq</span><span class="p">(</span>
+        <span class="n">sum_attribution</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Tensor</span><span class="p">],</span>
+        <span class="n">sum_attribution_sq</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Tensor</span><span class="p">],</span>
+        <span class="n">attribution</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">,</span>
+        <span class="n">i</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">nt_samples_batch_size_inter</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">bsz</span> <span class="o">=</span> <span class="n">attribution</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">//</span> <span class="n">nt_samples_batch_size_inter</span>
+        <span class="n">attribution_shape</span> <span class="o">=</span> <span class="n">cast</span><span class="p">(</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span> <span class="p">(</span><span class="n">bsz</span><span class="p">,</span> <span class="n">nt_samples_batch_size_inter</span><span class="p">))</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">attribution</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="c1"># pyre-fixme[22]: The cast is redundant.</span>
+            <span class="n">attribution_shape</span> <span class="o">+=</span> <span class="n">cast</span><span class="p">(</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">attribution</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">:]))</span>
+
+        <span class="n">attribution</span> <span class="o">=</span> <span class="n">attribution</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="n">attribution_shape</span><span class="p">)</span>
+        <span class="n">current_attribution_sum</span> <span class="o">=</span> <span class="n">attribution</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">keepdim</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="c1"># pyre-fixme[58]: `**` is not supported for operand types `Tensor` and</span>
+        <span class="c1">#  `int`.</span>
+        <span class="n">current_attribution_sq</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">attribution</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">keepdim</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+        <span class="n">sum_attribution</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">current_attribution_sum</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">sum_attribution</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">)</span>
+            <span class="k">else</span> <span class="n">sum_attribution</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">+</span> <span class="n">current_attribution_sum</span>
+        <span class="p">)</span>
+        <span class="n">sum_attribution_sq</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">current_attribution_sq</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">sum_attribution_sq</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">)</span>
+            <span class="k">else</span> <span class="n">sum_attribution_sq</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">+</span> <span class="n">current_attribution_sq</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_compute_partial_attribution</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">inputs_with_noise_partition</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span>
+        <span class="c1"># pyre-fixme[2]: Parameter annotation cannot be `Any`.</span>
+        <span class="n">kwargs_partition</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+        <span class="n">is_inputs_tuple</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span>
+        <span class="n">return_convergence_delta</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span> <span class="nb">bool</span><span class="p">,</span> <span class="n">Union</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="n">Tensor</span><span class="p">]]:</span>
+        <span class="n">attr_func</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">attribution_method</span><span class="o">.</span><span class="n">attribute</span>
+        <span class="c1"># smoothgrad_Attr(x) = 1 / n * sum(Attr(x + N(0, sigma^2))</span>
+        <span class="c1"># NOTE: using __wrapped__ such that it does not log the inner logs</span>
+
+        <span class="n">attributions</span> <span class="o">=</span> <span class="n">attr_func</span><span class="o">.</span><span class="n">__wrapped__</span><span class="p">(</span>  <span class="c1"># type: ignore</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">attribution_method</span><span class="p">,</span>  <span class="c1"># self</span>
+            <span class="p">(</span>
+                <span class="n">inputs_with_noise_partition</span>
+                <span class="k">if</span> <span class="n">is_inputs_tuple</span>
+                <span class="k">else</span> <span class="n">inputs_with_noise_partition</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="p">),</span>
+            <span class="o">**</span><span class="n">kwargs_partition</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">delta</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_delta_supported</span> <span class="ow">and</span> <span class="n">return_convergence_delta</span><span class="p">:</span>
+            <span class="n">attributions</span><span class="p">,</span> <span class="n">delta</span> <span class="o">=</span> <span class="n">attributions</span>
+
+        <span class="n">is_attrib_tuple</span> <span class="o">=</span> <span class="n">_is_tuple</span><span class="p">(</span><span class="n">attributions</span><span class="p">)</span>
+        <span class="n">attributions</span> <span class="o">=</span> <span class="n">_format_tensor_into_tuples</span><span class="p">(</span><span class="n">attributions</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="p">(</span>
+            <span class="n">cast</span><span class="p">(</span><span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span> <span class="n">attributions</span><span class="p">),</span>
+            <span class="n">cast</span><span class="p">(</span><span class="nb">bool</span><span class="p">,</span> <span class="n">is_attrib_tuple</span><span class="p">),</span>
+            <span class="n">delta</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_expand_partial</span><span class="p">(</span>
+        <span class="n">nt_samples_partition</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">kwargs_partial</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span>
+        <span class="n">inputs</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span>
+        <span class="n">draw_baseline_from_distrib</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="c1"># if the algorithm supports targets, baselines and/or</span>
+        <span class="c1"># additional_forward_args they will be expanded based</span>
+        <span class="c1"># on the nt_samples_partition and corresponding kwargs</span>
+        <span class="c1"># variables will be updated accordingly</span>
+        <span class="n">_expand_and_update_additional_forward_args</span><span class="p">(</span><span class="n">nt_samples_partition</span><span class="p">,</span> <span class="n">kwargs_partial</span><span class="p">)</span>
+        <span class="n">_expand_and_update_target</span><span class="p">(</span><span class="n">nt_samples_partition</span><span class="p">,</span> <span class="n">kwargs_partial</span><span class="p">)</span>
+        <span class="n">_expand_and_update_baselines</span><span class="p">(</span>
+            <span class="n">inputs</span><span class="p">,</span>
+            <span class="n">nt_samples_partition</span><span class="p">,</span>
+            <span class="n">kwargs_partial</span><span class="p">,</span>
+            <span class="n">draw_baseline_from_distrib</span><span class="o">=</span><span class="n">draw_baseline_from_distrib</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">_expand_and_update_feature_mask</span><span class="p">(</span><span class="n">nt_samples_partition</span><span class="p">,</span> <span class="n">kwargs_partial</span><span class="p">)</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_compute_smoothing</span><span class="p">(</span>
+        <span class="n">expected_attributions</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">Tensor</span><span class="p">],</span> <span class="o">...</span><span class="p">],</span>
+        <span class="n">expected_attributions_sq</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">Tensor</span><span class="p">],</span> <span class="o">...</span><span class="p">],</span>
+        <span class="n">nt_type</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span>
+        <span class="k">if</span> <span class="n">NoiseTunnelType</span><span class="p">[</span><span class="n">nt_type</span><span class="p">]</span> <span class="o">==</span> <span class="n">NoiseTunnelType</span><span class="o">.</span><span class="n">smoothgrad</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">expected_attributions</span>
+
+        <span class="k">if</span> <span class="n">NoiseTunnelType</span><span class="p">[</span><span class="n">nt_type</span><span class="p">]</span> <span class="o">==</span> <span class="n">NoiseTunnelType</span><span class="o">.</span><span class="n">smoothgrad_sq</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">expected_attributions_sq</span>
+
+        <span class="n">vargrad</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span>
+            <span class="n">expected_attribution_sq</span> <span class="o">-</span> <span class="n">expected_attribution</span> <span class="o">*</span> <span class="n">expected_attribution</span>
+            <span class="k">for</span> <span class="n">expected_attribution</span><span class="p">,</span> <span class="n">expected_attribution_sq</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span>
+                <span class="n">expected_attributions</span><span class="p">,</span> <span class="n">expected_attributions_sq</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">vargrad</span>
+
+    <span class="k">def</span> <span class="nf">_update_partial_attribution_and_delta</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">attributions_partial</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span>
+        <span class="n">delta_partial</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">,</span>
+        <span class="n">sum_attributions</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Tensor</span><span class="p">],</span>
+        <span class="n">sum_attributions_sq</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Tensor</span><span class="p">],</span>
+        <span class="n">delta_partial_list</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Tensor</span><span class="p">],</span>
+        <span class="n">nt_samples_partial</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">return_convergence_delta</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">attribution_partial</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">attributions_partial</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_update_sum_attribution_and_sq</span><span class="p">(</span>
+                <span class="n">sum_attributions</span><span class="p">,</span>
+                <span class="n">sum_attributions_sq</span><span class="p">,</span>
+                <span class="n">attribution_partial</span><span class="p">,</span>
+                <span class="n">i</span><span class="p">,</span>
+                <span class="n">nt_samples_partial</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_delta_supported</span> <span class="ow">and</span> <span class="n">return_convergence_delta</span><span class="p">:</span>
+            <span class="n">delta_partial_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">delta_partial</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_apply_checks_and_return_attributions</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
