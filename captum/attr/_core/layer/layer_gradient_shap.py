@@ -393,6 +393,24 @@ class LayerInputBaselineXGradient(LayerAttribution, GradientAttribution):
 
     @typing.overload
     # pyre-fixme[43]: The implementation of `attribute` does not accept all possible
+    #  arguments of overload defined on line `385`.
+    def attribute(
+        self,
+        inputs: Union[Tensor, Tuple[Tensor, ...]],
+        baselines: Union[Tensor, Tuple[Tensor, ...]],
+        target: TargetType = None,
+        # pyre-fixme[2]: Parameter annotation cannot be `Any`.
+        additional_forward_args: Any = None,
+        *,
+        # pyre-fixme[31]: Expression `Literal[True]` is not a valid type.
+        # pyre-fixme[24]: Non-generic type `typing.Literal` cannot take parameters.
+        return_convergence_delta: Literal[True],
+        attribute_to_layer_input: bool = False,
+        grad_kwargs: Optional[Dict[str, Any]] = None,
+    ) -> Tuple[Union[Tensor, Tuple[Tensor, ...]], Tensor]: ...
+
+    @typing.overload
+    # pyre-fixme[43]: The implementation of `attribute` does not accept all possible
     #  arguments of overload defined on line `373`.
     def attribute(
         self,
@@ -408,23 +426,6 @@ class LayerInputBaselineXGradient(LayerAttribution, GradientAttribution):
         attribute_to_layer_input: bool = False,
         grad_kwargs: Optional[Dict[str, Any]] = None,
     ) -> Union[Tensor, Tuple[Tensor, ...]]: ...
-
-    @typing.overload
-    # pyre-fixme[43]: The implementation of `attribute` does not accept all possible
-    #  arguments of overload defined on line `385`.
-    def attribute(
-        self,
-        inputs: Union[Tensor, Tuple[Tensor, ...]],
-        baselines: Union[Tensor, Tuple[Tensor, ...]],
-        target: TargetType = None,
-        additional_forward_args: Any = None,
-        *,
-        # pyre-fixme[31]: Expression `Literal[True]` is not a valid type.
-        # pyre-fixme[24]: Non-generic type `typing.Literal` cannot take parameters.
-        return_convergence_delta: Literal[True],
-        attribute_to_layer_input: bool = False,
-        grad_kwargs: Optional[Dict[str, Any]] = None,
-    ) -> Tuple[Union[Tensor, Tuple[Tensor, ...]], Tensor]: ...
 
     @log_usage()
     def attribute(  # type: ignore
@@ -481,7 +482,11 @@ class LayerInputBaselineXGradient(LayerAttribution, GradientAttribution):
 
         if self.multiplies_by_inputs:
             input_baseline_diffs = tuple(
-                input - baseline for input, baseline in zip(attr_inputs, attr_baselines)
+                # pyre-fixme[58]: `-` is not supported for operand types
+                # `typing.Tuple[torch._tensor.Tensor, ...]` and
+                # `typing.Tuple[torch._tensor.Tensor, ...]`.
+                input - baseline
+                for input, baseline in zip(attr_inputs, attr_baselines)
             )
             attributions = tuple(
                 input_baseline_diff * grad

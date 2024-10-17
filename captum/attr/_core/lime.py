@@ -715,7 +715,8 @@ def construct_feature_mask(
         if min_interp_features != 0:
             warnings.warn(
                 "Minimum element in feature mask is not 0, shifting indices to"
-                " start at 0."
+                " start at 0.",
+                stacklevel=2,
             )
             feature_mask = tuple(
                 single_mask - min_interp_features for single_mask in feature_mask
@@ -1157,7 +1158,8 @@ class Lime(LimeBase):
                 "Attempting to construct interpretable model with > 10000 features."
                 "This can be very slow or lead to OOM issues. Please provide a feature"
                 "mask which groups input features to reduce the number of interpretable"
-                "features. "
+                "features. ",
+                stacklevel=1,
             )
 
         coefs: Tensor
@@ -1171,7 +1173,9 @@ class Lime(LimeBase):
                         "You are providing multiple inputs for Lime / Kernel SHAP "
                         "attributions. This trains a separate interpretable model "
                         "for each example, which can be time consuming. It is "
-                        "recommended to compute attributions for one example at a time."
+                        "recommended to compute attributions for one example at a "
+                        "time.",
+                        stacklevel=1,
                     )
                     output_list = []
                     for (
@@ -1275,7 +1279,7 @@ class Lime(LimeBase):
     @typing.overload
     # pyre-fixme[43]: The implementation of `_convert_output_shape` does not accept
     #  all possible arguments of overload defined on line `1211`.
-    def _convert_output_shape(
+    def _convert_output_shape(  # type: ignore
         self,
         formatted_inp: Tuple[Tensor, ...],
         feature_mask: Tuple[Tensor, ...],

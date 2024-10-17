@@ -225,7 +225,8 @@ class GuidedGradCam(GradientAttribution):
                 warnings.warn(
                     "Couldn't appropriately interpolate GradCAM attributions for some "
                     "input tensors, returning empty tensor for corresponding "
-                    "attributions."
+                    "attributions.",
+                    stacklevel=1,
                 )
                 output_attr.append(torch.empty(0))
 

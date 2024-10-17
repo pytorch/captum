@@ -189,7 +189,7 @@ class TracInCPFast(TracInCPBase):
         self.vectorize = vectorize
 
         # TODO: restore prior state
-        self.final_fc_layer = final_fc_layer  # type: ignore
+        self.final_fc_layer = cast(Module, final_fc_layer)
         for param in self.final_fc_layer.parameters():
             param.requires_grad = True
 
@@ -212,8 +212,7 @@ class TracInCPFast(TracInCPBase):
         return self._final_fc_layer
 
     @final_fc_layer.setter
-    # pyre-fixme[3]: Return type must be annotated.
-    def final_fc_layer(self, layer: Union[Module, str]):
+    def final_fc_layer(self, layer: Union[Module, str]) -> None:
         if isinstance(layer, str):
             try:
                 self._final_fc_layer = _get_module_from_name(self.model, layer)
@@ -579,7 +578,8 @@ class TracInCPFast(TracInCPBase):
                     "Therefore, if showing the progress of the computation of self "
                     "influence scores, only the number of batches processed can be "
                     "displayed, and not the percentage completion of the computation, "
-                    "nor any time estimates."
+                    "nor any time estimates.",
+                    stacklevel=1,
                 )
 
         # pyre-fixme[53]: Captured variable `inputs_len` is not annotated.
@@ -1040,7 +1040,8 @@ class TracInCPFastRandProj(TracInCPFast):
                 "each call to `influence` to compute influence scores or proponents "
                 "will be slower, but may avoid running out of memory."
             )
-            % "`TracInCPFast`"
+            % "`TracInCPFast`",
+            stacklevel=1,
         )
 
         # pyre-fixme[4]: Attribute must be annotated.
@@ -1230,7 +1231,8 @@ class TracInCPFastRandProj(TracInCPFast):
                 "random projections results only in approximate self influence "
                 "scores, there is no reason to use `TracInCPFastRandProj` when "
                 "calculating self influence scores."
-            )
+            ),
+            stacklevel=1,
         )
         raise NotImplementedError
 

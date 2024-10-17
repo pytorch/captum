@@ -367,7 +367,9 @@ class PerturbationAttribution(Attribution):
         return True
 
 
-class InternalAttribution(Attribution, Generic[ModuleOrModuleList]):
+# mypy false positive "Free type variable expected in Generic[...]" but
+# ModuleOrModuleList is a TypeVar
+class InternalAttribution(Attribution, Generic[ModuleOrModuleList]):  # type: ignore
     r"""
     Shared base class for LayerAttrubution and NeuronAttribution,
     attribution types that require a model and a particular layer.
