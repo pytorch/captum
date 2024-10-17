@@ -178,7 +178,8 @@ class TracInCPBase(DataInfluence):
                 "Unable to determine the number of batches in training dataset "
                 "`train_dataset`. Therefore, if showing the progress of computations, "
                 "only the number of batches processed can be displayed, and not the "
-                "percentage completion of the computation, nor any time estimates."
+                "percentage completion of the computation, nor any time estimates.",
+                stacklevel=1,
             )
 
     @property
@@ -1232,7 +1233,8 @@ class TracInCP(TracInCPBase):
                     "Therefore, if showing the progress of the computation of self "
                     "influence scores, only the number of batches processed can be "
                     "displayed, and not the percentage completion of the computation, "
-                    "nor any time estimates."
+                    "nor any time estimates.",
+                    stacklevel=1,
                 )
 
         # pyre-fixme[3]: Return type must be annotated.

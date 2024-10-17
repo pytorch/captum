@@ -283,7 +283,8 @@ class NeuronConductance(NeuronAttribution, GradientAttribution):
                 "The neuron_selector provided is a callable. Please ensure that this"
                 " function only selects neurons from the given layer; aggregating"
                 " or performing other operations on the tensor may lead to inaccurate"
-                " results."
+                " results.",
+                stacklevel=1,
             )
         # pyre-fixme[6]: For 1st argument expected `Tensor` but got
         #  `TensorOrTupleOfTensorsGeneric`.

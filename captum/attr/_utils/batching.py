@@ -51,7 +51,8 @@ def _batch_attribution(
         warnings.warn(
             "Internal batch size cannot be less than the number of input examples. "
             "Defaulting to internal batch size of %d equal to the number of examples."
-            % num_examples
+            % num_examples,
+            stacklevel=1,
         )
     # Number of steps for each batch
     step_count = max(1, internal_batch_size // num_examples)
@@ -62,7 +63,8 @@ def _batch_attribution(
                 "This method computes finite differences between evaluations at "
                 "consecutive steps, so internal batch size must be at least twice "
                 "the number of examples. Defaulting to internal batch size of %d"
-                " equal to twice the number of examples." % (2 * num_examples)
+                " equal to twice the number of examples." % (2 * num_examples),
+                stacklevel=1,
             )
 
     total_attr = None
@@ -161,7 +163,8 @@ def _batched_generator(
         warnings.warn(
             """It looks like that the attribution for a gradient-based method is
             computed in a `torch.no_grad` block or perhaps the inputs have no
-            requires_grad."""
+            requires_grad.""",
+            stacklevel=1,
         )
     if internal_batch_size is None:
         # pyre-fixme[7]: Expected `Iterator[Tuple[typing.Tuple[Tensor, ...], typing.A...
