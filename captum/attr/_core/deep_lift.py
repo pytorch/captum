@@ -118,6 +118,23 @@ class DeepLift(GradientAttribution):
 
     @typing.overload
     # pyre-fixme[43]: The implementation of `attribute` does not accept all possible
+    #  arguments of overload defined on line `131`.
+    def attribute(
+        self,
+        inputs: TensorOrTupleOfTensorsGeneric,
+        baselines: BaselineType = None,
+        target: TargetType = None,
+        # pyre-fixme[2]: Parameter annotation cannot be `Any`.
+        additional_forward_args: Any = None,
+        *,
+        # pyre-fixme[31]: Expression `Literal[True]` is not a valid type.
+        # pyre-fixme[24]: Non-generic type `typing.Literal` cannot take parameters.
+        return_convergence_delta: Literal[True],
+        custom_attribution_func: Union[None, Callable[..., Tuple[Tensor, ...]]] = None,
+    ) -> Tuple[TensorOrTupleOfTensorsGeneric, Tensor]: ...
+
+    @typing.overload
+    # pyre-fixme[43]: The implementation of `attribute` does not accept all possible
     #  arguments of overload defined on line `120`.
     def attribute(
         self,
@@ -132,22 +149,6 @@ class DeepLift(GradientAttribution):
         return_convergence_delta: Literal[False] = False,
         custom_attribution_func: Union[None, Callable[..., Tuple[Tensor, ...]]] = None,
     ) -> TensorOrTupleOfTensorsGeneric: ...
-
-    @typing.overload
-    # pyre-fixme[43]: The implementation of `attribute` does not accept all possible
-    #  arguments of overload defined on line `131`.
-    def attribute(
-        self,
-        inputs: TensorOrTupleOfTensorsGeneric,
-        baselines: BaselineType = None,
-        target: TargetType = None,
-        additional_forward_args: Any = None,
-        *,
-        # pyre-fixme[31]: Expression `Literal[True]` is not a valid type.
-        # pyre-fixme[24]: Non-generic type `typing.Literal` cannot take parameters.
-        return_convergence_delta: Literal[True],
-        custom_attribution_func: Union[None, Callable[..., Tuple[Tensor, ...]]] = None,
-    ) -> Tuple[TensorOrTupleOfTensorsGeneric, Tensor]: ...
 
     @log_usage()
     def attribute(  # type: ignore
@@ -636,6 +637,25 @@ class DeepLiftShap(DeepLift):
     # DeepLiftShap.attribute, so we ignore typing here
     @typing.overload  # type: ignore
     # pyre-fixme[43]: The implementation of `attribute` does not accept all possible
+    #  arguments of overload defined on line `597`.
+    def attribute(
+        self,
+        inputs: TensorOrTupleOfTensorsGeneric,
+        baselines: Union[
+            TensorOrTupleOfTensorsGeneric, Callable[..., TensorOrTupleOfTensorsGeneric]
+        ],
+        target: TargetType = None,
+        # pyre-fixme[2]: Parameter annotation cannot be `Any`.
+        additional_forward_args: Any = None,
+        *,
+        # pyre-fixme[31]: Expression `Literal[True]` is not a valid type.
+        # pyre-fixme[24]: Non-generic type `typing.Literal` cannot take parameters.
+        return_convergence_delta: Literal[True],
+        custom_attribution_func: Union[None, Callable[..., Tuple[Tensor, ...]]] = None,
+    ) -> Tuple[TensorOrTupleOfTensorsGeneric, Tensor]: ...
+
+    @typing.overload
+    # pyre-fixme[43]: The implementation of `attribute` does not accept all possible
     #  arguments of overload defined on line `584`.
     def attribute(
         self,
@@ -652,24 +672,6 @@ class DeepLiftShap(DeepLift):
         return_convergence_delta: Literal[False] = False,
         custom_attribution_func: Union[None, Callable[..., Tuple[Tensor, ...]]] = None,
     ) -> TensorOrTupleOfTensorsGeneric: ...
-
-    @typing.overload
-    # pyre-fixme[43]: The implementation of `attribute` does not accept all possible
-    #  arguments of overload defined on line `597`.
-    def attribute(
-        self,
-        inputs: TensorOrTupleOfTensorsGeneric,
-        baselines: Union[
-            TensorOrTupleOfTensorsGeneric, Callable[..., TensorOrTupleOfTensorsGeneric]
-        ],
-        target: TargetType = None,
-        additional_forward_args: Any = None,
-        *,
-        # pyre-fixme[31]: Expression `Literal[True]` is not a valid type.
-        # pyre-fixme[24]: Non-generic type `typing.Literal` cannot take parameters.
-        return_convergence_delta: Literal[True],
-        custom_attribution_func: Union[None, Callable[..., Tuple[Tensor, ...]]] = None,
-    ) -> Tuple[TensorOrTupleOfTensorsGeneric, Tensor]: ...
 
     @log_usage()
     def attribute(  # type: ignore

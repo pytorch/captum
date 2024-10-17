@@ -211,7 +211,8 @@ def configure_interpretable_embedding_layer(
         "embeddings and compute attributions for each embedding dimension. "
         "The original embedding layer must be set "
         "back by calling `remove_interpretable_embedding_layer` function "
-        "after model interpretation is finished. "
+        "after model interpretation is finished. ",
+        stacklevel=1,
     )
     interpretable_emb = InterpretableEmbeddingBase(
         embedding_layer, embedding_layer_name

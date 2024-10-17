@@ -29,14 +29,14 @@ from torch import Tensor
 
 @typing.overload
 # pyre-fixme[43]: The implementation of `_perturb_func` does not accept all possible
-#  arguments of overload defined on line `28`.
-def _perturb_func(inputs: Tensor) -> Tensor: ...
+#  arguments of overload defined on line `32`.
+def _perturb_func(inputs: Tuple[Tensor, ...]) -> Tuple[Tensor, ...]: ...
 
 
 @typing.overload
 # pyre-fixme[43]: The implementation of `_perturb_func` does not accept all possible
-#  arguments of overload defined on line `32`.
-def _perturb_func(inputs: Tuple[Tensor, ...]) -> Tuple[Tensor, ...]: ...
+#  arguments of overload defined on line `28`.
+def _perturb_func(inputs: Tensor) -> Tensor: ...
 
 
 def _perturb_func(
