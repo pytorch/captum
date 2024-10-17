@@ -261,6 +261,8 @@ class NoiseTunnel(Attribution):
                 else sum_attribution_sq[i] + current_attribution_sq
             )
 
+        # pyre-fixme[53]: Captured variable `attr_func` is not annotated.
+        # pyre-fixme[53]: Captured variable `is_inputs_tuple` is not annotated.
         def compute_partial_attribution(
             inputs_with_noise_partition: Tuple[Tensor, ...],
             # pyre-fixme[2]: Parameter annotation cannot be `Any`.

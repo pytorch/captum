@@ -232,6 +232,8 @@ def sensitivity_max(
     # pyre-fixme[33]: Given annotation cannot be `Any`.
     kwargs_copy: Any = None
 
+    # pyre-fixme[53]: Captured variable `bsz` is not annotated.
+    # pyre-fixme[53]: Captured variable `expl_inputs` is not annotated.
     def _next_sensitivity_max(current_n_perturb_samples: int) -> Tensor:
         inputs_perturbed = _generate_perturbations(current_n_perturb_samples)
 

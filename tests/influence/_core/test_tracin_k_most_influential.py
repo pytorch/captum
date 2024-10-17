@@ -24,10 +24,18 @@ class TestTracInGetKMostInfluential(BaseTest):
     param_list: List[
         Tuple[str, DataInfluenceConstructor, bool, bool, int, int, str, bool]
     ] = []
+    # pyre-fixme[16]: `type` has no attribute `batch_size`.
+    # pyre-fixme[16]: `type` has no attribute `k`.
     for batch_size, k in [(4, 7), (7, 4), (40, 5), (5, 40), (40, 45)]:
+        # pyre-fixme[16]: `type` has no attribute `unpack_inputs`.
         for unpack_inputs in [True, False]:
+            # pyre-fixme[16]: `type` has no attribute `proponents`.
             for proponents in [True, False]:
+                # pyre-fixme[16]: `type` has no attribute `gpu_setting`.
                 for gpu_setting in GPU_SETTING_LIST:
+                    # pyre-fixme[16]: `type` has no attribute `reduction`.
+                    # pyre-fixme[16]: `type` has no attribute `constr`.
+                    # pyre-fixme[16]: `type` has no attribute `aggregate`.
                     for reduction, constr, aggregate in [
                         (
                             "none",
@@ -50,6 +58,9 @@ class TestTracInGetKMostInfluential(BaseTest):
                                 name="linear2",
                                 layers=(
                                     ["module.linear2"]
+                                    # pyre-fixme[16]:
+                                    #  `TestTracInGetKMostInfluential` has no attribute
+                                    #  `gpu_setting`.
                                     if gpu_setting == "cuda_data_parallel"
                                     else ["linear2"]
                                 ),
@@ -58,19 +69,39 @@ class TestTracInGetKMostInfluential(BaseTest):
                         ),
                     ]:
                         if not (
+                            # pyre-fixme[16]: `TestTracInGetKMostInfluential` has no
+                            #  attribute `constr`.
                             "sample_wise_grads_per_batch" in constr.kwargs
                             and constr.kwargs["sample_wise_grads_per_batch"]
                             and is_gpu(gpu_setting)
                         ):
                             param_list.append(
                                 (
+                                    # pyre-fixme[16]:
+                                    #  `TestTracInGetKMostInfluential` has no attribute
+                                    #  `reduction`.
                                     reduction,
                                     constr,
+                                    # pyre-fixme[16]:
+                                    #  `TestTracInGetKMostInfluential` has no attribute
+                                    #  `unpack_inputs`.
                                     unpack_inputs,
+                                    # pyre-fixme[16]:
+                                    #  `TestTracInGetKMostInfluential` has no attribute
+                                    #  `proponents`.
                                     proponents,
+                                    # pyre-fixme[16]:
+                                    #  `TestTracInGetKMostInfluential` has no attribute
+                                    #  `batch_size`.
                                     batch_size,
+                                    # pyre-fixme[16]:
+                                    #  `TestTracInGetKMostInfluential` has no attribute
+                                    #  `k`.
                                     k,
                                     gpu_setting,
+                                    # pyre-fixme[16]:
+                                    #  `TestTracInGetKMostInfluential` has no attribute
+                                    #  `aggregate`.
                                     aggregate,
                                 )
                             )

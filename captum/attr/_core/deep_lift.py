@@ -487,6 +487,9 @@ class DeepLift(GradientAttribution):
                 "network.".format(module)
             )
 
+        # pyre-fixme[6]: For 1st argument expected `Type[Union[ELU, LeakyReLU, ReLU,
+        #  Sigmoid, Softmax, Softplus, Tanh, MaxPool1d, MaxPool2d, MaxPool3d]]` but got
+        #  `Type[Module]`.
         multipliers = SUPPORTED_NON_LINEAR[type(module)](
             module,
             module.input,
