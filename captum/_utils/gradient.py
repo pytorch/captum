@@ -159,6 +159,22 @@ def _neuron_gradients(
 
 @typing.overload
 # pyre-fixme[43]: The implementation of `_forward_layer_eval` does not accept all
+#  possible arguments of overload defined on line `170`.
+def _forward_layer_eval(
+    # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
+    forward_fn: Callable,
+    inputs: Union[Tensor, Tuple[Tensor, ...]],
+    layer: List[Module],
+    # pyre-fixme[2]: Parameter annotation cannot be `Any`.
+    additional_forward_args: Any = None,
+    device_ids: Union[None, List[int]] = None,
+    attribute_to_layer_input: bool = False,
+    grad_enabled: bool = False,
+) -> List[Tuple[Tensor, ...]]: ...
+
+
+@typing.overload
+# pyre-fixme[43]: The implementation of `_forward_layer_eval` does not accept all
 #  possible arguments of overload defined on line `158`.
 def _forward_layer_eval(
     # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
@@ -171,21 +187,6 @@ def _forward_layer_eval(
     attribute_to_layer_input: bool = False,
     grad_enabled: bool = False,
 ) -> Tuple[Tensor, ...]: ...
-
-
-@typing.overload
-# pyre-fixme[43]: The implementation of `_forward_layer_eval` does not accept all
-#  possible arguments of overload defined on line `170`.
-def _forward_layer_eval(
-    # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
-    forward_fn: Callable,
-    inputs: Union[Tensor, Tuple[Tensor, ...]],
-    layer: List[Module],
-    additional_forward_args: Any = None,
-    device_ids: Union[None, List[int]] = None,
-    attribute_to_layer_input: bool = False,
-    grad_enabled: bool = False,
-) -> List[Tuple[Tensor, ...]]: ...
 
 
 def _forward_layer_eval(
@@ -434,22 +435,6 @@ def _forward_layer_eval_with_neuron_grads(
 
 @typing.overload
 # pyre-fixme[43]: The implementation of `_forward_layer_eval_with_neuron_grads` does
-#  not accept all possible arguments of overload defined on line `392`.
-def _forward_layer_eval_with_neuron_grads(
-    # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
-    forward_fn: Callable,
-    inputs: Union[Tensor, Tuple[Tensor, ...]],
-    layer: Module,
-    additional_forward_args: Any = None,
-    gradient_neuron_selector: None = None,
-    grad_enabled: bool = False,
-    device_ids: Union[None, List[int]] = None,
-    attribute_to_layer_input: bool = False,
-) -> Tuple[Tensor, ...]: ...
-
-
-@typing.overload
-# pyre-fixme[43]: The implementation of `_forward_layer_eval_with_neuron_grads` does
 #  not accept all possible arguments of overload defined on line `405`.
 def _forward_layer_eval_with_neuron_grads(
     # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
@@ -462,6 +447,22 @@ def _forward_layer_eval_with_neuron_grads(
     device_ids: Union[None, List[int]] = None,
     attribute_to_layer_input: bool = False,
 ) -> List[Tuple[Tensor, ...]]: ...
+
+
+@typing.overload
+# pyre-fixme[43]: The implementation of `_forward_layer_eval_with_neuron_grads` does
+#  not accept all possible arguments of overload defined on line `392`.
+def _forward_layer_eval_with_neuron_grads(
+    # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
+    forward_fn: Callable,
+    inputs: Union[Tensor, Tuple[Tensor, ...]],
+    layer: Module,
+    additional_forward_args: Any = None,
+    gradient_neuron_selector: None = None,
+    grad_enabled: bool = False,
+    device_ids: Union[None, List[int]] = None,
+    attribute_to_layer_input: bool = False,
+) -> Tuple[Tensor, ...]: ...
 
 
 def _forward_layer_eval_with_neuron_grads(
