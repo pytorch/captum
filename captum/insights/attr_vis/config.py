@@ -74,9 +74,7 @@ ATTRIBUTION_NAMES_TO_METHODS: Dict[
 }
 
 
-# pyre-fixme[3]: Return type must be annotated.
-# pyre-fixme[2]: Parameter must be annotated.
-def _str_to_tuple(s):
+def _str_to_tuple(s: Tuple[int, ...]) -> Tuple[int, ...]:
     if isinstance(s, tuple):
         return s
     return tuple([int(i) for i in s.split()])

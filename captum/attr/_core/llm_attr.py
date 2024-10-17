@@ -1,18 +1,29 @@
 # pyre-strict
 from copy import copy
 
-from typing import Callable, cast, Dict, List, Optional, Union
+from textwrap import shorten
+
+from typing import Any, Callable, cast, Dict, List, Optional, Tuple, Union
+
+import matplotlib.colors as mcolors
 
 import matplotlib.pyplot as plt
 import numpy as np
 
 import torch
+from captum._utils.typing import TokenizerLike
 from captum.attr._core.feature_ablation import FeatureAblation
 from captum.attr._core.kernel_shap import KernelShap
+from captum.attr._core.layer.layer_gradient_shap import LayerGradientShap
+from captum.attr._core.layer.layer_gradient_x_activation import LayerGradientXActivation
 from captum.attr._core.layer.layer_integrated_gradients import LayerIntegratedGradients
 from captum.attr._core.lime import Lime
 from captum.attr._core.shapley_value import ShapleyValues, ShapleyValueSampling
-from captum.attr._utils.attribution import Attribution
+from captum.attr._utils.attribution import (
+    Attribution,
+    GradientAttribution,
+    PerturbationAttribution,
+)
 from captum.attr._utils.interpretable_input import (
     InterpretableInput,
     TextTemplateInput,
@@ -20,8 +31,12 @@ from captum.attr._utils.interpretable_input import (
 )
 from torch import nn, Tensor
 
-
-DEFAULT_GEN_ARGS = {"max_new_tokens": 25, "do_sample": False}
+DEFAULT_GEN_ARGS: Dict[str, Any] = {
+    "max_new_tokens": 25,
+    "do_sample": False,
+    "temperature": None,
+    "top_p": None,
+}
 
 
 class LLMAttributionResult:
@@ -31,27 +46,25 @@ class LLMAttributionResult:
     It also provides utilities to help present and plot the result in different forms.
     """
 
-    # pyre-fixme[3]: Return type must be annotated.
     def __init__(
         self,
         seq_attr: Tensor,
-        token_attr: Union[Tensor, None],
+        token_attr: Optional[Tensor],
         input_tokens: List[str],
         output_tokens: List[str],
-    ):
+    ) -> None:
         self.seq_attr = seq_attr
         self.token_attr = token_attr
         self.input_tokens = input_tokens
         self.output_tokens = output_tokens
 
     @property
-    # pyre-fixme[3]: Return type must be annotated.
-    def seq_attr_dict(self):
+    def seq_attr_dict(self) -> Dict[str, float]:
         return {k: v for v, k in zip(self.seq_attr.cpu().tolist(), self.input_tokens)}
 
-    # pyre-fixme[3]: Return type must be annotated.
-    # pyre-fixme[2]: Parameter must be annotated.
-    def plot_token_attr(self, show=False):
+    def plot_token_attr(
+        self, show: bool = False
+    ) -> Union[None, Tuple[plt.Figure, plt.Axes]]:
         """
         Generate a matplotlib plot for visualising the attribution
         of the output tokens.
@@ -61,7 +74,11 @@ class LLMAttributionResult:
                 Default: False
         """
 
-        # pyre-fixme[16]: `Optional` has no attribute `cpu`.
+        if self.token_attr is None:
+            raise ValueError(
+                "token_attr is None (no token-level attribution was performed), please "
+                "use plot_seq_attr instead for the sequence-level attribution plot"
+            )
         token_attr = self.token_attr.cpu()
 
         # maximum absolute attribution value
@@ -71,26 +88,47 @@ class LLMAttributionResult:
 
         fig, ax = plt.subplots()
 
+        # Hide the grid
+        ax.grid(False)
+
         # Plot the heatmap
         data = token_attr.numpy()
 
         fig.set_size_inches(
             max(data.shape[1] * 1.3, 6.4), max(data.shape[0] / 2.5, 4.8)
         )
+        colors = [
+            "#93003a",
+            "#d0365b",
+            "#f57789",
+            "#ffbdc3",
+            "#ffffff",
+            "#a4d6e1",
+            "#73a3ca",
+            "#4772b3",
+            "#00429d",
+        ]
+
         im = ax.imshow(
             data,
             vmax=max_abs_attr_val,
             vmin=-max_abs_attr_val,
-            cmap="RdYlGn",
+            cmap=mcolors.LinearSegmentedColormap.from_list(
+                name="colors", colors=colors
+            ),
             aspect="auto",
         )
+        fig.set_facecolor("white")
 
         # Create colorbar
-        cbar = ax.figure.colorbar(im, ax=ax)
-        cbar.ax.set_ylabel("Token Attribuiton", rotation=-90, va="bottom")
+        cbar = fig.colorbar(im, ax=ax)  # type: ignore
+        cbar.ax.set_ylabel("Token Attribution", rotation=-90, va="bottom")
 
         # Show all ticks and label them with the respective list entries.
-        ax.set_xticks(np.arange(data.shape[1]), labels=self.input_tokens)
+        shortened_tokens = [
+            shorten(t, width=50, placeholder="...") for t in self.input_tokens
+        ]
+        ax.set_xticks(np.arange(data.shape[1]), labels=shortened_tokens)
         ax.set_yticks(np.arange(data.shape[0]), labels=self.output_tokens)
 
         # Let the horizontal axes labeling appear on top.
@@ -116,12 +154,13 @@ class LLMAttributionResult:
 
         if show:
             plt.show()
+            return None  # mypy wants this
         else:
             return fig, ax
 
-    # pyre-fixme[3]: Return type must be annotated.
-    # pyre-fixme[2]: Parameter must be annotated.
-    def plot_seq_attr(self, show=False):
+    def plot_seq_attr(
+        self, show: bool = False
+    ) -> Union[None, Tuple[plt.Figure, plt.Axes]]:
         """
         Generate a matplotlib plot for visualising the attribution
         of the output sequence.
@@ -135,27 +174,88 @@ class LLMAttributionResult:
 
         data = self.seq_attr.cpu().numpy()
 
-        ax.set_xticks(range(data.shape[0]), labels=self.input_tokens)
+        fig.set_size_inches(max(data.shape[0] / 2, 6.4), max(data.shape[0] / 4, 4.8))
+
+        shortened_tokens = [
+            shorten(t, width=50, placeholder="...") for t in self.input_tokens
+        ]
+        ax.set_xticks(range(data.shape[0]), labels=shortened_tokens)
 
         ax.tick_params(top=True, bottom=False, labeltop=True, labelbottom=False)
 
-        plt.setp(ax.get_xticklabels(), rotation=-30, ha="right", rotation_mode="anchor")
+        plt.setp(
+            ax.get_xticklabels(),
+            rotation=-30,
+            ha="right",
+            rotation_mode="anchor",
+        )
+
+        fig.set_facecolor("white")
 
         # pos bar
         ax.bar(
-            range(data.shape[0]), [max(v, 0) for v in data], align="center", color="g"
+            range(data.shape[0]),
+            [max(v, 0) for v in data],
+            align="center",
+            color="#4772b3",
         )
         # neg bar
         ax.bar(
-            range(data.shape[0]), [min(v, 0) for v in data], align="center", color="r"
+            range(data.shape[0]),
+            [min(v, 0) for v in data],
+            align="center",
+            color="#d0365b",
         )
 
-        ax.set_ylabel("Sequence Attribuiton", rotation=90, va="bottom")
+        ax.set_ylabel("Sequence Attribution", rotation=90, va="bottom")
 
         if show:
             plt.show()
+            return None  # mypy wants this
         else:
             return fig, ax
+
+
+def _convert_ids_to_pretty_tokens(ids: Tensor, tokenizer: TokenizerLike) -> List[str]:
+    """
+    Convert ids to tokens without ugly unicode characters (e.g., Ġ). See:
+    https://github.com/huggingface/transformers/issues/4786 and
+    https://discuss.huggingface.co/t/bpe-tokenizers-and-spaces-before-words/475/2
+
+    This is the preferred function over tokenizer.convert_ids_to_tokens() for
+    user-facing data.
+
+    Quote from links:
+    > Spaces are converted in a special character (the Ġ) in the tokenizer prior to
+    > BPE splitting mostly to avoid digesting spaces since the standard BPE algorithm
+    > used spaces in its process
+    """
+    pretty_tokens = []
+    idx = 0
+    while idx < len(ids):
+        decoded = tokenizer.decode(ids[idx])
+        # Handle case where single token (e.g. unicode) is split into multiple IDs
+        # NOTE: This logic will fail if a tokenizer splits a token into 3+ IDs
+        if decoded.strip() == "�" and tokenizer.encode(decoded) != [ids[idx]]:
+            # ID at idx is split, ensure next token is also from a split
+            decoded_next = tokenizer.decode(ids[idx + 1])
+            if decoded_next.strip() == "�" and tokenizer.encode(decoded_next) != [
+                ids[idx + 1]
+            ]:
+                # Both tokens are from a split, combine them
+                decoded = tokenizer.decode(ids[idx : idx + 2])
+                pretty_tokens.append(decoded + "[1/2]")
+                pretty_tokens.append(decoded + "[2/2]")
+            else:
+                # Treat tokens as separate
+                pretty_tokens.append(decoded)
+                pretty_tokens.append(decoded_next)
+            idx += 2
+        else:
+            # Just a normal token
+            idx += 1
+            pretty_tokens.append(decoded)
+    return pretty_tokens
 
 
 class LLMAttribution(Attribution):
@@ -183,14 +283,12 @@ class LLMAttribution(Attribution):
     )
     SUPPORTED_INPUTS = (TextTemplateInput, TextTokenInput)
 
-    # pyre-fixme[3]: Return type must be annotated.
     def __init__(
         self,
-        attr_method: Attribution,
-        # pyre-fixme[2]: Parameter must be annotated.
-        tokenizer,
+        attr_method: PerturbationAttribution,
+        tokenizer: TokenizerLike,
         attr_target: str = "log_prob",  # TODO: support callable attr_target
-    ):
+    ) -> None:
         """
         Args:
             attr_method (Attribution): Instance of a supported perturbation attribution
@@ -213,10 +311,8 @@ class LLMAttribution(Attribution):
         super().__init__(attr_method.forward_func)
 
         # shallow copy is enough to avoid modifying original instance
-        # pyre-fixme[4]: Attribute must be annotated.
-        self.attr_method = copy(attr_method)
-        # pyre-fixme[4]: Attribute must be annotated.
-        self.include_per_token_attr = isinstance(
+        self.attr_method: PerturbationAttribution = copy(attr_method)
+        self.include_per_token_attr: bool = isinstance(
             attr_method, self.SUPPORTED_PER_TOKEN_ATTR_METHODS
         )
 
@@ -224,13 +320,10 @@ class LLMAttribution(Attribution):
 
         # alias, we really need a model and don't support wrapper functions
         # coz we need call model.forward, model.generate, etc.
-        # pyre-fixme[4]: Attribute must be annotated.
-        self.model = cast(nn.Module, self.forward_func)
+        self.model: nn.Module = cast(nn.Module, self.forward_func)
 
-        # pyre-fixme[4]: Attribute must be annotated.
-        self.tokenizer = tokenizer
-        # pyre-fixme[4]: Attribute must be annotated.
-        self.device = (
+        self.tokenizer: TokenizerLike = tokenizer
+        self.device: torch.device = (
             cast(torch.device, self.model.device)
             if hasattr(self.model, "device")
             else next(self.model.parameters()).device
@@ -242,32 +335,55 @@ class LLMAttribution(Attribution):
         ), "attr_target should be either 'log_prob' or 'prob'"
         self.attr_target = attr_target
 
-    # pyre-fixme[3]: Return type must be annotated.
     def _forward_func(
         self,
-        # pyre-fixme[2]: Parameter must be annotated.
-        perturbed_tensor,
-        # pyre-fixme[2]: Parameter must be annotated.
-        inp,
-        # pyre-fixme[2]: Parameter must be annotated.
-        target_tokens,
-        # pyre-fixme[2]: Parameter must be annotated.
-        use_cached_outputs=False,
-        _inspect_forward=None,
-    ):
+        perturbed_tensor: Union[None, Tensor],
+        inp: InterpretableInput,
+        target_tokens: Tensor,
+        use_cached_outputs: bool = False,
+        _inspect_forward: Optional[Callable[[str, str, List[float]], None]] = None,
+    ) -> Tensor:
+        # Lazily import transformers_typing to avoid importing transformers package if
+        # it isn't needed
+        from captum._utils.transformers_typing import (
+            Cache,
+            DynamicCache,
+            supports_caching,
+            update_model_kwargs,
+        )
+
         perturbed_input = self._format_model_input(inp.to_model_input(perturbed_tensor))
         init_model_inp = perturbed_input
 
         model_inp = init_model_inp
-        attention_mask = torch.tensor([[1] * model_inp.shape[1]])
-        attention_mask = attention_mask.to(model_inp.device)
+        attention_mask = torch.ones(
+            [1, model_inp.shape[1]], dtype=torch.long, device=model_inp.device
+        )
         model_kwargs = {"attention_mask": attention_mask}
+        # If applicable, update model kwargs for transformers models
+        update_model_kwargs(
+            model_kwargs=model_kwargs,
+            model=self.model,
+            input_ids=model_inp,
+            caching=use_cached_outputs,
+        )
 
-        log_prob_list = []
+        log_prob_list: List[Tensor] = []
         outputs = None
         for target_token in target_tokens:
             if use_cached_outputs:
                 if outputs is not None:
+                    # If applicable, convert past_key_values to DynamicCache for
+                    # transformers models
+                    if (
+                        Cache is not None
+                        and DynamicCache is not None
+                        and supports_caching(self.model)
+                        and not isinstance(outputs.past_key_values, Cache)
+                    ):
+                        outputs.past_key_values = DynamicCache.from_legacy_cache(
+                            outputs.past_key_values
+                        )
                     model_kwargs = self.model._update_model_kwargs_for_generation(
                         outputs, model_kwargs
                     )
@@ -276,7 +392,12 @@ class LLMAttribution(Attribution):
                 )
                 outputs = self.model.forward(**model_inputs)
             else:
-                outputs = self.model.forward(model_inp, attention_mask=attention_mask)
+                # Update attention mask to adapt to input size change
+                attention_mask = torch.ones(
+                    [1, model_inp.shape[1]], dtype=torch.long, device=model_inp.device
+                )
+                model_kwargs["attention_mask"] = attention_mask
+                outputs = self.model.forward(model_inp, **model_kwargs)
             new_token_logits = outputs.logits[:, -1]
             log_probs = torch.nn.functional.log_softmax(new_token_logits, dim=1)
 
@@ -286,7 +407,7 @@ class LLMAttribution(Attribution):
                 (model_inp, torch.tensor([[target_token]]).to(self.device)), dim=1
             )
 
-        total_log_prob = sum(log_prob_list)
+        total_log_prob = torch.sum(torch.stack(log_prob_list), dim=0)
         # 1st element is the total prob, rest are the target tokens
         # add a leading dim for batch even we only support single instance for now
         if self.include_per_token_attr:
@@ -295,8 +416,6 @@ class LLMAttribution(Attribution):
             ).unsqueeze(0)
         else:
             target_log_probs = total_log_prob
-        # pyre-fixme[6]: For 1st argument expected `Tensor` but got `Union[int,
-        #  Tensor]`.
         target_probs = torch.exp(target_log_probs)
 
         if _inspect_forward:
@@ -308,8 +427,7 @@ class LLMAttribution(Attribution):
 
         return target_probs if self.attr_target != "log_prob" else target_log_probs
 
-    # pyre-fixme[3]: Return type must be annotated.
-    def _format_model_input(self, model_input: Union[str, Tensor]):
+    def _format_model_input(self, model_input: Union[str, Tensor]) -> Tensor:
         """
         Convert str to tokenized tensor
         to make LLMAttribution work with model inputs of both
@@ -326,17 +444,13 @@ class LLMAttribution(Attribution):
         self,
         inp: InterpretableInput,
         target: Union[str, torch.Tensor, None] = None,
+        skip_tokens: Union[List[int], List[str], None] = None,
         num_trials: int = 1,
-        # pyre-fixme[24]: Generic type `dict` expects 2 type parameters, use
-        #  `typing.Dict[<key type>, <value type>]` to avoid runtime subscripting
-        #  errors.
-        gen_args: Optional[Dict] = None,
+        gen_args: Optional[Dict[str, Any]] = None,
         use_cached_outputs: bool = True,
         # internal callback hook can be used for logging
-        # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
-        _inspect_forward: Optional[Callable] = None,
-        # pyre-fixme[2]: Parameter must be annotated.
-        **kwargs,
+        _inspect_forward: Optional[Callable[[str, str, List[float]], None]] = None,
+        **kwargs: Any,
     ) -> LLMAttributionResult:
         """
         Args:
@@ -345,12 +459,19 @@ class LLMAttribution(Attribution):
                     which attributions are computed. If None, it uses the model
                     to generate the target based on the input and gen_args.
                     Default: None
+            skip_tokens (List[int] or List[str], optional): the tokens to skip in the
+                    the output's interpretable representation. Use this argument to
+                    define uninterested tokens, commonly like special tokens, e.g.,
+                    sos, and unk. It can be a list of strings of the tokens or a list
+                    of integers of the token ids.
+                    Default: None
             num_trials (int, optional): number of trials to run. Return is the average
                     attribibutions over all the trials.
                     Defaults: 1.
             gen_args (dict, optional): arguments for generating the target. Only used if
                     target is not given. When None, the default arguments are used,
-                    {"max_length": 25, "do_sample": False}
+                    {"max_new_tokens": 25, "do_sample": False,
+                    "temperature": None, "top_p": None}
                     Defaults: None
             **kwargs (Any): any extra keyword arguments passed to the call of the
                     underlying attribute function of the given attribution instance
@@ -380,17 +501,31 @@ class LLMAttribution(Attribution):
             target_tokens = output_tokens[0][model_inp.size(1) :]
         else:
             assert gen_args is None, "gen_args must be None when target is given"
+            # Encode skip tokens
+            if skip_tokens:
+                if isinstance(skip_tokens[0], str):
+                    skip_tokens = cast(List[str], skip_tokens)
+                    skip_tokens = self.tokenizer.convert_tokens_to_ids(skip_tokens)
+            else:
+                skip_tokens = []
 
-            if type(target) is str:
-                # exclude sos
-                target_tokens = self.tokenizer.encode(target)[1:]
-                target_tokens = torch.tensor(target_tokens)
-            elif type(target) is torch.Tensor:
-                target_tokens = target
+            if isinstance(target, str):
+                encoded = self.tokenizer.encode(target)
+                target_tokens = torch.tensor(
+                    [token for token in encoded if token not in skip_tokens]
+                )
+            elif isinstance(target, torch.Tensor):
+                target_tokens = target[
+                    ~torch.isin(target, torch.tensor(skip_tokens, device=target.device))
+                ]
+            else:
+                raise TypeError(
+                    "target must either be str or Tensor, but the type of target is "
+                    "{}".format(type(target))
+                )
 
         attr = torch.zeros(
             [
-                # pyre-fixme[61]: `target_tokens` is undefined, or not always defined.
                 1 + len(target_tokens) if self.include_per_token_attr else 1,
                 inp.n_itp_features,
             ],
@@ -405,8 +540,6 @@ class LLMAttribution(Attribution):
                 attr_input,
                 additional_forward_args=(
                     inp,
-                    # pyre-fixme[61]: `target_tokens` is undefined, or not always
-                    #  defined.
                     target_tokens,
                     use_cached_outputs,
                     _inspect_forward,
@@ -431,8 +564,15 @@ class LLMAttribution(Attribution):
                 attr[1:] if self.include_per_token_attr else None
             ),  # shape(n_output_token, n_input_features)
             inp.values,
-            # pyre-fixme[61]: `target_tokens` is undefined, or not always defined.
-            self.tokenizer.convert_ids_to_tokens(target_tokens),
+            _convert_ids_to_pretty_tokens(target_tokens, self.tokenizer),
+        )
+
+    def attribute_future(self) -> Callable[[], LLMAttributionResult]:
+        r"""
+        This method is not implemented for LLMAttribution.
+        """
+        raise NotImplementedError(
+            "attribute_future is not implemented for LLMAttribution"
         )
 
 
@@ -449,17 +589,18 @@ class LLMGradientAttribution(Attribution):
     and returns LLMAttributionResult
     """
 
-    SUPPORTED_METHODS = (LayerIntegratedGradients,)
+    SUPPORTED_METHODS = (
+        LayerGradientShap,
+        LayerGradientXActivation,
+        LayerIntegratedGradients,
+    )
     SUPPORTED_INPUTS = (TextTokenInput,)
 
-    # pyre-fixme[3]: Return type must be annotated.
     def __init__(
         self,
-        # pyre-fixme[2]: Parameter must be annotated.
-        attr_method,
-        # pyre-fixme[2]: Parameter must be annotated.
-        tokenizer,
-    ):
+        attr_method: GradientAttribution,
+        tokenizer: TokenizerLike,
+    ) -> None:
         """
         Args:
             attr_method (Attribution): instance of a supported perturbation attribution
@@ -473,78 +614,39 @@ class LLMGradientAttribution(Attribution):
 
         super().__init__(attr_method.forward_func)
 
-        # shallow copy is enough to avoid modifying original instance
-        # pyre-fixme[4]: Attribute must be annotated.
-        self.attr_method = copy(attr_method)
-        self.attr_method.forward_func = self._forward_func
-
         # alias, we really need a model and don't support wrapper functions
         # coz we need call model.forward, model.generate, etc.
-        # pyre-fixme[4]: Attribute must be annotated.
-        self.model = cast(nn.Module, self.forward_func)
+        self.model: nn.Module = cast(nn.Module, self.forward_func)
 
-        # pyre-fixme[4]: Attribute must be annotated.
-        self.tokenizer = tokenizer
-        # pyre-fixme[4]: Attribute must be annotated.
-        self.device = (
+        # shallow copy is enough to avoid modifying original instance
+        self.attr_method: GradientAttribution = copy(attr_method)
+        self.attr_method.forward_func = GradientForwardFunc(self)
+
+        self.tokenizer: TokenizerLike = tokenizer
+        self.device: torch.device = (
             cast(torch.device, self.model.device)
             if hasattr(self.model, "device")
             else next(self.model.parameters()).device
         )
 
-    # pyre-fixme[3]: Return type must be annotated.
-    def _forward_func(
-        self,
-        perturbed_tensor: Tensor,
-        inp: InterpretableInput,
-        target_tokens: Tensor,  # 1D tensor of target token ids
-        cur_target_idx: int,  # current target index
-    ):
-        perturbed_input = self._format_model_input(inp.to_model_input(perturbed_tensor))
-
-        if cur_target_idx:
-            # the input batch size can be expanded by attr method
-            output_token_tensor = (
-                target_tokens[:cur_target_idx]
-                .unsqueeze(0)
-                .expand(perturbed_input.size(0), -1)
-                .to(self.device)
-            )
-            new_input_tensor = torch.cat([perturbed_input, output_token_tensor], dim=1)
-        else:
-            new_input_tensor = perturbed_input
-
-        output_logits = self.model(new_input_tensor)
-
-        new_token_logits = output_logits.logits[:, -1]
-        log_probs = torch.nn.functional.log_softmax(new_token_logits, dim=1)
-
-        target_token = target_tokens[cur_target_idx]
-        token_log_probs = log_probs[..., target_token]
-
-        # the attribution target is limited to the log probability
-        return token_log_probs
-
-    # pyre-fixme[3]: Return type must be annotated.
-    # pyre-fixme[2]: Parameter must be annotated.
-    def _format_model_input(self, model_input):
+    def _format_model_input(self, model_input: Union[Tensor, str]) -> Tensor:
         """
         Convert str to tokenized tensor
         """
+        if isinstance(model_input, str):
+            return self.tokenizer.encode(model_input, return_tensors="pt").to(
+                self.device
+            )
         return model_input.to(self.device)
 
-    # pyre-fixme[3]: Return type must be annotated.
     def attribute(
         self,
         inp: InterpretableInput,
         target: Union[str, torch.Tensor, None] = None,
-        # pyre-fixme[24]: Generic type `dict` expects 2 type parameters, use
-        #  `typing.Dict[<key type>, <value type>]` to avoid runtime subscripting
-        #  errors.
-        gen_args: Optional[Dict] = None,
-        # pyre-fixme[2]: Parameter must be annotated.
-        **kwargs,
-    ):
+        skip_tokens: Union[List[int], List[str], None] = None,
+        gen_args: Optional[Dict[str, Any]] = None,
+        **kwargs: Any,
+    ) -> LLMAttributionResult:
         """
         Args:
             inp (InterpretableInput): input prompt for which attributions are computed
@@ -552,9 +654,16 @@ class LLMGradientAttribution(Attribution):
                     which attributions are computed. If None, it uses the model
                     to generate the target based on the input and gen_args.
                     Default: None
+            skip_tokens (List[int] or List[str], optional): the tokens to skip in the
+                    the output's interpretable representation. Use this argument to
+                    define uninterested tokens, commonly like special tokens, e.g.,
+                    sos, and unk. It can be a list of strings of the tokens or a list
+                    of integers of the token ids.
+                    Default: None
             gen_args (dict, optional): arguments for generating the target. Only used if
                     target is not given. When None, the default arguments are used,
-                    {"max_length": 25, "do_sample": False}
+                    {"max_new_tokens": 25, "do_sample": False,
+                    "temperature": None, "top_p": None}
                     Defaults: None
             **kwargs (Any): any extra keyword arguments passed to the call of the
                     underlying attribute function of the given attribution instance
@@ -578,36 +687,49 @@ class LLMGradientAttribution(Attribution):
             if not gen_args:
                 gen_args = DEFAULT_GEN_ARGS
 
-            model_inp = self._format_model_input(inp.to_model_input())
-            output_tokens = self.model.generate(model_inp, **gen_args)
-            target_tokens = output_tokens[0][model_inp.size(1) :]
+            with torch.no_grad():
+                model_inp = self._format_model_input(inp.to_model_input())
+                output_tokens = self.model.generate(model_inp, **gen_args)
+                target_tokens = output_tokens[0][model_inp.size(1) :]
         else:
             assert gen_args is None, "gen_args must be None when target is given"
+            # Encode skip tokens
+            if skip_tokens:
+                if isinstance(skip_tokens[0], str):
+                    skip_tokens = cast(List[str], skip_tokens)
+                    skip_tokens = self.tokenizer.convert_tokens_to_ids(skip_tokens)
+            else:
+                skip_tokens = []
 
-            if type(target) is str:
-                # exclude sos
-                target_tokens = self.tokenizer.encode(target)[1:]
-                target_tokens = torch.tensor(target_tokens)
-            elif type(target) is torch.Tensor:
-                target_tokens = target
+            if isinstance(target, str):
+                encoded = self.tokenizer.encode(target)
+                target_tokens = torch.tensor(
+                    [token for token in encoded if token not in skip_tokens]
+                )
+            elif isinstance(target, torch.Tensor):
+                target_tokens = target[
+                    ~torch.isin(target, torch.tensor(skip_tokens, device=target.device))
+                ]
+            else:
+                raise TypeError(
+                    "target must either be str or Tensor, but the type of target is "
+                    "{}".format(type(target))
+                )
 
         attr_inp = inp.to_tensor().to(self.device)
 
         attr_list = []
-        # pyre-fixme[61]: `target_tokens` is undefined, or not always defined.
         for cur_target_idx, _ in enumerate(target_tokens):
             # attr in shape(batch_size, input+output_len, emb_dim)
             attr = self.attr_method.attribute(
                 attr_inp,
                 additional_forward_args=(
                     inp,
-                    # pyre-fixme[61]: `target_tokens` is undefined, or not always
-                    #  defined.
                     target_tokens,
                     cur_target_idx,
                 ),
                 **kwargs,
-            )
+            ).detach()
             attr = cast(Tensor, attr)
 
             # will have the attr for previous output tokens
@@ -629,7 +751,7 @@ class LLMGradientAttribution(Attribution):
         # it attributes to all the elements of the output of the specified layer
         # so we need special handling for the inp type which don't care all the elements
         if isinstance(inp, TextTokenInput) and inp.itp_mask is not None:
-            itp_mask = inp.itp_mask.to(self.device)
+            itp_mask = inp.itp_mask.to(attr.device)
             itp_mask = itp_mask.expand_as(attr)
             attr = attr[itp_mask].view(attr.size(0), -1)
 
@@ -642,6 +764,58 @@ class LLMGradientAttribution(Attribution):
             seq_attr,
             attr,  # shape(n_output_token, n_input_features)
             inp.values,
-            # pyre-fixme[61]: `target_tokens` is undefined, or not always defined.
-            self.tokenizer.convert_ids_to_tokens(target_tokens),
+            _convert_ids_to_pretty_tokens(target_tokens, self.tokenizer),
         )
+
+    def attribute_future(self) -> Callable[[], LLMAttributionResult]:
+        r"""
+        This method is not implemented for LLMGradientAttribution.
+        """
+        raise NotImplementedError(
+            "attribute_future is not implemented for LLMGradientAttribution"
+        )
+
+
+class GradientForwardFunc(nn.Module):
+    """
+    A wrapper class for the forward function of a model in LLMGradientAttribution
+    """
+
+    def __init__(self, attr: LLMGradientAttribution) -> None:
+        super().__init__()
+        self.attr = attr
+        self.model: nn.Module = attr.model
+
+    def forward(
+        self,
+        perturbed_tensor: Tensor,
+        inp: InterpretableInput,
+        target_tokens: Tensor,  # 1D tensor of target token ids
+        cur_target_idx: int,  # current target index
+    ) -> Tensor:
+        perturbed_input = self.attr._format_model_input(
+            inp.to_model_input(perturbed_tensor)
+        )
+
+        if cur_target_idx:
+            # the input batch size can be expanded by attr method
+            output_token_tensor = (
+                target_tokens[:cur_target_idx]
+                .unsqueeze(0)
+                .expand(perturbed_input.size(0), -1)
+                .to(self.attr.device)
+            )
+            new_input_tensor = torch.cat([perturbed_input, output_token_tensor], dim=1)
+        else:
+            new_input_tensor = perturbed_input
+
+        output_logits = self.model(new_input_tensor)
+
+        new_token_logits = output_logits.logits[:, -1]
+        log_probs = torch.nn.functional.log_softmax(new_token_logits, dim=1)
+
+        target_token = target_tokens[cur_target_idx]
+        token_log_probs = log_probs[..., target_token]
+
+        # the attribution target is limited to the log probability
+        return token_log_probs

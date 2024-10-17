@@ -1,4 +1,6 @@
-#!/usr/bin/env python3import
+#!/usr/bin/env python3
+
+# pyre-strict
 
 import glob
 import os
@@ -50,7 +52,7 @@ class CustomClassifier(Classifier):
 
     def train_and_eval(
         self, dataloader: DataLoader, **kwargs: Any
-    ) -> Union[Dict, None]:
+    ) -> Union[Dict[str, Tensor], None]:
         inputs = []
         labels = []
         for input, label in dataloader:
@@ -59,6 +61,7 @@ class CustomClassifier(Classifier):
         inputs = torch.cat(inputs)
         labels = torch.cat(labels)
         # update concept ids aka classes
+        # pyre-fixme[16]: `CustomClassifier` has no attribute `_classes`.
         self._classes = list(OrderedDict.fromkeys([label.item() for label in labels]))
 
         # Training is skipped for performance and indepenence of sklearn reasons
@@ -85,11 +88,13 @@ class CustomClassifier(Classifier):
         accs = score.float().mean()
 
         # A hack to mock weights for two different layer
+        # pyre-fixme[16]: `CustomClassifier` has no attribute `num_features`.
         self.num_features = input.shape[1]
 
         return {"accs": accs}
 
     def weights(self) -> Tensor:
+        # pyre-fixme[16]: `CustomClassifier` has no attribute `num_features`.
         if self.num_features != 16:
             return torch.randn(2, self.num_features)
 
@@ -136,6 +141,7 @@ class CustomClassifier(Classifier):
         )
 
     def classes(self) -> List[int]:
+        # pyre-fixme[16]: `CustomClassifier` has no attribute `_classes`.
         return self._classes
 
 
@@ -145,7 +151,7 @@ class CustomClassifier_WO_Returning_Metrics(CustomClassifier):
 
     def train_and_eval(
         self, dataloader: DataLoader, **kwargs: Any
-    ) -> Union[Dict, None]:
+    ) -> Union[Dict[str, Tensor], None]:
         CustomClassifier.train_and_eval(self, dataloader)
         return None
 
@@ -172,6 +178,7 @@ class CustomIterableDataset(IterableDataset):
 
     def __init__(
         self,
+        # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
         get_tensor_from_filename_func: Callable,
         path: str,
         num_samples: int = 100,
@@ -183,14 +190,14 @@ class CustomIterableDataset(IterableDataset):
         """
 
         self.path = path
-        self.file_itr = ["x"] * num_samples
+        self.file_itr: List[str] = ["x"] * num_samples
         self.get_tensor_from_filename_func = get_tensor_from_filename_func
 
     def get_tensor_from_filename(self, filename: str) -> Tensor:
 
         return self.get_tensor_from_filename_func(filename)
 
-    def __iter__(self) -> Iterator:
+    def __iter__(self) -> Iterator[Tensor]:
 
         mapped_itr = map(self.get_tensor_from_filename, self.file_itr)
 
@@ -728,26 +735,22 @@ class Test(BaseTest):
             self.assertEqual(cavs["0-1"]["conv1"].concepts[1].id, 1)
             self.assertEqual(cavs["0-1"]["conv1"].concepts[1].name, "random")
 
-            self.assertEqual(cavs["0-1"]["conv1"].stats["classes"], [0, 1])
-            self.assertAlmostEqual(
-                cavs["0-1"]["conv1"].stats["accs"].item(), 0.4848, delta=0.001
-            )
-            self.assertEqual(
-                list(cavs["0-1"]["conv1"].stats["weights"].shape), [2, 128]
-            )
+            stats = cavs["0-1"]["conv1"].stats
+            self.assertIsNotNone(stats)
+            self.assertEqual(stats["classes"], [0, 1])  # type: ignore
+            self.assertAlmostEqual(stats["accs"].item(), 0.4848, delta=0.001)  # type: ignore # noqa: E501 line too long
+            self.assertEqual(list(stats["weights"].shape), [2, 128])  # type: ignore
 
             self.assertEqual(cavs["2-3"]["conv1"].concepts[0].id, 2)
             self.assertEqual(cavs["2-3"]["conv1"].concepts[0].name, "ceo")
             self.assertEqual(cavs["2-3"]["conv1"].concepts[1].id, 3)
             self.assertEqual(cavs["2-3"]["conv1"].concepts[1].name, "striped")
 
-            self.assertEqual(cavs["2-3"]["conv1"].stats["classes"], [2, 3])
-            self.assertAlmostEqual(
-                cavs["2-3"]["conv1"].stats["accs"].item(), 0.4848, delta=0.001
-            )
-            self.assertEqual(
-                list(cavs["2-3"]["conv1"].stats["weights"].shape), [2, 128]
-            )
+            stats = cavs["2-3"]["conv1"].stats
+            self.assertIsNotNone(stats)
+            self.assertEqual(stats["classes"], [2, 3])  # type: ignore
+            self.assertAlmostEqual(stats["accs"].item(), 0.4848, delta=0.001)  # type: ignore # noqa: E501 line too long
+            self.assertEqual(list(stats["weights"].shape), [2, 128])  # type: ignore
 
     def compute_cavs_interpret(
         self,
@@ -788,7 +791,9 @@ class Test(BaseTest):
         layers: Union[str, List[str]] = "conv2",
         attribute_to_layer_input: bool = False,
     ) -> None:
-        def wrap_in_list_if_not_already(input):
+        def wrap_in_list_if_not_already(
+            input: Union[str, float, List[float], List[str]]
+        ) -> Union[List[Union[float, str]], List[float], List[str]]:
             return (
                 input
                 if isinstance(input, list)
@@ -817,10 +822,14 @@ class Test(BaseTest):
             )
             concepts_key = concepts_to_str(experimental_sets[0])
 
-            _layers: List[str] = wrap_in_list_if_not_already(layers)
-            _accs: List[float] = wrap_in_list_if_not_already(accs)
-            _sign_counts: List[float] = wrap_in_list_if_not_already(sign_count)
-            _magnitudes: List[float] = wrap_in_list_if_not_already(magnitude)
+            _layers: List[str] = cast(List[str], wrap_in_list_if_not_already(layers))
+            _accs: List[float] = cast(List[float], wrap_in_list_if_not_already(accs))
+            _sign_counts: List[float] = cast(
+                List[float], wrap_in_list_if_not_already(sign_count)
+            )
+            _magnitudes: List[float] = cast(
+                List[float], wrap_in_list_if_not_already(magnitude)
+            )
 
             for layer, acc, sign_count, magnitude in zip(
                 _layers, _accs, _sign_counts, _magnitudes
@@ -835,6 +844,8 @@ class Test(BaseTest):
                     self.assertAlmostEqual(
                         stats["accs"].item(),
                         acc,
+                        # pyre-fixme[6]: For 3rd argument expected `None` but got
+                        #  `float`.
                         delta=0.0001,
                     )
 
@@ -884,6 +895,7 @@ class Test(BaseTest):
         concepts_dict = create_concepts()
         for concept in concepts_dict.values():
             self.assertTrue(concept.data_iter is not None)
+            # pyre-fixme[22]: The cast is redundant.
             data_iter = cast(DataLoader, concept.data_iter)
             self.assertEqual(
                 len(cast(CustomIterableDataset, data_iter.dataset).file_itr), 100
@@ -891,18 +903,19 @@ class Test(BaseTest):
             self.assertTrue(concept.data_iter is not None)
 
             total_batches = 0
-            for data in cast(Iterable, concept.data_iter):
+            for data in cast(Iterable[Tensor], concept.data_iter):
                 total_batches += data.shape[0]
                 self.assertEqual(data.shape[1:], torch.Size([1, 10, 10]))
             self.assertEqual(total_batches, 100)
 
     def test_TCAV_generate_all_activations(self) -> None:
-        def forward_hook_wrapper(expected_act: Tensor):
-            def forward_hook(module, inp, out=None):
+        def forward_hook_wrapper(expected_act: Tensor) -> int:
+            # pyre-fixme[2]: Parameter `module` must have a type other than `Any`.
+            def forward_hook(module: Any, inp: Tensor, out=None) -> None:
                 out = torch.reshape(out, (out.shape[0], -1))
                 self.assertEqual(out.detach().shape[1:], expected_act.shape[1:])
 
-            return forward_hook
+            return forward_hook  # type: ignore
 
         with tempfile.TemporaryDirectory() as tmpdirname:
             layers = ["conv1", "conv2", "fc1", "fc2"]
@@ -929,19 +942,25 @@ class Test(BaseTest):
                         tmpdirname, "default_model_id", concept.identifier, layer
                     )
 
-                    def batch_collate(batch):
+                    # pyre-fixme[2]: Parameter `batch` has no type specified.
+                    def batch_collate(batch) -> Tensor:
                         return torch.cat(batch)
 
                     self.assertTrue(concept.data_iter is not None)
                     assert not (activations is None)
                     for activation in cast(
-                        Iterable, DataLoader(activations, collate_fn=batch_collate)
+                        # pyre-fixme[24]: Generic type `Iterable`
+                        # expects 1 type parameter.
+                        Iterable,
+                        DataLoader(activations, collate_fn=batch_collate),
                     ):
 
                         concept_meta[concept.id] += activation.shape[0]
 
                         layer_module = _get_module_from_name(tcav.model, layer)
 
+                        # pyre-fixme[24]: Generic type `Iterable`
+                        # expects 1 type parameter.
                         for data in cast(Iterable, concept.data_iter):
                             hook = layer_module.register_forward_hook(
                                 forward_hook_wrapper(activation)

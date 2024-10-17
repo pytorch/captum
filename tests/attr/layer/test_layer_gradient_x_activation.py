@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+
+# pyre-strict
+
 import unittest
 from typing import Any, List, Tuple, Union
 
@@ -139,6 +142,8 @@ class Test(BaseTest):
 
         model = BasicModel_MultiLayer(multi_input_module=True)
         test_input = torch.tensor([[3.0, 4.0, 0.0]], requires_grad=True)
+        # pyre-fixme[6]: For 2nd argument expected `ModuleOrModuleList` but got
+        #  `List[Union[ReLU, Linear]]`.
         layer_act = LayerGradientXActivation(model, [model.linear1, model.relu])
         attributions = layer_act.attribute(
             inputs=test_input, target=0, grad_kwargs={"materialize_grads": True}
@@ -152,7 +157,11 @@ class Test(BaseTest):
         model: Module,
         target_layer: ModuleOrModuleList,
         test_input: Union[Tensor, Tuple[Tensor, ...]],
+        # pyre-fixme[24]: Generic type `list` expects 1 type parameter, use
+        # `typing.List[<element type>]` to avoid runtime subscripting errors.
         expected_activation: Union[List, Tuple[List[List[float]], ...]],
+        # pyre-fixme[2]: Parameter `additional_input` has type `None`
+        # but type `Any` is specified.
         additional_input: Any = None,
     ) -> None:
         layer_act = LayerGradientXActivation(model, target_layer)

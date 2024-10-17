@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+# pyre-unsafe
+
 from inspect import signature
 from typing import Callable, List, Optional, Tuple, Union
 
@@ -294,6 +296,14 @@ class Test(BaseTest):
         expected_delta = torch.Tensor([0.0, 0.0])
         assertTensorAlmostEqual(self, attrs, expected, 0.0001)
         assertTensorAlmostEqual(self, delta, expected_delta, 0.0001)
+
+    def test_futures_not_implemented(self) -> None:
+        model = ReLUDeepLiftModel()
+        dl = DeepLift(model, multiply_by_inputs=False)
+        attributions = None
+        with self.assertRaises(NotImplementedError):
+            attributions = dl.attribute_future()
+        self.assertEqual(attributions, None)
 
     def _deeplift_assert(
         self,

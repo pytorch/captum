@@ -1,5 +1,7 @@
 #!/usr/bin/env python3import
 
+# pyre-unsafe
+
 from typing import cast, Iterable
 
 import torch

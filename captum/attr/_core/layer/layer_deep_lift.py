@@ -351,9 +351,9 @@ class LayerDeepLift(LayerAttribution, DeepLift):
                 grad_kwargs=grad_kwargs,
             )
 
-            attr_inputs = tuple(map(lambda attr: attr[0], attrs))
-            attr_baselines = tuple(map(lambda attr: attr[1], attrs))
-            gradients = tuple(map(lambda grad: grad[0], gradients))
+            attr_inputs = tuple(attr[0] for attr in attrs)
+            attr_baselines = tuple(attr[1] for attr in attrs)
+            gradients = tuple(grad[0] for grad in gradients)
 
             if custom_attribution_func is None:
                 if self.multiplies_by_inputs:
@@ -387,8 +387,7 @@ class LayerDeepLift(LayerAttribution, DeepLift):
         )
 
     @property
-    # pyre-fixme[3]: Return type must be annotated.
-    def multiplies_by_inputs(self):
+    def multiplies_by_inputs(self) -> bool:
         return self._multiply_by_inputs
 
 
@@ -719,5 +718,5 @@ class LayerDeepLiftShap(LayerDeepLift, DeepLiftShap):
 
     @property
     # pyre-fixme[3]: Return type must be annotated.
-    def multiplies_by_inputs(self):
+    def multiplies_by_inputs(self) -> bool:
         return self._multiply_by_inputs

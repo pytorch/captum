@@ -43,6 +43,7 @@ class Attribution:
         self.forward_func = forward_func
 
     # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
+    # pyre-fixme[13]: Attribute `attribute` is never initialized.
     attribute: Callable
     r"""
     This method computes and returns the attribution values for each input tensor.
@@ -73,9 +74,40 @@ class Attribution:
 
     """
 
+    # pyre-fixme[24] Generic type `Callable` expects 2 type parameters.
+    # pyre-fixme[13]: Attribute `attribute_future` is never initialized.
+    attribute_future: Callable
+
+    r"""
+    This method computes and returns a Future of attribution values for each input
+    tensor. Deriving classes are responsible for implementing its logic accordingly.
+
+    Specific attribution algorithms that extend this class take relevant
+    arguments.
+
+    Args:
+
+        inputs (Tensor or tuple[Tensor, ...]): Input for which attribution
+                    is computed. It can be provided as a single tensor or
+                    a tuple of multiple tensors. If multiple input tensors
+                    are provided, the batch sizes must be aligned across all
+                    tensors.
+
+
+    Returns:
+
+        *Future[Tensor]* or *Future[tuple[Tensor, ...]]* of **attributions**:
+        - **attributions** (*Future[Tensor]* or *Future[tuple[Tensor, ...]]*):
+                    Future of attribution values for each input tensor.
+                    The results should be the same as the attribute
+                    method, except that the results are returned as a Future.
+                    If a single tensor is provided as inputs, a single Future tensor
+                    is returned. If a tuple is provided for inputs, a Future of a
+                    tuple of corresponding sized tensors is returned.
+    """
+
     @property
-    # pyre-fixme[3]: Return type must be annotated.
-    def multiplies_by_inputs(self):
+    def multiplies_by_inputs(self) -> bool:
         return False
 
     def has_convergence_delta(self) -> bool:
@@ -96,6 +128,7 @@ class Attribution:
         return False
 
     # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
+    # pyre-fixme[13]: Attribute `compute_convergence_delta` is never initialized.
     compute_convergence_delta: Callable
     r"""
     The attribution algorithms which derive `Attribution` class and provide
@@ -330,8 +363,7 @@ class PerturbationAttribution(Attribution):
         Attribution.__init__(self, forward_func)
 
     @property
-    # pyre-fixme[3]: Return type must be annotated.
-    def multiplies_by_inputs(self):
+    def multiplies_by_inputs(self) -> bool:
         return True
 
 
@@ -475,6 +507,7 @@ class NeuronAttribution(InternalAttribution):
         InternalAttribution.__init__(self, forward_func, layer, device_ids)
 
     # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
+    # pyre-fixme[13]: Attribute `attribute` is never initialized.
     attribute: Callable
     r"""
     This method computes and returns the neuron attribution values for each

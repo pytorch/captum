@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+
+# pyre-strict
+
 import unittest
 from typing import Any, Callable, List, Optional, Tuple, Union
 
@@ -105,7 +108,7 @@ class Test(BaseTest):
         )
 
     def test_classification(self) -> None:
-        def custom_baseline_fn(inputs):
+        def custom_baseline_fn(inputs: Tensor) -> Tensor:
             num_in = inputs.shape[1]
             return torch.arange(0.0, num_in * 4.0).reshape(4, num_in)
 
@@ -165,6 +168,7 @@ class Test(BaseTest):
         model: Module,
         layer: Module,
         inputs: TensorOrTupleOfTensorsGeneric,
+        # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
         baselines: Union[TensorOrTupleOfTensorsGeneric, Callable],
         target: TargetType,
         expected: Union[
@@ -178,6 +182,8 @@ class Test(BaseTest):
         expected_delta: Optional[Tensor] = None,
         n_samples: int = 5,
         attribute_to_layer_input: bool = False,
+        # pyre-fixme[2]: Parameter `add_args` has type `None`
+        # but type `Any` is specified.
         add_args: Any = None,
     ) -> None:
         lgs = LayerGradientShap(model, layer)
@@ -194,7 +200,13 @@ class Test(BaseTest):
         assertTensorTuplesAlmostEqual(self, attrs, expected, delta=0.005)
         if expected_delta is None:
             assert_attribution_delta(
-                self, inputs, attrs, n_samples, delta, is_layer=True
+                # pyre-fixme[6]: For 1st argument expected `FbBaseTest` but got `Test`.
+                self,  # type: ignore
+                inputs,
+                attrs,
+                n_samples,
+                delta,
+                is_layer=True,
             )
         else:
             for delta_i, expected_delta_i in zip(delta, expected_delta):

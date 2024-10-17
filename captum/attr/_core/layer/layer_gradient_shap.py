@@ -308,6 +308,8 @@ class LayerGradientShap(LayerAttribution, GradientAttribution):
         #  TensorOrTupleOfTensorsGeneric]` has no attribute `__getitem__`.
         assert isinstance(baselines[0], torch.Tensor), (
             "Baselines distribution has to be provided in a form "
+            # pyre-fixme[16]: Item `Callable` of `Union[(...) -> Any,
+            #  TensorOrTupleOfTensorsGeneric]` has no attribute `__getitem__`.
             "of a torch.Tensor {}.".format(baselines[0])
         )
 
@@ -340,8 +342,7 @@ class LayerGradientShap(LayerAttribution, GradientAttribution):
         return True
 
     @property
-    # pyre-fixme[3]: Return type must be annotated.
-    def multiplies_by_inputs(self):
+    def multiplies_by_inputs(self) -> bool:
         return self._multiply_by_inputs
 
 
@@ -508,6 +509,5 @@ class LayerInputBaselineXGradient(LayerAttribution, GradientAttribution):
         return True
 
     @property
-    # pyre-fixme[3]: Return type must be annotated.
-    def multiplies_by_inputs(self):
+    def multiplies_by_inputs(self) -> bool:
         return self._multiply_by_inputs

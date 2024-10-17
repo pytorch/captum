@@ -1,9 +1,10 @@
+# pyre-strict
 import inspect
 import os
 import unittest
 from functools import partial
 from inspect import isfunction
-from typing import Callable, List, Optional, Tuple, Union
+from typing import Any, Callable, List, Optional, Tuple, Union
 
 import torch
 import torch.nn as nn
@@ -22,6 +23,8 @@ from torch.nn import Module
 from torch.utils.data import DataLoader, Dataset
 
 
+# pyre-fixme[3]: Return type must be annotated.
+# pyre-fixme[2]: Parameter must be annotated.
 def _isSorted(x, key=lambda x: x, descending=True):
     if descending:
         return all([key(x[i]) >= key(x[i + 1]) for i in range(len(x) - 1)])
@@ -29,6 +32,8 @@ def _isSorted(x, key=lambda x: x, descending=True):
         return all([key(x[i]) <= key(x[i + 1]) for i in range(len(x) - 1)])
 
 
+# pyre-fixme[3]: Return type must be annotated.
+# pyre-fixme[2]: Parameter must be annotated.
 def _wrap_model_in_dataparallel(net):
     alt_device_ids = [0] + [x for x in range(torch.cuda.device_count() - 1, 0, -1)]
     net = net.cuda()
@@ -46,6 +51,7 @@ class ExplicitDataset(Dataset):
         labels: Tensor,
         use_gpu: bool = False,
     ) -> None:
+        # pyre-fixme[4]: Attribute must be annotated.
         self.samples, self.labels = samples, labels
         if use_gpu:
             self.samples = self.samples.cuda()
@@ -54,6 +60,8 @@ class ExplicitDataset(Dataset):
     def __len__(self) -> int:
         return len(self.samples)
 
+    # pyre-fixme[3]: Return type must be annotated.
+    # pyre-fixme[2]: Parameter must be annotated.
     def __getitem__(self, idx):
         return (self.samples[idx], self.labels[idx])
 
@@ -65,6 +73,7 @@ class UnpackDataset(Dataset):
         labels: Tensor,
         use_gpu: bool = False,
     ) -> None:
+        # pyre-fixme[4]: Attribute must be annotated.
         self.samples, self.labels = samples, labels
         if use_gpu:
             self.samples = _move_sample_list_to_cuda(self.samples)
@@ -73,6 +82,8 @@ class UnpackDataset(Dataset):
     def __len__(self) -> int:
         return len(self.samples[0])
 
+    # pyre-fixme[3]: Return type must be annotated.
+    # pyre-fixme[2]: Parameter must be annotated.
     def __getitem__(self, idx):
         """
         The signature of the returning item is: List[List], where the contents
@@ -87,7 +98,9 @@ class IdentityDataset(ExplicitDataset):
         num_features: int,
         use_gpu: bool = False,
     ) -> None:
+        # pyre-fixme[4]: Attribute must be annotated.
         self.samples = torch.diag(torch.ones(num_features))
+        # pyre-fixme[4]: Attribute must be annotated.
         self.labels = torch.zeros(num_features).unsqueeze(1)
         if use_gpu:
             self.samples = self.samples.cuda()
@@ -102,11 +115,13 @@ class RangeDataset(ExplicitDataset):
         num_features: int,
         use_gpu: bool = False,
     ) -> None:
+        # pyre-fixme[4]: Attribute must be annotated.
         self.samples = (
             torch.arange(start=low, end=high, dtype=torch.float)
             .repeat(num_features, 1)
             .transpose(1, 0)
         )
+        # pyre-fixme[4]: Attribute must be annotated.
         self.labels = torch.arange(start=low, end=high, dtype=torch.float).unsqueeze(1)
         if use_gpu:
             self.samples = self.samples.cuda()
@@ -115,6 +130,7 @@ class RangeDataset(ExplicitDataset):
 
 class BinaryDataset(ExplicitDataset):
     def __init__(self, use_gpu: bool = False) -> None:
+        # pyre-fixme[4]: Attribute must be annotated.
         self.samples = F.normalize(
             torch.stack(
                 (
@@ -145,6 +161,7 @@ class BinaryDataset(ExplicitDataset):
                 )
             )
         )
+        # pyre-fixme[4]: Attribute must be annotated.
         self.labels = torch.cat(
             (
                 torch.Tensor([1]).repeat(12, 1),
@@ -327,12 +344,18 @@ def is_gpu(gpu_setting: Optional[str]) -> bool:
     return gpu_setting == "cuda_data_parallel" or gpu_setting == "cuda"
 
 
+# pyre-fixme[3]: Return type must be annotated.
 def get_random_model_and_data(
+    # pyre-fixme[2]: Parameter must be annotated.
     tmpdir,
+    # pyre-fixme[2]: Parameter must be annotated.
     unpack_inputs,
+    # pyre-fixme[2]: Parameter must be annotated.
     return_test_data=True,
     gpu_setting: Optional[str] = None,
+    # pyre-fixme[2]: Parameter must be annotated.
     return_hessian_data=False,
+    # pyre-fixme[2]: Parameter must be annotated.
     model_type="random",
 ):
     """
@@ -386,6 +409,7 @@ def get_random_model_and_data(
         in_features, out_features, num_samples, use_gpu, unpack_inputs
     )
 
+    net: Union[BasicLinearNet, MultLinearNet, Linear, UnpackLinear]
     if model_type == "random":
         net = (
             BasicLinearNet(in_features, hidden_nodes, out_features)
@@ -470,6 +494,7 @@ def get_random_model_and_data(
         torch.save(net_adjusted.state_dict(), os.path.join(tmpdir, checkpoint_name))
 
     training_data = (
+        # pyre-fixme[61]: `net_adjusted` is undefined, or not always defined.
         net_adjusted,
         train_dataset,
     )
@@ -490,6 +515,7 @@ def get_random_model_and_data(
             return (*training_data, *hessian_data)
 
 
+# pyre-fixme[3]: Return type must be annotated.
 def generate_symmetric_matrix_given_eigenvalues(
     eigenvalues: Union[Tensor, List[float]]
 ):
@@ -508,6 +534,7 @@ def generate_symmetric_matrix_given_eigenvalues(
     return torch.matmul(Q, torch.matmul(torch.diag(torch.tensor(eigenvalues)), Q.T))
 
 
+# pyre-fixme[3]: Return type must be annotated.
 def generate_assymetric_matrix_given_eigenvalues(
     eigenvalues: Union[Tensor, List[float]]
 ):
@@ -531,13 +558,18 @@ def generate_assymetric_matrix_given_eigenvalues(
 
 class DataInfluenceConstructor:
     name: str = ""
+    # pyre-fixme[24]: Generic type `type` expects 1 type parameter, use
+    #  `typing.Type[<base type>]` to avoid runtime subscripting errors.
     data_influence_class: type
 
     def __init__(
         self,
+        # pyre-fixme[24]: Generic type `type` expects 1 type parameter, use
+        #  `typing.Type[<base type>]` to avoid runtime subscripting errors.
         data_influence_class: type,
         name: Optional[str] = None,
         duplicate_loss_fn: bool = False,
+        # pyre-fixme[2]: Parameter must be annotated.
         **kwargs,
     ) -> None:
         """
@@ -547,6 +579,7 @@ class DataInfluenceConstructor:
         self.data_influence_class = data_influence_class
         self.name = name if name else data_influence_class.__name__
         self.duplicate_loss_fn = duplicate_loss_fn
+        # pyre-fixme[4]: Attribute must be annotated.
         self.kwargs = kwargs
 
     def __repr__(self) -> str:
@@ -561,7 +594,9 @@ class DataInfluenceConstructor:
         dataset: Union[Dataset, DataLoader],
         tmpdir: str,
         batch_size: Union[int, None],
+        # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
         loss_fn: Optional[Union[Module, Callable]],
+        # pyre-fixme[2]: Parameter must be annotated.
         **kwargs,
     ) -> DataInfluence:
         constructor_kwargs = self.kwargs.copy()
@@ -627,8 +662,10 @@ class DataInfluenceConstructor:
 
 
 def generate_test_name(
+    # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
     testcase_func: Callable,
     param_num: str,
+    # pyre-fixme[11]: Annotation `param` is not defined as a type.
     param: param,
     args_to_skip: Optional[List[str]] = None,
 ) -> str:
@@ -665,7 +702,9 @@ def generate_test_name(
     )
 
 
-def build_test_name_func(args_to_skip: Optional[List[str]] = None):
+# pyre-fixme[24]: Generic type `partial` expects 1 type parameter.
+# Should be partial[str] but will cause TypeError: 'type' object is not subscriptable
+def build_test_name_func(args_to_skip: Optional[List[str]] = None) -> partial:
     """
     Returns function to generate human readable names for parameterized tests
     """
@@ -673,9 +712,13 @@ def build_test_name_func(args_to_skip: Optional[List[str]] = None):
     return partial(generate_test_name, args_to_skip=args_to_skip)
 
 
+# pyre-fixme[3]: Return type must be specified as type that does not contain `Any`.
 def _format_batch_into_tuple(
-    inputs: Union[Tuple, Tensor], targets: Tensor, unpack_inputs: bool
-):
+    # pyre-fixme[24]: Generic type `tuple` expects at least 1 type parameter.
+    inputs: Union[Tuple, Tensor],
+    targets: Tensor,
+    unpack_inputs: bool,
+) -> Tuple[Union[Tensor, Tuple[Any, ...]], Tensor]:
     if unpack_inputs:
         return (*inputs, targets)
     else:

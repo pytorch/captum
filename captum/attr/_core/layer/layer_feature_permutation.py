@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 # pyre-strict
-from typing import Any, Callable, cast, List, Tuple, Union
+from typing import Any, Callable, cast, List, Tuple, Type, Union
 
 import torch
 from captum._utils.common import (
@@ -245,6 +245,7 @@ class LayerFeaturePermutation(LayerAttribution, FeaturePermutation):
         return _attr
 
     @property
-    # pyre-fixme[3]: Return type must be annotated.
-    def attributor(self):
+    def attributor(
+        self,
+    ) -> Type[FeaturePermutation]:
         return FeaturePermutation

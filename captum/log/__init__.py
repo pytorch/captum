@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 # pyre-strict
+from typing import Any
 
 try:
     from captum.log.fb.internal_log import (
@@ -23,9 +24,7 @@ try:
 except ImportError:
     from functools import wraps
 
-    # pyre-fixme[3]: Return type must be annotated.
-    # pyre-fixme[2]: Parameter must be annotated.
-    def log(*args, **kwargs):
+    def log(*args: Any, **kwargs: Any) -> None:  # type: ignore
         pass
 
     # bug with mypy: https://github.com/python/mypy/issues/1153
@@ -34,42 +33,35 @@ except ImportError:
         def __init__(self, *args, **kwargs) -> None:
             pass
 
-        # pyre-fixme[3]: Return type must be annotated.
-        def __enter__(self):
+        def __enter__(self) -> "TimedLog":
             return self
 
-        # pyre-fixme[3]: Return type must be annotated.
         # pyre-fixme[2]: Parameter must be annotated.
-        def __exit__(self, exception_type, exception_value, traceback):
+        def __exit__(self, exception_type, exception_value, traceback) -> bool:
             return exception_value is not None
 
     # pyre-fixme[3]: Return type must be annotated.
-    # pyre-fixme[2]: Parameter must be annotated.
-    def log_usage(*log_args, **log_kwargs):
+    def log_usage(*log_args: Any, **log_kwargs: Any):
         # pyre-fixme[3]: Return type must be annotated.
         # pyre-fixme[2]: Parameter must be annotated.
         def _log_usage(func):
             @wraps(func)
             # pyre-fixme[53]: Captured variable `func` is not annotated.
             # pyre-fixme[3]: Return type must be annotated.
-            # pyre-fixme[2]: Parameter must be annotated.
-            def wrapper(*args, **kwargs):
+            def wrapper(*args: Any, **kwargs: Any):
                 return func(*args, **kwargs)
 
             return wrapper
 
         return _log_usage
 
-    # pyre-fixme[3]: Return type must be annotated.
     # pyre-fixme[2]: Parameter must be annotated.
-    def set_environment(env):
+    def set_environment(env) -> None:  # type: ignore
         pass
 
-    # pyre-fixme[3]: Return type must be annotated.
-    def disable_detailed_logging():
+    def disable_detailed_logging() -> None:
         pass
 
-    # pyre-fixme[3]: Return type must be annotated.
     # pyre-fixme[2]: Parameter must be annotated.
-    def patch_methods(tester, patch_log=True):
+    def patch_methods(tester, patch_log: bool = True) -> None:  # type: ignore
         pass

@@ -275,6 +275,9 @@ class GradientShap(GradientAttribution):
         #  attribute `__getitem__`.
         assert isinstance(baselines[0], torch.Tensor), (
             "Baselines distribution has to be provided in a form "
+            # pyre-fixme[16]: Item `Callable` of `Union[(...) ->
+            #  TensorOrTupleOfTensorsGeneric, TensorOrTupleOfTensorsGeneric]` has no
+            #  attribute `__getitem__`.
             "of a torch.Tensor {}.".format(baselines[0])
         )
 
@@ -301,19 +304,26 @@ class GradientShap(GradientAttribution):
 
         return attributions
 
+    # pyre-fixme[24] Generic type `Callable` expects 2 type parameters.
+    def attribute_future(self) -> Callable:
+        r"""
+        This method is not implemented for GradientShap.
+        """
+        raise NotImplementedError(
+            "attribute_future is not implemented for GradientShap"
+        )
+
     def has_convergence_delta(self) -> bool:
         return True
 
     @property
-    # pyre-fixme[3]: Return type must be annotated.
-    def multiplies_by_inputs(self):
+    def multiplies_by_inputs(self) -> bool:
         return self._multiply_by_inputs
 
 
 class InputBaselineXGradient(GradientAttribution):
     # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
-    # pyre-fixme[2]: Parameter must be annotated.
-    def __init__(self, forward_func: Callable, multiply_by_inputs=True) -> None:
+    def __init__(self, forward_func: Callable, multiply_by_inputs: bool = True) -> None:
         r"""
         Args:
 
@@ -426,12 +436,20 @@ class InputBaselineXGradient(GradientAttribution):
             is_inputs_tuple,
         )
 
+    # pyre-fixme[24] Generic type `Callable` expects 2 type parameters.
+    def attribute_future(self) -> Callable:
+        r"""
+        This method is not implemented for InputBaseLineXGradient.
+        """
+        raise NotImplementedError(
+            "attribute_future is not implemented for InputBaseLineXGradient"
+        )
+
     def has_convergence_delta(self) -> bool:
         return True
 
     @property
-    # pyre-fixme[3]: Return type must be annotated.
-    def multiplies_by_inputs(self):
+    def multiplies_by_inputs(self) -> bool:
         return self._multiply_by_inputs
 
 

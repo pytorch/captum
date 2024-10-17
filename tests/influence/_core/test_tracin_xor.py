@@ -1,7 +1,9 @@
+# pyre-strict
+
 import os
 import tempfile
 from collections import OrderedDict
-from typing import Callable, cast, Optional
+from typing import Callable, cast, List, Optional, Tuple
 
 import torch
 import torch.nn as nn
@@ -22,7 +24,9 @@ from tests.helpers.influence.common import (
 class TestTracInXOR(BaseTest):
 
     # TODO: Move test setup to use setUp and tearDown method overrides.
-    def _test_tracin_xor_setup(self, tmpdir: str, use_gpu: bool = False):
+    def _test_tracin_xor_setup(
+        self, tmpdir: str, use_gpu: bool = False
+    ) -> Tuple[BinaryDataset, ...]:
         net = BasicLinearNet(in_features=2, hidden_nodes=2, out_features=1)
 
         state = OrderedDict(
@@ -163,9 +167,11 @@ class TestTracInXOR(BaseTest):
 
         dataset = BinaryDataset(use_gpu)
 
-        return net_adjusted, dataset
+        return net_adjusted, dataset  # type: ignore
 
-    parametrized_list = [
+    parametrized_list: List[
+        Tuple[Optional[str], DataInfluenceConstructor, str, bool]
+    ] = [
         (
             "none",
             DataInfluenceConstructor(
@@ -218,6 +224,9 @@ class TestTracInXOR(BaseTest):
             ],
         )
 
+    # pyre-fixme[56]: Pyre was not able to infer the type of argument
+    # `tests.helpers.influence.common.build_test_name_func($parameter$args_to_skip
+    # = ["reduction"])` to decorator factory `parameterized.parameterized.expand`.
     @parameterized.expand(
         parametrized_list,
         name_func=build_test_name_func(args_to_skip=["reduction"]),
@@ -225,6 +234,7 @@ class TestTracInXOR(BaseTest):
     def test_tracin_xor(
         self,
         reduction: Optional[str],
+        # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
         tracin_constructor: Callable,
         mode: str,
         use_gpu: bool,
@@ -250,6 +260,7 @@ class TestTracInXOR(BaseTest):
             if mode == "check_idx":
 
                 self.assertTrue(isinstance(reduction, str))
+                # pyre-fixme[22]: The cast is redundant.
                 criterion = nn.MSELoss(reduction=cast(str, reduction))
 
                 tracin = tracin_constructor(
@@ -259,6 +270,7 @@ class TestTracInXOR(BaseTest):
                     batch_size,
                     criterion,
                 )
+                # pyre-fixme[16]: `object` has no attribute `influence`.
                 test_scores = tracin.influence((testset, testlabels))
                 idx = torch.argsort(test_scores, dim=1, descending=True)
                 # check that top 5 influences have matching binary classification

@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+# pyre-unsafe
+
 import torch
 from tests.helpers import BaseTest
 from tests.helpers.basic import assertTensorAlmostEqual

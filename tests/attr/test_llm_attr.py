@@ -1,20 +1,33 @@
 #!/usr/bin/env python3
 
+# pyre-strict
+
 import copy
-from collections import namedtuple
-from typing import Any, cast, Dict, List, Optional, Type, Union
+from typing import (
+    Any,
+    cast,
+    Dict,
+    List,
+    Literal,
+    NamedTuple,
+    Optional,
+    overload,
+    Tuple,
+    Type,
+    Union,
+)
 
 import torch
-from captum._utils.models.linear_model import (  # @manual=//pytorch/captum/captum/_utils/models/linear_model:linear_model  # noqa: E501
-    SkLearnLasso,
-)
+from captum._utils.models.linear_model import SkLearnLasso
 from captum.attr._core.feature_ablation import FeatureAblation
 from captum.attr._core.kernel_shap import KernelShap
+from captum.attr._core.layer.layer_gradient_shap import LayerGradientShap
+from captum.attr._core.layer.layer_gradient_x_activation import LayerGradientXActivation
 from captum.attr._core.layer.layer_integrated_gradients import LayerIntegratedGradients
 from captum.attr._core.lime import Lime
 from captum.attr._core.llm_attr import LLMAttribution, LLMGradientAttribution
 from captum.attr._core.shapley_value import ShapleyValues, ShapleyValueSampling
-from captum.attr._utils.attribution import PerturbationAttribution
+from captum.attr._utils.attribution import GradientAttribution, PerturbationAttribution
 from captum.attr._utils.interpretable_input import TextTemplateInput, TextTokenInput
 from parameterized import parameterized, parameterized_class
 from tests.helpers import BaseTest
@@ -27,6 +40,11 @@ class DummyTokenizer:
     sos: int = 0
     unk: int = 1
     special_tokens: Dict[int, str] = {sos: "<sos>", unk: "<unk>"}
+
+    @overload
+    def encode(self, text: str, return_tensors: None = None) -> List[int]: ...
+    @overload
+    def encode(self, text: str, return_tensors: Literal["pt"]) -> Tensor: ...
 
     def encode(
         self, text: str, return_tensors: Optional[str] = None
@@ -44,17 +62,44 @@ class DummyTokenizer:
             return torch.tensor([tokens_ids])
         return tokens_ids
 
-    def convert_ids_to_tokens(self, token_ids: List[int]) -> List[str]:
+    @overload
+    def convert_ids_to_tokens(self, token_ids: List[int]) -> List[str]: ...
+    @overload
+    def convert_ids_to_tokens(self, token_ids: int) -> str: ...
+
+    def convert_ids_to_tokens(
+        self, token_ids: Union[List[int], int]
+    ) -> Union[List[str], str]:
+        if isinstance(token_ids, int):
+            return (
+                self.special_tokens[token_ids]
+                if token_ids in self.special_tokens
+                else chr(token_ids)
+            )
         return [
             (self.special_tokens[tid] if tid in self.special_tokens else chr(tid))
             for tid in token_ids
         ]
 
-    def decode(self, token_ids: List[int]) -> str:
-        return " ".join(self.convert_ids_to_tokens(token_ids))
+    @overload
+    def convert_tokens_to_ids(self, tokens: str) -> int: ...
+    @overload
+    def convert_tokens_to_ids(self, tokens: List[str]) -> List[int]: ...
+
+    def convert_tokens_to_ids(
+        self, tokens: Union[List[str], str]
+    ) -> Union[List[int], int]:
+        raise NotImplementedError
+
+    def decode(self, token_ids: Tensor) -> str:
+        tokens = self.convert_ids_to_tokens(token_ids.tolist())
+        # pyre-fixme[7]: Expected `str` but got `Union[List[str], str]`.
+        return tokens if isinstance(tokens, str) else " ".join(tokens)
 
 
-Result = namedtuple("Result", ["logits", "past_key_values"])
+class Result(NamedTuple):
+    logits: Tensor
+    past_key_values: Tensor
 
 
 class DummyLLM(nn.Module):
@@ -87,7 +132,7 @@ class DummyLLM(nn.Module):
             self.linear.weight.data = rand_like(self.linear.weight)
             self.linear.bias.data.fill_(0.5)
 
-    def forward(self, input_ids: Tensor, *args, **kwargs) -> Result:
+    def forward(self, input_ids: Tensor, *args: Any, **kwargs: Any) -> Result:
         emb = self.emb(input_ids)
         if "past_key_values" in kwargs:
             emb = torch.cat((kwargs["past_key_values"], emb), dim=1)
@@ -98,26 +143,30 @@ class DummyLLM(nn.Module):
     def generate(
         self,
         input_ids: Tensor,
-        *args,
+        *args: Any,
         mock_response: Optional[str] = None,
-        **kwargs,
+        **kwargs: Any,
     ) -> Tensor:
         assert mock_response, "must mock response to use DummyLLM to generate"
         response = self.tokenizer.encode(mock_response)[1:]
         return torch.cat(
-            [input_ids, torch.tensor([response], device=self.device)], dim=1
+            # pyre-fixme[6]: In call `torch._C._VariableFunctions.cat`,
+            # for 1st positional argument, expected `Union[List[Tensor],
+            # typing.Tuple[Tensor, ...]]` but got `List[Union[List[int], Tensor]]`.
+            [input_ids, torch.tensor([response], device=self.device)],  # type: ignore
+            dim=1,
         )
 
     def _update_model_kwargs_for_generation(
-        self, outputs: Result, model_kwargs: Dict[str, Tensor]
-    ) -> Dict[str, Tensor]:
+        self, outputs: Result, model_kwargs: Dict[str, Any]
+    ) -> Dict[str, Any]:
         new_kwargs = copy.deepcopy(model_kwargs)
         if hasattr(outputs, "past_key_values"):
             new_kwargs["past_key_values"] = outputs.past_key_values
         return new_kwargs
 
     def prepare_inputs_for_generation(
-        self, model_inp: Tensor, **model_kwargs
+        self, model_inp: Tensor, **model_kwargs: Any
     ) -> Dict[str, Tensor]:
         model_inp = model_inp.to(self.device)
         if "past_key_values" in model_kwargs:
@@ -146,11 +195,15 @@ class DummyLLM(nn.Module):
         else [("cpu", True), ("cpu", False)]
     ),
 )
-# pyre-ignore Undefined attribute [13]
+# pyre-fixme[13]: Attribute `device` is never initialized.
+# pyre-fixme[13]: Attribute `use_cached_outputs` is never initialized.
 class TestLLMAttr(BaseTest):
+    # pyre-fixme[13]: Attribute `device` is never initialized.
     device: str
+    # pyre-fixme[13]: Attribute `use_cached_outputs` is never initialized.
     use_cached_outputs: bool
 
+    # pyre-fixme[56]: Pyre was not able to infer the type of argument `comprehension
     @parameterized.expand(
         [
             (
@@ -203,7 +256,7 @@ class TestLLMAttr(BaseTest):
         true_seq_attr: Tensor,
         true_tok_attr: Tensor,
     ) -> None:
-        attr_kws: Dict[Any, Any] = {}
+        attr_kws: Dict[str, int] = {}
         if n_samples is not None:
             attr_kws["n_samples"] = n_samples
 
@@ -215,7 +268,14 @@ class TestLLMAttr(BaseTest):
 
         inp = TextTemplateInput("{} b {} {} e {}", ["a", "c", "d", "f"])
         res = llm_attr.attribute(
-            inp, "m n o p q", use_cached_outputs=self.use_cached_outputs, **attr_kws
+            inp,
+            "m n o p q",
+            skip_tokens=[0],
+            use_cached_outputs=self.use_cached_outputs,
+            # pyre-fixme[6]: In call `LLMAttribution.attribute`,
+            # for 4th positional argument, expected
+            # `Optional[typing.Callable[..., typing.Any]]` but got `int`.
+            **attr_kws,  # type: ignore
         )
 
         self.assertEqual(res.seq_attr.shape, (4,))
@@ -270,13 +330,17 @@ class TestLLMAttr(BaseTest):
 
         inp = TextTemplateInput("{} b {} {} e {}", ["a", "c", "d", "f"])
         res = llm_fa.attribute(
-            inp, "m n o p q", use_cached_outputs=self.use_cached_outputs
+            inp,
+            "m n o p q",
+            skip_tokens=[0],
+            use_cached_outputs=self.use_cached_outputs,
         )
 
         # With FeatureAblation, the seq attr in log_prob
         # equals to the sum of each token attr
         assertTensorAlmostEqual(self, res.seq_attr, cast(Tensor, res.token_attr).sum(0))
 
+    # pyre-fixme[56]: Pyre was not able to infer the type of argument `comprehension
     @parameterized.expand(
         [
             (
@@ -309,7 +373,7 @@ class TestLLMAttr(BaseTest):
         init_kws = {}
         if interpretable_model is not None:
             init_kws["interpretable_model"] = interpretable_model
-        attr_kws: Dict[Any, Any] = {}
+        attr_kws: Dict[str, int] = {}
         if n_samples is not None:
             attr_kws["n_samples"] = n_samples
 
@@ -322,7 +386,11 @@ class TestLLMAttr(BaseTest):
 
         inp = TextTemplateInput("{} b {} {} e {}", ["a", "c", "d", "f"])
         res = llm_fa.attribute(
-            inp, "m n o p q", use_cached_outputs=self.use_cached_outputs, **attr_kws
+            inp,
+            "m n o p q",
+            skip_tokens=[0],
+            use_cached_outputs=self.use_cached_outputs,
+            **attr_kws,  # type: ignore
         )
 
         self.assertEqual(res.seq_attr.shape, (4,))
@@ -330,7 +398,6 @@ class TestLLMAttr(BaseTest):
         self.assertEqual(res.token_attr, None)
         self.assertEqual(res.input_tokens, ["a", "c", "d", "f"])
         self.assertEqual(res.output_tokens, ["m", "n", "o", "p", "q"])
-
         assertTensorAlmostEqual(
             self,
             actual=res.seq_attr,
@@ -339,66 +406,225 @@ class TestLLMAttr(BaseTest):
             mode="max",
         )
 
+    def test_futures_not_implemented(self) -> None:
+        llm = DummyLLM()
+        llm.to(self.device)
+        tokenizer = DummyTokenizer()
+        fa = FeatureAblation(llm)
+        llm_fa = LLMAttribution(fa, tokenizer)
+        attributions = None
+        with self.assertRaises(NotImplementedError):
+            attributions = llm_fa.attribute_future()
+        self.assertEqual(attributions, None)
+
+    def test_llm_attr_with_no_skip_tokens(self) -> None:
+        llm = DummyLLM()
+        llm.to(self.device)
+        tokenizer = DummyTokenizer()
+        fa = FeatureAblation(llm)
+        llm_fa = LLMAttribution(fa, tokenizer)
+
+        inp = TextTokenInput("a b c", tokenizer)
+        res = llm_fa.attribute(
+            inp,
+            "m n o p q",
+            use_cached_outputs=self.use_cached_outputs,
+        )
+
+        # 5 output tokens, 4 input tokens including sos
+        self.assertEqual(res.seq_attr.shape, (4,))
+        assert res.token_attr is not None
+        self.assertIsNotNone(res.token_attr)
+        token_attr = res.token_attr
+        self.assertEqual(token_attr.shape, (6, 4))
+        self.assertEqual(res.input_tokens, ["<sos>", "a", "b", "c"])
+        self.assertEqual(res.output_tokens, ["<sos>", "m", "n", "o", "p", "q"])
+
+    def test_llm_attr_with_skip_tensor_target(self) -> None:
+        llm = DummyLLM()
+        llm.to(self.device)
+        tokenizer = DummyTokenizer()
+        fa = FeatureAblation(llm)
+        llm_fa = LLMAttribution(fa, tokenizer)
+
+        inp = TextTokenInput("a b c", tokenizer)
+        res = llm_fa.attribute(
+            inp,
+            torch.tensor(tokenizer.encode("m n o p q")),
+            skip_tokens=[0],
+        )
+
+        # 5 output tokens, 4 input tokens including sos
+        self.assertEqual(res.seq_attr.shape, (4,))
+        assert res.token_attr is not None
+        self.assertIsNotNone(res.token_attr)
+        token_attr = res.token_attr
+        self.assertEqual(token_attr.shape, (5, 4))
+        self.assertEqual(res.input_tokens, ["<sos>", "a", "b", "c"])
+        self.assertEqual(res.output_tokens, ["m", "n", "o", "p", "q"])
+
 
 @parameterized_class(
     ("device",), [("cpu",), ("cuda",)] if torch.cuda.is_available() else [("cpu",)]
 )
-# pyre-ignore Undefined attribute [13]
 class TestLLMGradAttr(BaseTest):
+    # pyre-fixme[13]: Attribute `device` is never initialized.
     device: str
 
-    def test_llm_attr(self) -> None:
+    @parameterized.expand(
+        [
+            (LayerIntegratedGradients, None),
+            (LayerGradientXActivation, None),
+            (LayerGradientShap, (torch.tensor([[1, 0, 1, 0]]),)),
+        ]
+    )
+    def test_llm_attr(
+        self, AttrClass: Type[GradientAttribution], baselines: Optional[Tuple[Tensor]]
+    ) -> None:
         llm = DummyLLM()
         llm.to(self.device)
         tokenizer = DummyTokenizer()
-        attr = LayerIntegratedGradients(llm, llm.emb)
+        attr = AttrClass(llm, llm.emb)  # type: ignore[call-arg]
         llm_attr = LLMGradientAttribution(attr, tokenizer)
 
+        attr_kws: Dict[str, Any] = {}
+        if baselines is not None:
+            attr_kws["baselines"] = tuple(
+                baseline.to(self.device) for baseline in baselines
+            )
+
         inp = TextTokenInput("a b c", tokenizer)
-        res = llm_attr.attribute(inp, "m n o p q")
+        res = llm_attr.attribute(inp, "m n o p q", skip_tokens=[0], **attr_kws)
 
         # 5 output tokens, 4 input tokens including sos
         self.assertEqual(res.seq_attr.shape, (4,))
-        self.assertEqual(res.token_attr.shape, (5, 4))
+        assert res.token_attr is not None
+        self.assertIsNotNone(res.token_attr)
+        token_attr = res.token_attr
+        self.assertEqual(token_attr.shape, (5, 4))
         self.assertEqual(res.input_tokens, ["<sos>", "a", "b", "c"])
         self.assertEqual(res.output_tokens, ["m", "n", "o", "p", "q"])
 
         self.assertEqual(res.seq_attr.device.type, self.device)
-        self.assertEqual(res.token_attr.device.type, self.device)
+        assert res.token_attr is not None
+        self.assertEqual(token_attr.device.type, self.device)
 
-    def test_llm_attr_without_target(self) -> None:
+    @parameterized.expand(
+        [
+            (LayerIntegratedGradients, None),
+            (LayerGradientXActivation, None),
+            (LayerGradientShap, (torch.tensor([[1, 0, 1, 0]]),)),
+        ]
+    )
+    def test_llm_attr_without_target(
+        self, AttrClass: Type[GradientAttribution], baselines: Optional[Tuple[Tensor]]
+    ) -> None:
         llm = DummyLLM()
         llm.to(self.device)
         tokenizer = DummyTokenizer()
-        attr = LayerIntegratedGradients(llm, llm.emb)
+        attr = AttrClass(llm, llm.emb)  # type: ignore[call-arg]
         llm_attr = LLMGradientAttribution(attr, tokenizer)
 
+        attr_kws: Dict[str, Any] = {}
+        if baselines is not None:
+            attr_kws["baselines"] = tuple(
+                baseline.to(self.device) for baseline in baselines
+            )
+
         inp = TextTokenInput("a b c", tokenizer)
-        res = llm_attr.attribute(inp, gen_args={"mock_response": "x y z"})
+        res = llm_attr.attribute(inp, gen_args={"mock_response": "x y z"}, **attr_kws)
 
         self.assertEqual(res.seq_attr.shape, (4,))
-        self.assertEqual(res.token_attr.shape, (3, 4))
+        assert res.token_attr is not None
+        self.assertIsNotNone(res.token_attr)
+        token_attr = res.token_attr
+        self.assertEqual(token_attr.shape, (3, 4))
         self.assertEqual(res.input_tokens, ["<sos>", "a", "b", "c"])
         self.assertEqual(res.output_tokens, ["x", "y", "z"])
 
         self.assertEqual(res.seq_attr.device.type, self.device)
-        self.assertEqual(res.token_attr.device.type, self.device)
+        assert res.token_attr is not None
+        self.assertEqual(token_attr.device.type, self.device)
 
-    def test_llm_attr_with_skip_tokens(self) -> None:
+    @parameterized.expand(
+        [
+            (LayerIntegratedGradients, None),
+            (LayerGradientXActivation, None),
+            (LayerGradientShap, (torch.tensor([[1, 0, 1]]),)),
+        ]
+    )
+    def test_llm_attr_with_skip_tokens(
+        self, AttrClass: Type[GradientAttribution], baselines: Optional[Tuple[Tensor]]
+    ) -> None:
         llm = DummyLLM()
         llm.to(self.device)
         tokenizer = DummyTokenizer()
-        attr = LayerIntegratedGradients(llm, llm.emb)
+        attr = AttrClass(llm, llm.emb)  # type: ignore[call-arg]
         llm_attr = LLMGradientAttribution(attr, tokenizer)
 
+        attr_kws: Dict[str, Any] = {}
+        if baselines is not None:
+            attr_kws["baselines"] = tuple(
+                baseline.to(self.device) for baseline in baselines
+            )
+
         inp = TextTokenInput("a b c", tokenizer, skip_tokens=[0])
-        res = llm_attr.attribute(inp, "m n o p q")
+        res = llm_attr.attribute(inp, "m n o p q", skip_tokens=[0], **attr_kws)
 
         # 5 output tokens, 4 input tokens including sos
         self.assertEqual(res.seq_attr.shape, (3,))
-        self.assertEqual(res.token_attr.shape, (5, 3))
+        assert res.token_attr is not None
+        self.assertIsNotNone(res.token_attr)
+        token_attr = res.token_attr
+        self.assertEqual(token_attr.shape, (5, 3))
         self.assertEqual(res.input_tokens, ["a", "b", "c"])
         self.assertEqual(res.output_tokens, ["m", "n", "o", "p", "q"])
 
         self.assertEqual(res.seq_attr.device.type, self.device)
-        self.assertEqual(res.token_attr.device.type, self.device)
+        assert res.token_attr is not None
+        self.assertEqual(token_attr.device.type, self.device)
+
+    def test_llm_attr_with_no_skip_tokens(self) -> None:
+        llm = DummyLLM()
+        llm.to(self.device)
+        tokenizer = DummyTokenizer()
+        attr = LayerIntegratedGradients(llm, llm.emb)  # type: ignore[call-arg]
+        llm_attr = LLMGradientAttribution(attr, tokenizer)
+
+        attr_kws: Dict[str, Any] = {}
+        inp = TextTokenInput("a b c", tokenizer)
+        res = llm_attr.attribute(inp, "m n o p q", **attr_kws)
+
+        # 6 output tokens, 4 input tokens including sos
+        self.assertEqual(res.seq_attr.shape, (4,))
+        assert res.token_attr is not None
+        self.assertIsNotNone(res.token_attr)
+        token_attr = res.token_attr
+        self.assertEqual(token_attr.shape, (6, 4))
+        self.assertEqual(res.input_tokens, ["<sos>", "a", "b", "c"])
+        self.assertEqual(res.output_tokens, ["<sos>", "m", "n", "o", "p", "q"])
+
+    def test_llm_attr_with_skip_tensor_target(self) -> None:
+        llm = DummyLLM()
+        llm.to(self.device)
+        tokenizer = DummyTokenizer()
+        attr = LayerIntegratedGradients(llm, llm.emb)  # type: ignore[call-arg]
+        llm_attr = LLMGradientAttribution(attr, tokenizer)
+
+        attr_kws: Dict[str, Any] = {}
+        inp = TextTokenInput("a b c", tokenizer)
+        res = llm_attr.attribute(
+            inp,
+            torch.tensor(tokenizer.encode("m n o p q")),
+            skip_tokens=[0],
+            **attr_kws,
+        )
+
+        # 5 output tokens, 4 input tokens including sos
+        self.assertEqual(res.seq_attr.shape, (4,))
+        assert res.token_attr is not None
+        self.assertIsNotNone(res.token_attr)
+        token_attr = res.token_attr
+        self.assertEqual(token_attr.shape, (5, 4))
+        self.assertEqual(res.input_tokens, ["<sos>", "a", "b", "c"])
+        self.assertEqual(res.output_tokens, ["m", "n", "o", "p", "q"])

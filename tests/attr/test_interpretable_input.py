@@ -1,6 +1,11 @@
 #!/usr/bin/env python3
 
+# pyre-unsafe
+
+from typing import List, Optional, overload, Union
+
 import torch
+from captum._utils.typing import Literal
 from captum.attr._utils.interpretable_input import TextTemplateInput, TextTokenInput
 from parameterized import parameterized
 from tests.helpers import BaseTest
@@ -14,19 +19,58 @@ class DummyTokenizer:
         self.id_to_token = vocab_list
         self.unk_idx = len(vocab_list) + 1
 
-    def encode(self, text, **kwargs) -> Tensor:
+    @overload
+    def encode(self, text: str, return_tensors: None = None) -> List[int]: ...
+    @overload
+    # pyre-fixme[43]: Incompatible overload. The implementation of
+    # `DummyTokenizer.encode` does not accept all possible arguments of overload.
+    # pyre-ignore[11]: Annotation `pt` is not defined as a type
+    def encode(self, text: str, return_tensors: Literal["pt"]) -> Tensor: ...
+
+    def encode(
+        self, text: str, return_tensors: Optional[str] = "pt"
+    ) -> Union[List[int], Tensor]:
+        assert return_tensors == "pt"
         return torch.tensor([self.convert_tokens_to_ids(text.split(" "))])
 
-    def convert_ids_to_tokens(self, ids):
+    @overload
+    def convert_ids_to_tokens(self, token_ids: List[int]) -> List[str]: ...
+    @overload
+    def convert_ids_to_tokens(self, token_ids: int) -> str: ...
+
+    def convert_ids_to_tokens(
+        self, token_ids: Union[List[int], int]
+    ) -> Union[List[str], str]:
+        if isinstance(token_ids, int):
+            return (
+                self.id_to_token[token_ids]
+                if token_ids < len(self.id_to_token)
+                else "[UNK]"
+            )
         return [
-            (self.id_to_token[i] if i < len(self.id_to_token) else "[UNK]") for i in ids
+            (self.id_to_token[i] if i < len(self.id_to_token) else "[UNK]")
+            for i in token_ids
         ]
 
-    def convert_tokens_to_ids(self, tokens):
+    @overload
+    def convert_tokens_to_ids(self, tokens: str) -> int: ...
+    @overload
+    def convert_tokens_to_ids(self, tokens: List[str]) -> List[int]: ...
+
+    def convert_tokens_to_ids(
+        self, tokens: Union[List[str], str]
+    ) -> Union[List[int], int]:
+        if isinstance(tokens, str):
+            return (
+                self.token_to_id[tokens] if tokens in self.token_to_id else self.unk_idx
+            )
         return [
             (self.token_to_id[t] if t in self.token_to_id else self.unk_idx)
             for t in tokens
         ]
+
+    def decode(self, token_ids: Tensor) -> str:
+        raise NotImplementedError
 
 
 class TestTextTemplateInput(BaseTest):

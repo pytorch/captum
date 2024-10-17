@@ -21,8 +21,7 @@ SUPPORTED_RIEMANN_METHODS = [
     "riemann_trapezoid",
 ]
 
-# pyre-fixme[5]: Global expression must be annotated.
-SUPPORTED_METHODS = SUPPORTED_RIEMANN_METHODS + ["gausslegendre"]
+SUPPORTED_METHODS: List[str] = SUPPORTED_RIEMANN_METHODS + ["gausslegendre"]
 
 
 def approximation_parameters(

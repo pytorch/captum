@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+# pyre-strict
+
 import io
 import threading
 import time
@@ -82,9 +84,9 @@ class Test(BaseTest):
         )
 
     def test_simple_ablation_int_to_float(self) -> None:
-        net = BasicModel()
+        net: BasicModel = BasicModel()
 
-        def wrapper_func(inp):
+        def wrapper_func(inp: Tensor) -> Tensor:
             return net(inp).float()
 
         ablation_algo = FeatureAblation(wrapper_func)
@@ -336,11 +338,11 @@ class Test(BaseTest):
             _ = ablation.attribute(inp, perturbations_per_eval=2)
 
     def test_error_agg_mode_arbitrary_output(self) -> None:
-        net = BasicModel_MultiLayer()
+        net: BasicModel_MultiLayer = BasicModel_MultiLayer()
 
         # output 3 numbers for the entire batch
         # note that the batch size == 2
-        def forward_func(inp):
+        def forward_func(inp: Tensor) -> Tensor:
             pred = net(inp)
             return torch.stack([pred.sum(), pred.max(), pred.min()])
 
@@ -438,7 +440,7 @@ class Test(BaseTest):
         self._multi_input_batch_scalar_ablation_assert(ablation_algo, dtype=torch.int64)
 
     def test_future_output(self) -> None:
-        def forward_func(inp):
+        def forward_func(inp: Tensor) -> Tensor:
             dummy_output = torch.ones(1, 5, 3, 2)
             return dummy_output
 
@@ -452,20 +454,23 @@ class Test(BaseTest):
             target=None,
             feature_mask=mask,
             perturbations_per_eval=(1,),
+            # pyre-fixme[58]: `+` is not supported for operand types `Tuple[int]`
+            #  and `Size`.
             expected_ablation=torch.zeros((5 * 3 * 2,) + inp[0].shape),
             test_future=True,
         )
 
     def test_future_output_2(self) -> None:
-        net = BasicModel_MultiLayer()
+        net: BasicModel_MultiLayer = BasicModel_MultiLayer()
 
-        def slow_set_future(fut, value):
+        def slow_set_future(fut: torch.futures.Future[Tensor], value: Tensor) -> None:
             time.sleep(10)
             out = net(value)
             fut.set_result(out)
 
-        def forward_func(inp):
-            fut = torch.futures.Future()
+        def forward_func(inp: Tensor) -> torch.futures.Future[Tensor]:
+            # pyre-fixme[29]: `typing.Type[torch.futures.Future]` is not a function.
+            fut: torch.futures.Future[Tensor] = torch.futures.Future()
             t = threading.Thread(target=slow_set_future, args=(fut, inp))
             t.start()
             return fut
@@ -483,7 +488,7 @@ class Test(BaseTest):
         )
 
     def test_future_wrong_usage(self) -> None:
-        def forward_func(inp):
+        def forward_func(inp: Tensor) -> Tensor:
             dummy_output = torch.ones(1, 5, 3, 2)
             return dummy_output
 
@@ -504,7 +509,7 @@ class Test(BaseTest):
                 )
 
     def test_future_wrong_usage_2(self) -> None:
-        def forward_func(inp):
+        def forward_func(inp: Tensor) -> Tensor:
             dummy_output = torch.ones(1, 5, 3, 2)
             return dummy_output
 
@@ -525,7 +530,7 @@ class Test(BaseTest):
                 )
 
     def test_unassociated_output_3d_tensor(self) -> None:
-        def forward_func(inp):
+        def forward_func(inp: Tensor) -> Tensor:
             return torch.ones(1, 5, 3, 2)
 
         inp = torch.randn(10, 5)
@@ -537,11 +542,13 @@ class Test(BaseTest):
             target=None,
             feature_mask=mask,
             perturbations_per_eval=(1,),
+            # pyre-fixme[58]: `+` is not supported for operand types `Tuple[int]`
+            #  and `Size`.
             expected_ablation=torch.zeros((5 * 3 * 2,) + inp[0].shape),
         )
 
     def test_single_inp_ablation_multi_output_aggr(self) -> None:
-        def forward_func(inp):
+        def forward_func(inp: Tensor) -> Tensor:
             return inp[0].unsqueeze(0)
 
         inp = torch.tensor([[1.0, 2.0, 3.0], [4.0, 5.0, 6.0]])
@@ -558,7 +565,7 @@ class Test(BaseTest):
         )
 
     def test_single_inp_ablation_multi_output_aggr_mask_none(self) -> None:
-        def forward_func(inp):
+        def forward_func(inp: Tensor) -> Tensor:
             return inp[0].unsqueeze(0)
 
         inp = torch.tensor([[1.0, 2.0, 3.0], [4.0, 5.0, 6.0]])
@@ -574,7 +581,7 @@ class Test(BaseTest):
         )
 
     def test_single_inp_ablation_multi_output_aggr_non_standard(self) -> None:
-        def forward_func(inp):
+        def forward_func(inp: Tensor) -> Tensor:
             return inp[0].unsqueeze(0)
 
         inp = torch.tensor([[1.0, 2.0, 3.0], [4.0, 5.0, 6.0]])
@@ -590,7 +597,9 @@ class Test(BaseTest):
         )
 
     @unittest.mock.patch("sys.stderr", new_callable=io.StringIO)
-    def test_simple_ablation_with_show_progress(self, mock_stderr) -> None:
+    def test_simple_ablation_with_show_progress(
+        self, mock_stderr: unittest.mock.Mock
+    ) -> None:
         ablation_algo = FeatureAblation(BasicModel_MultiLayer())
         inp = torch.tensor([[20.0, 50.0, 30.0]], requires_grad=True)
 
@@ -616,7 +625,9 @@ class Test(BaseTest):
             mock_stderr.truncate(0)
 
     @unittest.mock.patch("sys.stderr", new_callable=io.StringIO)
-    def test_simple_ablation_with_mask_and_show_progress(self, mock_stderr) -> None:
+    def test_simple_ablation_with_mask_and_show_progress(
+        self, mock_stderr: unittest.mock.Mock
+    ) -> None:
         ablation_algo = FeatureAblation(BasicModel_MultiLayer())
         inp = torch.tensor([[20.0, 50.0, 30.0]], requires_grad=True)
 
@@ -705,6 +716,8 @@ class Test(BaseTest):
         self,
         ablation_algo: Attribution,
         test_input: TensorOrTupleOfTensorsGeneric,
+        # pyre-fixme[2]: Parameter `expected_ablation` must have a type that does not
+        # contain `Any`.
         expected_ablation: Union[
             Tensor,
             Tuple[Tensor, ...],
@@ -718,6 +731,8 @@ class Test(BaseTest):
             Tuple[List[Any], ...],
         ],
         feature_mask: Union[None, TensorOrTupleOfTensorsGeneric] = None,
+        # pyre-fixme[2]: Parameter `additional_input` has type `None` but type `Any`
+        # is specified.
         additional_input: Any = None,
         perturbations_per_eval: Tuple[int, ...] = (1,),
         baselines: BaselineType = None,

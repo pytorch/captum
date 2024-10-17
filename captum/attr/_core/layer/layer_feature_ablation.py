@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 # pyre-strict
-from typing import Any, Callable, List, Tuple, Union
+from typing import Any, Callable, List, Tuple, Type, Union
 
 import torch
 from captum._utils.common import (
@@ -311,6 +311,5 @@ class LayerFeatureAblation(LayerAttribution, PerturbationAttribution):
         return _attr
 
     @property
-    # pyre-fixme[3]: Return type must be annotated.
-    def attributor(self):
+    def attributor(self) -> Type[FeatureAblation]:
         return FeatureAblation

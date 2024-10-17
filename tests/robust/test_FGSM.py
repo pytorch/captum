@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+
+# pyre-unsafe
 from typing import Any, Callable, List, Optional, Tuple, Union
 
 import torch

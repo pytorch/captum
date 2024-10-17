@@ -3,7 +3,7 @@
 # pyre-strict
 from collections import defaultdict
 from copy import copy
-from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, Union
+from typing import Any, Callable, cast, Dict, Iterable, List, Optional, Tuple, Union
 
 import torch
 from captum._utils.common import (
@@ -30,9 +30,8 @@ SUPPORTED_METHODS = {FeatureAblation}
 
 
 # default reducer wehn reduce is None. Simply concat the outputs by the batch dimension
-# pyre-fixme[3]: Return type must be annotated.
 # pyre-fixme[2]: Parameter must be annotated.
-def _concat_tensors(accum, cur_output, _):
+def _concat_tensors(accum, cur_output, _) -> Tensor:
     return cur_output if accum is None else torch.cat([accum, cur_output])
 
 
@@ -185,7 +184,6 @@ class DataLoaderAttribution(Attribution):
 
         self.attr_method.forward_func = self._forward_with_dataloader
 
-    # pyre-fixme[3]: Return type must be annotated.
     def _forward_with_dataloader(
         self,
         batched_perturbed_feature_indices: Tensor,
@@ -195,11 +193,10 @@ class DataLoaderAttribution(Attribution):
         feature_mask: Tuple[Tensor, ...],
         # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
         reduce: Callable,
-        # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
-        to_metric: Optional[Callable],
+        to_metric: Optional[Callable[[Tensor], Tensor]],
         show_progress: bool,
         feature_idx_to_mask_idx: Dict[int, List[int]],
-    ):
+    ) -> Tensor:
         """
         Wrapper of the original given forward_func to be used in the attribution method
         It iterates over the dataloader with the given forward_func
@@ -245,7 +242,8 @@ class DataLoaderAttribution(Attribution):
 
                 accum_states[i] = reduce(accum_states[i], output, perturbed_inputs)
 
-        accum_results = [
+        accum_states = cast(List[Tensor], accum_states)
+        accum_results: List[Tensor] = [
             to_metric(accum) if to_metric else accum for accum in accum_states
         ]
 
@@ -278,7 +276,7 @@ class DataLoaderAttribution(Attribution):
         Args:
 
             dataloader (torch.Dataloader): the dataloader to attribute, which should
-                        return a tuple of consistant size for every iteration
+                        return a tuple of consistent size for every iteration
             input_roles (tuple[int, ...], optional): a tuple of integers to define the
                         role of each element returned from the dataloader. It should
                         have the same size as the return of the dataloader.
@@ -328,7 +326,7 @@ class DataLoaderAttribution(Attribution):
                         traverses needed is
                         ceil(n_perturbations / perturbations_per_pass).
 
-                        This arguement offers control of the trade-off between memory
+                        This argument offers control of the trade-off between memory
                         and efficiency. If the dataloader involves slow operations like
                         remote request or file I/O, multiple traversals can be
                         inefficient. On the other hand, each perturbation needs to
@@ -371,6 +369,9 @@ class DataLoaderAttribution(Attribution):
             assert len(input_roles) == len(inputs), (
                 "input_roles must have the same size as the return of the dataloader,",
                 f"length of input_roles is {len(input_roles)} ",
+                # pyre-fixme[6]: For 1st argument expected
+                #  `pyre_extensions.ReadOnly[Sized]` but got
+                #  `Optional[typing.Tuple[typing.Any, ...]]`.
                 f"whereas the length of dataloader return is {len(inputs)}",
             )
 
@@ -397,6 +398,9 @@ class DataLoaderAttribution(Attribution):
             "Baselines must have the same size as the return of the dataloader ",
             "that need attribution",
             f"length of baseline is {len(baselines)} ",
+            # pyre-fixme[6]: For 1st argument expected
+            #  `pyre_extensions.ReadOnly[Sized]` but got
+            #  `Optional[typing.Tuple[typing.Any, ...]]`.
             f'whereas the length of dataloader return with role "0" is {len(inputs)}',
         )
 
@@ -415,6 +419,9 @@ class DataLoaderAttribution(Attribution):
             "Feature mask must have the same size as the return of the dataloader ",
             "that need attribution",
             f"length of feature_mask is {len(feature_mask)} ",
+            # pyre-fixme[6]: For 1st argument expected
+            #  `pyre_extensions.ReadOnly[Sized]` but got
+            #  `Optional[typing.Tuple[typing.Any, ...]]`.
             f'whereas the length of dataloader return with role "0" is {len(inputs)}',
         )
 
@@ -467,3 +474,12 @@ class DataLoaderAttribution(Attribution):
             )
 
             return _format_output(is_inputs_tuple, attr)
+
+    # pyre-fixme[24] Generic type `Callable` expects 2 type parameters.
+    def attribute_future(self) -> Callable:
+        r"""
+        This method is not implemented for DataLoaderAttribution.
+        """
+        raise NotImplementedError(
+            "attribute_future is not implemented for DataLoaderAttribution"
+        )

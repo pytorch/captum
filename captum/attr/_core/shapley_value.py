@@ -485,6 +485,15 @@ class ShapleyValueSampling(PerturbationAttribution):
         #  `Tuple[Tensor, ...]`.
         return formatted_attr
 
+    # pyre-fixme[24] Generic type `Callable` expects 2 type parameters.
+    def attribute_future(self) -> Callable:
+        r"""
+        This method is not implemented for ShapleyValueSampling.
+        """
+        raise NotImplementedError(
+            "attribute_future is not implemented for ShapleyValueSampling"
+        )
+
     # pyre-fixme[3]: Return annotation cannot contain `Any`.
     def _perturbation_generator(
         self,
@@ -863,9 +872,9 @@ class ShapleyValues(ShapleyValueSampling):
             show_progress=show_progress,
         )
 
-    # pyre-fixme[3]: Return type must be annotated.
-    # pyre-fixme[2]: Parameter must be annotated.
-    def _get_n_evaluations(self, total_features, n_samples, perturbations_per_eval):
+    def _get_n_evaluations(
+        self, total_features: int, n_samples: int, perturbations_per_eval: int
+    ) -> int:
         """return the total number of forward evaluations needed"""
         return math.ceil(total_features / perturbations_per_eval) * math.factorial(
             total_features

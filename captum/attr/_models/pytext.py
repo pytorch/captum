@@ -2,6 +2,7 @@
 
 # pyre-strict
 from collections import defaultdict
+from typing import Tuple
 
 import torch
 from pytext.models.embeddings.dict_embedding import DictEmbedding
@@ -147,9 +148,8 @@ class BaselineGenerator:
                 )
         return tuple(baseline)
 
-    # pyre-fixme[3]: Return type must be annotated.
     # pyre-fixme[2]: Parameter must be annotated.
-    def _generate_baseline_single_word_feature(self, device):
+    def _generate_baseline_single_word_feature(self, device) -> torch.Tensor:
         return (
             torch.tensor(
                 [self.vocab_word.stoi[self.PAD] if hasattr(self, "vocab_word") else 0]
@@ -158,9 +158,11 @@ class BaselineGenerator:
             .to(device)
         )
 
-    # pyre-fixme[3]: Return type must be annotated.
-    # pyre-fixme[2]: Parameter must be annotated.
-    def _generate_baseline_single_dict_feature(self, device):
+    def _generate_baseline_single_dict_feature(
+        self,
+        # pyre-fixme[2]: Parameter `device` has no type specified.
+        device,
+    ) -> Tuple[torch.Tensor, ...]:
         r"""Generate dict features based on Assistant's case study by using
          sia_transformer:
          fbcode/assistant/sia/transformer/sia_transformer.py
@@ -247,9 +249,8 @@ def configure_task_integ_grads_embeddings(task):
     return integrated_gradients_embedding_lst[0]
 
 
-# pyre-fixme[3]: Return type must be annotated.
 # pyre-fixme[2]: Parameter must be annotated.
-def configure_model_integ_grads_embeddings(model):
+def configure_model_integ_grads_embeddings(model) -> EmbeddingList:
     r"""
     Wraps Pytext's DocNN model embedding with `IntegratedGradientsEmbedding`
     IntegratedGradientsEmbedding allows to perform baseline related operations

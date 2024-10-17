@@ -1,5 +1,7 @@
 # (c) Meta Platforms, Inc. and affiliates. Confidential and proprietary.
 
+# pyre-unsafe
+
 import tempfile
 from typing import Callable
 

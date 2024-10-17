@@ -329,6 +329,15 @@ class IntegratedGradients(GradientAttribution):
         #  <: [Tensor, typing.Tuple[Tensor, ...]]]]` but got `Tuple[Tensor, ...]`.
         return _format_output(is_inputs_tuple, attributions)
 
+    # pyre-fixme[24] Generic type `Callable` expects 2 type parameters.
+    def attribute_future(self) -> Callable:
+        r"""
+        This method is not implemented for IntegratedGradients.
+        """
+        raise NotImplementedError(
+            "attribute_future is not implemented for IntegratedGradients"
+        )
+
     def _attribute(
         self,
         inputs: Tuple[Tensor, ...],
@@ -412,6 +421,5 @@ class IntegratedGradients(GradientAttribution):
         return True
 
     @property
-    # pyre-fixme[3]: Return type must be annotated.
-    def multiplies_by_inputs(self):
+    def multiplies_by_inputs(self) -> bool:
         return self._multiply_by_inputs
