@@ -422,6 +422,8 @@ def infidelity(
         """
 
         # pyre-fixme[3]: Return type must be annotated.
+        # pyre-fixme[53]: Captured variable `baselines_expanded` is not annotated.
+        # pyre-fixme[53]: Captured variable `inputs_expanded` is not annotated.
         def call_perturb_func():
             r""" """
             baselines_pert = None
@@ -485,6 +487,7 @@ def infidelity(
                 is: {}"""
             ).format(perturb[0].shape, input_perturbed[0].shape)
 
+    # pyre-fixme[53]: Captured variable `bsz` is not annotated.
     def _next_infidelity_tensors(
         current_n_perturb_samples: int,
     ) -> Union[Tuple[Tensor], Tuple[Tensor, Tensor, Tensor]]:

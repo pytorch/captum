@@ -31,8 +31,12 @@ class TestTracInSelfInfluence(BaseTest):
 
     # add tests for `TracInCPBase` implementations
 
+    # pyre-fixme[16]: `type` has no attribute `unpack_inputs`.
     for unpack_inputs in [True, False]:
+        # pyre-fixme[16]: `type` has no attribute `gpu_setting`.
         for gpu_setting in GPU_SETTING_LIST:
+            # pyre-fixme[16]: `type` has no attribute `reduction`.
+            # pyre-fixme[16]: `type` has no attribute `constructor`.
             for reduction, constructor in [
                 (
                     "none",
@@ -45,6 +49,8 @@ class TestTracInSelfInfluence(BaseTest):
                         name="TracInCP_linear1",
                         layers=(
                             ["module.linear1"]
+                            # pyre-fixme[16]: `TestTracInSelfInfluence` has no
+                            #  attribute `gpu_setting`.
                             if gpu_setting == "cuda_data_parallel"
                             else ["linear1"]
                         ),
@@ -84,11 +90,17 @@ class TestTracInSelfInfluence(BaseTest):
                 ),
             ]:
                 if not (
+                    # pyre-fixme[16]: `TestTracInSelfInfluence` has no attribute
+                    #  `constructor`.
                     "sample_wise_grads_per_batch" in constructor.kwargs
                     and constructor.kwargs["sample_wise_grads_per_batch"]
                     and is_gpu(gpu_setting)
                 ):
                     param_list.append(
+                        # pyre-fixme[16]: `TestTracInSelfInfluence` has no attribute
+                        #  `reduction`.
+                        # pyre-fixme[16]: `TestTracInSelfInfluence` has no attribute
+                        #  `unpack_inputs`.
                         (reduction, constructor, unpack_inputs, gpu_setting)
                     )
 

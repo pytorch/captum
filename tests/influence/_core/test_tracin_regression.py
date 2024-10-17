@@ -60,8 +60,13 @@ class TestTracInRegression(BaseTest):
     param_list: List[Tuple[Optional[str], DataInfluenceConstructor, str, int, bool]] = (
         []
     )
+    # pyre-fixme[16]: `type` has no attribute `use_gpu`.
     for use_gpu in use_gpu_list:
+        # pyre-fixme[16]: `type` has no attribute `dim`.
         for dim in [1, 20]:
+            # pyre-fixme[16]: `type` has no attribute `mode`.
+            # pyre-fixme[16]: `type` has no attribute `reduction`.
+            # pyre-fixme[16]: `type` has no attribute `constructor`.
             for mode, reduction, constructor in [
                 (
                     "check_idx",
@@ -74,6 +79,8 @@ class TestTracInRegression(BaseTest):
                     DataInfluenceConstructor(
                         TracInCP,
                         name="TracInCP_fc1",
+                        # pyre-fixme[16]: `TestTracInRegression` has no attribute
+                        #  `use_gpu`.
                         layers=["module.fc1"] if use_gpu else ["fc1"],
                     ),
                 ),
@@ -138,7 +145,13 @@ class TestTracInRegression(BaseTest):
                     ),  # add a test where `duplicate_loss_fn` is True
                 ),
             ]:
+                # pyre-fixme[16]: `TestTracInRegression` has no attribute `mode`.
                 if not (mode == "sample_wise_trick" and use_gpu):
+                    # pyre-fixme[16]: `TestTracInRegression` has no attribute
+                    #  `reduction`.
+                    # pyre-fixme[16]: `TestTracInRegression` has no attribute
+                    #  `constructor`.
+                    # pyre-fixme[16]: `TestTracInRegression` has no attribute `dim`.
                     param_list.append((reduction, constructor, mode, dim, use_gpu))
 
     # pyre-fixme[56]: Pyre was not able to infer the type of argument
