@@ -376,6 +376,7 @@ class TestTracInRegression(BaseTest):
                 DataInfluenceConstructor(
                     ArnoldiInfluenceFunction,
                     arnoldi_tol=1e-8,  # needs to be small to avoid empty arnoldi basis
+                    hessian_reg=2e-3,
                 ),
             ),
         ],
