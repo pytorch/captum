@@ -5,11 +5,11 @@
 from typing import cast, Tuple
 
 import numpy as np
+import numpy.typing as npt
 import torch
 from captum._utils.typing import Tensor
 from captum.attr._core.gradient_shap import GradientShap
 from captum.attr._core.integrated_gradients import IntegratedGradients
-from numpy import ndarray
 from tests.attr.helpers.attribution_delta_util import (
     assert_attribution_delta,
     assert_delta,
@@ -132,7 +132,7 @@ class Test(BaseTest):
             inp_shape = cast(Tuple[int, ...], inputs.shape)
             return torch.arange(0.0, inp_shape[1] * 2.0).reshape(2, inp_shape[1])
 
-        def generate_baselines_returns_array() -> ndarray:
+        def generate_baselines_returns_array() -> npt.NDArray:
             return np.arange(0.0, num_in * 4.0).reshape(4, num_in)
 
         # 10-class classification model

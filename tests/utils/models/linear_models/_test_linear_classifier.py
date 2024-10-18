@@ -5,6 +5,7 @@ from typing import cast, Optional
 
 import captum._utils.models.linear_model.model as pytorch_model_module
 import numpy as np
+import numpy.typing as npt
 import sklearn.datasets as datasets
 import torch
 from tests.helpers.evaluate_linear_model import evaluate
@@ -107,7 +108,7 @@ def compare_to_sk_learn(
         o_sklearn["l1_reg"] = alpha * sklearn_h.norm(p=1, dim=-1)
 
     rel_diff = cast(
-        np.ndarray,
+        npt.NDArray,
         # pyre-fixme[6]: For 1st argument expected `int` but got `Union[int, Tensor]`.
         (sum(o_sklearn.values()) - sum(o_pytorch.values())),
     ) / abs(sum(o_sklearn.values()))
