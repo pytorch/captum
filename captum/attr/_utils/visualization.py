@@ -8,6 +8,7 @@ from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, Union
 import matplotlib
 
 import numpy as np
+import numpy.typing as npt
 from matplotlib import cm, colors, pyplot as plt
 from matplotlib.axes import Axes
 from matplotlib.collections import LineCollection
@@ -47,11 +48,11 @@ class VisualizeSign(Enum):
     all = 4
 
 
-def _prepare_image(attr_visual: ndarray) -> ndarray:
+def _prepare_image(attr_visual: npt.NDArray) -> npt.NDArray:
     return np.clip(attr_visual.astype(int), 0, 255)
 
 
-def _normalize_scale(attr: ndarray, scale_factor: float) -> ndarray:
+def _normalize_scale(attr: npt.NDArray, scale_factor: float) -> npt.NDArray:
     assert scale_factor != 0, "Cannot normalize by scale factor = 0"
     if abs(scale_factor) < 1e-5:
         warnings.warn(
@@ -64,7 +65,9 @@ def _normalize_scale(attr: ndarray, scale_factor: float) -> ndarray:
     return np.clip(attr_norm, -1, 1)
 
 
-def _cumulative_sum_threshold(values: ndarray, percentile: Union[int, float]) -> float:
+def _cumulative_sum_threshold(
+    values: npt.NDArray, percentile: Union[int, float]
+) -> float:
     # given values should be non-negative
     assert percentile >= 0 and percentile <= 100, (
         "Percentile for thresholding must be " "between 0 and 100 inclusive."
@@ -76,11 +79,11 @@ def _cumulative_sum_threshold(values: ndarray, percentile: Union[int, float]) ->
 
 
 def _normalize_attr(
-    attr: ndarray,
+    attr: npt.NDArray,
     sign: str,
     outlier_perc: Union[int, float] = 2,
     reduction_axis: Optional[int] = None,
-) -> ndarray:
+) -> npt.NDArray:
     attr_combined = attr
     if reduction_axis is not None:
         attr_combined = np.sum(attr, axis=reduction_axis)
@@ -130,7 +133,7 @@ def _initialize_cmap_and_vmin_vmax(
 
 def _visualize_original_image(
     plt_axis: Axes,
-    original_image: Optional[ndarray],
+    original_image: Optional[npt.NDArray],
     **kwargs: Any,
 ) -> None:
     assert (
@@ -143,7 +146,7 @@ def _visualize_original_image(
 
 def _visualize_heat_map(
     plt_axis: Axes,
-    norm_attr: ndarray,
+    norm_attr: npt.NDArray,
     cmap: Union[str, Colormap],
     vmin: float,
     vmax: float,
@@ -155,8 +158,8 @@ def _visualize_heat_map(
 
 def _visualize_blended_heat_map(
     plt_axis: Axes,
-    original_image: ndarray,
-    norm_attr: ndarray,
+    original_image: npt.NDArray,
+    norm_attr: npt.NDArray,
     cmap: Union[str, Colormap],
     vmin: float,
     vmax: float,
@@ -176,8 +179,8 @@ def _visualize_blended_heat_map(
 def _visualize_masked_image(
     plt_axis: Axes,
     sign: str,
-    original_image: ndarray,
-    norm_attr: ndarray,
+    original_image: npt.NDArray,
+    norm_attr: npt.NDArray,
     **kwargs: Any,
 ) -> None:
     assert VisualizeSign[sign].value != VisualizeSign.all.value, (
@@ -190,8 +193,8 @@ def _visualize_masked_image(
 def _visualize_alpha_scaling(
     plt_axis: Axes,
     sign: str,
-    original_image: ndarray,
-    norm_attr: ndarray,
+    original_image: npt.NDArray,
+    norm_attr: npt.NDArray,
     **kwargs: Any,
 ) -> None:
     assert VisualizeSign[sign].value != VisualizeSign.all.value, (
@@ -210,8 +213,8 @@ def _visualize_alpha_scaling(
 
 
 def visualize_image_attr(
-    attr: ndarray,
-    original_image: Optional[ndarray] = None,
+    attr: npt.NDArray,
+    original_image: Optional[npt.NDArray] = None,
     method: str = "heat_map",
     sign: str = "absolute_value",
     plt_fig_axis: Optional[Tuple[Figure, Axes]] = None,
@@ -417,8 +420,8 @@ def visualize_image_attr(
 
 
 def visualize_image_attr_multiple(
-    attr: ndarray,
-    original_image: Union[None, ndarray],
+    attr: npt.NDArray,
+    original_image: Union[None, npt.NDArray],
     methods: List[str],
     signs: List[str],
     titles: Optional[List[str]] = None,
@@ -526,9 +529,9 @@ def visualize_image_attr_multiple(
 
 
 def visualize_timeseries_attr(
-    attr: ndarray,
-    data: ndarray,
-    x_values: Optional[ndarray] = None,
+    attr: npt.NDArray,
+    data: npt.NDArray,
+    x_values: Optional[npt.NDArray] = None,
     method: str = "overlay_individual",
     sign: str = "absolute_value",
     channel_labels: Optional[List[str]] = None,
