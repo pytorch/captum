@@ -508,6 +508,7 @@ class LLMAttribution(Attribution):
                     skip_tokens = self.tokenizer.convert_tokens_to_ids(skip_tokens)
             else:
                 skip_tokens = []
+            skip_tokens = cast(List[int], skip_tokens)
 
             if isinstance(target, str):
                 encoded = self.tokenizer.encode(target)
@@ -700,6 +701,7 @@ class LLMGradientAttribution(Attribution):
                     skip_tokens = self.tokenizer.convert_tokens_to_ids(skip_tokens)
             else:
                 skip_tokens = []
+            skip_tokens = cast(List[int], skip_tokens)
 
             if isinstance(target, str):
                 encoded = self.tokenizer.encode(target)
