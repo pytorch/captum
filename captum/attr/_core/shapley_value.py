@@ -411,7 +411,8 @@ class ShapleyValueSampling(PerturbationAttribution):
                         warnings.warn(
                             "Feature mask is missing some integers between 0 and "
                             "num_features, for optimal performance, make sure each"
-                            " consecutive integer corresponds to a feature."
+                            " consecutive integer corresponds to a feature.",
+                            stacklevel=1,
                         )
                     # modified_eval dimensions: 1D tensor with length
                     # equal to #num_examples * #features in batch
@@ -858,7 +859,8 @@ class ShapleyValues(ShapleyValueSampling):
             warnings.warn(
                 "You are attempting to compute Shapley Values with at least 10 "
                 "features, which will likely be very computationally expensive."
-                "Consider using Shapley Value Sampling instead."
+                "Consider using Shapley Value Sampling instead.",
+                stacklevel=1,
             )
 
         return super().attribute.__wrapped__(

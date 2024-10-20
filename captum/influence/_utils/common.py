@@ -420,7 +420,8 @@ def _self_influence_by_batches_helper(
                 "Therefore, if showing the progress of the computation of self "
                 "influence scores, only the number of batches processed can be "
                 "displayed, and not the percentage completion of the computation, "
-                "nor any time estimates."
+                "nor any time estimates.",
+                stacklevel=1,
             )
         # then create the progress bar
         inputs_dataset = progress(
@@ -501,7 +502,8 @@ def _check_loss_fn(
                 f'please set the reduction attribute of `{loss_fn_name}` to "mean", '
                 f'i.e. `{loss_fn_name}.reduction = "mean"`. Note that if '
                 "`sample_wise_grads_per_batch` is True, the implementation "
-                "assumes the reduction is either a sum or mean reduction."
+                "assumes the reduction is either a sum or mean reduction.",
+                stacklevel=1,
             )
             reduction_type = "sum"
         else:
@@ -510,7 +512,8 @@ def _check_loss_fn(
                 "`sample_wise_grads_per_batch` is False, the implementation "
                 f'assumes that `{loss_fn_name}` is a "per-example" loss function (see '
                 f"documentation for `{loss_fn_name}` for details).  Please ensure "
-                "that this is the case."
+                "that this is the case.",
+                stacklevel=1,
             )
 
     return reduction_type
@@ -531,7 +534,8 @@ def _set_active_parameters(model: Module, layers: List[str]) -> List[Module]:
                 warnings.warn(
                     "Setting required grads for layer: {}, name: {}".format(
                         ".".join(layer), name
-                    )
+                    ),
+                    stacklevel=1,
                 )
                 param.requires_grad = True
     return layer_modules
@@ -556,7 +560,8 @@ def _progress_bar_constructor(
             f"of the computation of {quantities_name}, "
             "only the number of batches processed can be "
             "displayed, and not the percentage completion of the computation, "
-            "nor any time estimates."
+            "nor any time estimates.",
+            stacklevel=1,
         )
 
     return progress(
@@ -989,7 +994,10 @@ def _compute_batch_loss_influence_function_base(
                 "`reduction='sum'` loss function, or a `reduction='none'` "
                 "and set `sample_grads_per_batch` to false."
             )
-            warnings.warn(msg)
+            warnings.warn(
+                msg,
+                stacklevel=1,
+            )
         return _loss * multiplier
     elif reduction_type == "sum":
         return _loss

@@ -399,7 +399,8 @@ class AttackComparator(Generic[MetricResultType]):
             for key in attack.additional_args:
                 if key not in kwargs:
                     warnings.warn(
-                        f"Additional sample arg {key} not provided for {attack_key}"
+                        f"Additional sample arg {key} not provided for {attack_key}",
+                        stacklevel=1,
                     )
                 else:
                     additional_attack_args[key] = kwargs[key]
