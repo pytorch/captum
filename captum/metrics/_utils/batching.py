@@ -61,7 +61,8 @@ def _divide_and_aggregate_metrics(
                 "to compute the metrics, contains at least an instance of "
                 "the original example and doesn't exceed the number of "
                 "expanded n_perturb_samples."
-            ).format(max_examples_per_batch, bsz)
+            ).format(max_examples_per_batch, bsz),
+            stacklevel=1,
         )
 
     max_inps_per_batch = (

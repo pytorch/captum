@@ -72,7 +72,8 @@ class ModifiedReluGradientAttribution(GradientAttribution):
         # set hooks for overriding ReLU gradients
         warnings.warn(
             "Setting backward hooks on ReLU activations."
-            "The hooks will be removed after the attribution is finished"
+            "The hooks will be removed after the attribution is finished",
+            stacklevel=1,
         )
         try:
             self.model.apply(self._register_hooks)
