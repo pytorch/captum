@@ -38,17 +38,17 @@ def _local_perturb_func_default(
 
 
 @typing.overload
-# pyre-fixme[43]: The implementation of `_local_perturb_func` does not accept all
-#  possible arguments of overload defined on line `35`.
-def _local_perturb_func(inputs: Tensor) -> Tuple[Tensor, Tensor]: ...
-
-
-@typing.overload
-# pyre-fixme[43]: The implementation of `_local_perturb_func` does not accept all
-#  possible arguments of overload defined on line `39`.
+# pyre-ignore[43]: The implementation of `_local_perturb_func` does not accept all
+#  possible arguments of overload defined on line `43`.
 def _local_perturb_func(
     inputs: Tuple[Tensor, ...]
 ) -> Tuple[Tuple[Tensor, ...], Tuple[Tensor, ...]]: ...
+
+
+@typing.overload
+# pyre-ignore[43]: The implementation of `_local_perturb_func` does not accept all
+#  possible arguments of overload defined on line `51`.
+def _local_perturb_func(inputs: Tensor) -> Tuple[Tensor, Tensor]: ...
 
 
 def _local_perturb_func(
@@ -81,16 +81,16 @@ def _global_perturb_func1_default(
 
 @typing.overload
 # pyre-fixme[43]: The implementation of `_global_perturb_func1` does not accept all
-#  possible arguments of overload defined on line `70`.
-def _global_perturb_func1(inputs: Tensor) -> Tuple[Tensor, Tensor]: ...
-
-
-@typing.overload
-# pyre-fixme[43]: The implementation of `_global_perturb_func1` does not accept all
 #  possible arguments of overload defined on line `74`.
 def _global_perturb_func1(
     inputs: Tuple[Tensor, ...]
 ) -> Tuple[Tuple[Tensor, ...], Tuple[Tensor, ...]]: ...
+
+
+@typing.overload
+# pyre-fixme[43]: The implementation of `_global_perturb_func1` does not accept all
+#  possible arguments of overload defined on line `70`.
+def _global_perturb_func1(inputs: Tensor) -> Tuple[Tensor, Tensor]: ...
 
 
 # sensitivity-N, N = #input features

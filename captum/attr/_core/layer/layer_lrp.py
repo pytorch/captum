@@ -65,6 +65,26 @@ class LayerLRP(LRP, LayerAttribution):
 
     @typing.overload  # type: ignore
     # pyre-fixme[43]: The implementation of `attribute` does not accept all possible
+    #  arguments of overload defined on line `77`.
+    def attribute(
+        self,
+        inputs: TensorOrTupleOfTensorsGeneric,
+        target: TargetType = None,
+        # pyre-fixme[2]: Parameter annotation cannot be `Any`.
+        additional_forward_args: Any = None,
+        *,
+        # pyre-fixme[31]: Expression `Literal[True]` is not a valid type.
+        # pyre-fixme[24]: Non-generic type `typing.Literal` cannot take parameters.
+        return_convergence_delta: Literal[True],
+        attribute_to_layer_input: bool = False,
+        verbose: bool = False,
+    ) -> Tuple[
+        Union[Tensor, Tuple[Tensor, ...], List[Union[Tensor, Tuple[Tensor, ...]]]],
+        Union[Tensor, List[Tensor]],
+    ]: ...
+
+    @typing.overload
+    # pyre-fixme[43]: The implementation of `attribute` does not accept all possible
     #  arguments of overload defined on line `66`.
     def attribute(
         self,
@@ -79,25 +99,6 @@ class LayerLRP(LRP, LayerAttribution):
         attribute_to_layer_input: bool = False,
         verbose: bool = False,
     ) -> Union[Tensor, Tuple[Tensor, ...], List[Union[Tensor, Tuple[Tensor, ...]]]]: ...
-
-    @typing.overload
-    # pyre-fixme[43]: The implementation of `attribute` does not accept all possible
-    #  arguments of overload defined on line `77`.
-    def attribute(
-        self,
-        inputs: TensorOrTupleOfTensorsGeneric,
-        target: TargetType = None,
-        additional_forward_args: Any = None,
-        *,
-        # pyre-fixme[31]: Expression `Literal[True]` is not a valid type.
-        # pyre-fixme[24]: Non-generic type `typing.Literal` cannot take parameters.
-        return_convergence_delta: Literal[True],
-        attribute_to_layer_input: bool = False,
-        verbose: bool = False,
-    ) -> Tuple[
-        Union[Tensor, Tuple[Tensor, ...], List[Union[Tensor, Tuple[Tensor, ...]]]],
-        Union[Tensor, List[Tensor]],
-    ]: ...
 
     def attribute(
         self,

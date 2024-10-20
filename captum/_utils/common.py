@@ -73,17 +73,17 @@ def safe_div(
 @typing.overload
 # pyre-fixme[43]: The return type of overloaded function `_is_tuple` (`Literal[]`)
 #  is incompatible with the return type of the implementation (`bool`).
-# pyre-fixme[31]: Expression `Literal[False]` is not a valid type.
+# pyre-fixme[31]: Expression `Literal[True]` is not a valid type.
 # pyre-fixme[24]: Non-generic type `typing.Literal` cannot take parameters.
-def _is_tuple(inputs: Tensor) -> Literal[False]: ...
+def _is_tuple(inputs: Tuple[Tensor, ...]) -> Literal[True]: ...
 
 
 @typing.overload
 # pyre-fixme[43]: The return type of overloaded function `_is_tuple` (`Literal[]`)
 #  is incompatible with the return type of the implementation (`bool`).
-# pyre-fixme[31]: Expression `Literal[True]` is not a valid type.
+# pyre-fixme[31]: Expression `Literal[False]` is not a valid type.
 # pyre-fixme[24]: Non-generic type `typing.Literal` cannot take parameters.
-def _is_tuple(inputs: Tuple[Tensor, ...]) -> Literal[True]: ...
+def _is_tuple(inputs: Tensor) -> Literal[False]: ...
 
 
 def _is_tuple(inputs: Union[Tensor, Tuple[Tensor, ...]]) -> bool:
@@ -277,7 +277,7 @@ def _format_additional_forward_args(
 
 
 @overload
-def _format_additional_forward_args(
+def _format_additional_forward_args(  # type: ignore
     # pyre-fixme[2]: Parameter annotation cannot be `Any`.
     additional_forward_args: Any,
     # pyre-fixme[24]: Generic type `tuple` expects at least 1 type parameter.
@@ -780,10 +780,10 @@ def _reduce_list(
     """
     assert len(val_list) > 0, "Cannot reduce empty list!"
     if isinstance(val_list[0], torch.Tensor):
-        # pyre-fixme[16]: `bool` has no attribute `device`.
-        first_device = val_list[0].device
-        # pyre-fixme[16]: `bool` has no attribute `to`.
-        return red_func([elem.to(first_device) for elem in val_list])
+        first_device = cast(Tensor, val_list[0]).device
+        return red_func(
+            [elem.to(first_device) for elem in cast(List[Tensor], val_list)]
+        )
     elif isinstance(val_list[0], bool):
         # pyre-fixme[7]: Expected `TupleOrTensorOrBoolGeneric` but got `bool`.
         return any(val_list)

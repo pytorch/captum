@@ -131,11 +131,12 @@ class LayerIntegratedGradients(LayerAttribution, GradientAttribution):
     @overload
     # pyre-fixme[43]: The implementation of `attribute` does not accept all possible
     #  arguments of overload defined on line `126`.
-    def attribute(
+    def attribute(  # type: ignore
         self,
         inputs: Union[Tensor, Tuple[Tensor, ...]],
         baselines: BaselineType,
         target: TargetType,
+        # pyre-fixme[2]: Parameter annotation cannot be `Any`.
         additional_forward_args: Any,
         n_steps: int,
         method: str,
