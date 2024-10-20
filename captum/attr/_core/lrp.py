@@ -63,6 +63,22 @@ class LRP(GradientAttribution):
 
     @typing.overload
     # pyre-fixme[43]: The implementation of `attribute` does not accept all possible
+    #  arguments of overload defined on line `75`.
+    def attribute(
+        self,
+        inputs: TensorOrTupleOfTensorsGeneric,
+        target: TargetType = None,
+        # pyre-fixme[2]: Parameter annotation cannot be `Any`.
+        additional_forward_args: Any = None,
+        *,
+        # pyre-fixme[31]: Expression `Literal[True]` is not a valid type.
+        # pyre-fixme[24]: Non-generic type `typing.Literal` cannot take parameters.
+        return_convergence_delta: Literal[True],
+        verbose: bool = False,
+    ) -> Tuple[TensorOrTupleOfTensorsGeneric, Tensor]: ...
+
+    @typing.overload
+    # pyre-fixme[43]: The implementation of `attribute` does not accept all possible
     #  arguments of overload defined on line `65`.
     def attribute(
         self,
@@ -76,21 +92,6 @@ class LRP(GradientAttribution):
         return_convergence_delta: Literal[False] = False,
         verbose: bool = False,
     ) -> TensorOrTupleOfTensorsGeneric: ...
-
-    @typing.overload
-    # pyre-fixme[43]: The implementation of `attribute` does not accept all possible
-    #  arguments of overload defined on line `75`.
-    def attribute(
-        self,
-        inputs: TensorOrTupleOfTensorsGeneric,
-        target: TargetType = None,
-        additional_forward_args: Any = None,
-        *,
-        # pyre-fixme[31]: Expression `Literal[True]` is not a valid type.
-        # pyre-fixme[24]: Non-generic type `typing.Literal` cannot take parameters.
-        return_convergence_delta: Literal[True],
-        verbose: bool = False,
-    ) -> Tuple[TensorOrTupleOfTensorsGeneric, Tensor]: ...
 
     @log_usage()
     # pyre-fixme[43]: This definition does not have the same decorators as the

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 # pyre-strict
-from typing import Any, Callable, List, Tuple, Union
+from typing import Any, Callable, cast, List, Tuple, Union
 
 import torch
 from captum._utils.common import _format_output
@@ -128,7 +128,9 @@ class LayerActivation(LayerAttribution):
                 attribute_to_layer_input=attribute_to_layer_input,
             )
         if isinstance(self.layer, Module):
-            return _format_output(len(layer_eval) > 1, layer_eval)
+            return _format_output(
+                len(layer_eval) > 1, cast(Tuple[Tensor, ...], layer_eval)
+            )
         else:
             return [
                 # pyre-fixme[6]: For 2nd argument expected `Tuple[Tensor, ...]` but
