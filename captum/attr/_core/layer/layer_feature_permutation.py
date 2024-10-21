@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 # pyre-strict
-from typing import Any, Callable, cast, List, Tuple, Type, Union
+from typing import Any, Callable, cast, Dict, List, Tuple, Type, Union
 
 import torch
 from captum._utils.common import (
@@ -18,7 +18,7 @@ from captum._utils.typing import TargetType, TensorOrTupleOfTensorsGeneric
 from captum.attr._core.feature_permutation import FeaturePermutation
 from captum.attr._utils.attribution import LayerAttribution
 from captum.log import log_usage
-from torch import Tensor
+from torch import device, Tensor
 from torch.nn import Module
 from torch.nn.parallel.scatter_gather import scatter
 
@@ -32,8 +32,7 @@ class LayerFeaturePermutation(LayerAttribution, FeaturePermutation):
 
     def __init__(
         self,
-        # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
-        forward_func: Callable,
+        forward_func: Callable[[TensorOrTupleOfTensorsGeneric], Tensor],
         layer: Module,
         device_ids: Union[None, List[int]] = None,
     ) -> None:
@@ -64,8 +63,7 @@ class LayerFeaturePermutation(LayerAttribution, FeaturePermutation):
         self,
         inputs: Union[Tensor, Tuple[Tensor, ...]],
         target: TargetType = None,
-        # pyre-fixme[2]: Parameter annotation cannot be `Any`.
-        additional_forward_args: Any = None,
+        additional_forward_args: Any = None,  # type: ignore
         layer_mask: Union[None, TensorOrTupleOfTensorsGeneric] = None,
         perturbations_per_eval: int = 1,
     ) -> Union[Tensor, Tuple[Tensor, ...]]:
@@ -159,17 +157,21 @@ class LayerFeaturePermutation(LayerAttribution, FeaturePermutation):
                         otherwise a single tensor is returned.
         """
 
-        # pyre-fixme[2]: Parameter must be annotated.
-        def layer_forward_func(*args) -> Tensor:
-            layer_length = args[-1]
-            layer_input = args[:layer_length]
-            original_inputs = args[layer_length:-1]
+        def layer_forward_func(*args: Any) -> Tensor:
+            r"""
+            Args:
+                args (Any): Tuple containing the layer input, the original inputs,
+                and an int representing the length of the layer input
+            """
+            layer_length: int = args[-1]
+            layer_input: Tuple[Tensor, ...] = args[:layer_length]
+            original_inputs: Tuple[Tensor, ...] = args[layer_length:-1]
 
             device_ids = self.device_ids
             if device_ids is None:
                 device_ids = getattr(self.forward_func, "device_ids", None)
 
-            all_layer_inputs = {}
+            all_layer_inputs: Dict[device, Tuple[Tensor]] = {}
             if device_ids is not None:
                 scattered_layer_input = scatter(layer_input, target_gpus=device_ids)
                 for device_tensors in scattered_layer_input:
@@ -177,10 +179,11 @@ class LayerFeaturePermutation(LayerAttribution, FeaturePermutation):
             else:
                 all_layer_inputs[layer_input[0].device] = layer_input
 
-            # pyre-fixme[53]: Captured variable `all_layer_inputs` is not annotated.
-            # pyre-fixme[3]: Return type must be annotated.
-            # pyre-fixme[2]: Parameter must be annotated.
-            def forward_hook(module, inp, out=None):
+            def forward_hook(
+                module: Module,
+                inp: Union[None, Tensor, Tuple[Tensor, ...]],
+                out: Union[None, Tensor, Tuple[Tensor, ...]] = None,
+            ) -> Union[Tensor, Tuple[Tensor, ...]]:
                 device = _extract_device(module, inp, out)
                 is_layer_tuple = (
                     isinstance(out, tuple)
