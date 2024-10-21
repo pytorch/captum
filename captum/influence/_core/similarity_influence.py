@@ -297,7 +297,11 @@ class SimilarityInfluence(DataInfluence):
                     "returned as a tensor with [inputs_idx, src_dataset_idx] pairs "
                     "which may have corrupted similarity scores."
                 )
-                warnings.warn(zero_warning, RuntimeWarning)
+                warnings.warn(
+                    zero_warning,
+                    RuntimeWarning,
+                    stacklevel=1,
+                )
                 key = "-".join(["zero_acts", layer])
                 influences[key] = zero_acts
 
