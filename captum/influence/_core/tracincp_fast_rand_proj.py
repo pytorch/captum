@@ -189,7 +189,7 @@ class TracInCPFast(TracInCPBase):
         self.vectorize = vectorize
 
         # TODO: restore prior state
-        self.final_fc_layer = final_fc_layer  # type: ignore
+        self.final_fc_layer = cast(Module, final_fc_layer)
         for param in self.final_fc_layer.parameters():
             param.requires_grad = True
 
@@ -212,8 +212,7 @@ class TracInCPFast(TracInCPBase):
         return self._final_fc_layer
 
     @final_fc_layer.setter
-    # pyre-fixme[3]: Return type must be annotated.
-    def final_fc_layer(self, layer: Union[Module, str]):
+    def final_fc_layer(self, layer: Union[Module, str]) -> None:
         if isinstance(layer, str):
             try:
                 self._final_fc_layer = _get_module_from_name(self.model, layer)
