@@ -212,7 +212,8 @@ src="/_sphinx/documentation_options.js"></script>
                 <span class="s2">"Unable to determine the number of batches in training dataset "</span>
                 <span class="s2">"`train_dataset`. Therefore, if showing the progress of computations, "</span>
                 <span class="s2">"only the number of batches processed can be displayed, and not the "</span>
-                <span class="s2">"percentage completion of the computation, nor any time estimates."</span>
+                <span class="s2">"percentage completion of the computation, nor any time estimates."</span><span class="p">,</span>
+                <span class="n">stacklevel</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
             <span class="p">)</span>
 
     <span class="nd">@property</span>
@@ -1284,7 +1285,8 @@ src="/_sphinx/documentation_options.js"></script>
                     <span class="s2">"Therefore, if showing the progress of the computation of self "</span>
                     <span class="s2">"influence scores, only the number of batches processed can be "</span>
                     <span class="s2">"displayed, and not the percentage completion of the computation, "</span>
-                    <span class="s2">"nor any time estimates."</span>
+                    <span class="s2">"nor any time estimates."</span><span class="p">,</span>
+                    <span class="n">stacklevel</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
                 <span class="p">)</span>
 
         <span class="c1"># pyre-fixme[3]: Return type must be annotated.</span>

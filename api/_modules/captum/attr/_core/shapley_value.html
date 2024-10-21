@@ -447,7 +447,8 @@ src="/_sphinx/documentation_options.js"></script>
                         <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
                             <span class="s2">"Feature mask is missing some integers between 0 and "</span>
                             <span class="s2">"num_features, for optimal performance, make sure each"</span>
-                            <span class="s2">" consecutive integer corresponds to a feature."</span>
+                            <span class="s2">" consecutive integer corresponds to a feature."</span><span class="p">,</span>
+                            <span class="n">stacklevel</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
                         <span class="p">)</span>
                     <span class="c1"># modified_eval dimensions: 1D tensor with length</span>
                     <span class="c1"># equal to #num_examples * #features in batch</span>
@@ -903,7 +904,8 @@ src="/_sphinx/documentation_options.js"></script>
             <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
                 <span class="s2">"You are attempting to compute Shapley Values with at least 10 "</span>
                 <span class="s2">"features, which will likely be very computationally expensive."</span>
-                <span class="s2">"Consider using Shapley Value Sampling instead."</span>
+                <span class="s2">"Consider using Shapley Value Sampling instead."</span><span class="p">,</span>
+                <span class="n">stacklevel</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
             <span class="p">)</span>
 
         <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">attribute</span><span class="o">.</span><span class="n">__wrapped__</span><span class="p">(</span>

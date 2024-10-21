@@ -333,7 +333,11 @@ src="/_sphinx/documentation_options.js"></script>
                     <span class="s2">"returned as a tensor with [inputs_idx, src_dataset_idx] pairs "</span>
                     <span class="s2">"which may have corrupted similarity scores."</span>
                 <span class="p">)</span>
-                <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="n">zero_warning</span><span class="p">,</span> <span class="ne">RuntimeWarning</span><span class="p">)</span>
+                <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+                    <span class="n">zero_warning</span><span class="p">,</span>
+                    <span class="ne">RuntimeWarning</span><span class="p">,</span>
+                    <span class="n">stacklevel</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                <span class="p">)</span>
                 <span class="n">key</span> <span class="o">=</span> <span class="s2">"-"</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="s2">"zero_acts"</span><span class="p">,</span> <span class="n">layer</span><span class="p">])</span>
                 <span class="n">influences</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">zero_acts</span>
 

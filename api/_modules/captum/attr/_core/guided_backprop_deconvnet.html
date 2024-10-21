@@ -104,7 +104,8 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="c1"># set hooks for overriding ReLU gradients</span>
         <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
             <span class="s2">"Setting backward hooks on ReLU activations."</span>
-            <span class="s2">"The hooks will be removed after the attribution is finished"</span>
+            <span class="s2">"The hooks will be removed after the attribution is finished"</span><span class="p">,</span>
+            <span class="n">stacklevel</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
         <span class="p">)</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_register_hooks</span><span class="p">)</span>

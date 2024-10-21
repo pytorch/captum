@@ -438,7 +438,8 @@ src="/_sphinx/documentation_options.js"></script>
             <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">attack</span><span class="o">.</span><span class="n">additional_args</span><span class="p">:</span>
                 <span class="k">if</span> <span class="n">key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
                     <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
-                        <span class="sa">f</span><span class="s2">"Additional sample arg </span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2"> not provided for </span><span class="si">{</span><span class="n">attack_key</span><span class="si">}</span><span class="s2">"</span>
+                        <span class="sa">f</span><span class="s2">"Additional sample arg </span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2"> not provided for </span><span class="si">{</span><span class="n">attack_key</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+                        <span class="n">stacklevel</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
                     <span class="p">)</span>
                 <span class="k">else</span><span class="p">:</span>
                     <span class="n">additional_attack_args</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>

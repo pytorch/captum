@@ -616,7 +616,8 @@ src="/_sphinx/documentation_options.js"></script>
                     <span class="s2">"Therefore, if showing the progress of the computation of self "</span>
                     <span class="s2">"influence scores, only the number of batches processed can be "</span>
                     <span class="s2">"displayed, and not the percentage completion of the computation, "</span>
-                    <span class="s2">"nor any time estimates."</span>
+                    <span class="s2">"nor any time estimates."</span><span class="p">,</span>
+                    <span class="n">stacklevel</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
                 <span class="p">)</span>
 
         <span class="c1"># pyre-fixme[53]: Captured variable `inputs_len` is not annotated.</span>
@@ -1083,7 +1084,8 @@ src="/_sphinx/documentation_options.js"></script>
                 <span class="s2">"each call to `influence` to compute influence scores or proponents "</span>
                 <span class="s2">"will be slower, but may avoid running out of memory."</span>
             <span class="p">)</span>
-            <span class="o">%</span> <span class="s2">"`TracInCPFast`"</span>
+            <span class="o">%</span> <span class="s2">"`TracInCPFast`"</span><span class="p">,</span>
+            <span class="n">stacklevel</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
         <span class="p">)</span>
 
         <span class="c1"># pyre-fixme[4]: Attribute must be annotated.</span>
@@ -1275,7 +1277,8 @@ src="/_sphinx/documentation_options.js"></script>
                 <span class="s2">"random projections results only in approximate self influence "</span>
                 <span class="s2">"scores, there is no reason to use `TracInCPFastRandProj` when "</span>
                 <span class="s2">"calculating self influence scores."</span>
-            <span class="p">)</span>
+            <span class="p">),</span>
+            <span class="n">stacklevel</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
         <span class="p">)</span>
         <span class="k">raise</span> <span class="ne">NotImplementedError</span></div>
 

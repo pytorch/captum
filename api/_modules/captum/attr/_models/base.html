@@ -260,7 +260,8 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="s2">"embeddings and compute attributions for each embedding dimension. "</span>
         <span class="s2">"The original embedding layer must be set "</span>
         <span class="s2">"back by calling `remove_interpretable_embedding_layer` function "</span>
-        <span class="s2">"after model interpretation is finished. "</span>
+        <span class="s2">"after model interpretation is finished. "</span><span class="p">,</span>
+        <span class="n">stacklevel</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
     <span class="p">)</span>
     <span class="n">interpretable_emb</span> <span class="o">=</span> <span class="n">InterpretableEmbeddingBase</span><span class="p">(</span>
         <span class="n">embedding_layer</span><span class="p">,</span> <span class="n">embedding_layer_name</span>

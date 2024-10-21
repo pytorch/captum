@@ -762,7 +762,8 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="k">if</span> <span class="n">min_interp_features</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
             <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
                 <span class="s2">"Minimum element in feature mask is not 0, shifting indices to"</span>
-                <span class="s2">" start at 0."</span>
+                <span class="s2">" start at 0."</span><span class="p">,</span>
+                <span class="n">stacklevel</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
             <span class="p">)</span>
             <span class="n">feature_mask</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span>
                 <span class="n">single_mask</span> <span class="o">-</span> <span class="n">min_interp_features</span> <span class="k">for</span> <span class="n">single_mask</span> <span class="ow">in</span> <span class="n">feature_mask</span>
@@ -1212,7 +1213,8 @@ src="/_sphinx/documentation_options.js"></script>
                 <span class="s2">"Attempting to construct interpretable model with &gt; 10000 features."</span>
                 <span class="s2">"This can be very slow or lead to OOM issues. Please provide a feature"</span>
                 <span class="s2">"mask which groups input features to reduce the number of interpretable"</span>
-                <span class="s2">"features. "</span>
+                <span class="s2">"features. "</span><span class="p">,</span>
+                <span class="n">stacklevel</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
             <span class="p">)</span>
 
         <span class="n">coefs</span><span class="p">:</span> <span class="n">Tensor</span>
@@ -1226,7 +1228,9 @@ src="/_sphinx/documentation_options.js"></script>
                         <span class="s2">"You are providing multiple inputs for Lime / Kernel SHAP "</span>
                         <span class="s2">"attributions. This trains a separate interpretable model "</span>
                         <span class="s2">"for each example, which can be time consuming. It is "</span>
-                        <span class="s2">"recommended to compute attributions for one example at a time."</span>
+                        <span class="s2">"recommended to compute attributions for one example at a "</span>
+                        <span class="s2">"time."</span><span class="p">,</span>
+                        <span class="n">stacklevel</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
                     <span class="p">)</span>
                     <span class="n">output_list</span> <span class="o">=</span> <span class="p">[]</span>
                     <span class="k">for</span> <span class="p">(</span>

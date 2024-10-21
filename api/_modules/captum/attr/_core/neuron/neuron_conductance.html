@@ -319,7 +319,8 @@ src="/_sphinx/documentation_options.js"></script>
                 <span class="s2">"The neuron_selector provided is a callable. Please ensure that this"</span>
                 <span class="s2">" function only selects neurons from the given layer; aggregating"</span>
                 <span class="s2">" or performing other operations on the tensor may lead to inaccurate"</span>
-                <span class="s2">" results."</span>
+                <span class="s2">" results."</span><span class="p">,</span>
+                <span class="n">stacklevel</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
             <span class="p">)</span>
         <span class="c1"># pyre-fixme[6]: For 1st argument expected `Tensor` but got</span>
         <span class="c1">#  `TensorOrTupleOfTensorsGeneric`.</span>
