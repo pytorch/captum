@@ -417,7 +417,9 @@ src="/_sphinx/documentation_options.js"></script>
 
 
 
-<span class="k">class</span> <span class="nc">InternalAttribution</span><span class="p">(</span><span class="n">Attribution</span><span class="p">,</span> <span class="n">Generic</span><span class="p">[</span><span class="n">ModuleOrModuleList</span><span class="p">]):</span>
+<span class="c1"># mypy false positive "Free type variable expected in Generic[...]" but</span>
+<span class="c1"># ModuleOrModuleList is a TypeVar</span>
+<span class="k">class</span> <span class="nc">InternalAttribution</span><span class="p">(</span><span class="n">Attribution</span><span class="p">,</span> <span class="n">Generic</span><span class="p">[</span><span class="n">ModuleOrModuleList</span><span class="p">]):</span>  <span class="c1"># type: ignore</span>
 <span class="w">    </span><span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">    Shared base class for LayerAttrubution and NeuronAttribution,</span>
 <span class="sd">    attribution types that require a model and a particular layer.</span>
