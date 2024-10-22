@@ -2,24 +2,10 @@
 
 # pyre-strict
 
-from typing import (
-    List,
-    Optional,
-    overload,
-    Protocol,
-    Tuple,
-    TYPE_CHECKING,
-    TypeVar,
-    Union,
-)
+from typing import List, Literal, Optional, overload, Protocol, Tuple, TypeVar, Union
 
 from torch import Tensor
 from torch.nn import Module
-
-if TYPE_CHECKING:
-    from typing import Literal
-else:
-    Literal = {True: bool, False: bool, (True, False): bool, "pt": str}
 
 TensorOrTupleOfTensorsGeneric = TypeVar(
     "TensorOrTupleOfTensorsGeneric", Tensor, Tuple[Tensor, ...]
