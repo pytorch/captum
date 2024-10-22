@@ -86,6 +86,10 @@ def _is_tuple(inputs: Tuple[Tensor, ...]) -> Literal[True]: ...
 def _is_tuple(inputs: Tensor) -> Literal[False]: ...
 
 
+@typing.overload
+def _is_tuple(inputs: TensorOrTupleOfTensorsGeneric) -> bool: ...
+
+
 def _is_tuple(inputs: Union[Tensor, Tuple[Tensor, ...]]) -> bool:
     return isinstance(inputs, tuple)
 
