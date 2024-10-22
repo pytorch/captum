@@ -2,7 +2,7 @@
 
 # pyre-strict
 import warnings
-from typing import Any, Callable, List, Tuple, Union
+from typing import Callable, List, Tuple, Union
 
 import torch
 import torch.nn.functional as F
@@ -45,8 +45,7 @@ class ModifiedReluGradientAttribution(GradientAttribution):
         self,
         inputs: TensorOrTupleOfTensorsGeneric,
         target: TargetType = None,
-        # pyre-fixme[2]: Parameter annotation cannot be `Any`.
-        additional_forward_args: Any = None,
+        additional_forward_args: object = None,
     ) -> TensorOrTupleOfTensorsGeneric:
         r"""
         Computes attribution by overriding relu gradients. Based on constructor
@@ -58,16 +57,10 @@ class ModifiedReluGradientAttribution(GradientAttribution):
 
         # Keeps track whether original input is a tuple or not before
         # converting it into a tuple.
-        # pyre-fixme[6]: For 1st argument expected `Tensor` but got
-        #  `TensorOrTupleOfTensorsGeneric`.
         is_inputs_tuple = _is_tuple(inputs)
 
-        # pyre-fixme[9]: inputs has type `TensorOrTupleOfTensorsGeneric`; used as
-        #  `Tuple[Tensor, ...]`.
-        inputs = _format_tensor_into_tuples(inputs)
-        # pyre-fixme[6]: For 1st argument expected `Tuple[Tensor, ...]` but got
-        #  `TensorOrTupleOfTensorsGeneric`.
-        gradient_mask = apply_gradient_requirements(inputs)
+        inputs_tuple = _format_tensor_into_tuples(inputs)
+        gradient_mask = apply_gradient_requirements(inputs_tuple)
 
         # set hooks for overriding ReLU gradients
         warnings.warn(
@@ -79,14 +72,12 @@ class ModifiedReluGradientAttribution(GradientAttribution):
             self.model.apply(self._register_hooks)
 
             gradients = self.gradient_func(
-                self.forward_func, inputs, target, additional_forward_args
+                self.forward_func, inputs_tuple, target, additional_forward_args
             )
         finally:
             self._remove_hooks()
 
-        # pyre-fixme[6]: For 1st argument expected `Tuple[Tensor, ...]` but got
-        #  `TensorOrTupleOfTensorsGeneric`.
-        undo_gradient_requirements(inputs, gradient_mask)
+        undo_gradient_requirements(inputs_tuple, gradient_mask)
         # pyre-fixme[7]: Expected `TensorOrTupleOfTensorsGeneric` but got
         #  `Tuple[Tensor, ...]`.
         return _format_output(is_inputs_tuple, gradients)
@@ -155,8 +146,7 @@ class GuidedBackprop(ModifiedReluGradientAttribution):
         self,
         inputs: TensorOrTupleOfTensorsGeneric,
         target: TargetType = None,
-        # pyre-fixme[2]: Parameter annotation cannot be `Any`.
-        additional_forward_args: Any = None,
+        additional_forward_args: object = None,
     ) -> TensorOrTupleOfTensorsGeneric:
         r"""
         Args:
@@ -265,8 +255,7 @@ class Deconvolution(ModifiedReluGradientAttribution):
         self,
         inputs: TensorOrTupleOfTensorsGeneric,
         target: TargetType = None,
-        # pyre-fixme[2]: Parameter annotation cannot be `Any`.
-        additional_forward_args: Any = None,
+        additional_forward_args: object = None,
     ) -> TensorOrTupleOfTensorsGeneric:
         r"""
         Args:
