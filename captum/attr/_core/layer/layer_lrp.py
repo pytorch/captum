@@ -2,7 +2,7 @@
 
 # pyre-strict
 import typing
-from typing import Any, cast, List, Tuple, Union
+from typing import Any, cast, List, Literal, Tuple, Union
 
 from captum._utils.common import (
     _format_tensor_into_tuples,
@@ -15,7 +15,6 @@ from captum._utils.gradient import (
     undo_gradient_requirements,
 )
 from captum._utils.typing import (
-    Literal,
     ModuleOrModuleList,
     TargetType,
     TensorOrTupleOfTensorsGeneric,
@@ -64,8 +63,6 @@ class LayerLRP(LRP, LayerAttribution):
             self.device_ids = cast(List[int], self.model.device_ids)
 
     @typing.overload  # type: ignore
-    # pyre-fixme[43]: The implementation of `attribute` does not accept all possible
-    #  arguments of overload defined on line `77`.
     def attribute(
         self,
         inputs: TensorOrTupleOfTensorsGeneric,
@@ -73,8 +70,6 @@ class LayerLRP(LRP, LayerAttribution):
         # pyre-fixme[2]: Parameter annotation cannot be `Any`.
         additional_forward_args: Any = None,
         *,
-        # pyre-fixme[31]: Expression `Literal[True]` is not a valid type.
-        # pyre-fixme[24]: Non-generic type `typing.Literal` cannot take parameters.
         return_convergence_delta: Literal[True],
         attribute_to_layer_input: bool = False,
         verbose: bool = False,
@@ -84,17 +79,12 @@ class LayerLRP(LRP, LayerAttribution):
     ]: ...
 
     @typing.overload
-    # pyre-fixme[43]: The implementation of `attribute` does not accept all possible
-    #  arguments of overload defined on line `66`.
     def attribute(
         self,
         inputs: TensorOrTupleOfTensorsGeneric,
         target: TargetType = None,
         # pyre-fixme[2]: Parameter annotation cannot be `Any`.
         additional_forward_args: Any = None,
-        # pyre-fixme[9]: return_convergence_delta has type `Literal[]`; used as `bool`.
-        # pyre-fixme[31]: Expression `Literal[False]` is not a valid type.
-        # pyre-fixme[24]: Non-generic type `typing.Literal` cannot take parameters.
         return_convergence_delta: Literal[False] = False,
         attribute_to_layer_input: bool = False,
         verbose: bool = False,

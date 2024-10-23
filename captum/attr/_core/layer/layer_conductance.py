@@ -2,7 +2,7 @@
 
 # pyre-strict
 import typing
-from typing import Any, Callable, Dict, List, Optional, Tuple, Union
+from typing import Any, Callable, Dict, List, Literal, Optional, Tuple, Union
 
 import torch
 from captum._utils.common import (
@@ -12,7 +12,7 @@ from captum._utils.common import (
     _format_output,
 )
 from captum._utils.gradient import compute_layer_gradients_and_eval
-from captum._utils.typing import BaselineType, Literal, TargetType
+from captum._utils.typing import BaselineType, TargetType
 from captum.attr._utils.approximation_methods import approximation_parameters
 from captum.attr._utils.attribution import GradientAttribution, LayerAttribution
 from captum.attr._utils.batching import _batch_attribution
@@ -86,8 +86,6 @@ class LayerConductance(LayerAttribution, GradientAttribution):
         method: str = "gausslegendre",
         internal_batch_size: Union[None, int] = None,
         *,
-        # pyre-fixme[31]: Expression `Literal[True]` is not a valid type.
-        # pyre-fixme[24]: Non-generic type `typing.Literal` cannot take parameters.
         return_convergence_delta: Literal[True],
         attribute_to_layer_input: bool = False,
         grad_kwargs: Optional[Dict[str, Any]] = None,
@@ -105,9 +103,6 @@ class LayerConductance(LayerAttribution, GradientAttribution):
         n_steps: int = 50,
         method: str = "gausslegendre",
         internal_batch_size: Union[None, int] = None,
-        # pyre-fixme[9]: return_convergence_delta has type `Literal[]`; used as `bool`.
-        # pyre-fixme[31]: Expression `Literal[False]` is not a valid type.
-        # pyre-fixme[24]: Non-generic type `typing.Literal` cannot take parameters.
         return_convergence_delta: Literal[False] = False,
         attribute_to_layer_input: bool = False,
         grad_kwargs: Optional[Dict[str, Any]] = None,

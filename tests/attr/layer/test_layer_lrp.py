@@ -65,7 +65,6 @@ class Test(BaseTest):
         relevance, delta = lrp.attribute(  # type: ignore
             inputs,
             classIndex.item(),
-            # pyre-fixme[6]: For 3rd argument expected `Literal[]` but got `bool`.
             return_convergence_delta=True,
         )
         assertTensorAlmostEqual(
@@ -82,7 +81,6 @@ class Test(BaseTest):
         relevance_upper, delta = lrp_upper.attribute(
             inputs,
             attribute_to_layer_input=True,
-            # pyre-fixme[6]: For 3rd argument expected `Literal[]` but got `bool`.
             return_convergence_delta=True,
         )
         lrp_lower = LayerLRP(model, model.linear)
@@ -185,7 +183,6 @@ class Test(BaseTest):
         relevance, delta = lrp.attribute(
             inputs,
             attribute_to_layer_input=True,
-            # pyre-fixme[6]: For 3rd argument expected `Literal[]` but got `bool`.
             return_convergence_delta=True,
         )
         self.assertEqual(len(relevance), len(delta))

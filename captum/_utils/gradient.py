@@ -5,7 +5,18 @@ import threading
 import typing
 import warnings
 from collections import defaultdict
-from typing import Any, Callable, cast, Dict, List, Optional, Sequence, Tuple, Union
+from typing import (
+    Any,
+    Callable,
+    cast,
+    Dict,
+    List,
+    Literal,
+    Optional,
+    Sequence,
+    Tuple,
+    Union,
+)
 
 import torch
 from captum._utils.common import (
@@ -16,7 +27,6 @@ from captum._utils.common import (
 )
 from captum._utils.sample_gradient import SampleGradientWrapper
 from captum._utils.typing import (
-    Literal,
     ModuleOrModuleList,
     TargetType,
     TensorOrTupleOfTensorsGeneric,
@@ -226,9 +236,6 @@ def _forward_layer_distributed_eval(
     # pyre-fixme[2]: Parameter annotation cannot be `Any`.
     additional_forward_args: Any = None,
     attribute_to_layer_input: bool = False,
-    # pyre-fixme[9]: forward_hook_with_return has type `Literal[]`; used as `bool`.
-    # pyre-fixme[31]: Expression `Literal[False]` is not a valid type.
-    # pyre-fixme[24]: Non-generic type `typing.Literal` cannot take parameters.
     forward_hook_with_return: Literal[False] = False,
     require_layer_grads: bool = False,
 ) -> Dict[Module, Dict[device, Tuple[Tensor, ...]]]: ...
@@ -246,8 +253,6 @@ def _forward_layer_distributed_eval(
     additional_forward_args: Any = None,
     attribute_to_layer_input: bool = False,
     *,
-    # pyre-fixme[31]: Expression `Literal[True]` is not a valid type.
-    # pyre-fixme[24]: Non-generic type `typing.Literal` cannot take parameters.
     forward_hook_with_return: Literal[True],
     require_layer_grads: bool = False,
 ) -> Tuple[Dict[Module, Dict[device, Tuple[Tensor, ...]]], Tensor]: ...
@@ -675,7 +680,6 @@ def compute_layer_gradients_and_eval(
             target_ind=target_ind,
             additional_forward_args=additional_forward_args,
             attribute_to_layer_input=attribute_to_layer_input,
-            # pyre-fixme[6]: For 7th argument expected `Literal[]` but got `bool`.
             forward_hook_with_return=True,
             require_layer_grads=True,
         )

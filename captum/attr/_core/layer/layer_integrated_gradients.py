@@ -3,7 +3,7 @@
 # pyre-strict
 import functools
 import warnings
-from typing import Any, Callable, cast, List, overload, Tuple, Union
+from typing import Any, Callable, cast, List, Literal, overload, Tuple, Union
 
 import torch
 from captum._utils.common import (
@@ -12,7 +12,7 @@ from captum._utils.common import (
     _format_outputs,
 )
 from captum._utils.gradient import _forward_layer_eval, _run_forward
-from captum._utils.typing import BaselineType, Literal, ModuleOrModuleList, TargetType
+from captum._utils.typing import BaselineType, ModuleOrModuleList, TargetType
 from captum.attr._core.integrated_gradients import IntegratedGradients
 from captum.attr._utils.attribution import GradientAttribution, LayerAttribution
 from captum.attr._utils.common import (
@@ -227,8 +227,6 @@ class LayerIntegratedGradients(LayerAttribution, GradientAttribution):
         return _gradient_func
 
     @overload
-    # pyre-fixme[43]: The implementation of `attribute` does not accept all possible
-    #  arguments of overload defined on line `112`.
     def attribute(
         self,
         inputs: Union[Tensor, Tuple[Tensor, ...]],
@@ -239,15 +237,11 @@ class LayerIntegratedGradients(LayerAttribution, GradientAttribution):
         n_steps: int,
         method: str,
         internal_batch_size: Union[None, int],
-        # pyre-fixme[31]: Expression `Literal[False]` is not a valid type.
-        # pyre-fixme[24]: Non-generic type `typing.Literal` cannot take parameters.
         return_convergence_delta: Literal[False],
         attribute_to_layer_input: bool,
     ) -> Union[Tensor, Tuple[Tensor, ...], List[Union[Tensor, Tuple[Tensor, ...]]]]: ...
 
     @overload
-    # pyre-fixme[43]: The implementation of `attribute` does not accept all possible
-    #  arguments of overload defined on line `126`.
     def attribute(  # type: ignore
         self,
         inputs: Union[Tensor, Tuple[Tensor, ...]],
@@ -258,8 +252,6 @@ class LayerIntegratedGradients(LayerAttribution, GradientAttribution):
         n_steps: int,
         method: str,
         internal_batch_size: Union[None, int],
-        # pyre-fixme[31]: Expression `Literal[True]` is not a valid type.
-        # pyre-fixme[24]: Non-generic type `typing.Literal` cannot take parameters.
         return_convergence_delta: Literal[True],
         attribute_to_layer_input: bool,
     ) -> Tuple[
