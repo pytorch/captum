@@ -82,6 +82,12 @@ def _format_input_baseline(  # type: ignore
 ) -> Tuple[Tuple[Tensor, ...], Tuple[Union[Tensor, int, float], ...]]: ...
 
 
+@typing.overload
+def _format_input_baseline(  # type: ignore
+    inputs: TensorOrTupleOfTensorsGeneric, baselines: BaselineType
+) -> Tuple[Tuple[Tensor, ...], Tuple[Union[Tensor, int, float], ...]]: ...
+
+
 def _format_input_baseline(
     inputs: Union[Tensor, Tuple[Tensor, ...]], baselines: BaselineType
 ) -> Tuple[Tuple[Tensor, ...], Tuple[Union[Tensor, int, float], ...]]:
@@ -234,6 +240,21 @@ def _compute_conv_delta_and_format_attrs(
     # pyre-fixme[24]: Non-generic type `typing.Literal` cannot take parameters.
     is_inputs_tuple: Literal[False] = False,
 ) -> Union[Tensor, Tuple[Tensor, Tensor]]: ...
+
+
+@typing.overload
+def _compute_conv_delta_and_format_attrs(
+    attr_algo: "GradientAttribution",
+    return_convergence_delta: bool,
+    attributions: Tuple[Tensor, ...],
+    start_point: Union[int, float, Tensor, Tuple[Union[int, float, Tensor], ...]],
+    end_point: Union[Tensor, Tuple[Tensor, ...]],
+    additional_forward_args: Any,
+    target: TargetType,
+    is_inputs_tuple: bool = False,
+) -> Union[
+    Tensor, Tuple[Tensor, ...], Tuple[Union[Tensor, Tuple[Tensor, ...]], Tensor]
+]: ...
 
 
 # FIXME: GradientAttribution is provided as a string due to a circular import.
