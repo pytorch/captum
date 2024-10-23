@@ -3,7 +3,7 @@
 # pyre-strict
 from collections import defaultdict
 from copy import copy
-from typing import Any, Callable, cast, Dict, Iterable, List, Optional, Tuple, Union
+from typing import Callable, cast, Dict, Iterable, List, Optional, Tuple, Union
 
 import torch
 from captum._utils.common import (
@@ -31,7 +31,7 @@ SUPPORTED_METHODS = {FeatureAblation}
 
 # default reducer wehn reduce is None. Simply concat the outputs by the batch dimension
 # pyre-fixme[2]: Parameter must be annotated.
-def _concat_tensors(accum, cur_output, _) -> Tensor:
+def _concat_tensors(accum: Optional[Tensor], cur_output: Tensor, _) -> Tensor:
     return cur_output if accum is None else torch.cat([accum, cur_output])
 
 
@@ -61,14 +61,12 @@ def _create_perturbation_mask(
     return perturbation_mask
 
 
-# pyre-fixme[3]: Return annotation cannot contain `Any`.
 def _perturb_inputs(
-    # pyre-fixme[2]: Parameter annotation cannot contain `Any`.
-    inputs: Iterable[Any],
+    inputs: Iterable[object],
     input_roles: Tuple[int],
     baselines: Tuple[Union[int, float, Tensor], ...],
     perturbation_mask: Tuple[Union[Tensor, None], ...],
-) -> Tuple[Any, ...]:
+) -> Tuple[object, ...]:
     """
     Perturb inputs based on perturbation mask and baselines
     """
@@ -164,6 +162,8 @@ class DataLoaderAttribution(Attribution):
     e.g., Precision & Recall.
     """
 
+    attr_method: Attribution
+
     def __init__(self, attr_method: Attribution) -> None:
         r"""
         Args:
@@ -179,7 +179,6 @@ class DataLoaderAttribution(Attribution):
         super().__init__(attr_method.forward_func)
 
         # shallow copy is enough to avoid modifying original instance
-        # pyre-fixme[4]: Attribute must be annotated.
         self.attr_method = copy(attr_method)
 
         self.attr_method.forward_func = self._forward_with_dataloader
@@ -352,27 +351,22 @@ class DataLoaderAttribution(Attribution):
                         If return_input_shape is False, a single tensor is returned
                         where each index of the last dimension represents a feature
         """
-        inputs = next(iter(dataloader))
+        inputs = cast(Union[Tensor, Tuple[Tensor, ...]], next(iter(dataloader)))
         is_inputs_tuple = True
 
+        inputs_tuple: Tuple[Tensor, ...]
         if type(inputs) is list:
             # support list as it is a common return type for dataloader in torch
-            inputs = tuple(inputs)
+            inputs_tuple = tuple(inputs)
         elif type(inputs) is not tuple:
             is_inputs_tuple = False
-            inputs = _format_tensor_into_tuples(inputs)
+            inputs_tuple = _format_tensor_into_tuples(inputs)
 
         if input_roles:
-            # pyre-fixme[6]: For 1st argument expected
-            #  `pyre_extensions.ReadOnly[Sized]` but got
-            #  `Optional[typing.Tuple[typing.Any, ...]]`.
-            assert len(input_roles) == len(inputs), (
+            assert len(input_roles) == len(inputs_tuple), (
                 "input_roles must have the same size as the return of the dataloader,",
                 f"length of input_roles is {len(input_roles)} ",
-                # pyre-fixme[6]: For 1st argument expected
-                #  `pyre_extensions.ReadOnly[Sized]` but got
-                #  `Optional[typing.Tuple[typing.Any, ...]]`.
-                f"whereas the length of dataloader return is {len(inputs)}",
+                f"whereas the length of dataloader return is {len(inputs_tuple)}",
             )
 
             assert any(role == InputRole.need_attr for role in input_roles), (
@@ -381,14 +375,11 @@ class DataLoaderAttribution(Attribution):
             )
         else:
             # by default, assume every element in the dataloader needs attribution
-            # pyre-fixme[16]: `Optional` has no attribute `__iter__`.
-            input_roles = tuple(InputRole.need_attr for _ in inputs)
+            input_roles = tuple(InputRole.need_attr for _ in inputs_tuple)
 
         attr_inputs = tuple(
             inp
-            # pyre-fixme[6]: For 2nd argument expected `Iterable[Variable[_T2]]` but
-            #  got `Optional[typing.Tuple[typing.Any, ...]]`.
-            for role, inp in zip(input_roles, inputs)
+            for role, inp in zip(input_roles, inputs_tuple)
             if role == InputRole.need_attr
         )
 
@@ -398,10 +389,8 @@ class DataLoaderAttribution(Attribution):
             "Baselines must have the same size as the return of the dataloader ",
             "that need attribution",
             f"length of baseline is {len(baselines)} ",
-            # pyre-fixme[6]: For 1st argument expected
-            #  `pyre_extensions.ReadOnly[Sized]` but got
-            #  `Optional[typing.Tuple[typing.Any, ...]]`.
-            f'whereas the length of dataloader return with role "0" is {len(inputs)}',
+            'whereas the length of dataloader return with role "0" is',
+            f" {len(inputs_tuple)}",
         )
 
         for i, baseline in enumerate(baselines):
@@ -419,10 +408,8 @@ class DataLoaderAttribution(Attribution):
             "Feature mask must have the same size as the return of the dataloader ",
             "that need attribution",
             f"length of feature_mask is {len(feature_mask)} ",
-            # pyre-fixme[6]: For 1st argument expected
-            #  `pyre_extensions.ReadOnly[Sized]` but got
-            #  `Optional[typing.Tuple[typing.Any, ...]]`.
-            f'whereas the length of dataloader return with role "0" is {len(inputs)}',
+            'whereas the length of dataloader return with role "0"',
+            f" is {len(inputs_tuple)}",
         )
 
         for i, each_mask in enumerate(feature_mask):
