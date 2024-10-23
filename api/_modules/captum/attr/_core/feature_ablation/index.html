@@ -81,8 +81,9 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">    first dimension (i.e. a feature mask requires to be applied to all inputs).</span>
 <span class="sd">    """</span>
 
-    <span class="c1"># pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.</span>
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">forward_func</span><span class="p">:</span> <span class="n">Callable</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">forward_func</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="n">Tensor</span><span class="p">,</span> <span class="n">Future</span><span class="p">[</span><span class="n">Tensor</span><span class="p">]]]</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        Args:</span>
 
@@ -110,8 +111,7 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="n">inputs</span><span class="p">:</span> <span class="n">TensorOrTupleOfTensorsGeneric</span><span class="p">,</span>
         <span class="n">baselines</span><span class="p">:</span> <span class="n">BaselineType</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">target</span><span class="p">:</span> <span class="n">TargetType</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="c1"># pyre-fixme[2]: Parameter annotation cannot be `Any`.</span>
-        <span class="n">additional_forward_args</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">additional_forward_args</span><span class="p">:</span> <span class="nb">object</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">feature_mask</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="n">Tensor</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">perturbations_per_eval</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
         <span class="n">show_progress</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
@@ -297,8 +297,6 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">        """</span>
         <span class="c1"># Keeps track whether original input is a tuple or not before</span>
         <span class="c1"># converting it into a tuple.</span>
-        <span class="c1"># pyre-fixme[6]: For 1st argument expected `Tensor` but got</span>
-        <span class="c1">#  `TensorOrTupleOfTensorsGeneric`.</span>
         <span class="n">is_inputs_tuple</span> <span class="o">=</span> <span class="n">_is_tuple</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span>
 
         <span class="n">formatted_inputs</span><span class="p">,</span> <span class="n">baselines</span> <span class="o">=</span> <span class="n">_format_input_baseline</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">baselines</span><span class="p">)</span>
@@ -306,8 +304,6 @@ src="/_sphinx/documentation_options.js"></script>
             <span class="n">additional_forward_args</span>
         <span class="p">)</span>
         <span class="n">num_examples</span> <span class="o">=</span> <span class="n">formatted_inputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-        <span class="c1"># pyre-fixme[6]: For 2nd argument expected `Tuple[Tensor, ...]` but got</span>
-        <span class="c1">#  `TensorOrTupleOfTensorsGeneric`.</span>
         <span class="n">formatted_feature_mask</span> <span class="o">=</span> <span class="n">_format_feature_mask</span><span class="p">(</span><span class="n">feature_mask</span><span class="p">,</span> <span class="n">formatted_inputs</span><span class="p">)</span>
 
         <span class="k">assert</span> <span class="p">(</span>
@@ -420,8 +416,6 @@ src="/_sphinx/documentation_options.js"></script>
             <span class="c1"># pyre-fixme[7]: Expected `Variable[TensorOrTupleOfTensorsGeneric &lt;:</span>
             <span class="c1"># [Tensor, typing.Tuple[Tensor, ...]]]`</span>
             <span class="c1"># but got `Union[Tensor, typing.Tuple[Tensor, ...]]`.</span>
-            <span class="c1"># pyre-fixme[6]: In call `FeatureAblation._generate_result`,</span>
-            <span class="c1"># for 3rd positional argument, expected `bool` but got `Literal[]`.</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_generate_result</span><span class="p">(</span><span class="n">total_attrib</span><span class="p">,</span> <span class="n">weights</span><span class="p">,</span> <span class="n">is_inputs_tuple</span><span class="p">)</span>  <span class="c1"># type: ignore # noqa: E501 line too long</span></div>
 
 
@@ -453,8 +447,7 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="n">inputs</span><span class="p">:</span> <span class="n">TensorOrTupleOfTensorsGeneric</span><span class="p">,</span>
         <span class="n">baselines</span><span class="p">:</span> <span class="n">BaselineType</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">target</span><span class="p">:</span> <span class="n">TargetType</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="c1"># pyre-fixme[2]: Parameter annotation cannot be `Any`.</span>
-        <span class="n">additional_forward_args</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">additional_forward_args</span><span class="p">:</span> <span class="nb">object</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">feature_mask</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="n">Tensor</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">perturbations_per_eval</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
         <span class="n">show_progress</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
@@ -467,8 +460,6 @@ src="/_sphinx/documentation_options.js"></script>
 
         <span class="c1"># Keeps track whether original input is a tuple or not before</span>
         <span class="c1"># converting it into a tuple.</span>
-        <span class="c1"># pyre-fixme[6]: For 1st argument expected `Tensor` but got</span>
-        <span class="c1">#  `TensorOrTupleOfTensorsGeneric`.</span>
         <span class="n">is_inputs_tuple</span> <span class="o">=</span> <span class="n">_is_tuple</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span>
         <span class="n">formatted_inputs</span><span class="p">,</span> <span class="n">baselines</span> <span class="o">=</span> <span class="n">_format_input_baseline</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">baselines</span><span class="p">)</span>
         <span class="n">formatted_additional_forward_args</span> <span class="o">=</span> <span class="n">_format_additional_forward_args</span><span class="p">(</span>
@@ -700,13 +691,11 @@ src="/_sphinx/documentation_options.js"></script>
             <span class="p">)</span> <span class="kn">from</span> <span class="nn">e</span>
         <span class="k">return</span> <span class="n">result</span>
 
-    <span class="c1"># pyre-fixme[3]: Return type must be specified as type that does not contain `Any`</span>
     <span class="k">def</span> <span class="nf">_ith_input_ablation_generator</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">i</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
         <span class="n">inputs</span><span class="p">:</span> <span class="n">TensorOrTupleOfTensorsGeneric</span><span class="p">,</span>
-        <span class="c1"># pyre-fixme[2]: Parameter annotation cannot be `Any`.</span>
-        <span class="n">additional_args</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+        <span class="n">additional_args</span><span class="p">:</span> <span class="nb">object</span><span class="p">,</span>
         <span class="n">target</span><span class="p">:</span> <span class="n">TargetType</span><span class="p">,</span>
         <span class="n">baselines</span><span class="p">:</span> <span class="n">BaselineType</span><span class="p">,</span>
         <span class="n">input_mask</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="n">Tensor</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">]],</span>
@@ -715,7 +704,7 @@ src="/_sphinx/documentation_options.js"></script>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Generator</span><span class="p">[</span>
         <span class="n">Tuple</span><span class="p">[</span>
             <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span>
-            <span class="n">Any</span><span class="p">,</span>
+            <span class="nb">object</span><span class="p">,</span>
             <span class="n">TargetType</span><span class="p">,</span>
             <span class="n">Tensor</span><span class="p">,</span>
         <span class="p">],</span>
@@ -745,10 +734,9 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="n">perturbations_per_eval</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">perturbations_per_eval</span><span class="p">,</span> <span class="n">num_features</span><span class="p">)</span>
         <span class="n">baseline</span> <span class="o">=</span> <span class="n">baselines</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">baselines</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)</span> <span class="k">else</span> <span class="n">baselines</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">baseline</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">):</span>
-            <span class="c1"># pyre-fixme[58]: `+` is not supported for operand types `Tuple[int]`</span>
-            <span class="c1">#  and `Size`.</span>
-            <span class="n">baseline</span> <span class="o">=</span> <span class="n">baseline</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="mi">1</span><span class="p">,)</span> <span class="o">+</span> <span class="n">baseline</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+            <span class="n">baseline</span> <span class="o">=</span> <span class="n">baseline</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="mi">1</span><span class="p">,)</span> <span class="o">+</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">baseline</span><span class="o">.</span><span class="n">shape</span><span class="p">))</span>
 
+        <span class="n">additional_args_repeated</span><span class="p">:</span> <span class="nb">object</span>
         <span class="k">if</span> <span class="n">perturbations_per_eval</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
             <span class="c1"># Repeat features and additional args for batch size.</span>
             <span class="n">all_features_repeated</span> <span class="o">=</span> <span class="p">[</span>
@@ -767,6 +755,7 @@ src="/_sphinx/documentation_options.js"></script>
             <span class="n">target_repeated</span> <span class="o">=</span> <span class="n">target</span>
 
         <span class="n">num_features_processed</span> <span class="o">=</span> <span class="n">min_feature</span>
+        <span class="n">current_additional_args</span><span class="p">:</span> <span class="nb">object</span>
         <span class="k">while</span> <span class="n">num_features_processed</span> <span class="o">&lt;</span> <span class="n">num_features</span><span class="p">:</span>
             <span class="n">current_num_ablated_features</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span>
                 <span class="n">perturbations_per_eval</span><span class="p">,</span> <span class="n">num_features</span> <span class="o">-</span> <span class="n">num_features_processed</span>
@@ -802,9 +791,7 @@ src="/_sphinx/documentation_options.js"></script>
             <span class="c1"># dimension of this tensor.</span>
             <span class="n">current_reshaped</span> <span class="o">=</span> <span class="n">current_features</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span>
                 <span class="p">(</span><span class="n">current_num_ablated_features</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
-                <span class="c1"># pyre-fixme[58]: `+` is not supported for operand types</span>
-                <span class="c1"># `Tuple[int, int]` and `Size`.</span>
-                <span class="o">+</span> <span class="n">current_features</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>
+                <span class="o">+</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">current_features</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">:])</span>
             <span class="p">)</span>
 
             <span class="n">ablated_features</span><span class="p">,</span> <span class="n">current_mask</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_construct_ablated_input</span><span class="p">(</span>
@@ -820,10 +807,7 @@ src="/_sphinx/documentation_options.js"></script>
             <span class="c1"># (current_num_ablated_features * num_examples, inputs[i].shape[1:]),</span>
             <span class="c1"># which can be provided to the model as input.</span>
             <span class="n">current_features</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">ablated_features</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span>
-                <span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,)</span>
-                <span class="c1"># pyre-fixme[58]: `+` is not supported for operand types</span>
-                <span class="c1"># `Tuple[int]` and `Size`.</span>
-                <span class="o">+</span> <span class="n">ablated_features</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">2</span><span class="p">:]</span>
+                <span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,)</span> <span class="o">+</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">ablated_features</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">2</span><span class="p">:])</span>
             <span class="p">)</span>
             <span class="k">yield</span> <span class="nb">tuple</span><span class="p">(</span>
                 <span class="n">current_features</span>
@@ -858,9 +842,7 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">        thus counted towards ablations for that feature) and 0s otherwise.</span>
 <span class="sd">        """</span>
         <span class="n">current_mask</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">stack</span><span class="p">(</span>
-            <span class="c1"># pyre-fixme[6]: For 1st argument expected `Union[List[Tensor],</span>
-            <span class="c1"># Tuple[Tensor, ...]]` but got `List[Union[bool, Tensor]]`.</span>
-            <span class="p">[</span><span class="n">input_mask</span> <span class="o">==</span> <span class="n">j</span> <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">start_feature</span><span class="p">,</span> <span class="n">end_feature</span><span class="p">)],</span>  <span class="c1"># type: ignore # noqa: E501 line too long</span>
+            <span class="n">cast</span><span class="p">(</span><span class="n">List</span><span class="p">[</span><span class="n">Tensor</span><span class="p">],</span> <span class="p">[</span><span class="n">input_mask</span> <span class="o">==</span> <span class="n">j</span> <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">start_feature</span><span class="p">,</span> <span class="n">end_feature</span><span class="p">)]),</span>  <span class="c1"># type: ignore # noqa: E501 line too long</span>
             <span class="n">dim</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
         <span class="p">)</span><span class="o">.</span><span class="n">long</span><span class="p">()</span>
         <span class="n">current_mask</span> <span class="o">=</span> <span class="n">current_mask</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">expanded_input</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>

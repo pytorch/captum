@@ -36,7 +36,7 @@ src="/_sphinx/documentation_options.js"></script>
 
 <span class="kn">import</span> <span class="nn">typing</span>
 <span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">defaultdict</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">cast</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Union</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">cast</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Literal</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Union</span>
 
 <span class="kn">import</span> <span class="nn">torch.nn</span> <span class="k">as</span> <span class="nn">nn</span>
 <span class="kn">from</span> <span class="nn">captum._utils.common</span> <span class="kn">import</span> <span class="p">(</span>
@@ -50,7 +50,7 @@ src="/_sphinx/documentation_options.js"></script>
     <span class="n">apply_gradient_requirements</span><span class="p">,</span>
     <span class="n">undo_gradient_requirements</span><span class="p">,</span>
 <span class="p">)</span>
-<span class="kn">from</span> <span class="nn">captum._utils.typing</span> <span class="kn">import</span> <span class="n">Literal</span><span class="p">,</span> <span class="n">TargetType</span><span class="p">,</span> <span class="n">TensorOrTupleOfTensorsGeneric</span>
+<span class="kn">from</span> <span class="nn">captum._utils.typing</span> <span class="kn">import</span> <span class="n">TargetType</span><span class="p">,</span> <span class="n">TensorOrTupleOfTensorsGeneric</span>
 <span class="kn">from</span> <span class="nn">captum.attr._utils.attribution</span> <span class="kn">import</span> <span class="n">GradientAttribution</span>
 <span class="kn">from</span> <span class="nn">captum.attr._utils.common</span> <span class="kn">import</span> <span class="n">_sum_rows</span>
 <span class="kn">from</span> <span class="nn">captum.attr._utils.custom_modules</span> <span class="kn">import</span> <span class="n">Addition_Module</span>
@@ -77,6 +77,12 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">    Ancona et al. [https://openreview.net/forum?id=Sy21R9JAW].</span>
 <span class="sd">    """</span>
 
+    <span class="n">verbose</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="n">_original_state_dict</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">layers</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Module</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">backward_handles</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">RemovableHandle</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">forward_handles</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">RemovableHandle</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model</span><span class="p">:</span> <span class="n">Module</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        Args:</span>
@@ -96,33 +102,22 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="k">return</span> <span class="kc">True</span>
 
     <span class="nd">@typing</span><span class="o">.</span><span class="n">overload</span>
-    <span class="c1"># pyre-fixme[43]: The implementation of `attribute` does not accept all possible</span>
-    <span class="c1">#  arguments of overload defined on line `75`.</span>
     <span class="k">def</span> <span class="nf">attribute</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">inputs</span><span class="p">:</span> <span class="n">TensorOrTupleOfTensorsGeneric</span><span class="p">,</span>
         <span class="n">target</span><span class="p">:</span> <span class="n">TargetType</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="c1"># pyre-fixme[2]: Parameter annotation cannot be `Any`.</span>
-        <span class="n">additional_forward_args</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">additional_forward_args</span><span class="p">:</span> <span class="nb">object</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="o">*</span><span class="p">,</span>
-        <span class="c1"># pyre-fixme[31]: Expression `Literal[True]` is not a valid type.</span>
-        <span class="c1"># pyre-fixme[24]: Non-generic type `typing.Literal` cannot take parameters.</span>
         <span class="n">return_convergence_delta</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="kc">True</span><span class="p">],</span>
         <span class="n">verbose</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">TensorOrTupleOfTensorsGeneric</span><span class="p">,</span> <span class="n">Tensor</span><span class="p">]:</span> <span class="o">...</span>
 
     <span class="nd">@typing</span><span class="o">.</span><span class="n">overload</span>
-    <span class="c1"># pyre-fixme[43]: The implementation of `attribute` does not accept all possible</span>
-    <span class="c1">#  arguments of overload defined on line `65`.</span>
     <span class="k">def</span> <span class="nf">attribute</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">inputs</span><span class="p">:</span> <span class="n">TensorOrTupleOfTensorsGeneric</span><span class="p">,</span>
         <span class="n">target</span><span class="p">:</span> <span class="n">TargetType</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="c1"># pyre-fixme[2]: Parameter annotation cannot be `Any`.</span>
-        <span class="n">additional_forward_args</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="c1"># pyre-fixme[9]: return_convergence_delta has type `Literal[]`; used as `bool`.</span>
-        <span class="c1"># pyre-fixme[31]: Expression `Literal[False]` is not a valid type.</span>
-        <span class="c1"># pyre-fixme[24]: Non-generic type `typing.Literal` cannot take parameters.</span>
+        <span class="n">additional_forward_args</span><span class="p">:</span> <span class="nb">object</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">return_convergence_delta</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="kc">False</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
         <span class="n">verbose</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TensorOrTupleOfTensorsGeneric</span><span class="p">:</span> <span class="o">...</span>
@@ -136,7 +131,7 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">inputs</span><span class="p">:</span> <span class="n">TensorOrTupleOfTensorsGeneric</span><span class="p">,</span>
         <span class="n">target</span><span class="p">:</span> <span class="n">TargetType</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">additional_forward_args</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">additional_forward_args</span><span class="p">:</span> <span class="nb">object</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">return_convergence_delta</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
         <span class="n">verbose</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span>
@@ -235,35 +230,22 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">                &gt;&gt;&gt; attribution = lrp.attribute(input, target=5)</span>
 
 <span class="sd">        """</span>
-        <span class="c1"># pyre-fixme[16]: `LRP` has no attribute `verbose`.</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span> <span class="o">=</span> <span class="n">verbose</span>
-        <span class="c1"># pyre-fixme[16]: `LRP` has no attribute `_original_state_dict`.</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_original_state_dict</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">state_dict</span><span class="p">()</span>
-        <span class="c1"># pyre-fixme[16]: `LRP` has no attribute `layers`.</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">layers</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Module</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">layers</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_get_layers</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_check_and_attach_rules</span><span class="p">()</span>
-        <span class="c1"># pyre-fixme[16]: `LRP` has no attribute `backward_handles`.</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">backward_handles</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">RemovableHandle</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="c1"># pyre-fixme[16]: `LRP` has no attribute `forward_handles`.</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">forward_handles</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">RemovableHandle</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
 
-        <span class="c1"># pyre-fixme[6]: For 1st argument expected `Tensor` but got</span>
-        <span class="c1">#  `TensorOrTupleOfTensorsGeneric`.</span>
         <span class="n">is_inputs_tuple</span> <span class="o">=</span> <span class="n">_is_tuple</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span>
-        <span class="c1"># pyre-fixme[9]: inputs has type `TensorOrTupleOfTensorsGeneric`; used as</span>
-        <span class="c1">#  `Tuple[Tensor, ...]`.</span>
-        <span class="n">inputs</span> <span class="o">=</span> <span class="n">_format_tensor_into_tuples</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span>
-        <span class="c1"># pyre-fixme[6]: For 1st argument expected `Tuple[Tensor, ...]` but got</span>
-        <span class="c1">#  `TensorOrTupleOfTensorsGeneric`.</span>
-        <span class="n">gradient_mask</span> <span class="o">=</span> <span class="n">apply_gradient_requirements</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span>
+        <span class="n">input_tuple</span> <span class="o">=</span> <span class="n">_format_tensor_into_tuples</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span>
+        <span class="n">gradient_mask</span> <span class="o">=</span> <span class="n">apply_gradient_requirements</span><span class="p">(</span><span class="n">input_tuple</span><span class="p">)</span>
 
         <span class="k">try</span><span class="p">:</span>
             <span class="c1"># 1. Forward pass: Change weights of layers according to selected rules.</span>
             <span class="n">output</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_compute_output_and_change_weights</span><span class="p">(</span>
-                <span class="c1"># pyre-fixme[6]: For 1st argument expected `Tuple[Tensor, ...]` but</span>
-                <span class="c1">#  got `TensorOrTupleOfTensorsGeneric`.</span>
-                <span class="n">inputs</span><span class="p">,</span>
+                <span class="n">input_tuple</span><span class="p">,</span>
                 <span class="n">target</span><span class="p">,</span>
                 <span class="n">additional_forward_args</span><span class="p">,</span>
             <span class="p">)</span>
@@ -271,7 +253,7 @@ src="/_sphinx/documentation_options.js"></script>
             <span class="c1"># propagation and execute back-propagation.</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_register_forward_hooks</span><span class="p">()</span>
             <span class="n">normalized_relevances</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">gradient_func</span><span class="p">(</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">_forward_fn_wrapper</span><span class="p">,</span> <span class="n">inputs</span><span class="p">,</span> <span class="n">target</span><span class="p">,</span> <span class="n">additional_forward_args</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_forward_fn_wrapper</span><span class="p">,</span> <span class="n">input_tuple</span><span class="p">,</span> <span class="n">target</span><span class="p">,</span> <span class="n">additional_forward_args</span>
             <span class="p">)</span>
             <span class="n">relevances</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span>
                 <span class="n">normalized_relevance</span>
@@ -281,9 +263,7 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="k">finally</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_restore_model</span><span class="p">()</span>
 
-        <span class="c1"># pyre-fixme[6]: For 1st argument expected `Tuple[Tensor, ...]` but got</span>
-        <span class="c1">#  `TensorOrTupleOfTensorsGeneric`.</span>
-        <span class="n">undo_gradient_requirements</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">gradient_mask</span><span class="p">)</span>
+        <span class="n">undo_gradient_requirements</span><span class="p">(</span><span class="n">input_tuple</span><span class="p">,</span> <span class="n">gradient_mask</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="n">return_convergence_delta</span><span class="p">:</span>
             <span class="c1"># pyre-fixme[7]: Expected `Union[Tuple[Variable[TensorOrTupleOfTensorsGen...</span>
@@ -356,13 +336,11 @@ src="/_sphinx/documentation_options.js"></script>
     <span class="k">def</span> <span class="nf">_get_layers</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model</span><span class="p">:</span> <span class="n">Module</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">for</span> <span class="n">layer</span> <span class="ow">in</span> <span class="n">model</span><span class="o">.</span><span class="n">children</span><span class="p">():</span>
             <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">layer</span><span class="o">.</span><span class="n">children</span><span class="p">()))</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-                <span class="c1"># pyre-fixme[16]: `LRP` has no attribute `layers`.</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">layer</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_get_layers</span><span class="p">(</span><span class="n">layer</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_check_and_attach_rules</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="c1"># pyre-fixme[16]: `LRP` has no attribute `layers`.</span>
         <span class="k">for</span> <span class="n">layer</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">layers</span><span class="p">:</span>
             <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">layer</span><span class="p">,</span> <span class="s2">"rule"</span><span class="p">):</span>
                 <span class="n">layer</span><span class="o">.</span><span class="n">activations</span> <span class="o">=</span> <span class="p">{}</span>  <span class="c1"># type: ignore</span>
@@ -401,50 +379,41 @@ src="/_sphinx/documentation_options.js"></script>
                     <span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_register_forward_hooks</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="c1"># pyre-fixme[16]: `LRP` has no attribute `layers`.</span>
         <span class="k">for</span> <span class="n">layer</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">layers</span><span class="p">:</span>
             <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">layer</span><span class="p">)</span> <span class="ow">in</span> <span class="n">SUPPORTED_NON_LINEAR_LAYERS</span><span class="p">:</span>
                 <span class="n">backward_handles</span> <span class="o">=</span> <span class="n">_register_backward_hook</span><span class="p">(</span>
                     <span class="n">layer</span><span class="p">,</span> <span class="n">PropagationRule</span><span class="o">.</span><span class="n">backward_hook_activation</span><span class="p">,</span> <span class="bp">self</span>
                 <span class="p">)</span>
-                <span class="c1"># pyre-fixme[16]: `LRP` has no attribute `backward_handles`.</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">backward_handles</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">backward_handles</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">forward_handle</span> <span class="o">=</span> <span class="n">layer</span><span class="o">.</span><span class="n">register_forward_hook</span><span class="p">(</span>
                     <span class="n">layer</span><span class="o">.</span><span class="n">rule</span><span class="o">.</span><span class="n">forward_hook</span>  <span class="c1"># type: ignore</span>
                 <span class="p">)</span>
-                <span class="c1"># pyre-fixme[16]: `LRP` has no attribute `forward_handles`.</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">forward_handles</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">forward_handle</span><span class="p">)</span>
-                <span class="c1"># pyre-fixme[16]: `LRP` has no attribute `verbose`.</span>
                 <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span><span class="p">:</span>
                     <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Applied </span><span class="si">{</span><span class="n">layer</span><span class="o">.</span><span class="n">rule</span><span class="si">}</span><span class="s2"> on layer </span><span class="si">{</span><span class="n">layer</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_register_weight_hooks</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="c1"># pyre-fixme[16]: `LRP` has no attribute `layers`.</span>
         <span class="k">for</span> <span class="n">layer</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">layers</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">layer</span><span class="o">.</span><span class="n">rule</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="n">forward_handle</span> <span class="o">=</span> <span class="n">layer</span><span class="o">.</span><span class="n">register_forward_hook</span><span class="p">(</span>
                     <span class="n">layer</span><span class="o">.</span><span class="n">rule</span><span class="o">.</span><span class="n">forward_hook_weights</span>  <span class="c1"># type: ignore</span>
                 <span class="p">)</span>
-                <span class="c1"># pyre-fixme[16]: `LRP` has no attribute `forward_handles`.</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">forward_handles</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">forward_handle</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_register_pre_hooks</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="c1"># pyre-fixme[16]: `LRP` has no attribute `layers`.</span>
         <span class="k">for</span> <span class="n">layer</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">layers</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">layer</span><span class="o">.</span><span class="n">rule</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="n">forward_handle</span> <span class="o">=</span> <span class="n">layer</span><span class="o">.</span><span class="n">register_forward_pre_hook</span><span class="p">(</span>
                     <span class="n">layer</span><span class="o">.</span><span class="n">rule</span><span class="o">.</span><span class="n">forward_pre_hook_activations</span>  <span class="c1"># type: ignore</span>
                 <span class="p">)</span>
-                <span class="c1"># pyre-fixme[16]: `LRP` has no attribute `forward_handles`.</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">forward_handles</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">forward_handle</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_compute_output_and_change_weights</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">inputs</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span>
         <span class="n">target</span><span class="p">:</span> <span class="n">TargetType</span><span class="p">,</span>
-        <span class="c1"># pyre-fixme[2]: Parameter annotation cannot be `Any`.</span>
-        <span class="n">additional_forward_args</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+        <span class="n">additional_forward_args</span><span class="p">:</span> <span class="nb">object</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tensor</span><span class="p">:</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_register_weight_hooks</span><span class="p">()</span>
@@ -462,15 +431,12 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="k">return</span> <span class="n">cast</span><span class="p">(</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">output</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_remove_forward_hooks</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="c1"># pyre-fixme[16]: `LRP` has no attribute `forward_handles`.</span>
         <span class="k">for</span> <span class="n">forward_handle</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">forward_handles</span><span class="p">:</span>
             <span class="n">forward_handle</span><span class="o">.</span><span class="n">remove</span><span class="p">()</span>
 
     <span class="k">def</span> <span class="nf">_remove_backward_hooks</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="c1"># pyre-fixme[16]: `LRP` has no attribute `backward_handles`.</span>
         <span class="k">for</span> <span class="n">backward_handle</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">backward_handles</span><span class="p">:</span>
             <span class="n">backward_handle</span><span class="o">.</span><span class="n">remove</span><span class="p">()</span>
-        <span class="c1"># pyre-fixme[16]: `LRP` has no attribute `layers`.</span>
         <span class="k">for</span> <span class="n">layer</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">layers</span><span class="p">:</span>
             <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">layer</span><span class="o">.</span><span class="n">rule</span><span class="p">,</span> <span class="s2">"_handle_input_hooks"</span><span class="p">):</span>
                 <span class="k">for</span> <span class="n">handle</span> <span class="ow">in</span> <span class="n">layer</span><span class="o">.</span><span class="n">rule</span><span class="o">.</span><span class="n">_handle_input_hooks</span><span class="p">:</span>  <span class="c1"># type: ignore</span>
@@ -479,13 +445,11 @@ src="/_sphinx/documentation_options.js"></script>
                 <span class="n">layer</span><span class="o">.</span><span class="n">rule</span><span class="o">.</span><span class="n">_handle_output_hook</span><span class="o">.</span><span class="n">remove</span><span class="p">()</span>  <span class="c1"># type: ignore</span>
 
     <span class="k">def</span> <span class="nf">_remove_rules</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="c1"># pyre-fixme[16]: `LRP` has no attribute `layers`.</span>
         <span class="k">for</span> <span class="n">layer</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">layers</span><span class="p">:</span>
             <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">layer</span><span class="p">,</span> <span class="s2">"rule"</span><span class="p">):</span>
                 <span class="k">del</span> <span class="n">layer</span><span class="o">.</span><span class="n">rule</span>
 
     <span class="k">def</span> <span class="nf">_clear_properties</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="c1"># pyre-fixme[16]: `LRP` has no attribute `layers`.</span>
         <span class="k">for</span> <span class="n">layer</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">layers</span><span class="p">:</span>
             <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">layer</span><span class="p">,</span> <span class="s2">"activation"</span><span class="p">):</span>
                 <span class="k">del</span> <span class="n">layer</span><span class="o">.</span><span class="n">activation</span>

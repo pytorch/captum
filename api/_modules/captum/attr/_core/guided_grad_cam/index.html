@@ -34,7 +34,7 @@ src="/_sphinx/documentation_options.js"></script>
 
 <span class="c1"># pyre-strict</span>
 <span class="kn">import</span> <span class="nn">warnings</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Union</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">List</span><span class="p">,</span> <span class="n">Union</span>
 
 <span class="kn">import</span> <span class="nn">torch</span>
 <span class="kn">from</span> <span class="nn">captum._utils.common</span> <span class="kn">import</span> <span class="n">_format_output</span><span class="p">,</span> <span class="n">_format_tensor_into_tuples</span><span class="p">,</span> <span class="n">_is_tuple</span>
@@ -108,8 +108,7 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">inputs</span><span class="p">:</span> <span class="n">TensorOrTupleOfTensorsGeneric</span><span class="p">,</span>
         <span class="n">target</span><span class="p">:</span> <span class="n">TargetType</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="c1"># pyre-fixme[2]: Parameter annotation cannot be `Any`.</span>
-        <span class="n">additional_forward_args</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">additional_forward_args</span><span class="p">:</span> <span class="nb">object</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">interpolate_mode</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"nearest"</span><span class="p">,</span>
         <span class="n">attribute_to_layer_input</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TensorOrTupleOfTensorsGeneric</span><span class="p">:</span>
@@ -217,15 +216,11 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">            &gt;&gt;&gt; # attribution size matches input size, Nx3x32x32</span>
 <span class="sd">            &gt;&gt;&gt; attribution = guided_gc.attribute(input, 3)</span>
 <span class="sd">        """</span>
-        <span class="c1"># pyre-fixme[6]: For 1st argument expected `Tensor` but got</span>
-        <span class="c1">#  `TensorOrTupleOfTensorsGeneric`.</span>
         <span class="n">is_inputs_tuple</span> <span class="o">=</span> <span class="n">_is_tuple</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span>
-        <span class="c1"># pyre-fixme[9]: inputs has type `TensorOrTupleOfTensorsGeneric`; used as</span>
-        <span class="c1">#  `Tuple[Tensor, ...]`.</span>
-        <span class="n">inputs</span> <span class="o">=</span> <span class="n">_format_tensor_into_tuples</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span>
+        <span class="n">inputs_tuple</span> <span class="o">=</span> <span class="n">_format_tensor_into_tuples</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span>
         <span class="n">grad_cam_attr</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">grad_cam</span><span class="o">.</span><span class="n">attribute</span><span class="o">.</span><span class="n">__wrapped__</span><span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">grad_cam</span><span class="p">,</span>  <span class="c1"># self</span>
-            <span class="n">inputs</span><span class="o">=</span><span class="n">inputs</span><span class="p">,</span>
+            <span class="n">inputs</span><span class="o">=</span><span class="n">inputs_tuple</span><span class="p">,</span>
             <span class="n">target</span><span class="o">=</span><span class="n">target</span><span class="p">,</span>
             <span class="n">additional_forward_args</span><span class="o">=</span><span class="n">additional_forward_args</span><span class="p">,</span>
             <span class="n">attribute_to_layer_input</span><span class="o">=</span><span class="n">attribute_to_layer_input</span><span class="p">,</span>
@@ -240,20 +235,18 @@ src="/_sphinx/documentation_options.js"></script>
 
         <span class="n">guided_backprop_attr</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">guided_backprop</span><span class="o">.</span><span class="n">attribute</span><span class="o">.</span><span class="n">__wrapped__</span><span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">guided_backprop</span><span class="p">,</span>  <span class="c1"># self</span>
-            <span class="n">inputs</span><span class="o">=</span><span class="n">inputs</span><span class="p">,</span>
+            <span class="n">inputs</span><span class="o">=</span><span class="n">inputs_tuple</span><span class="p">,</span>
             <span class="n">target</span><span class="o">=</span><span class="n">target</span><span class="p">,</span>
             <span class="n">additional_forward_args</span><span class="o">=</span><span class="n">additional_forward_args</span><span class="p">,</span>
         <span class="p">)</span>
         <span class="n">output_attr</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Tensor</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">inputs</span><span class="p">)):</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">inputs_tuple</span><span class="p">)):</span>
             <span class="k">try</span><span class="p">:</span>
                 <span class="n">output_attr</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
                     <span class="n">guided_backprop_attr</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
                     <span class="o">*</span> <span class="n">LayerAttribution</span><span class="o">.</span><span class="n">interpolate</span><span class="p">(</span>
                         <span class="n">grad_cam_attr</span><span class="p">,</span>
-                        <span class="c1"># pyre-fixme[6]: For 2nd argument expected `Union[int,</span>
-                        <span class="c1">#  typing.Tuple[int, ...]]` but got `Size`.</span>
-                        <span class="n">inputs</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">2</span><span class="p">:],</span>
+                        <span class="nb">tuple</span><span class="p">(</span><span class="n">inputs_tuple</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">2</span><span class="p">:]),</span>
                         <span class="n">interpolate_mode</span><span class="o">=</span><span class="n">interpolate_mode</span><span class="p">,</span>
                     <span class="p">)</span>
                 <span class="p">)</span>

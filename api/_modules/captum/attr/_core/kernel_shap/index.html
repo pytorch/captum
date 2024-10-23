@@ -34,7 +34,7 @@ src="/_sphinx/documentation_options.js"></script>
 
 <span class="c1"># pyre-strict</span>
 
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Generator</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Union</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">cast</span><span class="p">,</span> <span class="n">Generator</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Union</span>
 
 <span class="kn">import</span> <span class="nn">torch</span>
 <span class="kn">from</span> <span class="nn">captum._utils.models.linear_model</span> <span class="kn">import</span> <span class="n">SkLearnLinearRegression</span>
@@ -61,8 +61,7 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">    https://arxiv.org/abs/1705.07874</span>
 <span class="sd">    """</span>
 
-    <span class="c1"># pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.</span>
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">forward_func</span><span class="p">:</span> <span class="n">Callable</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">forward_func</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">Tensor</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        Args:</span>
 
@@ -86,8 +85,7 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="n">inputs</span><span class="p">:</span> <span class="n">TensorOrTupleOfTensorsGeneric</span><span class="p">,</span>
         <span class="n">baselines</span><span class="p">:</span> <span class="n">BaselineType</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">target</span><span class="p">:</span> <span class="n">TargetType</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="c1"># pyre-fixme[2]: Parameter annotation cannot be `Any`.</span>
-        <span class="n">additional_forward_args</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">additional_forward_args</span><span class="p">:</span> <span class="nb">object</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">feature_mask</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="n">Tensor</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">n_samples</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">25</span><span class="p">,</span>
         <span class="n">perturbations_per_eval</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
@@ -315,10 +313,7 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="p">)</span>
         <span class="n">num_features_list</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">num_interp_features</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">float</span><span class="p">)</span>
         <span class="n">denom</span> <span class="o">=</span> <span class="n">num_features_list</span> <span class="o">*</span> <span class="p">(</span><span class="n">num_interp_features</span> <span class="o">-</span> <span class="n">num_features_list</span><span class="p">)</span>
-        <span class="c1"># pyre-fixme[58]: `/` is not supported for operand types</span>
-        <span class="c1"># `int` and `torch._tensor.Tensor`.</span>
-        <span class="n">probs</span> <span class="o">=</span> <span class="p">(</span><span class="n">num_interp_features</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">/</span> <span class="n">denom</span>
-        <span class="c1"># pyre-fixme[16]: `float` has no attribute `__setitem__`.</span>
+        <span class="n">probs</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">((</span><span class="n">num_interp_features</span> <span class="o">-</span> <span class="mi">1</span><span class="p">))</span> <span class="o">/</span> <span class="n">denom</span>
         <span class="n">probs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.0</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_attribute_kwargs</span><span class="p">(</span>
             <span class="n">inputs</span><span class="o">=</span><span class="n">inputs</span><span class="p">,</span>
@@ -349,8 +344,7 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="n">_</span><span class="p">,</span>
         <span class="n">__</span><span class="p">,</span>
         <span class="n">interpretable_sample</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">,</span>
-        <span class="c1"># pyre-fixme[2]: Parameter must be annotated.</span>
-        <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="nb">object</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tensor</span><span class="p">:</span>
         <span class="k">assert</span> <span class="p">(</span>
             <span class="s2">"num_interp_features"</span> <span class="ow">in</span> <span class="n">kwargs</span>
@@ -374,8 +368,7 @@ src="/_sphinx/documentation_options.js"></script>
     <span class="k">def</span> <span class="nf">kernel_shap_perturb_generator</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">original_inp</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">]],</span>
-        <span class="c1"># pyre-fixme[2]: Parameter must be annotated.</span>
-        <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="nb">object</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Generator</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">]:</span>
 <span class="w">        </span><span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        Perturbations are sampled by the following process:</span>
@@ -403,11 +396,13 @@ src="/_sphinx/documentation_options.js"></script>
             <span class="n">device</span> <span class="o">=</span> <span class="n">original_inp</span><span class="o">.</span><span class="n">device</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">device</span> <span class="o">=</span> <span class="n">original_inp</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">device</span>
-        <span class="n">num_features</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s2">"num_interp_features"</span><span class="p">]</span>
+        <span class="n">num_features</span> <span class="o">=</span> <span class="n">cast</span><span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="n">kwargs</span><span class="p">[</span><span class="s2">"num_interp_features"</span><span class="p">])</span>
         <span class="k">yield</span> <span class="n">torch</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">num_features</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">device</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">long</span><span class="p">)</span>
         <span class="k">yield</span> <span class="n">torch</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">num_features</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">device</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">long</span><span class="p">)</span>
         <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
-            <span class="n">num_selected_features</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s2">"num_select_distribution"</span><span class="p">]</span><span class="o">.</span><span class="n">sample</span><span class="p">()</span>
+            <span class="n">num_selected_features</span> <span class="o">=</span> <span class="n">cast</span><span class="p">(</span>
+                <span class="n">Categorical</span><span class="p">,</span> <span class="n">kwargs</span><span class="p">[</span><span class="s2">"num_select_distribution"</span><span class="p">]</span>
+            <span class="p">)</span><span class="o">.</span><span class="n">sample</span><span class="p">()</span>
             <span class="n">rand_vals</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">num_features</span><span class="p">)</span>
             <span class="n">threshold</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">kthvalue</span><span class="p">(</span>
                 <span class="n">rand_vals</span><span class="p">,</span> <span class="n">num_features</span> <span class="o">-</span> <span class="n">num_selected_features</span>
