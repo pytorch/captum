@@ -4,8 +4,8 @@
 from typing import Tuple, Union
 
 import torch
-from captum._utils.typing import Tensor
 from tests.helpers import BaseTest
+from torch import Tensor
 
 
 def assert_attribution_delta(

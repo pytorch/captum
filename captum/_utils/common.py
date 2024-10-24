@@ -5,13 +5,23 @@ import typing
 from enum import Enum
 from functools import reduce
 from inspect import signature
-from typing import Any, Callable, cast, Dict, List, overload, Sequence, Tuple, Union
+from typing import (
+    Any,
+    Callable,
+    cast,
+    Dict,
+    List,
+    Literal,
+    overload,
+    Sequence,
+    Tuple,
+    Union,
+)
 
 import numpy as np
 import torch
 from captum._utils.typing import (
     BaselineType,
-    Literal,
     TargetType,
     TensorOrTupleOfTensorsGeneric,
     TupleOrTensorOrBoolGeneric,
@@ -71,23 +81,17 @@ def safe_div(
 
 
 @typing.overload
-# pyre-fixme[43]: The return type of overloaded function `_is_tuple` (`Literal[]`)
-#  is incompatible with the return type of the implementation (`bool`).
-# pyre-fixme[31]: Expression `Literal[True]` is not a valid type.
-# pyre-fixme[24]: Non-generic type `typing.Literal` cannot take parameters.
 def _is_tuple(inputs: Tuple[Tensor, ...]) -> Literal[True]: ...
 
 
 @typing.overload
-# pyre-fixme[43]: The return type of overloaded function `_is_tuple` (`Literal[]`)
-#  is incompatible with the return type of the implementation (`bool`).
-# pyre-fixme[31]: Expression `Literal[False]` is not a valid type.
-# pyre-fixme[24]: Non-generic type `typing.Literal` cannot take parameters.
 def _is_tuple(inputs: Tensor) -> Literal[False]: ...
 
 
 @typing.overload
-def _is_tuple(inputs: TensorOrTupleOfTensorsGeneric) -> bool: ...
+def _is_tuple(
+    inputs: TensorOrTupleOfTensorsGeneric,
+) -> bool: ...  # type: ignore
 
 
 def _is_tuple(inputs: Union[Tensor, Tuple[Tensor, ...]]) -> bool:
@@ -480,22 +484,14 @@ def _expand_and_update_feature_mask(n_samples: int, kwargs: dict) -> None:
 
 
 @typing.overload
-# pyre-fixme[43]: The implementation of `_format_output` does not accept all
-#  possible arguments of overload defined on line `449`.
 def _format_output(
-    # pyre-fixme[31]: Expression `Literal[True]` is not a valid type.
-    # pyre-fixme[24]: Non-generic type `typing.Literal` cannot take parameters.
     is_inputs_tuple: Literal[True],
     output: Tuple[Tensor, ...],
 ) -> Tuple[Tensor, ...]: ...
 
 
 @typing.overload
-# pyre-fixme[43]: The implementation of `_format_output` does not accept all
-#  possible arguments of overload defined on line `455`.
 def _format_output(
-    # pyre-fixme[31]: Expression `Literal[False]` is not a valid type.
-    # pyre-fixme[24]: Non-generic type `typing.Literal` cannot take parameters.
     is_inputs_tuple: Literal[False],
     output: Tuple[Tensor, ...],
 ) -> Tensor: ...
@@ -526,22 +522,14 @@ def _format_output(
 
 
 @typing.overload
-# pyre-fixme[43]: The implementation of `_format_outputs` does not accept all
-#  possible arguments of overload defined on line `483`.
 def _format_outputs(
-    # pyre-fixme[31]: Expression `Literal[False]` is not a valid type.
-    # pyre-fixme[24]: Non-generic type `typing.Literal` cannot take parameters.
     is_multiple_inputs: Literal[False],
     outputs: List[Tuple[Tensor, ...]],
 ) -> Union[Tensor, Tuple[Tensor, ...]]: ...
 
 
 @typing.overload
-# pyre-fixme[43]: The implementation of `_format_outputs` does not accept all
-#  possible arguments of overload defined on line `489`.
 def _format_outputs(
-    # pyre-fixme[31]: Expression `Literal[True]` is not a valid type.
-    # pyre-fixme[24]: Non-generic type `typing.Literal` cannot take parameters.
     is_multiple_inputs: Literal[True],
     outputs: List[Tuple[Tensor, ...]],
 ) -> List[Union[Tensor, Tuple[Tensor, ...]]]: ...

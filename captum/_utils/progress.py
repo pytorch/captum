@@ -5,9 +5,7 @@
 import sys
 import warnings
 from time import time
-from typing import Any, cast, Iterable, Optional, Sized, TextIO
-
-from captum._utils.typing import Literal
+from typing import Any, cast, Iterable, Literal, Optional, Sized, TextIO
 
 try:
     from tqdm.auto import tqdm
@@ -75,10 +73,7 @@ class NullProgress:
         return self
 
     # pyre-fixme[2]: Parameter must be annotated.
-    # pyre-fixme[31]: Expression `Literal[False]` is not a valid type.
-    # pyre-fixme[24]: Non-generic type `typing.Literal` cannot take parameters.
     def __exit__(self, exc_type, exc_value, exc_traceback) -> Literal[False]:
-        # pyre-fixme[7]: Expected `Literal[]` but got `bool`.
         return False
 
     # pyre-fixme[3]: Return type must be annotated.
@@ -139,11 +134,8 @@ class SimpleProgress:
         return self
 
     # pyre-fixme[2]: Parameter must be annotated.
-    # pyre-fixme[31]: Expression `Literal[False]` is not a valid type.
-    # pyre-fixme[24]: Non-generic type `typing.Literal` cannot take parameters.
     def __exit__(self, exc_type, exc_value, exc_traceback) -> Literal[False]:
         self.close()
-        # pyre-fixme[7]: Expected `Literal[]` but got `bool`.
         return False
 
     # pyre-fixme[3]: Return type must be annotated.

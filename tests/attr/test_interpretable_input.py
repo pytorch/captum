@@ -2,10 +2,9 @@
 
 # pyre-unsafe
 
-from typing import List, Optional, overload, Union
+from typing import List, Literal, Optional, overload, Union
 
 import torch
-from captum._utils.typing import Literal
 from captum.attr._utils.interpretable_input import TextTemplateInput, TextTokenInput
 from parameterized import parameterized
 from tests.helpers import BaseTest
@@ -22,10 +21,7 @@ class DummyTokenizer:
     @overload
     def encode(self, text: str, return_tensors: None = None) -> List[int]: ...
     @overload
-    # pyre-fixme[43]: Incompatible overload. The implementation of
-    # `DummyTokenizer.encode` does not accept all possible arguments of overload.
-    # pyre-ignore[11]: Annotation `pt` is not defined as a type
-    def encode(self, text: str, return_tensors: Literal["pt"]) -> Tensor: ...  # type: ignore  # noqa: E501 line too long
+    def encode(self, text: str, return_tensors: Literal["pt"]) -> Tensor: ...
 
     def encode(
         self, text: str, return_tensors: Optional[str] = "pt"
