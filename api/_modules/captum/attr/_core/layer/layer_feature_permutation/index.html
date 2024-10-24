@@ -45,12 +45,11 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="p">)</span>
 
 <span class="kn">from</span> <span class="nn">captum._utils.gradient</span> <span class="kn">import</span> <span class="n">_forward_layer_eval</span>
-
 <span class="kn">from</span> <span class="nn">captum._utils.typing</span> <span class="kn">import</span> <span class="n">TargetType</span><span class="p">,</span> <span class="n">TensorOrTupleOfTensorsGeneric</span>
 <span class="kn">from</span> <span class="nn">captum.attr._core.feature_permutation</span> <span class="kn">import</span> <span class="n">FeaturePermutation</span>
 <span class="kn">from</span> <span class="nn">captum.attr._utils.attribution</span> <span class="kn">import</span> <span class="n">LayerAttribution</span>
 <span class="kn">from</span> <span class="nn">captum.log</span> <span class="kn">import</span> <span class="n">log_usage</span>
-<span class="kn">from</span> <span class="nn">torch</span> <span class="kn">import</span> <span class="n">device</span><span class="p">,</span> <span class="n">Tensor</span>
+<span class="kn">from</span> <span class="nn">torch</span> <span class="kn">import</span> <span class="n">Tensor</span>
 <span class="kn">from</span> <span class="nn">torch.nn</span> <span class="kn">import</span> <span class="n">Module</span>
 <span class="kn">from</span> <span class="nn">torch.nn.parallel.scatter_gather</span> <span class="kn">import</span> <span class="n">scatter</span>
 
@@ -207,7 +206,7 @@ src="/_sphinx/documentation_options.js"></script>
             <span class="k">if</span> <span class="n">device_ids</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="n">device_ids</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">forward_func</span><span class="p">,</span> <span class="s2">"device_ids"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
 
-            <span class="n">all_layer_inputs</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="n">device</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{}</span>
+            <span class="n">all_layer_inputs</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">device</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{}</span>
             <span class="k">if</span> <span class="n">device_ids</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="n">scattered_layer_input</span> <span class="o">=</span> <span class="n">scatter</span><span class="p">(</span><span class="n">layer_input</span><span class="p">,</span> <span class="n">target_gpus</span><span class="o">=</span><span class="n">device_ids</span><span class="p">)</span>
                 <span class="k">for</span> <span class="n">device_tensors</span> <span class="ow">in</span> <span class="n">scattered_layer_input</span><span class="p">:</span>
