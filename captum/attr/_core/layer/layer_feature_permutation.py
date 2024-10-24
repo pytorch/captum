@@ -13,12 +13,11 @@ from captum._utils.common import (
 )
 
 from captum._utils.gradient import _forward_layer_eval
-
 from captum._utils.typing import TargetType, TensorOrTupleOfTensorsGeneric
 from captum.attr._core.feature_permutation import FeaturePermutation
 from captum.attr._utils.attribution import LayerAttribution
 from captum.log import log_usage
-from torch import device, Tensor
+from torch import Tensor
 from torch.nn import Module
 from torch.nn.parallel.scatter_gather import scatter
 
@@ -171,7 +170,7 @@ class LayerFeaturePermutation(LayerAttribution, FeaturePermutation):
             if device_ids is None:
                 device_ids = getattr(self.forward_func, "device_ids", None)
 
-            all_layer_inputs: Dict[device, Tuple[Tensor, ...]] = {}
+            all_layer_inputs: Dict[torch.device, Tuple[Tensor, ...]] = {}
             if device_ids is not None:
                 scattered_layer_input = scatter(layer_input, target_gpus=device_ids)
                 for device_tensors in scattered_layer_input:
