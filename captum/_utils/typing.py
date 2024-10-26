@@ -25,7 +25,8 @@ TensorOrTupleOfTensorsGeneric = TypeVar(
 TupleOrTensorOrBoolGeneric = TypeVar("TupleOrTensorOrBoolGeneric", Tuple, Tensor, bool)
 ModuleOrModuleList = TypeVar("ModuleOrModuleList", Module, List[Module])
 TargetType = Union[None, int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]]
-BaselineType = Union[None, Tensor, int, float, Tuple[Union[Tensor, int, float], ...]]
+BaselineTupleType = Union[None, Tuple[Union[Tensor, int, float], ...]]
+BaselineType = Union[None, Tensor, int, float, BaselineTupleType]
 
 TensorLikeList1D = List[float]
 TensorLikeList2D = List[TensorLikeList1D]
