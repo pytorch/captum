@@ -90,8 +90,8 @@ def _is_tuple(inputs: Tensor) -> Literal[False]: ...
 
 @typing.overload
 def _is_tuple(
-    inputs: TensorOrTupleOfTensorsGeneric,
-) -> bool: ...  # type: ignore
+    inputs: TensorOrTupleOfTensorsGeneric,  # type: ignore
+) -> bool: ...
 
 
 def _is_tuple(inputs: Union[Tensor, Tuple[Tensor, ...]]) -> bool:
