@@ -3,7 +3,7 @@
 # pyre-strict
 
 import math
-from typing import Any, Callable, cast, Dict, Generator, List, Optional, Tuple, Union
+from typing import Any, Callable, cast, Generator, List, Optional, Tuple, Union
 
 import torch
 from captum._utils.common import (
@@ -573,7 +573,7 @@ class FeatureAblation(PerturbationAttribution):
         formatted_inputs: Tuple[Tensor, ...],
         feature_mask: Tuple[Tensor, ...],
         perturbations_per_eval: int,
-        **kwargs: Dict[str, Any],
+        **kwargs: Any,
     ):
         feature_counts = self._get_feature_counts(
             formatted_inputs, feature_mask, **kwargs
