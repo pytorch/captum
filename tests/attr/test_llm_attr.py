@@ -19,6 +19,7 @@ from typing import (
 
 import torch
 from captum._utils.models.linear_model import SkLearnLasso
+from captum._utils.typing import BatchEncodingType
 from captum.attr._core.feature_ablation import FeatureAblation
 from captum.attr._core.kernel_shap import KernelShap
 from captum.attr._core.layer.layer_gradient_shap import LayerGradientShap
@@ -95,6 +96,13 @@ class DummyTokenizer:
         tokens = self.convert_ids_to_tokens(token_ids.tolist())
         # pyre-fixme[7]: Expected `str` but got `Union[List[str], str]`.
         return tokens if isinstance(tokens, str) else " ".join(tokens)
+
+    def __call__(
+        self,
+        text: Optional[Union[str, List[str], List[List[str]]]] = None,
+        return_offsets_mapping: bool = False,
+    ) -> BatchEncodingType:
+        raise NotImplementedError
 
 
 class Result(NamedTuple):

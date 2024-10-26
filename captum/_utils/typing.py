@@ -2,7 +2,18 @@
 
 # pyre-strict
 
-from typing import List, Literal, Optional, overload, Protocol, Tuple, TypeVar, Union
+from collections import UserDict
+from typing import (
+    List,
+    Literal,
+    Optional,
+    overload,
+    Protocol,
+    Tuple,
+    TYPE_CHECKING,
+    TypeVar,
+    Union,
+)
 
 from torch import Tensor
 from torch.nn import Module
@@ -28,6 +39,13 @@ TensorLikeList = Union[
     TensorLikeList4D,
     TensorLikeList5D,
 ]
+
+
+# Necessary for Python >=3.7 and <3.9!
+if TYPE_CHECKING:
+    BatchEncodingType = UserDict[Union[int, str], object]
+else:
+    BatchEncodingType = UserDict
 
 
 class TokenizerLike(Protocol):
@@ -62,3 +80,9 @@ class TokenizerLike(Protocol):
     def convert_tokens_to_ids(
         self, tokens: Union[List[str], str]
     ) -> Union[List[int], int]: ...
+
+    def __call__(
+        self,
+        text: Optional[Union[str, List[str], List[List[str]]]] = None,
+        return_offsets_mapping: bool = False,
+    ) -> BatchEncodingType: ...
