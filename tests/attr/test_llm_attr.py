@@ -3,6 +3,8 @@
 # pyre-strict
 
 import copy
+
+from collections import UserDict
 from typing import (
     Any,
     cast,
@@ -40,24 +42,38 @@ class DummyTokenizer:
     vocab_size: int = 256
     sos: int = 0
     unk: int = 1
-    special_tokens: Dict[int, str] = {sos: "<sos>", unk: "<unk>"}
+    sos_str: str = "<sos>"
+    special_tokens: Dict[int, str] = {sos: sos_str, unk: "<unk>"}
 
     @overload
-    def encode(self, text: str, return_tensors: None = None) -> List[int]: ...
+    def encode(
+        self, text: str, add_special_tokens: bool = ..., return_tensors: None = ...
+    ) -> List[int]: ...
+
     @overload
-    def encode(self, text: str, return_tensors: Literal["pt"]) -> Tensor: ...
+    def encode(
+        self,
+        text: str,
+        add_special_tokens: bool = ...,
+        return_tensors: Literal["pt"] = ...,
+    ) -> Tensor: ...
 
     def encode(
-        self, text: str, return_tensors: Optional[str] = None
+        self,
+        text: str,
+        add_special_tokens: bool = True,
+        return_tensors: Optional[str] = None,
     ) -> Union[List[int], Tensor]:
         tokens = text.split(" ")
 
         tokens_ids: Union[List[int], Tensor] = [
-            ord(s[0]) if len(s) == 1 else self.unk for s in tokens
+            ord(s[0]) if len(s) == 1 else (self.sos if s == self.sos_str else self.unk)
+            for s in tokens
         ]
 
         # start with sos
-        tokens_ids = [self.sos, *tokens_ids]
+        if add_special_tokens:
+            tokens_ids = [self.sos, *tokens_ids]
 
         if return_tensors:
             return torch.tensor([tokens_ids])
@@ -100,9 +116,24 @@ class DummyTokenizer:
     def __call__(
         self,
         text: Optional[Union[str, List[str], List[List[str]]]] = None,
+        add_special_tokens: bool = True,
         return_offsets_mapping: bool = False,
     ) -> BatchEncodingType:
-        raise NotImplementedError
+        assert isinstance(text, str)
+        input_ids = self.encode(text, add_special_tokens=add_special_tokens)
+
+        result: BatchEncodingType = UserDict()
+        result["input_ids"] = input_ids
+
+        if return_offsets_mapping:
+            offset_mapping = []
+            idx = 0
+            for token in text.split(" "):
+                offset_mapping.append((idx - (0 if idx == 0 else 1), idx + len(token)))
+                idx += len(token) + 1  # +1 for space
+            result["offset_mapping"] = offset_mapping
+
+        return result
 
 
 class Result(NamedTuple):
