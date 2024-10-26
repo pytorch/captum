@@ -21,14 +21,24 @@ from captum.metrics._utils.batching import _divide_and_aggregate_metrics
 from torch import Tensor
 
 
-# pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
-def infidelity_perturb_func_decorator(multipy_by_inputs: bool = True) -> Callable:
+def infidelity_perturb_func_decorator(
+    multiply_by_inputs: bool = True,
+    # pyre-ignore[34]: The type variable `Variable[TensorOrTupleOfTensorsGeneric
+    # <: [torch._tensor.Tensor, typing.Tuple[torch._tensor.Tensor, ...]]]` isn't
+    # present in the function's parameters.
+) -> Callable[
+    [Callable[..., TensorOrTupleOfTensorsGeneric]],
+    Callable[
+        [TensorOrTupleOfTensorsGeneric, BaselineType],
+        Tuple[Tuple[Tensor, ...], Tuple[Tensor, ...]],
+    ],
+]:
     r"""An auxiliary, decorator function that helps with computing
     perturbations given perturbed inputs. It can be useful for cases
     when `pertub_func` returns only perturbed inputs and we
     internally compute the perturbations as
     (input - perturbed_input) / (input - baseline) if
-    multipy_by_inputs is set to True and
+    multiply_by_inputs is set to True and
     (input - perturbed_input) otherwise.
 
     If users decorate their `pertub_func` with
@@ -37,14 +47,18 @@ def infidelity_perturb_func_decorator(multipy_by_inputs: bool = True) -> Callabl
 
     Args:
 
-        multipy_by_inputs (bool): Indicates whether model inputs'
+        multiply_by_inputs (bool): Indicates whether model inputs'
                 multiplier is factored in the computation of
                 attribution scores.
 
     """
 
-    # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
-    def sub_infidelity_perturb_func_decorator(pertub_func: Callable) -> Callable:
+    def sub_infidelity_perturb_func_decorator(
+        pertub_func: Callable[..., TensorOrTupleOfTensorsGeneric]
+    ) -> Callable[
+        [TensorOrTupleOfTensorsGeneric, BaselineType],
+        Tuple[Tuple[Tensor, ...], Tuple[Tensor, ...]],
+    ]:
         r"""
         Args:
 
@@ -68,23 +82,18 @@ def infidelity_perturb_func_decorator(multipy_by_inputs: bool = True) -> Callabl
 
         """
 
-        # pyre-fixme[3]: Return type must be annotated.
         def default_perturb_func(
             inputs: TensorOrTupleOfTensorsGeneric, baselines: BaselineType = None
-        ):
+        ) -> Tuple[Tuple[Tensor, ...], Tuple[Tensor, ...]]:
             r""" """
-            inputs_perturbed = (
+            inputs_perturbed: TensorOrTupleOfTensorsGeneric = (
                 pertub_func(inputs, baselines)
                 if baselines is not None
                 else pertub_func(inputs)
             )
-            inputs_perturbed = _format_tensor_into_tuples(inputs_perturbed)
-            # pyre-fixme[9]: inputs has type `TensorOrTupleOfTensorsGeneric`; used
-            #  as `Tuple[Tensor, ...]`.
-            inputs = _format_tensor_into_tuples(inputs)
-            # pyre-fixme[6]: For 2nd argument expected `Tuple[Tensor, ...]` but got
-            #  `TensorOrTupleOfTensorsGeneric`.
-            baselines = _format_baseline(baselines, inputs)
+            inputs_perturbed_formatted = _format_tensor_into_tuples(inputs_perturbed)
+            inputs_formatted = _format_tensor_into_tuples(inputs)
+            baselines = _format_baseline(baselines, inputs_formatted)
             if baselines is None:
                 perturbations = tuple(
                     (
@@ -93,12 +102,12 @@ def infidelity_perturb_func_decorator(multipy_by_inputs: bool = True) -> Callabl
                             input,
                             default_denom=1.0,
                         )
-                        if multipy_by_inputs
+                        if multiply_by_inputs
                         else input - input_perturbed
                     )
-                    # pyre-fixme[6]: For 2nd argument expected
-                    #  `Iterable[Variable[_T2]]` but got `None`.
-                    for input, input_perturbed in zip(inputs, inputs_perturbed)
+                    for input, input_perturbed in zip(
+                        inputs_formatted, inputs_perturbed_formatted
+                    )
                 )
             else:
                 perturbations = tuple(
@@ -108,18 +117,16 @@ def infidelity_perturb_func_decorator(multipy_by_inputs: bool = True) -> Callabl
                             input - baseline,
                             default_denom=1.0,
                         )
-                        if multipy_by_inputs
+                        if multiply_by_inputs
                         else input - input_perturbed
                     )
                     for input, input_perturbed, baseline in zip(
-                        inputs,
-                        # pyre-fixme[6]: For 2nd argument expected
-                        #  `Iterable[Variable[_T2]]` but got `None`.
-                        inputs_perturbed,
+                        inputs_formatted,
+                        inputs_perturbed_formatted,
                         baselines,
                     )
                 )
-            return perturbations, inputs_perturbed
+            return perturbations, inputs_perturbed_formatted
 
         return default_perturb_func
 
@@ -130,8 +137,9 @@ def infidelity_perturb_func_decorator(multipy_by_inputs: bool = True) -> Callabl
 def infidelity(
     # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
     forward_func: Callable,
-    # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
-    perturb_func: Callable,
+    perturb_func: Callable[
+        ..., Tuple[TensorOrTupleOfTensorsGeneric, TensorOrTupleOfTensorsGeneric]
+    ],
     inputs: TensorOrTupleOfTensorsGeneric,
     attributions: TensorOrTupleOfTensorsGeneric,
     baselines: BaselineType = None,
@@ -188,25 +196,25 @@ def infidelity(
 
                 >>> from captum.metrics import infidelity_perturb_func_decorator
 
-                >>> @infidelity_perturb_func_decorator(<multipy_by_inputs flag>)
+                >>> @infidelity_perturb_func_decorator(<multiply_by_inputs flag>)
                 >>> def my_perturb_func(inputs):
                 >>>   <MY-LOGIC-HERE>
                 >>>   return perturbed_inputs
 
-                In case `multipy_by_inputs` is False we compute perturbations by
-                `input - perturbed_input` difference and in case `multipy_by_inputs`
+                In case `multiply_by_inputs` is False we compute perturbations by
+                `input - perturbed_input` difference and in case `multiply_by_inputs`
                 flag is True we compute it by dividing
                 (input - perturbed_input) by (input - baselines).
                 The user needs to only return perturbed inputs in `perturb_func`
                 as described above.
 
                 `infidelity_perturb_func_decorator` needs to be used with
-                `multipy_by_inputs` flag set to False in case infidelity
+                `multiply_by_inputs` flag set to False in case infidelity
                 score is being computed for attribution maps that are local aka
                 that do not factor in inputs in the final attribution score.
                 Such attribution algorithms include Saliency, GradCam, Guided Backprop,
                 or Integrated Gradients and DeepLift attribution scores that are already
-                computed with `multipy_by_inputs=False` flag.
+                computed with `multiply_by_inputs=False` flag.
 
                 If there are more than one inputs passed to infidelity function those
                 will be passed to `perturb_func` as tuples in the same order as they
@@ -283,10 +291,10 @@ def infidelity(
                 meaning that the inputs multiplier isn't factored in the
                 attribution scores.
                 This can be done duing the definition of the attribution algorithm
-                by passing `multipy_by_inputs=False` flag.
+                by passing `multiply_by_inputs=False` flag.
                 For example in case of Integrated Gradients (IG) we can obtain
                 local attribution scores if we define the constructor of IG as:
-                ig = IntegratedGradients(multipy_by_inputs=False)
+                ig = IntegratedGradients(multiply_by_inputs=False)
 
                 Some attribution algorithms are inherently local.
                 Examples of inherently local attribution methods include:
@@ -434,7 +442,10 @@ def infidelity(
     _next_infidelity_tensors = _make_next_infidelity_tensors_func(
         forward_func,
         bsz,
-        perturb_func,
+        # error: Argument 3 to "_make_next_infidelity_tensors_func" has incompatible
+        # type "Callable[..., tuple[Tensor, Tensor]]"; expected
+        # "Callable[..., tuple[tuple[Tensor, ...], tuple[Tensor, ...]]]"  [arg-type]
+        perturb_func,  # type: ignore
         inputs,
         baselines,
         attributions,
@@ -477,8 +488,9 @@ def infidelity(
 
 def _generate_perturbations(
     current_n_perturb_samples: int,
-    # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
-    perturb_func: Callable,
+    perturb_func: Callable[
+        ..., Tuple[TensorOrTupleOfTensorsGeneric, TensorOrTupleOfTensorsGeneric]
+    ],
     inputs: TensorOrTupleOfTensorsGeneric,
     baselines: BaselineType,
 ) -> Tuple[TensorOrTupleOfTensorsGeneric, TensorOrTupleOfTensorsGeneric]:
@@ -491,8 +503,9 @@ def _generate_perturbations(
     repeated instances per example.
     """
 
-    # pyre-fixme[3]: Return type must be annotated.
-    def call_perturb_func():
+    def call_perturb_func() -> (
+        Tuple[TensorOrTupleOfTensorsGeneric, TensorOrTupleOfTensorsGeneric]
+    ):
         r""" """
         baselines_pert = None
         inputs_pert: Union[Tensor, Tuple[Tensor, ...]]
@@ -561,8 +574,9 @@ def _make_next_infidelity_tensors_func(
     # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
     forward_func: Callable,
     bsz: int,
-    # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
-    perturb_func: Callable,
+    perturb_func: Callable[
+        ..., Tuple[TensorOrTupleOfTensorsGeneric, TensorOrTupleOfTensorsGeneric]
+    ],
     inputs: TensorOrTupleOfTensorsGeneric,
     baselines: BaselineType,
     attributions: TensorOrTupleOfTensorsGeneric,
@@ -579,15 +593,13 @@ def _make_next_infidelity_tensors_func(
             current_n_perturb_samples, perturb_func, inputs, baselines
         )
 
-        perturbations = _format_tensor_into_tuples(perturbations)
-        inputs_perturbed = _format_tensor_into_tuples(inputs_perturbed)
+        perturbations_formatted = _format_tensor_into_tuples(perturbations)
+        inputs_perturbed_formatted = _format_tensor_into_tuples(inputs_perturbed)
 
         _validate_inputs_and_perturbations(
             cast(Tuple[Tensor, ...], inputs),
-            # pyre-fixme[22]: The cast is redundant.
-            cast(Tuple[Tensor, ...], inputs_perturbed),
-            # pyre-fixme[22]: The cast is redundant.
-            cast(Tuple[Tensor, ...], perturbations),
+            inputs_perturbed_formatted,
+            perturbations_formatted,
         )
 
         targets_expanded = _expand_target(
@@ -603,7 +615,7 @@ def _make_next_infidelity_tensors_func(
 
         inputs_perturbed_fwd = _run_forward(
             forward_func,
-            inputs_perturbed,
+            inputs_perturbed_formatted,
             targets_expanded,
             additional_forward_args_expanded,
         )
@@ -624,7 +636,7 @@ def _make_next_infidelity_tensors_func(
         attributions_times_perturb = tuple(
             (attribution_expanded * perturbation).view(attribution_expanded.size(0), -1)
             for attribution_expanded, perturbation in zip(
-                attributions_expanded, perturbations
+                attributions_expanded, perturbations_formatted
             )
         )
 
