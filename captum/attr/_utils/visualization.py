@@ -3,7 +3,7 @@
 # pyre-strict
 import warnings
 from enum import Enum
-from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, Union
+from typing import Any, Callable, cast, Dict, Iterable, List, Optional, Tuple, Union
 
 import matplotlib
 
@@ -444,7 +444,7 @@ def visualize_image_attr_multiple(
     fig_size: Tuple[int, int] = (8, 6),
     use_pyplot: bool = True,
     **kwargs: Any,
-) -> Tuple[Figure, Axes]:
+) -> Tuple[Figure, Union[Axes, List[Axes]]]:
     r"""
     Visualizes attribution using multiple visualization methods displayed
     in a 1 x k grid, where k is the number of desired visualizations.
@@ -516,15 +516,19 @@ def visualize_image_attr_multiple(
         plt_fig = plt.figure(figsize=fig_size)
     else:
         plt_fig = Figure(figsize=fig_size)
-    plt_axis = plt_fig.subplots(1, len(methods))
+    plt_axis_np = plt_fig.subplots(1, len(methods), squeeze=True)
 
+    plt_axis: Union[Axes, List[Axes]]
     plt_axis_list: List[Axes] = []
     # When visualizing one
     if len(methods) == 1:
-        plt_axis_list = [plt_axis]  # type: ignore
+        plt_axis = cast(Axes, plt_axis_np)
+        plt_axis_list = [plt_axis]
         # Figure.subplots returns Axes or array of Axes
     else:
-        plt_axis_list = plt_axis  # type: ignore
+        # https://github.com/numpy/numpy/issues/24738
+        plt_axis = cast(List[Axes], cast(npt.NDArray, plt_axis_np).tolist())
+        plt_axis_list = plt_axis
         # Figure.subplots returns Axes or array of Axes
 
     for i in range(len(methods)):
