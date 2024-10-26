@@ -226,7 +226,42 @@ def _clean_up_pretty_token(token: str) -> str:
     return token.replace("\n", "\\n").strip()
 
 
-def _convert_ids_to_pretty_tokens(ids: Tensor, tokenizer: TokenizerLike) -> List[str]:
+def _encode_with_offsets(
+    txt: str,
+    tokenizer: TokenizerLike,
+    add_special_tokens: bool = True,
+    **kwargs: Any,
+) -> Tuple[List[int], List[Tuple[int, int]]]:
+    enc = tokenizer(
+        txt,
+        return_offsets_mapping=True,
+        add_special_tokens=add_special_tokens,
+        **kwargs,
+    )
+    input_ids = cast(List[int], enc["input_ids"])
+    offset_mapping = cast(List[Tuple[int, int]], enc["offset_mapping"])
+    assert len(input_ids) == len(offset_mapping), (
+        f"{len(input_ids)} != {len(offset_mapping)}: {txt} -> "
+        f"{input_ids}, {offset_mapping}"
+    )
+    # For the case where offsets are not set properly (the end and start are
+    # equal for all tokens - fall back on the start of the next span in the
+    # offset mapping)
+    offset_mapping_corrected = []
+    for i, (start, end) in enumerate(offset_mapping):
+        if start == end:
+            if (i + 1) < len(offset_mapping):
+                end = offset_mapping[i + 1][0]
+            else:
+                end = len(txt)
+        offset_mapping_corrected.append((start, end))
+    return input_ids, offset_mapping_corrected
+
+
+def _convert_ids_to_pretty_tokens(
+    ids: Tensor,
+    tokenizer: TokenizerLike,
+) -> List[str]:
     """
     Convert ids to tokens without ugly unicode characters (e.g., Ġ). See:
     https://github.com/huggingface/transformers/issues/4786 and
@@ -241,32 +276,26 @@ def _convert_ids_to_pretty_tokens(ids: Tensor, tokenizer: TokenizerLike) -> List
     > used spaces in its process
     """
     txt = tokenizer.decode(ids)
+    input_ids: Optional[List[int]] = None
     # Don't add special tokens (they're either already there, or we don't want them)
-    enc = tokenizer(txt, return_offsets_mapping=True, add_special_tokens=False)
-    input_ids = cast(List[int], enc["input_ids"])
-    offset_mapping = cast(List[Tuple[int, int]], enc["offset_mapping"])
+    input_ids, offset_mapping = _encode_with_offsets(
+        txt, tokenizer, add_special_tokens=False
+    )
 
     pretty_tokens = []
     end_prev = -1
     idx = 0
-    for i, (input_id, offset) in enumerate(zip(input_ids, offset_mapping)):
+    for i, offset in enumerate(offset_mapping):
         start, end = offset
-        if start == end:
-            # For the case where offsets are not set properly (the end and start are
-            # equal for all tokens - fall back on the start of the next span in the
-            # offset mapping)
-            if (i + 1) < len(input_ids):
-                end = offset_mapping[i + 1][0]
-            else:
-                end = len(txt)
-        if input_id != ids[idx]:
+        if input_ids[i] != ids[idx]:
             # When the re-encoded string doesn't match the original encoding we skip
             # this token and hope for the best, falling back on a naive method. This
             # can happen when a tokenizer might add a token that corresponds to
             # a space only when add_special_tokens=False.
             warnings.warn(
-                f"(i={i}) input_id {input_id} != ids[idx] {ids[idx]} (corresponding "
-                f"to text: {repr(txt[start:end])}). Skipping this token.",
+                f"(i={i}, idx={idx}) input_ids[i] {input_ids[i]} != ids[idx] "
+                f"{ids[idx]} (corresponding to text: {repr(txt[start:end])}). "
+                "Skipping this token.",
                 stacklevel=2,
             )
             continue
