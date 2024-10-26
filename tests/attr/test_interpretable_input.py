@@ -20,12 +20,23 @@ class DummyTokenizer:
         self.unk_idx = len(vocab_list) + 1
 
     @overload
-    def encode(self, text: str, return_tensors: None = None) -> List[int]: ...
+    def encode(
+        self, text: str, add_special_tokens: bool = ..., return_tensors: None = ...
+    ) -> List[int]: ...
+
     @overload
-    def encode(self, text: str, return_tensors: Literal["pt"]) -> Tensor: ...
+    def encode(
+        self,
+        text: str,
+        add_special_tokens: bool = ...,
+        return_tensors: Literal["pt"] = ...,
+    ) -> Tensor: ...
 
     def encode(
-        self, text: str, return_tensors: Optional[str] = "pt"
+        self,
+        text: str,
+        add_special_tokens: bool = True,
+        return_tensors: Optional[str] = "pt",
     ) -> Union[List[int], Tensor]:
         assert return_tensors == "pt"
         return torch.tensor([self.convert_tokens_to_ids(text.split(" "))])
@@ -72,6 +83,7 @@ class DummyTokenizer:
     def __call__(
         self,
         text: Optional[Union[str, List[str], List[List[str]]]] = None,
+        add_special_tokens: bool = True,
         return_offsets_mapping: bool = False,
     ) -> BatchEncodingType:
         raise NotImplementedError

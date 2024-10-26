@@ -1,4 +1,7 @@
 # pyre-strict
+
+import warnings
+
 from copy import copy
 
 from textwrap import shorten
@@ -216,6 +219,11 @@ class LLMAttributionResult:
             return fig, ax
 
 
+def _clean_up_pretty_token(token: str) -> str:
+    """Remove newlines and leading/trailing whitespace from token."""
+    return token.replace("\n", "\\n").strip()
+
+
 def _convert_ids_to_pretty_tokens(ids: Tensor, tokenizer: TokenizerLike) -> List[str]:
     """
     Convert ids to tokens without ugly unicode characters (e.g., Ġ). See:
@@ -230,10 +238,63 @@ def _convert_ids_to_pretty_tokens(ids: Tensor, tokenizer: TokenizerLike) -> List
     > BPE splitting mostly to avoid digesting spaces since the standard BPE algorithm
     > used spaces in its process
     """
+    txt = tokenizer.decode(ids)
+    # Don't add special tokens (they're either already there, or we don't want them)
+    enc = tokenizer(txt, return_offsets_mapping=True, add_special_tokens=False)
+    input_ids = cast(List[int], enc["input_ids"])
+    offset_mapping = cast(List[Tuple[int, int]], enc["offset_mapping"])
+
+    pretty_tokens = []
+    end_prev = -1
+    idx = 0
+    for i, (input_id, offset) in enumerate(zip(input_ids, offset_mapping)):
+        start, end = offset
+        if start == end:
+            # For the case where offsets are not set properly (the end and start are
+            # equal for all tokens - fall back on the start of the next span in the
+            # offset mapping)
+            if (i + 1) < len(input_ids):
+                end = offset_mapping[i + 1][0]
+            else:
+                end = len(txt)
+        if input_id != ids[idx]:
+            # When the re-encoded string doesn't match the original encoding we skip
+            # this token and hope for the best, falling back on a naive method. This
+            # can happen when a tokenizer might add a token that corresponds to
+            # a space only when add_special_tokens=False.
+            warnings.warn(
+                f"(i={i}) input_id {input_id} != ids[idx] {ids[idx]} (corresponding "
+                f"to text: {repr(txt[start:end])}). Skipping this token.",
+                stacklevel=2,
+            )
+            continue
+        pretty_tokens.append(
+            _clean_up_pretty_token(txt[start:end])
+            + (" [OVERLAP]" if end_prev > start else "")
+        )
+        end_prev = end
+        idx += 1
+    if len(pretty_tokens) != len(ids):
+        warnings.warn(
+            f"Pretty tokens length {len(pretty_tokens)} != ids length {len(ids)}! "
+            "Falling back to naive decoding logic.",
+            stacklevel=2,
+        )
+        return _convert_ids_to_pretty_tokens_fallback(ids, tokenizer)
+    return pretty_tokens
+
+
+def _convert_ids_to_pretty_tokens_fallback(
+    ids: Tensor, tokenizer: TokenizerLike
+) -> List[str]:
+    """
+    Fallback function that naively handles logic when multiple ids map to one string.
+    """
     pretty_tokens = []
     idx = 0
     while idx < len(ids):
         decoded = tokenizer.decode(ids[idx])
+        decoded_pretty = _clean_up_pretty_token(decoded)
         # Handle case where single token (e.g. unicode) is split into multiple IDs
         # NOTE: This logic will fail if a tokenizer splits a token into 3+ IDs
         if decoded.strip() == "�" and tokenizer.encode(decoded) != [ids[idx]]:
@@ -244,17 +305,17 @@ def _convert_ids_to_pretty_tokens(ids: Tensor, tokenizer: TokenizerLike) -> List
             ]:
                 # Both tokens are from a split, combine them
                 decoded = tokenizer.decode(ids[idx : idx + 2])
-                pretty_tokens.append(decoded + "[1/2]")
-                pretty_tokens.append(decoded + "[2/2]")
+                pretty_tokens.append(decoded_pretty)
+                pretty_tokens.append(decoded_pretty + " [OVERLAP]")
             else:
                 # Treat tokens as separate
-                pretty_tokens.append(decoded)
-                pretty_tokens.append(decoded_next)
+                pretty_tokens.append(decoded_pretty)
+                pretty_tokens.append(_clean_up_pretty_token(decoded_next))
             idx += 2
         else:
             # Just a normal token
             idx += 1
-            pretty_tokens.append(decoded)
+            pretty_tokens.append(decoded_pretty)
     return pretty_tokens
 
 
