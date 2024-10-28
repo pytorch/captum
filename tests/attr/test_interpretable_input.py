@@ -5,6 +5,7 @@
 from typing import List, Literal, Optional, overload, Union
 
 import torch
+from captum._utils.typing import BatchEncodingType
 from captum.attr._utils.interpretable_input import TextTemplateInput, TextTokenInput
 from parameterized import parameterized
 from tests.helpers import BaseTest
@@ -66,6 +67,13 @@ class DummyTokenizer:
         ]
 
     def decode(self, token_ids: Tensor) -> str:
+        raise NotImplementedError
+
+    def __call__(
+        self,
+        text: Optional[Union[str, List[str], List[List[str]]]] = None,
+        return_offsets_mapping: bool = False,
+    ) -> BatchEncodingType:
         raise NotImplementedError
 
 
