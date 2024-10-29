@@ -2,11 +2,13 @@
 
 import warnings
 
+from abc import ABC
+
 from copy import copy
 
 from textwrap import shorten
 
-from typing import Any, Callable, cast, Dict, List, Optional, Tuple, Union
+from typing import Any, Callable, cast, Dict, List, Optional, Tuple, Type, Union
 
 import matplotlib.colors as mcolors
 
@@ -319,7 +321,104 @@ def _convert_ids_to_pretty_tokens_fallback(
     return pretty_tokens
 
 
-class LLMAttribution(Attribution):
+class BaseLLMAttribution(Attribution, ABC):
+    """Base class for LLM Attribution methods"""
+
+    SUPPORTED_INPUTS: Tuple[Type[InterpretableInput], ...]
+    SUPPORTED_METHODS: Tuple[Type[Attribution], ...]
+
+    model: nn.Module
+    tokenizer: TokenizerLike
+    device: torch.device
+
+    def __init__(
+        self,
+        attr_method: Attribution,
+        tokenizer: TokenizerLike,
+    ) -> None:
+        assert isinstance(
+            attr_method, self.SUPPORTED_METHODS
+        ), f"{self.__class__.__name__} does not support {type(attr_method)}"
+
+        super().__init__(attr_method.forward_func)
+
+        # alias, we really need a model and don't support wrapper functions
+        # coz we need call model.forward, model.generate, etc.
+        self.model: nn.Module = cast(nn.Module, self.forward_func)
+
+        self.tokenizer: TokenizerLike = tokenizer
+        self.device: torch.device = (
+            cast(torch.device, self.model.device)
+            if hasattr(self.model, "device")
+            else next(self.model.parameters()).device
+        )
+
+    def _get_target_tokens(
+        self,
+        inp: InterpretableInput,
+        target: Union[str, torch.Tensor, None] = None,
+        skip_tokens: Union[List[int], List[str], None] = None,
+        gen_args: Optional[Dict[str, Any]] = None,
+    ) -> Tensor:
+        assert isinstance(
+            inp, self.SUPPORTED_INPUTS
+        ), f"LLMAttribution does not support input type {type(inp)}"
+
+        if target is None:
+            # generate when None
+            assert hasattr(self.model, "generate") and callable(self.model.generate), (
+                "The model does not have recognizable generate function."
+                "Target must be given for attribution"
+            )
+
+            if not gen_args:
+                gen_args = DEFAULT_GEN_ARGS
+
+            model_inp = self._format_model_input(inp.to_model_input())
+            output_tokens = self.model.generate(model_inp, **gen_args)
+            target_tokens = output_tokens[0][model_inp.size(1) :]
+        else:
+            assert gen_args is None, "gen_args must be None when target is given"
+            # Encode skip tokens
+            if skip_tokens:
+                if isinstance(skip_tokens[0], str):
+                    skip_tokens = cast(List[str], skip_tokens)
+                    skip_tokens = self.tokenizer.convert_tokens_to_ids(skip_tokens)
+            else:
+                skip_tokens = []
+            skip_tokens = cast(List[int], skip_tokens)
+
+            if isinstance(target, str):
+                encoded = self.tokenizer.encode(target)
+                target_tokens = torch.tensor(
+                    [token for token in encoded if token not in skip_tokens]
+                )
+            elif isinstance(target, torch.Tensor):
+                target_tokens = target[
+                    ~torch.isin(target, torch.tensor(skip_tokens, device=target.device))
+                ]
+            else:
+                raise TypeError(
+                    "target must either be str or Tensor, but the type of target is "
+                    "{}".format(type(target))
+                )
+        return target_tokens
+
+    def _format_model_input(self, model_input: Union[str, Tensor]) -> Tensor:
+        """
+        Convert str to tokenized tensor
+        to make LLMAttribution work with model inputs of both
+        raw text and text token tensors
+        """
+        # return tensor(1, n_tokens)
+        if isinstance(model_input, str):
+            return self.tokenizer.encode(model_input, return_tensors="pt").to(
+                self.device
+            )
+        return model_input.to(self.device)
+
+
+class LLMAttribution(BaseLLMAttribution):
     """
     Attribution class for large language models. It wraps a perturbation-based
     attribution algorthm to produce commonly interested attribution
@@ -365,11 +464,7 @@ class LLMAttribution(Attribution):
                     Default: "log_prob"
         """
 
-        assert isinstance(
-            attr_method, self.SUPPORTED_METHODS
-        ), f"LLMAttribution does not support {type(attr_method)}"
-
-        super().__init__(attr_method.forward_func)
+        super().__init__(attr_method, tokenizer)
 
         # shallow copy is enough to avoid modifying original instance
         self.attr_method: PerturbationAttribution = copy(attr_method)
@@ -378,17 +473,6 @@ class LLMAttribution(Attribution):
         )
 
         self.attr_method.forward_func = self._forward_func
-
-        # alias, we really need a model and don't support wrapper functions
-        # coz we need call model.forward, model.generate, etc.
-        self.model: nn.Module = cast(nn.Module, self.forward_func)
-
-        self.tokenizer: TokenizerLike = tokenizer
-        self.device: torch.device = (
-            cast(torch.device, self.model.device)
-            if hasattr(self.model, "device")
-            else next(self.model.parameters()).device
-        )
 
         assert attr_target in (
             "log_prob",
@@ -488,19 +572,6 @@ class LLMAttribution(Attribution):
 
         return target_probs if self.attr_target != "log_prob" else target_log_probs
 
-    def _format_model_input(self, model_input: Union[str, Tensor]) -> Tensor:
-        """
-        Convert str to tokenized tensor
-        to make LLMAttribution work with model inputs of both
-        raw text and text token tensors
-        """
-        # return tensor(1, n_tokens)
-        if isinstance(model_input, str):
-            return self.tokenizer.encode(model_input, return_tensors="pt").to(
-                self.device
-            )
-        return model_input.to(self.device)
-
     def attribute(
         self,
         inp: InterpretableInput,
@@ -527,7 +598,7 @@ class LLMAttribution(Attribution):
                     of integers of the token ids.
                     Default: None
             num_trials (int, optional): number of trials to run. Return is the average
-                    attribibutions over all the trials.
+                    attributions over all the trials.
                     Defaults: 1.
             gen_args (dict, optional): arguments for generating the target. Only used if
                     target is not given. When None, the default arguments are used,
@@ -542,49 +613,12 @@ class LLMAttribution(Attribution):
             attr (LLMAttributionResult): Attribution result. token_attr will be None
                     if attr method is Lime or KernelShap.
         """
-
-        assert isinstance(
-            inp, self.SUPPORTED_INPUTS
-        ), f"LLMAttribution does not support input type {type(inp)}"
-
-        if target is None:
-            # generate when None
-            assert hasattr(self.model, "generate") and callable(self.model.generate), (
-                "The model does not have recognizable generate function."
-                "Target must be given for attribution"
-            )
-
-            if not gen_args:
-                gen_args = DEFAULT_GEN_ARGS
-
-            model_inp = self._format_model_input(inp.to_model_input())
-            output_tokens = self.model.generate(model_inp, **gen_args)
-            target_tokens = output_tokens[0][model_inp.size(1) :]
-        else:
-            assert gen_args is None, "gen_args must be None when target is given"
-            # Encode skip tokens
-            if skip_tokens:
-                if isinstance(skip_tokens[0], str):
-                    skip_tokens = cast(List[str], skip_tokens)
-                    skip_tokens = self.tokenizer.convert_tokens_to_ids(skip_tokens)
-            else:
-                skip_tokens = []
-            skip_tokens = cast(List[int], skip_tokens)
-
-            if isinstance(target, str):
-                encoded = self.tokenizer.encode(target)
-                target_tokens = torch.tensor(
-                    [token for token in encoded if token not in skip_tokens]
-                )
-            elif isinstance(target, torch.Tensor):
-                target_tokens = target[
-                    ~torch.isin(target, torch.tensor(skip_tokens, device=target.device))
-                ]
-            else:
-                raise TypeError(
-                    "target must either be str or Tensor, but the type of target is "
-                    "{}".format(type(target))
-                )
+        target_tokens = self._get_target_tokens(
+            inp,
+            target,
+            skip_tokens=skip_tokens,
+            gen_args=gen_args,
+        )
 
         attr = torch.zeros(
             [
@@ -638,7 +672,7 @@ class LLMAttribution(Attribution):
         )
 
 
-class LLMGradientAttribution(Attribution):
+class LLMGradientAttribution(BaseLLMAttribution):
     """
     Attribution class for large language models. It wraps a gradient-based
     attribution algorthm to produce commonly interested attribution
@@ -670,36 +704,11 @@ class LLMGradientAttribution(Attribution):
                     interface convention
             tokenizer (Tokenizer): tokenizer of the llm model used in the attr_method
         """
-        assert isinstance(
-            attr_method, self.SUPPORTED_METHODS
-        ), f"LLMGradientAttribution does not support {type(attr_method)}"
-
-        super().__init__(attr_method.forward_func)
-
-        # alias, we really need a model and don't support wrapper functions
-        # coz we need call model.forward, model.generate, etc.
-        self.model: nn.Module = cast(nn.Module, self.forward_func)
+        super().__init__(attr_method, tokenizer)
 
         # shallow copy is enough to avoid modifying original instance
         self.attr_method: GradientAttribution = copy(attr_method)
         self.attr_method.forward_func = GradientForwardFunc(self)
-
-        self.tokenizer: TokenizerLike = tokenizer
-        self.device: torch.device = (
-            cast(torch.device, self.model.device)
-            if hasattr(self.model, "device")
-            else next(self.model.parameters()).device
-        )
-
-    def _format_model_input(self, model_input: Union[Tensor, str]) -> Tensor:
-        """
-        Convert str to tokenized tensor
-        """
-        if isinstance(model_input, str):
-            return self.tokenizer.encode(model_input, return_tensors="pt").to(
-                self.device
-            )
-        return model_input.to(self.device)
 
     def attribute(
         self,
@@ -734,50 +743,12 @@ class LLMGradientAttribution(Attribution):
 
             attr (LLMAttributionResult): attribution result
         """
-
-        assert isinstance(
-            inp, self.SUPPORTED_INPUTS
-        ), f"LLMGradAttribution does not support input type {type(inp)}"
-
-        if target is None:
-            # generate when None
-            assert hasattr(self.model, "generate") and callable(self.model.generate), (
-                "The model does not have recognizable generate function."
-                "Target must be given for attribution"
-            )
-
-            if not gen_args:
-                gen_args = DEFAULT_GEN_ARGS
-
-            with torch.no_grad():
-                model_inp = self._format_model_input(inp.to_model_input())
-                output_tokens = self.model.generate(model_inp, **gen_args)
-                target_tokens = output_tokens[0][model_inp.size(1) :]
-        else:
-            assert gen_args is None, "gen_args must be None when target is given"
-            # Encode skip tokens
-            if skip_tokens:
-                if isinstance(skip_tokens[0], str):
-                    skip_tokens = cast(List[str], skip_tokens)
-                    skip_tokens = self.tokenizer.convert_tokens_to_ids(skip_tokens)
-            else:
-                skip_tokens = []
-            skip_tokens = cast(List[int], skip_tokens)
-
-            if isinstance(target, str):
-                encoded = self.tokenizer.encode(target)
-                target_tokens = torch.tensor(
-                    [token for token in encoded if token not in skip_tokens]
-                )
-            elif isinstance(target, torch.Tensor):
-                target_tokens = target[
-                    ~torch.isin(target, torch.tensor(skip_tokens, device=target.device))
-                ]
-            else:
-                raise TypeError(
-                    "target must either be str or Tensor, but the type of target is "
-                    "{}".format(type(target))
-                )
+        target_tokens = self._get_target_tokens(
+            inp,
+            target,
+            skip_tokens=skip_tokens,
+            gen_args=gen_args,
+        )
 
         attr_inp = inp.to_tensor().to(self.device)
 
