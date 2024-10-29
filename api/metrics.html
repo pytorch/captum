@@ -75,25 +75,25 @@ perturbations internally then we can wrap perturb_func with
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">captum.metrics</span> <span class="kn">import</span> <span class="n">infidelity_perturb_func_decorator</span>
 </pre></div>
 </div>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="nd">@infidelity_perturb_func_decorator</span><span class="p">(</span><span class="o">&lt;</span><span class="n">multipy_by_inputs</span> <span class="n">flag</span><span class="o">&gt;</span><span class="p">)</span>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="nd">@infidelity_perturb_func_decorator</span><span class="p">(</span><span class="o">&lt;</span><span class="n">multiply_by_inputs</span> <span class="n">flag</span><span class="o">&gt;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="k">def</span> <span class="nf">my_perturb_func</span><span class="p">(</span><span class="n">inputs</span><span class="p">):</span>
 <span class="gp">&gt;&gt;&gt; </span>  <span class="o">&lt;</span><span class="n">MY</span><span class="o">-</span><span class="n">LOGIC</span><span class="o">-</span><span class="n">HERE</span><span class="o">&gt;</span>
 <span class="gp">&gt;&gt;&gt; </span>  <span class="k">return</span> <span class="n">perturbed_inputs</span>
 </pre></div>
 </div>
-<p>In case <cite>multipy_by_inputs</cite> is False we compute perturbations by
-<cite>input - perturbed_input</cite> difference and in case <cite>multipy_by_inputs</cite>
+<p>In case <cite>multiply_by_inputs</cite> is False we compute perturbations by
+<cite>input - perturbed_input</cite> difference and in case <cite>multiply_by_inputs</cite>
 flag is True we compute it by dividing
 (input - perturbed_input) by (input - baselines).
 The user needs to only return perturbed inputs in <cite>perturb_func</cite>
 as described above.</p>
 <p><cite>infidelity_perturb_func_decorator</cite> needs to be used with
-<cite>multipy_by_inputs</cite> flag set to False in case infidelity
+<cite>multiply_by_inputs</cite> flag set to False in case infidelity
 score is being computed for attribution maps that are local aka
 that do not factor in inputs in the final attribution score.
 Such attribution algorithms include Saliency, GradCam, Guided Backprop,
 or Integrated Gradients and DeepLift attribution scores that are already
-computed with <cite>multipy_by_inputs=False</cite> flag.</p>
+computed with <cite>multiply_by_inputs=False</cite> flag.</p>
 <p>If there are more than one inputs passed to infidelity function those
 will be passed to <cite>perturb_func</cite> as tuples in the same order as they
 are passed to infidelity function.</p>
@@ -163,10 +163,10 @@ Many global attribution algorithms can be used in local modes,
 meaning that the inputs multiplier isn’t factored in the
 attribution scores.
 This can be done duing the definition of the attribution algorithm
-by passing <cite>multipy_by_inputs=False</cite> flag.
+by passing <cite>multiply_by_inputs=False</cite> flag.
 For example in case of Integrated Gradients (IG) we can obtain
 local attribution scores if we define the constructor of IG as:
-ig = IntegratedGradients(multipy_by_inputs=False)</p>
+ig = IntegratedGradients(multiply_by_inputs=False)</p>
 <p>Some attribution algorithms are inherently local.
 Examples of inherently local attribution methods include:
 Saliency, Guided GradCam, Guided Backprop and Deconvolution.</p>

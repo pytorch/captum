@@ -34,7 +34,7 @@ src="/_sphinx/documentation_options.js"></script>
 
 <span class="c1"># pyre-strict</span>
 
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">cast</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Union</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">cast</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Union</span>
 
 <span class="kn">import</span> <span class="nn">torch</span>
 <span class="kn">from</span> <span class="nn">captum._utils.common</span> <span class="kn">import</span> <span class="p">(</span>
@@ -47,40 +47,59 @@ src="/_sphinx/documentation_options.js"></script>
     <span class="n">ExpansionTypes</span><span class="p">,</span>
     <span class="n">safe_div</span><span class="p">,</span>
 <span class="p">)</span>
-<span class="kn">from</span> <span class="nn">captum._utils.typing</span> <span class="kn">import</span> <span class="n">BaselineType</span><span class="p">,</span> <span class="n">TargetType</span><span class="p">,</span> <span class="n">TensorOrTupleOfTensorsGeneric</span>
+<span class="kn">from</span> <span class="nn">captum._utils.typing</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">BaselineTupleType</span><span class="p">,</span>
+    <span class="n">BaselineType</span><span class="p">,</span>
+    <span class="n">TargetType</span><span class="p">,</span>
+    <span class="n">TensorOrTupleOfTensorsGeneric</span><span class="p">,</span>
+<span class="p">)</span>
 <span class="kn">from</span> <span class="nn">captum.log</span> <span class="kn">import</span> <span class="n">log_usage</span>
 <span class="kn">from</span> <span class="nn">captum.metrics._utils.batching</span> <span class="kn">import</span> <span class="n">_divide_and_aggregate_metrics</span>
 <span class="kn">from</span> <span class="nn">torch</span> <span class="kn">import</span> <span class="n">Tensor</span>
 
 
-<span class="c1"># pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.</span>
-<span class="k">def</span> <span class="nf">infidelity_perturb_func_decorator</span><span class="p">(</span><span class="n">multipy_by_inputs</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">:</span>
+<span class="k">def</span> <span class="nf">infidelity_perturb_func_decorator</span><span class="p">(</span>
+    <span class="n">multiply_by_inputs</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+    <span class="c1"># pyre-ignore[34]: The type variable `Variable[TensorOrTupleOfTensorsGeneric</span>
+    <span class="c1"># &lt;: [torch._tensor.Tensor, typing.Tuple[torch._tensor.Tensor, ...]]]` isn't</span>
+    <span class="c1"># present in the function's parameters.</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">[</span>
+    <span class="p">[</span><span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">TensorOrTupleOfTensorsGeneric</span><span class="p">]],</span>
+    <span class="n">Callable</span><span class="p">[</span>
+        <span class="p">[</span><span class="n">TensorOrTupleOfTensorsGeneric</span><span class="p">,</span> <span class="n">BaselineType</span><span class="p">],</span>
+        <span class="n">Tuple</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">]],</span>
+    <span class="p">],</span>
+<span class="p">]:</span>
 <span class="w">    </span><span class="sa">r</span><span class="sd">"""An auxiliary, decorator function that helps with computing</span>
 <span class="sd">    perturbations given perturbed inputs. It can be useful for cases</span>
-<span class="sd">    when `pertub_func` returns only perturbed inputs and we</span>
+<span class="sd">    when `perturb_func` returns only perturbed inputs and we</span>
 <span class="sd">    internally compute the perturbations as</span>
 <span class="sd">    (input - perturbed_input) / (input - baseline) if</span>
-<span class="sd">    multipy_by_inputs is set to True and</span>
+<span class="sd">    multiply_by_inputs is set to True and</span>
 <span class="sd">    (input - perturbed_input) otherwise.</span>
 
-<span class="sd">    If users decorate their `pertub_func` with</span>
-<span class="sd">    `@infidelity_perturb_func_decorator` function then their `pertub_func`</span>
+<span class="sd">    If users decorate their `perturb_func` with</span>
+<span class="sd">    `@infidelity_perturb_func_decorator` function then their `perturb_func`</span>
 <span class="sd">    needs to only return perturbed inputs.</span>
 
 <span class="sd">    Args:</span>
 
-<span class="sd">        multipy_by_inputs (bool): Indicates whether model inputs'</span>
+<span class="sd">        multiply_by_inputs (bool): Indicates whether model inputs'</span>
 <span class="sd">                multiplier is factored in the computation of</span>
 <span class="sd">                attribution scores.</span>
 
 <span class="sd">    """</span>
 
-    <span class="c1"># pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.</span>
-    <span class="k">def</span> <span class="nf">sub_infidelity_perturb_func_decorator</span><span class="p">(</span><span class="n">pertub_func</span><span class="p">:</span> <span class="n">Callable</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">:</span>
+    <span class="k">def</span> <span class="nf">sub_infidelity_perturb_func_decorator</span><span class="p">(</span>
+        <span class="n">perturb_func</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">TensorOrTupleOfTensorsGeneric</span><span class="p">]</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">[</span>
+        <span class="p">[</span><span class="n">TensorOrTupleOfTensorsGeneric</span><span class="p">,</span> <span class="n">BaselineType</span><span class="p">],</span>
+        <span class="n">Tuple</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">]],</span>
+    <span class="p">]:</span>
 <span class="w">        </span><span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        Args:</span>
 
-<span class="sd">            pertub_func(Callable): Input perturbation function that takes inputs</span>
+<span class="sd">            perturb_func(Callable): Input perturbation function that takes inputs</span>
 <span class="sd">                and optionally baselines and returns perturbed inputs</span>
 
 <span class="sd">        Returns:</span>
@@ -100,23 +119,18 @@ src="/_sphinx/documentation_options.js"></script>
 
 <span class="sd">        """</span>
 
-        <span class="c1"># pyre-fixme[3]: Return type must be annotated.</span>
         <span class="k">def</span> <span class="nf">default_perturb_func</span><span class="p">(</span>
             <span class="n">inputs</span><span class="p">:</span> <span class="n">TensorOrTupleOfTensorsGeneric</span><span class="p">,</span> <span class="n">baselines</span><span class="p">:</span> <span class="n">BaselineType</span> <span class="o">=</span> <span class="kc">None</span>
-        <span class="p">):</span>
+        <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">]]:</span>
 <span class="w">            </span><span class="sa">r</span><span class="sd">""" """</span>
-            <span class="n">inputs_perturbed</span> <span class="o">=</span> <span class="p">(</span>
-                <span class="n">pertub_func</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">baselines</span><span class="p">)</span>
+            <span class="n">inputs_perturbed</span><span class="p">:</span> <span class="n">TensorOrTupleOfTensorsGeneric</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="n">perturb_func</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">baselines</span><span class="p">)</span>
                 <span class="k">if</span> <span class="n">baselines</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
-                <span class="k">else</span> <span class="n">pertub_func</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span>
+                <span class="k">else</span> <span class="n">perturb_func</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span>
             <span class="p">)</span>
-            <span class="n">inputs_perturbed</span> <span class="o">=</span> <span class="n">_format_tensor_into_tuples</span><span class="p">(</span><span class="n">inputs_perturbed</span><span class="p">)</span>
-            <span class="c1"># pyre-fixme[9]: inputs has type `TensorOrTupleOfTensorsGeneric`; used</span>
-            <span class="c1">#  as `Tuple[Tensor, ...]`.</span>
-            <span class="n">inputs</span> <span class="o">=</span> <span class="n">_format_tensor_into_tuples</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span>
-            <span class="c1"># pyre-fixme[6]: For 2nd argument expected `Tuple[Tensor, ...]` but got</span>
-            <span class="c1">#  `TensorOrTupleOfTensorsGeneric`.</span>
-            <span class="n">baselines</span> <span class="o">=</span> <span class="n">_format_baseline</span><span class="p">(</span><span class="n">baselines</span><span class="p">,</span> <span class="n">inputs</span><span class="p">)</span>
+            <span class="n">inputs_perturbed_formatted</span> <span class="o">=</span> <span class="n">_format_tensor_into_tuples</span><span class="p">(</span><span class="n">inputs_perturbed</span><span class="p">)</span>
+            <span class="n">inputs_formatted</span> <span class="o">=</span> <span class="n">_format_tensor_into_tuples</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span>
+            <span class="n">baselines</span> <span class="o">=</span> <span class="n">_format_baseline</span><span class="p">(</span><span class="n">baselines</span><span class="p">,</span> <span class="n">inputs_formatted</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">baselines</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="n">perturbations</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span>
                     <span class="p">(</span>
@@ -125,12 +139,12 @@ src="/_sphinx/documentation_options.js"></script>
                             <span class="nb">input</span><span class="p">,</span>
                             <span class="n">default_denom</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
                         <span class="p">)</span>
-                        <span class="k">if</span> <span class="n">multipy_by_inputs</span>
+                        <span class="k">if</span> <span class="n">multiply_by_inputs</span>
                         <span class="k">else</span> <span class="nb">input</span> <span class="o">-</span> <span class="n">input_perturbed</span>
                     <span class="p">)</span>
-                    <span class="c1"># pyre-fixme[6]: For 2nd argument expected</span>
-                    <span class="c1">#  `Iterable[Variable[_T2]]` but got `None`.</span>
-                    <span class="k">for</span> <span class="nb">input</span><span class="p">,</span> <span class="n">input_perturbed</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">inputs_perturbed</span><span class="p">)</span>
+                    <span class="k">for</span> <span class="nb">input</span><span class="p">,</span> <span class="n">input_perturbed</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span>
+                        <span class="n">inputs_formatted</span><span class="p">,</span> <span class="n">inputs_perturbed_formatted</span>
+                    <span class="p">)</span>
                 <span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">perturbations</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span>
@@ -140,18 +154,16 @@ src="/_sphinx/documentation_options.js"></script>
                             <span class="nb">input</span> <span class="o">-</span> <span class="n">baseline</span><span class="p">,</span>
                             <span class="n">default_denom</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
                         <span class="p">)</span>
-                        <span class="k">if</span> <span class="n">multipy_by_inputs</span>
+                        <span class="k">if</span> <span class="n">multiply_by_inputs</span>
                         <span class="k">else</span> <span class="nb">input</span> <span class="o">-</span> <span class="n">input_perturbed</span>
                     <span class="p">)</span>
                     <span class="k">for</span> <span class="nb">input</span><span class="p">,</span> <span class="n">input_perturbed</span><span class="p">,</span> <span class="n">baseline</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span>
-                        <span class="n">inputs</span><span class="p">,</span>
-                        <span class="c1"># pyre-fixme[6]: For 2nd argument expected</span>
-                        <span class="c1">#  `Iterable[Variable[_T2]]` but got `None`.</span>
-                        <span class="n">inputs_perturbed</span><span class="p">,</span>
+                        <span class="n">inputs_formatted</span><span class="p">,</span>
+                        <span class="n">inputs_perturbed_formatted</span><span class="p">,</span>
                         <span class="n">baselines</span><span class="p">,</span>
                     <span class="p">)</span>
                 <span class="p">)</span>
-            <span class="k">return</span> <span class="n">perturbations</span><span class="p">,</span> <span class="n">inputs_perturbed</span>
+            <span class="k">return</span> <span class="n">perturbations</span><span class="p">,</span> <span class="n">inputs_perturbed_formatted</span>
 
         <span class="k">return</span> <span class="n">default_perturb_func</span>
 
@@ -162,15 +174,14 @@ src="/_sphinx/documentation_options.js"></script>
 <a class="viewcode-back" href="../../../../metrics.html#captum.metrics.infidelity">[docs]</a>
 <span class="nd">@log_usage</span><span class="p">()</span>
 <span class="k">def</span> <span class="nf">infidelity</span><span class="p">(</span>
-    <span class="c1"># pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.</span>
-    <span class="n">forward_func</span><span class="p">:</span> <span class="n">Callable</span><span class="p">,</span>
-    <span class="c1"># pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.</span>
-    <span class="n">perturb_func</span><span class="p">:</span> <span class="n">Callable</span><span class="p">,</span>
+    <span class="n">forward_func</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">Tensor</span><span class="p">],</span>
+    <span class="n">perturb_func</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[</span>
+        <span class="o">...</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">TensorOrTupleOfTensorsGeneric</span><span class="p">,</span> <span class="n">TensorOrTupleOfTensorsGeneric</span><span class="p">]</span>
+    <span class="p">],</span>
     <span class="n">inputs</span><span class="p">:</span> <span class="n">TensorOrTupleOfTensorsGeneric</span><span class="p">,</span>
     <span class="n">attributions</span><span class="p">:</span> <span class="n">TensorOrTupleOfTensorsGeneric</span><span class="p">,</span>
     <span class="n">baselines</span><span class="p">:</span> <span class="n">BaselineType</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="c1"># pyre-fixme[2]: Parameter annotation cannot be `Any`.</span>
-    <span class="n">additional_forward_args</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">additional_forward_args</span><span class="p">:</span> <span class="nb">object</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">target</span><span class="p">:</span> <span class="n">TargetType</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">n_perturb_samples</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">10</span><span class="p">,</span>
     <span class="n">max_examples_per_batch</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -222,25 +233,25 @@ src="/_sphinx/documentation_options.js"></script>
 
 <span class="sd">                &gt;&gt;&gt; from captum.metrics import infidelity_perturb_func_decorator</span>
 
-<span class="sd">                &gt;&gt;&gt; @infidelity_perturb_func_decorator(&lt;multipy_by_inputs flag&gt;)</span>
+<span class="sd">                &gt;&gt;&gt; @infidelity_perturb_func_decorator(&lt;multiply_by_inputs flag&gt;)</span>
 <span class="sd">                &gt;&gt;&gt; def my_perturb_func(inputs):</span>
 <span class="sd">                &gt;&gt;&gt;   &lt;MY-LOGIC-HERE&gt;</span>
 <span class="sd">                &gt;&gt;&gt;   return perturbed_inputs</span>
 
-<span class="sd">                In case `multipy_by_inputs` is False we compute perturbations by</span>
-<span class="sd">                `input - perturbed_input` difference and in case `multipy_by_inputs`</span>
+<span class="sd">                In case `multiply_by_inputs` is False we compute perturbations by</span>
+<span class="sd">                `input - perturbed_input` difference and in case `multiply_by_inputs`</span>
 <span class="sd">                flag is True we compute it by dividing</span>
 <span class="sd">                (input - perturbed_input) by (input - baselines).</span>
 <span class="sd">                The user needs to only return perturbed inputs in `perturb_func`</span>
 <span class="sd">                as described above.</span>
 
 <span class="sd">                `infidelity_perturb_func_decorator` needs to be used with</span>
-<span class="sd">                `multipy_by_inputs` flag set to False in case infidelity</span>
+<span class="sd">                `multiply_by_inputs` flag set to False in case infidelity</span>
 <span class="sd">                score is being computed for attribution maps that are local aka</span>
 <span class="sd">                that do not factor in inputs in the final attribution score.</span>
 <span class="sd">                Such attribution algorithms include Saliency, GradCam, Guided Backprop,</span>
 <span class="sd">                or Integrated Gradients and DeepLift attribution scores that are already</span>
-<span class="sd">                computed with `multipy_by_inputs=False` flag.</span>
+<span class="sd">                computed with `multiply_by_inputs=False` flag.</span>
 
 <span class="sd">                If there are more than one inputs passed to infidelity function those</span>
 <span class="sd">                will be passed to `perturb_func` as tuples in the same order as they</span>
@@ -317,10 +328,10 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">                meaning that the inputs multiplier isn't factored in the</span>
 <span class="sd">                attribution scores.</span>
 <span class="sd">                This can be done duing the definition of the attribution algorithm</span>
-<span class="sd">                by passing `multipy_by_inputs=False` flag.</span>
+<span class="sd">                by passing `multiply_by_inputs=False` flag.</span>
 <span class="sd">                For example in case of Integrated Gradients (IG) we can obtain</span>
 <span class="sd">                local attribution scores if we define the constructor of IG as:</span>
-<span class="sd">                ig = IntegratedGradients(multipy_by_inputs=False)</span>
+<span class="sd">                ig = IntegratedGradients(multiply_by_inputs=False)</span>
 
 <span class="sd">                Some attribution algorithms are inherently local.</span>
 <span class="sd">                Examples of inherently local attribution methods include:</span>
@@ -443,35 +454,35 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">        &gt;&gt;&gt; infid = infidelity(net, perturb_fn, input, attribution)</span>
 <span class="sd">    """</span>
     <span class="c1"># perform argument formattings</span>
-    <span class="n">inputs</span> <span class="o">=</span> <span class="n">_format_tensor_into_tuples</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span>  <span class="c1"># type: ignore</span>
+    <span class="n">inputs_formatted</span> <span class="o">=</span> <span class="n">_format_tensor_into_tuples</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span>
+    <span class="n">baselines_formatted</span><span class="p">:</span> <span class="n">BaselineTupleType</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="k">if</span> <span class="n">baselines</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">baselines</span> <span class="o">=</span> <span class="n">_format_baseline</span><span class="p">(</span><span class="n">baselines</span><span class="p">,</span> <span class="n">cast</span><span class="p">(</span><span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span> <span class="n">inputs</span><span class="p">))</span>
+        <span class="n">baselines_formatted</span> <span class="o">=</span> <span class="n">_format_baseline</span><span class="p">(</span><span class="n">baselines</span><span class="p">,</span> <span class="n">inputs_formatted</span><span class="p">)</span>
     <span class="n">additional_forward_args</span> <span class="o">=</span> <span class="n">_format_additional_forward_args</span><span class="p">(</span><span class="n">additional_forward_args</span><span class="p">)</span>
-    <span class="n">attributions</span> <span class="o">=</span> <span class="n">_format_tensor_into_tuples</span><span class="p">(</span><span class="n">attributions</span><span class="p">)</span>  <span class="c1"># type: ignore</span>
+    <span class="n">attributions_formatted</span> <span class="o">=</span> <span class="n">_format_tensor_into_tuples</span><span class="p">(</span><span class="n">attributions</span><span class="p">)</span>
 
     <span class="c1"># Make sure that inputs and corresponding attributions have matching sizes.</span>
-    <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">attributions</span><span class="p">),</span> <span class="p">(</span>
-<span class="w">        </span><span class="sd">"""The number of tensors in the inputs and</span>
-<span class="sd">        attributions must match. Found number of tensors in the inputs is: {} and in the</span>
-<span class="sd">        attributions: {}"""</span>
-    <span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">inputs</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">attributions</span><span class="p">))</span>
-    <span class="k">for</span> <span class="n">inp</span><span class="p">,</span> <span class="n">attr</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">attributions</span><span class="p">):</span>
+    <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">inputs_formatted</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">attributions_formatted</span><span class="p">),</span> <span class="p">(</span>
+        <span class="s2">"The number of tensors in the inputs and attributions must match. "</span>
+        <span class="sa">f</span><span class="s2">"Found number of tensors in the inputs is: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">inputs_formatted</span><span class="p">)</span><span class="si">}</span><span class="s2"> and in "</span>
+        <span class="sa">f</span><span class="s2">"the attributions: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">attributions_formatted</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span>
+    <span class="p">)</span>
+    <span class="k">for</span> <span class="n">inp</span><span class="p">,</span> <span class="n">attr</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">inputs_formatted</span><span class="p">,</span> <span class="n">attributions_formatted</span><span class="p">):</span>
         <span class="k">assert</span> <span class="n">inp</span><span class="o">.</span><span class="n">shape</span> <span class="o">==</span> <span class="n">attr</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="p">(</span>
-<span class="w">            </span><span class="sd">"""Inputs and attributions must have</span>
-<span class="sd">        matching shapes. One of the input tensor's shape is {} and the</span>
-<span class="sd">        attribution tensor's shape is: {}"""</span>
-            <span class="c1"># pyre-fixme[16]: Module `attr` has no attribute `shape`.</span>
-        <span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">inp</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">attr</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+            <span class="s2">"Inputs and attributions must have matching shapes. "</span>
+            <span class="sa">f</span><span class="s2">"One of the input tensor's shape is </span><span class="si">{</span><span class="n">inp</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s2"> and the "</span>
+            <span class="sa">f</span><span class="s2">"attribution tensor's shape is: </span><span class="si">{</span><span class="n">attr</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s2">"</span>
+        <span class="p">)</span>
 
-    <span class="n">bsz</span> <span class="o">=</span> <span class="n">inputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">bsz</span> <span class="o">=</span> <span class="n">inputs_formatted</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
 
     <span class="n">_next_infidelity_tensors</span> <span class="o">=</span> <span class="n">_make_next_infidelity_tensors_func</span><span class="p">(</span>
         <span class="n">forward_func</span><span class="p">,</span>
         <span class="n">bsz</span><span class="p">,</span>
         <span class="n">perturb_func</span><span class="p">,</span>
-        <span class="n">inputs</span><span class="p">,</span>
-        <span class="n">baselines</span><span class="p">,</span>
-        <span class="n">attributions</span><span class="p">,</span>
+        <span class="n">inputs_formatted</span><span class="p">,</span>
+        <span class="n">baselines_formatted</span><span class="p">,</span>
+        <span class="n">attributions_formatted</span><span class="p">,</span>
         <span class="n">additional_forward_args</span><span class="p">,</span>
         <span class="n">target</span><span class="p">,</span>
         <span class="n">normalize</span><span class="p">,</span>
@@ -481,7 +492,7 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="c1"># if not normalize, directly return aggrgated MSE ((a-b)^2,)</span>
         <span class="c1"># else return aggregated MSE's polynomial expansion tensors (a^2, ab, b^2)</span>
         <span class="n">agg_tensors</span> <span class="o">=</span> <span class="n">_divide_and_aggregate_metrics</span><span class="p">(</span>
-            <span class="n">cast</span><span class="p">(</span><span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span> <span class="n">inputs</span><span class="p">),</span>
+            <span class="n">inputs_formatted</span><span class="p">,</span>
             <span class="n">n_perturb_samples</span><span class="p">,</span>
             <span class="n">_next_infidelity_tensors</span><span class="p">,</span>
             <span class="n">agg_func</span><span class="o">=</span><span class="n">_sum_infidelity_tensors</span><span class="p">,</span>
@@ -495,11 +506,7 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="n">beta</span> <span class="o">=</span> <span class="n">safe_div</span><span class="p">(</span><span class="n">beta_num</span><span class="p">,</span> <span class="n">beta_denorm</span><span class="p">)</span>
 
         <span class="n">infidelity_values</span> <span class="o">=</span> <span class="p">(</span>
-            <span class="c1"># pyre-fixme[58]: `**` is not supported for operand types `Tensor` and</span>
-            <span class="c1">#  `int`.</span>
-            <span class="n">beta</span><span class="o">**</span><span class="mi">2</span> <span class="o">*</span> <span class="n">agg_tensors</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-            <span class="o">-</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">beta</span> <span class="o">*</span> <span class="n">agg_tensors</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
-            <span class="o">+</span> <span class="n">agg_tensors</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+            <span class="n">beta</span> <span class="o">*</span> <span class="n">beta</span> <span class="o">*</span> <span class="n">agg_tensors</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">beta</span> <span class="o">*</span> <span class="n">agg_tensors</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">agg_tensors</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
         <span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="n">infidelity_values</span> <span class="o">=</span> <span class="n">agg_tensors</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
@@ -512,10 +519,11 @@ src="/_sphinx/documentation_options.js"></script>
 
 <span class="k">def</span> <span class="nf">_generate_perturbations</span><span class="p">(</span>
     <span class="n">current_n_perturb_samples</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
-    <span class="c1"># pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.</span>
-    <span class="n">perturb_func</span><span class="p">:</span> <span class="n">Callable</span><span class="p">,</span>
-    <span class="n">inputs</span><span class="p">:</span> <span class="n">TensorOrTupleOfTensorsGeneric</span><span class="p">,</span>
-    <span class="n">baselines</span><span class="p">:</span> <span class="n">BaselineType</span><span class="p">,</span>
+    <span class="n">perturb_func</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[</span>
+        <span class="o">...</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">TensorOrTupleOfTensorsGeneric</span><span class="p">,</span> <span class="n">TensorOrTupleOfTensorsGeneric</span><span class="p">]</span>
+    <span class="p">],</span>
+    <span class="n">inputs</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span>
+    <span class="n">baselines</span><span class="p">:</span> <span class="n">BaselineTupleType</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">TensorOrTupleOfTensorsGeneric</span><span class="p">,</span> <span class="n">TensorOrTupleOfTensorsGeneric</span><span class="p">]:</span>
 <span class="w">    </span><span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">    The perturbations are generated for each example</span>
@@ -526,17 +534,16 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">    repeated instances per example.</span>
 <span class="sd">    """</span>
 
-    <span class="c1"># pyre-fixme[3]: Return type must be annotated.</span>
-    <span class="k">def</span> <span class="nf">call_perturb_func</span><span class="p">():</span>
+    <span class="k">def</span> <span class="nf">call_perturb_func</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="p">(</span>
+        <span class="n">Tuple</span><span class="p">[</span><span class="n">TensorOrTupleOfTensorsGeneric</span><span class="p">,</span> <span class="n">TensorOrTupleOfTensorsGeneric</span><span class="p">]</span>
+    <span class="p">):</span>
 <span class="w">        </span><span class="sa">r</span><span class="sd">""" """</span>
-        <span class="n">baselines_pert</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">baselines_pert</span><span class="p">:</span> <span class="n">BaselineType</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="n">inputs_pert</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">]]</span>
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">inputs_expanded</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
             <span class="n">inputs_pert</span> <span class="o">=</span> <span class="n">inputs_expanded</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
             <span class="k">if</span> <span class="n">baselines_expanded</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="c1"># pyre-fixme[24]: Generic type `tuple` expects at least 1 type</span>
-                <span class="c1">#  parameter.</span>
-                <span class="n">baselines_pert</span> <span class="o">=</span> <span class="n">cast</span><span class="p">(</span><span class="n">Tuple</span><span class="p">,</span> <span class="n">baselines_expanded</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+                <span class="n">baselines_pert</span> <span class="o">=</span> <span class="n">baselines_expanded</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">inputs_pert</span> <span class="o">=</span> <span class="n">inputs_expanded</span>
             <span class="n">baselines_pert</span> <span class="o">=</span> <span class="n">baselines_expanded</span>
@@ -561,9 +568,7 @@ src="/_sphinx/documentation_options.js"></script>
                 <span class="ow">and</span> <span class="n">baseline</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">1</span>
                 <span class="k">else</span> <span class="n">baseline</span>
             <span class="p">)</span>
-            <span class="c1"># pyre-fixme[24]: Generic type `tuple` expects at least 1 type</span>
-            <span class="c1">#  parameter.</span>
-            <span class="k">for</span> <span class="nb">input</span><span class="p">,</span> <span class="n">baseline</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">cast</span><span class="p">(</span><span class="n">Tuple</span><span class="p">,</span> <span class="n">baselines</span><span class="p">))</span>
+            <span class="k">for</span> <span class="nb">input</span><span class="p">,</span> <span class="n">baseline</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">baselines</span><span class="p">)</span>
         <span class="p">)</span>
 
     <span class="k">return</span> <span class="n">call_perturb_func</span><span class="p">()</span>
@@ -576,33 +581,32 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
     <span class="c1"># asserts the sizes of the perturbations and inputs</span>
     <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">perturbations</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">inputs</span><span class="p">),</span> <span class="p">(</span>
-<span class="w">        </span><span class="sd">"""The number of perturbed</span>
-<span class="sd">        inputs and corresponding perturbations must have the same number of</span>
-<span class="sd">        elements. Found number of inputs is: {} and perturbations:</span>
-<span class="sd">        {}"""</span>
-    <span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">perturbations</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">inputs</span><span class="p">))</span>
+        <span class="s2">"The number of perturbed "</span>
+        <span class="s2">"inputs and corresponding perturbations must have the same number of "</span>
+        <span class="sa">f</span><span class="s2">"elements. Found number of inputs is: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">perturbations</span><span class="p">)</span><span class="si">}</span><span class="s2"> and "</span>
+        <span class="sa">f</span><span class="s2">"perturbations: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span>
+    <span class="p">)</span>
 
     <span class="c1"># asserts the shapes of the perturbations and perturbed inputs</span>
     <span class="k">for</span> <span class="n">perturb</span><span class="p">,</span> <span class="n">input_perturbed</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">perturbations</span><span class="p">,</span> <span class="n">inputs_perturbed</span><span class="p">):</span>
         <span class="k">assert</span> <span class="n">perturb</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span> <span class="o">==</span> <span class="n">input_perturbed</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="p">(</span>
-<span class="w">            </span><span class="sd">"""Perturbed input</span>
-<span class="sd">            and corresponding perturbation must have the same shape and</span>
-<span class="sd">            dimensionality. Found perturbation shape is: {} and the input shape</span>
-<span class="sd">            is: {}"""</span>
-        <span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">perturb</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">input_perturbed</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+            <span class="s2">"Perturbed input "</span>
+            <span class="s2">"and corresponding perturbation must have the same shape and "</span>
+            <span class="sa">f</span><span class="s2">"dimensionality. Found perturbation shape is: </span><span class="si">{</span><span class="n">perturb</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s2"> "</span>
+            <span class="sa">f</span><span class="s2">"and the input shape is: </span><span class="si">{</span><span class="n">input_perturbed</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s2">"</span>
+        <span class="p">)</span>
 
 
 <span class="k">def</span> <span class="nf">_make_next_infidelity_tensors_func</span><span class="p">(</span>
-    <span class="c1"># pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.</span>
-    <span class="n">forward_func</span><span class="p">:</span> <span class="n">Callable</span><span class="p">,</span>
+    <span class="n">forward_func</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">Tensor</span><span class="p">],</span>
     <span class="n">bsz</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
-    <span class="c1"># pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.</span>
-    <span class="n">perturb_func</span><span class="p">:</span> <span class="n">Callable</span><span class="p">,</span>
-    <span class="n">inputs</span><span class="p">:</span> <span class="n">TensorOrTupleOfTensorsGeneric</span><span class="p">,</span>
-    <span class="n">baselines</span><span class="p">:</span> <span class="n">BaselineType</span><span class="p">,</span>
-    <span class="n">attributions</span><span class="p">:</span> <span class="n">TensorOrTupleOfTensorsGeneric</span><span class="p">,</span>
-    <span class="c1"># pyre-fixme[2]: Parameter annotation cannot be `Any`.</span>
-    <span class="n">additional_forward_args</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">perturb_func</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[</span>
+        <span class="o">...</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">TensorOrTupleOfTensorsGeneric</span><span class="p">,</span> <span class="n">TensorOrTupleOfTensorsGeneric</span><span class="p">]</span>
+    <span class="p">],</span>
+    <span class="n">inputs</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span>
+    <span class="n">baselines</span><span class="p">:</span> <span class="n">BaselineTupleType</span><span class="p">,</span>
+    <span class="n">attributions</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span>
+    <span class="n">additional_forward_args</span><span class="p">:</span> <span class="nb">object</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">target</span><span class="p">:</span> <span class="n">TargetType</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">normalize</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">[[</span><span class="nb">int</span><span class="p">],</span> <span class="n">Union</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">],</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">Tensor</span><span class="p">,</span> <span class="n">Tensor</span><span class="p">]]]:</span>
@@ -614,15 +618,13 @@ src="/_sphinx/documentation_options.js"></script>
             <span class="n">current_n_perturb_samples</span><span class="p">,</span> <span class="n">perturb_func</span><span class="p">,</span> <span class="n">inputs</span><span class="p">,</span> <span class="n">baselines</span>
         <span class="p">)</span>
 
-        <span class="n">perturbations</span> <span class="o">=</span> <span class="n">_format_tensor_into_tuples</span><span class="p">(</span><span class="n">perturbations</span><span class="p">)</span>
-        <span class="n">inputs_perturbed</span> <span class="o">=</span> <span class="n">_format_tensor_into_tuples</span><span class="p">(</span><span class="n">inputs_perturbed</span><span class="p">)</span>
+        <span class="n">perturbations_formatted</span> <span class="o">=</span> <span class="n">_format_tensor_into_tuples</span><span class="p">(</span><span class="n">perturbations</span><span class="p">)</span>
+        <span class="n">inputs_perturbed_formatted</span> <span class="o">=</span> <span class="n">_format_tensor_into_tuples</span><span class="p">(</span><span class="n">inputs_perturbed</span><span class="p">)</span>
 
         <span class="n">_validate_inputs_and_perturbations</span><span class="p">(</span>
-            <span class="n">cast</span><span class="p">(</span><span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span> <span class="n">inputs</span><span class="p">),</span>
-            <span class="c1"># pyre-fixme[22]: The cast is redundant.</span>
-            <span class="n">cast</span><span class="p">(</span><span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span> <span class="n">inputs_perturbed</span><span class="p">),</span>
-            <span class="c1"># pyre-fixme[22]: The cast is redundant.</span>
-            <span class="n">cast</span><span class="p">(</span><span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span> <span class="n">perturbations</span><span class="p">),</span>
+            <span class="n">inputs</span><span class="p">,</span>
+            <span class="n">inputs_perturbed_formatted</span><span class="p">,</span>
+            <span class="n">perturbations_formatted</span><span class="p">,</span>
         <span class="p">)</span>
 
         <span class="n">targets_expanded</span> <span class="o">=</span> <span class="n">_expand_target</span><span class="p">(</span>
@@ -638,7 +640,7 @@ src="/_sphinx/documentation_options.js"></script>
 
         <span class="n">inputs_perturbed_fwd</span> <span class="o">=</span> <span class="n">_run_forward</span><span class="p">(</span>
             <span class="n">forward_func</span><span class="p">,</span>
-            <span class="n">inputs_perturbed</span><span class="p">,</span>
+            <span class="n">inputs_perturbed_formatted</span><span class="p">,</span>
             <span class="n">targets_expanded</span><span class="p">,</span>
             <span class="n">additional_forward_args_expanded</span><span class="p">,</span>
         <span class="p">)</span>
@@ -659,7 +661,7 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="n">attributions_times_perturb</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span>
             <span class="p">(</span><span class="n">attribution_expanded</span> <span class="o">*</span> <span class="n">perturbation</span><span class="p">)</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="n">attribution_expanded</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="mi">0</span><span class="p">),</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
             <span class="k">for</span> <span class="n">attribution_expanded</span><span class="p">,</span> <span class="n">perturbation</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span>
-                <span class="n">attributions_expanded</span><span class="p">,</span> <span class="n">perturbations</span>
+                <span class="n">attributions_expanded</span><span class="p">,</span> <span class="n">perturbations_formatted</span>
             <span class="p">)</span>
         <span class="p">)</span>
 
@@ -689,9 +691,9 @@ src="/_sphinx/documentation_options.js"></script>
     <span class="k">return</span> <span class="n">_next_infidelity_tensors</span>
 
 
-<span class="c1"># pyre-fixme[3]: Return type must be annotated.</span>
-<span class="c1"># pyre-fixme[2]: Parameter must be annotated.</span>
-<span class="k">def</span> <span class="nf">_sum_infidelity_tensors</span><span class="p">(</span><span class="n">agg_tensors</span><span class="p">,</span> <span class="n">tensors</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">_sum_infidelity_tensors</span><span class="p">(</span>
+    <span class="n">agg_tensors</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span> <span class="n">tensors</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span>
     <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">agg_t</span> <span class="o">+</span> <span class="n">t</span> <span class="k">for</span> <span class="n">agg_t</span><span class="p">,</span> <span class="n">t</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">agg_tensors</span><span class="p">,</span> <span class="n">tensors</span><span class="p">))</span>
 </pre></div>
 </div>
