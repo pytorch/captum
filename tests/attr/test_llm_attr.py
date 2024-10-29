@@ -127,6 +127,8 @@ class DummyTokenizer:
 
         if return_offsets_mapping:
             offset_mapping = []
+            if add_special_tokens:
+                offset_mapping.append((0, 0))
             idx = 0
             for token in text.split(" "):
                 offset_mapping.append((idx - (0 if idx == 0 else 1), idx + len(token)))
