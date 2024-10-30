@@ -2,7 +2,7 @@
 
 # pyre-strict
 import warnings
-from typing import List, Union
+from typing import List, Optional, Union
 
 import torch
 from captum._utils.common import _format_output, _format_tensor_into_tuples, _is_tuple
@@ -72,7 +72,7 @@ class GuidedGradCam(GradientAttribution):
         self,
         inputs: TensorOrTupleOfTensorsGeneric,
         target: TargetType = None,
-        additional_forward_args: object = None,
+        additional_forward_args: Optional[object] = None,
         interpolate_mode: str = "nearest",
         attribute_to_layer_input: bool = False,
     ) -> TensorOrTupleOfTensorsGeneric:

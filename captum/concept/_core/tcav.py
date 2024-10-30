@@ -589,8 +589,7 @@ class TCAV(ConceptInterpreter):
         inputs: TensorOrTupleOfTensorsGeneric,
         experimental_sets: List[List[Concept]],
         target: TargetType = None,
-        # pyre-fixme[2]: Parameter annotation cannot be `Any`.
-        additional_forward_args: Any = None,
+        additional_forward_args: Optional[object] = None,
         processes: Optional[int] = None,
         **kwargs: Any,
     ) -> Dict[str, Dict[str, Dict[str, Tensor]]]:

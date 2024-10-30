@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 # pyre-strict
-from typing import Any, Callable, cast, Dict, List, Tuple, Type, Union
+from typing import Any, Callable, cast, Dict, List, Optional, Tuple, Type, Union
 
 import torch
 from captum._utils.common import (
@@ -69,7 +69,7 @@ class LayerFeatureAblation(LayerAttribution, PerturbationAttribution):
         inputs: Union[Tensor, Tuple[Tensor, ...]],
         layer_baselines: BaselineType = None,
         target: TargetType = None,
-        additional_forward_args: object = None,
+        additional_forward_args: Optional[object] = None,
         layer_mask: Union[None, Tensor, Tuple[Tensor, ...]] = None,
         attribute_to_layer_input: bool = False,
         perturbations_per_eval: int = 1,

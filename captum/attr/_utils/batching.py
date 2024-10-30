@@ -3,7 +3,7 @@
 # pyre-strict
 import typing
 import warnings
-from typing import Any, Callable, Iterator, Tuple, Union
+from typing import Any, Callable, Iterator, Optional, Tuple, Union
 
 import torch
 from captum._utils.common import (
@@ -139,8 +139,7 @@ def _tuple_splice_range(
 # pyre-fixme[3]: Return annotation cannot contain `Any`.
 def _batched_generator(
     inputs: TensorOrTupleOfTensorsGeneric,
-    # pyre-fixme[2]: Parameter annotation cannot be `Any`.
-    additional_forward_args: Any = None,
+    additional_forward_args: Optional[object] = None,
     target_ind: TargetType = None,
     internal_batch_size: Union[None, int] = None,
 ) -> Iterator[Tuple[Tuple[Tensor, ...], Any, TargetType]]:
@@ -181,6 +180,9 @@ def _batched_generator(
                 )
             # pyre-fixme[7]: Expected `Iterator[Tuple[typing.Tuple[Tensor, ...], typi...
             yield inputs_splice, _tuple_splice_range(
+                # pyre-fixme[6]: In call `_tuple_splice_range`, for 1st positional
+                # argument, expected `None` but got
+                # `Optional[typing.Tuple[typing.Any, ...]]`
                 additional_forward_args,
                 current_total,
                 current_total + internal_batch_size,
@@ -195,8 +197,7 @@ def _batched_generator(
 def _batched_operator(
     operator: Callable[..., TupleOrTensorOrBoolGeneric],
     inputs: TensorOrTupleOfTensorsGeneric,
-    # pyre-fixme[2]: Parameter annotation cannot be `Any`.
-    additional_forward_args: Any = None,
+    additional_forward_args: Optional[object] = None,
     target_ind: TargetType = None,
     internal_batch_size: Union[None, int] = None,
     **kwargs: Any,

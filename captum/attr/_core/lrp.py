@@ -4,7 +4,7 @@
 
 import typing
 from collections import defaultdict
-from typing import Any, Callable, cast, Dict, List, Literal, Tuple, Union
+from typing import Any, Callable, cast, Dict, List, Literal, Optional, Tuple, Union
 
 import torch.nn as nn
 from captum._utils.common import (
@@ -72,7 +72,7 @@ class LRP(GradientAttribution):
         self,
         inputs: TensorOrTupleOfTensorsGeneric,
         target: TargetType = None,
-        additional_forward_args: object = None,
+        additional_forward_args: Optional[object] = None,
         *,
         return_convergence_delta: Literal[True],
         verbose: bool = False,
@@ -83,7 +83,7 @@ class LRP(GradientAttribution):
         self,
         inputs: TensorOrTupleOfTensorsGeneric,
         target: TargetType = None,
-        additional_forward_args: object = None,
+        additional_forward_args: Optional[object] = None,
         return_convergence_delta: Literal[False] = False,
         verbose: bool = False,
     ) -> TensorOrTupleOfTensorsGeneric: ...
@@ -95,7 +95,7 @@ class LRP(GradientAttribution):
         self,
         inputs: TensorOrTupleOfTensorsGeneric,
         target: TargetType = None,
-        additional_forward_args: object = None,
+        additional_forward_args: Optional[object] = None,
         return_convergence_delta: bool = False,
         verbose: bool = False,
     ) -> Union[
@@ -367,7 +367,7 @@ class LRP(GradientAttribution):
         self,
         inputs: Tuple[Tensor, ...],
         target: TargetType,
-        additional_forward_args: object,
+        additional_forward_args: Optional[object],
     ) -> Tensor:
         try:
             self._register_weight_hooks()

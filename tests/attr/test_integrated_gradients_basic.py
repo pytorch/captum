@@ -3,7 +3,7 @@
 # pyre-strict
 
 import unittest
-from typing import Any, cast, Optional, Tuple, Union
+from typing import cast, Optional, Tuple, Union
 
 import torch
 from captum._utils.common import _zeros
@@ -394,9 +394,7 @@ class Test(BaseTest):
         inputs: TensorOrTupleOfTensorsGeneric,
         baselines: BaselineType = None,
         target: Union[None, int] = None,
-        # pyre-fixme[2]: Parameter `additional_forward_args` has type `None`
-        # but type`Any` is specified.
-        additional_forward_args: Any = None,
+        additional_forward_args: Optional[object] = None,
         type: str = "vanilla",
         approximation_method: str = "gausslegendre",
         multiply_by_inputs: bool = True,
@@ -502,9 +500,7 @@ class Test(BaseTest):
         inputs: TensorOrTupleOfTensorsGeneric,
         baselines: Union[None, Tensor, Tuple[Tensor, ...]] = None,
         target: Optional[int] = None,
-        # pyre-fixme[2]: Parameter `additional_forward_args` has type `None` but type
-        # `Any` is specified.
-        additional_forward_args: Any = None,
+        additional_forward_args: Optional[object] = None,
         approximation_method: str = "gausslegendre",
     ) -> None:
         ig = IntegratedGradients(model)

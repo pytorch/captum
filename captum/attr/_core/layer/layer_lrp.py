@@ -2,7 +2,7 @@
 
 # pyre-strict
 import typing
-from typing import Any, cast, List, Literal, Tuple, Union
+from typing import Any, cast, List, Literal, Optional, Tuple, Union
 
 from captum._utils.common import (
     _format_tensor_into_tuples,
@@ -67,8 +67,7 @@ class LayerLRP(LRP, LayerAttribution):
         self,
         inputs: TensorOrTupleOfTensorsGeneric,
         target: TargetType = None,
-        # pyre-fixme[2]: Parameter annotation cannot be `Any`.
-        additional_forward_args: Any = None,
+        additional_forward_args: Optional[object] = None,
         *,
         return_convergence_delta: Literal[True],
         attribute_to_layer_input: bool = False,
@@ -83,8 +82,7 @@ class LayerLRP(LRP, LayerAttribution):
         self,
         inputs: TensorOrTupleOfTensorsGeneric,
         target: TargetType = None,
-        # pyre-fixme[2]: Parameter annotation cannot be `Any`.
-        additional_forward_args: Any = None,
+        additional_forward_args: Optional[object] = None,
         return_convergence_delta: Literal[False] = False,
         attribute_to_layer_input: bool = False,
         verbose: bool = False,
@@ -94,7 +92,7 @@ class LayerLRP(LRP, LayerAttribution):
         self,
         inputs: TensorOrTupleOfTensorsGeneric,
         target: TargetType = None,
-        additional_forward_args: Any = None,
+        additional_forward_args: Optional[object] = None,
         return_convergence_delta: bool = False,
         attribute_to_layer_input: bool = False,
         verbose: bool = False,
