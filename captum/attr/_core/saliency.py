@@ -2,7 +2,7 @@
 
 # pyre-strict
 
-from typing import Callable
+from typing import Callable, Optional
 
 import torch
 from captum._utils.common import _format_output, _format_tensor_into_tuples, _is_tuple
@@ -41,7 +41,7 @@ class Saliency(GradientAttribution):
         inputs: TensorOrTupleOfTensorsGeneric,
         target: TargetType = None,
         abs: bool = True,
-        additional_forward_args: object = None,
+        additional_forward_args: Optional[object] = None,
     ) -> TensorOrTupleOfTensorsGeneric:
         r"""
         Args:

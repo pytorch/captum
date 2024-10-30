@@ -273,9 +273,25 @@ def _format_float_or_tensor_into_tuples(
     return inputs
 
 
+@overload
+def _format_additional_forward_args(
+    # pyre-fixme[24]: Generic type `tuple` expects at least 1 type parameter.
+    additional_forward_args: Union[Tensor, Tuple]
+    # pyre-fixme[24]: Generic type `tuple` expects at least 1 type parameter.
+) -> Tuple: ...
+
+
+@overload
+def _format_additional_forward_args(  # type: ignore
+    additional_forward_args: Optional[object],
+    # pyre-fixme[24]: Generic type `tuple` expects at least 1 type parameter.
+) -> Union[None, Tuple]: ...
+
+
 def _format_additional_forward_args(
     additional_forward_args: Optional[object],
-) -> Union[None, Tuple[object, ...]]:
+    # pyre-fixme[24]: Generic type `tuple` expects at least 1 type parameter.
+) -> Union[None, Tuple]:
     if additional_forward_args is not None and not isinstance(
         additional_forward_args, tuple
     ):
@@ -284,8 +300,8 @@ def _format_additional_forward_args(
 
 
 def _expand_additional_forward_args(
-    # pyre-fixme[2]: Parameter annotation cannot be `Any`.
-    additional_forward_args: Any,
+    # pyre-fixme[24]: Generic type `tuple` expects at least 1 type parameter.
+    additional_forward_args: Union[None, Tuple],
     n_steps: int,
     expansion_type: ExpansionTypes = ExpansionTypes.repeat,
     # pyre-fixme[24]: Generic type `tuple` expects at least 1 type parameter.
@@ -557,8 +573,7 @@ def _run_forward(
     # pyre-fixme[2]: Parameter annotation cannot be `Any`.
     inputs: Any,
     target: TargetType = None,
-    # pyre-fixme[2]: Parameter annotation cannot be `Any`.
-    additional_forward_args: Any = None,
+    additional_forward_args: Optional[object] = None,
 ) -> Union[Tensor, Future[Tensor]]:
     forward_func_args = signature(forward_func).parameters
     if len(forward_func_args) == 0:

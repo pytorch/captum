@@ -2,7 +2,7 @@
 
 # pyre-strict
 import typing
-from typing import Callable, Literal, Tuple, Union
+from typing import Callable, Literal, Optional, Tuple, Union
 
 import numpy as np
 import torch
@@ -91,7 +91,7 @@ class GradientShap(GradientAttribution):
         n_samples: int = 5,
         stdevs: Union[float, Tuple[float, ...]] = 0.0,
         target: TargetType = None,
-        additional_forward_args: object = None,
+        additional_forward_args: Optional[object] = None,
         *,
         return_convergence_delta: Literal[True],
     ) -> Tuple[TensorOrTupleOfTensorsGeneric, Tensor]: ...
@@ -106,7 +106,7 @@ class GradientShap(GradientAttribution):
         n_samples: int = 5,
         stdevs: Union[float, Tuple[float, ...]] = 0.0,
         target: TargetType = None,
-        additional_forward_args: object = None,
+        additional_forward_args: Optional[object] = None,
         return_convergence_delta: Literal[False] = False,
     ) -> TensorOrTupleOfTensorsGeneric: ...
 
@@ -122,7 +122,7 @@ class GradientShap(GradientAttribution):
         n_samples: int = 5,
         stdevs: Union[float, Tuple[float, ...]] = 0.0,
         target: TargetType = None,
-        additional_forward_args: object = None,
+        additional_forward_args: Optional[object] = None,
         return_convergence_delta: bool = False,
     ) -> Union[
         TensorOrTupleOfTensorsGeneric, Tuple[TensorOrTupleOfTensorsGeneric, Tensor]
@@ -336,7 +336,7 @@ class InputBaselineXGradient(GradientAttribution):
         inputs: TensorOrTupleOfTensorsGeneric,
         baselines: BaselineType = None,
         target: TargetType = None,
-        additional_forward_args: object = None,
+        additional_forward_args: Optional[object] = None,
         *,
         return_convergence_delta: Literal[True],
     ) -> Tuple[TensorOrTupleOfTensorsGeneric, Tensor]: ...
@@ -347,7 +347,7 @@ class InputBaselineXGradient(GradientAttribution):
         inputs: TensorOrTupleOfTensorsGeneric,
         baselines: BaselineType = None,
         target: TargetType = None,
-        additional_forward_args: object = None,
+        additional_forward_args: Optional[object] = None,
         return_convergence_delta: Literal[False] = False,
     ) -> TensorOrTupleOfTensorsGeneric: ...
 
@@ -357,7 +357,7 @@ class InputBaselineXGradient(GradientAttribution):
         inputs: TensorOrTupleOfTensorsGeneric,
         baselines: BaselineType = None,
         target: TargetType = None,
-        additional_forward_args: object = None,
+        additional_forward_args: Optional[object] = None,
         return_convergence_delta: bool = False,
     ) -> Union[
         TensorOrTupleOfTensorsGeneric, Tuple[TensorOrTupleOfTensorsGeneric, Tensor]

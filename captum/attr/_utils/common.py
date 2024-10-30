@@ -3,7 +3,7 @@
 # pyre-strict
 import typing
 from inspect import signature
-from typing import Any, Callable, List, Literal, Tuple, TYPE_CHECKING, Union
+from typing import Callable, List, Literal, Optional, Tuple, TYPE_CHECKING, Union
 
 import torch
 from captum._utils.common import (
@@ -207,8 +207,7 @@ def _compute_conv_delta_and_format_attrs(
     attributions: Tuple[Tensor, ...],
     start_point: Union[int, float, Tensor, Tuple[Union[int, float, Tensor], ...]],
     end_point: Union[Tensor, Tuple[Tensor, ...]],
-    # pyre-fixme[2]: Parameter annotation cannot be `Any`.
-    additional_forward_args: Any,
+    additional_forward_args: Optional[object],
     target: TargetType,
     is_inputs_tuple: Literal[True],
 ) -> Union[Tuple[Tensor, ...], Tuple[Tuple[Tensor, ...], Tensor]]: ...
@@ -221,8 +220,7 @@ def _compute_conv_delta_and_format_attrs(
     attributions: Tuple[Tensor, ...],
     start_point: Union[int, float, Tensor, Tuple[Union[int, float, Tensor], ...]],
     end_point: Union[Tensor, Tuple[Tensor, ...]],
-    # pyre-fixme[2]: Parameter annotation cannot be `Any`.
-    additional_forward_args: Any,
+    additional_forward_args: Optional[object],
     target: TargetType,
     is_inputs_tuple: Literal[False] = False,
 ) -> Union[Tensor, Tuple[Tensor, Tensor]]: ...
@@ -235,7 +233,7 @@ def _compute_conv_delta_and_format_attrs(
     attributions: Tuple[Tensor, ...],
     start_point: Union[int, float, Tensor, Tuple[Union[int, float, Tensor], ...]],
     end_point: Union[Tensor, Tuple[Tensor, ...]],
-    additional_forward_args: Any,
+    additional_forward_args: Optional[object],
     target: TargetType,
     is_inputs_tuple: bool = False,
 ) -> Union[
@@ -251,7 +249,7 @@ def _compute_conv_delta_and_format_attrs(
     attributions: Tuple[Tensor, ...],
     start_point: Union[int, float, Tensor, Tuple[Union[int, float, Tensor], ...]],
     end_point: Union[Tensor, Tuple[Tensor, ...]],
-    additional_forward_args: Any,
+    additional_forward_args: Optional[object],
     target: TargetType,
     is_inputs_tuple: bool = False,
 ) -> Union[

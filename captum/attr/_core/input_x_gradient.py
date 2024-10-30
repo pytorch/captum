@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 # pyre-strict
-from typing import Callable
+from typing import Callable, Optional
 
 from captum._utils.common import _format_output, _format_tensor_into_tuples, _is_tuple
 from captum._utils.gradient import (
@@ -35,7 +35,7 @@ class InputXGradient(GradientAttribution):
         self,
         inputs: TensorOrTupleOfTensorsGeneric,
         target: TargetType = None,
-        additional_forward_args: object = None,
+        additional_forward_args: Optional[object] = None,
     ) -> TensorOrTupleOfTensorsGeneric:
         r"""
         Args:

@@ -82,8 +82,7 @@ class LayerGradCam(LayerAttribution, GradientAttribution):
         self,
         inputs: Union[Tensor, Tuple[Tensor, ...]],
         target: TargetType = None,
-        # pyre-fixme[2]: Parameter annotation cannot be `Any`.
-        additional_forward_args: Any = None,
+        additional_forward_args: Optional[object] = None,
         attribute_to_layer_input: bool = False,
         relu_attributions: bool = False,
         attr_dim_summation: bool = True,

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 # pyre-strict
-from typing import Any, Callable, cast, List, Tuple, Union
+from typing import Any, Callable, cast, List, Optional, Tuple, Union
 
 import torch
 from captum._utils.common import _verify_select_neuron
@@ -64,8 +64,7 @@ class NeuronFeatureAblation(NeuronAttribution, PerturbationAttribution):
         # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
         neuron_selector: Union[int, Tuple[Union[int, slice], ...], Callable],
         baselines: BaselineType = None,
-        # pyre-fixme[2]: Parameter annotation cannot be `Any`.
-        additional_forward_args: Any = None,
+        additional_forward_args: Optional[object] = None,
         feature_mask: Union[None, TensorOrTupleOfTensorsGeneric] = None,
         attribute_to_neuron_input: bool = False,
         perturbations_per_eval: int = 1,

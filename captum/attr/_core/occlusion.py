@@ -57,7 +57,7 @@ class Occlusion(FeatureAblation):
         ] = None,
         baselines: BaselineType = None,
         target: TargetType = None,
-        additional_forward_args: object = None,
+        additional_forward_args: Optional[object] = None,
         perturbations_per_eval: int = 1,
         show_progress: bool = False,
     ) -> TensorOrTupleOfTensorsGeneric:

@@ -2,7 +2,7 @@
 
 # pyre-strict
 
-from typing import Callable, cast, Generator, Tuple, Union
+from typing import Callable, cast, Generator, Optional, Tuple, Union
 
 import torch
 from captum._utils.models.linear_model import SkLearnLinearRegression
@@ -49,7 +49,7 @@ class KernelShap(Lime):
         inputs: TensorOrTupleOfTensorsGeneric,
         baselines: BaselineType = None,
         target: TargetType = None,
-        additional_forward_args: object = None,
+        additional_forward_args: Optional[object] = None,
         feature_mask: Union[None, Tensor, Tuple[Tensor, ...]] = None,
         n_samples: int = 25,
         perturbations_per_eval: int = 1,

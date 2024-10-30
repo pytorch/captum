@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 # pyre-strict
-from typing import Any, Callable, cast, List, Tuple, Union
+from typing import Callable, cast, List, Optional, Tuple, Union
 
 import torch
 from captum._utils.common import _format_output
@@ -51,8 +51,7 @@ class LayerActivation(LayerAttribution):
     def attribute(
         self,
         inputs: Union[Tensor, Tuple[Tensor, ...]],
-        # pyre-fixme[2]: Parameter annotation cannot be `Any`.
-        additional_forward_args: Any = None,
+        additional_forward_args: Optional[object] = None,
         attribute_to_layer_input: bool = False,
     ) -> Union[Tensor, Tuple[Tensor, ...], List[Union[Tensor, Tuple[Tensor, ...]]]]:
         r"""

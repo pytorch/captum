@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 # pyre-strict
-from typing import Any, Callable, List, Tuple, Union
+from typing import Callable, List, Optional, Tuple, Union
 
 from captum._utils.gradient import construct_neuron_grad_fn
 from captum._utils.typing import TensorOrTupleOfTensorsGeneric
@@ -79,8 +79,7 @@ class NeuronIntegratedGradients(NeuronAttribution, GradientAttribution):
         # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
         neuron_selector: Union[int, Tuple[Union[int, slice], ...], Callable],
         baselines: Union[None, Tensor, Tuple[Tensor, ...]] = None,
-        # pyre-fixme[2]: Parameter annotation cannot be `Any`.
-        additional_forward_args: Any = None,
+        additional_forward_args: Optional[object] = None,
         n_steps: int = 50,
         method: str = "gausslegendre",
         internal_batch_size: Union[None, int] = None,

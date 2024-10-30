@@ -147,7 +147,7 @@ def infidelity(
     inputs: TensorOrTupleOfTensorsGeneric,
     attributions: TensorOrTupleOfTensorsGeneric,
     baselines: BaselineType = None,
-    additional_forward_args: object = None,
+    additional_forward_args: Optional[object] = None,
     target: TargetType = None,
     n_perturb_samples: int = 10,
     max_examples_per_batch: Optional[int] = None,
@@ -571,7 +571,7 @@ def _make_next_infidelity_tensors_func(
     inputs: Tuple[Tensor, ...],
     baselines: BaselineTupleType,
     attributions: Tuple[Tensor, ...],
-    additional_forward_args: object = None,
+    additional_forward_args: Optional[Tuple[object, ...]] = None,
     target: TargetType = None,
     normalize: bool = False,
 ) -> Callable[[int], Union[Tuple[Tensor], Tuple[Tensor, Tensor, Tensor]]]:

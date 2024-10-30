@@ -5,7 +5,7 @@
 import itertools
 import math
 import warnings
-from typing import Callable, cast, Iterable, Sequence, Tuple, Union
+from typing import Callable, cast, Iterable, Optional, Sequence, Tuple, Union
 
 import torch
 from captum._utils.common import (
@@ -108,7 +108,7 @@ class ShapleyValueSampling(PerturbationAttribution):
         inputs: TensorOrTupleOfTensorsGeneric,
         baselines: BaselineType = None,
         target: TargetType = None,
-        additional_forward_args: object = None,
+        additional_forward_args: Optional[Tuple[object, ...]] = None,
         feature_mask: Union[None, TensorOrTupleOfTensorsGeneric] = None,
         n_samples: int = 25,
         perturbations_per_eval: int = 1,
@@ -464,7 +464,7 @@ class ShapleyValueSampling(PerturbationAttribution):
     def _perturbation_generator(
         self,
         inputs: Tuple[Tensor, ...],
-        additional_args: object,
+        additional_args: Optional[Tuple[object, ...]],
         target: TargetType,
         baselines: Tuple[Tensor, ...],
         input_masks: TensorOrTupleOfTensorsGeneric,
@@ -627,7 +627,7 @@ class ShapleyValues(ShapleyValueSampling):
         inputs: TensorOrTupleOfTensorsGeneric,
         baselines: BaselineType = None,
         target: TargetType = None,
-        additional_forward_args: object = None,
+        additional_forward_args: Optional[object] = None,
         feature_mask: Union[None, TensorOrTupleOfTensorsGeneric] = None,
         perturbations_per_eval: int = 1,
         show_progress: bool = False,

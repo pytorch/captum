@@ -259,8 +259,7 @@ class AttackComparator(Generic[MetricResultType]):
         self,
         # pyre-fixme[2]: Parameter annotation cannot be `Any`.
         inputs: Any,
-        # pyre-fixme[2]: Parameter annotation cannot be `Any`.
-        additional_forward_args: Any = None,
+        additional_forward_args: Optional[object] = None,
         perturbations_per_eval: int = 1,
         # pyre-fixme[2]: Parameter must be annotated.
         **kwargs,
