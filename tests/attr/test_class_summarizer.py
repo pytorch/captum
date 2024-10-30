@@ -57,7 +57,9 @@ class Test(BaseTest):
         for batch_size in [None, 1, 4]:
             for sizes, classes in zip(sizes_to_test, list_of_classes):
 
-                def create_batch_labels(batch_idx):
+                def create_batch_labels(
+                    batch_idx, batch_size=batch_size, classes=classes
+                ):
                     if batch_size is None:
                         # batch_size = 1
                         return classes[batch_idx]
