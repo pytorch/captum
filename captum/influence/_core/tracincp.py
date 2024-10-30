@@ -72,10 +72,10 @@ class TracInCPBase(DataInfluence):
         self,
         model: Module,
         train_dataset: Union[Dataset, DataLoader],
-        # pyre-fixme[24]: Generic type `Iterator` expects 1 type parameter.
-        checkpoints: Union[str, List[str], Iterator],
-        # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
-        checkpoints_load_func: Callable = _load_flexible_state_dict,
+        checkpoints: Union[str, List[str], Iterator[str]],
+        checkpoints_load_func: Callable[
+            [Module, str], float
+        ] = _load_flexible_state_dict,
         # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
         loss_fn: Optional[Union[Module, Callable]] = None,
         batch_size: Union[int, None] = 1,
@@ -146,9 +146,8 @@ class TracInCPBase(DataInfluence):
         """
 
         self.model: Module = model
-
         self.checkpoints = checkpoints  # type: ignore
-
+        self._checkpoints: List[str] = self.checkpoints
         self.checkpoints_load_func = checkpoints_load_func
         self.loss_fn = loss_fn
         # If test_loss_fn not provided, it's assumed to be same as loss_fn
@@ -184,12 +183,10 @@ class TracInCPBase(DataInfluence):
 
     @property
     def checkpoints(self) -> List[str]:
-        # pyre-fixme[16]: `TracInCPBase` has no attribute `_checkpoints`.
         return self._checkpoints
 
     @checkpoints.setter
-    # pyre-fixme[24]: Generic type `Iterator` expects 1 type parameter.
-    def checkpoints(self, checkpoints: Union[str, List[str], Iterator]) -> None:
+    def checkpoints(self, checkpoints: Union[str, List[str], Iterator[str]]) -> None:
         if isinstance(checkpoints, str):
             self._checkpoints = AV.sort_files(glob.glob(join(checkpoints, "*")))
         elif isinstance(checkpoints, List) and isinstance(checkpoints[0], str):
@@ -450,10 +447,10 @@ class TracInCP(TracInCPBase):
         self,
         model: Module,
         train_dataset: Union[Dataset, DataLoader],
-        # pyre-fixme[24]: Generic type `Iterator` expects 1 type parameter.
-        checkpoints: Union[str, List[str], Iterator],
-        # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
-        checkpoints_load_func: Callable = _load_flexible_state_dict,
+        checkpoints: Union[str, List[str], Iterator[str]],
+        checkpoints_load_func: Callable[
+            [Module, str], float
+        ] = _load_flexible_state_dict,
         layers: Optional[List[str]] = None,
         # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
         loss_fn: Optional[Union[Module, Callable]] = None,
@@ -584,13 +581,11 @@ class TracInCP(TracInCPBase):
         self.sample_wise_grads_per_batch = sample_wise_grads_per_batch
 
         # check `loss_fn`
-        # pyre-fixme[4]: Attribute must be annotated.
-        self.reduction_type = _check_loss_fn(
+        self.reduction_type: str = _check_loss_fn(
             self, loss_fn, "loss_fn", sample_wise_grads_per_batch
         )
         # check `test_loss_fn` if it was provided
-        # pyre-fixme[4]: Attribute must be annotated.
-        self.test_reduction_type = (
+        self.test_reduction_type: str = (
             self.reduction_type
             if test_loss_fn is None
             else _check_loss_fn(
@@ -603,8 +598,7 @@ class TracInCP(TracInCPBase):
         within influence to restore after every influence call)? or make a copy so that
         changes to grad_requires aren't persistent after using TracIn.
         """
-        # pyre-fixme[4]: Attribute must be annotated.
-        self.layer_modules = None
+        self.layer_modules: Optional[List[Module]] = None
         if layers is not None:
             self.layer_modules = _set_active_parameters(model, layers)
 
@@ -760,9 +754,8 @@ class TracInCP(TracInCPBase):
 
         inputs_batch = next(inputs_iter)
 
-        # pyre-fixme[3]: Return type must be annotated.
-        # pyre-fixme[2]: Parameter must be annotated.
-        def get_batch_contribution(inputs_batch):
+        # pyre-fixme[2]: Parameter `inputs_batch` must have a type that does not contain `Any`. # noqa: E501
+        def get_batch_contribution(inputs_batch: Tuple[Any, ...]) -> Tuple[Tensor, ...]:
             _input_jacobians = self._basic_computation_tracincp(
                 inputs_batch[0:-1],
                 inputs_batch[-1],
@@ -871,12 +864,10 @@ class TracInCP(TracInCPBase):
                     the variable d in the top of page 15 of the TracIn paper:
                     https://arxiv.org/pdf/2002.08484.pdf.
         """
-        # If `inputs` is not a `DataLoader`, turn it into one.
-        inputs = _format_inputs_dataset(inputs)
+        f_inputs: DataLoader = _format_inputs_dataset(inputs)
 
-        # pyre-fixme[3]: Return type must be annotated.
-        # pyre-fixme[2]: Parameter must be annotated.
-        def get_checkpoint_contribution(checkpoint):
+        def get_checkpoint_contribution(checkpoint: str) -> Tensor:
+            nonlocal f_inputs
             assert (
                 checkpoint is not None
             ), "None returned from `checkpoints`, cannot load."
@@ -885,19 +876,13 @@ class TracInCP(TracInCPBase):
             # get jacobians as tuple of tensors
             if aggregate:
                 inputs_jacobians = self._sum_jacobians(
-                    # pyre-fixme[6]: For 1st argument expected
-                    #  `DataLoader[typing.Any]` but got `Union[DataLoader[typing.Any],
-                    #  typing.Tuple[typing.Any, ...]]`.
-                    inputs,
+                    f_inputs,
                     self.loss_fn,
                     self.reduction_type,
                 )
             else:
                 inputs_jacobians = self._concat_jacobians(
-                    # pyre-fixme[6]: For 1st argument expected
-                    #  `DataLoader[typing.Any]` but got `Union[DataLoader[typing.Any],
-                    #  typing.Tuple[typing.Any, ...]]`.
-                    inputs,
+                    f_inputs,
                     self.loss_fn,
                     self.reduction_type,
                 )
@@ -932,9 +917,9 @@ class TracInCP(TracInCPBase):
         computed by `_get_checkpoint_jacobians`.
         """
 
-        # pyre-fixme[3]: Return type must be annotated.
-        # pyre-fixme[2]: Parameter must be annotated.
-        def get_checkpoint_contribution(input_jacobians, checkpoint):
+        def get_checkpoint_contribution(
+            input_jacobians: Tuple[Tensor, ...], checkpoint: str
+        ) -> Tensor:
 
             assert (
                 checkpoint is not None
@@ -1224,7 +1209,7 @@ class TracInCP(TracInCPBase):
         if show_progress:
             # Try to determine length of inner progress bar if possible, with a default
             # of `None`.
-            inputs_len = None
+            inputs_len: Optional[int] = None
             try:
                 inputs_len = len(inputs)
             except TypeError:
@@ -1237,9 +1222,8 @@ class TracInCP(TracInCPBase):
                     stacklevel=1,
                 )
 
-        # pyre-fixme[3]: Return type must be annotated.
         # pyre-fixme[2]: Parameter must be annotated.
-        def calculate_via_vector_norm(layer_jacobian):
+        def calculate_via_vector_norm(layer_jacobian) -> Tensor:
             # Helper to efficiently calculate vector norm if pytorch version permits.
             return (
                 torch.linalg.vector_norm(
@@ -1249,10 +1233,8 @@ class TracInCP(TracInCPBase):
                 ** 2
             )
 
-        # pyre-fixme[53]: Captured variable `inputs_len` is not annotated.
-        # pyre-fixme[3]: Return type must be annotated.
-        # pyre-fixme[2]: Parameter must be annotated.
-        def get_checkpoint_contribution(checkpoint):
+        def get_checkpoint_contribution(checkpoint: str) -> Tensor:
+            nonlocal inputs_len
             # This function returns a 1D tensor representing the contribution to the
             # self influence score for the given checkpoint, for all batches in
             # `inputs`. The length of the 1D tensor is the total number of
