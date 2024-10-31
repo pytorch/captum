@@ -1222,8 +1222,7 @@ class TracInCP(TracInCPBase):
                     stacklevel=1,
                 )
 
-        # pyre-fixme[2]: Parameter must be annotated.
-        def calculate_via_vector_norm(layer_jacobian) -> Tensor:
+        def calculate_via_vector_norm(layer_jacobian: Tensor) -> Tensor:
             # Helper to efficiently calculate vector norm if pytorch version permits.
             return (
                 torch.linalg.vector_norm(
