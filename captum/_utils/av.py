@@ -351,8 +351,7 @@ class AV:
         inputs: Union[Tensor, Tuple[Tensor, ...]],
         identifier: str,
         num_id: str,
-        # pyre-fixme[2]: Parameter annotation cannot be `Any`.
-        additional_forward_args: Any = None,
+        additional_forward_args: Optional[object] = None,
         load_from_disk: bool = True,
     ) -> None:
         r"""

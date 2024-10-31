@@ -169,8 +169,7 @@ class MinParamPerturbation:
         # pyre-fixme[24]: Generic type `list` expects 1 type parameter, use
         #  `typing.List[<element type>]` to avoid runtime subscripting errors.
         input_list: List,
-        # pyre-fixme[2]: Parameter annotation cannot be `Any`.
-        additional_forward_args: Any,
+        additional_forward_args: Optional[Tuple[object, ...]],
         correct_fn_kwargs: Optional[Dict[str, Any]],
         target: TargetType,
     ) -> Optional[int]:
@@ -239,8 +238,7 @@ class MinParamPerturbation:
         # pyre-fixme[2]: Parameter annotation cannot be `Any`.
         preproc_input: Any,
         attack_kwargs: Optional[Dict[str, Any]],
-        # pyre-fixme[2]: Parameter annotation cannot be `Any`.
-        additional_forward_args: Any,
+        additional_forward_args: Optional[Tuple[object, ...]],
         # pyre-fixme[2]: Parameter annotation cannot be `Any`.
         expanded_additional_args: Any,
         correct_fn_kwargs: Optional[Dict[str, Any]],
@@ -301,8 +299,7 @@ class MinParamPerturbation:
         # pyre-fixme[2]: Parameter annotation cannot be `Any`.
         preproc_input: Any,
         attack_kwargs: Optional[Dict[str, Any]],
-        # pyre-fixme[2]: Parameter annotation cannot be `Any`.
-        additional_forward_args: Any,
+        additional_forward_args: Optional[Tuple[object, ...]],
         # pyre-fixme[2]: Parameter annotation cannot be `Any`.
         expanded_additional_args: Any,
         correct_fn_kwargs: Optional[Dict[str, Any]],

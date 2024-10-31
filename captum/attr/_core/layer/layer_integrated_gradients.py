@@ -3,7 +3,7 @@
 # pyre-strict
 import functools
 import warnings
-from typing import Any, Callable, cast, List, Literal, overload, Tuple, Union
+from typing import Callable, cast, List, Literal, Optional, overload, Tuple, Union
 
 import torch
 from captum._utils.common import (
@@ -120,8 +120,7 @@ class LayerIntegratedGradients(LayerAttribution, GradientAttribution):
             forward_fn: Callable,
             inputs: Union[Tensor, Tuple[Tensor, ...]],
             target_ind: TargetType = None,
-            # pyre-fixme[2]: Parameter annotation cannot be `Any`.
-            additional_forward_args: Any = None,
+            additional_forward_args: Optional[object] = None,
         ) -> Tuple[Tensor, ...]:
             if self.device_ids is None or len(self.device_ids) == 0:
                 scattered_inputs = (inputs,)
@@ -232,8 +231,7 @@ class LayerIntegratedGradients(LayerAttribution, GradientAttribution):
         inputs: Union[Tensor, Tuple[Tensor, ...]],
         baselines: BaselineType,
         target: TargetType,
-        # pyre-fixme[2]: Parameter annotation cannot be `Any`.
-        additional_forward_args: Any,
+        additional_forward_args: Optional[object],
         n_steps: int,
         method: str,
         internal_batch_size: Union[None, int],
@@ -247,8 +245,7 @@ class LayerIntegratedGradients(LayerAttribution, GradientAttribution):
         inputs: Union[Tensor, Tuple[Tensor, ...]],
         baselines: BaselineType,
         target: TargetType,
-        # pyre-fixme[2]: Parameter annotation cannot be `Any`.
-        additional_forward_args: Any,
+        additional_forward_args: Optional[object],
         n_steps: int,
         method: str,
         internal_batch_size: Union[None, int],
@@ -267,7 +264,7 @@ class LayerIntegratedGradients(LayerAttribution, GradientAttribution):
         inputs: Union[Tensor, Tuple[Tensor, ...]],
         baselines: BaselineType = None,
         target: TargetType = None,
-        additional_forward_args: Any = None,
+        additional_forward_args: Optional[object] = None,
         n_steps: int = 50,
         method: str = "gausslegendre",
         internal_batch_size: Union[None, int] = None,
@@ -289,7 +286,7 @@ class LayerIntegratedGradients(LayerAttribution, GradientAttribution):
         inputs: Union[Tensor, Tuple[Tensor, ...]],
         baselines: BaselineType = None,
         target: TargetType = None,
-        additional_forward_args: Any = None,
+        additional_forward_args: Optional[object] = None,
         n_steps: int = 50,
         method: str = "gausslegendre",
         internal_batch_size: Union[None, int] = None,

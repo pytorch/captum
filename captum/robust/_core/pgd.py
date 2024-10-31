@@ -80,8 +80,7 @@ class PGD(Perturbation):
         step_num: int,
         # pyre-fixme[2]: Parameter annotation cannot be `Any`.
         target: Any,
-        # pyre-fixme[2]: Parameter annotation cannot be `Any`.
-        additional_forward_args: Any = None,
+        additional_forward_args: Optional[object] = None,
         targeted: bool = False,
         random_start: bool = False,
         norm: str = "Linf",

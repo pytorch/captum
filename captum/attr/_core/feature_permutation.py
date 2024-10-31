@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 # pyre-strict
-from typing import Any, Callable, Tuple, Union
+from typing import Any, Callable, Optional, Tuple, Union
 
 import torch
 from captum._utils.typing import TargetType, TensorOrTupleOfTensorsGeneric
@@ -99,7 +99,7 @@ class FeaturePermutation(FeatureAblation):
         self,
         inputs: TensorOrTupleOfTensorsGeneric,
         target: TargetType = None,
-        additional_forward_args: object = None,
+        additional_forward_args: Optional[object] = None,
         feature_mask: Union[None, TensorOrTupleOfTensorsGeneric] = None,
         perturbations_per_eval: int = 1,
         show_progress: bool = False,
@@ -280,7 +280,7 @@ class FeaturePermutation(FeatureAblation):
         self,
         inputs: TensorOrTupleOfTensorsGeneric,
         target: TargetType = None,
-        additional_forward_args: object = None,
+        additional_forward_args: Optional[object] = None,
         feature_mask: Union[None, TensorOrTupleOfTensorsGeneric] = None,
         perturbations_per_eval: int = 1,
         show_progress: bool = False,

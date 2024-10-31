@@ -3,7 +3,7 @@
 # pyre-strict
 
 import typing
-from typing import Any, Callable, cast, List, Optional, Tuple, Union
+from typing import Callable, cast, List, Optional, Tuple, Union
 
 import torch
 from captum._utils.typing import BaselineType, TargetType, TensorOrTupleOfTensorsGeneric
@@ -293,9 +293,7 @@ class Test(BaseTest):
         max_examples_per_batch: Optional[int] = None,
         baselines: Optional[BaselineType] = None,
         target: Optional[TargetType] = None,
-        # pyre-fixme[2]: Parameter `additional_forward_args` has type `None`
-        # but type `Any` is specified.
-        additional_forward_args: Optional[Any] = None,
+        additional_forward_args: Optional[object] = None,
     ) -> Tensor:
         if baselines is None:
             sens = sensitivity_max(

@@ -3,7 +3,7 @@
 # pyre-strict
 import typing
 import warnings
-from typing import Callable, cast, Dict, List, Literal, Tuple, Type, Union
+from typing import Callable, cast, Dict, List, Literal, Optional, Tuple, Type, Union
 
 import torch
 import torch.nn as nn
@@ -117,7 +117,7 @@ class DeepLift(GradientAttribution):
         inputs: TensorOrTupleOfTensorsGeneric,
         baselines: BaselineType = None,
         target: TargetType = None,
-        additional_forward_args: object = None,
+        additional_forward_args: Optional[Tuple[object, ...]] = None,
         *,
         return_convergence_delta: Literal[True],
         custom_attribution_func: Union[None, Callable[..., Tuple[Tensor, ...]]] = None,
@@ -129,7 +129,7 @@ class DeepLift(GradientAttribution):
         inputs: TensorOrTupleOfTensorsGeneric,
         baselines: BaselineType = None,
         target: TargetType = None,
-        additional_forward_args: object = None,
+        additional_forward_args: Optional[Tuple[object, ...]] = None,
         return_convergence_delta: Literal[False] = False,
         custom_attribution_func: Union[None, Callable[..., Tuple[Tensor, ...]]] = None,
     ) -> TensorOrTupleOfTensorsGeneric: ...
@@ -140,7 +140,7 @@ class DeepLift(GradientAttribution):
         inputs: TensorOrTupleOfTensorsGeneric,
         baselines: BaselineType = None,
         target: TargetType = None,
-        additional_forward_args: object = None,
+        additional_forward_args: Optional[Tuple[object, ...]] = None,
         return_convergence_delta: bool = False,
         custom_attribution_func: Union[None, Callable[..., Tuple[Tensor, ...]]] = None,
     ) -> Union[
@@ -370,7 +370,7 @@ class DeepLift(GradientAttribution):
         forward_func: Callable[..., Tensor],
         inputs: Tuple[Tuple[Tensor, ...], Tuple[Tensor, ...]],
         target: TargetType = None,
-        additional_forward_args: object = None,
+        additional_forward_args: Optional[Tuple[object, ...]] = None,
     ) -> Callable[[], Tensor]:
         def forward_fn() -> Tensor:
             model_out = cast(
@@ -604,7 +604,7 @@ class DeepLiftShap(DeepLift):
             TensorOrTupleOfTensorsGeneric, Callable[..., TensorOrTupleOfTensorsGeneric]
         ],
         target: TargetType = None,
-        additional_forward_args: object = None,
+        additional_forward_args: Optional[Tuple[object, ...]] = None,
         *,
         return_convergence_delta: Literal[True],
         custom_attribution_func: Union[None, Callable[..., Tuple[Tensor, ...]]] = None,
@@ -618,7 +618,7 @@ class DeepLiftShap(DeepLift):
             TensorOrTupleOfTensorsGeneric, Callable[..., TensorOrTupleOfTensorsGeneric]
         ],
         target: TargetType = None,
-        additional_forward_args: object = None,
+        additional_forward_args: Optional[Tuple[object, ...]] = None,
         return_convergence_delta: Literal[False] = False,
         custom_attribution_func: Union[None, Callable[..., Tuple[Tensor, ...]]] = None,
     ) -> TensorOrTupleOfTensorsGeneric: ...
@@ -631,7 +631,7 @@ class DeepLiftShap(DeepLift):
             TensorOrTupleOfTensorsGeneric, Callable[..., TensorOrTupleOfTensorsGeneric]
         ],
         target: TargetType = None,
-        additional_forward_args: object = None,
+        additional_forward_args: Optional[Tuple[object, ...]] = None,
         return_convergence_delta: bool = False,
         custom_attribution_func: Union[None, Callable[..., Tuple[Tensor, ...]]] = None,
     ) -> Union[
@@ -840,7 +840,7 @@ class DeepLiftShap(DeepLift):
         baselines: Tuple[Tensor, ...],
         inputs: Tuple[Tensor, ...],
         target: TargetType,
-        additional_forward_args: object,
+        additional_forward_args: Optional[Tuple[object, ...]],
     ) -> Tuple[Tuple[Tensor, ...], Tuple[Tensor, ...], TargetType, object]:
         inp_bsz = inputs[0].shape[0]
         base_bsz = baselines[0].shape[0]

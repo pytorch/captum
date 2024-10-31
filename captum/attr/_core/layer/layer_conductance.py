@@ -80,8 +80,7 @@ class LayerConductance(LayerAttribution, GradientAttribution):
         inputs: Union[Tensor, Tuple[Tensor, ...]],
         baselines: BaselineType = None,
         target: TargetType = None,
-        # pyre-fixme[2]: Parameter annotation cannot be `Any`.
-        additional_forward_args: Any = None,
+        additional_forward_args: Optional[object] = None,
         n_steps: int = 50,
         method: str = "gausslegendre",
         internal_batch_size: Union[None, int] = None,
@@ -99,7 +98,7 @@ class LayerConductance(LayerAttribution, GradientAttribution):
         inputs: Union[Tensor, Tuple[Tensor, ...]],
         baselines: BaselineType = None,
         target: TargetType = None,
-        additional_forward_args: Any = None,
+        additional_forward_args: Optional[object] = None,
         n_steps: int = 50,
         method: str = "gausslegendre",
         internal_batch_size: Union[None, int] = None,
@@ -118,7 +117,7 @@ class LayerConductance(LayerAttribution, GradientAttribution):
             None, int, float, Tensor, Tuple[Union[int, float, Tensor], ...]
         ] = None,
         target: TargetType = None,
-        additional_forward_args: Any = None,
+        additional_forward_args: Optional[object] = None,
         n_steps: int = 50,
         method: str = "gausslegendre",
         internal_batch_size: Union[None, int] = None,
@@ -333,8 +332,7 @@ class LayerConductance(LayerAttribution, GradientAttribution):
         inputs: Tuple[Tensor, ...],
         baselines: Tuple[Union[Tensor, int, float], ...],
         target: TargetType = None,
-        # pyre-fixme[2]: Parameter annotation cannot be `Any`.
-        additional_forward_args: Any = None,
+        additional_forward_args: Optional[object] = None,
         n_steps: int = 50,
         method: str = "gausslegendre",
         attribute_to_layer_input: bool = False,

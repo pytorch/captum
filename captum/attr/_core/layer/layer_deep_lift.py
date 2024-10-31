@@ -101,8 +101,7 @@ class LayerDeepLift(LayerAttribution, DeepLift):
         inputs: Union[Tensor, Tuple[Tensor, ...]],
         baselines: BaselineType = None,
         target: TargetType = None,
-        # pyre-fixme[2]: Parameter annotation cannot be `Any`.
-        additional_forward_args: Any = None,
+        additional_forward_args: Optional[object] = None,
         *,
         return_convergence_delta: Literal[True],
         attribute_to_layer_input: bool = False,
@@ -116,8 +115,7 @@ class LayerDeepLift(LayerAttribution, DeepLift):
         inputs: Union[Tensor, Tuple[Tensor, ...]],
         baselines: BaselineType = None,
         target: TargetType = None,
-        # pyre-fixme[2]: Parameter annotation cannot be `Any`.
-        additional_forward_args: Any = None,
+        additional_forward_args: Optional[object] = None,
         return_convergence_delta: Literal[False] = False,
         attribute_to_layer_input: bool = False,
         custom_attribution_func: Union[None, Callable[..., Tuple[Tensor, ...]]] = None,
@@ -132,7 +130,7 @@ class LayerDeepLift(LayerAttribution, DeepLift):
         inputs: Union[Tensor, Tuple[Tensor, ...]],
         baselines: BaselineType = None,
         target: TargetType = None,
-        additional_forward_args: Any = None,
+        additional_forward_args: Optional[object] = None,
         return_convergence_delta: bool = False,
         attribute_to_layer_input: bool = False,
         custom_attribution_func: Union[None, Callable[..., Tuple[Tensor, ...]]] = None,
@@ -445,8 +443,7 @@ class LayerDeepLiftShap(LayerDeepLift, DeepLiftShap):
             Tensor, Tuple[Tensor, ...], Callable[..., Union[Tensor, Tuple[Tensor, ...]]]
         ],
         target: TargetType = None,
-        # pyre-fixme[2]: Parameter annotation cannot be `Any`.
-        additional_forward_args: Any = None,
+        additional_forward_args: Optional[Tuple[object, ...]] = None,
         *,
         return_convergence_delta: Literal[True],
         attribute_to_layer_input: bool = False,
@@ -463,8 +460,7 @@ class LayerDeepLiftShap(LayerDeepLift, DeepLiftShap):
             Tensor, Tuple[Tensor, ...], Callable[..., Union[Tensor, Tuple[Tensor, ...]]]
         ],
         target: TargetType = None,
-        # pyre-fixme[2]: Parameter annotation cannot be `Any`.
-        additional_forward_args: Any = None,
+        additional_forward_args: Optional[Tuple[object, ...]] = None,
         return_convergence_delta: Literal[False] = False,
         attribute_to_layer_input: bool = False,
         custom_attribution_func: Union[None, Callable[..., Tuple[Tensor, ...]]] = None,
@@ -480,7 +476,7 @@ class LayerDeepLiftShap(LayerDeepLift, DeepLiftShap):
             Tensor, Tuple[Tensor, ...], Callable[..., Union[Tensor, Tuple[Tensor, ...]]]
         ],
         target: TargetType = None,
-        additional_forward_args: Any = None,
+        additional_forward_args: Optional[Tuple[object, ...]] = None,
         return_convergence_delta: bool = False,
         attribute_to_layer_input: bool = False,
         custom_attribution_func: Union[None, Callable[..., Tuple[Tensor, ...]]] = None,
