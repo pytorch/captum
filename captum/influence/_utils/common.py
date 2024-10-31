@@ -65,7 +65,7 @@ def _tensor_batch_dot(t1: Tensor, t2: Tensor) -> Tensor:
 
 
 def _gradient_dot_product(
-    input_grads: Tuple[Tensor], src_grads: Tuple[Tensor]
+    input_grads: Tuple[Tensor, ...], src_grads: Tuple[Tensor, ...]
 ) -> Tensor:
     r"""
     Computes the dot product between the gradient vector for a model on an input batch
@@ -334,9 +334,10 @@ class _DatasetFromList(Dataset):
         return len(self._l)
 
 
-# pyre-fixme[3]: Return type must be annotated.
-# pyre-fixme[2]: Parameter annotation cannot contain `Any`.
-def _format_inputs_dataset(inputs_dataset: Union[Tuple[Any, ...], DataLoader]):
+def _format_inputs_dataset(
+    # pyre-fixme[2]: Parameter annotation cannot contain `Any`.
+    inputs_dataset: Union[Tuple[Any, ...], DataLoader]
+) -> DataLoader:
     # if `inputs_dataset` is not a `DataLoader`, turn it into one.
     # `_DatasetFromList` turns a list into a `Dataset` where `__getitem__`
     # returns an element in the list, and using it to construct a `DataLoader`
