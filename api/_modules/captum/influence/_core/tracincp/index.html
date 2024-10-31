@@ -1274,8 +1274,7 @@ src="/_sphinx/documentation_options.js"></script>
                     <span class="n">stacklevel</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
                 <span class="p">)</span>
 
-        <span class="c1"># pyre-fixme[2]: Parameter must be annotated.</span>
-        <span class="k">def</span> <span class="nf">calculate_via_vector_norm</span><span class="p">(</span><span class="n">layer_jacobian</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tensor</span><span class="p">:</span>
+        <span class="k">def</span> <span class="nf">calculate_via_vector_norm</span><span class="p">(</span><span class="n">layer_jacobian</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tensor</span><span class="p">:</span>
             <span class="c1"># Helper to efficiently calculate vector norm if pytorch version permits.</span>
             <span class="k">return</span> <span class="p">(</span>
                 <span class="n">torch</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">vector_norm</span><span class="p">(</span>
