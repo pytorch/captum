@@ -394,7 +394,7 @@ access to a number of our interpretability algorithms.
 To analyze a sample model on CIFAR10 via Captum Insights run
 
 ```
-python -m captum.insights.example
+python -m captum.insights.attr_vis.example
 ```
 
 and navigate to the URL specified in the output.
