@@ -108,7 +108,6 @@ def start_server(
 
     global port
     if port is None:
-        os.environ["WERKZEUG_RUN_MAIN"] = "true"  # hides starting message
         if not debug:
             log = logging.getLogger("werkzeug")
             log.disabled = True
