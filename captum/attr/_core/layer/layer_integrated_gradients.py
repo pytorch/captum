@@ -3,7 +3,18 @@
 # pyre-strict
 import functools
 import warnings
-from typing import Callable, cast, List, Literal, Optional, overload, Tuple, Union
+from typing import (
+    Any,
+    Callable,
+    cast,
+    Dict,
+    List,
+    Literal,
+    Optional,
+    overload,
+    Tuple,
+    Union,
+)
 
 import torch
 from captum._utils.common import (
@@ -113,6 +124,7 @@ class LayerIntegratedGradients(LayerAttribution, GradientAttribution):
         self,
         num_outputs_cumsum: Tensor,
         attribute_to_layer_input: bool,
+        grad_kwargs: Optional[Dict[str, Any]],
     ) -> Callable[..., Tuple[Tensor, ...]]:
 
         def _gradient_func(
@@ -220,7 +232,9 @@ class LayerIntegratedGradients(LayerAttribution, GradientAttribution):
                 )
                 # torch.unbind(forward_out) is a list of scalar tensor tuples and
                 # contains batch_size * #steps elements
-                grads = torch.autograd.grad(torch.unbind(output), inputs)
+                grads = torch.autograd.grad(
+                    torch.unbind(output), inputs, **grad_kwargs or {}
+                )
             return grads
 
         return _gradient_func
@@ -237,6 +251,7 @@ class LayerIntegratedGradients(LayerAttribution, GradientAttribution):
         internal_batch_size: Union[None, int],
         return_convergence_delta: Literal[False],
         attribute_to_layer_input: bool,
+        grad_kwargs: Optional[Dict[str, Any]],
     ) -> Union[Tensor, Tuple[Tensor, ...], List[Union[Tensor, Tuple[Tensor, ...]]]]: ...
 
     @overload
@@ -251,6 +266,7 @@ class LayerIntegratedGradients(LayerAttribution, GradientAttribution):
         internal_batch_size: Union[None, int],
         return_convergence_delta: Literal[True],
         attribute_to_layer_input: bool,
+        grad_kwargs: Optional[Dict[str, Any]],
     ) -> Tuple[
         Union[Tensor, Tuple[Tensor, ...], List[Union[Tensor, Tuple[Tensor, ...]]]],
         Tensor,
@@ -270,6 +286,7 @@ class LayerIntegratedGradients(LayerAttribution, GradientAttribution):
         internal_batch_size: Union[None, int] = None,
         return_convergence_delta: bool = False,
         attribute_to_layer_input: bool = False,
+        grad_kwargs: Optional[Dict[str, Any]] = None,
     ) -> Union[
         Union[Tensor, Tuple[Tensor, ...], List[Union[Tensor, Tuple[Tensor, ...]]]],
         Tuple[
@@ -292,6 +309,7 @@ class LayerIntegratedGradients(LayerAttribution, GradientAttribution):
         internal_batch_size: Union[None, int] = None,
         return_convergence_delta: bool = False,
         attribute_to_layer_input: bool = False,
+        grad_kwargs: Optional[Dict[str, Any]] = None,
     ) -> Union[
         Union[Tensor, Tuple[Tensor, ...], List[Union[Tensor, Tuple[Tensor, ...]]]],
         Tuple[
@@ -427,6 +445,9 @@ class LayerIntegratedGradients(LayerAttribution, GradientAttribution):
                         attribute to the input or output, is a single tensor.
                         Support for multiple tensors will be added later.
                         Default: False
+            grad_kwargs (Dict[str, Any], optional): Additional keyword
+                        arguments for torch.autograd.grad.
+                        Default: None
 
         Returns:
             **attributions** or 2-element tuple of **attributions**, **delta**:
@@ -523,7 +544,7 @@ class LayerIntegratedGradients(LayerAttribution, GradientAttribution):
         # inputs -> these inputs are scaled
 
         self.ig.gradient_func = self._make_gradient_func(
-            num_outputs_cumsum, attribute_to_layer_input
+            num_outputs_cumsum, attribute_to_layer_input, grad_kwargs
         )
         all_inputs = (
             (inps + additional_forward_args)

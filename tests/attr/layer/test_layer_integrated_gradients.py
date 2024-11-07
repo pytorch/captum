@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 # pyre-strict
-
+import unittest
 from typing import Any, cast, List, Tuple, Union
 
 import torch
@@ -13,6 +13,7 @@ from captum.attr._models.base import (
     configure_interpretable_embedding_layer,
     remove_interpretable_embedding_layer,
 )
+from packaging import version
 from tests.helpers.basic import (
     assertTensorAlmostEqual,
     assertTensorTuplesAlmostEqual,
@@ -228,6 +229,28 @@ class Test(BaseTest):
             ),
             attributions,
         )
+
+    def test_simple_multi_gradient_activation_with_unused_layer(self) -> None:
+        if version.parse(torch.__version__) < version.parse("2.1.0"):
+            raise unittest.SkipTest(
+                "Skipping unused layed gradient test since it is not supported "
+                "by torch version < 2.1"
+            )
+
+        model = BasicModel_MultiLayer(multi_input_module=True)
+        test_input = torch.tensor([[3.0, 4.0, 0.0]], requires_grad=True)
+        # pyre-fixme[6]: For 2nd argument expected `ModuleOrModuleList` but got
+        #  `List[Union[ReLU, Linear]]`.
+        layer_ig = LayerIntegratedGradients(model, [model.linear1, model.relu])
+        attributions = cast(
+            List[Tensor],
+            layer_ig.attribute(
+                inputs=test_input, target=0, grad_kwargs={"materialize_grads": True}
+            ),
+        )
+        self.assertEqual(len(attributions), 2)
+        self.assertEqual(list(attributions[0].shape), [1, 4])
+        self.assertEqual(list(attributions[1].shape), [1, 4])
 
     def _assert_compare_with_layer_conductance(
         self, model: Module, input: Tensor, attribute_to_layer_input: bool = False
