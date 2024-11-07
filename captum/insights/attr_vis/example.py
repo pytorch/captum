@@ -28,6 +28,7 @@ def get_classes() -> List[str]:
     ]
     return classes
 
+
 class Net(nn.Module):
     def __init__(self) -> None:
         super(Net, self).__init__()
@@ -51,6 +52,7 @@ class Net(nn.Module):
         x = self.relu4(self.fc2(x))
         x = self.fc3(x)
         return x
+
 
 def get_pretrained_model() -> Net:
     net = Net()
