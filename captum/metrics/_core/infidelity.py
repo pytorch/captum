@@ -499,6 +499,8 @@ def _generate_perturbations(
     repeated instances per example.
     """
 
+    # pyre-fixme[53]: Captured variable `baselines_expanded` is not annotated.
+    # pyre-fixme[53]: Captured variable `inputs_expanded` is not annotated.
     def call_perturb_func() -> (
         Tuple[TensorOrTupleOfTensorsGeneric, TensorOrTupleOfTensorsGeneric]
     ):
