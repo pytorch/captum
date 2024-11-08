@@ -534,6 +534,8 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">    repeated instances per example.</span>
 <span class="sd">    """</span>
 
+    <span class="c1"># pyre-fixme[53]: Captured variable `baselines_expanded` is not annotated.</span>
+    <span class="c1"># pyre-fixme[53]: Captured variable `inputs_expanded` is not annotated.</span>
     <span class="k">def</span> <span class="nf">call_perturb_func</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="p">(</span>
         <span class="n">Tuple</span><span class="p">[</span><span class="n">TensorOrTupleOfTensorsGeneric</span><span class="p">,</span> <span class="n">TensorOrTupleOfTensorsGeneric</span><span class="p">]</span>
     <span class="p">):</span>
