@@ -680,6 +680,7 @@ def _select_targets(output: Tensor, target: TargetType) -> Tensor:
         raise AssertionError(f"Target type {type(target)} is not valid.")
 
 
+# pyre-fixme[24]: Generic type `slice` expects 3 type parameters.
 def _contains_slice(target: Union[int, Tuple[Union[int, slice], ...]]) -> bool:
     if isinstance(target, tuple):
         for index in target:
@@ -690,7 +691,9 @@ def _contains_slice(target: Union[int, Tuple[Union[int, slice], ...]]) -> bool:
 
 
 def _verify_select_column(
-    output: Tensor, target: Union[int, Tuple[Union[int, slice], ...]]
+    # pyre-fixme[24]: Generic type `slice` expects 3 type parameters.
+    output: Tensor,
+    target: Union[int, Tuple[Union[int, slice], ...]],
 ) -> Tensor:
     target = (target,) if isinstance(target, int) else target
     assert (
