@@ -2,7 +2,6 @@
 
 # pyre-strict
 import logging
-import os
 import socket
 import threading
 from time import sleep
