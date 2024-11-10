@@ -44,7 +44,7 @@ class Net(nn.Module):
         self.relu3 = nn.ReLU()
         self.relu4 = nn.ReLU()
 
-    def forward(self, x):
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
         x = self.pool1(self.relu1(self.conv1(x)))
         x = self.pool2(self.relu2(self.conv2(x)))
         x = x.view(-1, 16 * 5 * 5)
