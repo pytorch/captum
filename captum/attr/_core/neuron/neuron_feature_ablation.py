@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 # pyre-strict
-from typing import Any, Callable, List, Tuple, Union
+from typing import Any, Callable, cast, List, Optional, Tuple, Union
 
 import torch
 from captum._utils.common import _verify_select_neuron
@@ -10,6 +10,7 @@ from captum._utils.typing import BaselineType, TensorOrTupleOfTensorsGeneric
 from captum.attr._core.feature_ablation import FeatureAblation
 from captum.attr._utils.attribution import NeuronAttribution, PerturbationAttribution
 from captum.log import log_usage
+from torch import Tensor
 from torch.nn import Module
 
 
@@ -63,8 +64,7 @@ class NeuronFeatureAblation(NeuronAttribution, PerturbationAttribution):
         # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
         neuron_selector: Union[int, Tuple[Union[int, slice], ...], Callable],
         baselines: BaselineType = None,
-        # pyre-fixme[2]: Parameter annotation cannot be `Any`.
-        additional_forward_args: Any = None,
+        additional_forward_args: Optional[object] = None,
         feature_mask: Union[None, TensorOrTupleOfTensorsGeneric] = None,
         attribute_to_neuron_input: bool = False,
         perturbations_per_eval: int = 1,
@@ -260,7 +260,9 @@ class NeuronFeatureAblation(NeuronAttribution, PerturbationAttribution):
                     device_ids=self.device_ids,
                     attribute_to_layer_input=attribute_to_neuron_input,
                 )
-                return _verify_select_neuron(layer_eval, neuron_selector)
+                return _verify_select_neuron(
+                    cast(Tuple[Tensor, ...], layer_eval), neuron_selector
+                )
 
         ablator = FeatureAblation(neuron_forward_func)
 

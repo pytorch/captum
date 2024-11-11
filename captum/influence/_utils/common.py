@@ -65,7 +65,7 @@ def _tensor_batch_dot(t1: Tensor, t2: Tensor) -> Tensor:
 
 
 def _gradient_dot_product(
-    input_grads: Tuple[Tensor], src_grads: Tuple[Tensor]
+    input_grads: Tuple[Tensor, ...], src_grads: Tuple[Tensor, ...]
 ) -> Tensor:
     r"""
     Computes the dot product between the gradient vector for a model on an input batch
@@ -334,9 +334,10 @@ class _DatasetFromList(Dataset):
         return len(self._l)
 
 
-# pyre-fixme[3]: Return type must be annotated.
-# pyre-fixme[2]: Parameter annotation cannot contain `Any`.
-def _format_inputs_dataset(inputs_dataset: Union[Tuple[Any, ...], DataLoader]):
+def _format_inputs_dataset(
+    # pyre-fixme[2]: Parameter annotation cannot contain `Any`.
+    inputs_dataset: Union[Tuple[Any, ...], DataLoader]
+) -> DataLoader:
     # if `inputs_dataset` is not a `DataLoader`, turn it into one.
     # `_DatasetFromList` turns a list into a `Dataset` where `__getitem__`
     # returns an element in the list, and using it to construct a `DataLoader`
@@ -420,7 +421,8 @@ def _self_influence_by_batches_helper(
                 "Therefore, if showing the progress of the computation of self "
                 "influence scores, only the number of batches processed can be "
                 "displayed, and not the percentage completion of the computation, "
-                "nor any time estimates."
+                "nor any time estimates.",
+                stacklevel=1,
             )
         # then create the progress bar
         inputs_dataset = progress(
@@ -501,7 +503,8 @@ def _check_loss_fn(
                 f'please set the reduction attribute of `{loss_fn_name}` to "mean", '
                 f'i.e. `{loss_fn_name}.reduction = "mean"`. Note that if '
                 "`sample_wise_grads_per_batch` is True, the implementation "
-                "assumes the reduction is either a sum or mean reduction."
+                "assumes the reduction is either a sum or mean reduction.",
+                stacklevel=1,
             )
             reduction_type = "sum"
         else:
@@ -510,7 +513,8 @@ def _check_loss_fn(
                 "`sample_wise_grads_per_batch` is False, the implementation "
                 f'assumes that `{loss_fn_name}` is a "per-example" loss function (see '
                 f"documentation for `{loss_fn_name}` for details).  Please ensure "
-                "that this is the case."
+                "that this is the case.",
+                stacklevel=1,
             )
 
     return reduction_type
@@ -531,7 +535,8 @@ def _set_active_parameters(model: Module, layers: List[str]) -> List[Module]:
                 warnings.warn(
                     "Setting required grads for layer: {}, name: {}".format(
                         ".".join(layer), name
-                    )
+                    ),
+                    stacklevel=1,
                 )
                 param.requires_grad = True
     return layer_modules
@@ -556,7 +561,8 @@ def _progress_bar_constructor(
             f"of the computation of {quantities_name}, "
             "only the number of batches processed can be "
             "displayed, and not the percentage completion of the computation, "
-            "nor any time estimates."
+            "nor any time estimates.",
+            stacklevel=1,
         )
 
     return progress(
@@ -989,7 +995,10 @@ def _compute_batch_loss_influence_function_base(
                 "`reduction='sum'` loss function, or a `reduction='none'` "
                 "and set `sample_grads_per_batch` to false."
             )
-            warnings.warn(msg)
+            warnings.warn(
+                msg,
+                stacklevel=1,
+            )
         return _loss * multiplier
     elif reduction_type == "sum":
         return _loss

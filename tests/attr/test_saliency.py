@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 # pyre-unsafe
-from typing import Any, cast, Tuple, Union
+from typing import cast, Optional, Tuple, Union
 
 import torch
 from captum._utils.typing import TensorOrTupleOfTensorsGeneric
@@ -120,7 +120,7 @@ class Test(BaseTest):
         model: Module,
         inputs: TensorOrTupleOfTensorsGeneric,
         expected: TensorOrTupleOfTensorsGeneric,
-        additional_forward_args: Any = None,
+        additional_forward_args: Optional[object] = None,
         nt_type: str = "vanilla",
         n_samples_batch_size=None,
     ) -> Union[Tensor, Tuple[Tensor, ...]]:

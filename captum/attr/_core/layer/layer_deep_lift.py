@@ -2,7 +2,7 @@
 
 # pyre-strict
 import typing
-from typing import Any, Callable, cast, Dict, Optional, Sequence, Tuple, Union
+from typing import Any, Callable, cast, Dict, Literal, Optional, Sequence, Tuple, Union
 
 import torch
 from captum._utils.common import (
@@ -13,12 +13,7 @@ from captum._utils.common import (
     ExpansionTypes,
 )
 from captum._utils.gradient import compute_layer_gradients_and_eval
-from captum._utils.typing import (
-    BaselineType,
-    Literal,
-    TargetType,
-    TensorOrTupleOfTensorsGeneric,
-)
+from captum._utils.typing import BaselineType, TargetType, TensorOrTupleOfTensorsGeneric
 from captum.attr._core.deep_lift import DeepLift, DeepLiftShap
 from captum.attr._utils.attribution import LayerAttribution
 from captum.attr._utils.common import (
@@ -101,41 +96,31 @@ class LayerDeepLift(LayerAttribution, DeepLift):
 
     # Ignoring mypy error for inconsistent signature with DeepLift
     @typing.overload  # type: ignore
-    # pyre-fixme[43]: The implementation of `attribute` does not accept all possible
-    #  arguments of overload defined on line `104`.
     def attribute(
         self,
         inputs: Union[Tensor, Tuple[Tensor, ...]],
         baselines: BaselineType = None,
         target: TargetType = None,
-        # pyre-fixme[2]: Parameter annotation cannot be `Any`.
-        additional_forward_args: Any = None,
-        # pyre-fixme[9]: return_convergence_delta has type `Literal[]`; used as `bool`.
-        # pyre-fixme[31]: Expression `Literal[False]` is not a valid type.
-        # pyre-fixme[24]: Non-generic type `typing.Literal` cannot take parameters.
-        return_convergence_delta: Literal[False] = False,
-        attribute_to_layer_input: bool = False,
-        custom_attribution_func: Union[None, Callable[..., Tuple[Tensor, ...]]] = None,
-        grad_kwargs: Optional[Dict[str, Any]] = None,
-    ) -> Union[Tensor, Tuple[Tensor, ...]]: ...
-
-    @typing.overload
-    # pyre-fixme[43]: The implementation of `attribute` does not accept all possible
-    #  arguments of overload defined on line `117`.
-    def attribute(
-        self,
-        inputs: Union[Tensor, Tuple[Tensor, ...]],
-        baselines: BaselineType = None,
-        target: TargetType = None,
-        additional_forward_args: Any = None,
+        additional_forward_args: Optional[object] = None,
         *,
-        # pyre-fixme[31]: Expression `Literal[True]` is not a valid type.
-        # pyre-fixme[24]: Non-generic type `typing.Literal` cannot take parameters.
         return_convergence_delta: Literal[True],
         attribute_to_layer_input: bool = False,
         custom_attribution_func: Union[None, Callable[..., Tuple[Tensor, ...]]] = None,
         grad_kwargs: Optional[Dict[str, Any]] = None,
     ) -> Tuple[Union[Tensor, Tuple[Tensor, ...]], Tensor]: ...
+
+    @typing.overload
+    def attribute(
+        self,
+        inputs: Union[Tensor, Tuple[Tensor, ...]],
+        baselines: BaselineType = None,
+        target: TargetType = None,
+        additional_forward_args: Optional[object] = None,
+        return_convergence_delta: Literal[False] = False,
+        attribute_to_layer_input: bool = False,
+        custom_attribution_func: Union[None, Callable[..., Tuple[Tensor, ...]]] = None,
+        grad_kwargs: Optional[Dict[str, Any]] = None,
+    ) -> Union[Tensor, Tuple[Tensor, ...]]: ...
 
     @log_usage()
     # pyre-fixme[43]: This definition does not have the same decorators as the
@@ -145,7 +130,7 @@ class LayerDeepLift(LayerAttribution, DeepLift):
         inputs: Union[Tensor, Tuple[Tensor, ...]],
         baselines: BaselineType = None,
         target: TargetType = None,
-        additional_forward_args: Any = None,
+        additional_forward_args: Optional[object] = None,
         return_convergence_delta: bool = False,
         attribute_to_layer_input: bool = False,
         custom_attribution_func: Union[None, Callable[..., Tuple[Tensor, ...]]] = None,
@@ -381,8 +366,6 @@ class LayerDeepLift(LayerAttribution, DeepLift):
             inputs,
             additional_forward_args,
             target,
-            # pyre-fixme[31]: Expression `Literal[False])]` is not a valid type.
-            # pyre-fixme[24]: Non-generic type `typing.Literal` cannot take parameters.
             cast(Union[Literal[True], Literal[False]], len(attributions) > 1),
         )
 
@@ -452,26 +435,6 @@ class LayerDeepLiftShap(LayerDeepLift, DeepLiftShap):
     # Ignoring mypy error for inconsistent signature with DeepLiftShap
     @typing.overload  # type: ignore
     # pyre-fixme[43]: The implementation of `attribute` does not accept all possible
-    #  arguments of overload defined on line `439`.
-    def attribute(
-        self,
-        inputs: Union[Tensor, Tuple[Tensor, ...]],
-        baselines: Union[
-            Tensor, Tuple[Tensor, ...], Callable[..., Union[Tensor, Tuple[Tensor, ...]]]
-        ],
-        target: TargetType = None,
-        # pyre-fixme[2]: Parameter annotation cannot be `Any`.
-        additional_forward_args: Any = None,
-        # pyre-fixme[9]: return_convergence_delta has type `Literal[]`; used as `bool`.
-        # pyre-fixme[31]: Expression `Literal[False]` is not a valid type.
-        # pyre-fixme[24]: Non-generic type `typing.Literal` cannot take parameters.
-        return_convergence_delta: Literal[False] = False,
-        attribute_to_layer_input: bool = False,
-        custom_attribution_func: Union[None, Callable[..., Tuple[Tensor, ...]]] = None,
-    ) -> Union[Tensor, Tuple[Tensor, ...]]: ...
-
-    @typing.overload
-    # pyre-fixme[43]: The implementation of `attribute` does not accept all possible
     #  arguments of overload defined on line `453`.
     def attribute(
         self,
@@ -480,14 +443,28 @@ class LayerDeepLiftShap(LayerDeepLift, DeepLiftShap):
             Tensor, Tuple[Tensor, ...], Callable[..., Union[Tensor, Tuple[Tensor, ...]]]
         ],
         target: TargetType = None,
-        additional_forward_args: Any = None,
+        additional_forward_args: Optional[Tuple[object, ...]] = None,
         *,
-        # pyre-fixme[31]: Expression `Literal[True]` is not a valid type.
-        # pyre-fixme[24]: Non-generic type `typing.Literal` cannot take parameters.
         return_convergence_delta: Literal[True],
         attribute_to_layer_input: bool = False,
         custom_attribution_func: Union[None, Callable[..., Tuple[Tensor, ...]]] = None,
     ) -> Tuple[Union[Tensor, Tuple[Tensor, ...]], Tensor]: ...
+
+    @typing.overload
+    # pyre-fixme[43]: The implementation of `attribute` does not accept all possible
+    #  arguments of overload defined on line `439`.
+    def attribute(
+        self,
+        inputs: Union[Tensor, Tuple[Tensor, ...]],
+        baselines: Union[
+            Tensor, Tuple[Tensor, ...], Callable[..., Union[Tensor, Tuple[Tensor, ...]]]
+        ],
+        target: TargetType = None,
+        additional_forward_args: Optional[Tuple[object, ...]] = None,
+        return_convergence_delta: Literal[False] = False,
+        attribute_to_layer_input: bool = False,
+        custom_attribution_func: Union[None, Callable[..., Tuple[Tensor, ...]]] = None,
+    ) -> Union[Tensor, Tuple[Tensor, ...]]: ...
 
     @log_usage()
     # pyre-fixme[43]: This definition does not have the same decorators as the
@@ -499,7 +476,7 @@ class LayerDeepLiftShap(LayerDeepLift, DeepLiftShap):
             Tensor, Tuple[Tensor, ...], Callable[..., Union[Tensor, Tuple[Tensor, ...]]]
         ],
         target: TargetType = None,
-        additional_forward_args: Any = None,
+        additional_forward_args: Optional[Tuple[object, ...]] = None,
         return_convergence_delta: bool = False,
         attribute_to_layer_input: bool = False,
         custom_attribution_func: Union[None, Callable[..., Tuple[Tensor, ...]]] = None,
@@ -684,10 +661,6 @@ class LayerDeepLiftShap(LayerDeepLift, DeepLiftShap):
             target=exp_target,
             additional_forward_args=exp_addit_args,
             return_convergence_delta=cast(
-                # pyre-fixme[31]: Expression `Literal[(True, False)]` is not a valid
-                #  type.
-                # pyre-fixme[24]: Non-generic type `typing.Literal` cannot take
-                #  parameters.
                 Literal[True, False],
                 return_convergence_delta,
             ),

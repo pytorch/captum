@@ -3,7 +3,7 @@
 # pyre-strict
 import typing
 from inspect import signature
-from typing import Any, Callable, List, Tuple, TYPE_CHECKING, Union
+from typing import Callable, List, Literal, Optional, Tuple, TYPE_CHECKING, Union
 
 import torch
 from captum._utils.common import (
@@ -12,12 +12,7 @@ from captum._utils.common import (
     _format_tensor_into_tuples,
     _validate_input as _validate_input_basic,
 )
-from captum._utils.typing import (
-    BaselineType,
-    Literal,
-    TargetType,
-    TensorOrTupleOfTensorsGeneric,
-)
+from captum._utils.typing import BaselineType, TargetType, TensorOrTupleOfTensorsGeneric
 from captum.attr._utils.approximation_methods import SUPPORTED_METHODS
 from torch import Tensor
 
@@ -77,8 +72,14 @@ def _format_input_baseline(
 
 
 @typing.overload
-def _format_input_baseline(
+def _format_input_baseline(  # type: ignore
     inputs: Union[Tensor, Tuple[Tensor, ...]], baselines: BaselineType
+) -> Tuple[Tuple[Tensor, ...], Tuple[Union[Tensor, int, float], ...]]: ...
+
+
+@typing.overload
+def _format_input_baseline(  # type: ignore
+    inputs: TensorOrTupleOfTensorsGeneric, baselines: BaselineType
 ) -> Tuple[Tuple[Tensor, ...], Tuple[Union[Tensor, int, float], ...]]: ...
 
 
@@ -200,39 +201,44 @@ def _format_and_verify_sliding_window_shapes(
 
 
 @typing.overload
-# pyre-fixme[43]: The implementation of `_compute_conv_delta_and_format_attrs` does
-#  not accept all possible arguments of overload defined on line `199`.
 def _compute_conv_delta_and_format_attrs(
     attr_algo: "GradientAttribution",
     return_convergence_delta: bool,
     attributions: Tuple[Tensor, ...],
     start_point: Union[int, float, Tensor, Tuple[Union[int, float, Tensor], ...]],
     end_point: Union[Tensor, Tuple[Tensor, ...]],
-    # pyre-fixme[2]: Parameter annotation cannot be `Any`.
-    additional_forward_args: Any,
+    additional_forward_args: Optional[object],
     target: TargetType,
-    # pyre-fixme[9]: is_inputs_tuple has type `Literal[]`; used as `bool`.
-    # pyre-fixme[31]: Expression `Literal[False]` is not a valid type.
-    # pyre-fixme[24]: Non-generic type `typing.Literal` cannot take parameters.
+    is_inputs_tuple: Literal[True],
+) -> Union[Tuple[Tensor, ...], Tuple[Tuple[Tensor, ...], Tensor]]: ...
+
+
+@typing.overload
+def _compute_conv_delta_and_format_attrs(
+    attr_algo: "GradientAttribution",
+    return_convergence_delta: bool,
+    attributions: Tuple[Tensor, ...],
+    start_point: Union[int, float, Tensor, Tuple[Union[int, float, Tensor], ...]],
+    end_point: Union[Tensor, Tuple[Tensor, ...]],
+    additional_forward_args: Optional[object],
+    target: TargetType,
     is_inputs_tuple: Literal[False] = False,
 ) -> Union[Tensor, Tuple[Tensor, Tensor]]: ...
 
 
 @typing.overload
-# pyre-fixme[43]: The implementation of `_compute_conv_delta_and_format_attrs` does
-#  not accept all possible arguments of overload defined on line `212`.
 def _compute_conv_delta_and_format_attrs(
     attr_algo: "GradientAttribution",
     return_convergence_delta: bool,
     attributions: Tuple[Tensor, ...],
     start_point: Union[int, float, Tensor, Tuple[Union[int, float, Tensor], ...]],
     end_point: Union[Tensor, Tuple[Tensor, ...]],
-    additional_forward_args: Any,
+    additional_forward_args: Optional[object],
     target: TargetType,
-    # pyre-fixme[31]: Expression `Literal[True]` is not a valid type.
-    # pyre-fixme[24]: Non-generic type `typing.Literal` cannot take parameters.
-    is_inputs_tuple: Literal[True],
-) -> Union[Tuple[Tensor, ...], Tuple[Tuple[Tensor, ...], Tensor]]: ...
+    is_inputs_tuple: bool = False,
+) -> Union[
+    Tensor, Tuple[Tensor, ...], Tuple[Union[Tensor, Tuple[Tensor, ...]], Tensor]
+]: ...
 
 
 # FIXME: GradientAttribution is provided as a string due to a circular import.
@@ -243,7 +249,7 @@ def _compute_conv_delta_and_format_attrs(
     attributions: Tuple[Tensor, ...],
     start_point: Union[int, float, Tensor, Tuple[Union[int, float, Tensor], ...]],
     end_point: Union[Tensor, Tuple[Tensor, ...]],
-    additional_forward_args: Any,
+    additional_forward_args: Optional[object],
     target: TargetType,
     is_inputs_tuple: bool = False,
 ) -> Union[

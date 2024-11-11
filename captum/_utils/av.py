@@ -330,7 +330,8 @@ class AV:
                 "Overwriting activations: load_from_disk is set to False. Removing all "
                 f"activations matching specified parameters {{path: {path}, "
                 f"model_id: {model_id}, layers: {layers}, identifier: {identifier}}} "
-                "before generating new activations."
+                "before generating new activations.",
+                stacklevel=1,
             )
             for layer in layers:
                 files = glob.glob(
@@ -350,8 +351,7 @@ class AV:
         inputs: Union[Tensor, Tuple[Tensor, ...]],
         identifier: str,
         num_id: str,
-        # pyre-fixme[2]: Parameter annotation cannot be `Any`.
-        additional_forward_args: Any = None,
+        additional_forward_args: Optional[object] = None,
         load_from_disk: bool = True,
     ) -> None:
         r"""

@@ -3,15 +3,16 @@
 # pyre-strict
 import warnings
 from enum import Enum
-from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, Union
+from typing import Any, Callable, cast, Dict, Iterable, List, Optional, Tuple, Union
 
 import matplotlib
 
 import numpy as np
+import numpy.typing as npt
 from matplotlib import cm, colors, pyplot as plt
 from matplotlib.axes import Axes
 from matplotlib.collections import LineCollection
-from matplotlib.colors import Colormap, LinearSegmentedColormap
+from matplotlib.colors import Colormap, LinearSegmentedColormap, Normalize
 from matplotlib.figure import Figure
 from matplotlib.image import AxesImage
 from mpl_toolkits.axes_grid1 import make_axes_locatable
@@ -47,11 +48,11 @@ class VisualizeSign(Enum):
     all = 4
 
 
-def _prepare_image(attr_visual: ndarray) -> ndarray:
+def _prepare_image(attr_visual: npt.NDArray) -> npt.NDArray:
     return np.clip(attr_visual.astype(int), 0, 255)
 
 
-def _normalize_scale(attr: ndarray, scale_factor: float) -> ndarray:
+def _normalize_scale(attr: npt.NDArray, scale_factor: float) -> npt.NDArray:
     assert scale_factor != 0, "Cannot normalize by scale factor = 0"
     if abs(scale_factor) < 1e-5:
         warnings.warn(
@@ -64,7 +65,9 @@ def _normalize_scale(attr: ndarray, scale_factor: float) -> ndarray:
     return np.clip(attr_norm, -1, 1)
 
 
-def _cumulative_sum_threshold(values: ndarray, percentile: Union[int, float]) -> float:
+def _cumulative_sum_threshold(
+    values: npt.NDArray, percentile: Union[int, float]
+) -> float:
     # given values should be non-negative
     assert percentile >= 0 and percentile <= 100, (
         "Percentile for thresholding must be " "between 0 and 100 inclusive."
@@ -72,15 +75,16 @@ def _cumulative_sum_threshold(values: ndarray, percentile: Union[int, float]) ->
     sorted_vals = np.sort(values.flatten())
     cum_sums = np.cumsum(sorted_vals)
     threshold_id = np.where(cum_sums >= cum_sums[-1] * 0.01 * percentile)[0][0]
+    # pyre-fixme[7]: Expected `float` but got `ndarray[typing.Any, dtype[typing.Any]]`.
     return sorted_vals[threshold_id]
 
 
 def _normalize_attr(
-    attr: ndarray,
+    attr: npt.NDArray,
     sign: str,
     outlier_perc: Union[int, float] = 2,
     reduction_axis: Optional[int] = None,
-) -> ndarray:
+) -> npt.NDArray:
     attr_combined = attr
     if reduction_axis is not None:
         attr_combined = np.sum(attr, axis=reduction_axis)
@@ -104,6 +108,25 @@ def _normalize_attr(
     else:
         raise AssertionError("Visualize Sign type is not valid.")
     return _normalize_scale(attr_combined, threshold)
+
+
+def _create_default_plot(
+    plt_fig_axis: Optional[Tuple[Figure, Union[Axes, List[Axes]]]],
+    use_pyplot: bool,
+    fig_size: Tuple[int, int],
+    **kwargs: Any,
+) -> Tuple[Figure, Union[Axes, List[Axes]]]:
+    # Create plot if figure, axis not provided
+    if plt_fig_axis is not None:
+        plt_fig, plt_axis = plt_fig_axis
+    else:
+        if use_pyplot:
+            plt_fig, plt_axis = plt.subplots(figsize=fig_size, **kwargs)
+        else:
+            plt_fig = Figure(figsize=fig_size)
+            plt_axis = plt_fig.subplots(**kwargs)
+    return plt_fig, plt_axis
+    # Figure.subplots returns Axes or array of Axes
 
 
 def _initialize_cmap_and_vmin_vmax(
@@ -130,7 +153,7 @@ def _initialize_cmap_and_vmin_vmax(
 
 def _visualize_original_image(
     plt_axis: Axes,
-    original_image: Optional[ndarray],
+    original_image: Optional[npt.NDArray],
     **kwargs: Any,
 ) -> None:
     assert (
@@ -143,7 +166,7 @@ def _visualize_original_image(
 
 def _visualize_heat_map(
     plt_axis: Axes,
-    norm_attr: ndarray,
+    norm_attr: npt.NDArray,
     cmap: Union[str, Colormap],
     vmin: float,
     vmax: float,
@@ -155,8 +178,8 @@ def _visualize_heat_map(
 
 def _visualize_blended_heat_map(
     plt_axis: Axes,
-    original_image: ndarray,
-    norm_attr: ndarray,
+    original_image: npt.NDArray,
+    norm_attr: npt.NDArray,
     cmap: Union[str, Colormap],
     vmin: float,
     vmax: float,
@@ -176,8 +199,8 @@ def _visualize_blended_heat_map(
 def _visualize_masked_image(
     plt_axis: Axes,
     sign: str,
-    original_image: ndarray,
-    norm_attr: ndarray,
+    original_image: npt.NDArray,
+    norm_attr: npt.NDArray,
     **kwargs: Any,
 ) -> None:
     assert VisualizeSign[sign].value != VisualizeSign.all.value, (
@@ -190,8 +213,8 @@ def _visualize_masked_image(
 def _visualize_alpha_scaling(
     plt_axis: Axes,
     sign: str,
-    original_image: ndarray,
-    norm_attr: ndarray,
+    original_image: npt.NDArray,
+    norm_attr: npt.NDArray,
     **kwargs: Any,
 ) -> None:
     assert VisualizeSign[sign].value != VisualizeSign.all.value, (
@@ -210,8 +233,8 @@ def _visualize_alpha_scaling(
 
 
 def visualize_image_attr(
-    attr: ndarray,
-    original_image: Optional[ndarray] = None,
+    attr: npt.NDArray,
+    original_image: Optional[npt.NDArray] = None,
     method: str = "heat_map",
     sign: str = "absolute_value",
     plt_fig_axis: Optional[Tuple[Figure, Axes]] = None,
@@ -335,16 +358,10 @@ def visualize_image_attr(
         >>> # Displays blended heat map visualization of computed attributions.
         >>> _ = visualize_image_attr(attribution, orig_image, "blended_heat_map")
     """
-    # Create plot if figure, axis not provided
-    if plt_fig_axis is not None:
-        plt_fig, plt_axis = plt_fig_axis
-    else:
-        if use_pyplot:
-            plt_fig, plt_axis = plt.subplots(figsize=fig_size)
-        else:
-            plt_fig = Figure(figsize=fig_size)
-            plt_axis = plt_fig.subplots()
-            # Figure.subplots returns Axes or array of Axes
+    plt_fig, plt_axis = _create_default_plot(plt_fig_axis, use_pyplot, fig_size)
+    if isinstance(plt_axis, list):
+        # To ensure plt_axis is always a single axis, not a list of axes.
+        plt_axis = plt_axis[0]
 
     if original_image is not None:
         if np.max(original_image) <= 1.0:
@@ -359,8 +376,10 @@ def visualize_image_attr(
         )
 
     # Remove ticks and tick labels from plot.
-    plt_axis.xaxis.set_ticks_position("none")
-    plt_axis.yaxis.set_ticks_position("none")
+    if plt_axis.xaxis is not None:
+        plt_axis.xaxis.set_ticks_position("none")
+    if plt_axis.yaxis is not None:
+        plt_axis.yaxis.set_ticks_position("none")
     plt_axis.set_yticklabels([])
     plt_axis.set_xticklabels([])
     plt_axis.grid(visible=False)
@@ -417,15 +436,15 @@ def visualize_image_attr(
 
 
 def visualize_image_attr_multiple(
-    attr: ndarray,
-    original_image: Union[None, ndarray],
+    attr: npt.NDArray,
+    original_image: Union[None, npt.NDArray],
     methods: List[str],
     signs: List[str],
     titles: Optional[List[str]] = None,
     fig_size: Tuple[int, int] = (8, 6),
     use_pyplot: bool = True,
     **kwargs: Any,
-) -> Tuple[Figure, Axes]:
+) -> Tuple[Figure, Union[Axes, List[Axes]]]:
     r"""
     Visualizes attribution using multiple visualization methods displayed
     in a 1 x k grid, where k is the number of desired visualizations.
@@ -497,15 +516,19 @@ def visualize_image_attr_multiple(
         plt_fig = plt.figure(figsize=fig_size)
     else:
         plt_fig = Figure(figsize=fig_size)
-    plt_axis = plt_fig.subplots(1, len(methods))
+    plt_axis_np = plt_fig.subplots(1, len(methods), squeeze=True)
 
+    plt_axis: Union[Axes, List[Axes]]
     plt_axis_list: List[Axes] = []
     # When visualizing one
     if len(methods) == 1:
-        plt_axis_list = [plt_axis]  # type: ignore
+        plt_axis = cast(Axes, plt_axis_np)
+        plt_axis_list = [plt_axis]
         # Figure.subplots returns Axes or array of Axes
     else:
-        plt_axis_list = plt_axis  # type: ignore
+        # https://github.com/numpy/numpy/issues/24738
+        plt_axis = cast(List[Axes], cast(npt.NDArray, plt_axis_np).tolist())
+        plt_axis_list = plt_axis
         # Figure.subplots returns Axes or array of Axes
 
     for i in range(len(methods)):
@@ -525,10 +548,130 @@ def visualize_image_attr_multiple(
     return plt_fig, plt_axis
 
 
+def _plot_attrs_as_axvspan(
+    attr_vals: npt.NDArray,
+    x_vals: npt.NDArray,
+    ax: Axes,
+    x_values: npt.NDArray,
+    cmap: LinearSegmentedColormap,
+    cm_norm: Normalize,
+    alpha_overlay: float,
+) -> None:
+    half_col_width = (x_values[1] - x_values[0]) / 2.0
+    for icol, col_center in enumerate(x_vals):
+        left = col_center - half_col_width
+        right = col_center + half_col_width
+        ax.axvspan(
+            xmin=left,
+            xmax=right,
+            facecolor=(cmap(cm_norm(attr_vals[icol]))),  # type: ignore
+            edgecolor=None,
+            alpha=alpha_overlay,
+        )
+
+
+def _visualize_overlay_individual(
+    num_channels: int,
+    plt_axis_list: npt.NDArray,
+    x_values: npt.NDArray,
+    data: npt.NDArray,
+    channel_labels: List[str],
+    norm_attr: npt.NDArray,
+    cmap: LinearSegmentedColormap,
+    cm_norm: Normalize,
+    alpha_overlay: float,
+    **kwargs: Any,
+) -> None:
+    # helper method for visualize_timeseries_attr
+    pyplot_kwargs = kwargs.get("pyplot_kwargs", {})
+
+    for chan in range(num_channels):
+        plt_axis_list[chan].plot(x_values, data[chan, :], **pyplot_kwargs)
+        if channel_labels is not None:
+            plt_axis_list[chan].set_ylabel(channel_labels[chan])
+
+        _plot_attrs_as_axvspan(
+            norm_attr[chan],
+            x_values,
+            plt_axis_list[chan],
+            x_values,
+            cmap,
+            cm_norm,
+            alpha_overlay,
+        )
+
+    plt.subplots_adjust(hspace=0)
+    pass
+
+
+def _visualize_overlay_combined(
+    num_channels: int,
+    plt_axis_list: npt.NDArray,
+    x_values: npt.NDArray,
+    data: npt.NDArray,
+    channel_labels: List[str],
+    norm_attr: npt.NDArray,
+    cmap: LinearSegmentedColormap,
+    cm_norm: Normalize,
+    alpha_overlay: float,
+    **kwargs: Any,
+) -> None:
+    pyplot_kwargs = kwargs.get("pyplot_kwargs", {})
+
+    cycler = plt.cycler("color", matplotlib.colormaps["Dark2"].colors)  # type: ignore
+    plt_axis_list[0].set_prop_cycle(cycler)
+
+    for chan in range(num_channels):
+        label = channel_labels[chan] if channel_labels else None
+        plt_axis_list[0].plot(x_values, data[chan, :], label=label, **pyplot_kwargs)
+
+    _plot_attrs_as_axvspan(
+        norm_attr,
+        x_values,
+        plt_axis_list[0],
+        x_values,
+        cmap,
+        cm_norm,
+        alpha_overlay,
+    )
+
+    plt_axis_list[0].legend(loc="best")
+
+
+def _visualize_colored_graph(
+    num_channels: int,
+    plt_axis_list: npt.NDArray,
+    x_values: npt.NDArray,
+    data: npt.NDArray,
+    channel_labels: List[str],
+    norm_attr: npt.NDArray,
+    cmap: LinearSegmentedColormap,
+    cm_norm: Normalize,
+    alpha_overlay: float,
+    **kwargs: Any,
+) -> None:
+    # helper method for visualize_timeseries_attr
+    pyplot_kwargs = kwargs.get("pyplot_kwargs", {})
+    for chan in range(num_channels):
+        points = np.array([x_values, data[chan, :]]).T.reshape(-1, 1, 2)
+        segments = np.concatenate([points[:-1], points[1:]], axis=1)
+
+        lc = LineCollection(segments, cmap=cmap, norm=cm_norm, **pyplot_kwargs)
+        lc.set_array(norm_attr[chan, :])
+        plt_axis_list[chan].add_collection(lc)
+        plt_axis_list[chan].set_ylim(
+            1.2 * np.min(data[chan, :]), 1.2 * np.max(data[chan, :])
+        )
+        if channel_labels is not None:
+            plt_axis_list[chan].set_ylabel(channel_labels[chan])
+
+    plt.subplots_adjust(hspace=0)
+
+
 def visualize_timeseries_attr(
-    attr: ndarray,
-    data: ndarray,
-    x_values: Optional[ndarray] = None,
+    attr: npt.NDArray,
+    data: npt.NDArray,
+    x_values: Optional[npt.NDArray] = None,
     method: str = "overlay_individual",
     sign: str = "absolute_value",
     channel_labels: Optional[List[str]] = None,
@@ -683,8 +826,8 @@ def visualize_timeseries_attr(
 
     num_subplots = num_channels
     if (
-        TimeseriesVisualizationMethod[method]
-        == TimeseriesVisualizationMethod.overlay_combined
+        TimeseriesVisualizationMethod[method].value
+        == TimeseriesVisualizationMethod.overlay_combined.value
     ):
         num_subplots = 1
         attr = np.sum(attr, axis=0)  # Merge attributions across channels
@@ -697,17 +840,9 @@ def visualize_timeseries_attr(
         x_values = np.arange(timeseries_length)
 
     # Create plot if figure, axis not provided
-    if plt_fig_axis is not None:
-        plt_fig, plt_axis = plt_fig_axis
-    else:
-        if use_pyplot:
-            plt_fig, plt_axis = plt.subplots(  # type: ignore
-                figsize=fig_size, nrows=num_subplots, sharex=True
-            )
-        else:
-            plt_fig = Figure(figsize=fig_size)
-            plt_axis = plt_fig.subplots(nrows=num_subplots, sharex=True)  # type: ignore
-            # Figure.subplots returns Axes or array of Axes
+    plt_fig, plt_axis = _create_default_plot(
+        plt_fig_axis, use_pyplot, fig_size, nrows=num_subplots, sharex=True
+    )
 
     if not isinstance(plt_axis, ndarray):
         plt_axis_list = np.array([plt_axis])
@@ -717,91 +852,30 @@ def visualize_timeseries_attr(
     norm_attr = _normalize_attr(attr, sign, outlier_perc, reduction_axis=None)
 
     # Set default colormap and bounds based on sign.
-    if VisualizeSign[sign] == VisualizeSign.all:
-        default_cmap: Union[str, LinearSegmentedColormap] = (
-            LinearSegmentedColormap.from_list("RdWhGn", ["red", "white", "green"])
-        )
-        vmin, vmax = -1, 1
-    elif VisualizeSign[sign] == VisualizeSign.positive:
-        default_cmap = "Greens"
-        vmin, vmax = 0, 1
-    elif VisualizeSign[sign] == VisualizeSign.negative:
-        default_cmap = "Reds"
-        vmin, vmax = 0, 1
-    elif VisualizeSign[sign] == VisualizeSign.absolute_value:
-        default_cmap = "Blues"
-        vmin, vmax = 0, 1
-    else:
-        raise AssertionError("Visualize Sign type is not valid.")
+    default_cmap, vmin, vmax = _initialize_cmap_and_vmin_vmax(sign)
     cmap = cmap if cmap is not None else default_cmap
     cmap = cm.get_cmap(cmap)  # type: ignore
     cm_norm = colors.Normalize(vmin, vmax)
 
-    # pyre-fixme[53]: Captured variable `cm_norm` is not annotated.
-    # pyre-fixme[2]: Parameter must be annotated.
-    def _plot_attrs_as_axvspan(attr_vals, x_vals, ax) -> None:
-        # pyre-fixme[16]: `Optional` has no attribute `__getitem__`.
-        half_col_width = (x_values[1] - x_values[0]) / 2.0
-        for icol, col_center in enumerate(x_vals):
-            left = col_center - half_col_width
-            right = col_center + half_col_width
-            ax.axvspan(
-                xmin=left,
-                xmax=right,
-                # pyre-fixme[29]: `Union[None, Colormap, str]` is not a function.
-                facecolor=(cmap(cm_norm(attr_vals[icol]))),  # type: ignore
-                edgecolor=None,
-                alpha=alpha_overlay,
-            )
-
-    if (
-        TimeseriesVisualizationMethod[method]
-        == TimeseriesVisualizationMethod.overlay_individual
-    ):
-        for chan in range(num_channels):
-            plt_axis_list[chan].plot(x_values, data[chan, :], **pyplot_kwargs)
-            if channel_labels is not None:
-                plt_axis_list[chan].set_ylabel(channel_labels[chan])
-
-            _plot_attrs_as_axvspan(norm_attr[chan], x_values, plt_axis_list[chan])
-
-        plt.subplots_adjust(hspace=0)
-
-    elif (
-        TimeseriesVisualizationMethod[method]
-        == TimeseriesVisualizationMethod.overlay_combined
-    ):
-        # Dark colors are better in this case
-        cycler = plt.cycler("color", matplotlib.colormaps["Dark2"])  # type: ignore
-        plt_axis_list[0].set_prop_cycle(cycler)
-
-        for chan in range(num_channels):
-            label = channel_labels[chan] if channel_labels else None
-            plt_axis_list[0].plot(x_values, data[chan, :], label=label, **pyplot_kwargs)
-
-        _plot_attrs_as_axvspan(norm_attr, x_values, plt_axis_list[0])
-
-        plt_axis_list[0].legend(loc="best")
-
-    elif (
-        TimeseriesVisualizationMethod[method]
-        == TimeseriesVisualizationMethod.colored_graph
-    ):
-        for chan in range(num_channels):
-            points = np.array([x_values, data[chan, :]]).T.reshape(-1, 1, 2)
-            segments = np.concatenate([points[:-1], points[1:]], axis=1)
-
-            lc = LineCollection(segments, cmap=cmap, norm=cm_norm, **pyplot_kwargs)
-            lc.set_array(norm_attr[chan, :])
-            plt_axis_list[chan].add_collection(lc)
-            plt_axis_list[chan].set_ylim(
-                1.2 * np.min(data[chan, :]), 1.2 * np.max(data[chan, :])
-            )
-            if channel_labels is not None:
-                plt_axis_list[chan].set_ylabel(channel_labels[chan])
-
-        plt.subplots_adjust(hspace=0)
-
+    visualization_methods: Dict[str, Callable[..., Union[None, AxesImage]]] = {
+        "overlay_individual": _visualize_overlay_individual,
+        "overlay_combined": _visualize_overlay_combined,
+        "colored_graph": _visualize_colored_graph,
+    }
+    kwargs = {
+        "num_channels": num_channels,
+        "plt_axis_list": plt_axis_list,
+        "x_values": x_values,
+        "data": data,
+        "channel_labels": channel_labels,
+        "norm_attr": norm_attr,
+        "cmap": cmap,
+        "cm_norm": cm_norm,
+        "alpha_overlay": alpha_overlay,
+        "pyplot_kwargs": pyplot_kwargs,
+    }
+    if method in visualization_methods:
+        visualization_methods[method](**kwargs)
     else:
         raise AssertionError("Invalid visualization method: {}".format(method))
 

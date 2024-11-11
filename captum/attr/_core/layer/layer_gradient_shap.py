@@ -3,12 +3,12 @@
 # pyre-strict
 
 import typing
-from typing import Any, Callable, cast, Dict, List, Optional, Tuple, Union
+from typing import Any, Callable, cast, Dict, List, Literal, Optional, Tuple, Union
 
 import numpy as np
 import torch
 from captum._utils.gradient import _forward_layer_eval, compute_layer_gradients_and_eval
-from captum._utils.typing import Literal, TargetType, TensorOrTupleOfTensorsGeneric
+from captum._utils.typing import TargetType, TensorOrTupleOfTensorsGeneric
 from captum.attr._core.gradient_shap import _scale_input
 from captum.attr._core.noise_tunnel import NoiseTunnel
 from captum.attr._utils.attribution import GradientAttribution, LayerAttribution
@@ -114,11 +114,8 @@ class LayerGradientShap(LayerAttribution, GradientAttribution):
         n_samples: int = 5,
         stdevs: Union[float, Tuple[float, ...]] = 0.0,
         target: TargetType = None,
-        # pyre-fixme[2]: Parameter annotation cannot be `Any`.
-        additional_forward_args: Any = None,
+        additional_forward_args: Optional[object] = None,
         *,
-        # pyre-fixme[31]: Expression `Literal[True]` is not a valid type.
-        # pyre-fixme[24]: Non-generic type `typing.Literal` cannot take parameters.
         return_convergence_delta: Literal[True],
         attribute_to_layer_input: bool = False,
     ) -> Tuple[Union[Tensor, Tuple[Tensor, ...]], Tensor]: ...
@@ -134,10 +131,7 @@ class LayerGradientShap(LayerAttribution, GradientAttribution):
         n_samples: int = 5,
         stdevs: Union[float, Tuple[float, ...]] = 0.0,
         target: TargetType = None,
-        additional_forward_args: Any = None,
-        # pyre-fixme[9]: return_convergence_delta has type `Literal[]`; used as `bool`.
-        # pyre-fixme[31]: Expression `Literal[False]` is not a valid type.
-        # pyre-fixme[24]: Non-generic type `typing.Literal` cannot take parameters.
+        additional_forward_args: Optional[object] = None,
         return_convergence_delta: Literal[False] = False,
         attribute_to_layer_input: bool = False,
     ) -> Union[Tensor, Tuple[Tensor, ...]]: ...
@@ -151,7 +145,7 @@ class LayerGradientShap(LayerAttribution, GradientAttribution):
         n_samples: int = 5,
         stdevs: Union[float, Tuple[float, ...]] = 0.0,
         target: TargetType = None,
-        additional_forward_args: Any = None,
+        additional_forward_args: Optional[object] = None,
         return_convergence_delta: bool = False,
         attribute_to_layer_input: bool = False,
     ) -> Union[
@@ -392,39 +386,29 @@ class LayerInputBaselineXGradient(LayerAttribution, GradientAttribution):
         self._multiply_by_inputs = multiply_by_inputs
 
     @typing.overload
-    # pyre-fixme[43]: The implementation of `attribute` does not accept all possible
-    #  arguments of overload defined on line `373`.
     def attribute(
         self,
         inputs: Union[Tensor, Tuple[Tensor, ...]],
         baselines: Union[Tensor, Tuple[Tensor, ...]],
         target: TargetType = None,
-        # pyre-fixme[2]: Parameter annotation cannot be `Any`.
-        additional_forward_args: Any = None,
-        # pyre-fixme[9]: return_convergence_delta has type `Literal[]`; used as `bool`.
-        # pyre-fixme[31]: Expression `Literal[False]` is not a valid type.
-        # pyre-fixme[24]: Non-generic type `typing.Literal` cannot take parameters.
-        return_convergence_delta: Literal[False] = False,
-        attribute_to_layer_input: bool = False,
-        grad_kwargs: Optional[Dict[str, Any]] = None,
-    ) -> Union[Tensor, Tuple[Tensor, ...]]: ...
-
-    @typing.overload
-    # pyre-fixme[43]: The implementation of `attribute` does not accept all possible
-    #  arguments of overload defined on line `385`.
-    def attribute(
-        self,
-        inputs: Union[Tensor, Tuple[Tensor, ...]],
-        baselines: Union[Tensor, Tuple[Tensor, ...]],
-        target: TargetType = None,
-        additional_forward_args: Any = None,
+        additional_forward_args: Optional[object] = None,
         *,
-        # pyre-fixme[31]: Expression `Literal[True]` is not a valid type.
-        # pyre-fixme[24]: Non-generic type `typing.Literal` cannot take parameters.
         return_convergence_delta: Literal[True],
         attribute_to_layer_input: bool = False,
         grad_kwargs: Optional[Dict[str, Any]] = None,
     ) -> Tuple[Union[Tensor, Tuple[Tensor, ...]], Tensor]: ...
+
+    @typing.overload
+    def attribute(
+        self,
+        inputs: Union[Tensor, Tuple[Tensor, ...]],
+        baselines: Union[Tensor, Tuple[Tensor, ...]],
+        target: TargetType = None,
+        additional_forward_args: Optional[object] = None,
+        return_convergence_delta: Literal[False] = False,
+        attribute_to_layer_input: bool = False,
+        grad_kwargs: Optional[Dict[str, Any]] = None,
+    ) -> Union[Tensor, Tuple[Tensor, ...]]: ...
 
     @log_usage()
     def attribute(  # type: ignore
@@ -432,7 +416,7 @@ class LayerInputBaselineXGradient(LayerAttribution, GradientAttribution):
         inputs: Union[Tensor, Tuple[Tensor, ...]],
         baselines: Union[Tensor, Tuple[Tensor, ...]],
         target: TargetType = None,
-        additional_forward_args: Any = None,
+        additional_forward_args: Optional[object] = None,
         return_convergence_delta: bool = False,
         attribute_to_layer_input: bool = False,
         grad_kwargs: Optional[Dict[str, Any]] = None,
@@ -481,7 +465,11 @@ class LayerInputBaselineXGradient(LayerAttribution, GradientAttribution):
 
         if self.multiplies_by_inputs:
             input_baseline_diffs = tuple(
-                input - baseline for input, baseline in zip(attr_inputs, attr_baselines)
+                # pyre-fixme[58]: `-` is not supported for operand types
+                # `typing.Tuple[torch._tensor.Tensor, ...]` and
+                # `typing.Tuple[torch._tensor.Tensor, ...]`.
+                input - baseline
+                for input, baseline in zip(attr_inputs, attr_baselines)
             )
             attributions = tuple(
                 input_baseline_diff * grad
@@ -500,8 +488,6 @@ class LayerInputBaselineXGradient(LayerAttribution, GradientAttribution):
             inputs,
             additional_forward_args,
             target,
-            # pyre-fixme[31]: Expression `Literal[False])]` is not a valid type.
-            # pyre-fixme[24]: Non-generic type `typing.Literal` cannot take parameters.
             cast(Union[Literal[True], Literal[False]], len(attributions) > 1),
         )
 

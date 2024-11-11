@@ -45,6 +45,7 @@ layer_methods_to_test_with_equiv = [
 
 class InputLayerMeta(type):
     def __new__(metacls, name: str, bases: Tuple, attrs: Dict):
+        global layer_methods_to_test_with_equiv
         for (
             layer_method,
             equiv_method,
@@ -56,7 +57,7 @@ class InputLayerMeta(type):
                     + f"_{equiv_method.__name__}_{multi_layer}"
                 )
                 attrs[test_name] = (
-                    lambda self: self.layer_method_with_input_layer_patches(
+                    lambda self, layer_method=layer_method, equiv_method=equiv_method, multi_layer=multi_layer: self.layer_method_with_input_layer_patches(  # noqa: E501
                         layer_method, equiv_method, multi_layer
                     )
                 )
@@ -107,8 +108,14 @@ class TestInputLayerWrapper(BaseTest, metaclass=InputLayerMeta):
 
         real_attributions = equivalent_method.attribute(*args_to_use, target=0)
 
-        if not isinstance(a1, tuple):
+        if isinstance(a1, list):
+            a1 = tuple(a1)
+        elif not isinstance(a1, tuple):
             a1 = (a1,)
+
+        if isinstance(a2, list):
+            a2 = tuple(a2)
+        elif not isinstance(a2, tuple):
             a2 = (a2,)
 
         if not isinstance(real_attributions, tuple):

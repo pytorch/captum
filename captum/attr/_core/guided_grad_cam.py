@@ -2,7 +2,7 @@
 
 # pyre-strict
 import warnings
-from typing import Any, List, Union
+from typing import List, Optional, Union
 
 import torch
 from captum._utils.common import _format_output, _format_tensor_into_tuples, _is_tuple
@@ -72,8 +72,7 @@ class GuidedGradCam(GradientAttribution):
         self,
         inputs: TensorOrTupleOfTensorsGeneric,
         target: TargetType = None,
-        # pyre-fixme[2]: Parameter annotation cannot be `Any`.
-        additional_forward_args: Any = None,
+        additional_forward_args: Optional[object] = None,
         interpolate_mode: str = "nearest",
         attribute_to_layer_input: bool = False,
     ) -> TensorOrTupleOfTensorsGeneric:
@@ -181,15 +180,11 @@ class GuidedGradCam(GradientAttribution):
             >>> # attribution size matches input size, Nx3x32x32
             >>> attribution = guided_gc.attribute(input, 3)
         """
-        # pyre-fixme[6]: For 1st argument expected `Tensor` but got
-        #  `TensorOrTupleOfTensorsGeneric`.
         is_inputs_tuple = _is_tuple(inputs)
-        # pyre-fixme[9]: inputs has type `TensorOrTupleOfTensorsGeneric`; used as
-        #  `Tuple[Tensor, ...]`.
-        inputs = _format_tensor_into_tuples(inputs)
+        inputs_tuple = _format_tensor_into_tuples(inputs)
         grad_cam_attr = self.grad_cam.attribute.__wrapped__(
             self.grad_cam,  # self
-            inputs=inputs,
+            inputs=inputs_tuple,
             target=target,
             additional_forward_args=additional_forward_args,
             attribute_to_layer_input=attribute_to_layer_input,
@@ -204,20 +199,18 @@ class GuidedGradCam(GradientAttribution):
 
         guided_backprop_attr = self.guided_backprop.attribute.__wrapped__(
             self.guided_backprop,  # self
-            inputs=inputs,
+            inputs=inputs_tuple,
             target=target,
             additional_forward_args=additional_forward_args,
         )
         output_attr: List[Tensor] = []
-        for i in range(len(inputs)):
+        for i in range(len(inputs_tuple)):
             try:
                 output_attr.append(
                     guided_backprop_attr[i]
                     * LayerAttribution.interpolate(
                         grad_cam_attr,
-                        # pyre-fixme[6]: For 2nd argument expected `Union[int,
-                        #  typing.Tuple[int, ...]]` but got `Size`.
-                        inputs[i].shape[2:],
+                        tuple(inputs_tuple[i].shape[2:]),
                         interpolate_mode=interpolate_mode,
                     )
                 )
@@ -225,7 +218,8 @@ class GuidedGradCam(GradientAttribution):
                 warnings.warn(
                     "Couldn't appropriately interpolate GradCAM attributions for some "
                     "input tensors, returning empty tensor for corresponding "
-                    "attributions."
+                    "attributions.",
+                    stacklevel=1,
                 )
                 output_attr.append(torch.empty(0))
 

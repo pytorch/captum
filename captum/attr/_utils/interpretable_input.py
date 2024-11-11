@@ -104,6 +104,9 @@ class InterpretableInput(ABC):
     is only allowed in certain attribution classes like LLMAttribution for now.)
     """
 
+    n_itp_features: int
+    values: List[str]
+
     @abstractmethod
     def to_tensor(self) -> Tensor:
         """

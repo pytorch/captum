@@ -2,10 +2,10 @@
 
 # pyre-unsafe
 
-from typing import List, Optional, overload, Union
+from typing import List, Literal, Optional, overload, Union
 
 import torch
-from captum._utils.typing import Literal
+from captum._utils.typing import BatchEncodingType
 from captum.attr._utils.interpretable_input import TextTemplateInput, TextTokenInput
 from parameterized import parameterized
 from tests.helpers import BaseTest
@@ -20,15 +20,23 @@ class DummyTokenizer:
         self.unk_idx = len(vocab_list) + 1
 
     @overload
-    def encode(self, text: str, return_tensors: None = None) -> List[int]: ...
+    def encode(
+        self, text: str, add_special_tokens: bool = ..., return_tensors: None = ...
+    ) -> List[int]: ...
+
     @overload
-    # pyre-fixme[43]: Incompatible overload. The implementation of
-    # `DummyTokenizer.encode` does not accept all possible arguments of overload.
-    # pyre-ignore[11]: Annotation `pt` is not defined as a type
-    def encode(self, text: str, return_tensors: Literal["pt"]) -> Tensor: ...
+    def encode(
+        self,
+        text: str,
+        add_special_tokens: bool = ...,
+        return_tensors: Literal["pt"] = ...,
+    ) -> Tensor: ...
 
     def encode(
-        self, text: str, return_tensors: Optional[str] = "pt"
+        self,
+        text: str,
+        add_special_tokens: bool = True,
+        return_tensors: Optional[str] = "pt",
     ) -> Union[List[int], Tensor]:
         assert return_tensors == "pt"
         return torch.tensor([self.convert_tokens_to_ids(text.split(" "))])
@@ -70,6 +78,14 @@ class DummyTokenizer:
         ]
 
     def decode(self, token_ids: Tensor) -> str:
+        raise NotImplementedError
+
+    def __call__(
+        self,
+        text: Optional[Union[str, List[str], List[List[str]]]] = None,
+        add_special_tokens: bool = True,
+        return_offsets_mapping: bool = False,
+    ) -> BatchEncodingType:
         raise NotImplementedError
 
 

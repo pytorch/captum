@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 # pyre-strict
-from typing import Any, Callable, cast, Generic, List, Tuple, Type, Union
+from typing import Callable, cast, Generic, List, Optional, Tuple, Type, Union
 
 import torch
 import torch.nn.functional as F
@@ -209,8 +209,7 @@ class GradientAttribution(Attribution):
         ],
         end_point: Union[Tensor, Tuple[Tensor, ...]],
         target: TargetType = None,
-        # pyre-fixme[2]: Parameter annotation cannot be `Any`.
-        additional_forward_args: Any = None,
+        additional_forward_args: Optional[object] = None,
     ) -> Tensor:
         r"""
         Here we provide a specific implementation for `compute_convergence_delta`
@@ -367,7 +366,9 @@ class PerturbationAttribution(Attribution):
         return True
 
 
-class InternalAttribution(Attribution, Generic[ModuleOrModuleList]):
+# mypy false positive "Free type variable expected in Generic[...]" but
+# ModuleOrModuleList is a TypeVar
+class InternalAttribution(Attribution, Generic[ModuleOrModuleList]):  # type: ignore
     r"""
     Shared base class for LayerAttrubution and NeuronAttribution,
     attribution types that require a model and a particular layer.

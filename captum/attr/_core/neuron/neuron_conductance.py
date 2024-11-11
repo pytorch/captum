@@ -98,8 +98,7 @@ class NeuronConductance(NeuronAttribution, GradientAttribution):
         neuron_selector: Union[int, Tuple[int, ...], Callable],
         baselines: BaselineType = None,
         target: TargetType = None,
-        # pyre-fixme[2]: Parameter annotation cannot be `Any`.
-        additional_forward_args: Any = None,
+        additional_forward_args: Optional[object] = None,
         n_steps: int = 50,
         method: str = "riemann_trapezoid",
         internal_batch_size: Union[None, int] = None,
@@ -283,7 +282,8 @@ class NeuronConductance(NeuronAttribution, GradientAttribution):
                 "The neuron_selector provided is a callable. Please ensure that this"
                 " function only selects neurons from the given layer; aggregating"
                 " or performing other operations on the tensor may lead to inaccurate"
-                " results."
+                " results.",
+                stacklevel=1,
             )
         # pyre-fixme[6]: For 1st argument expected `Tensor` but got
         #  `TensorOrTupleOfTensorsGeneric`.
@@ -338,8 +338,7 @@ class NeuronConductance(NeuronAttribution, GradientAttribution):
         neuron_selector: Union[int, Tuple[int, ...], Callable],
         baselines: Tuple[Union[Tensor, int, float], ...],
         target: TargetType = None,
-        # pyre-fixme[2]: Parameter annotation cannot be `Any`.
-        additional_forward_args: Any = None,
+        additional_forward_args: Optional[object] = None,
         n_steps: int = 50,
         method: str = "riemann_trapezoid",
         attribute_to_neuron_input: bool = False,

@@ -3,8 +3,10 @@
 # pyre-strict
 
 import os
-from typing import Any, Dict, List, Optional
+from contextlib import AbstractContextManager, nullcontext
+from typing import Any, Dict, List, Optional, TYPE_CHECKING
 
+import numpy as np
 import torch
 from captum.concept._core.concept import Concept
 from captum.concept._utils.common import concepts_to_str
@@ -166,7 +168,29 @@ class CAV:
         cavs_path = CAV.assemble_save_path(cavs_path, model_id, concepts, layer)
 
         if os.path.exists(cavs_path):
-            save_dict = torch.load(cavs_path)
+            # Necessary for Python >=3.7 and <3.9!
+            if TYPE_CHECKING:
+                ctx: AbstractContextManager[None, None]
+            else:
+                ctx: AbstractContextManager
+            if hasattr(torch.serialization, "safe_globals"):
+                safe_globals = [
+                    # pyre-ignore[16]: Module `numpy.core.multiarray` has no attribute
+                    # `_reconstruct`
+                    np.core.multiarray._reconstruct,  # type: ignore[attr-defined]
+                    np.ndarray,
+                    np.dtype,
+                ]
+                if hasattr(np, "dtypes"):
+                    # pyre-ignore[16]: Module `numpy` has no attribute `dtypes`.
+                    safe_globals.extend([np.dtypes.UInt32DType, np.dtypes.Int32DType])
+                ctx = torch.serialization.safe_globals(safe_globals)
+            else:
+                # safe globals not in existence in this version of torch yet. Use a
+                # dummy context manager instead
+                ctx = nullcontext()
+            with ctx:
+                save_dict = torch.load(cavs_path)
 
             concept_names = save_dict["concept_names"]
             concept_ids = save_dict["concept_ids"]

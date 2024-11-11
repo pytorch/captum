@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 # pyre-unsafe
-from typing import Any, cast
+from typing import cast, Optional
 
 import torch
 from captum._utils.typing import TensorOrTupleOfTensorsGeneric
@@ -63,7 +63,7 @@ class Test(BaseTest):
         model: Module,
         inputs: TensorOrTupleOfTensorsGeneric,
         expected_grads: TensorOrTupleOfTensorsGeneric,
-        additional_forward_args: Any = None,
+        additional_forward_args: Optional[object] = None,
         nt_type: str = "vanilla",
     ) -> None:
         input_x_grad = InputXGradient(model)

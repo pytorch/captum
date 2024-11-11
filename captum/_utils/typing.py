@@ -2,8 +2,10 @@
 
 # pyre-strict
 
+from collections import UserDict
 from typing import (
     List,
+    Literal,
     Optional,
     overload,
     Protocol,
@@ -16,11 +18,6 @@ from typing import (
 from torch import Tensor
 from torch.nn import Module
 
-if TYPE_CHECKING:
-    from typing import Literal
-else:
-    Literal = {True: bool, False: bool, (True, False): bool, "pt": str}
-
 TensorOrTupleOfTensorsGeneric = TypeVar(
     "TensorOrTupleOfTensorsGeneric", Tensor, Tuple[Tensor, ...]
 )
@@ -31,7 +28,8 @@ ModuleOrModuleListOrModuleTuple = TypeVar(
     "ModuleOrModuleListOrModuleTuple", Module, List[Module], Tuple[Module]
 )
 TargetType = Union[None, int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]]
-BaselineType = Union[None, Tensor, int, float, Tuple[Union[Tensor, int, float], ...]]
+BaselineTupleType = Union[None, Tuple[Union[Tensor, int, float], ...]]
+BaselineType = Union[None, Tensor, int, float, BaselineTupleType]
 
 TensorLikeList1D = List[float]
 TensorLikeList2D = List[TensorLikeList1D]
@@ -47,17 +45,35 @@ TensorLikeList = Union[
 ]
 
 
+# Necessary for Python >=3.7 and <3.9!
+if TYPE_CHECKING:
+    BatchEncodingType = UserDict[Union[int, str], object]
+else:
+    BatchEncodingType = UserDict
+
+
 class TokenizerLike(Protocol):
     """A protocol for tokenizer-like objects that can be used with Captum
     LLM attribution methods."""
 
     @overload
-    def encode(self, text: str, return_tensors: None = None) -> List[int]: ...
+    def encode(
+        self, text: str, add_special_tokens: bool = ..., return_tensors: None = ...
+    ) -> List[int]: ...
+
     @overload
-    def encode(self, text: str, return_tensors: Literal["pt"]) -> Tensor: ...
+    def encode(
+        self,
+        text: str,
+        add_special_tokens: bool = ...,
+        return_tensors: Literal["pt"] = ...,
+    ) -> Tensor: ...
 
     def encode(
-        self, text: str, return_tensors: Optional[str] = None
+        self,
+        text: str,
+        add_special_tokens: bool = True,
+        return_tensors: Optional[str] = None,
     ) -> Union[List[int], Tensor]: ...
 
     def decode(self, token_ids: Tensor) -> str: ...
@@ -79,3 +95,10 @@ class TokenizerLike(Protocol):
     def convert_tokens_to_ids(
         self, tokens: Union[List[str], str]
     ) -> Union[List[int], int]: ...
+
+    def __call__(
+        self,
+        text: Optional[Union[str, List[str], List[List[str]]]] = None,
+        add_special_tokens: bool = True,
+        return_offsets_mapping: bool = False,
+    ) -> BatchEncodingType: ...

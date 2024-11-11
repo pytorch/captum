@@ -5,13 +5,24 @@ import typing
 from enum import Enum
 from functools import reduce
 from inspect import signature
-from typing import Any, Callable, cast, Dict, List, overload, Sequence, Tuple, Union
+from typing import (
+    Any,
+    Callable,
+    cast,
+    Dict,
+    List,
+    Literal,
+    Optional,
+    overload,
+    Sequence,
+    Tuple,
+    Union,
+)
 
 import numpy as np
 import torch
 from captum._utils.typing import (
     BaselineType,
-    Literal,
     TargetType,
     TensorOrTupleOfTensorsGeneric,
     TupleOrTensorOrBoolGeneric,
@@ -71,19 +82,17 @@ def safe_div(
 
 
 @typing.overload
-# pyre-fixme[43]: The return type of overloaded function `_is_tuple` (`Literal[]`)
-#  is incompatible with the return type of the implementation (`bool`).
-# pyre-fixme[31]: Expression `Literal[False]` is not a valid type.
-# pyre-fixme[24]: Non-generic type `typing.Literal` cannot take parameters.
+def _is_tuple(inputs: Tuple[Tensor, ...]) -> Literal[True]: ...
+
+
+@typing.overload
 def _is_tuple(inputs: Tensor) -> Literal[False]: ...
 
 
 @typing.overload
-# pyre-fixme[43]: The return type of overloaded function `_is_tuple` (`Literal[]`)
-#  is incompatible with the return type of the implementation (`bool`).
-# pyre-fixme[31]: Expression `Literal[True]` is not a valid type.
-# pyre-fixme[24]: Non-generic type `typing.Literal` cannot take parameters.
-def _is_tuple(inputs: Tuple[Tensor, ...]) -> Literal[True]: ...
+def _is_tuple(
+    inputs: TensorOrTupleOfTensorsGeneric,  # type: ignore
+) -> bool: ...
 
 
 def _is_tuple(inputs: Union[Tensor, Tuple[Tensor, ...]]) -> bool:
@@ -265,10 +274,6 @@ def _format_float_or_tensor_into_tuples(
 
 
 @overload
-def _format_additional_forward_args(additional_forward_args: None) -> None: ...
-
-
-@overload
 def _format_additional_forward_args(
     # pyre-fixme[24]: Generic type `tuple` expects at least 1 type parameter.
     additional_forward_args: Union[Tensor, Tuple]
@@ -277,15 +282,16 @@ def _format_additional_forward_args(
 
 
 @overload
-def _format_additional_forward_args(
-    # pyre-fixme[2]: Parameter annotation cannot be `Any`.
-    additional_forward_args: Any,
+def _format_additional_forward_args(  # type: ignore
+    additional_forward_args: Optional[object],
     # pyre-fixme[24]: Generic type `tuple` expects at least 1 type parameter.
 ) -> Union[None, Tuple]: ...
 
 
-# pyre-fixme[24]: Generic type `tuple` expects at least 1 type parameter.
-def _format_additional_forward_args(additional_forward_args: Any) -> Union[None, Tuple]:
+def _format_additional_forward_args(
+    additional_forward_args: Optional[object],
+    # pyre-fixme[24]: Generic type `tuple` expects at least 1 type parameter.
+) -> Union[None, Tuple]:
     if additional_forward_args is not None and not isinstance(
         additional_forward_args, tuple
     ):
@@ -294,8 +300,8 @@ def _format_additional_forward_args(additional_forward_args: Any) -> Union[None,
 
 
 def _expand_additional_forward_args(
-    # pyre-fixme[2]: Parameter annotation cannot be `Any`.
-    additional_forward_args: Any,
+    # pyre-fixme[24]: Generic type `tuple` expects at least 1 type parameter.
+    additional_forward_args: Union[None, Tuple],
     n_steps: int,
     expansion_type: ExpansionTypes = ExpansionTypes.repeat,
     # pyre-fixme[24]: Generic type `tuple` expects at least 1 type parameter.
@@ -476,22 +482,14 @@ def _expand_and_update_feature_mask(n_samples: int, kwargs: dict) -> None:
 
 
 @typing.overload
-# pyre-fixme[43]: The implementation of `_format_output` does not accept all
-#  possible arguments of overload defined on line `449`.
 def _format_output(
-    # pyre-fixme[31]: Expression `Literal[True]` is not a valid type.
-    # pyre-fixme[24]: Non-generic type `typing.Literal` cannot take parameters.
     is_inputs_tuple: Literal[True],
     output: Tuple[Tensor, ...],
 ) -> Tuple[Tensor, ...]: ...
 
 
 @typing.overload
-# pyre-fixme[43]: The implementation of `_format_output` does not accept all
-#  possible arguments of overload defined on line `455`.
 def _format_output(
-    # pyre-fixme[31]: Expression `Literal[False]` is not a valid type.
-    # pyre-fixme[24]: Non-generic type `typing.Literal` cannot take parameters.
     is_inputs_tuple: Literal[False],
     output: Tuple[Tensor, ...],
 ) -> Tensor: ...
@@ -522,22 +520,14 @@ def _format_output(
 
 
 @typing.overload
-# pyre-fixme[43]: The implementation of `_format_outputs` does not accept all
-#  possible arguments of overload defined on line `483`.
 def _format_outputs(
-    # pyre-fixme[31]: Expression `Literal[False]` is not a valid type.
-    # pyre-fixme[24]: Non-generic type `typing.Literal` cannot take parameters.
     is_multiple_inputs: Literal[False],
     outputs: List[Tuple[Tensor, ...]],
 ) -> Union[Tensor, Tuple[Tensor, ...]]: ...
 
 
 @typing.overload
-# pyre-fixme[43]: The implementation of `_format_outputs` does not accept all
-#  possible arguments of overload defined on line `489`.
 def _format_outputs(
-    # pyre-fixme[31]: Expression `Literal[True]` is not a valid type.
-    # pyre-fixme[24]: Non-generic type `typing.Literal` cannot take parameters.
     is_multiple_inputs: Literal[True],
     outputs: List[Tuple[Tensor, ...]],
 ) -> List[Union[Tensor, Tuple[Tensor, ...]]]: ...
@@ -583,8 +573,7 @@ def _run_forward(
     # pyre-fixme[2]: Parameter annotation cannot be `Any`.
     inputs: Any,
     target: TargetType = None,
-    # pyre-fixme[2]: Parameter annotation cannot be `Any`.
-    additional_forward_args: Any = None,
+    additional_forward_args: Optional[object] = None,
 ) -> Union[Tensor, Future[Tensor]]:
     forward_func_args = signature(forward_func).parameters
     if len(forward_func_args) == 0:
@@ -691,6 +680,7 @@ def _select_targets(output: Tensor, target: TargetType) -> Tensor:
         raise AssertionError(f"Target type {type(target)} is not valid.")
 
 
+# pyre-fixme[24]: Generic type `slice` expects 3 type parameters.
 def _contains_slice(target: Union[int, Tuple[Union[int, slice], ...]]) -> bool:
     if isinstance(target, tuple):
         for index in target:
@@ -701,7 +691,9 @@ def _contains_slice(target: Union[int, Tuple[Union[int, slice], ...]]) -> bool:
 
 
 def _verify_select_column(
-    output: Tensor, target: Union[int, Tuple[Union[int, slice], ...]]
+    # pyre-fixme[24]: Generic type `slice` expects 3 type parameters.
+    output: Tensor,
+    target: Union[int, Tuple[Union[int, slice], ...]],
 ) -> Tensor:
     target = (target,) if isinstance(target, int) else target
     assert (
@@ -780,10 +772,10 @@ def _reduce_list(
     """
     assert len(val_list) > 0, "Cannot reduce empty list!"
     if isinstance(val_list[0], torch.Tensor):
-        # pyre-fixme[16]: `bool` has no attribute `device`.
-        first_device = val_list[0].device
-        # pyre-fixme[16]: `bool` has no attribute `to`.
-        return red_func([elem.to(first_device) for elem in val_list])
+        first_device = cast(Tensor, val_list[0]).device
+        return red_func(
+            [elem.to(first_device) for elem in cast(List[Tensor], val_list)]
+        )
     elif isinstance(val_list[0], bool):
         # pyre-fixme[7]: Expected `TupleOrTensorOrBoolGeneric` but got `bool`.
         return any(val_list)
@@ -861,8 +853,7 @@ def _register_backward_hook(
     module: Module,
     # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
     hook: Callable,
-    # pyre-fixme[2]: Parameter annotation cannot be `Any`.
-    attr_obj: Any,
+    attr_obj: Union[object, None],
 ) -> List[torch.utils.hooks.RemovableHandle]:
     grad_out: Dict[device, Tensor] = {}
 
@@ -872,10 +863,9 @@ def _register_backward_hook(
         out: Union[Tensor, Tuple[Tensor, ...]],
     ) -> None:
         nonlocal grad_out
-        grad_out = {}
 
-        # pyre-fixme[53]: Captured variable `grad_out` is not annotated.
         def output_tensor_hook(output_grad: Tensor) -> None:
+            nonlocal grad_out
             grad_out[output_grad.device] = output_grad
 
         if isinstance(out, tuple):
@@ -886,18 +876,19 @@ def _register_backward_hook(
         else:
             out.register_hook(output_tensor_hook)
 
-    # pyre-fixme[3]: Return type must be annotated.
-    # pyre-fixme[2]: Parameter must be annotated.
-    def pre_hook(module, inp):
-        # pyre-fixme[53]: Captured variable `module` is not annotated.
-        # pyre-fixme[3]: Return type must be annotated.
-        def input_tensor_hook(input_grad: Tensor):
+    def pre_hook(module: Module, inp: Union[Tensor, Tuple[Tensor, ...]]) -> Tensor:
+        def input_tensor_hook(
+            input_grad: Tensor,
+        ) -> Union[None, Tensor, Tuple[Tensor, ...]]:
+            nonlocal grad_out
+
             if len(grad_out) == 0:
-                return
+                return None
             hook_out = hook(module, input_grad, grad_out[input_grad.device])
 
             if hook_out is not None:
                 return hook_out[0] if isinstance(hook_out, tuple) else hook_out
+            return None
 
         if isinstance(inp, tuple):
             assert (

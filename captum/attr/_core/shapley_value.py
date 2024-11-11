@@ -5,7 +5,7 @@
 import itertools
 import math
 import warnings
-from typing import Any, Callable, cast, Iterable, Sequence, Tuple, Union
+from typing import Callable, cast, Iterable, Optional, Sequence, Tuple, Union
 
 import torch
 from captum._utils.common import (
@@ -56,9 +56,7 @@ def _shape_feature_mask(
             f"input shape: {inp.shape}, feature mask shape {mask.shape}"
         )
         if mask.dim() < inp.dim():
-            # pyre-fixme[58]: `+` is not supported for operand types `Tuple[int,
-            #  ...]` and `Size`.
-            mask = mask.reshape((1,) * (inp.dim() - mask.dim()) + mask.shape)
+            mask = mask.reshape((1,) * (inp.dim() - mask.dim()) + tuple(mask.shape))
 
         mask_list.append(mask)
 
@@ -89,8 +87,7 @@ class ShapleyValueSampling(PerturbationAttribution):
     https://pdfs.semanticscholar.org/7715/bb1070691455d1fcfc6346ff458dbca77b2c.pdf
     """
 
-    # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
-    def __init__(self, forward_func: Callable) -> None:
+    def __init__(self, forward_func: Callable[..., Union[int, float, Tensor]]) -> None:
         r"""
         Args:
 
@@ -111,8 +108,7 @@ class ShapleyValueSampling(PerturbationAttribution):
         inputs: TensorOrTupleOfTensorsGeneric,
         baselines: BaselineType = None,
         target: TargetType = None,
-        # pyre-fixme[2]: Parameter annotation cannot be `Any`.
-        additional_forward_args: Any = None,
+        additional_forward_args: Optional[Tuple[object, ...]] = None,
         feature_mask: Union[None, TensorOrTupleOfTensorsGeneric] = None,
         n_samples: int = 25,
         perturbations_per_eval: int = 1,
@@ -301,45 +297,25 @@ class ShapleyValueSampling(PerturbationAttribution):
         """
         # Keeps track whether original input is a tuple or not before
         # converting it into a tuple.
-        # pyre-fixme[6]: For 1st argument expected `Tensor` but got
-        #  `TensorOrTupleOfTensorsGeneric`.
         is_inputs_tuple = _is_tuple(inputs)
-        # pyre-fixme[9]: inputs has type `TensorOrTupleOfTensorsGeneric`; used as
-        #  `Tuple[Tensor, ...]`.
-        inputs, baselines = _format_input_baseline(inputs, baselines)
+        inputs_tuple, baselines = _format_input_baseline(inputs, baselines)
         additional_forward_args = _format_additional_forward_args(
             additional_forward_args
         )
-        # pyre-fixme[9]: feature_mask has type
-        #  `Optional[Variable[TensorOrTupleOfTensorsGeneric <: [Tensor,
-        #  typing.Tuple[Tensor, ...]]]]`; used as `Tuple[Tensor, ...]`.
-        # pyre-fixme[6]: For 2nd argument expected `Tuple[Tensor, ...]` but got
-        #  `TensorOrTupleOfTensorsGeneric`.
-        feature_mask = _format_feature_mask(feature_mask, inputs)
-        # pyre-fixme[9]: feature_mask has type
-        #  `Optional[Variable[TensorOrTupleOfTensorsGeneric <: [Tensor,
-        #  typing.Tuple[Tensor, ...]]]]`; used as `Tuple[Tensor, ...]`.
-        # pyre-fixme[6]: For 1st argument expected `Tuple[Tensor, ...]` but got
-        #  `Optional[Variable[TensorOrTupleOfTensorsGeneric <: [Tensor,
-        #  typing.Tuple[Tensor, ...]]]]`.
-        # pyre-fixme[6]: For 2nd argument expected `Tuple[Tensor, ...]` but got
-        #  `TensorOrTupleOfTensorsGeneric`.
-        feature_mask = _shape_feature_mask(feature_mask, inputs)
+        formatted_feature_mask = _format_feature_mask(feature_mask, inputs_tuple)
+        reshaped_feature_mask = _shape_feature_mask(
+            formatted_feature_mask, inputs_tuple
+        )
 
         assert (
             isinstance(perturbations_per_eval, int) and perturbations_per_eval >= 1
         ), "Ablations per evaluation must be at least 1."
 
         with torch.no_grad():
-            # pyre-fixme[6]: For 1st argument expected `Tuple[Tensor, ...]` but got
-            #  `TensorOrTupleOfTensorsGeneric`.
-            baselines = _tensorize_baseline(inputs, baselines)
-            num_examples = inputs[0].shape[0]
+            baselines = _tensorize_baseline(inputs_tuple, baselines)
+            num_examples = inputs_tuple[0].shape[0]
 
-            # pyre-fixme[6]: For 1st argument expected `Tuple[Tensor, ...]` but got
-            #  `Optional[Variable[TensorOrTupleOfTensorsGeneric <: [Tensor,
-            #  typing.Tuple[Tensor, ...]]]]`.
-            total_features = _get_max_feature_index(feature_mask) + 1
+            total_features = _get_max_feature_index(reshaped_feature_mask) + 1
 
             if show_progress:
                 attr_progress = progress(
@@ -362,7 +338,7 @@ class ShapleyValueSampling(PerturbationAttribution):
                 initial_eval,
                 num_examples,
                 perturbations_per_eval,
-                feature_mask,
+                reshaped_feature_mask,
                 allow_multi_outputs=True,
             )
 
@@ -372,11 +348,11 @@ class ShapleyValueSampling(PerturbationAttribution):
             # attr shape (*output_shape, *input_feature_shape)
             total_attrib = [
                 torch.zeros(
-                    output_shape + input.shape[1:],
+                    tuple(output_shape) + tuple(input.shape[1:]),
                     dtype=torch.float,
-                    device=inputs[0].device,
+                    device=inputs_tuple[0].device,
                 )
-                for input in inputs
+                for input in inputs_tuple
             ]
 
             iter_count = 0
@@ -393,17 +369,11 @@ class ShapleyValueSampling(PerturbationAttribution):
                     current_target,
                     current_masks,
                 ) in self._perturbation_generator(
-                    # pyre-fixme[6]: For 1st argument expected `Tuple[Tensor, ...]`
-                    #  but got `TensorOrTupleOfTensorsGeneric`.
-                    inputs,
+                    inputs_tuple,
                     additional_forward_args,
                     target,
                     baselines,
-                    # pyre-fixme[6]: For 5th argument expected
-                    #  `TensorOrTupleOfTensorsGeneric` but got
-                    #  `Optional[Variable[TensorOrTupleOfTensorsGeneric <: [Tensor,
-                    #  typing.Tuple[Tensor, ...]]]]`.
-                    feature_mask,
+                    reshaped_feature_mask,
                     feature_permutation,
                     perturbations_per_eval,
                 ):
@@ -411,7 +381,8 @@ class ShapleyValueSampling(PerturbationAttribution):
                         warnings.warn(
                             "Feature mask is missing some integers between 0 and "
                             "num_features, for optimal performance, make sure each"
-                            " consecutive integer corresponds to a feature."
+                            " consecutive integer corresponds to a feature.",
+                            stacklevel=1,
                         )
                     # modified_eval dimensions: 1D tensor with length
                     # equal to #num_examples * #features in batch
@@ -444,10 +415,8 @@ class ShapleyValueSampling(PerturbationAttribution):
                         # have the same dim as the mask tensor.
                         formatted_eval_diff = eval_diff.reshape(
                             (-1,)
-                            # pyre-fixme[58]: `+` is not supported for operand types
-                            #  `Tuple[int]` and `Size`.
-                            + output_shape
-                            + (len(inputs[j].shape) - 1) * (1,)
+                            + tuple(output_shape)
+                            + (len(inputs_tuple[j].shape) - 1) * (1,)
                         )
 
                         # mask in shape (n_perturb, *mask_shape_broadcastable_to_input)
@@ -459,11 +428,9 @@ class ShapleyValueSampling(PerturbationAttribution):
                         # )
                         cur_mask = current_masks[j]
                         cur_mask = cur_mask.reshape(
-                            cur_mask.shape[:2]
+                            tuple(cur_mask.shape[:2])
                             + (len(output_shape) - 1) * (1,)
-                            # pyre-fixme[58]: `+` is not supported for operand types
-                            #  `Tuple[int, ...]` and `Size`.
-                            + cur_mask.shape[2:]
+                            + tuple(cur_mask.shape[2:])
                         )
 
                         # aggregate n_perturb
@@ -494,18 +461,16 @@ class ShapleyValueSampling(PerturbationAttribution):
             "attribute_future is not implemented for ShapleyValueSampling"
         )
 
-    # pyre-fixme[3]: Return annotation cannot contain `Any`.
     def _perturbation_generator(
         self,
         inputs: Tuple[Tensor, ...],
-        # pyre-fixme[2]: Parameter annotation cannot be `Any`.
-        additional_args: Any,
+        additional_args: Optional[Tuple[object, ...]],
         target: TargetType,
         baselines: Tuple[Tensor, ...],
         input_masks: TensorOrTupleOfTensorsGeneric,
         feature_permutation: Sequence[int],
         perturbations_per_eval: int,
-    ) -> Iterable[Tuple[Tuple[Tensor, ...], Any, TargetType, Tuple[Tensor, ...]]]:
+    ) -> Iterable[Tuple[Tuple[Tensor, ...], object, TargetType, Tuple[Tensor, ...]]]:
         """
         This method is a generator which yields each perturbation to be evaluated
         including inputs, additional_forward_args, targets, and mask.
@@ -577,9 +542,9 @@ class ShapleyValueSampling(PerturbationAttribution):
                 combined_masks,
             )
 
-    # pyre-fixme[3]: Return type must be annotated.
-    # pyre-fixme[2]: Parameter must be annotated.
-    def _get_n_evaluations(self, total_features, n_samples, perturbations_per_eval):
+    def _get_n_evaluations(
+        self, total_features: int, n_samples: int, perturbations_per_eval: int
+    ) -> int:
         """return the total number of forward evaluations needed"""
         return math.ceil(total_features / perturbations_per_eval) * n_samples
 
@@ -641,8 +606,7 @@ class ShapleyValues(ShapleyValueSampling):
     evaluations, and we plan to add this approach in the future.
     """
 
-    # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
-    def __init__(self, forward_func: Callable) -> None:
+    def __init__(self, forward_func: Callable[..., Union[int, float, Tensor]]) -> None:
         r"""
         Args:
 
@@ -663,8 +627,7 @@ class ShapleyValues(ShapleyValueSampling):
         inputs: TensorOrTupleOfTensorsGeneric,
         baselines: BaselineType = None,
         target: TargetType = None,
-        # pyre-fixme[2]: Parameter annotation cannot be `Any`.
-        additional_forward_args: Any = None,
+        additional_forward_args: Optional[object] = None,
         feature_mask: Union[None, TensorOrTupleOfTensorsGeneric] = None,
         perturbations_per_eval: int = 1,
         show_progress: bool = False,
@@ -858,7 +821,8 @@ class ShapleyValues(ShapleyValueSampling):
             warnings.warn(
                 "You are attempting to compute Shapley Values with at least 10 "
                 "features, which will likely be very computationally expensive."
-                "Consider using Shapley Value Sampling instead."
+                "Consider using Shapley Value Sampling instead.",
+                stacklevel=1,
             )
 
         return super().attribute.__wrapped__(

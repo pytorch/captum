@@ -3,7 +3,7 @@
 # pyre-strict
 import typing
 import warnings
-from typing import Any, Callable, Iterator, Tuple, Union
+from typing import Any, Callable, Iterator, Optional, Tuple, Union
 
 import torch
 from captum._utils.common import (
@@ -51,7 +51,8 @@ def _batch_attribution(
         warnings.warn(
             "Internal batch size cannot be less than the number of input examples. "
             "Defaulting to internal batch size of %d equal to the number of examples."
-            % num_examples
+            % num_examples,
+            stacklevel=1,
         )
     # Number of steps for each batch
     step_count = max(1, internal_batch_size // num_examples)
@@ -62,7 +63,8 @@ def _batch_attribution(
                 "This method computes finite differences between evaluations at "
                 "consecutive steps, so internal batch size must be at least twice "
                 "the number of examples. Defaulting to internal batch size of %d"
-                " equal to twice the number of examples." % (2 * num_examples)
+                " equal to twice the number of examples." % (2 * num_examples),
+                stacklevel=1,
             )
 
     total_attr = None
@@ -137,8 +139,7 @@ def _tuple_splice_range(
 # pyre-fixme[3]: Return annotation cannot contain `Any`.
 def _batched_generator(
     inputs: TensorOrTupleOfTensorsGeneric,
-    # pyre-fixme[2]: Parameter annotation cannot be `Any`.
-    additional_forward_args: Any = None,
+    additional_forward_args: Optional[object] = None,
     target_ind: TargetType = None,
     internal_batch_size: Union[None, int] = None,
 ) -> Iterator[Tuple[Tuple[Tensor, ...], Any, TargetType]]:
@@ -161,7 +162,8 @@ def _batched_generator(
         warnings.warn(
             """It looks like that the attribution for a gradient-based method is
             computed in a `torch.no_grad` block or perhaps the inputs have no
-            requires_grad."""
+            requires_grad.""",
+            stacklevel=1,
         )
     if internal_batch_size is None:
         # pyre-fixme[7]: Expected `Iterator[Tuple[typing.Tuple[Tensor, ...], typing.A...
@@ -178,6 +180,9 @@ def _batched_generator(
                 )
             # pyre-fixme[7]: Expected `Iterator[Tuple[typing.Tuple[Tensor, ...], typi...
             yield inputs_splice, _tuple_splice_range(
+                # pyre-fixme[6]: In call `_tuple_splice_range`, for 1st positional
+                # argument, expected `None` but got
+                # `Optional[typing.Tuple[typing.Any, ...]]`
                 additional_forward_args,
                 current_total,
                 current_total + internal_batch_size,
@@ -192,8 +197,7 @@ def _batched_generator(
 def _batched_operator(
     operator: Callable[..., TupleOrTensorOrBoolGeneric],
     inputs: TensorOrTupleOfTensorsGeneric,
-    # pyre-fixme[2]: Parameter annotation cannot be `Any`.
-    additional_forward_args: Any = None,
+    additional_forward_args: Optional[object] = None,
     target_ind: TargetType = None,
     internal_batch_size: Union[None, int] = None,
     **kwargs: Any,
