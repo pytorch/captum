@@ -2,7 +2,7 @@
 
 import os
 import tempfile
-from typing import Any, Callable, cast, Dict, List, Optional, Tuple
+from typing import Any, Callable, Dict, List, Optional, Tuple
 
 import torch
 import torch.nn as nn
@@ -186,9 +186,8 @@ class TestTracInRegression(BaseTest):
 
             if mode == "check_idx":
 
-                self.assertTrue(isinstance(reduction, str))
-                # pyre-fixme[22]: The cast is redundant.
-                criterion = nn.MSELoss(reduction=cast(str, reduction))
+                assert isinstance(reduction, str)
+                criterion = nn.MSELoss(reduction=reduction)
 
                 tracin = tracin_constructor(
                     net,
@@ -286,9 +285,7 @@ class TestTracInRegression(BaseTest):
         features = 1
         dataset = RangeDataset(low, high, features)
         net = CoefficientNet()
-        self.assertTrue(isinstance(reduction, str))
-        # pyre-fixme[22]: The cast is redundant.
-        criterion = nn.MSELoss(reduction=cast(str, reduction))
+        criterion = nn.MSELoss(reduction=reduction)
         batch_size = 4
         weights = [0.4379, 0.1653, 0.5132, 0.3651, 0.9992]
 
@@ -412,9 +409,8 @@ class TestTracInRegression(BaseTest):
 
             if mode == "check_idx":
 
-                self.assertTrue(isinstance(reduction, str))
-                # pyre-fixme[22]: The cast is redundant.
-                criterion = nn.MSELoss(reduction=cast(str, reduction))
+                assert isinstance(reduction, str)
+                criterion = nn.MSELoss(reduction=reduction)
 
                 tracin = tracin_constructor(
                     net,
@@ -528,9 +524,8 @@ class TestTracInRegression(BaseTest):
 
             self.assertTrue(callable(tracin_constructor))
 
-            self.assertTrue(isinstance(reduction, str))
-            # pyre-fixme[22]: The cast is redundant.
-            criterion = nn.MSELoss(reduction=cast(str, reduction))
+            assert isinstance(reduction, str)
+            criterion = nn.MSELoss(reduction=reduction)
 
             # the output of `net`, i.e. `input` for the loss functions below, is a
             # batch_size x 1 2D tensor
