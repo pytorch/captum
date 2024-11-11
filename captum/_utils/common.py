@@ -691,8 +691,8 @@ def _contains_slice(target: Union[int, Tuple[Union[int, slice], ...]]) -> bool:
 
 
 def _verify_select_column(
-    # pyre-fixme[24]: Generic type `slice` expects 3 type parameters.
     output: Tensor,
+    # pyre-fixme[24]: Generic type `slice` expects 3 type parameters.
     target: Union[int, Tuple[Union[int, slice], ...]],
 ) -> Tensor:
     target = (target,) if isinstance(target, int) else target
