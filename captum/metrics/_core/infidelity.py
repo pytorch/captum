@@ -619,6 +619,8 @@ def _make_next_infidelity_tensors_func(
         inputs_fwd = torch.repeat_interleave(
             inputs_fwd, current_n_perturb_samples, dim=0
         )
+        # pyre-fixme[58]: `-` is not supported for operand types `Tensor` and
+        #  `Union[Future[Tensor], Tensor]`.
         perturbed_fwd_diffs = inputs_fwd - inputs_perturbed_fwd
         attributions_expanded = tuple(
             torch.repeat_interleave(attribution, current_n_perturb_samples, dim=0)

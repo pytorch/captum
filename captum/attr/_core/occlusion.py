@@ -316,6 +316,7 @@ class Occlusion(FeatureAblation):
             ],
             dim=0,
         ).long()
+        assert baseline is not None, "baseline should not be None"
         ablated_tensor = (
             expanded_input
             * (
