@@ -167,9 +167,9 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">            probs (Tensor): probabilities tensor of the gates are active</span>
 <span class="sd">                in shape(n_gates)</span>
 <span class="sd">        """</span>
-        <span class="n">std</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">std</span>
-        <span class="k">assert</span> <span class="n">std</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">,</span> <span class="s2">"std should not be None"</span>
-        <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mu</span> <span class="o">/</span> <span class="n">std</span>
+        <span class="c1"># pyre-fixme[58]: `/` is not supported for operand types `Parameter` and</span>
+        <span class="c1">#  `Optional[float]`.</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mu</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">std</span>
         <span class="k">return</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">torch</span><span class="o">.</span><span class="n">erf</span><span class="p">(</span><span class="n">x</span> <span class="o">/</span> <span class="n">math</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="p">)))</span>
 
     <span class="nd">@classmethod</span>
