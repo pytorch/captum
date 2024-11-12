@@ -133,6 +133,8 @@ class GaussianStochasticGates(StochasticGatesBase):
             probs (Tensor): probabilities tensor of the gates are active
                 in shape(n_gates)
         """
+        # pyre-fixme[58]: `/` is not supported for operand types `Parameter` and
+        #  `Optional[float]`.
         x = self.mu / self.std
         return 0.5 * (1 + torch.erf(x / math.sqrt(2)))
 
