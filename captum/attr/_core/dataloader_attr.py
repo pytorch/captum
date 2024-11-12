@@ -87,6 +87,8 @@ def _perturb_inputs(
         else:
             baseline = baselines[attr_inp_count]
 
+            # pyre-fixme[58]: `*` is not supported for operand types `object` and
+            #  `Tensor`.
             perturbed_inp = inp * pert_mask + baseline * (1 - pert_mask)
             perturbed_inputs.append(perturbed_inp)
 

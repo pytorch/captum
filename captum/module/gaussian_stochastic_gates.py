@@ -133,7 +133,9 @@ class GaussianStochasticGates(StochasticGatesBase):
             probs (Tensor): probabilities tensor of the gates are active
                 in shape(n_gates)
         """
-        x = self.mu / self.std
+        std = self.std
+        assert std is not None, "std should not be None"
+        x = self.mu / std
         return 0.5 * (1 + torch.erf(x / math.sqrt(2)))
 
     @classmethod
