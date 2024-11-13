@@ -806,11 +806,9 @@ class FeatureAblation(PerturbationAttribution):
             dim=0,
         ).long()
         current_mask = current_mask.to(expanded_input.device)
+        assert baseline is not None, "baseline must be provided"
         ablated_tensor = (
-            expanded_input
-            * (1 - current_mask).to(expanded_input.dtype)
-            # pyre-fixme[58]: `*` is not supported for operand types `Union[None, float,
-            #  Tensor]` and `Tensor`.
+            expanded_input * (1 - current_mask).to(expanded_input.dtype)
         ) + (baseline * current_mask.to(expanded_input.dtype))
         return ablated_tensor, current_mask
 

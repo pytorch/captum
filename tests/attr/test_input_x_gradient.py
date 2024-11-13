@@ -117,9 +117,9 @@ class Test(BaseTest):
             attributions = input_x_grad.attribute(input, target)
             output = model(input)[:, target]
             output.backward()
-            # pyre-fixme[58]: `*` is not supported for operand types
-            #  `Optional[Tensor]` and `Tensor`.
-            expected = input.grad * input
+            input_grad = input.grad
+            assert input_grad is not None
+            expected = input_grad * input
             assertTensorAlmostEqual(self, attributions, expected, 0.00001, "max")
         else:
             nt = NoiseTunnel(input_x_grad)
