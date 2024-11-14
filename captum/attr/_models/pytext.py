@@ -160,8 +160,7 @@ class BaselineGenerator:
 
     def _generate_baseline_single_dict_feature(
         self,
-        # pyre-fixme[2]: Parameter `device` has no type specified.
-        device,
+        device: torch.device,
     ) -> Tuple[torch.Tensor, ...]:
         r"""Generate dict features based on Assistant's case study by using
          sia_transformer:
@@ -197,7 +196,7 @@ class BaselineGenerator:
                 ]
             )
             .unsqueeze(0)
-            .to(device)
+            .to(device=device)
         )
         gazetteer_feat_weights = (
             torch.tensor(gazetteer_feat_weights).unsqueeze(0).to(device)
