@@ -12,6 +12,8 @@
 # In[1]:
 
 
+import warnings
+
 import bitsandbytes as bnb
 import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig
@@ -26,6 +28,10 @@ from captum.attr import (
     TextTemplateInput,
     ProductBaselines,
 )
+
+# Ignore warnings due to transformers library
+warnings.filterwarnings("ignore", ".*past_key_values.*")
+warnings.filterwarnings("ignore", ".*Skipping this token.*")
 
 
 # ## Preparation
@@ -42,7 +48,7 @@ def load_model(model_name, bnb_config):
     model = AutoModelForCausalLM.from_pretrained(
         model_name,
         quantization_config=bnb_config,
-        device_map="auto", # dispatch efficiently the model on the available ressources
+        device_map="auto",  # dispatch efficiently the model on the available ressources
         max_memory = {i: max_memory for i in range(n_gpus)},
     )
     tokenizer = AutoTokenizer.from_pretrained(model_name, token=True)
@@ -109,15 +115,16 @@ llm_attr = LLMAttribution(fa, tokenizer)
 # In[6]:
 
 
+skip_tokens = [1]  # skip the special token for the start of the text <s>
 inp = TextTokenInput(
     eval_prompt, 
     tokenizer,
-    skip_tokens=[1],  # skip the special token for the start of the text <s>
+    skip_tokens=skip_tokens,
 )
 
 target = "playing guitar, hiking, and spending time with his family."
 
-attr_res = llm_attr.attribute(inp, target=target)
+attr_res = llm_attr.attribute(inp, target=target, skip_tokens=skip_tokens)
 
 
 # With just a few lines of codes, we now get the `FeatureAblation` attribution result of our LLM. The return contains the attribution tensors to both the entire generated target seqeuence and each generated token, which tell us how each input token impact the output and each token within it.
@@ -153,7 +160,7 @@ inp = TextTemplateInput(
 
 target = "playing golf, hiking, and cooking."
 
-attr_res = llm_attr.attribute(inp, target=target)
+attr_res = llm_attr.attribute(inp, target=target, skip_tokens=skip_tokens)
 
 attr_res.plot_token_attr(show=True)
 
@@ -171,7 +178,7 @@ inp = TextTemplateInput(
     baselines=["Sarah", "Seattle", "WA", "doctor", "Her"],
 )
 
-attr_res = llm_attr.attribute(inp, target=target)
+attr_res = llm_attr.attribute(inp, target=target, skip_tokens=skip_tokens)
 
 attr_res.plot_token_attr(show=True)
 
@@ -195,12 +202,12 @@ baselines = ProductBaselines(
 
 inp = TextTemplateInput(
     "{name} lives in {city}, {state} and is a {occupation}. {pronoun} personal interests include", 
-    values={"name":"Dave", "city": "Palm Coast", "state": "FL", "occupation":"lawyer", "pronoun":"His"}, 
+    values={"name": "Dave", "city": "Palm Coast", "state": "FL", "occupation": "lawyer", "pronoun": "His"}, 
     baselines=baselines,
-    mask={"name":0, "city": 1, "state": 1, "occupation": 2, "pronoun": 0},
+    mask={"name": 0, "city": 1, "state": 1, "occupation": 2, "pronoun": 0},
 )
 
-attr_res = llm_attr.attribute(inp, target=target, num_trials=3)
+attr_res = llm_attr.attribute(inp, target=target, skip_tokens=skip_tokens, num_trials=3)
 
 attr_res.plot_token_attr(show=True)
 
@@ -218,7 +225,7 @@ sv = ShapleyValues(model)
 
 sv_llm_attr = LLMAttribution(sv, tokenizer)
 
-attr_res = sv_llm_attr.attribute(inp, target=target, num_trials=3)
+attr_res = sv_llm_attr.attribute(inp, target=target, skip_tokens=skip_tokens, num_trials=3)
 
 attr_res.plot_token_attr(show=True)
 
@@ -249,7 +256,7 @@ inp = TextTemplateInput(
     values=input_examples,
 )
 
-attr_res = sv_llm_attr.attribute(inp)
+attr_res = sv_llm_attr.attribute(inp, skip_tokens=skip_tokens)
 
 attr_res.plot_token_attr(show=True)
 
@@ -275,10 +282,10 @@ llm_attr = LLMGradientAttribution(lig, tokenizer)
 inp = TextTokenInput(
     eval_prompt,
     tokenizer,
-    skip_tokens=[1],  # skip the special token for the start of the text <s>
+    skip_tokens=skip_tokens,
 )
 
-attr_res = llm_attr.attribute(inp, target=target)
+attr_res = llm_attr.attribute(inp, target=target, skip_tokens=skip_tokens)
 
 attr_res.plot_seq_attr(show=True)
 
