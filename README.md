@@ -30,7 +30,7 @@ libraries such as torchvision, torchtext, and others.
 
 #### About Captum
 
-With the increase in model complexity and the resulting lack of transparency, model interpretability methods have become increasingly important. Model understanding is both an active area of research as well as an area of focus for practical applications across industries using machine learning. Captum provides state-of-the-art algorithms such as Integrated Gradients, Testing with Concept Activaton Vectors (TCAV), TracIn influence functions, just to name a few, that provide researchers and developers with an easy way to understand which features, training examples or concepts contribute to a models' predictions and in general what and how the model learns. In addition to that, Captum also provides adversarial attacks and minimal input perturbation capabilities that can be used both for generating counterfactual explanations and adversarial perturbations.
+With the increase in model complexity and the resulting lack of transparency, model interpretability methods have become increasingly important. Model understanding is both an active area of research as well as an area of focus for practical applications across industries using machine learning. Captum provides state-of-the-art algorithms such as Integrated Gradients, Testing with Concept Activation Vectors (TCAV), TracIn influence functions, just to name a few, that provide researchers and developers with an easy way to understand which features, training examples or concepts contribute to a models' predictions and in general what and how the model learns. In addition to that, Captum also provides adversarial attacks and minimal input perturbation capabilities that can be used both for generating counterfactual explanations and adversarial perturbations.
 
 <!--For model developers, Captum can be used to improve and troubleshoot models by facilitating the identification of different features that contribute to a model’s output in order to design better models and troubleshoot unexpected model outputs. -->
 
@@ -461,7 +461,7 @@ You can watch the recorded talk [here](https://www.youtube.com/watch?v=ayhBHZYje
 
 **ICLR 2021 workshop on Responsible AI**:
 - [Paper](https://arxiv.org/abs/2009.07896) on the Captum Library
-- [Paper](https://arxiv.org/abs/2106.07475) on Invesitgating Sanity Checks for Saliency Maps
+- [Paper](https://arxiv.org/abs/2106.07475) on Investigating Sanity Checks for Saliency Maps
 
 
 Summer school on medical imaging at University of Lyon. A class on model explainability (link to the video)
