@@ -116,4 +116,5 @@ def supports_caching(model: nn.Module) -> bool:
         # Cache is mandatory
         return True
     # Fallback on _supports_cache_class attribute
+    # pyre-fixme[7]: Expected `bool` but got `Union[Module, Tensor]`.
     return getattr(model, "_supports_cache_class", False)

@@ -404,6 +404,7 @@ class BaseLLMAttribution(Attribution, ABC):
                 gen_args = DEFAULT_GEN_ARGS
 
             model_inp = self._format_model_input(inp.to_model_input())
+            # pyre-fixme[29]: `Union[Module, Tensor]` is not a function.
             output_tokens = self.model.generate(model_inp, **gen_args)
             target_tokens = output_tokens[0][model_inp.size(1) :]
         else:
@@ -558,9 +559,11 @@ class LLMAttribution(BaseLLMAttribution):
                         outputs.past_key_values = DynamicCache.from_legacy_cache(
                             outputs.past_key_values
                         )
+                    # pyre-fixme[29]: `Union[Module, Tensor]` is not a function.
                     model_kwargs = self.model._update_model_kwargs_for_generation(
                         outputs, model_kwargs
                     )
+                # pyre-fixme[29]: `Union[Module, Tensor]` is not a function.
                 model_inputs = self.model.prepare_inputs_for_generation(
                     model_inp, **model_kwargs
                 )
