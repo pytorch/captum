@@ -445,6 +445,7 @@ src="/_sphinx/documentation_options.js"></script>
                 <span class="n">gen_args</span> <span class="o">=</span> <span class="n">DEFAULT_GEN_ARGS</span>
 
             <span class="n">model_inp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_format_model_input</span><span class="p">(</span><span class="n">inp</span><span class="o">.</span><span class="n">to_model_input</span><span class="p">())</span>
+            <span class="c1"># pyre-fixme[29]: `Union[Module, Tensor]` is not a function.</span>
             <span class="n">output_tokens</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">generate</span><span class="p">(</span><span class="n">model_inp</span><span class="p">,</span> <span class="o">**</span><span class="n">gen_args</span><span class="p">)</span>
             <span class="n">target_tokens</span> <span class="o">=</span> <span class="n">output_tokens</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="n">model_inp</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span> <span class="p">:]</span>
         <span class="k">else</span><span class="p">:</span>
@@ -601,9 +602,11 @@ src="/_sphinx/documentation_options.js"></script>
                         <span class="n">outputs</span><span class="o">.</span><span class="n">past_key_values</span> <span class="o">=</span> <span class="n">DynamicCache</span><span class="o">.</span><span class="n">from_legacy_cache</span><span class="p">(</span>
                             <span class="n">outputs</span><span class="o">.</span><span class="n">past_key_values</span>
                         <span class="p">)</span>
+                    <span class="c1"># pyre-fixme[29]: `Union[Module, Tensor]` is not a function.</span>
                     <span class="n">model_kwargs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">_update_model_kwargs_for_generation</span><span class="p">(</span>
                         <span class="n">outputs</span><span class="p">,</span> <span class="n">model_kwargs</span>
                     <span class="p">)</span>
+                <span class="c1"># pyre-fixme[29]: `Union[Module, Tensor]` is not a function.</span>
                 <span class="n">model_inputs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">prepare_inputs_for_generation</span><span class="p">(</span>
                     <span class="n">model_inp</span><span class="p">,</span> <span class="o">**</span><span class="n">model_kwargs</span>
                 <span class="p">)</span>
