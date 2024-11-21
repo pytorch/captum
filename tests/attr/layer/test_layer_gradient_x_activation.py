@@ -174,6 +174,8 @@ class Test(BaseTest):
                 self, attributions, expected_activation, delta=0.01
             )
         else:
+            # pyre-fixme[6]: For 1st argument expected
+            #  `pyre_extensions.PyreReadOnly[Sized]` but got `ModuleOrModuleList`.
             for i in range(len(target_layer)):
                 assertTensorTuplesAlmostEqual(
                     self, attributions[i], expected_activation[i], delta=0.01
@@ -196,6 +198,8 @@ class Test(BaseTest):
                 delta=0.01,
             )
         else:
+            # pyre-fixme[6]: For 1st argument expected
+            #  `pyre_extensions.PyreReadOnly[Sized]` but got `ModuleOrModuleList`.
             for i in range(len(target_layer)):
                 assertTensorTuplesAlmostEqual(
                     self,

@@ -407,6 +407,8 @@ class AttributionVisualizer:
             else self.models
         )
         results = []
+        # pyre-fixme[6]: For 1st argument expected `Iterable[_T]` but got
+        #  `Union[List[Any], Module]`.
         for model_index, model in enumerate(models_used):
             # Get list of model visualizations for each input
             actual_label_output = None
