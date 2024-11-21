@@ -848,7 +848,10 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="n">current_mask</span> <span class="o">=</span> <span class="n">current_mask</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">expanded_input</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
         <span class="k">assert</span> <span class="n">baseline</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">,</span> <span class="s2">"baseline must be provided"</span>
         <span class="n">ablated_tensor</span> <span class="o">=</span> <span class="p">(</span>
-            <span class="n">expanded_input</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">current_mask</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">expanded_input</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
+            <span class="n">expanded_input</span>
+            <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">current_mask</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">expanded_input</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
+            <span class="c1"># pyre-fixme[58]: `*` is not supported for operand types `Union[None, float,</span>
+            <span class="c1">#  Tensor]` and `Tensor`.</span>
         <span class="p">)</span> <span class="o">+</span> <span class="p">(</span><span class="n">baseline</span> <span class="o">*</span> <span class="n">current_mask</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">expanded_input</span><span class="o">.</span><span class="n">dtype</span><span class="p">))</span>
         <span class="k">return</span> <span class="n">ablated_tensor</span><span class="p">,</span> <span class="n">current_mask</span>
 
