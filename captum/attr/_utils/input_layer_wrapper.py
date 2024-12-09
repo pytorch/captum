@@ -3,9 +3,10 @@
 # pyre-strict
 
 import inspect
-from typing import Any
+from typing import Dict, List
 
 import torch.nn as nn
+from torch import Tensor
 
 
 class InputIdentity(nn.Module):
@@ -21,9 +22,7 @@ class InputIdentity(nn.Module):
         super().__init__()
         self.input_name = input_name
 
-    # pyre-fixme[3]: Return type must be annotated.
-    # pyre-fixme[2]: Parameter must be annotated.
-    def forward(self, x):
+    def forward(self, x: Tensor) -> Tensor:
         return x
 
 
@@ -64,18 +63,17 @@ class ModelInputWrapper(nn.Module):
         self.module = module_to_wrap
 
         # ignore self
-        # pyre-fixme[4]: Attribute must be annotated.
-        self.arg_name_list = inspect.getfullargspec(module_to_wrap.forward).args[1:]
+        self.arg_name_list: List[str] = inspect.getfullargspec(
+            module_to_wrap.forward
+        ).args[1:]
         self.input_maps = nn.ModuleDict(
             {arg_name: InputIdentity(arg_name) for arg_name in self.arg_name_list}
         )
 
-    # pyre-fixme[3]: Return annotation cannot be `Any`.
-    # pyre-fixme[2]: Parameter must be annotated.
-    def forward(self, *args, **kwargs) -> Any:
-        args = list(args)
-        for idx, (arg_name, arg) in enumerate(zip(self.arg_name_list, args)):
-            args[idx] = self.input_maps[arg_name](arg)
+    def forward(self, *args: str, **kwargs: Dict[str, str]) -> object:
+        args_list = list(args)
+        for idx, (arg_name, arg) in enumerate(zip(self.arg_name_list, args_list)):
+            args_list[idx] = self.input_maps[arg_name](arg)
 
         for arg_name in kwargs.keys():
             kwargs[arg_name] = self.input_maps[arg_name](kwargs[arg_name])
