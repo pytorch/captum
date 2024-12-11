@@ -65,9 +65,13 @@ class Test(BaseTest):
 
     def test_softmax_classification_batch_multi_target(self) -> None:
         num_in = 40
-        inputs = torch.arange(0.0, num_in * 3.0, requires_grad=True).reshape(3, num_in)
-        baselines = torch.arange(1.0, num_in + 1).reshape(1, num_in)
-        model = SoftmaxDeepLiftModel(num_in, 20, 10)
+        inputs = (
+            torch.arange(0.0, num_in * 3.0, requires_grad=True)
+            .reshape(3, num_in)
+            .double()
+        )
+        baselines = torch.arange(1.0, num_in + 1).reshape(1, num_in).double()
+        model = SoftmaxDeepLiftModel(num_in, 20, 10).double()
         dl = DeepLift(model)
 
         self.softmax_classification(

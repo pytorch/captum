@@ -523,8 +523,6 @@ class DeepLift(GradientAttribution):
                         additional_args, 2, ExpansionTypes.repeat
                     ),
                 )
-                # pyre-fixme[60]: Concatenation not yet support for multiple
-                #  variadic tuples: `*baseline_input_tsr, *expanded_additional_args`.
                 return (*baseline_input_tsr, *expanded_additional_args)
             return baseline_input_tsr
 
