@@ -563,8 +563,6 @@ src="/_sphinx/documentation_options.js"></script>
                         <span class="n">additional_args</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="n">ExpansionTypes</span><span class="o">.</span><span class="n">repeat</span>
                     <span class="p">),</span>
                 <span class="p">)</span>
-                <span class="c1"># pyre-fixme[60]: Concatenation not yet support for multiple</span>
-                <span class="c1">#  variadic tuples: `*baseline_input_tsr, *expanded_additional_args`.</span>
                 <span class="k">return</span> <span class="p">(</span><span class="o">*</span><span class="n">baseline_input_tsr</span><span class="p">,</span> <span class="o">*</span><span class="n">expanded_additional_args</span><span class="p">)</span>
             <span class="k">return</span> <span class="n">baseline_input_tsr</span>
 
