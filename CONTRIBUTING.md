@@ -63,7 +63,7 @@ Then run this script from the repository root:
 ```
 Note that we expect mypy to have version 0.760 or higher, and when type checking, use PyTorch 1.4 or
 higher due to fixes to PyTorch type hints available in 1.4. We also use the Literal feature which is
-available only in Python 3.8 or above. If type-checking using a previous version of Python, you will
+available only in Python 3.9 or above. If type-checking using a previous version of Python, you will
 need to install the typing-extension package which can be done with pip using `pip install typing-extensions`.
 
 #### Unit Tests
