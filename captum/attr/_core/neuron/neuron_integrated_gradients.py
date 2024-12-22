@@ -27,8 +27,7 @@ class NeuronIntegratedGradients(NeuronAttribution, GradientAttribution):
 
     def __init__(
         self,
-        # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
-        forward_func: Callable,
+        forward_func: Callable[..., Tensor],
         layer: Module,
         device_ids: Union[None, List[int]] = None,
         multiply_by_inputs: bool = True,
@@ -76,8 +75,11 @@ class NeuronIntegratedGradients(NeuronAttribution, GradientAttribution):
     def attribute(
         self,
         inputs: TensorOrTupleOfTensorsGeneric,
-        # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
-        neuron_selector: Union[int, Tuple[Union[int, slice], ...], Callable],
+        neuron_selector: Union[
+            int,
+            Tuple[Union[int, slice[int, int, int]], ...],
+            Callable[[Union[Tensor, Tuple[Tensor, ...]]], Tensor],
+        ],
         baselines: Union[None, Tensor, Tuple[Tensor, ...]] = None,
         additional_forward_args: Optional[object] = None,
         n_steps: int = 50,
