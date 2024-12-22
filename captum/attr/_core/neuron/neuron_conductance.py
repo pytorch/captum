@@ -39,8 +39,7 @@ class NeuronConductance(NeuronAttribution, GradientAttribution):
 
     def __init__(
         self,
-        # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
-        forward_func: Callable,
+        forward_func: Callable[..., Tensor],
         layer: Module,
         device_ids: Union[None, List[int]] = None,
         multiply_by_inputs: bool = True,
@@ -94,8 +93,11 @@ class NeuronConductance(NeuronAttribution, GradientAttribution):
     def attribute(
         self,
         inputs: TensorOrTupleOfTensorsGeneric,
-        # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
-        neuron_selector: Union[int, Tuple[int, ...], Callable],
+        neuron_selector: Union[
+            int,
+            Tuple[Union[int, slice[int, int, int]], ...],
+            Callable[[Union[Tensor, Tuple[Tensor, ...]]], Tensor],
+        ],
         baselines: BaselineType = None,
         target: TargetType = None,
         additional_forward_args: Optional[object] = None,
@@ -285,8 +287,6 @@ class NeuronConductance(NeuronAttribution, GradientAttribution):
                 " results.",
                 stacklevel=1,
             )
-        # pyre-fixme[6]: For 1st argument expected `Tensor` but got
-        #  `TensorOrTupleOfTensorsGeneric`.
         is_inputs_tuple = _is_tuple(inputs)
 
         # pyre-fixme[9]: inputs has type `TensorOrTupleOfTensorsGeneric`; used as
@@ -334,8 +334,11 @@ class NeuronConductance(NeuronAttribution, GradientAttribution):
     def _attribute(
         self,
         inputs: Tuple[Tensor, ...],
-        # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
-        neuron_selector: Union[int, Tuple[int, ...], Callable],
+        neuron_selector: Union[
+            int,
+            Tuple[Union[int, slice[int, int, int]], ...],
+            Callable[[Union[Tensor, Tuple[Tensor, ...]]], Tensor],
+        ],
         baselines: Tuple[Union[Tensor, int, float], ...],
         target: TargetType = None,
         additional_forward_args: Optional[object] = None,
