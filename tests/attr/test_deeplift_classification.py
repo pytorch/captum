@@ -2,7 +2,7 @@
 
 # pyre-unsafe
 
-from typing import Union
+from typing import TypeVar, Union
 
 import torch
 from captum._utils.typing import TargetType
@@ -20,6 +20,8 @@ from tests.helpers.classification_models import (
 )
 from torch import Tensor
 from torch.nn import Module
+
+DeepLiftAttrMethod = TypeVar("DeepLiftAttrMethod", DeepLift, DeepLiftShap)
 
 
 class Test(BaseTest):
@@ -155,7 +157,7 @@ class Test(BaseTest):
     def softmax_classification(
         self,
         model: Module,
-        attr_method: Union[DeepLift, DeepLiftShap],
+        attr_method: DeepLiftAttrMethod,
         input: Tensor,
         baselines: Union[float, int, Tensor],
         target: TargetType,
