@@ -15,7 +15,7 @@ jobs:
   tests:
     strategy:
       matrix:
-        python_version: ["3.8", "3.9", "3.10", "3.11"]
+        python_version: ["3.9", "3.10", "3.11", "3.12"]
       fail-fast: false
     uses: pytorch/test-infra/.github/workflows/linux_job.yml@main
     with:
@@ -28,7 +28,7 @@ jobs:
         # Create Conda Env
         conda create -yp ci_env python="${PYTHON_VERSION}"
         conda activate /pytorch/captum/ci_env
-        ./scripts/install_via_conda.sh -n
+        ./scripts/install_via_conda.sh
 
         # Run Tests
         python3 -m pytest -ra --cov=. --cov-report term-missing
