@@ -16,6 +16,7 @@ from captum._utils.gradient import (
 )
 from captum._utils.typing import (
     ModuleOrModuleList,
+    ModuleOrModuleListOrModuleTuple,
     TargetType,
     TensorOrTupleOfTensorsGeneric,
 )
@@ -253,7 +254,7 @@ class LayerLRP(LRP, LayerAttribution):
 
         if return_convergence_delta:
             delta: Union[Tensor, List[Tensor]]
-            if isinstance(self.layer, list):
+            if isinstance(self.layer, list) or isinstance(self.layer, tuple):
                 delta = []
                 for relevance_layer in relevances:
                     delta.append(
@@ -294,7 +295,7 @@ class LayerLRP(LRP, LayerAttribution):
     # pyre-fixme[3]: Return type must be annotated.
     # pyre-fixme[2]: Parameter must be annotated.
     def _get_output_relevance(self, output):
-        if isinstance(self.layer, list):
+        if isinstance(self.layer, list) or isinstance(self.layer, tuple):
             relevances = []
             for layer in self.layer:
                 relevances.append(self._get_single_output_relevance(layer, output))
