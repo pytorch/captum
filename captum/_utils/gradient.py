@@ -28,6 +28,7 @@ from captum._utils.common import (
 from captum._utils.sample_gradient import SampleGradientWrapper
 from captum._utils.typing import (
     ModuleOrModuleList,
+    SliceIntType,
     TargetType,
     TensorOrTupleOfTensorsGeneric,
 )
@@ -775,8 +776,11 @@ def compute_layer_gradients_and_eval(
 
 def construct_neuron_grad_fn(
     layer: Module,
-    # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
-    neuron_selector: Union[int, Tuple[Union[int, slice], ...], Callable],
+    neuron_selector: Union[
+        int,
+        Tuple[Union[int, SliceIntType], ...],
+        Callable[[Union[Tensor, Tuple[Tensor, ...]]], Tensor],
+    ],
     device_ids: Union[None, List[int]] = None,
     attribute_to_neuron_input: bool = False,
     # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
