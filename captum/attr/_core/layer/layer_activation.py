@@ -20,8 +20,7 @@ class LayerActivation(LayerAttribution):
 
     def __init__(
         self,
-        # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
-        forward_func: Callable,
+        forward_func: Callable[..., Union[int, float, Tensor]],
         layer: ModuleOrModuleList,
         device_ids: Union[None, List[int]] = None,
     ) -> None:
@@ -132,8 +131,6 @@ class LayerActivation(LayerAttribution):
             )
         else:
             return [
-                # pyre-fixme[6]: For 2nd argument expected `Tuple[Tensor, ...]` but
-                #  got `Tensor`.
                 _format_output(len(single_layer_eval) > 1, single_layer_eval)
                 for single_layer_eval in layer_eval
             ]
