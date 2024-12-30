@@ -85,7 +85,7 @@ const siteConfig = {
   docsSideNavCollapsible: false,
 
   // URL for editing docs
-  editUrl: "https://github.com/pytorch/captum/edit/master/docs/",
+  editUrl: "https://github.com/pytorch/captum/edit/main/docs/",
 
   // Disable logo text so we can just show the logo
   disableHeaderTitle: true,
