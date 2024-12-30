@@ -3,10 +3,11 @@
 # pyre-strict
 
 from abc import ABC, abstractmethod
+from typing import cast, Dict, List, Union
 
 import torch
-
 from captum._utils.common import _format_tensor_into_tuples
+from torch import Tensor
 
 
 class PropagationRule(ABC):
@@ -14,6 +15,9 @@ class PropagationRule(ABC):
     Base class for all propagation rule classes, also called Z-Rule.
     STABILITY_FACTOR is used to assure that no zero divison occurs.
     """
+
+    relevance_input: Dict[torch.device, Union[torch.Tensor, List[torch.Tensor]]] = {}
+    relevance_output: Dict[torch.device, torch.Tensor] = {}
 
     STABILITY_FACTOR = 1e-9
 
@@ -67,7 +71,7 @@ class PropagationRule(ABC):
                 # pyre-fixme[16]: `PropagationRule` has no attribute `relevance_input`.
                 self.relevance_input[device] = relevance.data
             else:
-                self.relevance_input[device].append(relevance.data)
+                cast(List[Tensor], self.relevance_input[device]).append(relevance.data)
 
             # replace_out is needed since two hooks are set on the same tensor
             # The output of this hook is needed in backward_hook_activation

@@ -41,6 +41,13 @@ TensorLikeList = Union[
     TensorLikeList5D,
 ]
 
+try:
+    # Subscripted slice syntax is not supported in previous Python versions,
+    # falling back to slice type.
+    SliceIntType = slice[int, int, int]
+except TypeError:
+    # pyre-fixme[24]: Generic type `slice` expects 3 type parameters.
+    SliceIntType = slice  # type: ignore
 
 # Necessary for Python >=3.7 and <3.9!
 if TYPE_CHECKING:
