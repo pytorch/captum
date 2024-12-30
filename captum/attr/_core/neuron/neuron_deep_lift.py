@@ -4,7 +4,11 @@
 from typing import Callable, cast, Optional, Tuple, Union
 
 from captum._utils.gradient import construct_neuron_grad_fn
-from captum._utils.typing import BaselineType, TensorOrTupleOfTensorsGeneric
+from captum._utils.typing import (
+    BaselineType,
+    SliceIntType,
+    TensorOrTupleOfTensorsGeneric,
+)
 from captum.attr._core.deep_lift import DeepLift, DeepLiftShap
 from captum.attr._utils.attribution import GradientAttribution, NeuronAttribution
 from captum.log import log_usage
@@ -79,8 +83,11 @@ class NeuronDeepLift(NeuronAttribution, GradientAttribution):
     def attribute(
         self,
         inputs: TensorOrTupleOfTensorsGeneric,
-        # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
-        neuron_selector: Union[int, Tuple[Union[int, slice], ...], Callable],
+        neuron_selector: Union[
+            int,
+            Tuple[Union[int, SliceIntType], ...],
+            Callable[[Union[Tensor, Tuple[Tensor, ...]]], Tensor],
+        ],
         baselines: BaselineType = None,
         additional_forward_args: Optional[object] = None,
         attribute_to_neuron_input: bool = False,
@@ -309,8 +316,11 @@ class NeuronDeepLiftShap(NeuronAttribution, GradientAttribution):
     def attribute(
         self,
         inputs: TensorOrTupleOfTensorsGeneric,
-        # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
-        neuron_selector: Union[int, Tuple[Union[int, slice], ...], Callable],
+        neuron_selector: Union[
+            int,
+            Tuple[Union[int, SliceIntType], ...],
+            Callable[[Union[Tensor, Tuple[Tensor, ...]]], Tensor],
+        ],
         baselines: Union[
             TensorOrTupleOfTensorsGeneric, Callable[..., TensorOrTupleOfTensorsGeneric]
         ],
