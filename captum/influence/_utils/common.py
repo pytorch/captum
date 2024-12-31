@@ -6,6 +6,7 @@ from functools import reduce
 from typing import (
     Any,
     Callable,
+    cast,
     Dict,
     Iterable,
     List,
@@ -273,18 +274,19 @@ def _get_k_most_influential_helper(
 
     # if show_progress, create progress bar
     total: Optional[int] = None
+    data_iterator: Union[Iterable[object], DataLoader] = influence_src_dataloader
     if show_progress:
         try:
             total = len(influence_src_dataloader)
         except AttributeError:
             pass
-        influence_src_dataloader = progress(
-            influence_src_dataloader,
+        data_iterator = progress(
+            cast(Iterable[object], influence_src_dataloader),
             desc=desc,
             total=total,
         )
 
-    for batch in influence_src_dataloader:
+    for batch in data_iterator:
 
         # calculate tracin_scores for the batch
         batch_tracin_scores = influence_batch_fn(inputs, batch)
@@ -406,6 +408,7 @@ def _self_influence_by_batches_helper(
     """
     # If `inputs_dataset` is not a `DataLoader`, turn it into one.
     inputs_dataset = _format_inputs_dataset(inputs_dataset)
+    inputs_dataset_iterator: Union[Iterable[object], DataLoader] = inputs_dataset
 
     # If `show_progress` is true, create a progress bar that keeps track of how
     # many batches have been processed
@@ -425,7 +428,7 @@ def _self_influence_by_batches_helper(
                 stacklevel=1,
             )
         # then create the progress bar
-        inputs_dataset = progress(
+        inputs_dataset_iterator = progress(
             inputs_dataset,
             desc=f"Using {instance_name} to compute self influence. Processing batch",
             total=inputs_dataset_len,
@@ -440,7 +443,7 @@ def _self_influence_by_batches_helper(
     return torch.cat(
         [
             self_influence_batch_fn(batch, show_progress=False)
-            for batch in inputs_dataset
+            for batch in inputs_dataset_iterator
         ]
     )
 

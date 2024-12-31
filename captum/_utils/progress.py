@@ -3,14 +3,32 @@
 # pyre-strict
 
 import sys
+import typing
 import warnings
 from time import time
-from typing import Any, cast, Iterable, Literal, Optional, Sized, TextIO
+from types import TracebackType
+from typing import (
+    Any,
+    Callable,
+    cast,
+    Iterable,
+    Iterator,
+    Literal,
+    Optional,
+    Sized,
+    TextIO,
+    Type,
+    TypeVar,
+    Union,
+)
 
 try:
     from tqdm.auto import tqdm
 except ImportError:
     tqdm = None
+
+T = TypeVar("T")
+IterableType = TypeVar("IterableType")
 
 
 class DisableErrorIOWrapper(object):
@@ -21,15 +39,13 @@ class DisableErrorIOWrapper(object):
         """
         self._wrapped = wrapped
 
-    # pyre-fixme[3]: Return type must be annotated.
-    # pyre-fixme[2]: Parameter must be annotated.
-    def __getattr__(self, name):
+    def __getattr__(self, name: str) -> object:
         return getattr(self._wrapped, name)
 
     @staticmethod
-    # pyre-fixme[3]: Return type must be annotated.
-    # pyre-fixme[2]: Parameter must be annotated.
-    def _wrapped_run(func, *args, **kwargs):
+    def _wrapped_run(
+        func: Callable[..., T], *args: object, **kwargs: object
+    ) -> Union[T, None]:
         try:
             return func(*args, **kwargs)
         except OSError as e:
@@ -38,19 +54,16 @@ class DisableErrorIOWrapper(object):
         except ValueError as e:
             if "closed" not in str(e):
                 raise
+        return None
 
-    # pyre-fixme[3]: Return type must be annotated.
-    # pyre-fixme[2]: Parameter must be annotated.
-    def write(self, *args, **kwargs):
+    def write(self, *args: object, **kwargs: object) -> Optional[int]:
         return self._wrapped_run(self._wrapped.write, *args, **kwargs)
 
-    # pyre-fixme[3]: Return type must be annotated.
-    # pyre-fixme[2]: Parameter must be annotated.
-    def flush(self, *args, **kwargs):
+    def flush(self, *args: object, **kwargs: object) -> None:
         return self._wrapped_run(self._wrapped.flush, *args, **kwargs)
 
 
-class NullProgress:
+class NullProgress(Iterable[IterableType]):
     """Passthrough class that implements the progress API.
 
     This class implements the tqdm and SimpleProgressBar api but
@@ -61,27 +74,28 @@ class NullProgress:
 
     def __init__(
         self,
-        # pyre-fixme[24]: Generic type `Iterable` expects 1 type parameter.
-        iterable: Optional[Iterable] = None,
+        iterable: Optional[Iterable[IterableType]] = None,
         *args: Any,
         **kwargs: Any,
     ) -> None:
         del args, kwargs
         self.iterable = iterable
 
-    def __enter__(self) -> "NullProgress":
+    def __enter__(self) -> "NullProgress[IterableType]":
         return self
 
-    # pyre-fixme[2]: Parameter must be annotated.
-    def __exit__(self, exc_type, exc_value, exc_traceback) -> Literal[False]:
+    def __exit__(
+        self,
+        exc_type: Union[Type[BaseException], None],
+        exc_value: Union[BaseException, None],
+        exc_traceback: Union[TracebackType, None],
+    ) -> Literal[False]:
         return False
 
-    # pyre-fixme[3]: Return type must be annotated.
-    def __iter__(self):
+    def __iter__(self) -> Iterator[IterableType]:
         if not self.iterable:
             return
-        # pyre-fixme[16]: `Optional` has no attribute `__iter__`.
-        for it in self.iterable:
+        for it in cast(Iterable[IterableType], self.iterable):
             yield it
 
     def update(self, amount: int = 1) -> None:
@@ -91,11 +105,10 @@ class NullProgress:
         pass
 
 
-class SimpleProgress:
+class SimpleProgress(Iterable[IterableType]):
     def __init__(
         self,
-        # pyre-fixme[24]: Generic type `Iterable` expects 1 type parameter.
-        iterable: Optional[Iterable] = None,
+        iterable: Optional[Iterable[IterableType]] = None,
         desc: Optional[str] = None,
         total: Optional[int] = None,
         file: Optional[TextIO] = None,
@@ -117,34 +130,33 @@ class SimpleProgress:
 
         self.desc = desc
 
-        # pyre-fixme[9]: file has type `Optional[TextIO]`; used as
-        #  `DisableErrorIOWrapper`.
-        file = DisableErrorIOWrapper(file if file else sys.stderr)
-        cast(TextIO, file)
-        self.file = file
+        file_wrapper = DisableErrorIOWrapper(file if file else sys.stderr)
+        self.file: DisableErrorIOWrapper = file_wrapper
 
         self.mininterval = mininterval
         self.last_print_t = 0.0
         self.closed = False
         self._is_parent = False
 
-    def __enter__(self) -> "SimpleProgress":
+    def __enter__(self) -> "SimpleProgress[IterableType]":
         self._is_parent = True
         self._refresh()
         return self
 
-    # pyre-fixme[2]: Parameter must be annotated.
-    def __exit__(self, exc_type, exc_value, exc_traceback) -> Literal[False]:
+    def __exit__(
+        self,
+        exc_type: Union[Type[BaseException], None],
+        exc_value: Union[BaseException, None],
+        exc_traceback: Union[TracebackType, None],
+    ) -> Literal[False]:
         self.close()
         return False
 
-    # pyre-fixme[3]: Return type must be annotated.
-    def __iter__(self):
+    def __iter__(self) -> Iterator[IterableType]:
         if self.closed or not self.iterable:
             return
         self._refresh()
-        # pyre-fixme[16]: `Optional` has no attribute `__iter__`.
-        for it in self.iterable:
+        for it in cast(Iterable[IterableType], self.iterable):
             yield it
             self.update()
         self.close()
@@ -153,9 +165,10 @@ class SimpleProgress:
         progress_str = self.desc + ": " if self.desc else ""
         if self.total:
             # e.g., progress: 60% 3/5
-            # pyre-fixme[58]: `//` is not supported for operand types `int` and
-            #  `Optional[int]`.
-            progress_str += f"{100 * self.cur // self.total}% {self.cur}/{self.total}"
+            progress_str += (
+                f"{100 * self.cur // cast(int, self.total)}%"
+                f" {self.cur}/{cast(int, self.total)}"
+            )
         else:
             # e.g., progress: .....
             progress_str += "." * self.cur
@@ -179,18 +192,39 @@ class SimpleProgress:
             self.closed = True
 
 
-# pyre-fixme[3]: Return type must be annotated.
+@typing.overload
 def progress(
-    # pyre-fixme[24]: Generic type `Iterable` expects 1 type parameter.
-    iterable: Optional[Iterable] = None,
+    iterable: None = None,
     desc: Optional[str] = None,
     total: Optional[int] = None,
     use_tqdm: bool = True,
     file: Optional[TextIO] = None,
     mininterval: float = 0.5,
-    # pyre-fixme[2]: Parameter must be annotated.
-    **kwargs,
-):
+    **kwargs: object,
+) -> Union[SimpleProgress[None], tqdm]: ...
+
+
+@typing.overload
+def progress(
+    iterable: Iterable[IterableType],
+    desc: Optional[str] = None,
+    total: Optional[int] = None,
+    use_tqdm: bool = True,
+    file: Optional[TextIO] = None,
+    mininterval: float = 0.5,
+    **kwargs: object,
+) -> Union[SimpleProgress[IterableType], tqdm]: ...
+
+
+def progress(
+    iterable: Optional[Iterable[IterableType]] = None,
+    desc: Optional[str] = None,
+    total: Optional[int] = None,
+    use_tqdm: bool = True,
+    file: Optional[TextIO] = None,
+    mininterval: float = 0.5,
+    **kwargs: object,
+) -> Union[SimpleProgress[IterableType], tqdm]:
     # Try to use tqdm is possible. Fall back to simple progress print
     if tqdm and use_tqdm:
         return tqdm(
