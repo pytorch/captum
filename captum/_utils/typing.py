@@ -21,8 +21,9 @@ from torch.nn import Module
 TensorOrTupleOfTensorsGeneric = TypeVar(
     "TensorOrTupleOfTensorsGeneric", Tensor, Tuple[Tensor, ...]
 )
-# pyre-fixme[24]: Generic type `tuple` expects at least 1 type parameter.
-TupleOrTensorOrBoolGeneric = TypeVar("TupleOrTensorOrBoolGeneric", Tuple, Tensor, bool)
+TupleOrTensorOrBoolGeneric = TypeVar(
+    "TupleOrTensorOrBoolGeneric", Tuple[Tensor, ...], Tensor, bool
+)
 ModuleOrModuleList = TypeVar("ModuleOrModuleList", Module, List[Module])
 TargetType = Union[None, int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]]
 BaselineTupleType = Union[None, Tuple[Union[Tensor, int, float], ...]]
@@ -46,7 +47,7 @@ try:
     # falling back to slice type.
     SliceIntType = slice[int, int, int]
 except TypeError:
-    # pyre-fixme[24]: Generic type `slice` expects 3 type parameters.
+    # pyre-ignore[24]: Generic type `slice` expects 3 type parameters.
     SliceIntType = slice  # type: ignore
 
 # Necessary for Python >=3.7 and <3.9!
