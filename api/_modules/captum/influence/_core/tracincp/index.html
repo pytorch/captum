@@ -38,7 +38,18 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="kn">import</span> <span class="nn">warnings</span>
 <span class="kn">from</span> <span class="nn">abc</span> <span class="kn">import</span> <span class="n">abstractmethod</span>
 <span class="kn">from</span> <span class="nn">os.path</span> <span class="kn">import</span> <span class="n">join</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Iterator</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Type</span><span class="p">,</span> <span class="n">Union</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">Any</span><span class="p">,</span>
+    <span class="n">Callable</span><span class="p">,</span>
+    <span class="n">cast</span><span class="p">,</span>
+    <span class="n">Iterable</span><span class="p">,</span>
+    <span class="n">Iterator</span><span class="p">,</span>
+    <span class="n">List</span><span class="p">,</span>
+    <span class="n">Optional</span><span class="p">,</span>
+    <span class="n">Tuple</span><span class="p">,</span>
+    <span class="n">Type</span><span class="p">,</span>
+    <span class="n">Union</span><span class="p">,</span>
+<span class="p">)</span>
 
 <span class="kn">import</span> <span class="nn">torch</span>
 <span class="kn">from</span> <span class="nn">captum._utils.av</span> <span class="kn">import</span> <span class="n">AV</span>
@@ -1085,10 +1096,12 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="n">inputs</span> <span class="o">=</span> <span class="n">_format_inputs_dataset</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span>
 
         <span class="n">train_dataloader</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">train_dataloader</span>
-
+        <span class="n">data_iterable</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Iterable</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">object</span><span class="p">,</span> <span class="o">...</span><span class="p">]],</span> <span class="n">DataLoader</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">train_dataloader</span>
+        <span class="p">)</span>
         <span class="k">if</span> <span class="n">show_progress</span><span class="p">:</span>
-            <span class="n">train_dataloader</span> <span class="o">=</span> <span class="n">progress</span><span class="p">(</span>
-                <span class="n">train_dataloader</span><span class="p">,</span>
+            <span class="n">data_iterable</span> <span class="o">=</span> <span class="n">progress</span><span class="p">(</span>
+                <span class="n">cast</span><span class="p">(</span><span class="n">Iterable</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">object</span><span class="p">,</span> <span class="o">...</span><span class="p">]],</span> <span class="n">train_dataloader</span><span class="p">),</span>
                 <span class="n">desc</span><span class="o">=</span><span class="p">(</span>
                     <span class="sa">f</span><span class="s2">"Using </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">get_name</span><span class="p">()</span><span class="si">}</span><span class="s2"> to compute "</span>
                     <span class="s2">"influence for training batches"</span>
@@ -1105,7 +1118,7 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="k">return</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">(</span>
             <span class="p">[</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_influence_batch_tracincp</span><span class="p">(</span><span class="n">inputs_checkpoint_jacobians</span><span class="p">,</span> <span class="n">batch</span><span class="p">)</span>
-                <span class="k">for</span> <span class="n">batch</span> <span class="ow">in</span> <span class="n">train_dataloader</span>
+                <span class="k">for</span> <span class="n">batch</span> <span class="ow">in</span> <span class="n">data_iterable</span>
             <span class="p">],</span>
             <span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
         <span class="p">)</span>
@@ -1302,7 +1315,7 @@ src="/_sphinx/documentation_options.js"></script>
             <span class="c1"># the same)</span>
             <span class="n">checkpoint_contribution</span> <span class="o">=</span> <span class="p">[]</span>
 
-            <span class="n">_inputs</span> <span class="o">=</span> <span class="n">inputs</span>
+            <span class="n">_inputs</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">DataLoader</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">]]]</span> <span class="o">=</span> <span class="n">inputs</span>
             <span class="c1"># If `show_progress` is true, create an inner progress bar that keeps track</span>
             <span class="c1"># of how many batches have been processed for the current checkpoint</span>
             <span class="k">if</span> <span class="n">show_progress</span><span class="p">:</span>
@@ -1318,8 +1331,8 @@ src="/_sphinx/documentation_options.js"></script>
             <span class="k">for</span> <span class="n">batch</span> <span class="ow">in</span> <span class="n">_inputs</span><span class="p">:</span>
 
                 <span class="n">layer_jacobians</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_basic_computation_tracincp</span><span class="p">(</span>
-                    <span class="n">batch</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span>
-                    <span class="n">batch</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span>
+                    <span class="n">cast</span><span class="p">(</span><span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span> <span class="n">batch</span><span class="p">)[</span><span class="mi">0</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span>
+                    <span class="n">cast</span><span class="p">(</span><span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span> <span class="n">batch</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">loss_fn</span><span class="p">,</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">reduction_type</span><span class="p">,</span>
                 <span class="p">)</span>

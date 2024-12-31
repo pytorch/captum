@@ -65,6 +65,7 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="p">)</span>
 <span class="kn">from</span> <span class="nn">captum.log</span> <span class="kn">import</span> <span class="n">log_usage</span>
 <span class="kn">from</span> <span class="nn">torch</span> <span class="kn">import</span> <span class="n">Tensor</span>
+<span class="kn">from</span> <span class="nn">torch.nn</span> <span class="kn">import</span> <span class="n">Module</span>
 <span class="kn">from</span> <span class="nn">torch.nn.parallel.scatter_gather</span> <span class="kn">import</span> <span class="n">scatter</span>
 
 
@@ -92,8 +93,7 @@ src="/_sphinx/documentation_options.js"></script>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
-        <span class="c1"># pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.</span>
-        <span class="n">forward_func</span><span class="p">:</span> <span class="n">Callable</span><span class="p">,</span>
+        <span class="n">forward_func</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">Tensor</span><span class="p">],</span>
         <span class="n">layer</span><span class="p">:</span> <span class="n">ModuleOrModuleList</span><span class="p">,</span>
         <span class="n">device_ids</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">multiply_by_inputs</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
@@ -162,8 +162,7 @@ src="/_sphinx/documentation_options.js"></script>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">]]:</span>
 
         <span class="k">def</span> <span class="nf">_gradient_func</span><span class="p">(</span>
-            <span class="c1"># pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.</span>
-            <span class="n">forward_fn</span><span class="p">:</span> <span class="n">Callable</span><span class="p">,</span>
+            <span class="n">forward_fn</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">Tensor</span><span class="p">],</span>
             <span class="n">inputs</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">]],</span>
             <span class="n">target_ind</span><span class="p">:</span> <span class="n">TargetType</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
             <span class="n">additional_forward_args</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">object</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -180,28 +179,21 @@ src="/_sphinx/documentation_options.js"></script>
                     <span class="n">target_gpus</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">device_ids</span><span class="p">,</span>
                 <span class="p">)</span>
 
-            <span class="n">scattered_inputs_dict</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="n">scattered_inputs_dict</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span>
+                <span class="n">torch</span><span class="o">.</span><span class="n">device</span><span class="p">,</span> <span class="n">Union</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">]]</span>
+            <span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
                 <span class="n">scattered_input</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">device</span><span class="p">:</span> <span class="n">scattered_input</span>
                 <span class="k">for</span> <span class="n">scattered_input</span> <span class="ow">in</span> <span class="n">scattered_inputs</span>
             <span class="p">}</span>
 
             <span class="k">with</span> <span class="n">torch</span><span class="o">.</span><span class="n">autograd</span><span class="o">.</span><span class="n">set_grad_enabled</span><span class="p">(</span><span class="kc">True</span><span class="p">):</span>
 
-                <span class="c1"># pyre-fixme[53]: Captured variable `num_outputs_cumsum` is not</span>
-                <span class="c1">#  annotated.</span>
-                <span class="c1"># pyre-fixme[53]: Captured variable `scattered_inputs_dict` is not</span>
-                <span class="c1">#  annotated.</span>
-                <span class="c1"># pyre-fixme[3]: Return type must be annotated.</span>
                 <span class="k">def</span> <span class="nf">layer_forward_hook</span><span class="p">(</span>
-                    <span class="c1"># pyre-fixme[2]: Parameter must be annotated.</span>
-                    <span class="n">module</span><span class="p">,</span>
-                    <span class="c1"># pyre-fixme[2]: Parameter must be annotated.</span>
-                    <span class="n">hook_inputs</span><span class="p">,</span>
-                    <span class="c1"># pyre-fixme[2]: Parameter must be annotated.</span>
-                    <span class="n">hook_outputs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-                    <span class="c1"># pyre-fixme[2]: Parameter must be annotated.</span>
-                    <span class="n">layer_idx</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
-                <span class="p">):</span>
+                    <span class="n">module</span><span class="p">:</span> <span class="n">Module</span><span class="p">,</span>
+                    <span class="n">hook_inputs</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">]],</span>
+                    <span class="n">hook_outputs</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="n">Tensor</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                    <span class="n">layer_idx</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
+                <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">]]:</span>
                     <span class="n">device</span> <span class="o">=</span> <span class="n">_extract_device</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="n">hook_inputs</span><span class="p">,</span> <span class="n">hook_outputs</span><span class="p">)</span>
                     <span class="n">is_layer_tuple</span> <span class="o">=</span> <span class="p">(</span>
                         <span class="nb">isinstance</span><span class="p">(</span><span class="n">hook_outputs</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)</span>
@@ -211,11 +203,14 @@ src="/_sphinx/documentation_options.js"></script>
                     <span class="p">)</span>
 
                     <span class="k">if</span> <span class="n">is_layer_tuple</span><span class="p">:</span>
-                        <span class="k">return</span> <span class="n">scattered_inputs_dict</span><span class="p">[</span><span class="n">device</span><span class="p">][</span>
-                            <span class="n">num_outputs_cumsum</span><span class="p">[</span><span class="n">layer_idx</span><span class="p">]</span> <span class="p">:</span> <span class="n">num_outputs_cumsum</span><span class="p">[</span>
-                                <span class="n">layer_idx</span> <span class="o">+</span> <span class="mi">1</span>
-                            <span class="p">]</span>
-                        <span class="p">]</span>
+                        <span class="k">return</span> <span class="n">cast</span><span class="p">(</span>
+                            <span class="n">Union</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">]],</span>
+                            <span class="n">scattered_inputs_dict</span><span class="p">[</span><span class="n">device</span><span class="p">][</span>
+                                <span class="n">num_outputs_cumsum</span><span class="p">[</span><span class="n">layer_idx</span><span class="p">]</span> <span class="p">:</span> <span class="n">num_outputs_cumsum</span><span class="p">[</span>
+                                    <span class="n">layer_idx</span> <span class="o">+</span> <span class="mi">1</span>
+                                <span class="p">]</span>
+                            <span class="p">],</span>
+                        <span class="p">)</span>
 
                     <span class="k">return</span> <span class="n">scattered_inputs_dict</span><span class="p">[</span><span class="n">device</span><span class="p">][</span><span class="n">num_outputs_cumsum</span><span class="p">[</span><span class="n">layer_idx</span><span class="p">]]</span>
 
@@ -538,11 +533,22 @@ src="/_sphinx/documentation_options.js"></script>
             <span class="n">additional_forward_args</span>
         <span class="p">)</span>
 
-        <span class="c1"># pyre-fixme[3]: Return type must be annotated.</span>
-        <span class="c1"># pyre-fixme[2]: Parameter must be annotated.</span>
-        <span class="k">def</span> <span class="nf">flatten_tuple</span><span class="p">(</span><span class="n">tup</span><span class="p">):</span>
+        <span class="k">def</span> <span class="nf">flatten_tuple</span><span class="p">(</span><span class="n">tup</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">]])</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span>
             <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span>
-                <span class="nb">sum</span><span class="p">((</span><span class="nb">list</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="p">(</span><span class="nb">tuple</span><span class="p">,</span> <span class="nb">list</span><span class="p">))</span> <span class="k">else</span> <span class="p">[</span><span class="n">x</span><span class="p">]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">tup</span><span class="p">),</span> <span class="p">[])</span>
+                <span class="n">cast</span><span class="p">(</span>
+                    <span class="n">List</span><span class="p">[</span><span class="n">Tensor</span><span class="p">],</span>
+                    <span class="nb">sum</span><span class="p">(</span>
+                        <span class="p">(</span>
+                            <span class="p">(</span>
+                                <span class="nb">list</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+                                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="p">(</span><span class="nb">tuple</span><span class="p">,</span> <span class="nb">list</span><span class="p">))</span>
+                                <span class="k">else</span> <span class="n">cast</span><span class="p">(</span><span class="n">List</span><span class="p">[</span><span class="n">Tensor</span><span class="p">],</span> <span class="p">[</span><span class="n">x</span><span class="p">])</span>
+                            <span class="p">)</span>
+                            <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">tup</span>
+                        <span class="p">),</span>
+                        <span class="p">[],</span>
+                    <span class="p">),</span>
+                <span class="p">)</span>
             <span class="p">)</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">device_ids</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
@@ -556,16 +562,18 @@ src="/_sphinx/documentation_options.js"></script>
             <span class="n">additional_forward_args</span><span class="o">=</span><span class="n">additional_forward_args</span><span class="p">,</span>
             <span class="n">attribute_to_layer_input</span><span class="o">=</span><span class="n">attribute_to_layer_input</span><span class="p">,</span>
         <span class="p">)</span>
-
+        <span class="n">input_layer_list</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">]]</span>
         <span class="c1"># if we have one output</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">layer</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
-            <span class="n">inputs_layer</span> <span class="o">=</span> <span class="p">(</span><span class="n">inputs_layer</span><span class="p">,)</span>
+            <span class="n">input_layer_list</span> <span class="o">=</span> <span class="p">[</span><span class="n">cast</span><span class="p">(</span><span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span> <span class="n">inputs_layer</span><span class="p">)]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">input_layer_list</span> <span class="o">=</span> <span class="n">inputs_layer</span>
 
-        <span class="n">num_outputs</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">Tensor</span><span class="p">)</span> <span class="k">else</span> <span class="nb">len</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">inputs_layer</span><span class="p">]</span>
+        <span class="n">num_outputs</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">Tensor</span><span class="p">)</span> <span class="k">else</span> <span class="nb">len</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">input_layer_list</span><span class="p">]</span>
         <span class="n">num_outputs_cumsum</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cumsum</span><span class="p">(</span>
             <span class="n">torch</span><span class="o">.</span><span class="n">IntTensor</span><span class="p">([</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="n">num_outputs</span><span class="p">),</span> <span class="n">dim</span><span class="o">=</span><span class="mi">0</span>  <span class="c1"># type: ignore</span>
         <span class="p">)</span>
-        <span class="n">inputs_layer</span> <span class="o">=</span> <span class="n">flatten_tuple</span><span class="p">(</span><span class="n">inputs_layer</span><span class="p">)</span>
+        <span class="n">inputs_layer</span> <span class="o">=</span> <span class="n">flatten_tuple</span><span class="p">(</span><span class="n">input_layer_list</span><span class="p">)</span>
 
         <span class="n">baselines_layer</span> <span class="o">=</span> <span class="n">_forward_layer_eval</span><span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">forward_func</span><span class="p">,</span>
