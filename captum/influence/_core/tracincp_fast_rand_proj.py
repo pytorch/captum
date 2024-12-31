@@ -5,7 +5,18 @@
 import threading
 import warnings
 from collections import defaultdict
-from typing import Any, Callable, cast, Dict, Iterator, List, Optional, Tuple, Union
+from typing import (
+    Any,
+    Callable,
+    cast,
+    Dict,
+    Iterable,
+    Iterator,
+    List,
+    Optional,
+    Tuple,
+    Union,
+)
 
 import torch
 from captum._utils.common import _get_module_from_name, _sort_key_list
@@ -418,10 +429,13 @@ class TracInCPFast(TracInCPBase):
         """
 
         train_dataloader = self.train_dataloader
+        train_dataloader_iterable: Union[DataLoader, Iterable[Tuple[object, ...]]] = (
+            train_dataloader
+        )
 
         if show_progress:
-            train_dataloader = progress(
-                train_dataloader,
+            train_dataloader_iterable = progress(
+                cast(Iterable[Tuple[object, ...]], train_dataloader),
                 desc=(
                     f"Using {self.get_name()} to compute "
                     "influence for training batches"
@@ -432,7 +446,7 @@ class TracInCPFast(TracInCPBase):
         return torch.cat(
             [
                 self._influence_batch_tracincp_fast(inputs, batch)
-                for batch in train_dataloader
+                for batch in train_dataloader_iterable
             ],
             dim=1,
         )

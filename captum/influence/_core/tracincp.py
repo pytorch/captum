@@ -6,7 +6,18 @@ import glob
 import warnings
 from abc import abstractmethod
 from os.path import join
-from typing import Any, Callable, Iterator, List, Optional, Tuple, Type, Union
+from typing import (
+    Any,
+    Callable,
+    cast,
+    Iterable,
+    Iterator,
+    List,
+    Optional,
+    Tuple,
+    Type,
+    Union,
+)
 
 import torch
 from captum._utils.av import AV
@@ -1033,10 +1044,12 @@ class TracInCP(TracInCPBase):
         inputs = _format_inputs_dataset(inputs)
 
         train_dataloader = self.train_dataloader
-
+        data_iterable: Union[Iterable[Tuple[object, ...]], DataLoader] = (
+            train_dataloader
+        )
         if show_progress:
-            train_dataloader = progress(
-                train_dataloader,
+            data_iterable = progress(
+                cast(Iterable[Tuple[object, ...]], train_dataloader),
                 desc=(
                     f"Using {self.get_name()} to compute "
                     "influence for training batches"
@@ -1053,7 +1066,7 @@ class TracInCP(TracInCPBase):
         return torch.cat(
             [
                 self._influence_batch_tracincp(inputs_checkpoint_jacobians, batch)
-                for batch in train_dataloader
+                for batch in data_iterable
             ],
             dim=1,
         )
@@ -1250,7 +1263,7 @@ class TracInCP(TracInCPBase):
             # the same)
             checkpoint_contribution = []
 
-            _inputs = inputs
+            _inputs: Union[DataLoader, Iterable[Tuple[Tensor, ...]]] = inputs
             # If `show_progress` is true, create an inner progress bar that keeps track
             # of how many batches have been processed for the current checkpoint
             if show_progress:
@@ -1266,8 +1279,8 @@ class TracInCP(TracInCPBase):
             for batch in _inputs:
 
                 layer_jacobians = self._basic_computation_tracincp(
-                    batch[0:-1],
-                    batch[-1],
+                    cast(Tuple[Tensor, ...], batch)[0:-1],
+                    cast(Tuple[Tensor, ...], batch)[-1],
                     self.loss_fn,
                     self.reduction_type,
                 )
