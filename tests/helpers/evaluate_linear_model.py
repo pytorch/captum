@@ -6,11 +6,13 @@
 from typing import cast, Dict
 
 import torch
+
+from captum._utils.models.linear_model.model import LinearModel
 from torch import Tensor
+from torch.utils.data import DataLoader
 
 
-# pyre-fixme[2]: Parameter must be annotated.
-def evaluate(test_data, classifier) -> Dict[str, Tensor]:
+def evaluate(test_data: DataLoader, classifier: LinearModel) -> Dict[str, Tensor]:
     classifier.eval()
 
     l1_loss = 0.0
