@@ -34,7 +34,7 @@ src="/_sphinx/documentation_options.js"></script>
 
 <span class="c1"># pyre-strict</span>
 <span class="kn">import</span> <span class="nn">typing</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Literal</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Union</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">cast</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Literal</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Union</span>
 
 <span class="kn">import</span> <span class="nn">torch</span>
 <span class="kn">from</span> <span class="nn">captum._utils.common</span> <span class="kn">import</span> <span class="p">(</span>
@@ -78,8 +78,7 @@ src="/_sphinx/documentation_options.js"></script>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
-        <span class="c1"># pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.</span>
-        <span class="n">forward_func</span><span class="p">:</span> <span class="n">Callable</span><span class="p">,</span>
+        <span class="n">forward_func</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">Tensor</span><span class="p">],</span>
         <span class="n">layer</span><span class="p">:</span> <span class="n">Module</span><span class="p">,</span>
         <span class="n">device_ids</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
@@ -110,8 +109,6 @@ src="/_sphinx/documentation_options.js"></script>
 
 
     <span class="nd">@typing</span><span class="o">.</span><span class="n">overload</span>
-    <span class="c1"># pyre-fixme[43]: The implementation of `attribute` does not accept all possible</span>
-    <span class="c1">#  arguments of overload defined on line `75`.</span>
     <span class="k">def</span> <span class="nf">attribute</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">inputs</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">]],</span>
@@ -128,8 +125,6 @@ src="/_sphinx/documentation_options.js"></script>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">]],</span> <span class="n">Tensor</span><span class="p">]:</span> <span class="o">...</span>
 
     <span class="nd">@typing</span><span class="o">.</span><span class="n">overload</span>
-    <span class="c1"># pyre-fixme[43]: The implementation of `attribute` does not accept all possible</span>
-    <span class="c1">#  arguments of overload defined on line `91`.</span>
     <span class="k">def</span> <span class="nf">attribute</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">inputs</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">]],</span>
@@ -416,7 +411,7 @@ src="/_sphinx/documentation_options.js"></script>
             <span class="n">layer_evals</span><span class="p">,</span>
         <span class="p">)</span> <span class="o">=</span> <span class="n">compute_layer_gradients_and_eval</span><span class="p">(</span>
             <span class="n">forward_fn</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">forward_func</span><span class="p">,</span>
-            <span class="n">layer</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">layer</span><span class="p">,</span>
+            <span class="n">layer</span><span class="o">=</span><span class="n">cast</span><span class="p">(</span><span class="n">Module</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">layer</span><span class="p">),</span>
             <span class="n">inputs</span><span class="o">=</span><span class="n">scaled_features_tpl</span><span class="p">,</span>
             <span class="n">additional_forward_args</span><span class="o">=</span><span class="n">input_additional_args</span><span class="p">,</span>
             <span class="n">target_ind</span><span class="o">=</span><span class="n">expanded_target</span><span class="p">,</span>
@@ -429,8 +424,6 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="c1"># This approximates the total input gradient of each step multiplied</span>
         <span class="c1"># by the step size.</span>
         <span class="n">grad_diffs</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span>
-            <span class="c1"># pyre-fixme[58]: `-` is not supported for operand types `Tuple[Tensor,</span>
-            <span class="c1">#  ...]` and `Tuple[Tensor, ...]`.</span>
             <span class="n">layer_eval</span><span class="p">[</span><span class="n">num_examples</span><span class="p">:]</span> <span class="o">-</span> <span class="n">layer_eval</span><span class="p">[:</span><span class="o">-</span><span class="n">num_examples</span><span class="p">]</span>
             <span class="k">for</span> <span class="n">layer_eval</span> <span class="ow">in</span> <span class="n">layer_evals</span>
         <span class="p">)</span>
@@ -443,8 +436,7 @@ src="/_sphinx/documentation_options.js"></script>
                 <span class="n">grad_diff</span> <span class="o">*</span> <span class="n">layer_gradient</span><span class="p">[:</span><span class="o">-</span><span class="n">num_examples</span><span class="p">],</span>
                 <span class="n">n_steps</span><span class="p">,</span>
                 <span class="n">num_examples</span><span class="p">,</span>
-                <span class="c1"># pyre-fixme[16]: `tuple` has no attribute `shape`.</span>
-                <span class="n">layer_eval</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">:],</span>
+                <span class="nb">tuple</span><span class="p">(</span><span class="n">layer_eval</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">:]),</span>
             <span class="p">)</span>
             <span class="k">for</span> <span class="n">layer_gradient</span><span class="p">,</span> <span class="n">layer_eval</span><span class="p">,</span> <span class="n">grad_diff</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span>
                 <span class="n">layer_gradients</span><span class="p">,</span> <span class="n">layer_evals</span><span class="p">,</span> <span class="n">grad_diffs</span>

@@ -33,7 +33,7 @@ src="/_sphinx/documentation_options.js"></script>
 <span></span><span class="ch">#!/usr/bin/env python3</span>
 
 <span class="c1"># pyre-strict</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Union</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">cast</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Union</span>
 
 <span class="kn">import</span> <span class="nn">torch</span>
 <span class="kn">import</span> <span class="nn">torch.nn.functional</span> <span class="k">as</span> <span class="nn">F</span>
@@ -88,8 +88,7 @@ src="/_sphinx/documentation_options.js"></script>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
-        <span class="c1"># pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.</span>
-        <span class="n">forward_func</span><span class="p">:</span> <span class="n">Callable</span><span class="p">,</span>
+        <span class="n">forward_func</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">Tensor</span><span class="p">],</span>
         <span class="n">layer</span><span class="p">:</span> <span class="n">Module</span><span class="p">,</span>
         <span class="n">device_ids</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
@@ -237,7 +236,7 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="c1"># hidden layer and hidden layer evaluated at each input.</span>
         <span class="n">layer_gradients</span><span class="p">,</span> <span class="n">layer_evals</span> <span class="o">=</span> <span class="n">compute_layer_gradients_and_eval</span><span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">forward_func</span><span class="p">,</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">layer</span><span class="p">,</span>
+            <span class="n">cast</span><span class="p">(</span><span class="n">Module</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">layer</span><span class="p">),</span>
             <span class="n">inputs</span><span class="p">,</span>
             <span class="n">target</span><span class="p">,</span>
             <span class="n">additional_forward_args</span><span class="p">,</span>
@@ -249,10 +248,7 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="n">summed_grads</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span>
             <span class="p">(</span>
                 <span class="n">torch</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span>
-                    <span class="c1"># pyre-fixme[6]: For 1st argument expected `Tensor` but got</span>
-                    <span class="c1">#  `Tuple[Tensor, ...]`.</span>
                     <span class="n">layer_grad</span><span class="p">,</span>
-                    <span class="c1"># pyre-fixme[16]: `tuple` has no attribute `shape`.</span>
                     <span class="n">dim</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(</span><span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">layer_grad</span><span class="o">.</span><span class="n">shape</span><span class="p">))),</span>
                     <span class="n">keepdim</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
                 <span class="p">)</span>
@@ -264,29 +260,17 @@ src="/_sphinx/documentation_options.js"></script>
 
         <span class="k">if</span> <span class="n">attr_dim_summation</span><span class="p">:</span>
             <span class="n">scaled_acts</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span>
-                <span class="c1"># pyre-fixme[58]: `*` is not supported for operand types</span>
-                <span class="c1">#  `Union[tuple[torch._tensor.Tensor], torch._tensor.Tensor]` and</span>
-                <span class="c1">#  `Tuple[Tensor, ...]`.</span>
-                <span class="c1"># pyre-fixme[6]: For 1st argument expected `Tensor` but got</span>
-                <span class="c1">#  `Tuple[Tensor, ...]`.</span>
                 <span class="n">torch</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">summed_grad</span> <span class="o">*</span> <span class="n">layer_eval</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">keepdim</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
                 <span class="k">for</span> <span class="n">summed_grad</span><span class="p">,</span> <span class="n">layer_eval</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">summed_grads</span><span class="p">,</span> <span class="n">layer_evals</span><span class="p">)</span>
             <span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">scaled_acts</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span>
-                <span class="c1"># pyre-fixme[58]: `*` is not supported for operand types</span>
-                <span class="c1">#  `Union[tuple[torch._tensor.Tensor], torch._tensor.Tensor]` and</span>
-                <span class="c1">#  `Tuple[Tensor, ...]`.</span>
                 <span class="n">summed_grad</span> <span class="o">*</span> <span class="n">layer_eval</span>
                 <span class="k">for</span> <span class="n">summed_grad</span><span class="p">,</span> <span class="n">layer_eval</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">summed_grads</span><span class="p">,</span> <span class="n">layer_evals</span><span class="p">)</span>
             <span class="p">)</span>
 
         <span class="k">if</span> <span class="n">relu_attributions</span><span class="p">:</span>
-            <span class="c1"># pyre-fixme[6]: For 1st argument expected `Tensor` but got</span>
-            <span class="c1">#  `Union[tuple[Tensor], Tensor]`.</span>
             <span class="n">scaled_acts</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">F</span><span class="o">.</span><span class="n">relu</span><span class="p">(</span><span class="n">scaled_act</span><span class="p">)</span> <span class="k">for</span> <span class="n">scaled_act</span> <span class="ow">in</span> <span class="n">scaled_acts</span><span class="p">)</span>
-        <span class="c1"># pyre-fixme[6]: For 2nd argument expected `Tuple[Tensor, ...]` but got</span>
-        <span class="c1">#  `Tuple[Union[tuple[Tensor], Tensor], ...]`.</span>
         <span class="k">return</span> <span class="n">_format_output</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">scaled_acts</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">,</span> <span class="n">scaled_acts</span><span class="p">)</span></div>
 </div>
 

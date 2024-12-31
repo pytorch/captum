@@ -95,8 +95,7 @@ src="/_sphinx/documentation_options.js"></script>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
-        <span class="c1"># pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.</span>
-        <span class="n">forward_func</span><span class="p">:</span> <span class="n">Callable</span><span class="p">,</span>
+        <span class="n">forward_func</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">Tensor</span><span class="p">],</span>
         <span class="n">layer</span><span class="p">:</span> <span class="n">Module</span><span class="p">,</span>
         <span class="n">device_ids</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">multiply_by_inputs</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
@@ -138,13 +137,12 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="bp">self</span><span class="o">.</span><span class="n">_multiply_by_inputs</span> <span class="o">=</span> <span class="n">multiply_by_inputs</span>
 
     <span class="nd">@typing</span><span class="o">.</span><span class="n">overload</span>
-    <span class="c1"># pyre-fixme[43]: The implementation of `attribute` does not accept all possible</span>
-    <span class="c1">#  arguments of overload defined on line `106`.</span>
     <span class="k">def</span> <span class="nf">attribute</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">inputs</span><span class="p">:</span> <span class="n">TensorOrTupleOfTensorsGeneric</span><span class="p">,</span>
-        <span class="c1"># pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.</span>
-        <span class="n">baselines</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">TensorOrTupleOfTensorsGeneric</span><span class="p">,</span> <span class="n">Callable</span><span class="p">],</span>
+        <span class="n">baselines</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span>
+            <span class="n">TensorOrTupleOfTensorsGeneric</span><span class="p">,</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">TensorOrTupleOfTensorsGeneric</span><span class="p">]</span>
+        <span class="p">],</span>
         <span class="n">n_samples</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">5</span><span class="p">,</span>
         <span class="n">stdevs</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="o">...</span><span class="p">]]</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">,</span>
         <span class="n">target</span><span class="p">:</span> <span class="n">TargetType</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -155,13 +153,12 @@ src="/_sphinx/documentation_options.js"></script>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">]],</span> <span class="n">Tensor</span><span class="p">]:</span> <span class="o">...</span>
 
     <span class="nd">@typing</span><span class="o">.</span><span class="n">overload</span>
-    <span class="c1"># pyre-fixme[43]: The implementation of `attribute` does not accept all possible</span>
-    <span class="c1">#  arguments of overload defined on line `120`.</span>
     <span class="k">def</span> <span class="nf">attribute</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">inputs</span><span class="p">:</span> <span class="n">TensorOrTupleOfTensorsGeneric</span><span class="p">,</span>
-        <span class="c1"># pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.</span>
-        <span class="n">baselines</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">TensorOrTupleOfTensorsGeneric</span><span class="p">,</span> <span class="n">Callable</span><span class="p">],</span>
+        <span class="n">baselines</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span>
+            <span class="n">TensorOrTupleOfTensorsGeneric</span><span class="p">,</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">TensorOrTupleOfTensorsGeneric</span><span class="p">]</span>
+        <span class="p">],</span>
         <span class="n">n_samples</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">5</span><span class="p">,</span>
         <span class="n">stdevs</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="o">...</span><span class="p">]]</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">,</span>
         <span class="n">target</span><span class="p">:</span> <span class="n">TargetType</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -173,11 +170,14 @@ src="/_sphinx/documentation_options.js"></script>
 <div class="viewcode-block" id="LayerGradientShap.attribute">
 <a class="viewcode-back" href="../../../../../layer.html#captum.attr.LayerGradientShap.attribute">[docs]</a>
     <span class="nd">@log_usage</span><span class="p">()</span>
+    <span class="c1"># pyre-fixme[43]: This definition does not have the same decorators as the</span>
+    <span class="c1">#  preceding overload(s).</span>
     <span class="k">def</span> <span class="nf">attribute</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">inputs</span><span class="p">:</span> <span class="n">TensorOrTupleOfTensorsGeneric</span><span class="p">,</span>
-        <span class="c1"># pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.</span>
-        <span class="n">baselines</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">TensorOrTupleOfTensorsGeneric</span><span class="p">,</span> <span class="n">Callable</span><span class="p">],</span>
+        <span class="n">baselines</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span>
+            <span class="n">TensorOrTupleOfTensorsGeneric</span><span class="p">,</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">TensorOrTupleOfTensorsGeneric</span><span class="p">]</span>
+        <span class="p">],</span>
         <span class="n">n_samples</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">5</span><span class="p">,</span>
         <span class="n">stdevs</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="o">...</span><span class="p">]]</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">,</span>
         <span class="n">target</span><span class="p">:</span> <span class="n">TargetType</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -330,17 +330,10 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">        """</span>
         <span class="c1"># since `baselines` is a distribution, we can generate it using a function</span>
         <span class="c1"># rather than passing it as an input argument</span>
-        <span class="c1"># pyre-fixme[9]: baselines has type `Union[typing.Callable[..., typing.Any],</span>
-        <span class="c1">#  Variable[TensorOrTupleOfTensorsGeneric &lt;: [Tensor, typing.Tuple[Tensor,</span>
-        <span class="c1">#  ...]]]]`; used as `Tuple[Tensor, ...]`.</span>
-        <span class="n">baselines</span> <span class="o">=</span> <span class="n">_format_callable_baseline</span><span class="p">(</span><span class="n">baselines</span><span class="p">,</span> <span class="n">inputs</span><span class="p">)</span>
-        <span class="c1"># pyre-fixme[16]: Item `Callable` of `Union[(...) -&gt; Any,</span>
-        <span class="c1">#  TensorOrTupleOfTensorsGeneric]` has no attribute `__getitem__`.</span>
-        <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">baselines</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">),</span> <span class="p">(</span>
+        <span class="n">formatted_baselines</span> <span class="o">=</span> <span class="n">_format_callable_baseline</span><span class="p">(</span><span class="n">baselines</span><span class="p">,</span> <span class="n">inputs</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">formatted_baselines</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">),</span> <span class="p">(</span>
             <span class="s2">"Baselines distribution has to be provided in a form "</span>
-            <span class="c1"># pyre-fixme[16]: Item `Callable` of `Union[(...) -&gt; Any,</span>
-            <span class="c1">#  TensorOrTupleOfTensorsGeneric]` has no attribute `__getitem__`.</span>
-            <span class="s2">"of a torch.Tensor </span><span class="si">{}</span><span class="s2">."</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">baselines</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+            <span class="s2">"of a torch.Tensor </span><span class="si">{}</span><span class="s2">."</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">formatted_baselines</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
         <span class="p">)</span>
 
         <span class="n">input_min_baseline_x_grad</span> <span class="o">=</span> <span class="n">LayerInputBaselineXGradient</span><span class="p">(</span>
@@ -359,7 +352,7 @@ src="/_sphinx/documentation_options.js"></script>
             <span class="n">nt_samples</span><span class="o">=</span><span class="n">n_samples</span><span class="p">,</span>
             <span class="n">stdevs</span><span class="o">=</span><span class="n">stdevs</span><span class="p">,</span>
             <span class="n">draw_baseline_from_distrib</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-            <span class="n">baselines</span><span class="o">=</span><span class="n">baselines</span><span class="p">,</span>
+            <span class="n">baselines</span><span class="o">=</span><span class="n">formatted_baselines</span><span class="p">,</span>
             <span class="n">target</span><span class="o">=</span><span class="n">target</span><span class="p">,</span>
             <span class="n">additional_forward_args</span><span class="o">=</span><span class="n">additional_forward_args</span><span class="p">,</span>
             <span class="n">return_convergence_delta</span><span class="o">=</span><span class="n">return_convergence_delta</span><span class="p">,</span>
@@ -384,8 +377,7 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="k">class</span> <span class="nc">LayerInputBaselineXGradient</span><span class="p">(</span><span class="n">LayerAttribution</span><span class="p">,</span> <span class="n">GradientAttribution</span><span class="p">):</span>
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
-        <span class="c1"># pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.</span>
-        <span class="n">forward_func</span><span class="p">:</span> <span class="n">Callable</span><span class="p">,</span>
+        <span class="n">forward_func</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">Tensor</span><span class="p">],</span>
         <span class="n">layer</span><span class="p">:</span> <span class="n">Module</span><span class="p">,</span>
         <span class="n">device_ids</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">multiply_by_inputs</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
@@ -477,7 +469,7 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="p">)</span>
         <span class="n">grads</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">compute_layer_gradients_and_eval</span><span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">forward_func</span><span class="p">,</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">layer</span><span class="p">,</span>
+            <span class="n">cast</span><span class="p">(</span><span class="n">Module</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">layer</span><span class="p">),</span>
             <span class="n">input_baseline_scaled</span><span class="p">,</span>
             <span class="n">target</span><span class="p">,</span>
             <span class="n">additional_forward_args</span><span class="p">,</span>
@@ -489,7 +481,7 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="n">attr_baselines</span> <span class="o">=</span> <span class="n">_forward_layer_eval</span><span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">forward_func</span><span class="p">,</span>
             <span class="n">baselines</span><span class="p">,</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">layer</span><span class="p">,</span>
+            <span class="n">cast</span><span class="p">(</span><span class="n">Module</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">layer</span><span class="p">),</span>
             <span class="n">additional_forward_args</span><span class="o">=</span><span class="n">additional_forward_args</span><span class="p">,</span>
             <span class="n">device_ids</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">device_ids</span><span class="p">,</span>
             <span class="n">attribute_to_layer_input</span><span class="o">=</span><span class="n">attribute_to_layer_input</span><span class="p">,</span>
@@ -498,19 +490,15 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="n">attr_inputs</span> <span class="o">=</span> <span class="n">_forward_layer_eval</span><span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">forward_func</span><span class="p">,</span>
             <span class="n">inputs</span><span class="p">,</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">layer</span><span class="p">,</span>
+            <span class="n">cast</span><span class="p">(</span><span class="n">Module</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">layer</span><span class="p">),</span>
             <span class="n">additional_forward_args</span><span class="o">=</span><span class="n">additional_forward_args</span><span class="p">,</span>
             <span class="n">device_ids</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">device_ids</span><span class="p">,</span>
             <span class="n">attribute_to_layer_input</span><span class="o">=</span><span class="n">attribute_to_layer_input</span><span class="p">,</span>
         <span class="p">)</span>
-
+        <span class="n">attributions</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">multiplies_by_inputs</span><span class="p">:</span>
             <span class="n">input_baseline_diffs</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span>
-                <span class="c1"># pyre-fixme[58]: `-` is not supported for operand types</span>
-                <span class="c1"># `typing.Tuple[torch._tensor.Tensor, ...]` and</span>
-                <span class="c1"># `typing.Tuple[torch._tensor.Tensor, ...]`.</span>
-                <span class="nb">input</span> <span class="o">-</span> <span class="n">baseline</span>
-                <span class="k">for</span> <span class="nb">input</span><span class="p">,</span> <span class="n">baseline</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">attr_inputs</span><span class="p">,</span> <span class="n">attr_baselines</span><span class="p">)</span>
+                <span class="nb">input</span> <span class="o">-</span> <span class="n">baseline</span> <span class="k">for</span> <span class="nb">input</span><span class="p">,</span> <span class="n">baseline</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">attr_inputs</span><span class="p">,</span> <span class="n">attr_baselines</span><span class="p">)</span>
             <span class="p">)</span>
             <span class="n">attributions</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span>
                 <span class="n">input_baseline_diff</span> <span class="o">*</span> <span class="n">grad</span>
@@ -522,8 +510,6 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="k">return</span> <span class="n">_compute_conv_delta_and_format_attrs</span><span class="p">(</span>
             <span class="bp">self</span><span class="p">,</span>
             <span class="n">return_convergence_delta</span><span class="p">,</span>
-            <span class="c1"># pyre-fixme[6]: For 3rd argument expected `Tuple[Tensor, ...]` but got</span>
-            <span class="c1">#  `Union[List[typing.Tuple[Tensor, ...]], tuple[Tensor]]`.</span>
             <span class="n">attributions</span><span class="p">,</span>
             <span class="n">baselines</span><span class="p">,</span>
             <span class="n">inputs</span><span class="p">,</span>

@@ -357,8 +357,9 @@ src="/_sphinx/documentation_options.js"></script>
                 <span class="n">additional_forward_args</span><span class="p">,</span>
             <span class="p">)</span>
 
-            <span class="c1"># pyre-fixme[24]: Generic type `Sequence` expects 1 type parameter.</span>
-            <span class="k">def</span> <span class="nf">chunk_output_fn</span><span class="p">(</span><span class="n">out</span><span class="p">:</span> <span class="n">TensorOrTupleOfTensorsGeneric</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Sequence</span><span class="p">:</span>
+            <span class="k">def</span> <span class="nf">chunk_output_fn</span><span class="p">(</span>
+                <span class="n">out</span><span class="p">:</span> <span class="n">TensorOrTupleOfTensorsGeneric</span><span class="p">,</span>
+            <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Tensor</span><span class="p">]]]:</span>
                 <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">out</span><span class="p">,</span> <span class="n">Tensor</span><span class="p">):</span>
                     <span class="k">return</span> <span class="n">out</span><span class="o">.</span><span class="n">chunk</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
                 <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">out_sub</span><span class="o">.</span><span class="n">chunk</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span> <span class="k">for</span> <span class="n">out_sub</span> <span class="ow">in</span> <span class="n">out</span><span class="p">)</span>
@@ -474,8 +475,6 @@ src="/_sphinx/documentation_options.js"></script>
 
     <span class="c1"># Ignoring mypy error for inconsistent signature with DeepLiftShap</span>
     <span class="nd">@typing</span><span class="o">.</span><span class="n">overload</span>  <span class="c1"># type: ignore</span>
-    <span class="c1"># pyre-fixme[43]: The implementation of `attribute` does not accept all possible</span>
-    <span class="c1">#  arguments of overload defined on line `453`.</span>
     <span class="k">def</span> <span class="nf">attribute</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">inputs</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">]],</span>
@@ -490,9 +489,7 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="n">custom_attribution_func</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">]],</span> <span class="n">Tensor</span><span class="p">]:</span> <span class="o">...</span>
 
-    <span class="nd">@typing</span><span class="o">.</span><span class="n">overload</span>
-    <span class="c1"># pyre-fixme[43]: The implementation of `attribute` does not accept all possible</span>
-    <span class="c1">#  arguments of overload defined on line `439`.</span>
+    <span class="nd">@typing</span><span class="o">.</span><span class="n">overload</span>  <span class="c1"># type: ignore</span>
     <span class="k">def</span> <span class="nf">attribute</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">inputs</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">]],</span>
@@ -696,7 +693,7 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="p">)</span> <span class="o">=</span> <span class="n">DeepLiftShap</span><span class="o">.</span><span class="n">_expand_inputs_baselines_targets</span><span class="p">(</span>
             <span class="bp">self</span><span class="p">,</span> <span class="n">baselines</span><span class="p">,</span> <span class="n">inputs</span><span class="p">,</span> <span class="n">target</span><span class="p">,</span> <span class="n">additional_forward_args</span>
         <span class="p">)</span>
-        <span class="n">attributions</span> <span class="o">=</span> <span class="n">LayerDeepLift</span><span class="o">.</span><span class="n">attribute</span><span class="o">.</span><span class="n">__wrapped__</span><span class="p">(</span>  <span class="c1"># type: ignore</span>
+        <span class="n">attribs_layer_deeplift</span> <span class="o">=</span> <span class="n">LayerDeepLift</span><span class="o">.</span><span class="n">attribute</span><span class="o">.</span><span class="n">__wrapped__</span><span class="p">(</span>  <span class="c1"># type: ignore</span>
             <span class="bp">self</span><span class="p">,</span>
             <span class="n">exp_inp</span><span class="p">,</span>
             <span class="n">exp_base</span><span class="p">,</span>
@@ -709,8 +706,12 @@ src="/_sphinx/documentation_options.js"></script>
             <span class="n">attribute_to_layer_input</span><span class="o">=</span><span class="n">attribute_to_layer_input</span><span class="p">,</span>
             <span class="n">custom_attribution_func</span><span class="o">=</span><span class="n">custom_attribution_func</span><span class="p">,</span>
         <span class="p">)</span>
+        <span class="n">delta</span><span class="p">:</span> <span class="n">Tensor</span>
+        <span class="n">attributions</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">]]</span>
         <span class="k">if</span> <span class="n">return_convergence_delta</span><span class="p">:</span>
-            <span class="n">attributions</span><span class="p">,</span> <span class="n">delta</span> <span class="o">=</span> <span class="n">attributions</span>
+            <span class="n">attributions</span><span class="p">,</span> <span class="n">delta</span> <span class="o">=</span> <span class="n">attribs_layer_deeplift</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">attributions</span> <span class="o">=</span> <span class="n">attribs_layer_deeplift</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">attributions</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">):</span>
             <span class="n">attributions</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span>
                 <span class="n">DeepLiftShap</span><span class="o">.</span><span class="n">_compute_mean_across_baselines</span><span class="p">(</span>
@@ -723,17 +724,19 @@ src="/_sphinx/documentation_options.js"></script>
                 <span class="bp">self</span><span class="p">,</span> <span class="n">inp_bsz</span><span class="p">,</span> <span class="n">base_bsz</span><span class="p">,</span> <span class="n">attributions</span>
             <span class="p">)</span>
         <span class="k">if</span> <span class="n">return_convergence_delta</span><span class="p">:</span>
-            <span class="c1"># pyre-fixme[61]: `delta` is undefined, or not always defined.</span>
             <span class="k">return</span> <span class="n">attributions</span><span class="p">,</span> <span class="n">delta</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="c1"># pyre-fixme[7]: Expected `Union[Tuple[Union[Tensor,</span>
-            <span class="c1">#  typing.Tuple[Tensor, ...]], Tensor], Tensor, typing.Tuple[Tensor, ...]]`</span>
-            <span class="c1">#  but got `Union[tuple[Tensor], Tensor]`.</span>
-            <span class="k">return</span> <span class="n">attributions</span></div>
+            <span class="k">return</span> <span class="n">cast</span><span class="p">(</span>
+                <span class="n">Union</span><span class="p">[</span>
+                    <span class="n">Tensor</span><span class="p">,</span>
+                    <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span>
+                    <span class="n">Tuple</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">]],</span> <span class="n">Tensor</span><span class="p">],</span>
+                <span class="p">],</span>
+                <span class="n">attributions</span><span class="p">,</span>
+            <span class="p">)</span></div>
 
 
     <span class="nd">@property</span>
-    <span class="c1"># pyre-fixme[3]: Return type must be annotated.</span>
     <span class="k">def</span> <span class="nf">multiplies_by_inputs</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_multiply_by_inputs</span></div>
 

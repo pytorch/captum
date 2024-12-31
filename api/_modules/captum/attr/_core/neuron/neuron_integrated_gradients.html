@@ -36,7 +36,7 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Union</span>
 
 <span class="kn">from</span> <span class="nn">captum._utils.gradient</span> <span class="kn">import</span> <span class="n">construct_neuron_grad_fn</span>
-<span class="kn">from</span> <span class="nn">captum._utils.typing</span> <span class="kn">import</span> <span class="n">TensorOrTupleOfTensorsGeneric</span>
+<span class="kn">from</span> <span class="nn">captum._utils.typing</span> <span class="kn">import</span> <span class="n">SliceIntType</span><span class="p">,</span> <span class="n">TensorOrTupleOfTensorsGeneric</span>
 <span class="kn">from</span> <span class="nn">captum.attr._core.integrated_gradients</span> <span class="kn">import</span> <span class="n">IntegratedGradients</span>
 <span class="kn">from</span> <span class="nn">captum.attr._utils.attribution</span> <span class="kn">import</span> <span class="n">GradientAttribution</span><span class="p">,</span> <span class="n">NeuronAttribution</span>
 <span class="kn">from</span> <span class="nn">captum.log</span> <span class="kn">import</span> <span class="n">log_usage</span>
@@ -61,8 +61,7 @@ src="/_sphinx/documentation_options.js"></script>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
-        <span class="c1"># pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.</span>
-        <span class="n">forward_func</span><span class="p">:</span> <span class="n">Callable</span><span class="p">,</span>
+        <span class="n">forward_func</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">Tensor</span><span class="p">],</span>
         <span class="n">layer</span><span class="p">:</span> <span class="n">Module</span><span class="p">,</span>
         <span class="n">device_ids</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">multiply_by_inputs</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
@@ -112,8 +111,11 @@ src="/_sphinx/documentation_options.js"></script>
     <span class="k">def</span> <span class="nf">attribute</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">inputs</span><span class="p">:</span> <span class="n">TensorOrTupleOfTensorsGeneric</span><span class="p">,</span>
-        <span class="c1"># pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.</span>
-        <span class="n">neuron_selector</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">slice</span><span class="p">],</span> <span class="o">...</span><span class="p">],</span> <span class="n">Callable</span><span class="p">],</span>
+        <span class="n">neuron_selector</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span>
+            <span class="nb">int</span><span class="p">,</span>
+            <span class="n">Tuple</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">SliceIntType</span><span class="p">],</span> <span class="o">...</span><span class="p">],</span>
+            <span class="n">Callable</span><span class="p">[[</span><span class="n">Union</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">]]],</span> <span class="n">Tensor</span><span class="p">],</span>
+        <span class="p">],</span>
         <span class="n">baselines</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="n">Tensor</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">additional_forward_args</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">object</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">n_steps</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">50</span><span class="p">,</span>

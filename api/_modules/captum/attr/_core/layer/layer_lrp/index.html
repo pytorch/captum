@@ -34,7 +34,9 @@ src="/_sphinx/documentation_options.js"></script>
 
 <span class="c1"># pyre-strict</span>
 <span class="kn">import</span> <span class="nn">typing</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">cast</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Literal</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Union</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">cast</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Literal</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">TypeVar</span><span class="p">,</span> <span class="n">Union</span>
+
+<span class="kn">import</span> <span class="nn">torch</span>
 
 <span class="kn">from</span> <span class="nn">captum._utils.common</span> <span class="kn">import</span> <span class="p">(</span>
     <span class="n">_format_tensor_into_tuples</span><span class="p">,</span>
@@ -53,8 +55,12 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="p">)</span>
 <span class="kn">from</span> <span class="nn">captum.attr._core.lrp</span> <span class="kn">import</span> <span class="n">LRP</span>
 <span class="kn">from</span> <span class="nn">captum.attr._utils.attribution</span> <span class="kn">import</span> <span class="n">LayerAttribution</span>
+<span class="kn">from</span> <span class="nn">captum.attr._utils.lrp_rules</span> <span class="kn">import</span> <span class="n">PropagationRule</span>
 <span class="kn">from</span> <span class="nn">torch</span> <span class="kn">import</span> <span class="n">Tensor</span>
 <span class="kn">from</span> <span class="nn">torch.nn</span> <span class="kn">import</span> <span class="n">Module</span>
+<span class="kn">from</span> <span class="nn">torch.utils.hooks</span> <span class="kn">import</span> <span class="n">RemovableHandle</span>
+
+<span class="n">T</span> <span class="o">=</span> <span class="n">TypeVar</span><span class="p">(</span><span class="s2">"T"</span><span class="p">)</span>
 
 
 <div class="viewcode-block" id="LayerLRP">
@@ -72,6 +78,13 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">    [https://doi.org/10.1016/j.dsp.2017.10.011] and the publication by</span>
 <span class="sd">    Ancona et al. [https://openreview.net/forum?id=Sy21R9JAW].</span>
 <span class="sd">    """</span>
+
+    <span class="n">device_ids</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span>
+    <span class="n">verbose</span><span class="p">:</span> <span class="nb">bool</span>
+    <span class="n">layers</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Module</span><span class="p">]</span>
+    <span class="n">attribute_to_layer_input</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="n">backward_handles</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">RemovableHandle</span><span class="p">]</span>
+    <span class="n">forward_handles</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">RemovableHandle</span><span class="p">]</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model</span><span class="p">:</span> <span class="n">Module</span><span class="p">,</span> <span class="n">layer</span><span class="p">:</span> <span class="n">ModuleOrModuleList</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">"""</span>
@@ -93,7 +106,6 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="n">LayerAttribution</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model</span><span class="p">,</span> <span class="n">layer</span><span class="p">)</span>
         <span class="n">LRP</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model</span><span class="p">)</span>
         <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">,</span> <span class="s2">"device_ids"</span><span class="p">):</span>
-            <span class="c1"># pyre-fixme[4]: Attribute must be annotated.</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">device_ids</span> <span class="o">=</span> <span class="n">cast</span><span class="p">(</span><span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">device_ids</span><span class="p">)</span>
 
     <span class="nd">@typing</span><span class="o">.</span><span class="n">overload</span>  <span class="c1"># type: ignore</span>
@@ -244,48 +256,34 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">                &gt;&gt;&gt; attribution = layer_lrp.attribute(input, target=5)</span>
 
 <span class="sd">        """</span>
-        <span class="c1"># pyre-fixme[16]: `LayerLRP` has no attribute `verbose`.</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span> <span class="o">=</span> <span class="n">verbose</span>
-        <span class="c1"># pyre-fixme[16]: `LayerLRP` has no attribute `_original_state_dict`.</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_original_state_dict</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">state_dict</span><span class="p">()</span>
-        <span class="c1"># pyre-fixme[16]: `LayerLRP` has no attribute `layers`.</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">layers</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_get_layers</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_check_and_attach_rules</span><span class="p">()</span>
-        <span class="c1"># pyre-fixme[16]: `LayerLRP` has no attribute `attribute_to_layer_input`.</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">attribute_to_layer_input</span> <span class="o">=</span> <span class="n">attribute_to_layer_input</span>
-        <span class="c1"># pyre-fixme[16]: `LayerLRP` has no attribute `backward_handles`.</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">backward_handles</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="c1"># pyre-fixme[16]: `LayerLRP` has no attribute `forward_handles`.</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">forward_handles</span> <span class="o">=</span> <span class="p">[]</span>
 
-        <span class="c1"># pyre-fixme[9]: inputs has type `TensorOrTupleOfTensorsGeneric`; used as</span>
-        <span class="c1">#  `Tuple[Tensor, ...]`.</span>
-        <span class="n">inputs</span> <span class="o">=</span> <span class="n">_format_tensor_into_tuples</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span>
-        <span class="c1"># pyre-fixme[6]: For 1st argument expected `Tuple[Tensor, ...]` but got</span>
-        <span class="c1">#  `TensorOrTupleOfTensorsGeneric`.</span>
-        <span class="n">gradient_mask</span> <span class="o">=</span> <span class="n">apply_gradient_requirements</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span>
+        <span class="n">inputs_tuple</span> <span class="o">=</span> <span class="n">_format_tensor_into_tuples</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span>
+        <span class="n">gradient_mask</span> <span class="o">=</span> <span class="n">apply_gradient_requirements</span><span class="p">(</span><span class="n">inputs_tuple</span><span class="p">)</span>
 
         <span class="k">try</span><span class="p">:</span>
             <span class="c1"># 1. Forward pass</span>
             <span class="n">output</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_compute_output_and_change_weights</span><span class="p">(</span>
-                <span class="c1"># pyre-fixme[6]: For 1st argument expected `Tuple[Tensor, ...]` but</span>
-                <span class="c1">#  got `TensorOrTupleOfTensorsGeneric`.</span>
-                <span class="n">inputs</span><span class="p">,</span>
+                <span class="n">inputs_tuple</span><span class="p">,</span>
                 <span class="n">target</span><span class="p">,</span>
                 <span class="n">additional_forward_args</span><span class="p">,</span>
             <span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_register_forward_hooks</span><span class="p">()</span>
             <span class="c1"># 2. Forward pass + backward pass</span>
             <span class="n">_</span> <span class="o">=</span> <span class="n">compute_gradients</span><span class="p">(</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">_forward_fn_wrapper</span><span class="p">,</span> <span class="n">inputs</span><span class="p">,</span> <span class="n">target</span><span class="p">,</span> <span class="n">additional_forward_args</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_forward_fn_wrapper</span><span class="p">,</span> <span class="n">inputs_tuple</span><span class="p">,</span> <span class="n">target</span><span class="p">,</span> <span class="n">additional_forward_args</span>
             <span class="p">)</span>
             <span class="n">relevances</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_output_relevance</span><span class="p">(</span><span class="n">output</span><span class="p">)</span>
         <span class="k">finally</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_restore_model</span><span class="p">()</span>
-        <span class="c1"># pyre-fixme[6]: For 1st argument expected `Tuple[Tensor, ...]` but got</span>
-        <span class="c1">#  `TensorOrTupleOfTensorsGeneric`.</span>
-        <span class="n">undo_gradient_requirements</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">gradient_mask</span><span class="p">)</span>
+        <span class="n">undo_gradient_requirements</span><span class="p">(</span><span class="n">inputs_tuple</span><span class="p">,</span> <span class="n">gradient_mask</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="n">return_convergence_delta</span><span class="p">:</span>
             <span class="n">delta</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">Tensor</span><span class="p">]]</span>
@@ -293,7 +291,10 @@ src="/_sphinx/documentation_options.js"></script>
                 <span class="n">delta</span> <span class="o">=</span> <span class="p">[]</span>
                 <span class="k">for</span> <span class="n">relevance_layer</span> <span class="ow">in</span> <span class="n">relevances</span><span class="p">:</span>
                     <span class="n">delta</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
-                        <span class="bp">self</span><span class="o">.</span><span class="n">compute_convergence_delta</span><span class="p">(</span><span class="n">relevance_layer</span><span class="p">,</span> <span class="n">output</span><span class="p">)</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">compute_convergence_delta</span><span class="p">(</span>
+                            <span class="n">cast</span><span class="p">(</span><span class="n">Union</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">]],</span> <span class="n">relevance_layer</span><span class="p">),</span>
+                            <span class="n">output</span><span class="p">,</span>
+                        <span class="p">)</span>
                     <span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">delta</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">compute_convergence_delta</span><span class="p">(</span>
@@ -304,33 +305,35 @@ src="/_sphinx/documentation_options.js"></script>
             <span class="k">return</span> <span class="n">relevances</span>  <span class="c1"># type: ignore</span></div>
 
 
-    <span class="c1"># pyre-fixme[3]: Return type must be annotated.</span>
-    <span class="c1"># pyre-fixme[2]: Parameter must be annotated.</span>
-    <span class="k">def</span> <span class="nf">_get_single_output_relevance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">layer</span><span class="p">,</span> <span class="n">output</span><span class="p">):</span>
-        <span class="c1"># pyre-fixme[16]: `LayerLRP` has no attribute `attribute_to_layer_input`.</span>
+    <span class="k">def</span> <span class="nf">_get_single_output_relevance</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">layer</span><span class="p">:</span> <span class="n">Module</span><span class="p">,</span> <span class="n">output</span><span class="p">:</span> <span class="n">Tensor</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">]]:</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">attribute_to_layer_input</span><span class="p">:</span>
-            <span class="n">normalized_relevances</span> <span class="o">=</span> <span class="n">layer</span><span class="o">.</span><span class="n">rule</span><span class="o">.</span><span class="n">relevance_input</span>
+            <span class="n">normalized_relevances</span> <span class="o">=</span> <span class="n">cast</span><span class="p">(</span>
+                <span class="n">Dict</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">device</span><span class="p">,</span> <span class="n">Tensor</span><span class="p">],</span>
+                <span class="n">cast</span><span class="p">(</span><span class="n">PropagationRule</span><span class="p">,</span> <span class="n">layer</span><span class="o">.</span><span class="n">rule</span><span class="p">)</span><span class="o">.</span><span class="n">relevance_input</span><span class="p">,</span>
+            <span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="n">normalized_relevances</span> <span class="o">=</span> <span class="n">layer</span><span class="o">.</span><span class="n">rule</span><span class="o">.</span><span class="n">relevance_output</span>
+            <span class="n">normalized_relevances</span> <span class="o">=</span> <span class="n">cast</span><span class="p">(</span><span class="n">PropagationRule</span><span class="p">,</span> <span class="n">layer</span><span class="o">.</span><span class="n">rule</span><span class="p">)</span><span class="o">.</span><span class="n">relevance_output</span>
         <span class="n">key_list</span> <span class="o">=</span> <span class="n">_sort_key_list</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">normalized_relevances</span><span class="o">.</span><span class="n">keys</span><span class="p">()),</span> <span class="bp">self</span><span class="o">.</span><span class="n">device_ids</span><span class="p">)</span>
-        <span class="n">normalized_relevances</span> <span class="o">=</span> <span class="n">_reduce_list</span><span class="p">(</span>
+        <span class="n">normalized_relevances_reduced</span> <span class="o">=</span> <span class="n">_reduce_list</span><span class="p">(</span>
             <span class="p">[</span><span class="n">normalized_relevances</span><span class="p">[</span><span class="n">device_id</span><span class="p">]</span> <span class="k">for</span> <span class="n">device_id</span> <span class="ow">in</span> <span class="n">key_list</span><span class="p">]</span>
         <span class="p">)</span>
 
-        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">normalized_relevances</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">normalized_relevances_reduced</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">):</span>
             <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span>
                 <span class="n">normalized_relevance</span>
                 <span class="o">*</span> <span class="n">output</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="o">-</span><span class="mi">1</span><span class="p">,)</span> <span class="o">+</span> <span class="p">(</span><span class="mi">1</span><span class="p">,)</span> <span class="o">*</span> <span class="p">(</span><span class="n">normalized_relevance</span><span class="o">.</span><span class="n">dim</span><span class="p">()</span> <span class="o">-</span> <span class="mi">1</span><span class="p">))</span>
-                <span class="k">for</span> <span class="n">normalized_relevance</span> <span class="ow">in</span> <span class="n">normalized_relevances</span>
+                <span class="k">for</span> <span class="n">normalized_relevance</span> <span class="ow">in</span> <span class="n">normalized_relevances_reduced</span>
             <span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">normalized_relevances</span> <span class="o">*</span> <span class="n">output</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span>
-                <span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,)</span> <span class="o">+</span> <span class="p">(</span><span class="mi">1</span><span class="p">,)</span> <span class="o">*</span> <span class="p">(</span><span class="n">normalized_relevances</span><span class="o">.</span><span class="n">dim</span><span class="p">()</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">normalized_relevances_reduced</span> <span class="o">*</span> <span class="n">output</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span>
+                <span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,)</span> <span class="o">+</span> <span class="p">(</span><span class="mi">1</span><span class="p">,)</span> <span class="o">*</span> <span class="p">(</span><span class="n">normalized_relevances_reduced</span><span class="o">.</span><span class="n">dim</span><span class="p">()</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
             <span class="p">)</span>
 
-    <span class="c1"># pyre-fixme[3]: Return type must be annotated.</span>
-    <span class="c1"># pyre-fixme[2]: Parameter must be annotated.</span>
-    <span class="k">def</span> <span class="nf">_get_output_relevance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">output</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_get_output_relevance</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">output</span><span class="p">:</span> <span class="n">Tensor</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span> <span class="n">List</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">]]]]:</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">layer</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
             <span class="n">relevances</span> <span class="o">=</span> <span class="p">[]</span>
             <span class="k">for</span> <span class="n">layer</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">layer</span><span class="p">:</span>
@@ -340,11 +343,9 @@ src="/_sphinx/documentation_options.js"></script>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_single_output_relevance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">layer</span><span class="p">,</span> <span class="n">output</span><span class="p">)</span>
 
     <span class="nd">@staticmethod</span>
-    <span class="c1"># pyre-fixme[3]: Return annotation cannot contain `Any`.</span>
     <span class="k">def</span> <span class="nf">_convert_list_to_tuple</span><span class="p">(</span>
-        <span class="c1"># pyre-fixme[2]: Parameter annotation cannot contain `Any`.</span>
-        <span class="n">relevances</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">Any</span><span class="p">],</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="o">...</span><span class="p">]]</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span>
+        <span class="n">relevances</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">T</span><span class="p">],</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">T</span><span class="p">,</span> <span class="o">...</span><span class="p">]]</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">T</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">relevances</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
             <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">relevances</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
