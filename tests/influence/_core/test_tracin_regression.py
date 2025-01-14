@@ -13,10 +13,7 @@ from captum.influence._core.tracincp_fast_rand_proj import (
     TracInCPFast,
     TracInCPFastRandProj,
 )
-from parameterized import parameterized
-from tests.helpers import BaseTest
-from tests.helpers.basic import assertTensorAlmostEqual
-from tests.helpers.influence.common import (
+from captum.testing.helpers.influence.common import (
     _isSorted,
     _wrap_model_in_dataparallel,
     build_test_name_func,
@@ -25,6 +22,9 @@ from tests.helpers.influence.common import (
     IdentityDataset,
     RangeDataset,
 )
+from parameterized import parameterized
+from tests.helpers import BaseTest
+from tests.helpers.basic import assertTensorAlmostEqual
 from torch import Tensor
 
 
@@ -142,7 +142,7 @@ class TestTracInRegression(BaseTest):
                     param_list.append((reduction, constructor, mode, dim, use_gpu))
 
     # pyre-fixme[56]: Pyre was not able to infer the type of argument
-    # `tests.helpers.influence.common.build_test_name_func
+    # `captum.testing.helpers.influence.common.build_test_name_func
     # ($parameter$args_to_skip = ["reduction"])` to decorator factory
     # `parameterized.parameterized.expand`.
     @parameterized.expand(
@@ -258,7 +258,7 @@ class TestTracInRegression(BaseTest):
                 )
 
     # pyre-fixme[56]: Pyre was not able to infer the type of argument
-    # `tests.helpers.influence.common.build_test_name_func()`
+    # `captum.testing.helpers.influence.common.build_test_name_func()`
     # to decorator factory `parameterized.parameterized.expand`.
     @parameterized.expand(
         [
@@ -350,7 +350,7 @@ class TestTracInRegression(BaseTest):
         return dataset, net
 
     # pyre-fixme[56]: Pyre was not able to infer the type of argument
-    # `tests.helpers.influence.common.build_test_name_func()`
+    # `captum.testing.helpers.influence.common.build_test_name_func()`
     # to decorator factory `parameterized.parameterized.expand`
     @parameterized.expand(
         [
@@ -465,7 +465,7 @@ class TestTracInRegression(BaseTest):
                 )
 
     # pyre-fixme[56]: Pyre was not able to infer the type of argument
-    # `tests.helpers.influence.common.build_test_name_func()`
+    # `captum.testing.helpers.influence.common.build_test_name_func()`
     # to decorator factory `parameterized.parameterized.expand`.
     @parameterized.expand(
         [

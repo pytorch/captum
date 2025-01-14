@@ -12,10 +12,7 @@ from captum.influence._utils.common import (
     _functional_call,
     _unflatten_params_factory,
 )
-from parameterized import parameterized
-from tests.helpers import BaseTest
-from tests.helpers.basic import assertTensorAlmostEqual, assertTensorTuplesAlmostEqual
-from tests.helpers.influence.common import (
+from captum.testing.helpers.influence.common import (
     _format_batch_into_tuple,
     build_test_name_func,
     DataInfluenceConstructor,
@@ -25,6 +22,9 @@ from tests.helpers.influence.common import (
     Linear,
     UnpackDataset,
 )
+from parameterized import parameterized
+from tests.helpers import BaseTest
+from tests.helpers.basic import assertTensorAlmostEqual, assertTensorTuplesAlmostEqual
 from torch.utils.data import DataLoader
 
 # TODO: for some unknow reason, this test does not work

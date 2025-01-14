@@ -8,13 +8,13 @@ from typing import Callable
 import torch.nn as nn
 from captum.influence._core.tracincp import TracInCP
 from captum.influence._core.tracincp_fast_rand_proj import TracInCPFast
-from parameterized import parameterized
-from tests.helpers import BaseTest
-from tests.helpers.influence.common import (
+from captum.testing.helpers.influence.common import (
     build_test_name_func,
     DataInfluenceConstructor,
     get_random_model_and_data,
 )
+from parameterized import parameterized
+from tests.helpers import BaseTest
 from torch.utils.data import DataLoader
 
 
@@ -69,9 +69,9 @@ class TestTracInShowProgress(BaseTest):
     # pyre-fixme[56]: Pyre was not able to infer the type of argument
     # `comprehension((reduction, constr, mode) for
     # generators(generator((reduction, constr) in
-    # [("none", tests.helpers.influence.common.DataInfluenceConstructor
+    # [("none", captum.testing.helpers.influence.common.DataInfluenceConstructor
     # (captum.influence._core.tracincp.TracInCP)),
-    # ("sum", tests.helpers.influence.common.DataInfluenceConstructor
+    # ("sum", captum.testing.helpers.influence.common.DataInfluenceConstructor
     # (captum.influence._core.tracincp_fast_rand_proj.TracInCPFast))] if ),
     # generators(generator(mode in ["self influence by checkpoints",
     # "self influence by batches", "influence", "k-most"] if ))))`

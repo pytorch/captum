@@ -8,10 +8,7 @@ from captum.influence._core.arnoldi_influence_function import ArnoldiInfluenceFu
 from captum.influence._core.influence_function import NaiveInfluenceFunction
 from captum.influence._core.tracincp import TracInCP, TracInCPBase
 from captum.influence._core.tracincp_fast_rand_proj import TracInCPFast
-from parameterized import parameterized
-from tests.helpers import BaseTest
-from tests.helpers.basic import assertTensorAlmostEqual
-from tests.helpers.influence.common import (
+from captum.testing.helpers.influence.common import (
     _format_batch_into_tuple,
     build_test_name_func,
     DataInfluenceConstructor,
@@ -19,6 +16,9 @@ from tests.helpers.influence.common import (
     GPU_SETTING_LIST,
     is_gpu,
 )
+from parameterized import parameterized
+from tests.helpers import BaseTest
+from tests.helpers.basic import assertTensorAlmostEqual
 from torch.utils.data import DataLoader
 
 
