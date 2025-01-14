@@ -64,7 +64,7 @@ attribution-based interpretability methods as well.</p>
 model inputs and optionally baselines as input arguments and returns
 either a tuple of perturbations and perturbed inputs or just
 perturbed inputs. For example:</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">def</span> <span class="nf">my_perturb_func</span><span class="p">(</span><span class="n">inputs</span><span class="p">):</span>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">def</span><span class="w"> </span><span class="nf">my_perturb_func</span><span class="p">(</span><span class="n">inputs</span><span class="p">):</span>
 <span class="gp">&gt;&gt;&gt; </span>  <span class="o">&lt;</span><span class="n">MY</span><span class="o">-</span><span class="n">LOGIC</span><span class="o">-</span><span class="n">HERE</span><span class="o">&gt;</span>
 <span class="gp">&gt;&gt;&gt; </span>  <span class="k">return</span> <span class="n">perturbations</span><span class="p">,</span> <span class="n">perturbed_inputs</span>
 </pre></div>
@@ -72,11 +72,11 @@ perturbed inputs. For example:</p>
 <p>If we want to only return perturbed inputs and compute
 perturbations internally then we can wrap perturb_func with
 <cite>infidelity_perturb_func_decorator</cite> decorator such as:</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">captum.metrics</span> <span class="kn">import</span> <span class="n">infidelity_perturb_func_decorator</span>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">captum.metrics</span><span class="w"> </span><span class="kn">import</span> <span class="n">infidelity_perturb_func_decorator</span>
 </pre></div>
 </div>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="nd">@infidelity_perturb_func_decorator</span><span class="p">(</span><span class="o">&lt;</span><span class="n">multiply_by_inputs</span> <span class="n">flag</span><span class="o">&gt;</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="k">def</span> <span class="nf">my_perturb_func</span><span class="p">(</span><span class="n">inputs</span><span class="p">):</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">def</span><span class="w"> </span><span class="nf">my_perturb_func</span><span class="p">(</span><span class="n">inputs</span><span class="p">):</span>
 <span class="gp">&gt;&gt;&gt; </span>  <span class="o">&lt;</span><span class="n">MY</span><span class="o">-</span><span class="n">LOGIC</span><span class="o">-</span><span class="n">HERE</span><span class="o">&gt;</span>
 <span class="gp">&gt;&gt;&gt; </span>  <span class="k">return</span> <span class="n">perturbed_inputs</span>
 </pre></div>
@@ -282,7 +282,7 @@ dimension is one.</p>
 <span class="gp">&gt;&gt;&gt; </span><span class="c1"># Computes saliency maps for class 3.</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">attribution</span> <span class="o">=</span> <span class="n">saliency</span><span class="o">.</span><span class="n">attribute</span><span class="p">(</span><span class="nb">input</span><span class="p">,</span> <span class="n">target</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="c1"># define a perturbation function for the input</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="k">def</span> <span class="nf">perturb_fn</span><span class="p">(</span><span class="n">inputs</span><span class="p">):</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">def</span><span class="w"> </span><span class="nf">perturb_fn</span><span class="p">(</span><span class="n">inputs</span><span class="p">):</span>
 <span class="gp">&gt;&gt;&gt; </span>   <span class="n">noise</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mf">0.003</span><span class="p">,</span> <span class="n">inputs</span><span class="o">.</span><span class="n">shape</span><span class="p">))</span><span class="o">.</span><span class="n">float</span><span class="p">()</span>
 <span class="gp">&gt;&gt;&gt; </span>   <span class="k">return</span> <span class="n">noise</span><span class="p">,</span> <span class="n">inputs</span> <span class="o">-</span> <span class="n">noise</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="c1"># Computes infidelity score for saliency maps</span>
@@ -478,7 +478,7 @@ the magnitudes of the input explanations.</p>
 </div>
 </div>
 <div class="clearer"></div>
-</div></div></div><footer class="nav-footer" id="footer"><section class="sitemap"><div class="footerSection"><h5>Docs</h5><a href="/docs/introduction">Introduction</a><a href="/docs/getting_started">Getting Started</a><a href="/tutorials/">Tutorials</a><a href="/api/">API Reference</a></div><div class="footerSection"><h5>Legal</h5><a href="https://opensource.facebook.com/legal/privacy/" target="_blank" rel="noreferrer noopener">Privacy</a><a href="https://opensource.facebook.com/legal/terms/" target="_blank" rel="noreferrer noopener">Terms</a></div><div class="footerSection"><h5>Social</h5><div class="social"><a class="github-button" href="https://github.com/pytorch/captum" data-count-href="https://github.com/pytorch/captum/stargazers" data-show-count="true" data-count-aria-label="# stargazers on GitHub" aria-label="Star Captum on GitHub">captum</a></div></div></section><a href="https://opensource.facebook.com/" target="_blank" rel="noreferrer noopener" class="fbOpenSource"><img src="/img/oss_logo.png" alt="Facebook Open Source" width="170" height="45"/></a><section class="copyright"> Copyright © 2024 Facebook Inc.</section><script>
+</div></div></div><footer class="nav-footer" id="footer"><section class="sitemap"><div class="footerSection"><h5>Docs</h5><a href="/docs/introduction">Introduction</a><a href="/docs/getting_started">Getting Started</a><a href="/tutorials/">Tutorials</a><a href="/api/">API Reference</a></div><div class="footerSection"><h5>Legal</h5><a href="https://opensource.facebook.com/legal/privacy/" target="_blank" rel="noreferrer noopener">Privacy</a><a href="https://opensource.facebook.com/legal/terms/" target="_blank" rel="noreferrer noopener">Terms</a></div><div class="footerSection"><h5>Social</h5><div class="social"><a class="github-button" href="https://github.com/pytorch/captum" data-count-href="https://github.com/pytorch/captum/stargazers" data-show-count="true" data-count-aria-label="# stargazers on GitHub" aria-label="Star Captum on GitHub">captum</a></div></div></section><a href="https://opensource.facebook.com/" target="_blank" rel="noreferrer noopener" class="fbOpenSource"><img src="/img/oss_logo.png" alt="Facebook Open Source" width="170" height="45"/></a><section class="copyright"> Copyright © 2025 Facebook Inc.</section><script>
             (function() {
               var BAD_BASE = '/captum/';
               if (window.location.origin !== 'https://captum.ai') {

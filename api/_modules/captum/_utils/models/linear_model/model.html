@@ -31,20 +31,20 @@ src="/_sphinx/documentation_options.js"></script>
 <div class="body" role="main">
 <h1>Source code for captum._utils.models.linear_model.model</h1><div class="highlight"><pre>
 <span></span><span class="c1"># pyre-strict</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">cast</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">cast</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span>
 
-<span class="kn">import</span> <span class="nn">torch.nn</span> <span class="k">as</span> <span class="nn">nn</span>
-<span class="kn">from</span> <span class="nn">captum._utils.models.model</span> <span class="kn">import</span> <span class="n">Model</span>
-<span class="kn">from</span> <span class="nn">torch</span> <span class="kn">import</span> <span class="n">Tensor</span>
-<span class="kn">from</span> <span class="nn">torch.utils.data</span> <span class="kn">import</span> <span class="n">DataLoader</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">torch.nn</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">nn</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">captum._utils.models.model</span><span class="w"> </span><span class="kn">import</span> <span class="n">Model</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">torch</span><span class="w"> </span><span class="kn">import</span> <span class="n">Tensor</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">torch.utils.data</span><span class="w"> </span><span class="kn">import</span> <span class="n">DataLoader</span>
 
 
-<span class="k">class</span> <span class="nc">LinearModel</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">,</span> <span class="n">Model</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">LinearModel</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">,</span> <span class="n">Model</span><span class="p">):</span>
     <span class="n">SUPPORTED_NORMS</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="s2">"batch_norm"</span><span class="p">,</span> <span class="s2">"layer_norm"</span><span class="p">]</span>
 
     <span class="c1"># pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.</span>
     <span class="c1"># pyre-fixme[2]: Parameter must be annotated.</span>
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">train_fn</span><span class="p">:</span> <span class="n">Callable</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">train_fn</span><span class="p">:</span> <span class="n">Callable</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        Constructs a linear model with a training function and additional</span>
 <span class="sd">        construction arguments that will be sent to</span>
@@ -73,7 +73,7 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="c1"># pyre-fixme[4]: Attribute must be annotated.</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">construct_kwargs</span> <span class="o">=</span> <span class="n">kwargs</span>
 
-    <span class="k">def</span> <span class="nf">_construct_model_params</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_construct_model_params</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">in_features</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">out_features</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -155,7 +155,7 @@ src="/_sphinx/documentation_options.js"></script>
 
     <span class="c1"># pyre-fixme[3]: Return type must be annotated.</span>
     <span class="c1"># pyre-fixme[2]: Parameter must be annotated.</span>
-    <span class="k">def</span> <span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">train_data</span><span class="p">:</span> <span class="n">DataLoader</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">train_data</span><span class="p">:</span> <span class="n">DataLoader</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 <span class="w">        </span><span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        Calls `self.train_fn`</span>
 <span class="sd">        """</span>
@@ -166,14 +166,14 @@ src="/_sphinx/documentation_options.js"></script>
             <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
         <span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tensor</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tensor</span><span class="p">:</span>
         <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">linear</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">norm</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
         <span class="c1"># pyre-fixme[29]: `Optional[nn.modules.linear.Linear]` is not a function.</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">linear</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">representation</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tensor</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">representation</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tensor</span><span class="p">:</span>
 <span class="w">        </span><span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        Returns a tensor which describes the hyper-plane input space. This does</span>
 <span class="sd">        not include the bias. For bias/intercept, please use `self.bias`</span>
@@ -181,7 +181,7 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">linear</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">linear</span><span class="o">.</span><span class="n">weight</span><span class="o">.</span><span class="n">detach</span><span class="p">()</span>
 
-    <span class="k">def</span> <span class="nf">bias</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Tensor</span><span class="p">]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">bias</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Tensor</span><span class="p">]:</span>
 <span class="w">        </span><span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        Returns the bias of the linear model</span>
 <span class="sd">        """</span>
@@ -189,7 +189,7 @@ src="/_sphinx/documentation_options.js"></script>
             <span class="k">return</span> <span class="kc">None</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">linear</span><span class="o">.</span><span class="n">bias</span><span class="o">.</span><span class="n">detach</span><span class="p">()</span>
 
-    <span class="k">def</span> <span class="nf">classes</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Tensor</span><span class="p">]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">classes</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Tensor</span><span class="p">]:</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">linear</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">linear</span><span class="o">.</span><span class="n">classes</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">return</span> <span class="kc">None</span>
         <span class="k">return</span> <span class="n">cast</span><span class="p">(</span><span class="n">Tensor</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">linear</span><span class="o">.</span><span class="n">classes</span><span class="p">)</span><span class="o">.</span><span class="n">detach</span><span class="p">()</span>
@@ -197,9 +197,9 @@ src="/_sphinx/documentation_options.js"></script>
 
 <div class="viewcode-block" id="SGDLinearModel">
 <a class="viewcode-back" href="../../../../../utilities.html#captum._utils.models.linear_model.SGDLinearModel">[docs]</a>
-<span class="k">class</span> <span class="nc">SGDLinearModel</span><span class="p">(</span><span class="n">LinearModel</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">SGDLinearModel</span><span class="p">(</span><span class="n">LinearModel</span><span class="p">):</span>
     <span class="c1"># pyre-fixme[2]: Parameter must be annotated.</span>
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        Factory class. Construct a a `LinearModel` with the</span>
 <span class="sd">        `sgd_train_linear_model` as the train method</span>
@@ -211,7 +211,7 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">                documentation.</span>
 <span class="sd">        """</span>
         <span class="c1"># avoid cycles</span>
-        <span class="kn">from</span> <span class="nn">captum._utils.models.linear_model.train</span> <span class="kn">import</span> <span class="n">sgd_train_linear_model</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">captum._utils.models.linear_model.train</span><span class="w"> </span><span class="kn">import</span> <span class="n">sgd_train_linear_model</span>
 
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">train_fn</span><span class="o">=</span><span class="n">sgd_train_linear_model</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
 
@@ -219,9 +219,9 @@ src="/_sphinx/documentation_options.js"></script>
 
 <div class="viewcode-block" id="SGDLasso">
 <a class="viewcode-back" href="../../../../../utilities.html#captum._utils.models.linear_model.SGDLasso">[docs]</a>
-<span class="k">class</span> <span class="nc">SGDLasso</span><span class="p">(</span><span class="n">SGDLinearModel</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">SGDLasso</span><span class="p">(</span><span class="n">SGDLinearModel</span><span class="p">):</span>
     <span class="c1"># pyre-fixme[2]: Parameter must be annotated.</span>
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        Factory class to train a `LinearModel` with SGD</span>
 <span class="sd">        (`sgd_train_linear_model`) whilst setting appropriate parameters to</span>
@@ -237,9 +237,9 @@ src="/_sphinx/documentation_options.js"></script>
     <span class="c1"># pyre-fixme[2]: Parameter must be annotated.</span>
 <div class="viewcode-block" id="SGDLasso.fit">
 <a class="viewcode-back" href="../../../../../utilities.html#captum._utils.models.linear_model.SGDLasso.fit">[docs]</a>
-    <span class="k">def</span> <span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">train_data</span><span class="p">:</span> <span class="n">DataLoader</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">train_data</span><span class="p">:</span> <span class="n">DataLoader</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="c1"># avoid cycles</span>
-        <span class="kn">from</span> <span class="nn">captum._utils.models.linear_model.train</span> <span class="kn">import</span> <span class="n">l2_loss</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">captum._utils.models.linear_model.train</span><span class="w"> </span><span class="kn">import</span> <span class="n">l2_loss</span>
 
         <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">train_data</span><span class="o">=</span><span class="n">train_data</span><span class="p">,</span> <span class="n">loss_fn</span><span class="o">=</span><span class="n">l2_loss</span><span class="p">,</span> <span class="n">reg_term</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
 </div>
@@ -248,9 +248,9 @@ src="/_sphinx/documentation_options.js"></script>
 
 <div class="viewcode-block" id="SGDRidge">
 <a class="viewcode-back" href="../../../../../utilities.html#captum._utils.models.linear_model.SGDRidge">[docs]</a>
-<span class="k">class</span> <span class="nc">SGDRidge</span><span class="p">(</span><span class="n">SGDLinearModel</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">SGDRidge</span><span class="p">(</span><span class="n">SGDLinearModel</span><span class="p">):</span>
     <span class="c1"># pyre-fixme[2]: Parameter must be annotated.</span>
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        Factory class to train a `LinearModel` with SGD</span>
 <span class="sd">        (`sgd_train_linear_model`) whilst setting appropriate parameters to</span>
@@ -263,18 +263,18 @@ src="/_sphinx/documentation_options.js"></script>
     <span class="c1"># pyre-fixme[2]: Parameter must be annotated.</span>
 <div class="viewcode-block" id="SGDRidge.fit">
 <a class="viewcode-back" href="../../../../../utilities.html#captum._utils.models.linear_model.SGDRidge.fit">[docs]</a>
-    <span class="k">def</span> <span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">train_data</span><span class="p">:</span> <span class="n">DataLoader</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">train_data</span><span class="p">:</span> <span class="n">DataLoader</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="c1"># avoid cycles</span>
-        <span class="kn">from</span> <span class="nn">captum._utils.models.linear_model.train</span> <span class="kn">import</span> <span class="n">l2_loss</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">captum._utils.models.linear_model.train</span><span class="w"> </span><span class="kn">import</span> <span class="n">l2_loss</span>
 
         <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">train_data</span><span class="o">=</span><span class="n">train_data</span><span class="p">,</span> <span class="n">loss_fn</span><span class="o">=</span><span class="n">l2_loss</span><span class="p">,</span> <span class="n">reg_term</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
 </div>
 
 
 
-<span class="k">class</span> <span class="nc">SGDLinearRegression</span><span class="p">(</span><span class="n">SGDLinearModel</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">SGDLinearRegression</span><span class="p">(</span><span class="n">SGDLinearModel</span><span class="p">):</span>
     <span class="c1"># pyre-fixme[2]: Parameter must be annotated.</span>
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        Factory class to train a `LinearModel` with SGD</span>
 <span class="sd">        (`sgd_train_linear_model`). For linear regression this assigns the loss</span>
@@ -284,9 +284,9 @@ src="/_sphinx/documentation_options.js"></script>
 
     <span class="c1"># pyre-fixme[3]: Return type must be annotated.</span>
     <span class="c1"># pyre-fixme[2]: Parameter must be annotated.</span>
-    <span class="k">def</span> <span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">train_data</span><span class="p">:</span> <span class="n">DataLoader</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">train_data</span><span class="p">:</span> <span class="n">DataLoader</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="c1"># avoid cycles</span>
-        <span class="kn">from</span> <span class="nn">captum._utils.models.linear_model.train</span> <span class="kn">import</span> <span class="n">l2_loss</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">captum._utils.models.linear_model.train</span><span class="w"> </span><span class="kn">import</span> <span class="n">l2_loss</span>
 
         <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span>
             <span class="n">train_data</span><span class="o">=</span><span class="n">train_data</span><span class="p">,</span> <span class="n">loss_fn</span><span class="o">=</span><span class="n">l2_loss</span><span class="p">,</span> <span class="n">reg_term</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span>
@@ -295,9 +295,9 @@ src="/_sphinx/documentation_options.js"></script>
 
 <div class="viewcode-block" id="SkLearnLinearModel">
 <a class="viewcode-back" href="../../../../../utilities.html#captum._utils.models.linear_model.SkLearnLinearModel">[docs]</a>
-<span class="k">class</span> <span class="nc">SkLearnLinearModel</span><span class="p">(</span><span class="n">LinearModel</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">SkLearnLinearModel</span><span class="p">(</span><span class="n">LinearModel</span><span class="p">):</span>
     <span class="c1"># pyre-fixme[2]: Parameter must be annotated.</span>
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sklearn_module</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sklearn_module</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        Factory class to construct a `LinearModel` with sklearn training method.</span>
 
@@ -321,7 +321,7 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">                The kwargs to pass to the construction of the sklearn model</span>
 <span class="sd">        """</span>
         <span class="c1"># avoid cycles</span>
-        <span class="kn">from</span> <span class="nn">captum._utils.models.linear_model.train</span> <span class="kn">import</span> <span class="n">sklearn_train_linear_model</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">captum._utils.models.linear_model.train</span><span class="w"> </span><span class="kn">import</span> <span class="n">sklearn_train_linear_model</span>
 
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">train_fn</span><span class="o">=</span><span class="n">sklearn_train_linear_model</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
@@ -331,7 +331,7 @@ src="/_sphinx/documentation_options.js"></script>
     <span class="c1"># pyre-fixme[2]: Parameter must be annotated.</span>
 <div class="viewcode-block" id="SkLearnLinearModel.fit">
 <a class="viewcode-back" href="../../../../../utilities.html#captum._utils.models.linear_model.SkLearnLinearModel.fit">[docs]</a>
-    <span class="k">def</span> <span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">train_data</span><span class="p">:</span> <span class="n">DataLoader</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">train_data</span><span class="p">:</span> <span class="n">DataLoader</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 <span class="w">        </span><span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        Args:</span>
 <span class="sd">            train_data</span>
@@ -348,9 +348,9 @@ src="/_sphinx/documentation_options.js"></script>
 
 <div class="viewcode-block" id="SkLearnLasso">
 <a class="viewcode-back" href="../../../../../utilities.html#captum._utils.models.linear_model.SkLearnLasso">[docs]</a>
-<span class="k">class</span> <span class="nc">SkLearnLasso</span><span class="p">(</span><span class="n">SkLearnLinearModel</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">SkLearnLasso</span><span class="p">(</span><span class="n">SkLearnLinearModel</span><span class="p">):</span>
     <span class="c1"># pyre-fixme[2]: Parameter must be annotated.</span>
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        Factory class. Trains a `LinearModel` model with</span>
 <span class="sd">        `sklearn.linear_model.Lasso`. You will need sklearn version &gt;= 0.23 to</span>
@@ -362,7 +362,7 @@ src="/_sphinx/documentation_options.js"></script>
     <span class="c1"># pyre-fixme[2]: Parameter must be annotated.</span>
 <div class="viewcode-block" id="SkLearnLasso.fit">
 <a class="viewcode-back" href="../../../../../utilities.html#captum._utils.models.linear_model.SkLearnLasso.fit">[docs]</a>
-    <span class="k">def</span> <span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">train_data</span><span class="p">:</span> <span class="n">DataLoader</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">train_data</span><span class="p">:</span> <span class="n">DataLoader</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">train_data</span><span class="o">=</span><span class="n">train_data</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
 </div>
 
@@ -370,9 +370,9 @@ src="/_sphinx/documentation_options.js"></script>
 
 <div class="viewcode-block" id="SkLearnRidge">
 <a class="viewcode-back" href="../../../../../utilities.html#captum._utils.models.linear_model.SkLearnRidge">[docs]</a>
-<span class="k">class</span> <span class="nc">SkLearnRidge</span><span class="p">(</span><span class="n">SkLearnLinearModel</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">SkLearnRidge</span><span class="p">(</span><span class="n">SkLearnLinearModel</span><span class="p">):</span>
     <span class="c1"># pyre-fixme[2]: Parameter must be annotated.</span>
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        Factory class. Trains a model with `sklearn.linear_model.Ridge`.</span>
 
@@ -385,7 +385,7 @@ src="/_sphinx/documentation_options.js"></script>
     <span class="c1"># pyre-fixme[2]: Parameter must be annotated.</span>
 <div class="viewcode-block" id="SkLearnRidge.fit">
 <a class="viewcode-back" href="../../../../../utilities.html#captum._utils.models.linear_model.SkLearnRidge.fit">[docs]</a>
-    <span class="k">def</span> <span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">train_data</span><span class="p">:</span> <span class="n">DataLoader</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">train_data</span><span class="p">:</span> <span class="n">DataLoader</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">train_data</span><span class="o">=</span><span class="n">train_data</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
 </div>
 
@@ -393,9 +393,9 @@ src="/_sphinx/documentation_options.js"></script>
 
 <div class="viewcode-block" id="SkLearnLinearRegression">
 <a class="viewcode-back" href="../../../../../utilities.html#captum._utils.models.linear_model.SkLearnLinearRegression">[docs]</a>
-<span class="k">class</span> <span class="nc">SkLearnLinearRegression</span><span class="p">(</span><span class="n">SkLearnLinearModel</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">SkLearnLinearRegression</span><span class="p">(</span><span class="n">SkLearnLinearModel</span><span class="p">):</span>
     <span class="c1"># pyre-fixme[2]: Parameter must be annotated.</span>
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        Factory class. Trains a model with `sklearn.linear_model.LinearRegression`.</span>
 
@@ -408,15 +408,15 @@ src="/_sphinx/documentation_options.js"></script>
     <span class="c1"># pyre-fixme[2]: Parameter must be annotated.</span>
 <div class="viewcode-block" id="SkLearnLinearRegression.fit">
 <a class="viewcode-back" href="../../../../../utilities.html#captum._utils.models.linear_model.SkLearnLinearRegression.fit">[docs]</a>
-    <span class="k">def</span> <span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">train_data</span><span class="p">:</span> <span class="n">DataLoader</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">train_data</span><span class="p">:</span> <span class="n">DataLoader</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">train_data</span><span class="o">=</span><span class="n">train_data</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
 </div>
 
 
 
-<span class="k">class</span> <span class="nc">SkLearnLogisticRegression</span><span class="p">(</span><span class="n">SkLearnLinearModel</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">SkLearnLogisticRegression</span><span class="p">(</span><span class="n">SkLearnLinearModel</span><span class="p">):</span>
     <span class="c1"># pyre-fixme[2]: Parameter must be annotated.</span>
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        Factory class. Trains a model with `sklearn.linear_model.LogisticRegression`.</span>
 
@@ -427,13 +427,13 @@ src="/_sphinx/documentation_options.js"></script>
 
     <span class="c1"># pyre-fixme[3]: Return type must be annotated.</span>
     <span class="c1"># pyre-fixme[2]: Parameter must be annotated.</span>
-    <span class="k">def</span> <span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">train_data</span><span class="p">:</span> <span class="n">DataLoader</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">train_data</span><span class="p">:</span> <span class="n">DataLoader</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">train_data</span><span class="o">=</span><span class="n">train_data</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
 
-<span class="k">class</span> <span class="nc">SkLearnSGDClassifier</span><span class="p">(</span><span class="n">SkLearnLinearModel</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">SkLearnSGDClassifier</span><span class="p">(</span><span class="n">SkLearnLinearModel</span><span class="p">):</span>
     <span class="c1"># pyre-fixme[2]: Parameter must be annotated.</span>
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        Factory class. Trains a model with `sklearn.linear_model.SGDClassifier(`.</span>
 
@@ -444,7 +444,7 @@ src="/_sphinx/documentation_options.js"></script>
 
     <span class="c1"># pyre-fixme[3]: Return type must be annotated.</span>
     <span class="c1"># pyre-fixme[2]: Parameter must be annotated.</span>
-    <span class="k">def</span> <span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">train_data</span><span class="p">:</span> <span class="n">DataLoader</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">train_data</span><span class="p">:</span> <span class="n">DataLoader</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">train_data</span><span class="o">=</span><span class="n">train_data</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -494,7 +494,7 @@ src="/_sphinx/documentation_options.js"></script>
 </div>
 </div>
 <div class="clearer"></div>
-</div></div></div><footer class="nav-footer" id="footer"><section class="sitemap"><div class="footerSection"><h5>Docs</h5><a href="/docs/introduction">Introduction</a><a href="/docs/getting_started">Getting Started</a><a href="/tutorials/">Tutorials</a><a href="/api/">API Reference</a></div><div class="footerSection"><h5>Legal</h5><a href="https://opensource.facebook.com/legal/privacy/" target="_blank" rel="noreferrer noopener">Privacy</a><a href="https://opensource.facebook.com/legal/terms/" target="_blank" rel="noreferrer noopener">Terms</a></div><div class="footerSection"><h5>Social</h5><div class="social"><a class="github-button" href="https://github.com/pytorch/captum" data-count-href="https://github.com/pytorch/captum/stargazers" data-show-count="true" data-count-aria-label="# stargazers on GitHub" aria-label="Star Captum on GitHub">captum</a></div></div></section><a href="https://opensource.facebook.com/" target="_blank" rel="noreferrer noopener" class="fbOpenSource"><img src="/img/oss_logo.png" alt="Facebook Open Source" width="170" height="45"/></a><section class="copyright"> Copyright © 2024 Facebook Inc.</section><script>
+</div></div></div><footer class="nav-footer" id="footer"><section class="sitemap"><div class="footerSection"><h5>Docs</h5><a href="/docs/introduction">Introduction</a><a href="/docs/getting_started">Getting Started</a><a href="/tutorials/">Tutorials</a><a href="/api/">API Reference</a></div><div class="footerSection"><h5>Legal</h5><a href="https://opensource.facebook.com/legal/privacy/" target="_blank" rel="noreferrer noopener">Privacy</a><a href="https://opensource.facebook.com/legal/terms/" target="_blank" rel="noreferrer noopener">Terms</a></div><div class="footerSection"><h5>Social</h5><div class="social"><a class="github-button" href="https://github.com/pytorch/captum" data-count-href="https://github.com/pytorch/captum/stargazers" data-show-count="true" data-count-aria-label="# stargazers on GitHub" aria-label="Star Captum on GitHub">captum</a></div></div></section><a href="https://opensource.facebook.com/" target="_blank" rel="noreferrer noopener" class="fbOpenSource"><img src="/img/oss_logo.png" alt="Facebook Open Source" width="170" height="45"/></a><section class="copyright"> Copyright © 2025 Facebook Inc.</section><script>
             (function() {
               var BAD_BASE = '/captum/';
               if (window.location.origin !== 'https://captum.ai') {

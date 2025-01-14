@@ -31,16 +31,16 @@ src="/_sphinx/documentation_options.js"></script>
 <div class="body" role="main">
 <h1>Source code for captum.attr._utils.interpretable_input</h1><div class="highlight"><pre>
 <span></span><span class="c1"># pyre-strict</span>
-<span class="kn">from</span> <span class="nn">abc</span> <span class="kn">import</span> <span class="n">ABC</span><span class="p">,</span> <span class="n">abstractmethod</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">cast</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Union</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">ABC</span><span class="p">,</span> <span class="n">abstractmethod</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">cast</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Union</span>
 
-<span class="kn">import</span> <span class="nn">torch</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">torch</span>
 
-<span class="kn">from</span> <span class="nn">captum._utils.typing</span> <span class="kn">import</span> <span class="n">TokenizerLike</span>
-<span class="kn">from</span> <span class="nn">torch</span> <span class="kn">import</span> <span class="n">Tensor</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">captum._utils.typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">TokenizerLike</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">torch</span><span class="w"> </span><span class="kn">import</span> <span class="n">Tensor</span>
 
 
-<span class="k">def</span> <span class="nf">_scatter_itp_attr_by_mask</span><span class="p">(</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_scatter_itp_attr_by_mask</span><span class="p">(</span>
     <span class="n">itp_attr</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">,</span>
     <span class="n">input_shape</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span>
     <span class="n">mask</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">,</span>
@@ -89,7 +89,7 @@ src="/_sphinx/documentation_options.js"></script>
 
 <div class="viewcode-block" id="InterpretableInput">
 <a class="viewcode-back" href="../../../../utilities.html#captum.attr.InterpretableInput">[docs]</a>
-<span class="k">class</span> <span class="nc">InterpretableInput</span><span class="p">(</span><span class="n">ABC</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">InterpretableInput</span><span class="p">(</span><span class="n">ABC</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    InterpretableInput is an adapter for different kinds of model inputs to</span>
 <span class="sd">    work in Captum's attribution methods. Generally, attribution methods of Captum</span>
@@ -144,7 +144,7 @@ src="/_sphinx/documentation_options.js"></script>
 <div class="viewcode-block" id="InterpretableInput.to_tensor">
 <a class="viewcode-back" href="../../../../utilities.html#captum.attr.InterpretableInput.to_tensor">[docs]</a>
     <span class="nd">@abstractmethod</span>
-    <span class="k">def</span> <span class="nf">to_tensor</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tensor</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">to_tensor</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tensor</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Return the interpretable representation of this input as a tensor</span>
 
@@ -158,7 +158,7 @@ src="/_sphinx/documentation_options.js"></script>
 <div class="viewcode-block" id="InterpretableInput.to_model_input">
 <a class="viewcode-back" href="../../../../utilities.html#captum.attr.InterpretableInput.to_model_input">[docs]</a>
     <span class="nd">@abstractmethod</span>
-    <span class="k">def</span> <span class="nf">to_model_input</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">to_model_input</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">perturbed_tensor</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Tensor</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Tensor</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">"""</span>
@@ -183,7 +183,7 @@ src="/_sphinx/documentation_options.js"></script>
 
 <div class="viewcode-block" id="InterpretableInput.format_attr">
 <a class="viewcode-back" href="../../../../utilities.html#captum.attr.InterpretableInput.format_attr">[docs]</a>
-    <span class="k">def</span> <span class="nf">format_attr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">itp_attr</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tensor</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">format_attr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">itp_attr</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tensor</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Format the attribution of the interpretable feature if needed.</span>
 <span class="sd">        The way of formatting depends on the specific interpretable input type.</span>
@@ -206,7 +206,7 @@ src="/_sphinx/documentation_options.js"></script>
 
 <div class="viewcode-block" id="TextTemplateInput">
 <a class="viewcode-back" href="../../../../utilities.html#captum.attr.TextTemplateInput">[docs]</a>
-<span class="k">class</span> <span class="nc">TextTemplateInput</span><span class="p">(</span><span class="n">InterpretableInput</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">TextTemplateInput</span><span class="p">(</span><span class="n">InterpretableInput</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    TextTemplateInput is an implementation of InterpretableInput for text inputs, whose</span>
 <span class="sd">    interpretable features are certain segments (e.g., words, phrases) of the text.</span>
@@ -258,7 +258,7 @@ src="/_sphinx/documentation_options.js"></script>
     <span class="n">mask</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span> <span class="kc">None</span><span class="p">]</span>
     <span class="n">formatted_mask</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">template</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="nb">str</span><span class="p">]],</span>
         <span class="n">values</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]],</span>
@@ -346,14 +346,14 @@ src="/_sphinx/documentation_options.js"></script>
 
 <div class="viewcode-block" id="TextTemplateInput.to_tensor">
 <a class="viewcode-back" href="../../../../utilities.html#captum.attr.TextTemplateInput.to_tensor">[docs]</a>
-    <span class="k">def</span> <span class="nf">to_tensor</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">to_tensor</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
         <span class="c1"># Interpretable representation in shape(1, n_itp_features)</span>
         <span class="k">return</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">([[</span><span class="mf">1.0</span><span class="p">]</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_itp_features</span><span class="p">])</span></div>
 
 
 <div class="viewcode-block" id="TextTemplateInput.to_model_input">
 <a class="viewcode-back" href="../../../../utilities.html#captum.attr.TextTemplateInput.to_model_input">[docs]</a>
-    <span class="k">def</span> <span class="nf">to_model_input</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">perturbed_tensor</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Tensor</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">to_model_input</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">perturbed_tensor</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Tensor</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
         <span class="n">values</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">values</span><span class="p">)</span>  <span class="c1"># clone</span>
 
         <span class="k">if</span> <span class="n">perturbed_tensor</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
@@ -396,7 +396,7 @@ src="/_sphinx/documentation_options.js"></script>
 
 <div class="viewcode-block" id="TextTemplateInput.format_attr">
 <a class="viewcode-back" href="../../../../utilities.html#captum.attr.TextTemplateInput.format_attr">[docs]</a>
-    <span class="k">def</span> <span class="nf">format_attr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">itp_attr</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">format_attr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">itp_attr</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">mask</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">itp_attr</span>
 
@@ -414,7 +414,7 @@ src="/_sphinx/documentation_options.js"></script>
 
 <div class="viewcode-block" id="TextTokenInput">
 <a class="viewcode-back" href="../../../../utilities.html#captum.attr.TextTokenInput">[docs]</a>
-<span class="k">class</span> <span class="nc">TextTokenInput</span><span class="p">(</span><span class="n">InterpretableInput</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">TextTokenInput</span><span class="p">(</span><span class="n">InterpretableInput</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    TextTokenInput is an implementation of InterpretableInput for text inputs, whose</span>
 <span class="sd">    interpretable features are the tokens of the text with respect to a given tokenizer.</span>
@@ -462,7 +462,7 @@ src="/_sphinx/documentation_options.js"></script>
     <span class="n">n_itp_features</span><span class="p">:</span> <span class="nb">int</span>
     <span class="n">baselines</span><span class="p">:</span> <span class="nb">int</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
         <span class="n">tokenizer</span><span class="p">:</span> <span class="n">TokenizerLike</span><span class="p">,</span>
@@ -509,14 +509,14 @@ src="/_sphinx/documentation_options.js"></script>
 
 <div class="viewcode-block" id="TextTokenInput.to_tensor">
 <a class="viewcode-back" href="../../../../utilities.html#captum.attr.TextTokenInput.to_tensor">[docs]</a>
-    <span class="k">def</span> <span class="nf">to_tensor</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">to_tensor</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
         <span class="c1"># return the perturbation indicator as interpretable tensor instead of token ids</span>
         <span class="k">return</span> <span class="n">torch</span><span class="o">.</span><span class="n">ones_like</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">itp_tensor</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="TextTokenInput.to_model_input">
 <a class="viewcode-back" href="../../../../utilities.html#captum.attr.TextTokenInput.to_model_input">[docs]</a>
-    <span class="k">def</span> <span class="nf">to_model_input</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">perturbed_tensor</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Tensor</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tensor</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">to_model_input</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">perturbed_tensor</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Tensor</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tensor</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">perturbed_tensor</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">inp_tensor</span>
 
@@ -544,7 +544,7 @@ src="/_sphinx/documentation_options.js"></script>
 
 <div class="viewcode-block" id="TextTokenInput.format_attr">
 <a class="viewcode-back" href="../../../../utilities.html#captum.attr.TextTokenInput.format_attr">[docs]</a>
-    <span class="k">def</span> <span class="nf">format_attr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">itp_attr</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tensor</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">format_attr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">itp_attr</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tensor</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">itp_attr</span></div>
 </div>
 
@@ -596,7 +596,7 @@ src="/_sphinx/documentation_options.js"></script>
 </div>
 </div>
 <div class="clearer"></div>
-</div></div></div><footer class="nav-footer" id="footer"><section class="sitemap"><div class="footerSection"><h5>Docs</h5><a href="/docs/introduction">Introduction</a><a href="/docs/getting_started">Getting Started</a><a href="/tutorials/">Tutorials</a><a href="/api/">API Reference</a></div><div class="footerSection"><h5>Legal</h5><a href="https://opensource.facebook.com/legal/privacy/" target="_blank" rel="noreferrer noopener">Privacy</a><a href="https://opensource.facebook.com/legal/terms/" target="_blank" rel="noreferrer noopener">Terms</a></div><div class="footerSection"><h5>Social</h5><div class="social"><a class="github-button" href="https://github.com/pytorch/captum" data-count-href="https://github.com/pytorch/captum/stargazers" data-show-count="true" data-count-aria-label="# stargazers on GitHub" aria-label="Star Captum on GitHub">captum</a></div></div></section><a href="https://opensource.facebook.com/" target="_blank" rel="noreferrer noopener" class="fbOpenSource"><img src="/img/oss_logo.png" alt="Facebook Open Source" width="170" height="45"/></a><section class="copyright"> Copyright © 2024 Facebook Inc.</section><script>
+</div></div></div><footer class="nav-footer" id="footer"><section class="sitemap"><div class="footerSection"><h5>Docs</h5><a href="/docs/introduction">Introduction</a><a href="/docs/getting_started">Getting Started</a><a href="/tutorials/">Tutorials</a><a href="/api/">API Reference</a></div><div class="footerSection"><h5>Legal</h5><a href="https://opensource.facebook.com/legal/privacy/" target="_blank" rel="noreferrer noopener">Privacy</a><a href="https://opensource.facebook.com/legal/terms/" target="_blank" rel="noreferrer noopener">Terms</a></div><div class="footerSection"><h5>Social</h5><div class="social"><a class="github-button" href="https://github.com/pytorch/captum" data-count-href="https://github.com/pytorch/captum/stargazers" data-show-count="true" data-count-aria-label="# stargazers on GitHub" aria-label="Star Captum on GitHub">captum</a></div></div></section><a href="https://opensource.facebook.com/" target="_blank" rel="noreferrer noopener" class="fbOpenSource"><img src="/img/oss_logo.png" alt="Facebook Open Source" width="170" height="45"/></a><section class="copyright"> Copyright © 2025 Facebook Inc.</section><script>
             (function() {
               var BAD_BASE = '/captum/';
               if (window.location.origin !== 'https://captum.ai') {

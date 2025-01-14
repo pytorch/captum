@@ -102,30 +102,30 @@
 <div class="prompt input_prompt">In [1]:</div>
 <div class="inner_cell">
 <div class="input_area">
-<div class="highlight hl-ipython3"><pre><span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="kn">import</span> <span class="nn">os</span><span class="o">,</span> <span class="nn">glob</span>
+<div class="highlight hl-ipython3"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">os</span><span class="o">,</span><span class="w"> </span><span class="nn">glob</span>
 
-<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
 
-<span class="kn">from</span> <span class="nn">PIL</span> <span class="kn">import</span> <span class="n">Image</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">PIL</span><span class="w"> </span><span class="kn">import</span> <span class="n">Image</span>
 
-<span class="kn">from</span> <span class="nn">scipy.stats</span> <span class="kn">import</span> <span class="n">ttest_ind</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">scipy.stats</span><span class="w"> </span><span class="kn">import</span> <span class="n">ttest_ind</span>
 
 <span class="c1"># ..........torch imports............</span>
-<span class="kn">import</span> <span class="nn">torch</span>
-<span class="kn">import</span> <span class="nn">torchvision</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">torch</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">torchvision</span>
 
-<span class="kn">from</span> <span class="nn">torch.utils.data</span> <span class="kn">import</span> <span class="n">IterableDataset</span><span class="p">,</span> <span class="n">DataLoader</span>
-<span class="kn">from</span> <span class="nn">torchvision</span> <span class="kn">import</span> <span class="n">transforms</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">torch.utils.data</span><span class="w"> </span><span class="kn">import</span> <span class="n">IterableDataset</span><span class="p">,</span> <span class="n">DataLoader</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">torchvision</span><span class="w"> </span><span class="kn">import</span> <span class="n">transforms</span>
 
 <span class="c1">#.... Captum imports..................</span>
-<span class="kn">from</span> <span class="nn">captum.attr</span> <span class="kn">import</span> <span class="n">LayerGradientXActivation</span><span class="p">,</span> <span class="n">LayerIntegratedGradients</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">captum.attr</span><span class="w"> </span><span class="kn">import</span> <span class="n">LayerGradientXActivation</span><span class="p">,</span> <span class="n">LayerIntegratedGradients</span>
 
-<span class="kn">from</span> <span class="nn">captum.concept</span> <span class="kn">import</span> <span class="n">TCAV</span>
-<span class="kn">from</span> <span class="nn">captum.concept</span> <span class="kn">import</span> <span class="n">Concept</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">captum.concept</span><span class="w"> </span><span class="kn">import</span> <span class="n">TCAV</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">captum.concept</span><span class="w"> </span><span class="kn">import</span> <span class="n">Concept</span>
 
-<span class="kn">from</span> <span class="nn">captum.concept._utils.data_iterator</span> <span class="kn">import</span> <span class="n">dataset_to_dataloader</span><span class="p">,</span> <span class="n">CustomIterableDataset</span>
-<span class="kn">from</span> <span class="nn">captum.concept._utils.common</span> <span class="kn">import</span> <span class="n">concepts_to_str</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">captum.concept._utils.data_iterator</span><span class="w"> </span><span class="kn">import</span> <span class="n">dataset_to_dataloader</span><span class="p">,</span> <span class="n">CustomIterableDataset</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">captum.concept._utils.common</span><span class="w"> </span><span class="kn">import</span> <span class="n">concepts_to_str</span>
 </pre></div>
 </div>
 </div>
@@ -151,7 +151,7 @@
 <div class="inner_cell">
 <div class="input_area">
 <div class="highlight hl-ipython3"><pre><span></span><span class="c1"># Method to normalize an image to Imagenet mean and standard deviation</span>
-<span class="k">def</span> <span class="nf">transform</span><span class="p">(</span><span class="n">img</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">transform</span><span class="p">(</span><span class="n">img</span><span class="p">):</span>
 
     <span class="k">return</span> <span class="n">transforms</span><span class="o">.</span><span class="n">Compose</span><span class="p">(</span>
         <span class="p">[</span>
@@ -180,12 +180,12 @@
 <div class="prompt input_prompt">In [3]:</div>
 <div class="inner_cell">
 <div class="input_area">
-<div class="highlight hl-ipython3"><pre><span></span><span class="k">def</span> <span class="nf">get_tensor_from_filename</span><span class="p">(</span><span class="n">filename</span><span class="p">):</span>
+<div class="highlight hl-ipython3"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">get_tensor_from_filename</span><span class="p">(</span><span class="n">filename</span><span class="p">):</span>
     <span class="n">img</span> <span class="o">=</span> <span class="n">Image</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span><span class="s2">"RGB"</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">transform</span><span class="p">(</span><span class="n">img</span><span class="p">)</span>
 
 
-<span class="k">def</span> <span class="nf">load_image_tensors</span><span class="p">(</span><span class="n">class_name</span><span class="p">,</span> <span class="n">root_path</span><span class="o">=</span><span class="s1">'data/tcav/image/imagenet/'</span><span class="p">,</span> <span class="n">transform</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">load_image_tensors</span><span class="p">(</span><span class="n">class_name</span><span class="p">,</span> <span class="n">root_path</span><span class="o">=</span><span class="s1">'data/tcav/image/imagenet/'</span><span class="p">,</span> <span class="n">transform</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
     <span class="n">path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">root_path</span><span class="p">,</span> <span class="n">class_name</span><span class="p">)</span>
     <span class="n">filenames</span> <span class="o">=</span> <span class="n">glob</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="n">path</span> <span class="o">+</span> <span class="s1">'/*.jpg'</span><span class="p">)</span>
 
@@ -212,7 +212,7 @@
 <div class="prompt input_prompt">In [4]:</div>
 <div class="inner_cell">
 <div class="input_area">
-<div class="highlight hl-ipython3"><pre><span></span><span class="k">def</span> <span class="nf">assemble_concept</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="nb">id</span><span class="p">,</span> <span class="n">concepts_path</span><span class="o">=</span><span class="s2">"data/tcav/image/concepts/"</span><span class="p">):</span>
+<div class="highlight hl-ipython3"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">assemble_concept</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="nb">id</span><span class="p">,</span> <span class="n">concepts_path</span><span class="o">=</span><span class="s2">"data/tcav/image/concepts/"</span><span class="p">):</span>
     <span class="n">concept_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">concepts_path</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span> <span class="o">+</span> <span class="s2">"/"</span>
     <span class="n">dataset</span> <span class="o">=</span> <span class="n">CustomIterableDataset</span><span class="p">(</span><span class="n">get_tensor_from_filename</span><span class="p">,</span> <span class="n">concept_path</span><span class="p">)</span>
     <span class="n">concept_iter</span> <span class="o">=</span> <span class="n">dataset_to_dataloader</span><span class="p">(</span><span class="n">dataset</span><span class="p">)</span>
@@ -551,10 +551,10 @@ Place random images under <code>random_0</code>, <code>random_1</code>, <code>ra
 <div class="prompt input_prompt">In [14]:</div>
 <div class="inner_cell">
 <div class="input_area">
-<div class="highlight hl-ipython3"><pre><span></span><span class="k">def</span> <span class="nf">format_float</span><span class="p">(</span><span class="n">f</span><span class="p">):</span>
+<div class="highlight hl-ipython3"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">format_float</span><span class="p">(</span><span class="n">f</span><span class="p">):</span>
     <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="s1">'</span><span class="si">{:.3f}</span><span class="s1">'</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">f</span><span class="p">)</span> <span class="k">if</span> <span class="nb">abs</span><span class="p">(</span><span class="n">f</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="mf">0.0005</span> <span class="k">else</span> <span class="s1">'</span><span class="si">{:.3e}</span><span class="s1">'</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">f</span><span class="p">))</span>
 
-<span class="k">def</span> <span class="nf">plot_tcav_scores</span><span class="p">(</span><span class="n">experimental_sets</span><span class="p">,</span> <span class="n">tcav_scores</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">plot_tcav_scores</span><span class="p">(</span><span class="n">experimental_sets</span><span class="p">,</span> <span class="n">tcav_scores</span><span class="p">):</span>
     <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">experimental_sets</span><span class="p">),</span> <span class="n">figsize</span> <span class="o">=</span> <span class="p">(</span><span class="mi">25</span><span class="p">,</span> <span class="mi">7</span><span class="p">))</span>
 
     <span class="n">barWidth</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">/</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">experimental_sets</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
@@ -763,7 +763,7 @@ If <code>striped</code> concept is truly important in predicting <code>zebra</co
 <div class="prompt input_prompt">In [20]:</div>
 <div class="inner_cell">
 <div class="input_area">
-<div class="highlight hl-ipython3"><pre><span></span><span class="k">def</span> <span class="nf">assemble_scores</span><span class="p">(</span><span class="n">scores</span><span class="p">,</span> <span class="n">experimental_sets</span><span class="p">,</span> <span class="n">idx</span><span class="p">,</span> <span class="n">score_layer</span><span class="p">,</span> <span class="n">score_type</span><span class="p">):</span>
+<div class="highlight hl-ipython3"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">assemble_scores</span><span class="p">(</span><span class="n">scores</span><span class="p">,</span> <span class="n">experimental_sets</span><span class="p">,</span> <span class="n">idx</span><span class="p">,</span> <span class="n">score_layer</span><span class="p">,</span> <span class="n">score_type</span><span class="p">):</span>
     <span class="n">score_list</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="k">for</span> <span class="n">concepts</span> <span class="ow">in</span> <span class="n">experimental_sets</span><span class="p">:</span>
         <span class="n">score_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">scores</span><span class="p">[</span><span class="s2">"-"</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="nb">str</span><span class="p">(</span><span class="n">c</span><span class="o">.</span><span class="n">id</span><span class="p">)</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">concepts</span><span class="p">])][</span><span class="n">score_layer</span><span class="p">][</span><span class="n">score_type</span><span class="p">][</span><span class="n">idx</span><span class="p">])</span>
@@ -787,7 +787,7 @@ If <code>striped</code> concept is truly important in predicting <code>zebra</co
 <div class="prompt input_prompt">In [21]:</div>
 <div class="inner_cell">
 <div class="input_area">
-<div class="highlight hl-ipython3"><pre><span></span><span class="k">def</span> <span class="nf">get_pval</span><span class="p">(</span><span class="n">scores</span><span class="p">,</span> <span class="n">experimental_sets</span><span class="p">,</span> <span class="n">score_layer</span><span class="p">,</span> <span class="n">score_type</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.05</span><span class="p">,</span> <span class="n">print_ret</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<div class="highlight hl-ipython3"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">get_pval</span><span class="p">(</span><span class="n">scores</span><span class="p">,</span> <span class="n">experimental_sets</span><span class="p">,</span> <span class="n">score_layer</span><span class="p">,</span> <span class="n">score_type</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.05</span><span class="p">,</span> <span class="n">print_ret</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
     
     <span class="n">P1</span> <span class="o">=</span> <span class="n">assemble_scores</span><span class="p">(</span><span class="n">scores</span><span class="p">,</span> <span class="n">experimental_sets</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">score_layer</span><span class="p">,</span> <span class="n">score_type</span><span class="p">)</span>
     <span class="n">P2</span> <span class="o">=</span> <span class="n">assemble_scores</span><span class="p">(</span><span class="n">scores</span><span class="p">,</span> <span class="n">experimental_sets</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">score_layer</span><span class="p">,</span> <span class="n">score_type</span><span class="p">)</span>
@@ -848,9 +848,9 @@ If <code>striped</code> concept is truly important in predicting <code>zebra</co
 <div class="inner_cell">
 <div class="input_area">
 <div class="highlight hl-ipython3"><pre><span></span><span class="n">n</span> <span class="o">=</span> <span class="mi">4</span>
-<span class="k">def</span> <span class="nf">show_boxplots</span><span class="p">(</span><span class="n">layer</span><span class="p">,</span> <span class="n">metric</span><span class="o">=</span><span class="s1">'sign_count'</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">show_boxplots</span><span class="p">(</span><span class="n">layer</span><span class="p">,</span> <span class="n">metric</span><span class="o">=</span><span class="s1">'sign_count'</span><span class="p">):</span>
 
-    <span class="k">def</span> <span class="nf">format_label_text</span><span class="p">(</span><span class="n">experimental_sets</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">format_label_text</span><span class="p">(</span><span class="n">experimental_sets</span><span class="p">):</span>
         <span class="n">concept_id_list</span> <span class="o">=</span> <span class="p">[</span><span class="n">exp</span><span class="o">.</span><span class="n">name</span> <span class="k">if</span> <span class="n">i</span> <span class="o">==</span> <span class="mi">0</span> <span class="k">else</span> \
                              <span class="n">exp</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">'_'</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">exp</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">experimental_sets</span><span class="p">[</span><span class="mi">0</span><span class="p">])]</span>
         <span class="k">return</span> <span class="n">concept_id_list</span>
@@ -961,7 +961,7 @@ Below diagrams show that <code>striped</code> concept has TCAV scores that are c
 </div>
 </div>
 </div>
-</div></div><div class="tutorialButtonWrapper buttonWrapper"><a class="tutorialButton button" download="" href="/files/TCAV_Image.ipynb" target="_blank"><svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="file-download" class="svg-inline--fa fa-file-download fa-w-12" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><path fill="currentColor" d="M224 136V0H24C10.7 0 0 10.7 0 24v464c0 13.3 10.7 24 24 24h336c13.3 0 24-10.7 24-24V160H248c-13.2 0-24-10.8-24-24zm76.45 211.36l-96.42 95.7c-6.65 6.61-17.39 6.61-24.04 0l-96.42-95.7C73.42 337.29 80.54 320 94.82 320H160v-80c0-8.84 7.16-16 16-16h32c8.84 0 16 7.16 16 16v80h65.18c14.28 0 21.4 17.29 11.27 27.36zM377 105L279.1 7c-4.5-4.5-10.6-7-17-7H256v128h128v-6.1c0-6.3-2.5-12.4-7-16.9z"></path></svg>Download Tutorial Jupyter Notebook</a></div><div class="tutorialButtonWrapper buttonWrapper"><a class="tutorialButton button" download="" href="/files/TCAV_Image.py" target="_blank"><svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="file-download" class="svg-inline--fa fa-file-download fa-w-12" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><path fill="currentColor" d="M224 136V0H24C10.7 0 0 10.7 0 24v464c0 13.3 10.7 24 24 24h336c13.3 0 24-10.7 24-24V160H248c-13.2 0-24-10.8-24-24zm76.45 211.36l-96.42 95.7c-6.65 6.61-17.39 6.61-24.04 0l-96.42-95.7C73.42 337.29 80.54 320 94.82 320H160v-80c0-8.84 7.16-16 16-16h32c8.84 0 16 7.16 16 16v80h65.18c14.28 0 21.4 17.29 11.27 27.36zM377 105L279.1 7c-4.5-4.5-10.6-7-17-7H256v128h128v-6.1c0-6.3-2.5-12.4-7-16.9z"></path></svg>Download Tutorial Source Code</a></div></div></div></div><footer class="nav-footer" id="footer"><section class="sitemap"><div class="footerSection"><h5>Docs</h5><a href="/docs/introduction">Introduction</a><a href="/docs/getting_started">Getting Started</a><a href="/tutorials/">Tutorials</a><a href="/api/">API Reference</a></div><div class="footerSection"><h5>Legal</h5><a href="https://opensource.facebook.com/legal/privacy/" target="_blank" rel="noreferrer noopener">Privacy</a><a href="https://opensource.facebook.com/legal/terms/" target="_blank" rel="noreferrer noopener">Terms</a></div><div class="footerSection"><h5>Social</h5><div class="social"><a class="github-button" href="https://github.com/pytorch/captum" data-count-href="https://github.com/pytorch/captum/stargazers" data-show-count="true" data-count-aria-label="# stargazers on GitHub" aria-label="Star Captum on GitHub">captum</a></div></div></section><a href="https://opensource.facebook.com/" target="_blank" rel="noreferrer noopener" class="fbOpenSource"><img src="/img/oss_logo.png" alt="Facebook Open Source" width="170" height="45"/></a><section class="copyright"> Copyright © 2024 Facebook Inc.</section><script>
+</div></div><div class="tutorialButtonWrapper buttonWrapper"><a class="tutorialButton button" download="" href="/files/TCAV_Image.ipynb" target="_blank"><svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="file-download" class="svg-inline--fa fa-file-download fa-w-12" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><path fill="currentColor" d="M224 136V0H24C10.7 0 0 10.7 0 24v464c0 13.3 10.7 24 24 24h336c13.3 0 24-10.7 24-24V160H248c-13.2 0-24-10.8-24-24zm76.45 211.36l-96.42 95.7c-6.65 6.61-17.39 6.61-24.04 0l-96.42-95.7C73.42 337.29 80.54 320 94.82 320H160v-80c0-8.84 7.16-16 16-16h32c8.84 0 16 7.16 16 16v80h65.18c14.28 0 21.4 17.29 11.27 27.36zM377 105L279.1 7c-4.5-4.5-10.6-7-17-7H256v128h128v-6.1c0-6.3-2.5-12.4-7-16.9z"></path></svg>Download Tutorial Jupyter Notebook</a></div><div class="tutorialButtonWrapper buttonWrapper"><a class="tutorialButton button" download="" href="/files/TCAV_Image.py" target="_blank"><svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="file-download" class="svg-inline--fa fa-file-download fa-w-12" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><path fill="currentColor" d="M224 136V0H24C10.7 0 0 10.7 0 24v464c0 13.3 10.7 24 24 24h336c13.3 0 24-10.7 24-24V160H248c-13.2 0-24-10.8-24-24zm76.45 211.36l-96.42 95.7c-6.65 6.61-17.39 6.61-24.04 0l-96.42-95.7C73.42 337.29 80.54 320 94.82 320H160v-80c0-8.84 7.16-16 16-16h32c8.84 0 16 7.16 16 16v80h65.18c14.28 0 21.4 17.29 11.27 27.36zM377 105L279.1 7c-4.5-4.5-10.6-7-17-7H256v128h128v-6.1c0-6.3-2.5-12.4-7-16.9z"></path></svg>Download Tutorial Source Code</a></div></div></div></div><footer class="nav-footer" id="footer"><section class="sitemap"><div class="footerSection"><h5>Docs</h5><a href="/docs/introduction">Introduction</a><a href="/docs/getting_started">Getting Started</a><a href="/tutorials/">Tutorials</a><a href="/api/">API Reference</a></div><div class="footerSection"><h5>Legal</h5><a href="https://opensource.facebook.com/legal/privacy/" target="_blank" rel="noreferrer noopener">Privacy</a><a href="https://opensource.facebook.com/legal/terms/" target="_blank" rel="noreferrer noopener">Terms</a></div><div class="footerSection"><h5>Social</h5><div class="social"><a class="github-button" href="https://github.com/pytorch/captum" data-count-href="https://github.com/pytorch/captum/stargazers" data-show-count="true" data-count-aria-label="# stargazers on GitHub" aria-label="Star Captum on GitHub">captum</a></div></div></section><a href="https://opensource.facebook.com/" target="_blank" rel="noreferrer noopener" class="fbOpenSource"><img src="/img/oss_logo.png" alt="Facebook Open Source" width="170" height="45"/></a><section class="copyright"> Copyright © 2025 Facebook Inc.</section><script>
             (function() {
               var BAD_BASE = '/captum/';
               if (window.location.origin !== 'https://captum.ai') {
