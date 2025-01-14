@@ -9,15 +9,15 @@ from captum.influence._core.tracincp_fast_rand_proj import (
     TracInCPFast,
     TracInCPFastRandProj,
 )
-from parameterized import parameterized
-from tests.helpers import BaseTest
-from tests.helpers.basic import assertTensorAlmostEqual
-from tests.helpers.influence.common import (
+from captum.testing.helpers.influence.common import (
     _format_batch_into_tuple,
     build_test_name_func,
     DataInfluenceConstructor,
     get_random_model_and_data,
 )
+from parameterized import parameterized
+from tests.helpers import BaseTest
+from tests.helpers.basic import assertTensorAlmostEqual
 from torch.utils.data import DataLoader
 
 
@@ -32,13 +32,13 @@ class TestTracInDataLoader(BaseTest):
     # `comprehension((reduction, constr, unpack_inputs) for
     # generators(generator(unpack_inputs in [False, True] if ),
     # generators(generator((reduction, constr) in
-    # [("none", tests.helpers.influence.common.DataInfluenceConstructor
+    # [("none", captum.testing.helpers.influence.common.DataInfluenceConstructor
     # (captum.influence._core.tracincp.TracInCP)),
-    # ("sum", tests.helpers.influence.common.DataInfluenceConstructor
+    # ("sum", captum.testing.helpers.influence.common.DataInfluenceConstructor
     # (captum.influence._core.tracincp_fast_rand_proj.TracInCPFast)), ("sum",
-    # tests.helpers.influence.common.DataInfluenceConstructor(captum.influence._core.
+    # captum.testing.helpers.influence.common.DataInfluenceConstructor(captum.influence._core.
     # tracincp_fast_rand_proj.TracInCPFastRandProj)), ("sum",
-    # tests.helpers.influence.common.DataInfluenceConstructor(
+    # captum.testing.helpers.influence.common.DataInfluenceConstructor(
     # captum.influence._core.tracincp_fast_rand_proj.TracInCPFastRandProj,
     # $parameter$name = "TracInCPFastRandProj_1DProj",
     # $parameter$projection_dim = 1))] if ))))`

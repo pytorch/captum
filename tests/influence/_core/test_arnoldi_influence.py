@@ -17,10 +17,7 @@ from captum.influence._utils.common import (
     _top_eigen,
     _unflatten_params_factory,
 )
-from parameterized import parameterized
-from tests.helpers import BaseTest
-from tests.helpers.basic import assertTensorAlmostEqual
-from tests.helpers.influence.common import (
+from captum.testing.helpers.influence.common import (
     _format_batch_into_tuple,
     build_test_name_func,
     DataInfluenceConstructor,
@@ -31,6 +28,9 @@ from tests.helpers.influence.common import (
     is_gpu,
     UnpackDataset,
 )
+from parameterized import parameterized
+from tests.helpers import BaseTest
+from tests.helpers.basic import assertTensorAlmostEqual
 from torch import Tensor
 from torch.utils.data import DataLoader
 

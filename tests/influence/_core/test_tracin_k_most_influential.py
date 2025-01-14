@@ -6,11 +6,7 @@ from typing import Callable, List, Optional, Tuple
 import torch
 import torch.nn as nn
 from captum.influence._core.tracincp import TracInCP
-
-from parameterized import parameterized
-from tests.helpers import BaseTest
-from tests.helpers.basic import assertTensorAlmostEqual
-from tests.helpers.influence.common import (
+from captum.testing.helpers.influence.common import (
     _format_batch_into_tuple,
     build_test_name_func,
     DataInfluenceConstructor,
@@ -18,6 +14,10 @@ from tests.helpers.influence.common import (
     GPU_SETTING_LIST,
     is_gpu,
 )
+
+from parameterized import parameterized
+from tests.helpers import BaseTest
+from tests.helpers.basic import assertTensorAlmostEqual
 
 
 class TestTracInGetKMostInfluential(BaseTest):
@@ -76,7 +76,7 @@ class TestTracInGetKMostInfluential(BaseTest):
                             )
 
     # pyre-fixme[56]: Pyre was not able to infer the type of argument
-    # `tests.helpers.influence.common.build_test_name_func()`
+    # `captum.testing.helpers.influence.common.build_test_name_func()`
     # to decorator factory `parameterized.parameterized.expand`.
     @parameterized.expand(
         param_list,

@@ -9,16 +9,16 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from captum.influence._core.tracincp import TracInCP
-from parameterized import parameterized
-from tests.helpers import BaseTest
-from tests.helpers.basic import assertTensorAlmostEqual
-from tests.helpers.influence.common import (
+from captum.testing.helpers.influence.common import (
     _wrap_model_in_dataparallel,
     BasicLinearNet,
     BinaryDataset,
     build_test_name_func,
     DataInfluenceConstructor,
 )
+from parameterized import parameterized
+from tests.helpers import BaseTest
+from tests.helpers.basic import assertTensorAlmostEqual
 
 
 class TestTracInXOR(BaseTest):
@@ -225,7 +225,7 @@ class TestTracInXOR(BaseTest):
         )
 
     # pyre-fixme[56]: Pyre was not able to infer the type of argument
-    # `tests.helpers.influence.common.build_test_name_func($parameter$args_to_skip
+    # `captum.testing.helpers.influence.common.build_test_name_func($parameter$args_to_skip
     # = ["reduction"])` to decorator factory `parameterized.parameterized.expand`.
     @parameterized.expand(
         parametrized_list,
