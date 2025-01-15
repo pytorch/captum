@@ -7,13 +7,13 @@ import torch
 from captum._utils.typing import TensorOrTupleOfTensorsGeneric
 from captum.attr._core.input_x_gradient import InputXGradient
 from captum.attr._core.noise_tunnel import NoiseTunnel
+from captum.testing.helpers import BaseTest
+from captum.testing.helpers.basic import assertTensorAlmostEqual
+from captum.testing.helpers.classification_models import SoftmaxModel
 from tests.attr.helpers.get_config_util import (
     get_basic_config,
     get_multiargs_basic_config,
 )
-from tests.helpers import BaseTest
-from tests.helpers.basic import assertTensorAlmostEqual
-from tests.helpers.classification_models import SoftmaxModel
 from torch import Tensor
 from torch.nn import Module
 

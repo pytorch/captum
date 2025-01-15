@@ -11,9 +11,9 @@ from captum._utils.typing import BaselineType, Tensor, TensorOrTupleOfTensorsGen
 from captum.attr._core.integrated_gradients import IntegratedGradients
 from captum.attr._core.noise_tunnel import NoiseTunnel
 from captum.attr._utils.common import _tensorize_baseline
-from tests.helpers import BaseTest
-from tests.helpers.basic import assertTensorAlmostEqual
-from tests.helpers.basic_models import (
+from captum.testing.helpers import BaseTest
+from captum.testing.helpers.basic import assertTensorAlmostEqual
+from captum.testing.helpers.basic_models import (
     BasicModel,
     BasicModel2,
     BasicModel3,

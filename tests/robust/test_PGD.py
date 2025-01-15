@@ -3,9 +3,13 @@
 # pyre-unsafe
 import torch
 from captum.robust import PGD
-from tests.helpers import BaseTest
-from tests.helpers.basic import assertTensorAlmostEqual
-from tests.helpers.basic_models import BasicModel, BasicModel2, BasicModel_MultiLayer
+from captum.testing.helpers import BaseTest
+from captum.testing.helpers.basic import assertTensorAlmostEqual
+from captum.testing.helpers.basic_models import (
+    BasicModel,
+    BasicModel2,
+    BasicModel_MultiLayer,
+)
 from torch.nn import CrossEntropyLoss
 
 

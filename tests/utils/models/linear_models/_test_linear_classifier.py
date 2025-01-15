@@ -8,7 +8,7 @@ import numpy as np
 import numpy.typing as npt
 import sklearn.datasets as datasets
 import torch
-from tests.helpers.evaluate_linear_model import evaluate
+from captum.testing.helpers.evaluate_linear_model import evaluate
 from torch.utils.data import DataLoader, TensorDataset
 
 

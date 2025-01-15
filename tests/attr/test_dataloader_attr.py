@@ -9,12 +9,12 @@ import torch
 
 from captum.attr._core.dataloader_attr import DataLoaderAttribution, InputRole
 from captum.attr._core.feature_ablation import FeatureAblation
-from parameterized import parameterized
-from tests.helpers.basic import (
+from captum.testing.helpers.basic import (
     assertAttributionComparision,
     assertTensorAlmostEqual,
     BaseTest,
 )
+from parameterized import parameterized
 from torch import Tensor
 from torch.utils.data import DataLoader, TensorDataset
 

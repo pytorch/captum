@@ -8,12 +8,12 @@ from typing import Any, List, Tuple, Union
 import torch
 import torch.nn as nn
 from captum.attr._core.layer.layer_activation import LayerActivation
-from tests.helpers.basic import (
+from captum.testing.helpers.basic import (
     assertTensorAlmostEqual,
     assertTensorTuplesAlmostEqual,
     BaseTest,
 )
-from tests.helpers.basic_models import (
+from captum.testing.helpers.basic_models import (
     BasicModel_MultiLayer,
     BasicModel_MultiLayer_MultiInput,
     Conv1dSeqModel,

@@ -6,9 +6,9 @@ from typing import Any, Callable, List, Tuple
 
 import torch
 from captum.attr._core.feature_permutation import _permute_feature, FeaturePermutation
-from tests.helpers import BaseTest
-from tests.helpers.basic import assertTensorAlmostEqual
-from tests.helpers.basic_models import BasicModelWithSparseInputs
+from captum.testing.helpers import BaseTest
+from captum.testing.helpers.basic import assertTensorAlmostEqual
+from captum.testing.helpers.basic_models import BasicModelWithSparseInputs
 from torch import Tensor
 
 

@@ -5,7 +5,7 @@ from typing import Any, Tuple
 
 import torch
 from captum._utils.gradient import compute_gradients
-from tests.helpers.basic_models import BasicModel, BasicModel5_MultiArgs
+from captum.testing.helpers.basic_models import BasicModel, BasicModel5_MultiArgs
 from torch import Tensor
 from torch.nn import Module
 

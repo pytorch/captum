@@ -8,12 +8,12 @@ from typing import Callable, List, Optional, Tuple, Union
 import torch
 from captum.attr._core.deep_lift import DeepLift, DeepLiftShap
 from captum.attr._core.integrated_gradients import IntegratedGradients
-from tests.helpers.basic import (
+from captum.testing.helpers.basic import (
     assertAttributionComparision,
     assertTensorAlmostEqual,
     BaseTest,
 )
-from tests.helpers.basic_models import (
+from captum.testing.helpers.basic_models import (
     BasicModelWithReusedModules,
     Conv1dSeqModel,
     LinearMaxPoolLinearModel,

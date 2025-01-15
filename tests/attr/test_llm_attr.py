@@ -32,9 +32,9 @@ from captum.attr._core.llm_attr import LLMAttribution, LLMGradientAttribution
 from captum.attr._core.shapley_value import ShapleyValues, ShapleyValueSampling
 from captum.attr._utils.attribution import GradientAttribution, PerturbationAttribution
 from captum.attr._utils.interpretable_input import TextTemplateInput, TextTokenInput
+from captum.testing.helpers import BaseTest
+from captum.testing.helpers.basic import assertTensorAlmostEqual, rand_like
 from parameterized import parameterized, parameterized_class
-from tests.helpers import BaseTest
-from tests.helpers.basic import assertTensorAlmostEqual, rand_like
 from torch import nn, Tensor
 
 

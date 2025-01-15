@@ -13,17 +13,17 @@ from captum.attr._models.base import (
     configure_interpretable_embedding_layer,
     remove_interpretable_embedding_layer,
 )
-from packaging import version
-from tests.helpers.basic import (
+from captum.testing.helpers.basic import (
     assertTensorAlmostEqual,
     assertTensorTuplesAlmostEqual,
     BaseTest,
 )
-from tests.helpers.basic_models import (
+from captum.testing.helpers.basic_models import (
     BasicEmbeddingModel,
     BasicModel_MultiLayer,
     BasicModel_MultiLayer_TrueMultiInput,
 )
+from packaging import version
 from torch import Tensor
 from torch.nn import Module
 

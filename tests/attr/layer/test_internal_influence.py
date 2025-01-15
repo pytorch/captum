@@ -7,12 +7,12 @@ from typing import Any, Dict, List, Optional, Tuple, Union
 import torch
 from captum._utils.typing import BaselineType
 from captum.attr._core.layer.internal_influence import InternalInfluence
-from packaging import version
-from tests.helpers.basic import assertTensorTuplesAlmostEqual, BaseTest
-from tests.helpers.basic_models import (
+from captum.testing.helpers.basic import assertTensorTuplesAlmostEqual, BaseTest
+from captum.testing.helpers.basic_models import (
     BasicModel_MultiLayer,
     BasicModel_MultiLayer_MultiInput,
 )
+from packaging import version
 from torch import Tensor
 from torch.nn import Module
 

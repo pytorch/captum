@@ -9,9 +9,12 @@ import torch.nn as nn
 from captum.attr import LayerLRP
 from captum.attr._utils.lrp_rules import Alpha1_Beta0_Rule, EpsilonRule, GammaRule
 
-from tests.helpers import BaseTest
-from tests.helpers.basic import assertTensorAlmostEqual
-from tests.helpers.basic_models import BasicModel_ConvNet_One_Conv, SimpleLRPModel
+from captum.testing.helpers import BaseTest
+from captum.testing.helpers.basic import assertTensorAlmostEqual
+from captum.testing.helpers.basic_models import (
+    BasicModel_ConvNet_One_Conv,
+    SimpleLRPModel,
+)
 from torch import Tensor
 
 
