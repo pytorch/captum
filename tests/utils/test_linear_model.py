@@ -10,9 +10,9 @@ from captum._utils.models.linear_model.model import (
     SGDLinearRegression,
     SGDRidge,
 )
-from tests.helpers import BaseTest
-from tests.helpers.basic import assertTensorAlmostEqual
-from tests.helpers.evaluate_linear_model import evaluate
+from captum.testing.helpers import BaseTest
+from captum.testing.helpers.basic import assertTensorAlmostEqual
+from captum.testing.helpers.evaluate_linear_model import evaluate
 from torch import Tensor
 
 

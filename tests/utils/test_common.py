@@ -14,7 +14,7 @@ from captum._utils.common import (
     parse_version,
     safe_div,
 )
-from tests.helpers.basic import (
+from captum.testing.helpers.basic import (
     assertTensorAlmostEqual,
     assertTensorTuplesAlmostEqual,
     BaseTest,

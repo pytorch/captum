@@ -7,7 +7,7 @@ from typing import List
 
 import torch
 from captum.attr._utils.approximation_methods import Riemann, riemann_builders
-from tests.helpers.basic import assertTensorAlmostEqual
+from captum.testing.helpers.basic import assertTensorAlmostEqual
 
 
 class Test(unittest.TestCase):

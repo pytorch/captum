@@ -12,8 +12,8 @@ from captum.attr._models.base import (
     InterpretableEmbeddingBase,
     remove_interpretable_embedding_layer,
 )
-from tests.helpers.basic import assertTensorAlmostEqual
-from tests.helpers.basic_models import BasicEmbeddingModel, TextModule
+from captum.testing.helpers.basic import assertTensorAlmostEqual
+from captum.testing.helpers.basic_models import BasicEmbeddingModel, TextModule
 from torch.nn import Embedding
 
 

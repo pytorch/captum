@@ -13,9 +13,9 @@ from captum.attr._core.guided_backprop_deconvnet import Deconvolution
 from captum.attr._core.neuron.neuron_guided_backprop_deconvnet import (
     NeuronDeconvolution,
 )
-from tests.helpers import BaseTest
-from tests.helpers.basic import assertTensorAlmostEqual
-from tests.helpers.basic_models import BasicModel_ConvNet_One_Conv
+from captum.testing.helpers import BaseTest
+from captum.testing.helpers.basic import assertTensorAlmostEqual
+from captum.testing.helpers.basic_models import BasicModel_ConvNet_One_Conv
 from torch.nn import Module
 
 

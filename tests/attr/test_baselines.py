@@ -4,7 +4,7 @@ from typing import cast, Dict, List, Tuple, Union
 from captum.attr._utils.baselines import ProductBaselines
 
 # from parameterized import parameterized
-from tests.helpers import BaseTest
+from captum.testing.helpers import BaseTest
 
 
 class TestProductBaselines(BaseTest):

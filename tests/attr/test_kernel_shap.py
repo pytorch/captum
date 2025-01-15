@@ -10,13 +10,13 @@ from typing import Any, Callable, List, Tuple, Union
 import torch
 from captum._utils.typing import BaselineType, TensorOrTupleOfTensorsGeneric
 from captum.attr._core.kernel_shap import KernelShap
-from tests.helpers.basic import (
+from captum.testing.helpers.basic import (
     assertTensorAlmostEqual,
     assertTensorTuplesAlmostEqual,
     BaseTest,
     set_all_random_seeds,
 )
-from tests.helpers.basic_models import (
+from captum.testing.helpers.basic_models import (
     BasicLinearModel,
     BasicModel_MultiLayer,
     BasicModel_MultiLayer_MultiInput,

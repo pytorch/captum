@@ -9,13 +9,13 @@ import torch
 from captum._utils.typing import ModuleOrModuleList
 from captum.attr._core.layer.layer_activation import LayerActivation
 from captum.attr._core.layer.layer_gradient_x_activation import LayerGradientXActivation
-from packaging import version
-from tests.helpers.basic import assertTensorTuplesAlmostEqual, BaseTest
-from tests.helpers.basic_models import (
+from captum.testing.helpers.basic import assertTensorTuplesAlmostEqual, BaseTest
+from captum.testing.helpers.basic_models import (
     BasicEmbeddingModel,
     BasicModel_MultiLayer,
     BasicModel_MultiLayer_MultiInput,
 )
+from packaging import version
 from torch import Tensor
 from torch.nn import Module
 

@@ -12,10 +12,9 @@ from captum._utils.gradient import (
     compute_layer_gradients_and_eval,
     undo_gradient_requirements,
 )
-from packaging import version
-from tests.helpers import BaseTest
-from tests.helpers.basic import assertTensorAlmostEqual
-from tests.helpers.basic_models import (
+from captum.testing.helpers import BaseTest
+from captum.testing.helpers.basic import assertTensorAlmostEqual
+from captum.testing.helpers.basic_models import (
     BasicModel,
     BasicModel2,
     BasicModel4_MultiArgs,
@@ -23,6 +22,7 @@ from tests.helpers.basic_models import (
     BasicModel6_MultiTensor,
     BasicModel_MultiLayer,
 )
+from packaging import version
 
 
 class Test(BaseTest):

@@ -10,8 +10,8 @@ import torch.nn as nn
 from captum.insights import AttributionVisualizer, Batch
 from captum.insights.attr_vis.app import FilterConfig
 from captum.insights.attr_vis.features import BaseFeature, FeatureOutput, ImageFeature
+from captum.testing.helpers import BaseTest
 from packaging import version
-from tests.helpers import BaseTest
 from torch import Tensor
 from torch.utils.data import DataLoader
 

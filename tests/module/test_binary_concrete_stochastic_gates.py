@@ -6,9 +6,9 @@ import unittest
 
 import torch
 from captum.module.binary_concrete_stochastic_gates import BinaryConcreteStochasticGates
+from captum.testing.helpers import BaseTest
+from captum.testing.helpers.basic import assertTensorAlmostEqual
 from parameterized import parameterized_class
-from tests.helpers import BaseTest
-from tests.helpers.basic import assertTensorAlmostEqual
 
 
 @parameterized_class(
