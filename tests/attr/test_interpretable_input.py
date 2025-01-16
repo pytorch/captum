@@ -7,9 +7,9 @@ from typing import List, Literal, Optional, overload, Union
 import torch
 from captum._utils.typing import BatchEncodingType
 from captum.attr._utils.interpretable_input import TextTemplateInput, TextTokenInput
+from captum.testing.helpers import BaseTest
+from captum.testing.helpers.basic import assertTensorAlmostEqual
 from parameterized import parameterized
-from tests.helpers import BaseTest
-from tests.helpers.basic import assertTensorAlmostEqual
 from torch import Tensor
 
 

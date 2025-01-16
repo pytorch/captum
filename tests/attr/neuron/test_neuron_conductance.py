@@ -9,15 +9,15 @@ import torch
 from captum._utils.typing import BaselineType, TensorOrTupleOfTensorsGeneric
 from captum.attr._core.layer.layer_conductance import LayerConductance
 from captum.attr._core.neuron.neuron_conductance import NeuronConductance
-
-from packaging import version
-from tests.helpers import BaseTest
-from tests.helpers.basic import assertTensorAlmostEqual
-from tests.helpers.basic_models import (
+from captum.testing.helpers import BaseTest
+from captum.testing.helpers.basic import assertTensorAlmostEqual
+from captum.testing.helpers.basic_models import (
     BasicModel_ConvNet,
     BasicModel_MultiLayer,
     BasicModel_MultiLayer_MultiInput,
 )
+
+from packaging import version
 from torch import Tensor
 from torch.nn import Module
 

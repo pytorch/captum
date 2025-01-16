@@ -6,9 +6,13 @@ from typing import Any, Callable, List, Optional, Tuple, Union
 import torch
 from captum._utils.typing import TensorOrTupleOfTensorsGeneric
 from captum.robust import FGSM
-from tests.helpers import BaseTest
-from tests.helpers.basic import assertTensorAlmostEqual
-from tests.helpers.basic_models import BasicModel, BasicModel2, BasicModel_MultiLayer
+from captum.testing.helpers import BaseTest
+from captum.testing.helpers.basic import assertTensorAlmostEqual
+from captum.testing.helpers.basic_models import (
+    BasicModel,
+    BasicModel2,
+    BasicModel_MultiLayer,
+)
 from torch import Tensor
 from torch.nn import CrossEntropyLoss
 

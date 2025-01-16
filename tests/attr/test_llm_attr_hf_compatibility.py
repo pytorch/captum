@@ -13,8 +13,8 @@ from captum.attr._core.llm_attr import (
 from captum.attr._core.shapley_value import ShapleyValues, ShapleyValueSampling
 from captum.attr._utils.attribution import PerturbationAttribution
 from captum.attr._utils.interpretable_input import TextTemplateInput
+from captum.testing.helpers import BaseTest
 from parameterized import parameterized, parameterized_class
-from tests.helpers import BaseTest
 from torch import Tensor
 
 HAS_HF = True

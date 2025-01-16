@@ -9,24 +9,24 @@ from typing import cast, List, Tuple, Union
 
 import torch
 from captum.attr._core.layer.layer_deep_lift import LayerDeepLift, LayerDeepLiftShap
-from packaging import version
-from tests.attr.helpers.neuron_layer_testing_util import (
-    create_inps_and_base_for_deeplift_neuron_layer_testing,
-    create_inps_and_base_for_deepliftshap_neuron_layer_testing,
-)
-from tests.helpers.basic import (
+from captum.testing.helpers.basic import (
     assert_delta,
     assertTensorAlmostEqual,
     assertTensorTuplesAlmostEqual,
     BaseTest,
 )
-from tests.helpers.basic_models import (
+from captum.testing.helpers.basic_models import (
     BasicModel_ConvNet,
     BasicModel_ConvNet_MaxPool3d,
     BasicModel_MaxPool_ReLU,
     BasicModel_MultiLayer,
     LinearMaxPoolLinearModel,
     ReLULinearModel,
+)
+from packaging import version
+from tests.attr.helpers.neuron_layer_testing_util import (
+    create_inps_and_base_for_deeplift_neuron_layer_testing,
+    create_inps_and_base_for_deepliftshap_neuron_layer_testing,
 )
 from torch import Tensor
 

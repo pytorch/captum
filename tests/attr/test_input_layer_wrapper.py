@@ -23,8 +23,8 @@ from captum.attr import (
     LayerIntegratedGradients,
 )
 from captum.attr._utils.input_layer_wrapper import ModelInputWrapper
-from tests.helpers.basic import assertTensorTuplesAlmostEqual, BaseTest
-from tests.helpers.basic_models import (
+from captum.testing.helpers.basic import assertTensorTuplesAlmostEqual, BaseTest
+from captum.testing.helpers.basic_models import (
     BasicModel,
     BasicModel_MultiLayer_TrueMultiInput,
     MixedKwargsAndArgsModule,

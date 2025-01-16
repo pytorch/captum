@@ -14,9 +14,9 @@ from captum._utils.typing import (
     TensorOrTupleOfTensorsGeneric,
 )
 from captum.attr._core.occlusion import Occlusion
-from tests.helpers import BaseTest
-from tests.helpers.basic import assertTensorAlmostEqual
-from tests.helpers.basic_models import (
+from captum.testing.helpers import BaseTest
+from captum.testing.helpers.basic import assertTensorAlmostEqual
+from captum.testing.helpers.basic_models import (
     BasicModel3,
     BasicModel_ConvNet_One_Conv,
     BasicModel_MultiLayer,

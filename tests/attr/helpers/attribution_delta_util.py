@@ -4,7 +4,7 @@
 from typing import Tuple, Union
 
 import torch
-from tests.helpers import BaseTest
+from captum.testing.helpers import BaseTest
 from torch import Tensor
 
 

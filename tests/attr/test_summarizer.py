@@ -3,7 +3,7 @@
 # pyre-unsafe
 import torch
 from captum.attr import CommonStats, Summarizer
-from tests.helpers import BaseTest
+from captum.testing.helpers import BaseTest
 
 
 class Test(BaseTest):
