@@ -18,6 +18,11 @@ from captum.attr._core.neuron.neuron_guided_backprop_deconvnet import (
 )
 from captum.attr._core.noise_tunnel import NoiseTunnel
 from captum.attr._utils.attribution import Attribution, InternalAttribution
+from captum.testing.helpers.basic import (
+    assertTensorTuplesAlmostEqual,
+    BaseTest,
+    deep_copy_args,
+)
 from tests.attr.helpers.gen_test_utils import (
     gen_test_name,
     get_target_layer,
@@ -25,7 +30,6 @@ from tests.attr.helpers.gen_test_utils import (
     should_create_generated_test,
 )
 from tests.attr.helpers.test_config import config
-from tests.helpers.basic import assertTensorTuplesAlmostEqual, BaseTest, deep_copy_args
 from torch import Tensor
 from torch.nn import Module
 

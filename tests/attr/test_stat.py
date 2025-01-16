@@ -6,8 +6,8 @@ from typing import Callable, List
 
 import torch
 from captum.attr import Max, Mean, Min, MSE, StdDev, Sum, Summarizer, Var
-from tests.helpers import BaseTest
-from tests.helpers.basic import assertTensorAlmostEqual
+from captum.testing.helpers import BaseTest
+from captum.testing.helpers.basic import assertTensorAlmostEqual
 
 
 def get_values(n: int = 100, lo=None, hi=None, integers: bool = False):

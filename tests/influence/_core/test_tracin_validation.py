@@ -5,6 +5,7 @@ from typing import Callable
 import torch.nn as nn
 from captum.influence._core.tracincp import TracInCP
 from captum.influence._core.tracincp_fast_rand_proj import TracInCPFast
+from captum.testing.helpers import BaseTest
 from captum.testing.helpers.influence.common import (
     build_test_name_func,
     DataInfluenceConstructor,
@@ -12,7 +13,6 @@ from captum.testing.helpers.influence.common import (
 )
 
 from parameterized import parameterized
-from tests.helpers import BaseTest
 
 
 class TestTracinValidator(BaseTest):

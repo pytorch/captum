@@ -6,6 +6,8 @@ from typing import Callable, List, Optional, Tuple
 import torch
 import torch.nn as nn
 from captum.influence._core.tracincp import TracInCP
+from captum.testing.helpers import BaseTest
+from captum.testing.helpers.basic import assertTensorAlmostEqual
 from captum.testing.helpers.influence.common import (
     _format_batch_into_tuple,
     build_test_name_func,
@@ -16,8 +18,6 @@ from captum.testing.helpers.influence.common import (
 )
 
 from parameterized import parameterized
-from tests.helpers import BaseTest
-from tests.helpers.basic import assertTensorAlmostEqual
 
 
 class TestTracInGetKMostInfluential(BaseTest):

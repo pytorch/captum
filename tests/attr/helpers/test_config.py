@@ -40,8 +40,8 @@ from captum.attr._core.occlusion import Occlusion
 from captum.attr._core.saliency import Saliency
 from captum.attr._core.shapley_value import ShapleyValueSampling
 from captum.attr._utils.input_layer_wrapper import ModelInputWrapper
-from tests.helpers.basic import set_all_random_seeds
-from tests.helpers.basic_models import (
+from captum.testing.helpers.basic import set_all_random_seeds
+from captum.testing.helpers.basic_models import (
     BasicModel_ConvNet,
     BasicModel_MultiLayer,
     BasicModel_MultiLayer_MultiInput,
