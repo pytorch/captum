@@ -34,11 +34,11 @@ src="/_sphinx/documentation_options.js"></script>
 
 <span class="c1"># pyre-strict</span>
 
-<span class="kn">import</span><span class="w"> </span><span class="nn">math</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">cast</span><span class="p">,</span> <span class="n">Generator</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Union</span>
+<span class="kn">import</span> <span class="nn">math</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">cast</span><span class="p">,</span> <span class="n">Generator</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Union</span>
 
-<span class="kn">import</span><span class="w"> </span><span class="nn">torch</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">captum._utils.common</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+<span class="kn">import</span> <span class="nn">torch</span>
+<span class="kn">from</span> <span class="nn">captum._utils.common</span> <span class="kn">import</span> <span class="p">(</span>
     <span class="n">_expand_additional_forward_args</span><span class="p">,</span>
     <span class="n">_expand_target</span><span class="p">,</span>
     <span class="n">_format_additional_forward_args</span><span class="p">,</span>
@@ -47,19 +47,19 @@ src="/_sphinx/documentation_options.js"></script>
     <span class="n">_is_tuple</span><span class="p">,</span>
     <span class="n">_run_forward</span><span class="p">,</span>
 <span class="p">)</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">captum._utils.exceptions</span><span class="w"> </span><span class="kn">import</span> <span class="n">FeatureAblationFutureError</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">captum._utils.progress</span><span class="w"> </span><span class="kn">import</span> <span class="n">progress</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">captum._utils.typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">BaselineType</span><span class="p">,</span> <span class="n">TargetType</span><span class="p">,</span> <span class="n">TensorOrTupleOfTensorsGeneric</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">captum.attr._utils.attribution</span><span class="w"> </span><span class="kn">import</span> <span class="n">PerturbationAttribution</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">captum.attr._utils.common</span><span class="w"> </span><span class="kn">import</span> <span class="n">_format_input_baseline</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">captum.log</span><span class="w"> </span><span class="kn">import</span> <span class="n">log_usage</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">torch</span><span class="w"> </span><span class="kn">import</span> <span class="n">dtype</span><span class="p">,</span> <span class="n">Tensor</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">torch.futures</span><span class="w"> </span><span class="kn">import</span> <span class="n">collect_all</span><span class="p">,</span> <span class="n">Future</span>
+<span class="kn">from</span> <span class="nn">captum._utils.exceptions</span> <span class="kn">import</span> <span class="n">FeatureAblationFutureError</span>
+<span class="kn">from</span> <span class="nn">captum._utils.progress</span> <span class="kn">import</span> <span class="n">progress</span>
+<span class="kn">from</span> <span class="nn">captum._utils.typing</span> <span class="kn">import</span> <span class="n">BaselineType</span><span class="p">,</span> <span class="n">TargetType</span><span class="p">,</span> <span class="n">TensorOrTupleOfTensorsGeneric</span>
+<span class="kn">from</span> <span class="nn">captum.attr._utils.attribution</span> <span class="kn">import</span> <span class="n">PerturbationAttribution</span>
+<span class="kn">from</span> <span class="nn">captum.attr._utils.common</span> <span class="kn">import</span> <span class="n">_format_input_baseline</span>
+<span class="kn">from</span> <span class="nn">captum.log</span> <span class="kn">import</span> <span class="n">log_usage</span>
+<span class="kn">from</span> <span class="nn">torch</span> <span class="kn">import</span> <span class="n">dtype</span><span class="p">,</span> <span class="n">Tensor</span>
+<span class="kn">from</span> <span class="nn">torch.futures</span> <span class="kn">import</span> <span class="n">collect_all</span><span class="p">,</span> <span class="n">Future</span>
 
 
 <div class="viewcode-block" id="FeatureAblation">
 <a class="viewcode-back" href="../../../../feature_ablation.html#captum.attr.FeatureAblation">[docs]</a>
-<span class="k">class</span><span class="w"> </span><span class="nc">FeatureAblation</span><span class="p">(</span><span class="n">PerturbationAttribution</span><span class="p">):</span>
+<span class="k">class</span> <span class="nc">FeatureAblation</span><span class="p">(</span><span class="n">PerturbationAttribution</span><span class="p">):</span>
 <span class="w">    </span><span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">    A perturbation based approach to computing attribution, involving</span>
 <span class="sd">    replacing each input feature with a given baseline / reference, and</span>
@@ -81,7 +81,7 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">    first dimension (i.e. a feature mask requires to be applied to all inputs).</span>
 <span class="sd">    """</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">forward_func</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="n">Tensor</span><span class="p">,</span> <span class="n">Future</span><span class="p">[</span><span class="n">Tensor</span><span class="p">]]]</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sa">r</span><span class="sd">"""</span>
@@ -106,7 +106,7 @@ src="/_sphinx/documentation_options.js"></script>
 <div class="viewcode-block" id="FeatureAblation.attribute">
 <a class="viewcode-back" href="../../../../feature_ablation.html#captum.attr.FeatureAblation.attribute">[docs]</a>
     <span class="nd">@log_usage</span><span class="p">()</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">attribute</span><span class="p">(</span>
+    <span class="k">def</span> <span class="nf">attribute</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">inputs</span><span class="p">:</span> <span class="n">TensorOrTupleOfTensorsGeneric</span><span class="p">,</span>
         <span class="n">baselines</span><span class="p">:</span> <span class="n">BaselineType</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -419,7 +419,7 @@ src="/_sphinx/documentation_options.js"></script>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_generate_result</span><span class="p">(</span><span class="n">total_attrib</span><span class="p">,</span> <span class="n">weights</span><span class="p">,</span> <span class="n">is_inputs_tuple</span><span class="p">)</span>  <span class="c1"># type: ignore # noqa: E501 line too long</span></div>
 
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">_initial_eval_to_processed_initial_eval_fut</span><span class="p">(</span>
+    <span class="k">def</span> <span class="nf">_initial_eval_to_processed_initial_eval_fut</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">initial_eval</span><span class="p">:</span> <span class="n">Future</span><span class="p">[</span><span class="n">Tensor</span><span class="p">],</span> <span class="n">formatted_inputs</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">Tensor</span><span class="p">],</span> <span class="n">List</span><span class="p">[</span><span class="n">Tensor</span><span class="p">],</span> <span class="n">Tensor</span><span class="p">,</span> <span class="n">Tensor</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="n">dtype</span><span class="p">]:</span>
         <span class="k">try</span><span class="p">:</span>
@@ -436,13 +436,13 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="k">except</span> <span class="n">FeatureAblationFutureError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
             <span class="k">raise</span> <span class="n">FeatureAblationFutureError</span><span class="p">(</span>
                 <span class="s2">"initial_eval_to_processed_initial_eval_fut func failed"</span>
-            <span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">e</span>
+            <span class="p">)</span> <span class="kn">from</span> <span class="nn">e</span>
         <span class="k">return</span> <span class="n">result</span>
 
 <div class="viewcode-block" id="FeatureAblation.attribute_future">
 <a class="viewcode-back" href="../../../../feature_ablation.html#captum.attr.FeatureAblation.attribute_future">[docs]</a>
     <span class="nd">@log_usage</span><span class="p">()</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">attribute_future</span><span class="p">(</span>
+    <span class="k">def</span> <span class="nf">attribute_future</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">inputs</span><span class="p">:</span> <span class="n">TensorOrTupleOfTensorsGeneric</span><span class="p">,</span>
         <span class="n">baselines</span><span class="p">:</span> <span class="n">BaselineType</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -608,7 +608,7 @@ src="/_sphinx/documentation_options.js"></script>
 
 
     <span class="c1"># pyre-fixme[3] return type must be annotated</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">_attribute_progress_setup</span><span class="p">(</span>
+    <span class="k">def</span> <span class="nf">_attribute_progress_setup</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">formatted_inputs</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span>
         <span class="n">feature_mask</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span>
@@ -627,7 +627,7 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="p">)</span>
         <span class="k">return</span> <span class="n">attr_progress</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">_eval_fut_to_ablated_out_fut</span><span class="p">(</span>
+    <span class="k">def</span> <span class="nf">_eval_fut_to_ablated_out_fut</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="c1"># pyre-ignore Invalid type parameters [24]</span>
         <span class="n">eval_futs</span><span class="p">:</span> <span class="n">Future</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">Future</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">object</span><span class="p">]]]],</span>
@@ -688,10 +688,10 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="k">except</span> <span class="n">FeatureAblationFutureError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
             <span class="k">raise</span> <span class="n">FeatureAblationFutureError</span><span class="p">(</span>
                 <span class="s2">"eval_fut_to_ablated_out_fut func failed)"</span>
-            <span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">e</span>
+            <span class="p">)</span> <span class="kn">from</span> <span class="nn">e</span>
         <span class="k">return</span> <span class="n">result</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">_ith_input_ablation_generator</span><span class="p">(</span>
+    <span class="k">def</span> <span class="nf">_ith_input_ablation_generator</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">i</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
         <span class="n">inputs</span><span class="p">:</span> <span class="n">TensorOrTupleOfTensorsGeneric</span><span class="p">,</span>
@@ -816,7 +816,7 @@ src="/_sphinx/documentation_options.js"></script>
             <span class="n">current_features</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">original_tensor</span>
             <span class="n">num_features_processed</span> <span class="o">+=</span> <span class="n">current_num_ablated_features</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">_construct_ablated_input</span><span class="p">(</span>
+    <span class="k">def</span> <span class="nf">_construct_ablated_input</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">expanded_input</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">,</span>
         <span class="n">input_mask</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="n">Tensor</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">]],</span>
@@ -855,7 +855,7 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="p">)</span> <span class="o">+</span> <span class="p">(</span><span class="n">baseline</span> <span class="o">*</span> <span class="n">current_mask</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">expanded_input</span><span class="o">.</span><span class="n">dtype</span><span class="p">))</span>
         <span class="k">return</span> <span class="n">ablated_tensor</span><span class="p">,</span> <span class="n">current_mask</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">_get_feature_range_and_mask</span><span class="p">(</span>
+    <span class="k">def</span> <span class="nf">_get_feature_range_and_mask</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="nb">input</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">,</span>
         <span class="n">input_mask</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Tensor</span><span class="p">],</span>
@@ -874,7 +874,7 @@ src="/_sphinx/documentation_options.js"></script>
             <span class="n">input_mask</span><span class="p">,</span>
         <span class="p">)</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">_get_feature_counts</span><span class="p">(</span>
+    <span class="k">def</span> <span class="nf">_get_feature_counts</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">inputs</span><span class="p">:</span> <span class="n">TensorOrTupleOfTensorsGeneric</span><span class="p">,</span>
         <span class="n">feature_mask</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span>
@@ -893,7 +893,7 @@ src="/_sphinx/documentation_options.js"></script>
             <span class="k">for</span> <span class="n">inp</span><span class="p">,</span> <span class="n">mask</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">feature_mask</span><span class="p">)</span>
         <span class="p">)</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">_parse_forward_out</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">forward_output</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tensor</span><span class="p">:</span>
+    <span class="k">def</span> <span class="nf">_parse_forward_out</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">forward_output</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tensor</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        A temp wrapper for global _run_forward util to force forward output</span>
 <span class="sd">        type assertion &amp; conversion.</span>
@@ -913,7 +913,7 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="c1"># ref: https://github.com/pytorch/pytorch/pull/21215</span>
         <span class="k">return</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="n">forward_output</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">cast</span><span class="p">(</span><span class="n">dtype</span><span class="p">,</span> <span class="n">output_type</span><span class="p">))</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">_process_initial_eval</span><span class="p">(</span>
+    <span class="k">def</span> <span class="nf">_process_initial_eval</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">initial_eval</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">,</span>
         <span class="n">inputs</span><span class="p">:</span> <span class="n">TensorOrTupleOfTensorsGeneric</span><span class="p">,</span>
@@ -957,7 +957,7 @@ src="/_sphinx/documentation_options.js"></script>
             <span class="n">attrib_type</span><span class="p">,</span>
         <span class="p">)</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">_process_ablated_out</span><span class="p">(</span>
+    <span class="k">def</span> <span class="nf">_process_ablated_out</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">modified_eval</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">,</span>
         <span class="n">current_inputs</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span>
@@ -1023,7 +1023,7 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="n">total_attrib</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">+=</span> <span class="p">(</span><span class="n">eval_diff</span> <span class="o">*</span> <span class="n">current_mask</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">attrib_type</span><span class="p">))</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">dim</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">total_attrib</span><span class="p">,</span> <span class="n">weights</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">_fut_tuple_to_accumulate_fut_list</span><span class="p">(</span>
+    <span class="k">def</span> <span class="nf">_fut_tuple_to_accumulate_fut_list</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">total_attrib</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Tensor</span><span class="p">],</span>
         <span class="n">weights</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Tensor</span><span class="p">],</span>
@@ -1036,9 +1036,9 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="k">except</span> <span class="n">FeatureAblationFutureError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
             <span class="k">raise</span> <span class="n">FeatureAblationFutureError</span><span class="p">(</span>
                 <span class="s2">"fut_tuple_to_accumulate_fut_list failed"</span>
-            <span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">e</span>
+            <span class="p">)</span> <span class="kn">from</span> <span class="nn">e</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">_generate_async_result</span><span class="p">(</span>
+    <span class="k">def</span> <span class="nf">_generate_async_result</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">futs</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">Future</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">Tensor</span><span class="p">],</span> <span class="n">List</span><span class="p">[</span><span class="n">Tensor</span><span class="p">]]]]],</span>
         <span class="n">is_inputs_tuple</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span>
@@ -1066,7 +1066,7 @@ src="/_sphinx/documentation_options.js"></script>
 
         <span class="k">return</span> <span class="n">result_fut</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">_accumulate_for_single_input</span><span class="p">(</span>
+    <span class="k">def</span> <span class="nf">_accumulate_for_single_input</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">total_attrib</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Tensor</span><span class="p">],</span>
         <span class="n">weights</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Tensor</span><span class="p">],</span>
@@ -1084,7 +1084,7 @@ src="/_sphinx/documentation_options.js"></script>
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">weights</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">weight</span><span class="p">)</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">_generate_result</span><span class="p">(</span>
+    <span class="k">def</span> <span class="nf">_generate_result</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">total_attrib</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Tensor</span><span class="p">],</span>
         <span class="n">weights</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Tensor</span><span class="p">],</span>

@@ -97,15 +97,15 @@
 <div class="prompt input_prompt">In [1]:</div>
 <div class="inner_cell">
 <div class="input_area">
-<div class="highlight hl-ipython3"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<div class="highlight hl-ipython3"><pre><span></span><span class="kn">import</span> <span class="nn">os</span>
 
-<span class="kn">import</span><span class="w"> </span><span class="nn">torch</span>
-<span class="kn">import</span><span class="w"> </span><span class="nn">torch.nn</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">nn</span>
-<span class="kn">import</span><span class="w"> </span><span class="nn">torchvision</span>
-<span class="kn">import</span><span class="w"> </span><span class="nn">torchvision.transforms</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">transforms</span>
+<span class="kn">import</span> <span class="nn">torch</span>
+<span class="kn">import</span> <span class="nn">torch.nn</span> <span class="k">as</span> <span class="nn">nn</span>
+<span class="kn">import</span> <span class="nn">torchvision</span>
+<span class="kn">import</span> <span class="nn">torchvision.transforms</span> <span class="k">as</span> <span class="nn">transforms</span>
 
-<span class="kn">from</span><span class="w"> </span><span class="nn">captum.insights</span><span class="w"> </span><span class="kn">import</span> <span class="n">AttributionVisualizer</span><span class="p">,</span> <span class="n">Batch</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">captum.insights.attr_vis.features</span><span class="w"> </span><span class="kn">import</span> <span class="n">ImageFeature</span>
+<span class="kn">from</span> <span class="nn">captum.insights</span> <span class="kn">import</span> <span class="n">AttributionVisualizer</span><span class="p">,</span> <span class="n">Batch</span>
+<span class="kn">from</span> <span class="nn">captum.insights.attr_vis.features</span> <span class="kn">import</span> <span class="n">ImageFeature</span>
 </pre></div>
 </div>
 </div>
@@ -123,7 +123,7 @@
 <div class="prompt input_prompt">In [2]:</div>
 <div class="inner_cell">
 <div class="input_area">
-<div class="highlight hl-ipython3"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">get_classes</span><span class="p">():</span>
+<div class="highlight hl-ipython3"><pre><span></span><span class="k">def</span> <span class="nf">get_classes</span><span class="p">():</span>
     <span class="n">classes</span> <span class="o">=</span> <span class="p">[</span>
         <span class="s2">"Plane"</span><span class="p">,</span>
         <span class="s2">"Car"</span><span class="p">,</span>
@@ -139,9 +139,9 @@
     <span class="k">return</span> <span class="n">classes</span>
 
 
-<span class="k">def</span><span class="w"> </span><span class="nf">get_pretrained_model</span><span class="p">():</span>
-    <span class="k">class</span><span class="w"> </span><span class="nc">Net</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
-        <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">get_pretrained_model</span><span class="p">():</span>
+    <span class="k">class</span> <span class="nc">Net</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+        <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
             <span class="nb">super</span><span class="p">(</span><span class="n">Net</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">conv1</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Conv2d</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">5</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">pool1</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">MaxPool2d</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
@@ -155,7 +155,7 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">relu3</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">ReLU</span><span class="p">()</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">relu4</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">ReLU</span><span class="p">()</span>
 
-        <span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
             <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pool1</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">relu1</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">conv1</span><span class="p">(</span><span class="n">x</span><span class="p">)))</span>
             <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pool2</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">relu2</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">conv2</span><span class="p">(</span><span class="n">x</span><span class="p">)))</span>
             <span class="n">x</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">16</span> <span class="o">*</span> <span class="mi">5</span> <span class="o">*</span> <span class="mi">5</span><span class="p">)</span>
@@ -169,11 +169,11 @@
     <span class="k">return</span> <span class="n">net</span>
 
 
-<span class="k">def</span><span class="w"> </span><span class="nf">baseline_func</span><span class="p">(</span><span class="nb">input</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">baseline_func</span><span class="p">(</span><span class="nb">input</span><span class="p">):</span>
     <span class="k">return</span> <span class="nb">input</span> <span class="o">*</span> <span class="mi">0</span>
 
 
-<span class="k">def</span><span class="w"> </span><span class="nf">formatted_data_iter</span><span class="p">():</span>
+<span class="k">def</span> <span class="nf">formatted_data_iter</span><span class="p">():</span>
     <span class="n">dataset</span> <span class="o">=</span> <span class="n">torchvision</span><span class="o">.</span><span class="n">datasets</span><span class="o">.</span><span class="n">CIFAR10</span><span class="p">(</span>
         <span class="n">root</span><span class="o">=</span><span class="s2">"data/test"</span><span class="p">,</span> <span class="n">train</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">download</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">transform</span><span class="o">=</span><span class="n">transforms</span><span class="o">.</span><span class="n">ToTensor</span><span class="p">()</span>
     <span class="p">)</span>
@@ -234,10 +234,10 @@
 <div class="output">
 <div class="output_area">
 <div class="prompt"></div>
-<div id="39997372-d04d-424f-bb44-1c571c8ab4e8"></div>
+<div id="fd15b0b7-5678-4ad2-8ce3-33e0d0298749"></div>
 <div class="output_subarea output_widget_view">
 <script type="text/javascript">
-var element = $('#39997372-d04d-424f-bb44-1c571c8ab4e8');
+var element = $('#fd15b0b7-5678-4ad2-8ce3-33e0d0298749');
 </script>
 <script type="application/vnd.jupyter.widget-view+json">
 {"model_id": "a16715bdfba9454bb4180e852cc98c1c", "version_major": 2, "version_minor": 0}
@@ -246,10 +246,10 @@ var element = $('#39997372-d04d-424f-bb44-1c571c8ab4e8');
 </div>
 <div class="output_area">
 <div class="prompt"></div>
-<div id="77214188-8100-45d7-9333-95d8c29f3a53"></div>
+<div id="4ef14cdf-1ad6-4ec5-9b22-11f4f95ce7b4"></div>
 <div class="output_subarea output_widget_view">
 <script type="text/javascript">
-var element = $('#77214188-8100-45d7-9333-95d8c29f3a53');
+var element = $('#4ef14cdf-1ad6-4ec5-9b22-11f4f95ce7b4');
 </script>
 <script type="application/vnd.jupyter.widget-view+json">
 {"model_id": "4b44b7e00f004ef7a56a34200ff2a64f", "version_major": 2, "version_minor": 0}
@@ -265,7 +265,7 @@ var element = $('#77214188-8100-45d7-9333-95d8c29f3a53');
 <div class="inner_cell">
 <div class="input_area">
 <div class="highlight hl-ipython3"><pre><span></span><span class="c1"># show a screenshot if using notebook non-interactively</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">IPython.display</span><span class="w"> </span><span class="kn">import</span> <span class="n">Image</span>
+<span class="kn">from</span> <span class="nn">IPython.display</span> <span class="kn">import</span> <span class="n">Image</span>
 <span class="n">Image</span><span class="p">(</span><span class="n">filename</span><span class="o">=</span><span class="s1">'img/captum_insights.png'</span><span class="p">)</span>
 </pre></div>
 </div>

@@ -34,21 +34,21 @@ src="/_sphinx/documentation_options.js"></script>
 
 <span class="c1"># pyre-strict</span>
 
-<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">cast</span><span class="p">,</span> <span class="n">Generator</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Union</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">cast</span><span class="p">,</span> <span class="n">Generator</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Union</span>
 
-<span class="kn">import</span><span class="w"> </span><span class="nn">torch</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">captum._utils.models.linear_model</span><span class="w"> </span><span class="kn">import</span> <span class="n">SkLearnLinearRegression</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">captum._utils.typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">BaselineType</span><span class="p">,</span> <span class="n">TargetType</span><span class="p">,</span> <span class="n">TensorOrTupleOfTensorsGeneric</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">captum.attr._core.lime</span><span class="w"> </span><span class="kn">import</span> <span class="n">construct_feature_mask</span><span class="p">,</span> <span class="n">Lime</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">captum.attr._utils.common</span><span class="w"> </span><span class="kn">import</span> <span class="n">_format_input_baseline</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">captum.log</span><span class="w"> </span><span class="kn">import</span> <span class="n">log_usage</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">torch</span><span class="w"> </span><span class="kn">import</span> <span class="n">Tensor</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">torch.distributions.categorical</span><span class="w"> </span><span class="kn">import</span> <span class="n">Categorical</span>
+<span class="kn">import</span> <span class="nn">torch</span>
+<span class="kn">from</span> <span class="nn">captum._utils.models.linear_model</span> <span class="kn">import</span> <span class="n">SkLearnLinearRegression</span>
+<span class="kn">from</span> <span class="nn">captum._utils.typing</span> <span class="kn">import</span> <span class="n">BaselineType</span><span class="p">,</span> <span class="n">TargetType</span><span class="p">,</span> <span class="n">TensorOrTupleOfTensorsGeneric</span>
+<span class="kn">from</span> <span class="nn">captum.attr._core.lime</span> <span class="kn">import</span> <span class="n">construct_feature_mask</span><span class="p">,</span> <span class="n">Lime</span>
+<span class="kn">from</span> <span class="nn">captum.attr._utils.common</span> <span class="kn">import</span> <span class="n">_format_input_baseline</span>
+<span class="kn">from</span> <span class="nn">captum.log</span> <span class="kn">import</span> <span class="n">log_usage</span>
+<span class="kn">from</span> <span class="nn">torch</span> <span class="kn">import</span> <span class="n">Tensor</span>
+<span class="kn">from</span> <span class="nn">torch.distributions.categorical</span> <span class="kn">import</span> <span class="n">Categorical</span>
 
 
 <div class="viewcode-block" id="KernelShap">
 <a class="viewcode-back" href="../../../../kernel_shap.html#captum.attr.KernelShap">[docs]</a>
-<span class="k">class</span><span class="w"> </span><span class="nc">KernelShap</span><span class="p">(</span><span class="n">Lime</span><span class="p">):</span>
+<span class="k">class</span> <span class="nc">KernelShap</span><span class="p">(</span><span class="n">Lime</span><span class="p">):</span>
 <span class="w">    </span><span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">    Kernel SHAP is a method that uses the LIME framework to compute</span>
 <span class="sd">    Shapley Values. Setting the loss function, weighting kernel and</span>
@@ -61,7 +61,7 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">    https://arxiv.org/abs/1705.07874</span>
 <span class="sd">    """</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">forward_func</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">Tensor</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">forward_func</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">Tensor</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        Args:</span>
 
@@ -80,7 +80,7 @@ src="/_sphinx/documentation_options.js"></script>
 <div class="viewcode-block" id="KernelShap.attribute">
 <a class="viewcode-back" href="../../../../kernel_shap.html#captum.attr.KernelShap.attribute">[docs]</a>
     <span class="nd">@log_usage</span><span class="p">()</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">attribute</span><span class="p">(</span>  <span class="c1"># type: ignore</span>
+    <span class="k">def</span> <span class="nf">attribute</span><span class="p">(</span>  <span class="c1"># type: ignore</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">inputs</span><span class="p">:</span> <span class="n">TensorOrTupleOfTensorsGeneric</span><span class="p">,</span>
         <span class="n">baselines</span><span class="p">:</span> <span class="n">BaselineType</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -332,14 +332,14 @@ src="/_sphinx/documentation_options.js"></script>
     <span class="c1"># pyre-fixme[24] Generic type `Callable` expects 2 type parameters.</span>
 <div class="viewcode-block" id="KernelShap.attribute_future">
 <a class="viewcode-back" href="../../../../kernel_shap.html#captum.attr.KernelShap.attribute_future">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">attribute_future</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">:</span>
+    <span class="k">def</span> <span class="nf">attribute_future</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">:</span>
 <span class="w">        </span><span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        This method is not implemented for KernelShap.</span>
 <span class="sd">        """</span>
         <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">"attribute_future is not implemented for KernelShap"</span><span class="p">)</span></div>
 
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">kernel_shap_similarity_kernel</span><span class="p">(</span>
+    <span class="k">def</span> <span class="nf">kernel_shap_similarity_kernel</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">_</span><span class="p">,</span>
         <span class="n">__</span><span class="p">,</span>
@@ -365,7 +365,7 @@ src="/_sphinx/documentation_options.js"></script>
 
 <div class="viewcode-block" id="KernelShap.kernel_shap_perturb_generator">
 <a class="viewcode-back" href="../../../../kernel_shap.html#captum.attr.KernelShap.kernel_shap_perturb_generator">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">kernel_shap_perturb_generator</span><span class="p">(</span>
+    <span class="k">def</span> <span class="nf">kernel_shap_perturb_generator</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">original_inp</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">]],</span>
         <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="nb">object</span><span class="p">,</span>

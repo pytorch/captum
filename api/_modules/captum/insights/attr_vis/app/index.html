@@ -33,9 +33,9 @@ src="/_sphinx/documentation_options.js"></script>
 <span></span><span class="ch">#!/usr/bin/env python3</span>
 
 <span class="c1"># pyre-strict</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">collections</span><span class="w"> </span><span class="kn">import</span> <span class="n">namedtuple</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">itertools</span><span class="w"> </span><span class="kn">import</span> <span class="n">cycle</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+<span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">namedtuple</span>
+<span class="kn">from</span> <span class="nn">itertools</span> <span class="kn">import</span> <span class="n">cycle</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="p">(</span>
     <span class="n">Any</span><span class="p">,</span>
     <span class="n">Callable</span><span class="p">,</span>
     <span class="n">Dict</span><span class="p">,</span>
@@ -47,29 +47,29 @@ src="/_sphinx/documentation_options.js"></script>
     <span class="n">Union</span><span class="p">,</span>
 <span class="p">)</span>
 
-<span class="kn">import</span><span class="w"> </span><span class="nn">torch</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">captum.attr</span><span class="w"> </span><span class="kn">import</span> <span class="n">IntegratedGradients</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">captum.attr._utils.batching</span><span class="w"> </span><span class="kn">import</span> <span class="n">_batched_generator</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">captum.insights.attr_vis.attribution_calculation</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+<span class="kn">import</span> <span class="nn">torch</span>
+<span class="kn">from</span> <span class="nn">captum.attr</span> <span class="kn">import</span> <span class="n">IntegratedGradients</span>
+<span class="kn">from</span> <span class="nn">captum.attr._utils.batching</span> <span class="kn">import</span> <span class="n">_batched_generator</span>
+<span class="kn">from</span> <span class="nn">captum.insights.attr_vis.attribution_calculation</span> <span class="kn">import</span> <span class="p">(</span>
     <span class="n">AttributionCalculation</span><span class="p">,</span>
     <span class="n">OutputScore</span><span class="p">,</span>
 <span class="p">)</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">captum.insights.attr_vis.config</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+<span class="kn">from</span> <span class="nn">captum.insights.attr_vis.config</span> <span class="kn">import</span> <span class="p">(</span>
     <span class="n">ATTRIBUTION_METHOD_CONFIG</span><span class="p">,</span>
     <span class="n">ATTRIBUTION_NAMES_TO_METHODS</span><span class="p">,</span>
 <span class="p">)</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">captum.insights.attr_vis.features</span><span class="w"> </span><span class="kn">import</span> <span class="n">BaseFeature</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">captum.insights.attr_vis.server</span><span class="w"> </span><span class="kn">import</span> <span class="n">namedtuple_to_dict</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">captum.log</span><span class="w"> </span><span class="kn">import</span> <span class="n">log_usage</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">torch</span><span class="w"> </span><span class="kn">import</span> <span class="n">Tensor</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">torch.nn</span><span class="w"> </span><span class="kn">import</span> <span class="n">Module</span>
+<span class="kn">from</span> <span class="nn">captum.insights.attr_vis.features</span> <span class="kn">import</span> <span class="n">BaseFeature</span>
+<span class="kn">from</span> <span class="nn">captum.insights.attr_vis.server</span> <span class="kn">import</span> <span class="n">namedtuple_to_dict</span>
+<span class="kn">from</span> <span class="nn">captum.log</span> <span class="kn">import</span> <span class="n">log_usage</span>
+<span class="kn">from</span> <span class="nn">torch</span> <span class="kn">import</span> <span class="n">Tensor</span>
+<span class="kn">from</span> <span class="nn">torch.nn</span> <span class="kn">import</span> <span class="n">Module</span>
 
 <span class="n">_CONTEXT_COLAB</span> <span class="o">=</span> <span class="s2">"_CONTEXT_COLAB"</span>
 <span class="n">_CONTEXT_IPYTHON</span> <span class="o">=</span> <span class="s2">"_CONTEXT_IPYTHON"</span>
 <span class="n">_CONTEXT_NONE</span> <span class="o">=</span> <span class="s2">"_CONTEXT_NONE"</span>
 
 
-<span class="k">def</span><span class="w"> </span><span class="nf">_get_context</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="k">def</span> <span class="nf">_get_context</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">"""Determine the most specific context that we're in.</span>
 <span class="sd">    Implementation from TensorBoard: https://git.io/JvObD.</span>
 
@@ -89,8 +89,8 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="c1"># which will cause "Duplicate extension: grpc/_cython/cygrpc.so!"</span>
         <span class="c1"># @manual</span>
         <span class="c1"># pyre-fixme[21]: Could not find module `google.colab`.</span>
-        <span class="kn">import</span><span class="w"> </span><span class="nn">google.colab</span>  <span class="c1"># noqa: F401</span>
-        <span class="kn">import</span><span class="w"> </span><span class="nn">IPython</span>
+        <span class="kn">import</span> <span class="nn">google.colab</span>  <span class="c1"># noqa: F401</span>
+        <span class="kn">import</span> <span class="nn">IPython</span>
     <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
         <span class="k">pass</span>
     <span class="k">else</span><span class="p">:</span>
@@ -101,7 +101,7 @@ src="/_sphinx/documentation_options.js"></script>
     <span class="c1"># In an IPython command line shell or Jupyter notebook, we can</span>
     <span class="c1"># directly query whether we're in a notebook context.</span>
     <span class="k">try</span><span class="p">:</span>
-        <span class="kn">import</span><span class="w"> </span><span class="nn">IPython</span>
+        <span class="kn">import</span> <span class="nn">IPython</span>
     <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
         <span class="k">pass</span>
     <span class="k">else</span><span class="p">:</span>
@@ -126,7 +126,7 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="n">SampleCache</span> <span class="o">=</span> <span class="n">namedtuple</span><span class="p">(</span><span class="s2">"SampleCache"</span><span class="p">,</span> <span class="s2">"inputs additional_forward_args label"</span><span class="p">)</span>
 
 
-<span class="k">class</span><span class="w"> </span><span class="nc">FilterConfig</span><span class="p">(</span><span class="n">NamedTuple</span><span class="p">):</span>
+<span class="k">class</span> <span class="nc">FilterConfig</span><span class="p">(</span><span class="n">NamedTuple</span><span class="p">):</span>
     <span class="n">attribution_method</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">IntegratedGradients</span><span class="o">.</span><span class="n">get_name</span><span class="p">()</span>
     <span class="c1"># issue with mypy github.com/python/mypy/issues/8376</span>
     <span class="n">attribution_arguments</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
@@ -142,8 +142,8 @@ src="/_sphinx/documentation_options.js"></script>
 
 <div class="viewcode-block" id="Batch">
 <a class="viewcode-back" href="../../../../insights.html#captum.insights.Batch">[docs]</a>
-<span class="k">class</span><span class="w"> </span><span class="nc">Batch</span><span class="p">:</span>
-    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+<span class="k">class</span> <span class="nc">Batch</span><span class="p">:</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">inputs</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">]],</span>
         <span class="n">labels</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Tensor</span><span class="p">],</span>
@@ -187,8 +187,8 @@ src="/_sphinx/documentation_options.js"></script>
 
 <div class="viewcode-block" id="AttributionVisualizer">
 <a class="viewcode-back" href="../../../../insights.html#captum.insights.AttributionVisualizer">[docs]</a>
-<span class="k">class</span><span class="w"> </span><span class="nc">AttributionVisualizer</span><span class="p">:</span>
-    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+<span class="k">class</span> <span class="nc">AttributionVisualizer</span><span class="p">:</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">models</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">Module</span><span class="p">],</span> <span class="n">Module</span><span class="p">],</span>
         <span class="n">classes</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
@@ -254,7 +254,7 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="bp">self</span><span class="o">.</span><span class="n">_dataset_iter</span> <span class="o">=</span> <span class="nb">iter</span><span class="p">(</span><span class="n">dataset</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_dataset_cache</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Batch</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">_calculate_attribution_from_cache</span><span class="p">(</span>
+    <span class="k">def</span> <span class="nf">_calculate_attribution_from_cache</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">input_index</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">model_index</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">target</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Tensor</span><span class="p">]</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">VisualizationOutput</span><span class="p">]:</span>
         <span class="n">c</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_outputs</span><span class="p">[</span><span class="n">input_index</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span>
@@ -271,7 +271,7 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="k">return</span> <span class="n">result</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
 
     <span class="c1"># pyre-fixme[2]: Parameter must be annotated.</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">_update_config</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">settings</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span> <span class="nf">_update_config</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">settings</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_config</span> <span class="o">=</span> <span class="n">FilterConfig</span><span class="p">(</span>
             <span class="n">attribution_method</span><span class="o">=</span><span class="n">settings</span><span class="p">[</span><span class="s2">"attribution_method"</span><span class="p">],</span>
             <span class="n">attribution_arguments</span><span class="o">=</span><span class="n">settings</span><span class="p">[</span><span class="s2">"arguments"</span><span class="p">],</span>
@@ -281,9 +281,9 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="p">)</span>
 
     <span class="nd">@log_usage</span><span class="p">()</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">render</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">debug</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="kn">from</span><span class="w"> </span><span class="nn">captum.insights.attr_vis.widget.widget</span><span class="w"> </span><span class="kn">import</span> <span class="n">CaptumInsights</span>
-        <span class="kn">from</span><span class="w"> </span><span class="nn">IPython.display</span><span class="w"> </span><span class="kn">import</span> <span class="n">display</span>
+    <span class="k">def</span> <span class="nf">render</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">debug</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="kn">from</span> <span class="nn">captum.insights.attr_vis.widget.widget</span> <span class="kn">import</span> <span class="n">CaptumInsights</span>
+        <span class="kn">from</span> <span class="nn">IPython.display</span> <span class="kn">import</span> <span class="n">display</span>
 
         <span class="n">widget</span> <span class="o">=</span> <span class="n">CaptumInsights</span><span class="p">(</span><span class="n">visualizer</span><span class="o">=</span><span class="bp">self</span><span class="p">)</span>
         <span class="n">display</span><span class="p">(</span><span class="n">widget</span><span class="p">)</span>
@@ -292,7 +292,7 @@ src="/_sphinx/documentation_options.js"></script>
 
     <span class="nd">@log_usage</span><span class="p">()</span>
     <span class="c1"># pyre-fixme[3]: Return type must be annotated.</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">serve</span><span class="p">(</span>
+    <span class="k">def</span> <span class="nf">serve</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">blocking</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
         <span class="n">debug</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
@@ -309,7 +309,7 @@ src="/_sphinx/documentation_options.js"></script>
             <span class="p">)</span>
 
     <span class="c1"># pyre-fixme[3]: Return type must be annotated.</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">_serve</span><span class="p">(</span>
+    <span class="k">def</span> <span class="nf">_serve</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">blocking</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
         <span class="n">debug</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
@@ -317,22 +317,22 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="n">port</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
         <span class="n">bind_all</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
     <span class="p">):</span>
-        <span class="kn">from</span><span class="w"> </span><span class="nn">captum.insights.attr_vis.server</span><span class="w"> </span><span class="kn">import</span> <span class="n">start_server</span>
+        <span class="kn">from</span> <span class="nn">captum.insights.attr_vis.server</span> <span class="kn">import</span> <span class="n">start_server</span>
 
         <span class="k">return</span> <span class="n">start_server</span><span class="p">(</span>
             <span class="bp">self</span><span class="p">,</span> <span class="n">blocking</span><span class="o">=</span><span class="n">blocking</span><span class="p">,</span> <span class="n">debug</span><span class="o">=</span><span class="n">debug</span><span class="p">,</span> <span class="n">_port</span><span class="o">=</span><span class="n">port</span><span class="p">,</span> <span class="n">bind_all</span><span class="o">=</span><span class="n">bind_all</span>
         <span class="p">)</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">_serve_colab</span><span class="p">(</span>
+    <span class="k">def</span> <span class="nf">_serve_colab</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">blocking</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
         <span class="n">debug</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
         <span class="c1"># pyre-fixme[2]: Parameter must be annotated.</span>
         <span class="n">port</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="kn">import</span><span class="w"> </span><span class="nn">ipywidgets</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">widgets</span>
-        <span class="kn">from</span><span class="w"> </span><span class="nn">captum.insights.attr_vis.server</span><span class="w"> </span><span class="kn">import</span> <span class="n">start_server</span>
-        <span class="kn">from</span><span class="w"> </span><span class="nn">IPython.display</span><span class="w"> </span><span class="kn">import</span> <span class="n">display</span><span class="p">,</span> <span class="n">HTML</span>
+        <span class="kn">import</span> <span class="nn">ipywidgets</span> <span class="k">as</span> <span class="nn">widgets</span>
+        <span class="kn">from</span> <span class="nn">captum.insights.attr_vis.server</span> <span class="kn">import</span> <span class="n">start_server</span>
+        <span class="kn">from</span> <span class="nn">IPython.display</span> <span class="kn">import</span> <span class="n">display</span><span class="p">,</span> <span class="n">HTML</span>
 
         <span class="c1"># TODO: Output widget only captures beginning of server logs. It seems</span>
         <span class="c1"># the context manager isn't respected when the web server is run on a</span>
@@ -383,7 +383,7 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="n">display</span><span class="p">(</span><span class="n">html</span><span class="p">)</span>
         <span class="n">display</span><span class="p">(</span><span class="n">out</span><span class="p">)</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">_predictions_matches_labels</span><span class="p">(</span>
+    <span class="k">def</span> <span class="nf">_predictions_matches_labels</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">predicted_scores</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">OutputScore</span><span class="p">],</span> <span class="n">labels</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">predicted_scores</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
@@ -396,7 +396,7 @@ src="/_sphinx/documentation_options.js"></script>
 
         <span class="k">return</span> <span class="n">labels</span> <span class="o">==</span> <span class="n">predicted_label</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">_should_keep_prediction</span><span class="p">(</span>
+    <span class="k">def</span> <span class="nf">_should_keep_prediction</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">predicted_scores</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">OutputScore</span><span class="p">],</span> <span class="n">actual_label</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">OutputScore</span><span class="p">]</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
         <span class="c1"># filter by class</span>
@@ -424,7 +424,7 @@ src="/_sphinx/documentation_options.js"></script>
 
         <span class="k">return</span> <span class="kc">True</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">_calculate_vis_output</span><span class="p">(</span>
+    <span class="k">def</span> <span class="nf">_calculate_vis_output</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="c1"># pyre-fixme[2]: Parameter must be annotated.</span>
         <span class="n">inputs</span><span class="p">,</span>
@@ -528,7 +528,7 @@ src="/_sphinx/documentation_options.js"></script>
 
         <span class="k">return</span> <span class="n">results</span> <span class="k">if</span> <span class="n">results</span> <span class="k">else</span> <span class="kc">None</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">_get_outputs</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">VisualizationOutput</span><span class="p">],</span> <span class="n">SampleCache</span><span class="p">]]:</span>
+    <span class="k">def</span> <span class="nf">_get_outputs</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">VisualizationOutput</span><span class="p">],</span> <span class="n">SampleCache</span><span class="p">]]:</span>
         <span class="c1"># If we run out of new batches, then we need to</span>
         <span class="c1"># display data which was already shown before.</span>
         <span class="c1"># However, since the dataset given to us is a generator,</span>
@@ -568,7 +568,7 @@ src="/_sphinx/documentation_options.js"></script>
 
     <span class="nd">@log_usage</span><span class="p">()</span>
     <span class="c1"># pyre-fixme[3]: Return type must be annotated.</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">visualize</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">visualize</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_outputs</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="k">while</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_outputs</span><span class="p">)</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">_config</span><span class="o">.</span><span class="n">num_examples</span><span class="p">:</span>
             <span class="c1"># pyre-fixme[6]: For 1st argument expected</span>
@@ -577,7 +577,7 @@ src="/_sphinx/documentation_options.js"></script>
             <span class="bp">self</span><span class="o">.</span><span class="n">_outputs</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_get_outputs</span><span class="p">())</span>
         <span class="k">return</span> <span class="p">[</span><span class="n">o</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">o</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_outputs</span><span class="p">]</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">get_insights_config</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+    <span class="k">def</span> <span class="nf">get_insights_config</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
         <span class="k">return</span> <span class="p">{</span>
             <span class="s2">"classes"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">classes</span><span class="p">,</span>
             <span class="s2">"methods"</span><span class="p">:</span> <span class="nb">list</span><span class="p">(</span><span class="n">ATTRIBUTION_NAMES_TO_METHODS</span><span class="o">.</span><span class="n">keys</span><span class="p">()),</span>
