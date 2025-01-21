@@ -10,14 +10,14 @@ import torch
 from captum._utils.typing import Tensor
 from captum.attr._core.gradient_shap import GradientShap
 from captum.attr._core.integrated_gradients import IntegratedGradients
+from captum.testing.attr.helpers.attribution_delta_util import (
+    assert_attribution_delta,
+    assert_delta,
+)
 from captum.testing.helpers import BaseTest
 from captum.testing.helpers.basic import assertTensorAlmostEqual
 from captum.testing.helpers.basic_models import BasicLinearModel, BasicModel2
 from captum.testing.helpers.classification_models import SoftmaxModel
-from tests.attr.helpers.attribution_delta_util import (
-    assert_attribution_delta,
-    assert_delta,
-)
 
 
 class Test(BaseTest):

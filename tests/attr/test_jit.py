@@ -25,17 +25,17 @@ from captum.attr._core.occlusion import Occlusion
 from captum.attr._core.saliency import Saliency
 from captum.attr._core.shapley_value import ShapleyValueSampling
 from captum.attr._utils.attribution import Attribution
+from captum.testing.attr.helpers.gen_test_utils import (
+    gen_test_name,
+    parse_test_config,
+    should_create_generated_test,
+)
+from captum.testing.attr.helpers.test_config import config
 from captum.testing.helpers.basic import (
     assertTensorTuplesAlmostEqual,
     BaseTest,
     deep_copy_args,
 )
-from tests.attr.helpers.gen_test_utils import (
-    gen_test_name,
-    parse_test_config,
-    should_create_generated_test,
-)
-from tests.attr.helpers.test_config import config
 from torch import Tensor
 from torch.nn import Module
 

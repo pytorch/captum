@@ -8,6 +8,7 @@ from typing import Any, cast, Dict, List, Optional, Tuple, Union
 import torch
 from captum._utils.typing import BaselineType
 from captum.attr._core.layer.layer_conductance import LayerConductance
+from captum.testing.attr.helpers.conductance_reference import ConductanceReference
 from captum.testing.helpers.basic import (
     assertTensorAlmostEqual,
     assertTensorTuplesAlmostEqual,
@@ -19,7 +20,6 @@ from captum.testing.helpers.basic_models import (
     BasicModel_MultiLayer_MultiInput,
 )
 from packaging import version
-from tests.attr.helpers.conductance_reference import ConductanceReference
 from torch import Tensor
 from torch.nn import Module
 
