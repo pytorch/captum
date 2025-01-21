@@ -9,6 +9,10 @@ from typing import Tuple, Union
 import torch
 from captum._utils.typing import TensorOrTupleOfTensorsGeneric
 from captum.attr._core.neuron.neuron_deep_lift import NeuronDeepLift, NeuronDeepLiftShap
+from captum.testing.attr.helpers.neuron_layer_testing_util import (
+    create_inps_and_base_for_deeplift_neuron_layer_testing,
+    create_inps_and_base_for_deepliftshap_neuron_layer_testing,
+)
 from captum.testing.helpers import BaseTest
 from captum.testing.helpers.basic import assertTensorAlmostEqual
 from captum.testing.helpers.basic_models import (
@@ -16,10 +20,6 @@ from captum.testing.helpers.basic_models import (
     BasicModel_ConvNet_MaxPool3d,
     LinearMaxPoolLinearModel,
     ReLULinearModel,
-)
-from tests.attr.helpers.neuron_layer_testing_util import (
-    create_inps_and_base_for_deeplift_neuron_layer_testing,
-    create_inps_and_base_for_deepliftshap_neuron_layer_testing,
 )
 from torch import Tensor
 

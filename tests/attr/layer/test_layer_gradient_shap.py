@@ -13,6 +13,7 @@ from captum.attr._core.layer.layer_gradient_shap import (
     LayerGradientShap,
     LayerInputBaselineXGradient,
 )
+from captum.testing.attr.helpers.attribution_delta_util import assert_attribution_delta
 from captum.testing.helpers.basic import (
     assertTensorAlmostEqual,
     assertTensorTuplesAlmostEqual,
@@ -24,7 +25,6 @@ from captum.testing.helpers.basic_models import (
 )
 from captum.testing.helpers.classification_models import SoftmaxModel
 from packaging import version
-from tests.attr.helpers.attribution_delta_util import assert_attribution_delta
 from torch import Tensor
 from torch.nn import Module
 
