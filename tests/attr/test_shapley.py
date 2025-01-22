@@ -14,6 +14,7 @@ from captum.testing.helpers.basic import assertTensorTuplesAlmostEqual, BaseTest
 from captum.testing.helpers.basic_models import (
     BasicModel_MultiLayer,
     BasicModel_MultiLayer_MultiInput,
+    BasicModel_MultiLayer_MultiInput_with_Future,
     BasicModel_MultiLayer_with_Future,
     BasicModelBoolInput,
     BasicModelBoolInput_with_Future,
@@ -201,6 +202,25 @@ class Test(BaseTest):
             test_true_shapley=False,
         )
 
+    def test_multi_input_shapley_sampling_without_mask_future(self) -> None:
+        net = BasicModel_MultiLayer_MultiInput_with_Future()
+        inp1 = torch.tensor([[23.0, 0.0, 0.0], [20.0, 50.0, 30.0]])
+        inp2 = torch.tensor([[20.0, 0.0, 50.0], [0.0, 100.0, 0.0]])
+        inp3 = torch.tensor([[0.0, 100.0, 10.0], [0.0, 10.0, 0.0]])
+        expected = (
+            [[90, 0, 0], [78.0, 198.0, 118.0]],
+            [[78, 0, 198], [0.0, 398.0, 0.0]],
+            [[0, 398, 38], [0.0, 38.0, 0.0]],
+        )
+        self._shapley_test_assert_future(
+            net,
+            (inp1, inp2, inp3),
+            expected,
+            additional_input=(1,),
+            n_samples=200,
+            test_true_shapley=False,
+        )
+
     def test_multi_input_shapley_sampling_with_mask(self) -> None:
         net = BasicModel_MultiLayer_MultiInput()
         inp1 = torch.tensor([[23.0, 100.0, 0.0], [20.0, 50.0, 30.0]])
@@ -227,6 +247,41 @@ class Test(BaseTest):
             [[52, 1040, 132], [184, 184, 184]],
         )
         self._shapley_test_assert(
+            net,
+            (inp1, inp2, inp3),
+            expected_with_baseline,
+            additional_input=(1,),
+            feature_mask=(mask1, mask2, mask3),
+            baselines=(2, 3.0, 4),
+            perturbations_per_eval=(1, 2, 3),
+        )
+
+    def test_multi_input_shapley_sampling_with_mask_future(self) -> None:
+        net = BasicModel_MultiLayer_MultiInput_with_Future()
+        inp1 = torch.tensor([[23.0, 100.0, 0.0], [20.0, 50.0, 30.0]])
+        inp2 = torch.tensor([[20.0, 50.0, 30.0], [0.0, 100.0, 0.0]])
+        inp3 = torch.tensor([[0.0, 100.0, 10.0], [2.0, 10.0, 3.0]])
+        mask1 = torch.tensor([[1, 1, 1], [0, 1, 0]])
+        mask2 = torch.tensor([[0, 1, 2]])
+        mask3 = torch.tensor([[0, 1, 2], [0, 0, 0]])
+        expected = (
+            [[1088.6666, 1088.6666, 1088.6666], [255.0, 595.0, 255.0]],
+            [[76.6666, 1088.6666, 156.6666], [255.0, 595.0, 0.0]],
+            [[76.6666, 1088.6666, 156.6666], [255.0, 255.0, 255.0]],
+        )
+        self._shapley_test_assert_future(
+            net,
+            (inp1, inp2, inp3),
+            expected,
+            additional_input=(1,),
+            feature_mask=(mask1, mask2, mask3),
+        )
+        expected_with_baseline = (
+            [[1040, 1040, 1040], [184, 580.0, 184]],
+            [[52, 1040, 132], [184, 580.0, -12.0]],
+            [[52, 1040, 132], [184, 184, 184]],
+        )
+        self._shapley_test_assert_future(
             net,
             (inp1, inp2, inp3),
             expected_with_baseline,

@@ -576,6 +576,17 @@ class BasicModel_MultiLayer_MultiInput(nn.Module):
         return self.model(scale * (x1 + x2 + x3))
 
 
+class BasicModel_MultiLayer_MultiInput_with_Future(nn.Module):
+    def __init__(self) -> None:
+        super().__init__()
+        self.model = BasicModel_MultiLayer_with_Future()
+
+    @no_type_check
+    # pyre-fixme[3]: Return type must be annotated.
+    def forward(self, x1: Tensor, x2: Tensor, x3: Tensor, scale: int):
+        return self.model(scale * (x1 + x2 + x3))
+
+
 class BasicModel_MultiLayer_TrueMultiInput(nn.Module):
     def __init__(self) -> None:
         super().__init__()
