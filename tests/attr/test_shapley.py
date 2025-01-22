@@ -454,98 +454,356 @@ class Test(BaseTest):
 
     # Remaining tests are for cases where forward function returns a scalar
     # per batch, as either a float, integer, 0d tensor or 1d tensor.
-    def test_single_shapley_batch_scalar_float(self) -> None:
-        net = BasicModel_MultiLayer()
+    @parameterized.expand([True, False])
+    def test_single_shapley_batch_scalar_float(self, use_future) -> None:
+        def func(inp):
+            return torch.sum(net(inp)).item()
+
+        def func_future(inp):
+            temp = net_fut(inp)
+            temp.wait()
+            fut = Future()
+            fut.set_result(torch.sum(temp.value()).item())
+            return fut
+
+        if use_future:
+            net_fut = BasicModel_MultiLayer_with_Future()
+            func_to_use = func_future
+        else:
+            net = BasicModel_MultiLayer()
+            func_to_use = func
         self._single_input_one_sample_batch_scalar_shapley_assert(
-            lambda inp: torch.sum(net(inp)).item()
+            lambda inp: func_to_use(inp), use_future=use_future
         )
 
-    def test_single_shapley_batch_scalar_tensor_0d(self) -> None:
-        net = BasicModel_MultiLayer()
+    @parameterized.expand([True, False])
+    def test_single_shapley_batch_scalar_tensor_0d(self, use_future) -> None:
+        def func(inp):
+            return torch.sum(net(inp))
+
+        def func_future(inp):
+            temp = net_fut(inp)
+            temp.wait()
+            fut = Future()
+            fut.set_result(torch.sum(temp.value()))
+            return fut
+
+        if use_future:
+            net_fut = BasicModel_MultiLayer_with_Future()
+            func_to_use = func_future
+        else:
+            net = BasicModel_MultiLayer()
+            func_to_use = func
         self._single_input_one_sample_batch_scalar_shapley_assert(
-            lambda inp: torch.sum(net(inp))
+            lambda inp: func_to_use(inp), use_future=use_future
         )
 
-    def test_single_shapley_batch_scalar_tensor_1d(self) -> None:
-        net = BasicModel_MultiLayer()
+    @parameterized.expand([True, False])
+    def test_single_shapley_batch_scalar_tensor_1d(self, use_future) -> None:
+        def func(inp):
+            return torch.sum(net(inp)).reshape(1)
+
+        def func_future(inp):
+            temp = net_fut(inp)
+            temp.wait()
+            fut = Future()
+            fut.set_result(torch.sum(temp.value()).reshape(1))
+            return fut
+
+        if use_future:
+            net_fut = BasicModel_MultiLayer_with_Future()
+            func_to_use = func_future
+        else:
+            net = BasicModel_MultiLayer()
+            func_to_use = func
         self._single_input_one_sample_batch_scalar_shapley_assert(
-            lambda inp: torch.sum(net(inp)).reshape(1)
+            lambda inp: func_to_use(inp), use_future=use_future
         )
 
-    def test_single_shapley_batch_scalar_tensor_int(self) -> None:
-        net = BasicModel_MultiLayer()
+    @parameterized.expand([True, False])
+    def test_single_shapley_batch_scalar_tensor_int(self, use_future) -> None:
+        def func(inp):
+            return int(torch.sum(net(inp)).item())
+
+        def func_future(inp):
+            temp = net_fut(inp)
+            temp.wait()
+            fut = Future()
+            fut.set_result(int(torch.sum(temp.value()).item()))
+            return fut
+
+        if use_future:
+            net_fut = BasicModel_MultiLayer_with_Future()
+            func_to_use = func_future
+        else:
+            net = BasicModel_MultiLayer()
+            func_to_use = func
         self._single_input_one_sample_batch_scalar_shapley_assert(
-            lambda inp: int(torch.sum(net(inp)).item())
+            lambda inp: func_to_use(inp), use_future=use_future
         )
 
-    def test_single_shapley_int_batch_scalar_float(self) -> None:
-        net = BasicModel_MultiLayer()
+    @parameterized.expand([True, False])
+    def test_single_shapley_int_batch_scalar_float(self, use_future) -> None:
+        def func(inp):
+            return torch.sum(net(inp.float())).item()
+
+        def func_future(inp):
+            temp = net_fut(inp.float())
+            temp.wait()
+            fut = Future()
+            fut.set_result(torch.sum(temp.value()).item())
+            return fut
+
+        if use_future:
+            net_fut = BasicModel_MultiLayer_with_Future()
+            func_to_use = func_future
+        else:
+            net = BasicModel_MultiLayer()
+            func_to_use = func
         self._single_int_input_multi_sample_batch_scalar_shapley_assert(
-            lambda inp: torch.sum(net(inp.float())).item()
+            lambda inp: func_to_use(inp), use_future=use_future
         )
 
-    def test_single_shapley_int_batch_scalar_tensor_0d(self) -> None:
-        net = BasicModel_MultiLayer()
+    @parameterized.expand([True, False])
+    def test_single_shapley_int_batch_scalar_tensor_0d(self, use_future) -> None:
+        def func(inp):
+            return torch.sum(net(inp.float()))
+
+        def func_future(inp):
+            temp = net_fut(inp.float())
+            temp.wait()
+            fut = Future()
+            fut.set_result(torch.sum(temp.value()))
+            return fut
+
+        if use_future:
+            net_fut = BasicModel_MultiLayer_with_Future()
+            func_to_use = func_future
+        else:
+            net = BasicModel_MultiLayer()
+            func_to_use = func
         self._single_int_input_multi_sample_batch_scalar_shapley_assert(
-            lambda inp: torch.sum(net(inp.float()))
+            lambda inp: func_to_use(inp), use_future=use_future
         )
 
-    def test_single_shapley_int_batch_scalar_tensor_1d(self) -> None:
-        net = BasicModel_MultiLayer()
+    @parameterized.expand([True, False])
+    def test_single_shapley_int_batch_scalar_tensor_1d(self, use_future) -> None:
+        def func(inp):
+            return torch.sum(net(inp.float())).reshape(1)
+
+        def func_future(inp):
+            temp = net_fut(inp.float())
+            temp.wait()
+            fut = Future()
+            fut.set_result(torch.sum(temp.value()).reshape(1))
+            return fut
+
+        if use_future:
+            net_fut = BasicModel_MultiLayer_with_Future()
+            func_to_use = func_future
+        else:
+            net = BasicModel_MultiLayer()
+            func_to_use = func
         self._single_int_input_multi_sample_batch_scalar_shapley_assert(
-            lambda inp: torch.sum(net(inp.float())).reshape(1)
+            lambda inp: func_to_use(inp), use_future=use_future
         )
 
-    def test_single_shapley_int_batch_scalar_tensor_int(self) -> None:
-        net = BasicModel_MultiLayer()
+    @parameterized.expand([True, False])
+    def test_single_shapley_int_batch_scalar_tensor_int(self, use_future) -> None:
+        def func(inp):
+            return int(torch.sum(net(inp.float())).item())
+
+        def func_future(inp):
+            temp = net_fut(inp.float())
+            temp.wait()
+            fut = Future()
+            fut.set_result(int(torch.sum(temp.value()).item()))
+            return fut
+
+        if use_future:
+            net_fut = BasicModel_MultiLayer_with_Future()
+            func_to_use = func_future
+        else:
+            net = BasicModel_MultiLayer()
+            func_to_use = func
         self._single_int_input_multi_sample_batch_scalar_shapley_assert(
-            lambda inp: int(torch.sum(net(inp.float())).item())
+            lambda inp: func_to_use(inp), use_future=use_future
         )
 
-    def test_multi_sample_shapley_batch_scalar_float(self) -> None:
-        net = BasicModel_MultiLayer()
+    @parameterized.expand([True, False])
+    def test_multi_sample_shapley_batch_scalar_float(self, use_future) -> None:
+        def func(inp):
+            return torch.sum(net(inp)).item()
+
+        def func_future(inp):
+            temp = net_fut(inp)
+            temp.wait()
+            fut = Future()
+            fut.set_result(torch.sum(temp.value()).item())
+            return fut
+
+        if use_future:
+            net_fut = BasicModel_MultiLayer_with_Future()
+            func_to_use = func_future
+        else:
+            net = BasicModel_MultiLayer()
+            func_to_use = func
         self._single_input_multi_sample_batch_scalar_shapley_assert(
-            lambda inp: torch.sum(net(inp)).item()
+            lambda inp: func_to_use(inp), use_future=use_future
         )
 
-    def test_multi_sample_shapley_batch_scalar_tensor_0d(self) -> None:
-        net = BasicModel_MultiLayer()
+    @parameterized.expand([True, False])
+    def test_multi_sample_shapley_batch_scalar_tensor_0d(self, use_future) -> None:
+        def func(inp):
+            return torch.sum(net(inp))
+
+        def func_future(inp):
+            temp = net_fut(inp)
+            temp.wait()
+            fut = Future()
+            fut.set_result(torch.sum(temp.value()))
+            return fut
+
+        if use_future:
+            net_fut = BasicModel_MultiLayer_with_Future()
+            func_to_use = func_future
+        else:
+            net = BasicModel_MultiLayer()
+            func_to_use = func
         self._single_input_multi_sample_batch_scalar_shapley_assert(
-            lambda inp: torch.sum(net(inp))
+            lambda inp: func_to_use(inp), use_future=use_future
         )
 
-    def test_multi_sample_shapley_batch_scalar_tensor_1d(self) -> None:
-        net = BasicModel_MultiLayer()
+    @parameterized.expand([True, False])
+    def test_multi_sample_shapley_batch_scalar_tensor_1d(self, use_future) -> None:
+        def func(inp):
+            return torch.sum(net(inp)).reshape(1)
+
+        def func_future(inp):
+            temp = net_fut(inp)
+            temp.wait()
+            fut = Future()
+            fut.set_result(torch.sum(temp.value()).reshape(1))
+            return fut
+
+        if use_future:
+            net_fut = BasicModel_MultiLayer_with_Future()
+            func_to_use = func_future
+        else:
+            net = BasicModel_MultiLayer()
+            func_to_use = func
         self._single_input_multi_sample_batch_scalar_shapley_assert(
-            lambda inp: torch.sum(net(inp)).reshape(1)
+            lambda inp: func_to_use(inp), use_future=use_future
         )
 
-    def test_multi_sample_shapley_batch_scalar_tensor_int(self) -> None:
-        net = BasicModel_MultiLayer()
+    @parameterized.expand([True, False])
+    def test_multi_sample_shapley_batch_scalar_tensor_int(self, use_future) -> None:
+        def func(inp):
+            return int(torch.sum(net(inp)).item())
+
+        def func_future(inp):
+            temp = net_fut(inp)
+            temp.wait()
+            fut = Future()
+            fut.set_result(int(torch.sum(temp.value()).item()))
+            return fut
+
+        if use_future:
+            net_fut = BasicModel_MultiLayer_with_Future()
+            func_to_use = func_future
+        else:
+            net = BasicModel_MultiLayer()
+            func_to_use = func
         self._single_input_multi_sample_batch_scalar_shapley_assert(
-            lambda inp: int(torch.sum(net(inp)).item())
+            lambda inp: func_to_use(inp), use_future=use_future
         )
 
-    def test_multi_inp_shapley_batch_scalar_float(self) -> None:
-        net = BasicModel_MultiLayer_MultiInput()
+    @parameterized.expand([True, False])
+    def test_multi_inp_shapley_batch_scalar_float(self, use_future) -> None:
+        def func(*inp):
+            return torch.sum(net(*inp)).item()
+
+        def func_future(*inp):
+            temp = net_fut(*inp)
+            temp.wait()
+            fut = Future()
+            fut.set_result(torch.sum(temp.value()).item())
+            return fut
+
+        if use_future:
+            net_fut = BasicModel_MultiLayer_MultiInput_with_Future()
+            func_to_use = func_future
+        else:
+            net = BasicModel_MultiLayer_MultiInput()
+            func_to_use = func
         self._multi_input_batch_scalar_shapley_assert(
-            lambda *inp: torch.sum(net(*inp)).item()
+            lambda *inp: func_to_use(*inp), use_future=use_future
         )
 
-    def test_multi_inp_shapley_batch_scalar_tensor_0d(self) -> None:
-        net = BasicModel_MultiLayer_MultiInput()
-        self._multi_input_batch_scalar_shapley_assert(lambda *inp: torch.sum(net(*inp)))
+    @parameterized.expand([True, False])
+    def test_multi_inp_shapley_batch_scalar_tensor_0d(self, use_future) -> None:
+        def func(*inp):
+            return torch.sum(net(*inp))
 
-    def test_multi_inp_shapley_batch_scalar_tensor_1d(self) -> None:
-        net = BasicModel_MultiLayer_MultiInput()
+        def func_future(*inp):
+            temp = net_fut(*inp)
+            temp.wait()
+            fut = Future()
+            fut.set_result(torch.sum(temp.value()))
+            return fut
+
+        if use_future:
+            net_fut = BasicModel_MultiLayer_MultiInput_with_Future()
+            func_to_use = func_future
+        else:
+            net = BasicModel_MultiLayer_MultiInput()
+            func_to_use = func
         self._multi_input_batch_scalar_shapley_assert(
-            lambda *inp: torch.sum(net(*inp)).reshape(1)
+            lambda *inp: func_to_use(*inp), use_future=use_future
         )
 
-    def test_mutli_inp_shapley_batch_scalar_tensor_int(self) -> None:
-        net = BasicModel_MultiLayer_MultiInput()
+    @parameterized.expand([True, False])
+    def test_multi_inp_shapley_batch_scalar_tensor_1d(self, use_future) -> None:
+        def func(*inp):
+            return torch.sum(net(*inp)).reshape(1)
+
+        def func_future(*inp):
+            temp = net_fut(*inp)
+            temp.wait()
+            fut = Future()
+            fut.set_result(torch.sum(temp.value()).reshape(1))
+            return fut
+
+        if use_future:
+            net_fut = BasicModel_MultiLayer_MultiInput_with_Future()
+            func_to_use = func_future
+        else:
+            net = BasicModel_MultiLayer_MultiInput()
+            func_to_use = func
         self._multi_input_batch_scalar_shapley_assert(
-            lambda *inp: int(torch.sum(net(*inp)).item())
+            lambda *inp: func_to_use(*inp), use_future=use_future
+        )
+
+    @parameterized.expand([True, False])
+    def test_mutli_inp_shapley_batch_scalar_tensor_int(self, use_future) -> None:
+        def func(*inp):
+            return int(torch.sum(net(*inp)).item())
+
+        def func_future(*inp):
+            temp = net_fut(*inp)
+            temp.wait()
+            fut = Future()
+            fut.set_result(int(torch.sum(temp.value()).item()))
+            return fut
+
+        if use_future:
+            net_fut = BasicModel_MultiLayer_MultiInput_with_Future()
+            func_to_use = func_future
+        else:
+            net = BasicModel_MultiLayer_MultiInput()
+            func_to_use = func
+        self._multi_input_batch_scalar_shapley_assert(
+            lambda *inp: func_to_use(*inp), use_future=use_future
         )
 
     @unittest.mock.patch("sys.stderr", new_callable=io.StringIO)
@@ -607,53 +865,90 @@ class Test(BaseTest):
             mock_stderr.truncate(0)
 
     def _single_input_one_sample_batch_scalar_shapley_assert(
-        self, func: Callable
+        self,
+        func: Callable,
+        use_future: bool = False,
     ) -> None:
         inp = torch.tensor([[2.0, 10.0, 3.0]], requires_grad=True)
         mask = torch.tensor([[0, 0, 1]])
-
-        self._shapley_test_assert(
-            func,
-            inp,
-            [[79.0, 79.0, 21.0]],
-            feature_mask=mask,
-            perturbations_per_eval=(1,),
-            target=None,
-        )
+        if use_future:
+            self._shapley_test_assert_future(
+                func,
+                inp,
+                [[79.0, 79.0, 21.0]],
+                feature_mask=mask,
+                perturbations_per_eval=(1,),
+                target=None,
+            )
+        else:
+            self._shapley_test_assert(
+                func,
+                inp,
+                [[79.0, 79.0, 21.0]],
+                feature_mask=mask,
+                perturbations_per_eval=(1,),
+                target=None,
+            )
 
     def _single_input_multi_sample_batch_scalar_shapley_assert(
-        self, func: Callable
+        self,
+        func: Callable,
+        use_future: bool = False,
     ) -> None:
         inp = torch.tensor([[2.0, 10.0, 3.0], [20.0, 50.0, 30.0]], requires_grad=True)
         mask = torch.tensor([[0, 0, 1]])
-
-        self._shapley_test_assert(
-            func,
-            inp,
-            [[629.0, 629.0, 251.0]],
-            feature_mask=mask,
-            perturbations_per_eval=(1,),
-            target=None,
-            n_samples=2500,
-        )
+        if use_future:
+            self._shapley_test_assert_future(
+                func,
+                inp,
+                [[629.0, 629.0, 251.0]],
+                feature_mask=mask,
+                perturbations_per_eval=(1,),
+                target=None,
+                n_samples=2500,
+            )
+        else:
+            self._shapley_test_assert(
+                func,
+                inp,
+                [[629.0, 629.0, 251.0]],
+                feature_mask=mask,
+                perturbations_per_eval=(1,),
+                target=None,
+                n_samples=2500,
+            )
 
     def _single_int_input_multi_sample_batch_scalar_shapley_assert(
-        self, func: Callable
+        self,
+        func: Callable,
+        use_future: bool = False,
     ) -> None:
         inp = torch.tensor([[2, 10, 3], [20, 50, 30]])
         mask = torch.tensor([[0, 0, 1]])
+        if use_future:
+            self._shapley_test_assert_future(
+                func,
+                inp,
+                [[629.0, 629.0, 251.0]],
+                feature_mask=mask,
+                perturbations_per_eval=(1,),
+                target=None,
+                n_samples=2500,
+            )
+        else:
+            self._shapley_test_assert(
+                func,
+                inp,
+                [[629.0, 629.0, 251.0]],
+                feature_mask=mask,
+                perturbations_per_eval=(1,),
+                target=None,
+                n_samples=2500,
+            )
 
-        self._shapley_test_assert(
-            func,
-            inp,
-            [[629.0, 629.0, 251.0]],
-            feature_mask=mask,
-            perturbations_per_eval=(1,),
-            target=None,
-            n_samples=2500,
-        )
-
-    def _multi_input_batch_scalar_shapley_assert(self, func: Callable) -> None:
+    def _multi_input_batch_scalar_shapley_assert(
+        self, func: Callable, use_future: bool = False
+    ) -> None:
         inp1 = torch.tensor([[23.0, 100.0, 0.0], [20.0, 50.0, 30.0]])
         inp2 = torch.tensor([[20.0, 50.0, 30.0], [0.0, 100.0, 0.0]])
         inp3 = torch.tensor([[0.0, 100.0, 10.0], [20.0, 10.0, 13.0]])
@@ -665,18 +960,30 @@ class Test(BaseTest):
             [[306.6666, 3850.6666, 410.6666]],
             [[306.6666, 3850.6666, 410.6666]],
         )
-
-        self._shapley_test_assert(
-            func,
-            (inp1, inp2, inp3),
-            expected,
-            additional_input=(1,),
-            feature_mask=(mask1, mask2, mask3),
-            perturbations_per_eval=(1,),
-            target=None,
-            n_samples=3500,
-            delta=1.2,
-        )
+        if use_future:
+            self._shapley_test_assert_future(
+                func,
+                (inp1, inp2, inp3),
+                expected,
+                additional_input=(1,),
+                feature_mask=(mask1, mask2, mask3),
+                perturbations_per_eval=(1,),
+                target=None,
+                n_samples=3500,
+                delta=1.2,
+            )
+        else:
+            self._shapley_test_assert(
+                func,
+                (inp1, inp2, inp3),
+                expected,
+                additional_input=(1,),
+                feature_mask=(mask1, mask2, mask3),
+                perturbations_per_eval=(1,),
+                target=None,
+                n_samples=3500,
+                delta=1.2,
+            )
 
     def _shapley_test_assert(
         self,
