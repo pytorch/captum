@@ -14,6 +14,7 @@ from captum.testing.helpers.basic import assertTensorTuplesAlmostEqual, BaseTest
 from captum.testing.helpers.basic_models import (
     BasicModel_MultiLayer,
     BasicModel_MultiLayer_MultiInput,
+    BasicModel_MultiLayer_with_Future,
     BasicModelBoolInput,
 )
 
@@ -23,6 +24,17 @@ class Test(BaseTest):
         net = BasicModel_MultiLayer()
         inp = torch.tensor([[20.0, 50.0, 30.0]], requires_grad=True)
         self._shapley_test_assert(
+            net,
+            inp,
+            [[76.66666, 196.66666, 116.66666]],
+            perturbations_per_eval=(1, 2, 3),
+            n_samples=250,
+        )
+
+    def test_simple_shapley_sampling_future(self) -> None:
+        net = BasicModel_MultiLayer_with_Future()
+        inp = torch.tensor([[20.0, 50.0, 30.0]], requires_grad=True)
+        self._shapley_test_assert_future(
             net,
             inp,
             [[76.66666, 196.66666, 116.66666]],
@@ -388,15 +400,6 @@ class Test(BaseTest):
             mock_stderr.seek(0)
             mock_stderr.truncate(0)
 
-    def test_futures_not_implemented(self) -> None:
-        net = BasicModel_MultiLayer()
-
-        attributions = None
-        shapley_samp = ShapleyValueSampling(net)
-        with self.assertRaises(NotImplementedError):
-            attributions = shapley_samp.attribute_future()
-        self.assertEqual(attributions, None)
-
     def _single_input_one_sample_batch_scalar_shapley_assert(
         self, func: Callable
     ) -> None:
@@ -498,6 +501,53 @@ class Test(BaseTest):
             )
             assertTensorTuplesAlmostEqual(
                 self, attributions, expected_attr, delta=delta, mode="max"
+            )
+            if test_true_shapley:
+                shapley_val = ShapleyValues(model)
+                attributions = shapley_val.attribute(
+                    test_input,
+                    target=target,
+                    feature_mask=feature_mask,
+                    additional_forward_args=additional_input,
+                    baselines=baselines,
+                    perturbations_per_eval=batch_size,
+                    show_progress=show_progress,
+                )
+                assertTensorTuplesAlmostEqual(
+                    self, attributions, expected_attr, mode="max", delta=0.001
+                )
+
+    def _shapley_test_assert_future(
+        self,
+        model: Callable,
+        test_input: TensorOrTupleOfTensorsGeneric,
+        expected_attr,
+        feature_mask: Union[None, TensorOrTupleOfTensorsGeneric] = None,
+        additional_input: Any = None,
+        perturbations_per_eval: Tuple[int, ...] = (1,),
+        baselines: BaselineType = None,
+        target: Union[None, int] = 0,
+        n_samples: int = 100,
+        delta: float = 1.0,
+        # leaving this false as it is not supported for future
+        test_true_shapley: bool = False,
+        show_progress: bool = False,
+    ) -> None:
+        for batch_size in perturbations_per_eval:
+            shapley_samp = ShapleyValueSampling(model)
+            attributions = shapley_samp.attribute_future(
+                test_input,
+                target=target,
+                feature_mask=feature_mask,
+                additional_forward_args=additional_input,
+                baselines=baselines,
+                perturbations_per_eval=batch_size,
+                n_samples=n_samples,
+                show_progress=show_progress,
+            )
+            attributions.wait()
+            assertTensorTuplesAlmostEqual(
+                self, attributions.value(), expected_attr, delta=delta, mode="max"
             )
             if test_true_shapley:
                 shapley_val = ShapleyValues(model)

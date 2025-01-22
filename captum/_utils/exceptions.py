@@ -9,3 +9,11 @@ class FeatureAblationFutureError(Exception):
     FeatureAblation attribution call"""
 
     pass
+
+
+class ShapleyValueFutureError(Exception):
+    """This custom error is raised when an error
+    occurs within the callback chain of a
+    ShapleyValue attribution call"""
+
+    pass

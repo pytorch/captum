@@ -8,6 +8,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from torch import Tensor
+from torch.futures import Future
 
 """
 @no_type_check annotation is applied to type-hinted models to avoid errors
@@ -475,6 +476,61 @@ class BasicModel_MultiLayer(nn.Module):
             return torch.stack((stack_mid, 4 * stack_mid), dim=3)
         else:
             return lin2_out
+
+
+class BasicModel_MultiLayer_with_Future(nn.Module):
+    # This model is used to test the case where the model returns a future
+    def __init__(self, inplace: bool = False, multi_input_module: bool = False) -> None:
+        super().__init__()
+        # Linear 0 is simply identity transform
+        self.multi_input_module = multi_input_module
+        self.linear0 = nn.Linear(3, 3)
+        self.linear0.weight = nn.Parameter(torch.eye(3))
+        self.linear0.bias = nn.Parameter(torch.zeros(3))
+        self.linear1 = nn.Linear(3, 4)
+        self.linear1.weight = nn.Parameter(torch.ones(4, 3))
+        self.linear1.bias = nn.Parameter(torch.tensor([-10.0, 1.0, 1.0, 1.0]))
+
+        self.linear1_alt = nn.Linear(3, 4)
+        self.linear1_alt.weight = nn.Parameter(torch.ones(4, 3))
+        self.linear1_alt.bias = nn.Parameter(torch.tensor([-10.0, 1.0, 1.0, 1.0]))
+        self.multi_relu = MultiRelu(inplace=inplace)
+        self.relu = nn.ReLU(inplace=inplace)
+
+        self.linear2 = nn.Linear(4, 2)
+        self.linear2.weight = nn.Parameter(torch.ones(2, 4))
+        self.linear2.bias = nn.Parameter(torch.tensor([-1.0, 1.0]))
+
+    @no_type_check
+    # pyre-fixme[3]: Return type must be annotated.
+    def forward(
+        self,
+        x: Tensor,
+        add_input: Optional[Tensor] = None,
+        multidim_output: bool = False,
+    ):
+        input = x if add_input is None else x + add_input
+        lin0_out = self.linear0(input)
+        lin1_out = self.linear1(lin0_out)
+        if self.multi_input_module:
+            relu_out1, relu_out2 = self.multi_relu(lin1_out, self.linear1_alt(input))
+            relu_out = relu_out1 + relu_out2
+            # relu is not used when multi_input_module set to True,
+            # so this is to set an unsued layer intentionally for testing
+            # and it won't be part of return
+            self.relu(lin1_out)
+        else:
+            relu_out = self.relu(lin1_out)
+        # pyre-fixme [29]: `typing.Type[Future]` is not a function
+        result = Future()
+        lin2_out = self.linear2(relu_out)
+        if multidim_output:
+            stack_mid = torch.stack((lin2_out, 2 * lin2_out), dim=2)
+            result.set_result(torch.stack((stack_mid, 4 * stack_mid), dim=3))
+            return result
+        else:
+            result.set_result(lin2_out)
+            return result
 
 
 class BasicModelBoolInput(nn.Module):
