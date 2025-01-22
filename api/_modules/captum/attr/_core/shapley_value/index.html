@@ -37,7 +37,7 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="kn">import</span> <span class="nn">itertools</span>
 <span class="kn">import</span> <span class="nn">math</span>
 <span class="kn">import</span> <span class="nn">warnings</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">cast</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Sequence</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Union</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">cast</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Sequence</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Union</span>
 
 <span class="kn">import</span> <span class="nn">torch</span>
 <span class="kn">from</span> <span class="nn">captum._utils.common</span> <span class="kn">import</span> <span class="p">(</span>
@@ -52,6 +52,7 @@ src="/_sphinx/documentation_options.js"></script>
     <span class="n">_is_tuple</span><span class="p">,</span>
     <span class="n">_run_forward</span><span class="p">,</span>
 <span class="p">)</span>
+<span class="kn">from</span> <span class="nn">captum._utils.exceptions</span> <span class="kn">import</span> <span class="n">ShapleyValueFutureError</span>
 <span class="kn">from</span> <span class="nn">captum._utils.progress</span> <span class="kn">import</span> <span class="n">progress</span>
 <span class="kn">from</span> <span class="nn">captum._utils.typing</span> <span class="kn">import</span> <span class="n">BaselineType</span><span class="p">,</span> <span class="n">TargetType</span><span class="p">,</span> <span class="n">TensorOrTupleOfTensorsGeneric</span>
 <span class="kn">from</span> <span class="nn">captum.attr._utils.attribution</span> <span class="kn">import</span> <span class="n">PerturbationAttribution</span>
@@ -61,7 +62,8 @@ src="/_sphinx/documentation_options.js"></script>
     <span class="n">_tensorize_baseline</span><span class="p">,</span>
 <span class="p">)</span>
 <span class="kn">from</span> <span class="nn">captum.log</span> <span class="kn">import</span> <span class="n">log_usage</span>
-<span class="kn">from</span> <span class="nn">torch</span> <span class="kn">import</span> <span class="n">dtype</span><span class="p">,</span> <span class="n">Tensor</span>
+<span class="kn">from</span> <span class="nn">torch</span> <span class="kn">import</span> <span class="n">dtype</span><span class="p">,</span> <span class="n">Size</span><span class="p">,</span> <span class="n">Tensor</span>
+<span class="kn">from</span> <span class="nn">torch.futures</span> <span class="kn">import</span> <span class="n">collect_all</span><span class="p">,</span> <span class="n">Future</span>
 
 
 <span class="k">def</span> <span class="nf">_all_perm_generator</span><span class="p">(</span><span class="n">num_features</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">num_samples</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">Sequence</span><span class="p">[</span><span class="nb">int</span><span class="p">]]:</span>
@@ -430,7 +432,6 @@ src="/_sphinx/documentation_options.js"></script>
                     <span class="p">)</span>
                     <span class="k">if</span> <span class="n">show_progress</span><span class="p">:</span>
                         <span class="n">attr_progress</span><span class="o">.</span><span class="n">update</span><span class="p">()</span>
-
                     <span class="k">if</span> <span class="n">agg_output_mode</span><span class="p">:</span>
                         <span class="n">eval_diff</span> <span class="o">=</span> <span class="n">modified_eval</span> <span class="o">-</span> <span class="n">prev_results</span>
                         <span class="n">prev_results</span> <span class="o">=</span> <span class="n">modified_eval</span>
@@ -474,7 +475,6 @@ src="/_sphinx/documentation_options.js"></script>
 
                         <span class="c1"># (*output_shape, *input_feature_shape)</span>
                         <span class="n">total_attrib</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">+=</span> <span class="n">cur_attr</span>
-
             <span class="k">if</span> <span class="n">show_progress</span><span class="p">:</span>
                 <span class="n">attr_progress</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
 
@@ -489,17 +489,320 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="k">return</span> <span class="n">formatted_attr</span></div>
 
 
-    <span class="c1"># pyre-fixme[24] Generic type `Callable` expects 2 type parameters.</span>
 <div class="viewcode-block" id="ShapleyValueSampling.attribute_future">
 <a class="viewcode-back" href="../../../../shapley_value_sampling.html#captum.attr.ShapleyValueSampling.attribute_future">[docs]</a>
-    <span class="k">def</span> <span class="nf">attribute_future</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">:</span>
+    <span class="k">def</span> <span class="nf">attribute_future</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">inputs</span><span class="p">:</span> <span class="n">TensorOrTupleOfTensorsGeneric</span><span class="p">,</span>
+        <span class="n">baselines</span><span class="p">:</span> <span class="n">BaselineType</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">target</span><span class="p">:</span> <span class="n">TargetType</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">additional_forward_args</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">object</span><span class="p">,</span> <span class="o">...</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">feature_mask</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="n">TensorOrTupleOfTensorsGeneric</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">n_samples</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">25</span><span class="p">,</span>
+        <span class="n">perturbations_per_eval</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
+        <span class="n">show_progress</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Future</span><span class="p">[</span><span class="n">TensorOrTupleOfTensorsGeneric</span><span class="p">]:</span>
 <span class="w">        </span><span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        This method is not implemented for ShapleyValueSampling.</span>
 <span class="sd">        """</span>
-        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span>
-            <span class="s2">"attribute_future is not implemented for ShapleyValueSampling"</span>
-        <span class="p">)</span></div>
+        <span class="n">is_inputs_tuple</span> <span class="o">=</span> <span class="n">_is_tuple</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span>
+        <span class="n">inputs_tuple</span><span class="p">,</span> <span class="n">baselines</span> <span class="o">=</span> <span class="n">_format_input_baseline</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">baselines</span><span class="p">)</span>
+        <span class="n">additional_forward_args</span> <span class="o">=</span> <span class="n">_format_additional_forward_args</span><span class="p">(</span>
+            <span class="n">additional_forward_args</span>
+        <span class="p">)</span>
+        <span class="n">formatted_feature_mask</span> <span class="o">=</span> <span class="n">_format_feature_mask</span><span class="p">(</span><span class="n">feature_mask</span><span class="p">,</span> <span class="n">inputs_tuple</span><span class="p">)</span>
+        <span class="n">reshaped_feature_mask</span> <span class="o">=</span> <span class="n">_shape_feature_mask</span><span class="p">(</span>
+            <span class="n">formatted_feature_mask</span><span class="p">,</span> <span class="n">inputs_tuple</span>
+        <span class="p">)</span>
 
+        <span class="k">assert</span> <span class="p">(</span>
+            <span class="nb">isinstance</span><span class="p">(</span><span class="n">perturbations_per_eval</span><span class="p">,</span> <span class="nb">int</span><span class="p">)</span> <span class="ow">and</span> <span class="n">perturbations_per_eval</span> <span class="o">&gt;=</span> <span class="mi">1</span>
+        <span class="p">),</span> <span class="s2">"Ablations per evaluation must be at least 1."</span>
+
+        <span class="k">with</span> <span class="n">torch</span><span class="o">.</span><span class="n">no_grad</span><span class="p">():</span>
+            <span class="n">baselines</span> <span class="o">=</span> <span class="n">_tensorize_baseline</span><span class="p">(</span><span class="n">inputs_tuple</span><span class="p">,</span> <span class="n">baselines</span><span class="p">)</span>
+            <span class="n">num_examples</span> <span class="o">=</span> <span class="n">inputs_tuple</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+            <span class="n">total_features</span> <span class="o">=</span> <span class="n">_get_max_feature_index</span><span class="p">(</span><span class="n">reshaped_feature_mask</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
+
+            <span class="k">if</span> <span class="n">show_progress</span><span class="p">:</span>
+                <span class="n">attr_progress</span> <span class="o">=</span> <span class="n">progress</span><span class="p">(</span>
+                    <span class="n">desc</span><span class="o">=</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">get_name</span><span class="p">()</span><span class="si">}</span><span class="s2"> attribution"</span><span class="p">,</span>
+                    <span class="n">total</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_get_n_evaluations</span><span class="p">(</span>
+                        <span class="n">total_features</span><span class="p">,</span> <span class="n">n_samples</span><span class="p">,</span> <span class="n">perturbations_per_eval</span>
+                    <span class="p">)</span>
+                    <span class="o">+</span> <span class="mi">1</span><span class="p">,</span>  <span class="c1"># add 1 for the initial eval</span>
+                <span class="p">)</span>
+                <span class="n">attr_progress</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+
+            <span class="n">initial_eval</span><span class="p">:</span> <span class="n">Future</span><span class="p">[</span><span class="n">Tensor</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_strict_run_forward_future</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">forward_func</span><span class="p">,</span> <span class="n">baselines</span><span class="p">,</span> <span class="n">target</span><span class="p">,</span> <span class="n">additional_forward_args</span>
+            <span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">show_progress</span><span class="p">:</span>
+                <span class="n">attr_progress</span><span class="o">.</span><span class="n">update</span><span class="p">()</span>
+
+            <span class="n">prev_result_tuple</span><span class="p">:</span> <span class="n">Future</span><span class="p">[</span>
+                <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">Tensor</span><span class="p">,</span> <span class="n">Size</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">Tensor</span><span class="p">],</span> <span class="nb">bool</span><span class="p">]</span>
+            <span class="p">]</span> <span class="o">=</span> <span class="n">initial_eval</span><span class="o">.</span><span class="n">then</span><span class="p">(</span>
+                <span class="k">lambda</span> <span class="n">inp</span><span class="o">=</span><span class="n">initial_eval</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_initialEvalToPrevResultsTuple</span><span class="p">(</span>  <span class="c1"># type: ignore # noqa: E501 line too long</span>
+                    <span class="n">inp</span><span class="p">,</span>
+                    <span class="n">num_examples</span><span class="p">,</span>
+                    <span class="n">perturbations_per_eval</span><span class="p">,</span>
+                    <span class="n">reshaped_feature_mask</span><span class="p">,</span>
+                    <span class="n">inputs_tuple</span><span class="p">,</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+
+            <span class="n">iter_count</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="c1"># Iterate for number of samples, generate a permutation of the features</span>
+            <span class="c1"># and evalute the incremental increase for each feature.</span>
+            <span class="k">for</span> <span class="n">feature_permutation</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">permutation_generator</span><span class="p">(</span>
+                <span class="n">total_features</span><span class="p">,</span> <span class="n">n_samples</span>
+            <span class="p">):</span>
+                <span class="n">prev_result_tuple</span> <span class="o">=</span> <span class="n">prev_result_tuple</span><span class="o">.</span><span class="n">then</span><span class="p">(</span>
+                    <span class="k">lambda</span> <span class="n">inp</span><span class="o">=</span><span class="n">prev_result_tuple</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_setPrevResultsToInitialEval</span><span class="p">(</span><span class="n">inp</span><span class="p">)</span>  <span class="c1"># type: ignore # noqa: E501 line too long</span>
+                <span class="p">)</span>
+
+                <span class="n">iter_count</span> <span class="o">+=</span> <span class="mi">1</span>
+                <span class="k">for</span> <span class="p">(</span>
+                    <span class="n">current_inputs</span><span class="p">,</span>
+                    <span class="n">current_add_args</span><span class="p">,</span>
+                    <span class="n">current_target</span><span class="p">,</span>
+                    <span class="n">current_masks</span><span class="p">,</span>
+                <span class="p">)</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_perturbation_generator</span><span class="p">(</span>
+                    <span class="n">inputs_tuple</span><span class="p">,</span>
+                    <span class="n">additional_forward_args</span><span class="p">,</span>
+                    <span class="n">target</span><span class="p">,</span>
+                    <span class="n">baselines</span><span class="p">,</span>
+                    <span class="n">reshaped_feature_mask</span><span class="p">,</span>
+                    <span class="n">feature_permutation</span><span class="p">,</span>
+                    <span class="n">perturbations_per_eval</span><span class="p">,</span>
+                <span class="p">):</span>
+                    <span class="k">if</span> <span class="nb">sum</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">mask</span><span class="p">)</span><span class="o">.</span><span class="n">item</span><span class="p">()</span> <span class="k">for</span> <span class="n">mask</span> <span class="ow">in</span> <span class="n">current_masks</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                        <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+                            <span class="s2">"Feature mask is missing some integers between 0 and "</span>
+                            <span class="s2">"num_features, for optimal performance, make sure each"</span>
+                            <span class="s2">" consecutive integer corresponds to a feature."</span><span class="p">,</span>
+                            <span class="n">stacklevel</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                        <span class="p">)</span>
+                    <span class="c1"># modified_eval dimensions: 1D tensor with length</span>
+                    <span class="c1"># equal to #num_examples * #features in batch</span>
+                    <span class="n">modified_eval</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_strict_run_forward_future</span><span class="p">(</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">forward_func</span><span class="p">,</span>
+                        <span class="n">current_inputs</span><span class="p">,</span>
+                        <span class="n">current_target</span><span class="p">,</span>
+                        <span class="n">current_add_args</span><span class="p">,</span>
+                    <span class="p">)</span>
+                    <span class="k">if</span> <span class="n">show_progress</span><span class="p">:</span>
+                        <span class="n">attr_progress</span><span class="o">.</span><span class="n">update</span><span class="p">()</span>
+
+                    <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">modified_eval</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Future</span><span class="p">),</span> <span class="p">(</span>
+                        <span class="s2">"when using futures method, modified_eval should have "</span>
+                        <span class="sa">f</span><span class="s2">"Future type rather than </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">modified_eval</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span>
+                    <span class="p">)</span>
+                    <span class="n">eval_futs</span><span class="p">:</span> <span class="n">Future</span><span class="p">[</span>
+                        <span class="n">List</span><span class="p">[</span>
+                            <span class="n">Future</span><span class="p">[</span>
+                                <span class="n">Union</span><span class="p">[</span>
+                                    <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">Tensor</span><span class="p">,</span> <span class="n">Size</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">Tensor</span><span class="p">],</span> <span class="nb">bool</span><span class="p">],</span>
+                                    <span class="n">Tensor</span><span class="p">,</span>
+                                <span class="p">]</span>
+                            <span class="p">]</span>
+                        <span class="p">]</span>
+                    <span class="p">]</span> <span class="o">=</span> <span class="n">collect_all</span><span class="p">([</span><span class="n">prev_result_tuple</span><span class="p">,</span> <span class="n">modified_eval</span><span class="p">])</span>
+
+                    <span class="n">prev_result_tuple</span> <span class="o">=</span> <span class="n">eval_futs</span><span class="o">.</span><span class="n">then</span><span class="p">(</span>
+                        <span class="k">lambda</span> <span class="n">evals</span><span class="o">=</span><span class="n">eval_futs</span><span class="p">,</span> <span class="n">masks</span><span class="o">=</span><span class="n">current_masks</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_evalFutToPrevResultsTuple</span><span class="p">(</span>  <span class="c1"># type: ignore # noqa: E501 line too long</span>
+                            <span class="n">evals</span><span class="p">,</span> <span class="n">num_examples</span><span class="p">,</span> <span class="n">inputs_tuple</span><span class="p">,</span> <span class="n">masks</span>
+                        <span class="p">)</span>
+                    <span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">show_progress</span><span class="p">:</span>
+                <span class="n">attr_progress</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+            <span class="c1"># Divide total attributions by number of random permutations and return</span>
+            <span class="c1"># formatted attributions.</span>
+            <span class="n">formatted_attr</span><span class="p">:</span> <span class="n">Future</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">]]]</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="n">prev_result_tuple</span><span class="o">.</span><span class="n">then</span><span class="p">(</span>
+                    <span class="k">lambda</span> <span class="n">inp</span><span class="o">=</span><span class="n">prev_result_tuple</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_prevResultTupleToFormattedAttr</span><span class="p">(</span>  <span class="c1"># type: ignore # noqa: E501 line too long</span>
+                        <span class="n">inp</span><span class="p">,</span> <span class="n">iter_count</span><span class="p">,</span> <span class="n">is_inputs_tuple</span>
+                    <span class="p">)</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+        <span class="c1"># pyre-fixme[7]: Expected `TensorOrTupleOfTensorsGeneric` but got</span>
+        <span class="c1">#  `Tuple[Tensor, ...]`.</span>
+        <span class="k">return</span> <span class="n">formatted_attr</span>  <span class="c1"># type: ignore</span></div>
+
+
+    <span class="k">def</span> <span class="nf">_initialEvalToPrevResultsTuple</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">initial_eval</span><span class="p">:</span> <span class="n">Future</span><span class="p">[</span><span class="n">Tensor</span><span class="p">],</span>
+        <span class="n">num_examples</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">perturbations_per_eval</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">reshaped_feature_mask</span><span class="p">:</span> <span class="n">TensorOrTupleOfTensorsGeneric</span><span class="p">,</span>
+        <span class="n">inputs_tuple</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">Tensor</span><span class="p">,</span> <span class="n">Size</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">Tensor</span><span class="p">],</span> <span class="nb">bool</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">"""Since the initial eval is a Future, it is easier to bundle the prev_result,</span>
+<span class="sd">        agg_output_mode, output_shape, and total_attrib together</span>
+<span class="sd">        as Shapley Value Feature Attributions are being calculated"""</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">initial_eval_processed</span> <span class="o">=</span> <span class="n">initial_eval</span><span class="o">.</span><span class="n">value</span><span class="p">()</span>
+            <span class="n">prev_result</span> <span class="o">=</span> <span class="n">initial_eval_processed</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">initial_eval_processed</span><span class="p">,</span> <span class="n">Tensor</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">AssertionError</span><span class="p">(</span>
+                    <span class="s2">"initial_eval_to_processed_initial_eval_fut: "</span>
+                    <span class="s2">"initial_eval should be a Tensor"</span>
+                <span class="p">)</span>
+            <span class="n">agg_output_mode</span> <span class="o">=</span> <span class="n">_find_output_mode_and_verify</span><span class="p">(</span>
+                <span class="n">initial_eval_processed</span><span class="p">,</span>
+                <span class="n">num_examples</span><span class="p">,</span>
+                <span class="n">perturbations_per_eval</span><span class="p">,</span>
+                <span class="n">reshaped_feature_mask</span><span class="p">,</span>
+                <span class="n">allow_multi_outputs</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="n">output_shape</span> <span class="o">=</span> <span class="n">initial_eval_processed</span><span class="o">.</span><span class="n">shape</span>
+            <span class="n">total_attrib</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Tensor</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span>
+                <span class="n">torch</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span>
+                    <span class="nb">tuple</span><span class="p">(</span><span class="n">output_shape</span><span class="p">)</span> <span class="o">+</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">input</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">:]),</span>
+                    <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">float</span><span class="p">,</span>
+                    <span class="n">device</span><span class="o">=</span><span class="n">inputs_tuple</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">device</span><span class="p">,</span>
+                <span class="p">)</span>
+                <span class="k">for</span> <span class="nb">input</span> <span class="ow">in</span> <span class="n">inputs_tuple</span>
+            <span class="p">]</span>
+            <span class="n">result</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="n">initial_eval_processed</span><span class="p">,</span>
+                <span class="n">prev_result</span><span class="p">,</span>
+                <span class="n">output_shape</span><span class="p">,</span>
+                <span class="n">total_attrib</span><span class="p">,</span>
+                <span class="n">agg_output_mode</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="k">except</span> <span class="n">ShapleyValueFutureError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">ShapleyValueFutureError</span><span class="p">(</span>
+                <span class="s2">"_initial_eval_to_prev_results_tuple func failed"</span>
+            <span class="p">)</span> <span class="kn">from</span> <span class="nn">e</span>
+        <span class="k">return</span> <span class="n">result</span>
+
+    <span class="k">def</span> <span class="nf">_setPrevResultsToInitialEval</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">processed_initial_eval</span><span class="p">:</span> <span class="n">Future</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">Tensor</span><span class="p">,</span> <span class="n">Size</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">Tensor</span><span class="p">],</span> <span class="nb">bool</span><span class="p">]],</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">Tensor</span><span class="p">,</span> <span class="n">Size</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">Tensor</span><span class="p">],</span> <span class="nb">bool</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">"""At the beginning of each feature permutation, the prev_results is</span>
+<span class="sd">        reset to the initial eval, and this method helps set that up"""</span>
+        <span class="p">(</span><span class="n">initial_eval</span><span class="p">,</span> <span class="n">prev_results</span><span class="p">,</span> <span class="n">output_shape</span><span class="p">,</span> <span class="n">total_attrib</span><span class="p">,</span> <span class="n">agg_output_mode</span><span class="p">)</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">processed_initial_eval</span><span class="o">.</span><span class="n">value</span><span class="p">()</span>
+        <span class="p">)</span>
+        <span class="n">prev_results</span> <span class="o">=</span> <span class="n">initial_eval</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">initial_eval</span><span class="p">,</span> <span class="n">prev_results</span><span class="p">,</span> <span class="n">output_shape</span><span class="p">,</span> <span class="n">total_attrib</span><span class="p">,</span> <span class="n">agg_output_mode</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_evalFutToPrevResultsTuple</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">eval_futs</span><span class="p">:</span> <span class="n">Future</span><span class="p">[</span>
+            <span class="n">List</span><span class="p">[</span>
+                <span class="n">Union</span><span class="p">[</span>
+                    <span class="n">Future</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">Tensor</span><span class="p">,</span> <span class="n">Size</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">Tensor</span><span class="p">],</span> <span class="nb">bool</span><span class="p">]],</span>
+                    <span class="n">Future</span><span class="p">[</span><span class="n">Tensor</span><span class="p">],</span>
+                <span class="p">]</span>
+            <span class="p">]</span>
+        <span class="p">],</span>
+        <span class="n">num_examples</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">inputs_tuple</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span>
+        <span class="n">current_masks</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">Tensor</span><span class="p">,</span> <span class="n">Size</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">Tensor</span><span class="p">],</span> <span class="nb">bool</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">"""Helper method responsible for calculating</span>
+<span class="sd">        eval differences between the modified eval and prev_results</span>
+<span class="sd">        Tensor and storing them in total_attrib. Returns prev_results_tuple</span>
+<span class="sd">        with modified total_attrib and prev_results"""</span>
+        <span class="n">prev_results_tuple</span> <span class="o">=</span> <span class="n">eval_futs</span><span class="o">.</span><span class="n">value</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">value</span><span class="p">()</span>
+        <span class="n">modified_eval</span> <span class="o">=</span> <span class="n">eval_futs</span><span class="o">.</span><span class="n">value</span><span class="p">()[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">value</span><span class="p">()</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">modified_eval</span><span class="p">,</span> <span class="n">Tensor</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span>
+            <span class="n">prev_results_tuple</span><span class="p">,</span> <span class="nb">tuple</span>
+        <span class="p">):</span>
+            <span class="k">raise</span> <span class="n">ShapleyValueFutureError</span><span class="p">(</span>
+                <span class="s2">"_eval_fut_to_prev_results_tuple func failed due to type mismatch"</span>
+            <span class="p">)</span>
+        <span class="p">(</span>
+            <span class="n">initial_eval</span><span class="p">,</span>
+            <span class="n">prev_results</span><span class="p">,</span>
+            <span class="n">output_shape</span><span class="p">,</span>
+            <span class="n">total_attrib</span><span class="p">,</span>
+            <span class="n">agg_output_mode</span><span class="p">,</span>
+        <span class="p">)</span> <span class="o">=</span> <span class="n">prev_results_tuple</span>
+        <span class="k">if</span> <span class="n">agg_output_mode</span><span class="p">:</span>
+            <span class="n">eval_diff</span> <span class="o">=</span> <span class="n">modified_eval</span> <span class="o">-</span> <span class="n">prev_results</span>
+            <span class="n">prev_results</span> <span class="o">=</span> <span class="n">modified_eval</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># when perturb_per_eval &gt; 1, every num_examples stands for</span>
+            <span class="c1"># one perturb. Since the perturbs are from a consecutive</span>
+            <span class="c1"># perumuation, each diff of a perturb is its eval minus</span>
+            <span class="c1"># the eval of the previous perturb</span>
+
+            <span class="n">all_eval</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">((</span><span class="n">prev_results</span><span class="p">,</span> <span class="n">modified_eval</span><span class="p">),</span> <span class="n">dim</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+            <span class="n">eval_diff</span> <span class="o">=</span> <span class="n">all_eval</span><span class="p">[</span><span class="n">num_examples</span><span class="p">:]</span> <span class="o">-</span> <span class="n">all_eval</span><span class="p">[:</span><span class="o">-</span><span class="n">num_examples</span><span class="p">]</span>
+            <span class="n">prev_results</span> <span class="o">=</span> <span class="n">all_eval</span><span class="p">[</span><span class="o">-</span><span class="n">num_examples</span><span class="p">:]</span>
+
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">total_attrib</span><span class="p">)):</span>
+            <span class="c1"># format eval_diff to shape</span>
+            <span class="c1"># (n_perturb, *output_shape, 1,.. 1)</span>
+            <span class="c1"># where n_perturb may not be perturb_per_eval</span>
+            <span class="c1"># Append n_input_feature dim of 1 to make the tensor</span>
+            <span class="c1"># have the same dim as the mask tensor.</span>
+            <span class="n">formatted_eval_diff</span> <span class="o">=</span> <span class="n">eval_diff</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span>
+                <span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,)</span> <span class="o">+</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">output_shape</span><span class="p">)</span> <span class="o">+</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">inputs_tuple</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span><span class="p">,)</span>
+            <span class="p">)</span>
+
+            <span class="c1"># mask in shape (n_perturb, *mask_shape_broadcastable_to_input)</span>
+            <span class="c1"># reshape to</span>
+            <span class="c1"># (</span>
+            <span class="c1">#     n_perturb,</span>
+            <span class="c1">#     *broadcastable_to_output_shape</span>
+            <span class="c1">#     *broadcastable_to_input_feature_shape</span>
+            <span class="c1"># )</span>
+            <span class="n">cur_mask</span> <span class="o">=</span> <span class="n">current_masks</span><span class="p">[</span><span class="n">j</span><span class="p">]</span>
+            <span class="n">cur_mask</span> <span class="o">=</span> <span class="n">cur_mask</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span>
+                <span class="nb">tuple</span><span class="p">(</span><span class="n">cur_mask</span><span class="o">.</span><span class="n">shape</span><span class="p">[:</span><span class="mi">2</span><span class="p">])</span>
+                <span class="o">+</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">output_shape</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span><span class="p">,)</span>
+                <span class="o">+</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">cur_mask</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">2</span><span class="p">:])</span>
+            <span class="p">)</span>
+
+            <span class="c1"># aggregate n_perturb</span>
+            <span class="n">cur_attr</span> <span class="o">=</span> <span class="p">(</span><span class="n">formatted_eval_diff</span> <span class="o">*</span> <span class="n">cur_mask</span><span class="o">.</span><span class="n">float</span><span class="p">())</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">dim</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+            <span class="c1"># (*output_shape, *input_feature_shape)</span>
+            <span class="n">total_attrib</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">+=</span> <span class="n">cur_attr</span>
+
+        <span class="n">result</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">initial_eval</span><span class="p">,</span>
+            <span class="n">prev_results</span><span class="p">,</span>
+            <span class="n">output_shape</span><span class="p">,</span>
+            <span class="n">total_attrib</span><span class="p">,</span>
+            <span class="n">agg_output_mode</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">result</span>
+
+    <span class="k">def</span> <span class="nf">_prevResultTupleToFormattedAttr</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">prev_result_tuple</span><span class="p">:</span> <span class="n">Future</span><span class="p">[</span>
+            <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">Tensor</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span> <span class="n">List</span><span class="p">[</span><span class="n">Tensor</span><span class="p">],</span> <span class="nb">bool</span><span class="p">]</span>
+        <span class="p">],</span>
+        <span class="n">iter_count</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">is_inputs_tuple</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">]]:</span>
+<span class="w">        </span><span class="sd">"""Helper method to format total_attrib, which is a</span>
+<span class="sd">        list of tensors, into formatted attributions, which</span>
+<span class="sd">        are either a single tensor or a tuple of tensors"""</span>
+
+        <span class="p">(</span>
+            <span class="n">_</span><span class="p">,</span>
+            <span class="n">_</span><span class="p">,</span>
+            <span class="n">_</span><span class="p">,</span>
+            <span class="n">total_attrib</span><span class="p">,</span>
+            <span class="n">_</span><span class="p">,</span>
+        <span class="p">)</span> <span class="o">=</span> <span class="n">prev_result_tuple</span><span class="o">.</span><span class="n">value</span><span class="p">()</span>
+        <span class="n">attrib</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span>
+            <span class="n">tensor_attrib_total</span> <span class="o">/</span> <span class="n">iter_count</span> <span class="k">for</span> <span class="n">tensor_attrib_total</span> <span class="ow">in</span> <span class="n">total_attrib</span>
+        <span class="p">)</span>
+        <span class="n">formatted_attr</span> <span class="o">=</span> <span class="n">_format_output</span><span class="p">(</span><span class="n">is_inputs_tuple</span><span class="p">,</span> <span class="n">attrib</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">formatted_attr</span>
 
     <span class="k">def</span> <span class="nf">_perturbation_generator</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
@@ -612,7 +915,40 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="c1"># using python built-in type as torch dtype</span>
         <span class="c1"># int -&gt; torch.int64, float -&gt; torch.float64</span>
         <span class="c1"># ref: https://github.com/pytorch/pytorch/pull/21215</span>
-        <span class="k">return</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">([</span><span class="n">forward_output</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">cast</span><span class="p">(</span><span class="n">dtype</span><span class="p">,</span> <span class="n">output_type</span><span class="p">))</span></div>
+        <span class="k">return</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">([</span><span class="n">forward_output</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">cast</span><span class="p">(</span><span class="n">dtype</span><span class="p">,</span> <span class="n">output_type</span><span class="p">))</span>
+
+    <span class="c1"># pyre-fixme[2]: Parameter must be annotated.</span>
+    <span class="k">def</span> <span class="nf">_strict_run_forward_future</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Future</span><span class="p">[</span><span class="n">Tensor</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        A temp wrapper for global _run_forward util to force</span>
+<span class="sd">        forward outputtype assertion &amp; conversion, but takes</span>
+<span class="sd">        into account the Future tensor type</span>
+<span class="sd">        """</span>
+
+        <span class="k">def</span> <span class="nf">process_strict_run_forward</span><span class="p">(</span><span class="n">fut</span><span class="p">:</span> <span class="n">Future</span><span class="p">[</span><span class="n">Tensor</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Tensor</span><span class="p">:</span>
+            <span class="n">output</span> <span class="o">=</span> <span class="n">fut</span><span class="o">.</span><span class="n">value</span><span class="p">()</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">output</span><span class="p">,</span> <span class="n">Tensor</span><span class="p">):</span>
+                <span class="c1"># format scalar to shape (1) so we can always</span>
+                <span class="c1"># assume non-empty output_shape</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">output</span><span class="o">.</span><span class="n">shape</span><span class="p">:</span>
+                    <span class="n">output</span> <span class="o">=</span> <span class="n">output</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+                <span class="k">return</span> <span class="n">output</span>
+            <span class="n">output_type</span> <span class="o">=</span> <span class="nb">type</span><span class="p">(</span><span class="n">output</span><span class="p">)</span>
+            <span class="k">assert</span> <span class="n">output_type</span> <span class="ow">is</span> <span class="nb">int</span> <span class="ow">or</span> <span class="n">output_type</span> <span class="ow">is</span> <span class="nb">float</span><span class="p">,</span> <span class="p">(</span>
+                <span class="s2">"the return of forward_func must be a Future of tensor, int, or float,"</span>
+                <span class="sa">f</span><span class="s2">" received: </span><span class="si">{</span><span class="n">output_type</span><span class="si">}</span><span class="s2">"</span>
+            <span class="p">)</span>
+            <span class="n">output</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">([</span><span class="n">output</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">cast</span><span class="p">(</span><span class="n">dtype</span><span class="p">,</span> <span class="n">output_type</span><span class="p">))</span>
+            <span class="k">return</span> <span class="n">output</span>
+
+        <span class="n">forward_output</span> <span class="o">=</span> <span class="n">_run_forward</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">forward_output</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Future</span><span class="p">),</span> <span class="p">(</span>
+            <span class="s2">"The return type of forward_func must be a Future"</span>
+            <span class="sa">f</span><span class="s2">" received: </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">forward_output</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span>
+        <span class="p">)</span>
+
+        <span class="n">return_output</span> <span class="o">=</span> <span class="n">forward_output</span><span class="o">.</span><span class="n">then</span><span class="p">(</span><span class="n">process_strict_run_forward</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">return_output</span></div>
 
 
 
