@@ -16,6 +16,7 @@ from captum.testing.helpers.basic_models import (
     BasicModel_MultiLayer_MultiInput,
     BasicModel_MultiLayer_with_Future,
     BasicModelBoolInput,
+    BasicModelBoolInput_with_Future,
 )
 from parameterized import parameterized
 from torch.futures import Future
@@ -66,28 +67,51 @@ class Test(BaseTest):
                 perturbations_per_eval=(1, 2, 3),
             )
 
-    def test_simple_shapley_sampling_boolean(self) -> None:
-        net = BasicModelBoolInput()
+    @parameterized.expand([True, False])
+    def test_simple_shapley_sampling_boolean(self, use_future) -> None:
         inp = torch.tensor([[True, False, True]])
-        self._shapley_test_assert(
-            net,
-            inp,
-            [[35.0, 35.0, 35.0]],
-            feature_mask=torch.tensor([[0, 0, 1]]),
-            perturbations_per_eval=(1, 2, 3),
-        )
+        if use_future:
+            net_fut = BasicModelBoolInput_with_Future()
+            self._shapley_test_assert_future(
+                net_fut,
+                inp,
+                [[35.0, 35.0, 35.0]],
+                feature_mask=torch.tensor([[0, 0, 1]]),
+                perturbations_per_eval=(1, 2, 3),
+            )
+        else:
+            net = BasicModelBoolInput()
+            self._shapley_test_assert(
+                net,
+                inp,
+                [[35.0, 35.0, 35.0]],
+                feature_mask=torch.tensor([[0, 0, 1]]),
+                perturbations_per_eval=(1, 2, 3),
+            )
 
-    def test_simple_shapley_sampling_boolean_with_baseline(self) -> None:
-        net = BasicModelBoolInput()
+    @parameterized.expand([True, False])
+    def test_simple_shapley_sampling_boolean_with_baseline(self, use_future) -> None:
         inp = torch.tensor([[True, False, True]])
-        self._shapley_test_assert(
-            net,
-            inp,
-            [[-40.0, -40.0, 0.0]],
-            feature_mask=torch.tensor([[0, 0, 1]]),
-            baselines=True,
-            perturbations_per_eval=(1, 2, 3),
-        )
+        if use_future:
+            net_fut = BasicModelBoolInput_with_Future()
+            self._shapley_test_assert_future(
+                net_fut,
+                inp,
+                [[-40.0, -40.0, 0.0]],
+                feature_mask=torch.tensor([[0, 0, 1]]),
+                baselines=True,
+                perturbations_per_eval=(1, 2, 3),
+            )
+        else:
+            net = BasicModelBoolInput()
+            self._shapley_test_assert(
+                net,
+                inp,
+                [[-40.0, -40.0, 0.0]],
+                feature_mask=torch.tensor([[0, 0, 1]]),
+                baselines=True,
+                perturbations_per_eval=(1, 2, 3),
+            )
 
     @parameterized.expand([True, False])
     def test_simple_shapley_sampling_with_baselines(self, use_future) -> None:

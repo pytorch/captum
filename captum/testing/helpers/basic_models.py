@@ -533,6 +533,22 @@ class BasicModel_MultiLayer_with_Future(nn.Module):
             return result
 
 
+class BasicModelBoolInput_with_Future(nn.Module):
+    def __init__(self) -> None:
+        super().__init__()
+        self.mod = BasicModel_MultiLayer_with_Future()
+
+    # pyre-fixme[3]: Return type must be annotated.
+    def forward(
+        self,
+        x: Tensor,
+        add_input: Optional[Tensor] = None,
+        mult: float = 10.0,
+    ):
+        assert x.dtype is torch.bool, "Input must be boolean"
+        return self.mod(x.float() * mult, add_input)
+
+
 class BasicModelBoolInput(nn.Module):
     def __init__(self) -> None:
         super().__init__()
