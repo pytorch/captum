@@ -133,8 +133,12 @@ if __name__ == "__main__":
         keywords=[
             "Model Interpretability",
             "Model Understanding",
+            "Model Interpretability",
+            "Model Understanding",
             "Feature Importance",
             "Neuron Importance",
+            "Data Attribution",
+            "Explainable AI",
             "PyTorch",
         ],
         classifiers=[
