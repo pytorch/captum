@@ -25,8 +25,6 @@ of integrated gradients, saliency maps, smoothgrad, vargrad and others for
 PyTorch models. It has quick integration for models built with domain-specific
 libraries such as torchvision, torchtext, and others.
 
-*Captum is currently in beta and under active development!*
-
 
 #### About Captum
 
