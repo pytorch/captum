@@ -59,7 +59,7 @@ def infidelity_perturb_func_decorator(
     """
 
     def sub_infidelity_perturb_func_decorator(
-        perturb_func: Callable[..., TensorOrTupleOfTensorsGeneric]
+        perturb_func: Callable[..., TensorOrTupleOfTensorsGeneric],
     ) -> Callable[
         [TensorOrTupleOfTensorsGeneric, BaselineType],
         Tuple[Tuple[Tensor, ...], Tuple[Tensor, ...]],
@@ -611,6 +611,11 @@ def _make_next_infidelity_tensors_func(
             targets_expanded,
             additional_forward_args_expanded,
         )
+        if isinstance(inputs_perturbed_fwd, torch.futures.Future):
+            raise NotImplementedError(
+                f"Outputs from forward_func of type {type(inputs_perturbed_fwd)} are "
+                "not yet supported."
+            )
         inputs_fwd = _run_forward(forward_func, inputs, target, additional_forward_args)
         # _run_forward may return future of Tensor,
         # but we don't support it here now
@@ -619,8 +624,6 @@ def _make_next_infidelity_tensors_func(
         inputs_fwd = torch.repeat_interleave(
             inputs_fwd, current_n_perturb_samples, dim=0
         )
-        # pyre-fixme[58]: `-` is not supported for operand types `Tensor` and
-        #  `Union[Future[Tensor], Tensor]`.
         perturbed_fwd_diffs = inputs_fwd - inputs_perturbed_fwd
         attributions_expanded = tuple(
             torch.repeat_interleave(attribution, current_n_perturb_samples, dim=0)

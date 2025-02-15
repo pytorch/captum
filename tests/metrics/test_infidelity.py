@@ -41,7 +41,7 @@ def _local_perturb_func_default(
 # pyre-ignore[43]: The implementation of `_local_perturb_func` does not accept all
 #  possible arguments of overload defined on line `43`.
 def _local_perturb_func(
-    inputs: Tuple[Tensor, ...]
+    inputs: Tuple[Tensor, ...],
 ) -> Tuple[Tuple[Tensor, ...], Tuple[Tensor, ...]]: ...
 
 
@@ -83,7 +83,7 @@ def _global_perturb_func1_default(
 # pyre-fixme[43]: The implementation of `_global_perturb_func1` does not accept all
 #  possible arguments of overload defined on line `74`.
 def _global_perturb_func1(
-    inputs: Tuple[Tensor, ...]
+    inputs: Tuple[Tensor, ...],
 ) -> Tuple[Tuple[Tensor, ...], Tuple[Tensor, ...]]: ...
 
 
