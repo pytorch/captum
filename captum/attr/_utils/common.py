@@ -373,7 +373,7 @@ def _find_output_mode_and_verify(
 
 
 def _construct_default_feature_mask(
-    inputs: Tuple[Tensor, ...]
+    inputs: Tuple[Tensor, ...],
 ) -> Tuple[Tuple[Tensor, ...], int]:
     feature_mask = []
     current_num_features = 0
