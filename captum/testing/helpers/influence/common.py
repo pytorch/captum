@@ -33,7 +33,7 @@ def _isSorted(x, key=lambda x: x, descending=True) -> bool:
 
 # pyre-fixme[2]: Parameter must be annotated.
 def _wrap_model_in_dataparallel(net) -> Module:
-    alt_device_ids = [0] + [x for x in range(torch.cuda.device_count() - 1, 0, -1)]
+    alt_device_ids = [0] + list(range(torch.cuda.device_count() - 1, 0, -1))
     net = net.cuda()
     return torch.nn.DataParallel(net, device_ids=alt_device_ids)
 
@@ -505,7 +505,7 @@ def get_random_model_and_data(
 
 # pyre-fixme[3]: Return type must be annotated.
 def generate_symmetric_matrix_given_eigenvalues(
-    eigenvalues: Union[Tensor, List[float]]
+    eigenvalues: Union[Tensor, List[float]],
 ):
     """
     following https://github.com/google-research/jax-influence/blob/74bd321156b5445bb35b9594568e4eaaec1a76a3/jax_influence/test_utils.py#L123  # noqa: E501
@@ -523,7 +523,7 @@ def generate_symmetric_matrix_given_eigenvalues(
 
 
 def generate_assymetric_matrix_given_eigenvalues(
-    eigenvalues: Union[Tensor, List[float]]
+    eigenvalues: Union[Tensor, List[float]],
 ) -> Tensor:
     """
     following https://github.com/google-research/jax-influence/blob/74bd321156b5445bb35b9594568e4eaaec1a76a3/jax_influence/test_utils.py#L105 # noqa: E501
