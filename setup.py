@@ -152,7 +152,10 @@ if __name__ == "__main__":
         ],
         long_description=long_description,
         long_description_content_type="text/markdown",
-        python_requires=">=3.9",
+        python_requires=">={required_major}.{required_minor}".format(
+            required_minor=REQUIRED_MINOR,
+            required_major=REQUIRED_MAJOR,
+        ),
         install_requires=[
             "matplotlib",
             "numpy<2.0",
