@@ -307,7 +307,7 @@ class LayerLRP(LRP, LayerAttribution):
 
     @staticmethod
     def _convert_list_to_tuple(
-        relevances: Union[List[T], Tuple[T, ...]]
+        relevances: Union[List[T], Tuple[T, ...]],
     ) -> Tuple[T, ...]:
         if isinstance(relevances, list):
             return tuple(relevances)
