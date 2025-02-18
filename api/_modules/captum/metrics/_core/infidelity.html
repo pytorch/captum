@@ -91,7 +91,7 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">    """</span>
 
     <span class="k">def</span> <span class="nf">sub_infidelity_perturb_func_decorator</span><span class="p">(</span>
-        <span class="n">perturb_func</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">TensorOrTupleOfTensorsGeneric</span><span class="p">]</span>
+        <span class="n">perturb_func</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">TensorOrTupleOfTensorsGeneric</span><span class="p">],</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">[</span>
         <span class="p">[</span><span class="n">TensorOrTupleOfTensorsGeneric</span><span class="p">,</span> <span class="n">BaselineType</span><span class="p">],</span>
         <span class="n">Tuple</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">]],</span>
@@ -646,6 +646,11 @@ src="/_sphinx/documentation_options.js"></script>
             <span class="n">targets_expanded</span><span class="p">,</span>
             <span class="n">additional_forward_args_expanded</span><span class="p">,</span>
         <span class="p">)</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">inputs_perturbed_fwd</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">futures</span><span class="o">.</span><span class="n">Future</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"Outputs from forward_func of type </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">inputs_perturbed_fwd</span><span class="p">)</span><span class="si">}</span><span class="s2"> are "</span>
+                <span class="s2">"not yet supported."</span>
+            <span class="p">)</span>
         <span class="n">inputs_fwd</span> <span class="o">=</span> <span class="n">_run_forward</span><span class="p">(</span><span class="n">forward_func</span><span class="p">,</span> <span class="n">inputs</span><span class="p">,</span> <span class="n">target</span><span class="p">,</span> <span class="n">additional_forward_args</span><span class="p">)</span>
         <span class="c1"># _run_forward may return future of Tensor,</span>
         <span class="c1"># but we don't support it here now</span>
@@ -654,8 +659,6 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="n">inputs_fwd</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">repeat_interleave</span><span class="p">(</span>
             <span class="n">inputs_fwd</span><span class="p">,</span> <span class="n">current_n_perturb_samples</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">0</span>
         <span class="p">)</span>
-        <span class="c1"># pyre-fixme[58]: `-` is not supported for operand types `Tensor` and</span>
-        <span class="c1">#  `Union[Future[Tensor], Tensor]`.</span>
         <span class="n">perturbed_fwd_diffs</span> <span class="o">=</span> <span class="n">inputs_fwd</span> <span class="o">-</span> <span class="n">inputs_perturbed_fwd</span>
         <span class="n">attributions_expanded</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span>
             <span class="n">torch</span><span class="o">.</span><span class="n">repeat_interleave</span><span class="p">(</span><span class="n">attribution</span><span class="p">,</span> <span class="n">current_n_perturb_samples</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
