@@ -232,12 +232,12 @@ def _format_tensor_into_tuples(inputs: None) -> None: ...
 
 @overload
 def _format_tensor_into_tuples(
-    inputs: Union[Tensor, Tuple[Tensor, ...]]
+    inputs: Union[Tensor, Tuple[Tensor, ...]],
 ) -> Tuple[Tensor, ...]: ...
 
 
 def _format_tensor_into_tuples(
-    inputs: Union[None, Tensor, Tuple[Tensor, ...]]
+    inputs: Union[None, Tensor, Tuple[Tensor, ...]],
 ) -> Union[None, Tuple[Tensor, ...]]:
     if inputs is None:
         return None
@@ -261,7 +261,7 @@ def _format_inputs(inputs: Any, unpack_inputs: bool = True) -> Any:
 
 
 def _format_float_or_tensor_into_tuples(
-    inputs: Union[float, Tensor, Tuple[Union[float, Tensor], ...]]
+    inputs: Union[float, Tensor, Tuple[Union[float, Tensor], ...]],
 ) -> Tuple[Union[float, Tensor], ...]:
     if not isinstance(inputs, tuple):
         assert isinstance(
@@ -276,7 +276,7 @@ def _format_float_or_tensor_into_tuples(
 @overload
 def _format_additional_forward_args(
     # pyre-fixme[24]: Generic type `tuple` expects at least 1 type parameter.
-    additional_forward_args: Union[Tensor, Tuple]
+    additional_forward_args: Union[Tensor, Tuple],
     # pyre-fixme[24]: Generic type `tuple` expects at least 1 type parameter.
 ) -> Tuple: ...
 
