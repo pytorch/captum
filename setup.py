@@ -69,7 +69,7 @@ DEV_REQUIRES = (
     + [
         "black",
         "flake8",
-        "sphinx",
+        "sphinx<8.2.0",
         "sphinx-autodoc-typehints",
         "sphinxcontrib-katex",
         "mypy>=0.760",
