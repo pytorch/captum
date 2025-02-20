@@ -14,10 +14,13 @@ build:
 requirements:
   host:
     - python>=3.9
+    - setuptools
   run:
     - numpy<2.0
     - pytorch>=1.10
     - matplotlib-base
+    - tqdm
+    - packaging
 
 test:
   imports:
