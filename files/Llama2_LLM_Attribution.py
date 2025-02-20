@@ -3,7 +3,7 @@
 
 # # Understanding Llama2 with Captum LLM Attribution
 # 
-# In this tutorial, we will demonstrate the LLM attribution functionality introduced in Captum v0.7, which makes it a breeze to applying the attribution algorithms to interpret the large langague models (LLM) in text generation. The new functionalities include a series utilities that help you with many common tedious scaffolding required by LLMs like defining intepretable features in text input and handling the sequential predictions. You can also check our paper for more details https://arxiv.org/abs/2312.05491
+# In this tutorial, we will demonstrate the LLM attribution functionality introduced in Captum v0.7, which makes it a breeze to applying the attribution algorithms to interpret the large langague models (LLM) in text generation. Please note that executing some of the cells in this notebook require Captum v0.8 or a manual install. The new functionalities include a series utilities that help you with many common tedious scaffolding required by LLMs like defining intepretable features in text input and handling the sequential predictions. You can also check our paper for more details https://arxiv.org/abs/2312.05491
 # 
 # Next, we will use Llama2 (7b-chat) as an example and use both perturbation-based and grandient-based algrithms respectively to see how the input prompts lead to the generated content. First, let's import the needed dependencies. Specifically, from Captum, besides the algorithms `FeatureAblation` and `LayerIntegratedGradients` themselves, we will also import:
 # - perturbation-based and gradient-based wrappers for LLM, `LLMAttribution` and `LLMGradientAttribution`
