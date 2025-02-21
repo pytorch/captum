@@ -33,7 +33,7 @@ src="/_sphinx/documentation_options.js"></script>
 <h1>Feature Permutation<a class="headerlink" href="#feature-permutation" title="Link to this heading">¶</a></h1>
 <dl class="py class">
 <dt class="sig sig-object py" id="captum.attr.FeaturePermutation">
-<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">captum.attr.</span></span><span class="sig-name descname"><span class="pre">FeaturePermutation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">forward_func</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">perm_func</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">_permute_feature</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/feature_permutation.html#FeaturePermutation"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum.attr.FeaturePermutation" title="Link to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">captum.attr.</span></span><span class="sig-name descname"><span class="pre">FeaturePermutation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">forward_func</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">perm_func</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">_permute_feature</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">perm_func_cross_tensor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">_permute_features_across_tensors</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/feature_permutation.html#FeaturePermutation"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum.attr.FeaturePermutation" title="Link to this definition">¶</a></dt>
 <dd><p>A perturbation based approach to compute attribution, which
 takes each input feature, permutes the feature values within a batch,
 and computes the difference between original and shuffled outputs for
@@ -59,7 +59,8 @@ not provide a meaningful attribution.</p>
 <p>This method, unlike other attribution methods, requires a batch
 of examples to compute attributions and cannot be performed on a single example.</p>
 <p>By default, each scalar value within
-each input tensor is taken as a feature and shuffled independently. Passing
+each input tensor is taken as a feature and shuffled independently, <em>unless</em>
+attribute() is called with enable_cross_tensor_attribution=True. Passing
 a feature mask, allows grouping features to be shuffled together.
 Each input scalar in the group will be given the same attribution value
 equal to the change in target as a result of shuffling the entire feature
@@ -83,12 +84,16 @@ feature mask across the batch. This defaults to a function
 which applies a random permutation, this argument only needs
 to be provided if a custom permutation behavior is desired.
 Default: <cite>_permute_feature</cite></p></li>
+<li><p><strong>perm_func_cross_tensor</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Callable" title="(in Python v3.13)"><em>Callable</em></a><em>, </em><em>optional</em>) – Similar to perm_func,
+except it can permute grouped features across multiple input
+tensors, rather than taking each input tensor independently.
+Default: <cite>_permute_features_across_tensors</cite></p></li>
 </ul>
 </dd>
 </dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="captum.attr.FeaturePermutation.attribute">
-<span class="sig-name descname"><span class="pre">attribute</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inputs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">additional_forward_args</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">feature_mask</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">perturbations_per_eval</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">show_progress</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/feature_permutation.html#FeaturePermutation.attribute"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum.attr.FeaturePermutation.attribute" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">attribute</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inputs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">additional_forward_args</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">feature_mask</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">perturbations_per_eval</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">show_progress</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">enable_cross_tensor_attribution</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/feature_permutation.html#FeaturePermutation.attribute"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum.attr.FeaturePermutation.attribute" title="Link to this definition">¶</a></dt>
 <dd><p>This function is almost equivalent to
 <a class="reference internal" href="feature_ablation.html#captum.attr.FeatureAblation.attribute" title="captum.attr.FeatureAblation.attribute"><code class="xref py py-func docutils literal notranslate"><span class="pre">FeatureAblation.attribute</span></code></a>. The
 main difference is the way ablated examples are generated. Specifically they
@@ -157,12 +162,14 @@ the range 0 to num_features - 1, and indices
 corresponding to the same feature should have the
 same value.  Note that features within each input
 tensor are ablated independently (not across
-tensors).</p>
+tensors), unless enable_cross_tensor_attribution is
+True.</p>
 <p>The first dimension of each mask must be 1, as we require
 to have the same group of features for each input sample.</p>
 <p>If None, then a feature mask is constructed which assigns
 each scalar within a tensor as a separate feature, which
-is permuted independently.
+is permuted independently, unless
+enable_cross_tensor_attribution is True.
 Default: None</p>
 </p></li>
 <li><p><strong>perturbations_per_eval</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><em>int</em></a><em>, </em><em>optional</em>) – Allows permutations
@@ -181,6 +188,10 @@ Default: 1</p></li>
 It will try to use tqdm if available for advanced features
 (e.g. time estimation). Otherwise, it will fallback to
 a simple output of progress.
+Default: False</p></li>
+<li><p><strong>enable_cross_tensor_attribution</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.13)"><em>bool</em></a><em>, </em><em>optional</em>) – If True, then
+features can be grouped across input tensors depending on
+the values in the feature mask.
 Default: False</p></li>
 <li><p><strong>**kwargs</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.13)"><em>Any</em></a><em>, </em><em>optional</em>) – Any additional arguments used by child
 classes of <a class="reference internal" href="feature_ablation.html#captum.attr.FeatureAblation" title="captum.attr.FeatureAblation"><code class="xref py py-class docutils literal notranslate"><span class="pre">FeatureAblation</span></code></a> (such as
