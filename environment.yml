@@ -4,3 +4,6 @@ channels:
 dependencies:
   - numpy<2.0
   - pytorch>=1.10
+  - matplotlib-base
+  - tqdm
+  - packaging
