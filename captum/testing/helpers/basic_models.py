@@ -2,7 +2,7 @@
 
 # pyre-strict
 
-from typing import no_type_check, Optional, Tuple, Union
+from typing import Any, Iterable, List, no_type_check, Optional, Tuple, Union
 
 import torch
 import torch.nn as nn
@@ -428,8 +428,27 @@ class MultiRelu(nn.Module):
         return (self.relu1(arg1), self.relu2(arg2))
 
 
+class GradientUnsupportedLayerOutput(nn.Module):
+    # pyre-fixme[2]: Parameter must be annotated.
+    def __init__(self, unsupported_layer_output) -> None:
+        super().__init__()
+        # pyre-fixme[4]: Attribute must be annotated.
+        self.unsupported_layer_output = unsupported_layer_output
+
+    @no_type_check
+    # pyre-fixme[3]: Return type must be annotated.
+    def forward(self):
+        return self.unsupported_layer_output
+
+
 class BasicModel_MultiLayer(nn.Module):
-    def __init__(self, inplace: bool = False, multi_input_module: bool = False) -> None:
+    def __init__(
+        self,
+        inplace: bool = False,
+        multi_input_module: bool = False,
+        # pyre-fixme[2]: Parameter must be annotated.
+        unsupported_layer_output=None,
+    ) -> None:
         super().__init__()
         # Linear 0 is simply identity transform
         self.multi_input_module = multi_input_module
@@ -445,6 +464,7 @@ class BasicModel_MultiLayer(nn.Module):
         self.linear1_alt.bias = nn.Parameter(torch.tensor([-10.0, 1.0, 1.0, 1.0]))
         self.multi_relu = MultiRelu(inplace=inplace)
         self.relu = nn.ReLU(inplace=inplace)
+        self.unsupportedLayer = GradientUnsupportedLayerOutput(unsupported_layer_output)
 
         self.linear2 = nn.Linear(4, 2)
         self.linear2.weight = nn.Parameter(torch.ones(2, 4))
@@ -461,7 +481,11 @@ class BasicModel_MultiLayer(nn.Module):
         input = x if add_input is None else x + add_input
         lin0_out = self.linear0(input)
         lin1_out = self.linear1(lin0_out)
-        if self.multi_input_module:
+        if self.unsupportedLayer is not None:
+            relu_out = self.unsupportedLayer()
+            # Since unsupportedLayer is replacing relu or multi_relu, output shape must be the same.
+            # relu and multi_relu are not used when unsupportedLayer is not None,
+        elif self.multi_input_module:
             relu_out1, relu_out2 = self.multi_relu(lin1_out, self.linear1_alt(input))
             relu_out = relu_out1 + relu_out2
             # relu is not used when multi_input_module set to True,
