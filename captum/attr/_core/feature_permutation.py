@@ -4,7 +4,7 @@
 from typing import Any, Callable, Optional, Tuple, Union
 
 import torch
-from captum._utils.typing import TargetType, TensorOrTupleOfTensorsGeneric
+from captum._utils.typing import BaselineType, TargetType, TensorOrTupleOfTensorsGeneric
 from captum.attr._core.feature_ablation import FeatureAblation
 from captum.log import log_usage
 from torch import Tensor
@@ -23,6 +23,31 @@ def _permute_feature(x: Tensor, feature_mask: Tensor) -> Tensor:
     return (x[perm] * feature_mask.to(dtype=x.dtype)) + (
         x * feature_mask.bitwise_not().to(dtype=x.dtype)
     )
+
+
+def _permute_features_across_tensors(
+    inputs: Tuple[Tensor, ...], feature_masks: Tuple[Tensor, ...]
+) -> Tuple[Tensor, ...]:
+    """
+    Permutes features across multiple input tensors using the corresponding
+    feature masks.
+    """
+    permuted_outputs = []
+    for input_tensor, feature_mask in zip(inputs, feature_masks):
+        if not feature_mask.any():
+            permuted_outputs.append(input_tensor)
+            continue
+        n = input_tensor.size(0)
+        assert n > 1, "cannot permute features with batch_size = 1"
+        perm = torch.randperm(n)
+        no_perm = torch.arange(n)
+        while (perm == no_perm).all():
+            perm = torch.randperm(n)
+        permuted_x = (
+            input_tensor[perm] * feature_mask.to(dtype=input_tensor.dtype)
+        ) + (input_tensor * feature_mask.bitwise_not().to(dtype=input_tensor.dtype))
+        permuted_outputs.append(permuted_x)
+    return tuple(permuted_outputs)
 
 
 class FeaturePermutation(FeatureAblation):
@@ -55,7 +80,8 @@ class FeaturePermutation(FeatureAblation):
     of examples to compute attributions and cannot be performed on a single example.
 
     By default, each scalar value within
-    each input tensor is taken as a feature and shuffled independently. Passing
+    each input tensor is taken as a feature and shuffled independently, *unless*
+    attribute() is called with enable_cross_tensor_attribution=True. Passing
     a feature mask, allows grouping features to be shuffled together.
     Each input scalar in the group will be given the same attribution value
     equal to the change in target as a result of shuffling the entire feature
@@ -76,6 +102,9 @@ class FeaturePermutation(FeatureAblation):
         self,
         forward_func: Callable[..., Union[int, float, Tensor, Future[Tensor]]],
         perm_func: Callable[[Tensor, Tensor], Tensor] = _permute_feature,
+        perm_func_cross_tensor: Callable[
+            [Tuple[Tensor, ...], Tuple[Tensor, ...]], Tuple[Tensor, ...]
+        ] = _permute_features_across_tensors,
     ) -> None:
         r"""
         Args:
@@ -88,9 +117,14 @@ class FeaturePermutation(FeatureAblation):
                 which applies a random permutation, this argument only needs
                 to be provided if a custom permutation behavior is desired.
                 Default: `_permute_feature`
+            perm_func_cross_tensor (Callable, optional): Similar to perm_func,
+                except it can permute grouped features across multiple input
+                tensors, rather than taking each input tensor independently.
+                Default: `_permute_features_across_tensors`
         """
         FeatureAblation.__init__(self, forward_func=forward_func)
         self.perm_func = perm_func
+        self.perm_func_cross_tensor = perm_func_cross_tensor
 
     # suppressing error caused by the child class not having a matching
     # signature to the parent
@@ -103,6 +137,7 @@ class FeaturePermutation(FeatureAblation):
         feature_mask: Union[None, TensorOrTupleOfTensorsGeneric] = None,
         perturbations_per_eval: int = 1,
         show_progress: bool = False,
+        enable_cross_tensor_attribution: bool = False,
         **kwargs: Any,
     ) -> TensorOrTupleOfTensorsGeneric:
         r"""
@@ -176,14 +211,16 @@ class FeaturePermutation(FeatureAblation):
                             corresponding to the same feature should have the
                             same value.  Note that features within each input
                             tensor are ablated independently (not across
-                            tensors).
+                            tensors), unless enable_cross_tensor_attribution is
+                            True.
 
                             The first dimension of each mask must be 1, as we require
                             to have the same group of features for each input sample.
 
                             If None, then a feature mask is constructed which assigns
                             each scalar within a tensor as a separate feature, which
-                            is permuted independently.
+                            is permuted independently, unless
+                            enable_cross_tensor_attribution is True.
                             Default: None
                 perturbations_per_eval (int, optional): Allows permutations
                             of multiple features to be processed simultaneously
@@ -201,6 +238,10 @@ class FeaturePermutation(FeatureAblation):
                             It will try to use tqdm if available for advanced features
                             (e.g. time estimation). Otherwise, it will fallback to
                             a simple output of progress.
+                            Default: False
+                enable_cross_tensor_attribution (bool, optional): If True, then
+                            features can be grouped across input tensors depending on
+                            the values in the feature mask.
                             Default: False
                 **kwargs (Any, optional): Any additional arguments used by child
                             classes of :class:`.FeatureAblation` (such as
@@ -273,6 +314,7 @@ class FeaturePermutation(FeatureAblation):
             feature_mask=feature_mask,
             perturbations_per_eval=perturbations_per_eval,
             show_progress=show_progress,
+            enable_cross_tensor_attribution=enable_cross_tensor_attribution,
             **kwargs,
         )
 
@@ -343,3 +385,16 @@ class FeaturePermutation(FeatureAblation):
             ]
         )
         return output, current_mask
+
+    def _construct_ablated_input_across_tensors(
+        self,
+        inputs: Tuple[Tensor, ...],
+        input_mask: Tuple[Tensor, ...],
+        baselines: BaselineType,
+        feature_idx: int,
+    ) -> Tuple[Tuple[Tensor, ...], Tuple[Tensor, ...]]:
+        feature_masks = tuple(
+            (mask == feature_idx).to(inputs[0].device) for mask in input_mask
+        )
+        permuted_outputs = self.perm_func_cross_tensor(inputs, feature_masks)
+        return permuted_outputs, feature_masks
