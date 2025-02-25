@@ -1038,7 +1038,12 @@ class Lime(LimeBase):
                         coefficient of the corresponding interpretale feature.
                         All elements with the same value in the feature mask
                         will contain the same coefficient in the returned
-                        attributions. If return_input_shape is False, a 1D
+                        attributions.
+                        If forward_func returns a single element per batch, then the
+                        first dimension of each tensor will be 1, and the remaining
+                        dimensions will have the same shape as the original input
+                        tensor.
+                        If return_input_shape is False, a 1D
                         tensor is returned, containing only the coefficients
                         of the trained interpreatable models, with length
                         num_interp_features.
@@ -1242,6 +1247,7 @@ class Lime(LimeBase):
                 coefs,
                 num_interp_features,
                 is_inputs_tuple,
+                leading_dim_one=(bsz > 1),
             )
         else:
             return coefs
@@ -1254,6 +1260,7 @@ class Lime(LimeBase):
         coefs: Tensor,
         num_interp_features: int,
         is_inputs_tuple: Literal[True],
+        leading_dim_one: bool = False,
     ) -> Tuple[Tensor, ...]: ...
 
     @typing.overload
@@ -1264,6 +1271,7 @@ class Lime(LimeBase):
         coefs: Tensor,
         num_interp_features: int,
         is_inputs_tuple: Literal[False],
+        leading_dim_one: bool = False,
     ) -> Tensor: ...
 
     @typing.overload
@@ -1274,6 +1282,7 @@ class Lime(LimeBase):
         coefs: Tensor,
         num_interp_features: int,
         is_inputs_tuple: bool,
+        leading_dim_one: bool = False,
     ) -> Union[Tensor, Tuple[Tensor, ...]]: ...
 
     def _convert_output_shape(
@@ -1283,6 +1292,7 @@ class Lime(LimeBase):
         coefs: Tensor,
         num_interp_features: int,
         is_inputs_tuple: bool,
+        leading_dim_one: bool = False,
     ) -> Union[Tensor, Tuple[Tensor, ...]]:
         coefs = coefs.flatten()
         attr = [
@@ -1295,4 +1305,7 @@ class Lime(LimeBase):
                     coefs[single_feature].item()
                     * (feature_mask[tensor_ind] == single_feature).float()
                 )
+        if leading_dim_one:
+            for i in range(len(attr)):
+                attr[i] = attr[i][0:1]
         return _format_output(is_inputs_tuple, tuple(attr))
