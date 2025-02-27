@@ -656,7 +656,12 @@ matches the input shape, with each element containing the
 coefficient of the corresponding interpretale feature.
 All elements with the same value in the feature mask
 will contain the same coefficient in the returned
-attributions. If return_input_shape is False, a 1D
+attributions.
+If forward_func returns a single element per batch, then the
+first dimension of each tensor will be 1, and the remaining
+dimensions will have the same shape as the original input
+tensor.
+If return_input_shape is False, a 1D
 tensor is returned, containing only the coefficients
 of the trained interpreatable models, with length
 num_interp_features.</p></li>
