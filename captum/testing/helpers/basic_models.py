@@ -2,7 +2,7 @@
 
 # pyre-strict
 
-from typing import no_type_check, Optional, Tuple, Union
+from typing import Iterable, no_type_check, Optional, Tuple, Union
 
 import torch
 import torch.nn as nn
@@ -428,11 +428,36 @@ class MultiRelu(nn.Module):
         return (self.relu1(arg1), self.relu2(arg2))
 
 
+class GradientUnsupportedLayerOutput(nn.Module):
+    """
+    This layer is used to test the case where the model returns a layer that
+    is not supported by the gradient computation.
+    """
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.relu1 = nn.ReLU(inplace=True)
+
+    @no_type_check
+    def forward(
+        self, unsupported_layer_output: Optional[Iterable[Tensor]]
+    ) -> Optional[Iterable[Tensor]]:
+        return unsupported_layer_output
+
+
 class BasicModel_MultiLayer(nn.Module):
-    def __init__(self, inplace: bool = False, multi_input_module: bool = False) -> None:
+    def __init__(
+        self,
+        inplace: bool = False,
+        multi_input_module: bool = False,
+        # pyre-fixme[2]: Parameter must be annotated.
+        unsupported_layer_output=None,
+    ) -> None:
         super().__init__()
         # Linear 0 is simply identity transform
         self.multi_input_module = multi_input_module
+        # pyre-fixme[4]: Attribute must be annotated.
+        self.unsupported_layer_output = unsupported_layer_output
         self.linear0 = nn.Linear(3, 3)
         self.linear0.weight = nn.Parameter(torch.eye(3))
         self.linear0.bias = nn.Parameter(torch.zeros(3))
@@ -445,6 +470,7 @@ class BasicModel_MultiLayer(nn.Module):
         self.linear1_alt.bias = nn.Parameter(torch.tensor([-10.0, 1.0, 1.0, 1.0]))
         self.multi_relu = MultiRelu(inplace=inplace)
         self.relu = nn.ReLU(inplace=inplace)
+        self.unsupportedLayer = GradientUnsupportedLayerOutput()
 
         self.linear2 = nn.Linear(4, 2)
         self.linear2.weight = nn.Parameter(torch.ones(2, 4))
@@ -461,6 +487,9 @@ class BasicModel_MultiLayer(nn.Module):
         input = x if add_input is None else x + add_input
         lin0_out = self.linear0(input)
         lin1_out = self.linear1(lin0_out)
+        if self.unsupported_layer_output is not None:
+            self.unsupportedLayer(self.unsupported_layer_output)
+            ## unsupportedLayer is unused intentionally for testing
         if self.multi_input_module:
             relu_out1, relu_out2 = self.multi_relu(lin1_out, self.linear1_alt(input))
             relu_out = relu_out1 + relu_out2
