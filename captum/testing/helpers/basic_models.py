@@ -485,7 +485,14 @@ class BasicModel_GradientLayerAttribution(nn.Module):
 
         lin3_out = self.linear3(lin1_out_alt).to(torch.int64)
 
-        return torch.cat((lin2_out, lin3_out), dim=1)
+        output_tensors = torch.cat((lin2_out, lin3_out), dim=1)
+
+        # we return a dictionary of tensors as an output to test the case
+        # where an output accessor is required
+        return {
+            "task {}".format(i + 1): output_tensors[:, i]
+            for i in range(output_tensors.shape[1])
+        }
 
 
 class MultiRelu(nn.Module):
