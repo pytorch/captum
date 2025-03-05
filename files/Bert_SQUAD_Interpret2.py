@@ -36,12 +36,10 @@ from captum.attr import visualization as viz
 from captum.attr import IntegratedGradients, LayerConductance, LayerIntegratedGradients, LayerActivation
 from captum.attr import configure_interpretable_embedding_layer, remove_interpretable_embedding_layer
 
-
 # In[2]:
 
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-
 
 # The first step is to fine-tune BERT model on SQUAD dataset. This can be easiy accomplished by following the steps described in hugging face's official web site: https://github.com/huggingface/transformers#run_squadpy-fine-tuning-on-squad-for-question-answering 
 # 
@@ -64,7 +62,6 @@ model.zero_grad()
 # load tokenizer
 tokenizer = BertTokenizer.from_pretrained(model_path)
 
-
 # A helper function to perform forward pass of the model and make predictions.
 
 # In[4]:
@@ -74,7 +71,6 @@ def predict(inputs, token_type_ids=None, position_ids=None, attention_mask=None)
     output = model(inputs, token_type_ids=token_type_ids,
                  position_ids=position_ids, attention_mask=attention_mask, )
     return output.start_logits, output.end_logits, output.attentions
-
 
 # Defining a custom forward function that will allow us to access the start and end positions of our prediction using `position` input argument.
 
@@ -86,7 +82,6 @@ def squad_pos_forward_func(inputs, token_type_ids=None, position_ids=None, atten
                  position_ids=position_ids, attention_mask=attention_mask, )
     pred = pred[position]
     return pred.max(1).values
-
 
 # Let's define some variables and functions that will help us to compute the attribution of attention matrices for specific output such as start or end positions of the prediction.
 # 
@@ -101,7 +96,6 @@ ref_token_id = tokenizer.pad_token_id # A token used for generating token refere
 sep_token_id = tokenizer.sep_token_id # A token used as a separator between question and text and it is also added to the end of the text.
 cls_token_id = tokenizer.cls_token_id # A token used for prepending to the concatenated question-text word sequence
 
-
 # Below we define a set of helper function for constructing references / baselines for word tokens, token types and position ids.
 
 # In[7]:
@@ -115,7 +109,8 @@ def construct_input_ref_pair(question, text, ref_token_id, sep_token_id, cls_tok
     input_ids = [cls_token_id] + question_ids + [sep_token_id] + text_ids + [sep_token_id]
 
     # construct reference token ids 
-    ref_input_ids = [cls_token_id] + [ref_token_id] * len(question_ids) + [sep_token_id] +         [ref_token_id] * len(text_ids) + [sep_token_id]
+    ref_input_ids = [cls_token_id] + [ref_token_id] * len(question_ids) + [sep_token_id] + \
+        [ref_token_id] * len(text_ids) + [sep_token_id]
 
     return torch.tensor([input_ids], device=device), torch.tensor([ref_input_ids], device=device), len(question_ids)
 
@@ -138,7 +133,9 @@ def construct_input_ref_pos_id_pair(input_ids):
 def construct_attention_mask(input_ids):
     return torch.ones_like(input_ids)
     
-def construct_whole_bert_embeddings(input_ids, ref_input_ids,                                     token_type_ids=None, ref_token_type_ids=None,                                     position_ids=None, ref_position_ids=None):
+def construct_whole_bert_embeddings(input_ids, ref_input_ids, \
+                                    token_type_ids=None, ref_token_type_ids=None, \
+                                    position_ids=None, ref_position_ids=None):
     input_embeddings = interpretable_embedding.indices_to_embeddings(input_ids)
     ref_input_embeddings = interpretable_embedding.indices_to_embeddings(ref_input_ids)
     
@@ -166,7 +163,6 @@ attention_mask = construct_attention_mask(input_ids)
 indices = input_ids[0].detach().tolist()
 all_tokens = tokenizer.convert_ids_to_tokens(indices)
 
-
 # Also, let's define the ground truth for prediction's start and end positions.
 
 # In[10]:
@@ -177,7 +173,6 @@ ground_truth = 'to include, empower and support humans of all kinds'
 ground_truth_tokens = tokenizer.encode(ground_truth, add_special_tokens=False)
 ground_truth_end_ind = indices.index(ground_truth_tokens[-1])
 ground_truth_start_ind = ground_truth_end_ind - len(ground_truth_tokens) + 1
-
 
 # Now let's make predictions using input, token type, position id and a default attention mask.
 
@@ -192,7 +187,6 @@ start_scores, end_scores, output_attentions = predict(input_ids,
 
 print('Question: ', question)
 print('Predicted Answer: ', ' '.join(all_tokens[torch.argmax(start_scores) : torch.argmax(end_scores)+1]))
-
 
 # # Visualizing Attention Matrices
 
@@ -236,7 +230,6 @@ def visualize_token2token_scores(scores_mat, x_label_name='Head'):
     plt.tight_layout()
     plt.show()
 
-
 # #### A helper function for visualizing Token-To-Head matrices
 
 # Below helper function will be used for visualizing the importance scores for tokens across all heads in all layers.
@@ -266,7 +259,6 @@ def visualize_token2head_scores(scores_mat):
     plt.tight_layout()
     plt.show()
 
-
 # Let's examine a specific layer. For that reason we will define a fixed layer id that will be used for visualization purposes. The users are free to change this layer if they want to examine a different one.
 # 
 
@@ -275,14 +267,12 @@ def visualize_token2head_scores(scores_mat):
 
 layer = 11
 
-
 # Visualizing attention matrices for a selected layer `layer`. 
 
 # In[16]:
 
 
 visualize_token2token_scores(output_attentions_all[layer].squeeze().detach().cpu().numpy())
-
 
 # Based on the visualizations above we observe that there is a high attention set along the diagonals and on an uninformative token such as `[SEP]`. This is something that was observed in previous papers which indicates that attention matrices aren't always a good indicator of finding which tokens are more important or which token is related to which. We observe similar pattern when we examine another layer.
 
@@ -298,13 +288,11 @@ if torch.__version__ >= '1.7.0':
 else:
     norm_fn = torch.norm
 
-
 # In[18]:
 
 
 visualize_token2token_scores(norm_fn(output_attentions_all, dim=2).squeeze().detach().cpu().numpy(),
                              x_label_name='Layer')
-
 
 # Based on the visualiziation above we can convince ourselves that attention scores aren't trustworthy measures of importances for token-to-token relations across all layers. We see strong signal along the diagonal and for the `[SEP]` and `[CLS]` tokens. These signals, however, aren't true indicators of what semantic the model learns.
 # 
@@ -323,7 +311,6 @@ def summarize_attributions(attributions):
     attributions = attributions / norm_fn(attributions)
     return attributions
 
-
 # # Interpreting BertLayer Outputs and Self-Attention Matrices in each Layer
 
 # Now let's look into the layers of our network. More specifically we would like to look into the distribution of attribution scores for each token across all layers and attribution matrices for each head in all layers in Bert model.  
@@ -336,7 +323,6 @@ def summarize_attributions(attributions):
 
 
 interpretable_embedding = configure_interpretable_embedding_layer(model, 'bert.embeddings.word_embeddings')
-
 
 # Let's iterate over all layers and compute the attributions w.r.t. all tokens in the input and attention matrices. 
 # 
@@ -351,7 +337,9 @@ layer_attrs_end = []
 layer_attn_mat_start = []
 layer_attn_mat_end = []
 
-input_embeddings, ref_input_embeddings = construct_whole_bert_embeddings(input_ids, ref_input_ids,                                          token_type_ids=token_type_ids, ref_token_type_ids=ref_token_type_ids,                                          position_ids=position_ids, ref_position_ids=ref_position_ids)
+input_embeddings, ref_input_embeddings = construct_whole_bert_embeddings(input_ids, ref_input_ids, \
+                                         token_type_ids=token_type_ids, ref_token_type_ids=ref_token_type_ids, \
+                                         position_ids=position_ids, ref_position_ids=ref_position_ids)
 
 for i in range(model.config.num_hidden_layers):
     lc = LayerConductance(squad_pos_forward_func, model.bert.encoder.layer[i])
@@ -366,7 +354,6 @@ for i in range(model.config.num_hidden_layers):
 
     
 
-
 # In[22]:
 
 
@@ -379,7 +366,6 @@ layer_attrs_end = torch.stack(layer_attrs_end)
 layer_attn_mat_start = torch.stack(layer_attn_mat_start)
 # layer x batch x head x seq_len x seq_len
 layer_attn_mat_end = torch.stack(layer_attn_mat_end)
-
 
 # As a reminder of Part 1 we visualize the heatmaps of the attributions for the outputs of all 12 layers in the plots below. The outputs of 12 layers are also known as context layer which represents the dot product between the attribution matrices and value vector.
 # 
@@ -406,7 +392,6 @@ plt.xlabel('Tokens')
 plt.ylabel('Layers')
 plt.show()
 
-
 # Now let's examine the heat map of the attributions for the end position prediction. In the case of end position prediction we again observe high attribution scores for the token `what` in the last 11 layers.
 # Correctly predicted end token `kinds` has positive attribution across all layers and it is especially prominent in the last two layers. It's also interesting to observe that `humans` token also has  relatively high attribution score in the last two layers.
 
@@ -423,7 +408,6 @@ plt.ylabel('Layers')
 
 plt.show()
 
-
 # It is interesting to note that when we compare the heat maps of start and end position, overall the colors for start position prediction on the map have darker intensities. This implies that there are less tokens that attribute positively to the start position prediction and there are more tokens which are negative indicators or signals of start position prediction.
 
 # # Interpreting Attribution Scores for Attention Matrices
@@ -439,7 +423,6 @@ plt.show()
 
 visualize_token2token_scores(layer_attn_mat_start[layer].squeeze().cpu().detach().numpy())
 
-
 # As we can see from the visualizations above, in contrary to attention scores the attributions of specific target w.r.t. to those scores are more meaningful and most importantly, they do not attend to `[SEP]` token or show diagonal patterns. We observe that heads 4, 9, 12 and 2 show strong relationship between `what` and `it` tokens when predicting start position, head 10 and 11 between `it` and `it`, heads 8 between `important` and `to` and head 1 between `to` and `what`. Note that `to` token is the start position of the answer token. It is also important to mention that these observations are for a selected `layer`. We can change the index of selected `layer` and examine interesting relationships in other layers.
 
 # In the cell below we visualize the attention attribution scores normalized across the head axis.
@@ -450,7 +433,6 @@ visualize_token2token_scores(layer_attn_mat_start[layer].squeeze().cpu().detach(
 visualize_token2token_scores(norm_fn(layer_attn_mat_start, dim=2).squeeze().detach().cpu().numpy(),
                              x_label_name='Layer')
 
-
 # By looking at the visualizations above we can see that the model pays attention to very specific handpicked relationships when making a sprediction for start position. Most notably in the layers 10, 7, 11 and 4 it focuses more on the relationships between `it` and `is`, `important` and `to`.
 
 # Now let's run the same experiments for the end position prediction. Below we visualize the attribution scorese of attention matrices for the end position prediction for the selected `layer`.
@@ -459,7 +441,6 @@ visualize_token2token_scores(norm_fn(layer_attn_mat_start, dim=2).squeeze().deta
 
 
 visualize_token2token_scores(layer_attn_mat_end[layer].squeeze().cpu().detach().numpy())
-
 
 # As we can see from the visualizations above that for the end position prediction we have stronger attention towards the end of the answer token `kinds`. Here we can see stronger connection between `humans` and `kinds` in the 11th head, `it` and `em`, `power`, `and` in the 5th, 6th and 8th heads. The connections between `it` and `what` are also strong in first couple and 10th heads.
 
@@ -470,7 +451,6 @@ visualize_token2token_scores(layer_attn_mat_end[layer].squeeze().cpu().detach().
 
 visualize_token2token_scores(norm_fn(layer_attn_mat_end, dim=2).squeeze().detach().cpu().numpy(),
                              x_label_name='Layer')
-
 
 # As we can see from the visualizations above for the end position prediction there is a relation learnt between `[SEP]` and `.` in first and second layers. Also we observe that `it` token is strongly related to `what`, `important` and `to`.
 
@@ -504,7 +484,6 @@ all_head_size = 768
 
 layers = [model.bert.encoder.layer[layer].attention.self.value for layer in range(len(model.bert.encoder.layer))]
 
-
 # We use `Captum`'s LayerActivation algorithm to access the outputs of all `layers`.
 
 # In[31]:
@@ -515,7 +494,6 @@ la = LayerActivation(squad_pos_forward_func, layers)
 value_layer_acts = la.attribute(input_embeddings, additional_forward_args=(token_type_ids, position_ids, attention_mask))
 # shape -> layer x batch x seq_len x all_head_size
 value_layer_acts = torch.stack(value_layer_acts)
-
 
 # In the cell below we perform several transformations with the value layer activations and bring it to the shape so that we can compute different norms. The transformations are done the same way as it is described in the original paper and corresponding github implementation.
 
@@ -536,7 +514,6 @@ value_layer_acts = value_layer_acts.view(value_layer_acts_shape[:-1] + (1, value
 
 print('value_layer_acts: ', value_layer_acts.shape)
 
-
 # #### Getting Access to Dense Features 
 
 # Now let's transform dense features so that we can use them to compute ||f(x)|| and ||α * f(x)||.
@@ -551,7 +528,6 @@ dense_acts = dense_acts.view(len(layers), all_head_size, num_heads, head_size)
 # layer x num_heads x head_size x all_head_size
 dense_acts = dense_acts.permute(0, 2, 3, 1).contiguous()
 
-
 # Computing f(x) score by multiplying the value vector with the weights of the dense vector for all layers.
 
 # In[34]:
@@ -560,7 +536,6 @@ dense_acts = dense_acts.permute(0, 2, 3, 1).contiguous()
 # layers, batch, seq_length, num_heads, 1, all_head_size
 f_x = torch.stack([value_layer_acts_i.matmul(dense_acts_i) for value_layer_acts_i, dense_acts_i in zip(value_layer_acts, dense_acts)])
 f_x.shape
-
 
 # In[35]:
 
@@ -584,7 +559,6 @@ f_x_norm = norm_fn(f_x, dim=-1)
 
 visualize_token2head_scores(f_x_norm.squeeze().detach().cpu().numpy())
 
-
 # When we examine ||f(x)|| scores for all layers we can easily see that the `[SEP]` token receives the lowest score across all layers. This is one of the conclusions that the original paper came to. In terms of other tokens we can see that the heads in different layers focus on different parts of the input sentence.
 
 # Now let's compute ||α * f_x||. This computation is performed using the original paper's technique with the help of einsum operator.
@@ -598,14 +572,12 @@ alpha_f_x = torch.einsum('lbhks,lbhsd->lbhksd', output_attentions_all, f_x)
 # layer x batch x num_heads x seq_length x seq_length
 alpha_f_x_norm = norm_fn(alpha_f_x, dim=-1)
 
-
 # Let's now visualize ||α * f_x|| scores for the layer with index `layer`.
 
 # In[38]:
 
 
 visualize_token2token_scores(alpha_f_x_norm[layer].squeeze().detach().cpu().numpy())
-
 
 # As we can see from the visualizations above there is no strong attention to `[SEP]` or `[CLS]` tokens. Some of the heads show diagonal patterns and some of them show strong attention between specific pairs of tokens.
 
@@ -624,7 +596,6 @@ summed_alpha_f_x_norm = norm_fn(summed_alpha_f_x, dim=-1)
 
 
 visualize_token2token_scores(summed_alpha_f_x_norm.squeeze().cpu().detach().numpy(), x_label_name='Layer')
-
 
 # Above visualizations also confirm that the attention scores aren't concentrated on the tokens such as `[CLS]`, `[SEP]` and `.` however we see stronger signals along the diagonals and some patches of stronger signals between certain parts of the text including some tokens in the question part that are relevant in the answer piece.
 

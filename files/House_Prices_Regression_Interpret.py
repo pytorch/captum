@@ -109,7 +109,6 @@ for i, (ax, col) in enumerate(zip(axs.flat, feature_names)):
     ax.set_xlabel(col)
     ax.set_ylabel('Median House Value')
 
-
 # From the diagram above we can tell that some of the most influential features that are correlated with the output average house value are:   
 #    - MedInc, median income in block group
 #      If MedInc increases the house value increases too.
@@ -148,7 +147,6 @@ size_hidden2 = 50
 size_hidden3 = 10
 size_hidden4 = 1
 
-
 # We define a four layer neural network containing ReLUs between each linear layer. This network is slightly more complex than the standard linear regression model and results in a slightly better accuracy.
 
 # In[92]:
@@ -184,7 +182,6 @@ model.train()
 
 
 criterion = nn.MSELoss(reduction='sum')
-
 
 # Defining the training function that contains the training loop and uses RMSprop and given input hyper-parameters to train the model defined in the cell above.
 
@@ -232,13 +229,11 @@ def train_load_save_model(model_obj, model_path):
         print('Finished training the model. Saving the model to the path: {}'.format(model_path))
         torch.save(model_obj.state_dict(), model_path)
 
-
 # In[98]:
 
 
 SAVED_MODEL_PATH = 'models/california_model.pt'
 train_load_save_model(model, SAVED_MODEL_PATH)
-
 
 # Let's perform a simple sanity check and compute the performance of the model using Root Squared Mean Error (RSME) metric.
 
@@ -250,7 +245,6 @@ outputs = model(X_test)
 err = np.sqrt(mean_squared_error(outputs.detach().numpy(), y_test.detach().numpy()))
 
 print('model err: ', err)
-
 
 # # Comparing different attribution algorithms
 
@@ -368,7 +362,6 @@ lc_attr_test = lc.attribute(X_test, n_steps=100, attribute_to_layer_input=True)
 # shape: size_hidden4 x size_hidden3
 lin4_weight = model.lin4.weight
 
-
 # In the cell below we normalize and visualize the attributions and learned model weights for all 10 neurons in the fourth hidden layer. 
 # The weights represent the weight matrix of the fourth linear layer. The attributions are computed with respect to the inputs of the fourth linear layer.
 
@@ -409,7 +402,6 @@ plt.show()
 # We also observe that the neurons five and six have very small attributions but relatively larger weights. Another interesting thing to observe is that the weights do not fluctuate much whereas attributions do fluctuate more relative to that and spike in Neuron 0.
 
 # In[ ]:
-
 
 
 

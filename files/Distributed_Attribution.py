@@ -28,7 +28,6 @@ from torch.multiprocessing import Process
 
 from captum.attr import IntegratedGradients
 
-
 # We now define a small toy model for this example.
 
 # In[2]:
@@ -45,7 +44,6 @@ class ToyModel(nn.Module):
     def forward(self, x: Tensor):
         return self.relu(self.linear1(x))
 
-
 # ### torch.distributed Example
 
 # In the following cell, we set parameters USE_CUDA and WORLD_SIZE. WORLD_SIZE corresponds to the number of processes initialized and should be set to either 1, 2, or 4 for this example. USE_CUDA should be set to true if GPUs are available and there must be at least WORLD_SIZE GPUs available.
@@ -55,7 +53,6 @@ class ToyModel(nn.Module):
 
 USE_CUDA = True
 WORLD_SIZE = 4
-
 
 # We now define the function that runs on each process, which takes the rank (identifier for current process), size (total number of processes), and inp_batch, which corresponds to the input portion for the current process. Integrated Gradients is computed on the given input and concatenated with other processes on the process with rank 0. The model can also be wrapped in Distributed Data Parallel, which synchronizes parameter updates across processes, by uncommenting the corresponding line, but it is not necessary for this example, since no parameters updates / training is conducted.
 
@@ -92,7 +89,6 @@ def run(rank, size, inp_batch):
     else:
         torch.distributed.gather(attr)
 
-
 # This function performs required setup and cleanup steps on each process and executes the chosen function (run).
 
 # In[5]:
@@ -105,7 +101,6 @@ def init_process(rank, size, fn, inp_batch, backend='gloo'):
     dist.init_process_group(backend, rank=rank, world_size=size)
     fn(rank, size, inp_batch)
     dist.destroy_process_group()
-
 
 # We are now ready to run the initialize and run the processes. The gathered output attributions are printed by the rank 0 process upon completion.
 
@@ -136,7 +131,6 @@ ig = IntegratedGradients(model)
 batch = 1.0 * torch.arange(12).reshape(4,3)
 print(ig.attribute(batch, target=0))
 
-
 # ### DataParallel Example
 
 # If GPUs are available, we can also distribute computation using torch.nn.DataParallel instead. DataParallel is a wrapper around a module which internally splits each input batch across available CUDA device, parallelizing computation. Note that DistributedDataParallel is expected to be faster than DataParallel, but DataParallel can be simpler to setup, with only a wrapper around the module. More information regarding comparing the 2 approaches can be found [here](https://pytorch.org/tutorials/intermediate/ddp_tutorial.html).
@@ -150,7 +144,6 @@ dp_model = nn.DataParallel(model.cuda())
 ig = IntegratedGradients(dp_model)
 
 print(ig.attribute(batch.cuda(), target=0))
-
 
 # ## Part 2: Distributing computation of Titanic Dataset Attribution
 
@@ -176,7 +169,6 @@ from torch.multiprocessing import Process
 
 from captum.attr import IntegratedGradients
 
-
 # Download the Titanic dataset from: http://biostat.mc.vanderbilt.edu/wiki/pub/Main/DataSets/titanic3.csv. 
 # Update path to the dataset here.
 
@@ -184,7 +176,6 @@ from captum.attr import IntegratedGradients
 
 
 dataset_path = "titanic3.csv"
-
 
 # We define a simple neural network architecture, which is trained in the Titanic tutorial.
 
@@ -206,7 +197,6 @@ class TitanicSimpleNNModel(nn.Module):
         sigmoid_out1 = self.sigmoid1(lin1_out)
         sigmoid_out2 = self.sigmoid2(self.linear2(sigmoid_out1))
         return self.softmax(self.linear3(sigmoid_out2))
-
 
 # We now define a helper method to read the CSV and generate a TensorDataset object corresponding to the test set of the Titianic dataset. For more details on the pre-processing, refer to the Titanic_Basic_Interpret tutorial.
 
@@ -241,7 +231,6 @@ def load_dataset():
     dataset = TensorDataset(test_features_tensor)
     return dataset
 
-
 # In the following cell, we set parameters USE_CUDA and WORLD_SIZE. WORLD_SIZE corresponds to the number of processes initialized. USE_CUDA should be set to true if GPUs are available and there must be at least WORLD_SIZE GPUs available.
 
 # In[5]:
@@ -249,7 +238,6 @@ def load_dataset():
 
 USE_CUDA = True
 WORLD_SIZE = 4
-
 
 # We now define the function that runs on each process, which takes the rank (identifier for current process) and size (total number of processes). The model and appropriate part of the dataset are loaded, and attributions are computed for this part of the dataset. The attributions are then averaged across processes. Note that DistributedSampler repeats examples to ensure that each partition has the same number of examples.
 # 
@@ -296,7 +284,6 @@ def run(rank, size):
         total_attr = total_attr / size
         print("Average Attributions:", total_attr)
 
-
 # This function performs required setup and cleanup steps on each process and executes the chosen function (run).
 
 # In[7]:
@@ -309,7 +296,6 @@ def init_process(rank, size, fn, backend='gloo'):
     dist.init_process_group(backend, rank=rank, world_size=size)
     fn(rank, size)
     dist.destroy_process_group()
-
 
 # We are now ready to run the initialize and run the processes. The average attributions over the dataset are printed by the rank 0 process upon completion.
 

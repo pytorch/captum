@@ -38,7 +38,6 @@ assert(os.path.exists(VQA_MODEL_PATH))
 sys.path.append(PYTORCH_VQA_DIR)
 sys.path.append(PYTORCH_RESNET_DIR)
 
-
 # Now, we will import the necessary modules to run the code in this tutorial. Please make sure you have the [prerequisites to run captum](https://captum.ai/docs/getting_started), along with the pre-requisites to run this tutorial (as described in the first section).
 
 # In[2]:
@@ -69,13 +68,11 @@ from captum.insights import AttributionVisualizer, Batch
 from captum.insights.attr_vis.features import ImageFeature, TextFeature
 from captum.attr import TokenReferenceBase, configure_interpretable_embedding_layer, remove_interpretable_embedding_layer
 
-
 # In[3]:
 
 
 # Let's set the device we will use for model inference
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-
 
 # # VQA Model Setup
 # 
@@ -106,15 +103,13 @@ vqa_net = torch.nn.DataParallel(Net(num_tokens), device_ids=[0, 1])
 vqa_net.load_state_dict(saved_state["weights"])
 vqa_net = vqa_net.to(device)
 
-
 # In[5]:
 
 
-# for visualization to convert indices to tokens for questions
+ # for visualization to convert indices to tokens for questions
 question_words = ["unk"] * num_tokens
 for w, idx in token_to_index.items():
-   question_words[idx] = w
-
+    question_words[idx] = w
 
 # Let's modify the VQA model to use pytorch-resnet. Our model will be called `vqa_resnet`.
 
@@ -177,7 +172,6 @@ del vqa_net
 # this is necessary for the backpropagation of RNNs models in eval mode
 torch.backends.cudnn.enabled = False
 
-
 # # Input Utilities
 # 
 # Now we will need some utility functions for the inputs of our model. 
@@ -193,7 +187,6 @@ central_fraction = 1.0
 transform = get_transform(image_size, central_fraction=central_fraction)
 transform_normalize = transform.transforms.pop()
 
-
 # Now for the input question, we will need an encoding function (to go from words -> indices):
 
 # In[8]:
@@ -208,7 +201,6 @@ def encode_question(question):
         vec[i] = index
     return vec, torch.tensor(len(question_arr), device=device)
 
-
 # # Baseline Inputs 
 
 # The insights API utilises captum's attribution API under the hood, hence we will need a baseline for our inputs. A baseline is (typically) a neutral output to reference in order for our attribution algorithm(s) to understand which features are important in making a prediction (this is very simplified explanation, 'Remark 1' in the [Integrated Gradients paper](https://arxiv.org/pdf/1703.01365.pdf) has an excellent explanation on why they must be utilised).
@@ -220,7 +212,6 @@ def encode_question(question):
 
 def baseline_image(x):
     return x * 0
-
 
 # For sentences, as done in the multi-modal VQA tutorial, we will use a sentence composed of padded symbols.
 # 
@@ -245,7 +236,6 @@ def baseline_text(x):
 
 def input_text_transform(x):
     return interpretable_embedding.indices_to_embeddings(x)
-
 
 # # Using the Insights API
 # 
@@ -272,7 +262,6 @@ def vqa_dataset(image, questions, targets):
             inputs=(img, q), labels=(target_idx,), additional_args=q_len
         )
 
-
 # Let's create our `AttributionVisualizer`, to do this we need the following:
 # 
 # - A score function, which tells us how to interpret the model's output vector
@@ -288,7 +277,6 @@ def vqa_dataset(image, questions, targets):
 def score_func(o):
     return F.softmax(o, dim=1)
 
-
 # The following function will convert a sequence of question indices to the associated question words for visualization purposes. This will be provided to the `TextFeature` object to describe text features.
 
 # In[13]:
@@ -296,7 +284,6 @@ def score_func(o):
 
 def itos(input):
     return [question_words[int(i)] for i in input.squeeze(0)]
-
 
 # Let's define some dummy data to visualize using the function we declared earlier.
 
@@ -309,7 +296,6 @@ dataset = vqa_dataset("./img/vqa/elephant.jpg",
     "where is the elephant" ],
     ["elephant", "gray", "zoo"]
 )
-
 
 # Now let's describe our features. Each feature requires an input transformation function and a set of baselines. As described earlier, we will use the black image for the image baseline and a padded sequence for the text baseline.
 # 
@@ -335,7 +321,6 @@ features = [
     ),
 ]
 
-
 # Let's define our AttributionVisualizer object with the above parameters and our `vqa_resnet` model. 
 
 # In[16]:
@@ -349,7 +334,6 @@ visualizer = AttributionVisualizer(
     classes=answer_words,
 )
 
-
 # And now we can visualize the outputs produced by the model.
 # 
 # Insights allows [different attribution methods](https://captum.ai/docs/algorithms) to be chosen. By default, [integrated gradients](https://captum.ai/api/integrated_gradients) is selected.
@@ -359,7 +343,6 @@ visualizer = AttributionVisualizer(
 
 visualizer.render()
 
-
 # In[18]:
 
 
@@ -367,11 +350,9 @@ visualizer.render()
 import IPython.display
 IPython.display.Image(filename='img/captum_insights_vqa.png')
 
-
 # Finally, since we are done with visualization, we will revert the change to the model we made with `configure_interpretable_embedding_layer`. To do this, we will invoke the `remove_interpretable_embedding_layer` function. Uncomment the line below to execute the cell.
 
 # In[19]:
 
 
 # remove_interpretable_embedding_layer(vqa_resnet, interpretable_embedding)
-

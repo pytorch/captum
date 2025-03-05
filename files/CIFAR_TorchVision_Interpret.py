@@ -18,7 +18,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 
-get_ipython().run_line_magic('matplotlib', 'inline')
+%matplotlib inline
 
 import torch
 import torchvision
@@ -32,7 +32,6 @@ from captum.attr import Saliency
 from captum.attr import DeepLift
 from captum.attr import NoiseTunnel
 from captum.attr import visualization as viz
-
 
 # In the cell below we load test and train datasets, define image transformers and supported classification label classes.
 
@@ -94,7 +93,6 @@ class Net(nn.Module):
 
 net = Net()
 
-
 # In[4]:
 
 
@@ -141,7 +139,6 @@ else:
     print('Finished Training')
     torch.save(net.state_dict(), 'models/cifar_torchvision.pt')
 
-
 # In the cell below we load some images from the test dataset and perform predictions.
 
 # In[6]:
@@ -169,7 +166,6 @@ _, predicted = torch.max(outputs, 1)
 print('Predicted: ', ' '.join('%5s' % classes[predicted[j]]
                               for j in range(4)))
 
-
 # Let's choose a test image at index `ind` and apply some of our attribution algorithms on it.
 
 # In[7]:
@@ -180,14 +176,12 @@ ind = 3
 input = images[ind].unsqueeze(0)
 input.requires_grad = True
 
-
 # Sets model to eval mode for interpretation purposes
 
 # In[8]:
 
 
 net.eval()
-
 
 # A generic function that will be used for calling `attribute` on attribution algorithm defined in input.
 
@@ -204,7 +198,6 @@ def attribute_image_features(algorithm, input, **kwargs):
     return tensor_attributions
         
 
-
 # Computes gradients with respect to class `ind` and transposes them for visualization purposes.
 
 # In[10]:
@@ -213,7 +206,6 @@ def attribute_image_features(algorithm, input, **kwargs):
 saliency = Saliency(net)
 grads = saliency.attribute(input, target=labels[ind].item())
 grads = np.transpose(grads.squeeze().cpu().detach().numpy(), (1, 2, 0))
-
 
 # Applies integrated gradients attribution algorithm on test image. Integrated Gradients computes the integral of the gradients of the output prediction for the class index `ind` with respect to the input image pixels. More details about integrated gradients can be found in the original paper: https://arxiv.org/abs/1703.01365
 
@@ -224,7 +216,6 @@ ig = IntegratedGradients(net)
 attr_ig, delta = attribute_image_features(ig, input, baselines=input * 0, return_convergence_delta=True)
 attr_ig = np.transpose(attr_ig.squeeze().cpu().detach().numpy(), (1, 2, 0))
 print('Approximation delta: ', abs(delta))
-
 
 # Below we demonstrate how to use integrated gradients and noise tunnel with smoothgrad square option on the test image. Noise tunnel with `smoothgrad square` option adds gaussian noise with a standard deviation of `stdevs=0.2` to the input image `nt_samples` times, computes the attributions for `nt_samples` images and returns the mean of the squared attributions across `nt_samples` images.
 
@@ -237,7 +228,6 @@ attr_ig_nt = attribute_image_features(nt, input, baselines=input * 0, nt_type='s
                                       nt_samples=100, stdevs=0.2)
 attr_ig_nt = np.transpose(attr_ig_nt.squeeze(0).cpu().detach().numpy(), (1, 2, 0))
 
-
 # Applies DeepLift on test image. Deeplift assigns attributions to each input pixel by looking at the differences of output and its reference in terms of the differences of the input from the reference.
 
 # In[ ]:
@@ -246,7 +236,6 @@ attr_ig_nt = np.transpose(attr_ig_nt.squeeze(0).cpu().detach().numpy(), (1, 2, 0
 dl = DeepLift(net)
 attr_dl = attribute_image_features(dl, input, baselines=input * 0)
 attr_dl = np.transpose(attr_dl.squeeze(0).cpu().detach().numpy(), (1, 2, 0))
-
 
 # In the cell below we will visualize the attributions for `Saliency Maps`, `DeepLift`, `Integrated Gradients` and `Integrated Gradients with SmoothGrad`.
 
@@ -274,4 +263,5 @@ _ = viz.visualize_image_attr(attr_ig_nt, original_image, method="blended_heat_ma
 
 _ = viz.visualize_image_attr(attr_dl, original_image, method="blended_heat_map",sign="all",show_colorbar=True, 
                           title="Overlayed DeepLift")
+
 

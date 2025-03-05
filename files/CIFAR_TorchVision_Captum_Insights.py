@@ -89,7 +89,6 @@ def formatted_data_iter():
         images, labels = next(dataloader)
         yield Batch(inputs=images, labels=labels)
 
-
 # Run the visualizer and render inside notebook for interactive debugging.
 
 # In[3]:
@@ -112,11 +111,11 @@ visualizer = AttributionVisualizer(
 )
 
 
+
 # In[4]:
 
 
 visualizer.render()
-
 
 # In[5]:
 
@@ -124,4 +123,3 @@ visualizer.render()
 # show a screenshot if using notebook non-interactively
 from IPython.display import Image
 Image(filename='img/captum_insights.png')
-

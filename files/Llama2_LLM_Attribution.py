@@ -33,7 +33,6 @@ from captum.attr import (
 warnings.filterwarnings("ignore", ".*past_key_values.*")
 warnings.filterwarnings("ignore", ".*Skipping this token.*")
 
-
 # ## Preparation
 # 
 # Let's make a helper function to load models through Huggingface. We will also add an extra step for 4-bits quantization which can effectively reduce the GPU memory consumption. Now, we can use them to load "Llama-2-7b-chat".
@@ -68,7 +67,6 @@ def create_bnb_config():
 
     return bnb_config
 
-
 # In[3]:
 
 
@@ -77,7 +75,6 @@ model_name = "meta-llama/Llama-2-13b-chat-hf"
 bnb_config = create_bnb_config()
 
 model, tokenizer = load_model(model_name, bnb_config)
-
 
 # Let's test the model with a simple prompt and take a look at the output.
 
@@ -93,7 +90,6 @@ with torch.no_grad():
     response = tokenizer.decode(output_ids, skip_special_tokens=True)
     print(response)
 
-
 # ## Perturbation-based Attribution
 # 
 # OK now, the model is working and has completed the given prompt by producing several possible interests. To understand how the model produces them based on the prompt, we will first use the perturbation-based algrotihms from Captum to understand the generation. We can start with the simplest `FeatureAblation`, which ablates each of the features of this string to see how it affects the predicted probability of the target string. The way is the same as before: feed the model into the corresponding constructor to initiate the attribution method. But additionally, to help it work with text-based input and output, we need to wrap it with the new `LLMAttribution` class.
@@ -104,7 +100,6 @@ with torch.no_grad():
 fa = FeatureAblation(model)
 
 llm_attr = LLMAttribution(fa, tokenizer)
-
 
 # The newly created `llm_attr` is the same as the wrapped attribution method instance which provides an `.attribute()` function taking the model inputs and returns the attribution scores of cared features within the inputs. However, by default, Captum's attribution algorithms assume each input into the model must be PyTorch tensors and perturb them at tensor level. This is likely not what we want for LLM, where we are more interested in the interpretable text input and making text modifications like removing a text segment, than a less meaningful tensor of token indices. To solve this, we introduce a new adapter design called `InterpretableInput` which handles the conversion between more interpretable input type and tensor, and tells Captum how to work with them. `llm_attr` is made to accept certain text-based `InterpretableInput` as the arguements. The concept of "Interpretable Input" mainly comes from the following two papers:
 # - [“Why Should I Trust You?”: Explaining the Predictions of Any Classifier](https://arxiv.org/abs/1602.04938)
@@ -126,7 +121,6 @@ target = "playing guitar, hiking, and spending time with his family."
 
 attr_res = llm_attr.attribute(inp, target=target, skip_tokens=skip_tokens)
 
-
 # With just a few lines of codes, we now get the `FeatureAblation` attribution result of our LLM. The return contains the attribution tensors to both the entire generated target seqeuence and each generated token, which tell us how each input token impact the output and each token within it.
 
 # In[7]:
@@ -135,14 +129,12 @@ attr_res = llm_attr.attribute(inp, target=target, skip_tokens=skip_tokens)
 print("attr to the output sequence:", attr_res.seq_attr.shape)  # shape(n_input_token)
 print("attr to the output tokens:", attr_res.token_attr.shape)  # shape(n_output_token, n_input_token)
 
-
 # It also provides the utilities to visualize the results. Next we will plot the token attribution to view the relations between input and output tokens. As we will see, the result is generally very positive. This is expected, since the target, "playing guitar, hiking, and spending time with his family", is what the model feel confident to generate by itself given the input tokens. So change in the input is more likely divert the model from this target.
 
 # In[8]:
 
 
 attr_res.plot_token_attr(show=True)
-
 
 # However, it may not always make sense to define individual token as intepretable features and perturb it. Tokenizers used in modern LLMs may break a single word making the tokens not intepretable by themselves. For example, in our case above, the tokenizer can break the word "Palm" into "_Pal" and "m". It doesn't make much sense to study the separate attribution of them. Moreover, even a whole word can be meaningless. For example, "Palm Coast" together result in a city name. Changing just partial of its tokens would likely not give anything belongs to the natural distribution of potential cities in Florida, which may lead to unexpected impacts on the perturbed model output.
 # 
@@ -164,7 +156,6 @@ attr_res = llm_attr.attribute(inp, target=target, skip_tokens=skip_tokens)
 
 attr_res.plot_token_attr(show=True)
 
-
 # We know that perturbation-based algrotihms calculate the attribution by switching the features between "presence" and "absence" states. So what should a text feature look like here when it is in "absence" in the above example? Captum allows users to set the baselines, i.e., the reference values, to use when a feature is absent. By default, `TextTemplateInput` uses empty string `''` as the baselines for all, which is equivalent to the removal of the segments. This may not be perfect for the same out-of-distribution reason. For example, when the feature "name" is absent, the prompt loses its subjective and no longer makes much sense. 
 # 
 # To improve it, let's manually set the baselines to something that still fit the context of the original text and keep it within the natural data distribution.
@@ -181,7 +172,6 @@ inp = TextTemplateInput(
 attr_res = llm_attr.attribute(inp, target=target, skip_tokens=skip_tokens)
 
 attr_res.plot_token_attr(show=True)
-
 
 # The result represents how the features impacts the output compared with the single baseline. It can be a useful setup to have some interesting findings. For example, the city name "Palm Coast" is more positive to "playing golf" but negative to "hiking" compared with "Seattle".
 # 
@@ -211,7 +201,6 @@ attr_res = llm_attr.attribute(inp, target=target, skip_tokens=skip_tokens, num_t
 
 attr_res.plot_token_attr(show=True)
 
-
 # One potential issue with the current approach is using Feature Ablation. If the model learns complex interations between the prompt features, the true importance may not be reflected in the attribution scores. Consider a case where the model predicts a high probability of playing golf if a person is either a lawyer or lives in Palm Coast. By ablating a feature one at a time, the probability may appear to be unchanged when ablating each feature independently, but may drop substantially when perturbing both together.
 # 
 # To address this, we can apply alternate perturbation-based attribution methods available in Captum such as ShapleyValue(Sampling), KernelShap and Lime, which ablate different subgroups of features and may result in more accurate scores.
@@ -228,7 +217,6 @@ sv_llm_attr = LLMAttribution(sv, tokenizer)
 attr_res = sv_llm_attr.attribute(inp, target=target, skip_tokens=skip_tokens, num_trials=3)
 
 attr_res.plot_token_attr(show=True)
-
 
 # Let's now consider a more complex example, where we use the LLM as a few-shot learner to classify sample movie reviews as positive or negative. We want to measure the relative impact of the few shot examples. Since the prompt changes slightly in the case that no examples are needed, we define a prompt function rather than a format string in this case.
 
@@ -260,7 +248,6 @@ attr_res = sv_llm_attr.attribute(inp, skip_tokens=skip_tokens)
 
 attr_res.plot_token_attr(show=True)
 
-
 # Interestingly, we can see all these few-shot examples we choose actually make the model less likely to correctly label the given review as "Positive".
 
 # # Gradient-based Attribution
@@ -272,7 +259,6 @@ attr_res.plot_token_attr(show=True)
 lig = LayerIntegratedGradients(model, model.model.embed_tokens)
 
 llm_attr = LLMGradientAttribution(lig, tokenizer)
-
 
 # Now that we have our LLM attribution object, we can similarly call `.attribute()` to obtain our gradient-based attributions. Right now, `LLMGradientAttribution` can only handle `TextTokenInput` inputs. We can visualize the attribution with respect to both the full output sequence and individual output tokens using the methods `.plot_seq_attr()` and `.plot_token_attr()`, respectively.
 
@@ -289,13 +275,11 @@ attr_res = llm_attr.attribute(inp, target=target, skip_tokens=skip_tokens)
 
 attr_res.plot_seq_attr(show=True)
 
-
 # Layer Integrated Gradients estimates that the most important input token in the prediction of the subsequent tokens in the sentence is the word, "lives." We can visualize further token-level attribution at the embedding layer as well.
 
 # In[16]:
 
 
 attr_res.plot_token_attr(show=True)
-
 
 # Keep in mind that the token- and sequence-wise attribution will change layer to layer. We encourage you to explore how this attribution changes with alternative layers in the LLM.

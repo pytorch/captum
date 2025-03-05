@@ -32,19 +32,16 @@ from captum.attr import LayerIntegratedGradients, TokenReferenceBase, visualizat
 
 nlp = spacy.load('en')
 
-
 # In[2]:
 
 
 for package in (captum, spacy, torch, torchtext):
     print(package.__name__, package.__version__)
 
-
 # In[ ]:
 
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-
 
 # The dataset used for training this model can be found in: https://ai.stanford.edu/~amaas/data/sentiment/
 # 
@@ -103,7 +100,6 @@ class CNN(nn.Module):
             
         return self.fc(cat)
 
-
 # Loads pretrained model and sets the model to eval mode.
 # 
 # The model can be downloaded here: https://github.com/pytorch/captum/blob/master/tutorials/models/imdb-model-cnn-large.pt
@@ -115,7 +111,6 @@ model = torch.load('models/imdb-model-cnn-large.pt')
 model.eval()
 model = model.to(device)
 
-
 # Forward function that supports sigmoid
 
 # In[6]:
@@ -124,7 +119,6 @@ model = model.to(device)
 def forward_with_sigmoid(input):
     return torch.sigmoid(model(input))
 
-
 # Load a small subset of test data using torchtext from IMDB dataset.
 
 # In[ ]:
@@ -132,7 +126,6 @@ def forward_with_sigmoid(input):
 
 TEXT = torchtext.data.Field(lower=True, tokenize='spacy')
 Label = torchtext.data.LabelField(dtype = torch.float)
-
 
 # In[ ]:
 
@@ -147,7 +140,6 @@ train, test = torchtext.datasets.IMDB.splits(text_field=TEXT,
 
 
 test, _ = test.split(split_ratio = 0.04)
-
 
 # Loading and setting up vocabulary for word embeddings using torchtext.
 
@@ -165,12 +157,10 @@ TEXT.build_vocab(train, vectors=loaded_vectors, max_size=len(loaded_vectors.stoi
 TEXT.vocab.set_vectors(stoi=loaded_vectors.stoi, vectors=loaded_vectors.vectors, dim=loaded_vectors.dim)
 Label.build_vocab(train)
 
-
 # In[10]:
 
 
 print('Vocabulary Size: ', len(TEXT.vocab))
-
 
 # In order to apply Integrated Gradients and many other interpretability algorithms on sentences, we need to create a reference (aka baseline) for the sentences and its constituent parts, tokens.
 # 
@@ -183,12 +173,10 @@ print('Vocabulary Size: ', len(TEXT.vocab))
 
 PAD_IND = TEXT.vocab.stoi[TEXT.pad_token]
 
-
 # In[12]:
 
 
 token_reference = TokenReferenceBase(reference_token_idx=PAD_IND)
-
 
 # Let's create an instance of `LayerIntegratedGradients` using forward function of our model and the embedding layer.
 # This instance of layer integrated gradients will be used to interpret movie rating review.
@@ -201,7 +189,6 @@ token_reference = TokenReferenceBase(reference_token_idx=PAD_IND)
 
 
 lig = LayerIntegratedGradients(model, model.embedding)
-
 
 # In the cell below, we define a generic function that generates attributions for each movie rating and stores them in a list using `VisualizationDataRecord` class. This will ultimately be used for visualization purposes.
 
@@ -233,7 +220,8 @@ def interpret_sentence(model, sentence, min_len = 7, label = 0):
     reference_indices = token_reference.generate_reference(seq_length, device=device).unsqueeze(0)
 
     # compute attributions and approximation delta using layer integrated gradients
-    attributions_ig, delta = lig.attribute(input_indices, reference_indices,                                            n_steps=500, return_convergence_delta=True)
+    attributions_ig, delta = lig.attribute(input_indices, reference_indices, \
+                                           n_steps=500, return_convergence_delta=True)
 
     print('pred: ', Label.vocab.itos[pred_ind], '(', '%.2f'%pred, ')', ', delta: ', abs(delta))
 
@@ -255,7 +243,6 @@ def add_attributions_to_visualizer(attributions, text, pred, pred_ind, label, de
                             text,
                             delta))
 
-
 # Below cells call `interpret_sentence` to interpret a couple handcrafted review phrases.
 
 # In[15]:
@@ -268,7 +255,6 @@ interpret_sentence(model, 'It was a horrible movie', label=0)
 interpret_sentence(model, 'I\'ve never watched something as bad', label=0)
 interpret_sentence(model, 'That is a terrible movie.', label=0)
 
-
 # Below is an example of how we can visualize attributions for the text tokens. Feel free to visualize it differently if you choose to have a different visualization method.
 
 # In[16]:
@@ -277,7 +263,6 @@ interpret_sentence(model, 'That is a terrible movie.', label=0)
 print('Visualize attributions based on Integrated Gradients')
 _ = visualization.visualize_text(vis_data_records_ig)
 
-
 # Above cell generates an output similar to this:
 
 # In[17]:
@@ -285,4 +270,3 @@ _ = visualization.visualize_text(vis_data_records_ig)
 
 from IPython.display import Image
 Image(filename='img/sentiment_analysis.png')
-

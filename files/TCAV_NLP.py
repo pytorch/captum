@@ -54,12 +54,10 @@ nlp = spacy.load('en')
 random.seed(123)
 np.random.seed(123)
 
-
 # In[2]:
 
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-
 
 # Defining torchtext data `Field` so that we can load the vocabulary for IMDB dataset the way that was done to train IMDB model. 
 
@@ -68,7 +66,6 @@ device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 TEXT = torchtext.data.Field(lower=True, tokenize='spacy')
 Label = torchtext.data.LabelField(dtype = torch.float)
-
 
 # Reading IMDB dataset the same way we did for training sensitivity analysis model. This will help us to load correct token to embedding mapping using Glove.
 
@@ -98,11 +95,11 @@ TEXT.build_vocab(train, vectors=loaded_vectors, max_size=len(loaded_vectors.stoi
 TEXT.vocab.set_vectors(stoi=loaded_vectors.stoi, vectors=loaded_vectors.vectors, dim=loaded_vectors.dim)
 
 
+
 # In[6]:
 
 
 print('Vocabulary Size: ', len(TEXT.vocab))
-
 
 # A helper function that allows to read concept examples from an input file. We also define `const_len=7`, minimum and maximum length of tokens in text. The text is extended up to 7 tokens with padding, if it is short or is truncated up to 7 tokens if it is long.
 
@@ -121,7 +118,6 @@ def get_tensor_from_filename(filename):
         text_indices = torch.tensor([TEXT.vocab.stoi[t] for t in concept.text], device=device)
         yield text_indices
         
-
 
 # The function below allows us to create a concept instance using a file path where the concepts are stored, concept name and id.
 
@@ -155,7 +151,8 @@ def print_concept_sample(concept_iter):
         cnt += 1
 
 neutral_concept = assemble_concept('neutral', 0, concepts_path="data/tcav/text-sensitivity/neutral.csv")
-positive_concept = assemble_concept('positive-adjectives', 5,                                     concepts_path="data/tcav/text-sensitivity/positive-adjectives.csv")
+positive_concept = assemble_concept('positive-adjectives', 5, \
+                                    concepts_path="data/tcav/text-sensitivity/positive-adjectives.csv")
 
 
 # Both `Positive Adjective` and `Neutral` concepts have the same number of examples representing corresponding concept. The examples for the `Positive Adjective` concept are semi-hand curated and the context is neutralized whereas those for neutral concept are chosen randomly from Gutenberg Poem Dataset (https://github.com/google-research-datasets/poem-sentiment/blob/master/data/train.tsv)
@@ -169,7 +166,6 @@ positive_concept = assemble_concept('positive-adjectives', 5,                   
 
 print_concept_sample(iter(neutral_concept.data_iter))
 
-
 # # Examples representing `Positive Adjective` Concept
 
 # `Positive Adjectives` concept is surrounded by neutral / uninformative context. It is important to note that we positioned positive adjectives in different locations in the text. This makes concept definitions more abstract and independent of the location. Apart from that as we can see the length of the text in the concepts in fixed to 7. This is because our sensitivity classifier was trained for a fixed sequence length of 7. Besides that this ensures that the activations for concept and prediction examples have the same shape.
@@ -178,7 +174,6 @@ print_concept_sample(iter(neutral_concept.data_iter))
 
 
 print_concept_sample(iter(positive_concept.data_iter))
-
 
 # # Defining and loading pre-trained ConvNet model
 
@@ -236,13 +231,11 @@ class CNN(nn.Module):
             
         return self.fc(cat)
 
-
 # In[13]:
 
 
 model = torch.load('models/imdb-model-cnn-large.pt')
 model.eval()
-
 
 # # Computing TCAV Scores
 
@@ -259,7 +252,9 @@ neutral_concept3 = assemble_concept('neutral3', 2, concepts_path="data/tcav/text
 neutral_concept4 = assemble_concept('neutral4', 3, concepts_path="data/tcav/text-sensitivity/neutral4.csv")
 neutral_concept5 = assemble_concept('neutral5', 4, concepts_path="data/tcav/text-sensitivity/neutral5.csv")
 
-positive_concept = assemble_concept('positive-adjectives', 5,                                     concepts_path="data/tcav/text-sensitivity/positive-adjectives.csv")
+positive_concept = assemble_concept('positive-adjectives', 5, \
+                                    concepts_path="data/tcav/text-sensitivity/positive-adjectives.csv")
+
 
 
 # Below we define five experimental sets consisting of `Positive Adjective` vs `Neutral` concept pairs. TCAV trains a model for each pair, and estimates tcav scores for each experimental set in given input layers. In this case we chose `convs.2` and `convs.1` layers. TCAV score indicates the importance of a concept in a given layer. The higher the TCAV score, the more important is that concept for given layer in making a prediction for a given set of samples.
@@ -275,7 +270,6 @@ experimental_sets=[[positive_concept, neutral_concept],
 
 tcav = TCAV(model, layers=['convs.2', 'convs.1'])
 
-
 # A helper function to convert text tokens into embedding indices. In other words numericalizing text tokens.
 
 # In[16]:
@@ -284,7 +278,8 @@ tcav = TCAV(model, layers=['convs.2', 'convs.1'])
 def covert_text_to_tensor(input_texts):
     input_tensors = []
     for input_text in input_texts:
-        input_tensor = torch.tensor([TEXT.vocab.stoi[tok.text] for                                      tok in nlp.tokenizer(input_text)], device=device).unsqueeze(0)
+        input_tensor = torch.tensor([TEXT.vocab.stoi[tok.text] for \
+                                     tok in nlp.tokenizer(input_text)], device=device).unsqueeze(0)
         input_tensors.append(input_tensor)
     return torch.cat(input_tensors)
 
@@ -294,7 +289,6 @@ def covert_text_to_tensor(input_texts):
 
 def extract_scores(interpretations, layer_name, score_type, idx):
     return [interpretations[key][layer_name][score_type][idx].item() for key in interpretations.keys()]
-
 
 # Here we define a number of examples that contain positive sentiment and test the sensitivity of model predictions to `Positive Adjectives` concept.
 
@@ -344,7 +338,6 @@ def plot_tcav_scores(experimental_sets, tcav_scores, layers = ['convs.2'], score
 
     plt.show()
 
-
 # In the cell below we visualize TCAV scores for `Positive Adjective` and `Neutral` concepts in `convs.2` and `convs.1` layers. For this experiment we tested `Positive Adjective` concept vs 5 different `Neutral` concepts. As we can see, `Positive Adjective` concept has consistent high score across all layers and experimental sets.
 
 # In[20]:
@@ -352,18 +345,17 @@ def plot_tcav_scores(experimental_sets, tcav_scores, layers = ['convs.2'], score
 
 plot_tcav_scores(experimental_sets, positive_interpretations, ['convs.1', 'convs.2'], score_type='sign_count')
 
-
 # Now let's perform the same experiment for examples that have negative sentiment.
 
 # In[21]:
 
 
-neg_input_texts = ["It was not a good movie pad", "I've never watched something as bad",     "It is a terrible movie ! pad"]
+neg_input_texts = ["It was not a good movie pad", "I've never watched something as bad", \
+    "It is a terrible movie ! pad"]
 neg_input_text_indices = covert_text_to_tensor(neg_input_texts)
 
 
 negative_interpretations = tcav.interpret(neg_input_text_indices, experimental_sets=experimental_sets)
-
 
 # Visualizing TCAV scores for sentances that have negative sentiment. As we can see from the digram below, TCAV score for `Positive Adjectives` is relatively low comapare to the opposite `Neutral` concept. This observation holds cosistently true accross all experimental sets and layers.
 
@@ -371,7 +363,6 @@ negative_interpretations = tcav.interpret(neg_input_text_indices, experimental_s
 
 
 plot_tcav_scores(experimental_sets, negative_interpretations, ['convs.1', 'convs.2'], score_type='sign_count')
-
 
 # # Statistical significance testing of concepts
 
@@ -413,7 +404,8 @@ def get_pval(interpretations, layer, score_type, alpha=0.05, print_ret=False):
 
 def show_boxplots(layer, scores, metric='sign_count'):
     def format_label_text(experimental_sets):
-        concept_name_list = [exp.name if i == 0 else                              exp.name.split('_')[0] for i, exp in enumerate(experimental_sets[0])]
+        concept_name_list = [exp.name if i == 0 else \
+                             exp.name.split('_')[0] for i, exp in enumerate(experimental_sets[0])]
         return concept_name_list
 
     n = 4
@@ -431,7 +423,6 @@ def show_boxplots(layer, scores, metric='sign_count'):
 
     plt.show()
 
-
 # The box plots below visualize the distribution of TCAV scores for a pair of concepts in two different layers, `convs.2` and `convs.1`. Each layer is visualized in a separate jupyter cell. Below diagrams show that `Positive Adjectives` concept has TCAV scores that are consistently high across all layers and experimental sets as apposed to `Neutral` concept. It also shows that `Positive Adjectives` and `Neutral` are disjoint populations.
 # 
 
@@ -440,9 +431,7 @@ def show_boxplots(layer, scores, metric='sign_count'):
 
 show_boxplots("convs.2", positive_interpretations, metric='sign_count')
 
-
 # In[26]:
 
 
 show_boxplots("convs.1", positive_interpretations, metric='sign_count')
-

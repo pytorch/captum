@@ -136,7 +136,6 @@ dotted_concept = assemble_concept("dotted", 2, concepts_path=concepts_path)
 random_0_concept = assemble_concept("random_0", 3, concepts_path=concepts_path)
 random_1_concept = assemble_concept("random_1", 4, concepts_path=concepts_path)
 
-
 # Let\'s visualize some samples from those concepts
 
 # In[6]:
@@ -170,7 +169,6 @@ for c, concept in enumerate([stripes_concept, zigzagged_concept, dotted_concept,
 
 model = torchvision.models.googlenet(pretrained=True)
 model = model.eval()
-
 
 # # Computing TCAV Scores
 
@@ -216,7 +214,6 @@ experimental_set_rand = [[stripes_concept, random_0_concept], [stripes_concept, 
 # Load sample images from folder
 zebra_imgs = load_image_tensors('zebra', transform=False)
 
-
 # Visualizing some of the images that we will use for making predictions and explaining those predictions by the means of concepts defined above.
 
 # In[11]:
@@ -237,7 +234,6 @@ axs[4].axis('off')
 
 plt.show()
 
-
 # Here we perform a transformation and convert the images into tensors, so that we can use them as inputs to NN model.
 
 # In[12]:
@@ -246,7 +242,6 @@ plt.show()
 # Load sample images from folder
 zebra_tensors = torch.stack([transform(img) for img in zebra_imgs])
 experimental_set_rand
-
 
 # In[13]:
 
@@ -261,7 +256,6 @@ tcav_scores_w_random = mytcav.interpret(inputs=zebra_tensors,
                                         n_steps=5,
                                        )
 tcav_scores_w_random
-
 
 # Auxiliary functions for visualizing of TCAV scores.
 
@@ -299,7 +293,6 @@ def plot_tcav_scores(experimental_sets, tcav_scores):
 
     plt.show()
 
-
 # Let's use above defined auxilary functions and visualize tcav scores below.
 
 # In[15]:
@@ -333,7 +326,6 @@ tcav_scores_w_zig_dot = mytcav.interpret(inputs=zebra_tensors,
 
 
 plot_tcav_scores(experimental_set_zig_dot, tcav_scores_w_zig_dot)    
-
 
 # Similar to the previous case in this experiment as well we observe that `striped` concept has very high TCAV scores across all  three layers compared to `zigzagged` and `dotted`. This means that the `striped` concept is an essential concept in predicting `zebra`.  
 
@@ -375,7 +367,6 @@ experimental_sets.extend([[random_0_concept, random_concept] for random_concept 
 
 experimental_sets
 
-
 # Now, let's define a convenience function for assembling the experiments together as lists of Concept objects, creating and running the TCAV:
 
 # In[20]:
@@ -387,7 +378,6 @@ def assemble_scores(scores, experimental_sets, idx, score_layer, score_type):
         score_list.append(scores["-".join([str(c.id) for c in concepts])][score_layer][score_type][idx])
         
     return score_list
-
 
 # In addition, it is interesting to look into the p-values of statistical significance tests for each concept. We say, that we reject null hypothesis, if the p-value for concept's TCAV scores is smaller than 0.05. This indicates that the concept is important for model prediction.
 # 
@@ -430,7 +420,6 @@ def get_pval(scores, experimental_sets, score_layer, score_type, alpha=0.05, pri
 # Run TCAV
 scores = mytcav.interpret(zebra_tensors, experimental_sets, zebra_ind, n_steps=5)
 
-
 # We can present the distribution of tcav scores using boxplots and the p-values indicating whether TCAV scores of those concepts are overlapping or disjoint.
 
 # In[23]:
@@ -440,7 +429,8 @@ n = 4
 def show_boxplots(layer, metric='sign_count'):
 
     def format_label_text(experimental_sets):
-        concept_id_list = [exp.name if i == 0 else                              exp.name.split('_')[0] for i, exp in enumerate(experimental_sets[0])]
+        concept_id_list = [exp.name if i == 0 else \
+                             exp.name.split('_')[0] for i, exp in enumerate(experimental_sets[0])]
         return concept_id_list
 
     n_plots = 2
@@ -459,7 +449,6 @@ def show_boxplots(layer, metric='sign_count'):
 
     plt.show()
 
-
 # Below box plots visualize the distribution of TCAV scores for two pairs of concepts in three different layers. Each layer is visualized in a separate jupyter cell. 
 # Below diagrams show that `striped` concept has TCAV scores that are consistently high across all layers and experimental sets as apposed to `random` concept. It also shows that `striped` and `random` are disjoint populations.
 # 
@@ -470,21 +459,17 @@ def show_boxplots(layer, metric='sign_count'):
 
 show_boxplots ("inception4c")
 
-
 # In[25]:
 
 
 show_boxplots ("inception4d")
-
 
 # In[26]:
 
 
 show_boxplots ("inception4e")
 
-
 # In[ ]:
-
 
 
 

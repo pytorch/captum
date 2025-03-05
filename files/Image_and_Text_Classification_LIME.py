@@ -18,7 +18,6 @@ from captum._utils.models.linear_model import SkLearnLinearRegression, SkLearnLa
 import os
 import json
 
-
 # ## 1. Image Classification
 
 # In this section, we will learn applying Lime to analyze a Resnet trained on ImageNet-1k. For testing data, we use samples from PASCAL VOC 2012 since its segmentation masks can directly serve as semantic "super-pixels" for images. 
@@ -34,7 +33,6 @@ from captum.attr._core.lime import get_exp_kernel_similarity_function
 from PIL import Image
 import matplotlib.pyplot as plt
 
-
 # ### 1.1 Load the model and dataset
 
 # We can directly load the pretrained Resnet from torchvision and set it to evaluation mode as our target image classifier to inspect. 
@@ -45,14 +43,12 @@ import matplotlib.pyplot as plt
 resnet = resnet18(pretrained=True)
 resnet = resnet.eval()
 
-
 # This model predicts ImageNet-1k labels for given sample images. To better present the results, we also load the mapping of label index and text.
 
 # In[4]:
 
 
-get_ipython().system('wget -P $HOME/.torch/models https://s3.amazonaws.com/deep-learning-models/image-models/imagenet_class_index.json')
-
+!wget -P $HOME/.torch/models https://s3.amazonaws.com/deep-learning-models/image-models/imagenet_class_index.json
 
 # In[5]:
 
@@ -60,7 +56,6 @@ get_ipython().system('wget -P $HOME/.torch/models https://s3.amazonaws.com/deep-
 labels_path = os.getenv('HOME') + '/.torch/models/imagenet_class_index.json'
 with open(labels_path) as json_data:
     idx_to_labels = {idx: label for idx, [_, label] in json.load(json_data).items()}
-
 
 # As mentioned before, we will use PASCAL VOC 2012 as the test data, which is available in torchvision as well. We will load it with `torchvision` transforms which convert both the images and targets, i.e., segmentation masks, to tensors.
 
@@ -84,7 +79,6 @@ voc_ds = VOCSegmentation(
     )
 )
 
-
 # This dataset provides an addional segmentation mask along with every image. Compared with inspecting each pixel, the segments (or "super-pixels") are semantically more intuitive for human to perceive. We will discuss more in section 1.3.
 # 
 # Let's pick one example to see how the image and corresponding mask look like. Here we choose an image with more than one segments besides background so that we can compare each segment's impact on the classification.
@@ -103,7 +97,6 @@ def show_image(ind):
 
 show_image(sample_idx)
 
-
 # ### 1.2 Baseline classification
 
 # We can check how well our model works with the above example. The original Resnet only gives the logits of labels, so we will add a softmax layer to normalize them into probabilities. 
@@ -115,7 +108,6 @@ img, seg_mask = voc_ds[sample_idx]  # tensors of shape (channel, hight, width)
 
 outputs = resnet(img.unsqueeze(0))
 output_probs = F.softmax(outputs, dim=1).squeeze(0)
-
 
 # Then we present the top 5 predicted labels to verify the result.
 
@@ -131,7 +123,6 @@ def print_result(probs, topk=1):
         print(f'{label} ({idx}):', round(prob, 4))
         
 print_result(output_probs, topk=5)
-
 
 # As we can see, the result is pretty reasonable.
 
@@ -158,7 +149,6 @@ for i, seg_id in enumerate(seg_ids):
     
 print('Feature mask IDs:', feature_mask.unique().tolist())
 
-
 # It is time to configure our Lime algorithm now. Essentially, Lime trains an interpretable surrogate model to simulate the target model's predictions. So, building an appropriate interpretable model is the most critical step in Lime. Fortunately, Captum has provided many most common interpretable models to save the efforts. We will demonstrate the usages of Linear Regression and Linear Lasso. Another important factor is the similarity function. Because Lime aims to explain the local behavior of an example, it will reweight the training samples according to their similarity distances. By default, Captum's Lime uses the exponential kernel on top of the consine distance. We will change to euclidean distance instead which is more popular in vision. 
 
 # In[11]:
@@ -171,7 +161,6 @@ lr_lime = Lime(
     interpretable_model=SkLearnLinearRegression(),  # build-in wrapped sklearn Linear Regression
     similarity_func=exp_eucl_distance
 )
-
 
 # Next, we will analyze these groups' influence on the most confident prediction `television`. Every time we call Lime's `attribute` function, an interpretable model is trained around the given input, so unlike many other Captum's attribution algorithms, it is strongly recommended to only provide a single example as input (tensors with first dimension or batch size = 1). There are advanced use cases of passing batched inputs. Interested readers can check the [documentation](https://captum.ai/api/lime.html) for details.
 # 
@@ -192,7 +181,6 @@ attrs = lr_lime.attribute(
 
 print('Attribution range:', attrs.min().item(), 'to', attrs.max().item())
 
-
 # Now, let us use Captum's visualization tool to view the attribution heat map.
 
 # In[13]:
@@ -207,7 +195,6 @@ def show_attr(attr_map):
     )
     
 show_attr(attrs)
-
 
 # The result looks decent: the television segment does demonstrate strongest positive correlation with the prediction, while the chairs has relatively trivial impact and the border slightly shows negative contribution.
 # 
@@ -243,7 +230,6 @@ attrs = lasso_lime.attribute(
 print('Attribution range:', attrs.min().item(), 'to', attrs.max().item())
 show_attr(attrs)
 
-
 # As we can see, the new attribution result removes the chairs and border with the help of Lasso.
 # 
 # Another interesting question to explore is if the model also recognize the chairs in the image. To answer it, we will use the most related label `rocking_chair` from ImageNet as the target, whose label index is `765`. We can check how confident the model feels about the alternative object.
@@ -255,7 +241,6 @@ alter_label_idx = 765
 
 alter_prob = output_probs[alter_label_idx].item()
 print(f'{idx_to_labels[str(alter_label_idx)]} ({alter_label_idx}):', round(alter_prob, 4))
-
 
 # Then, we will redo the attribution with our Lasso Lime.
 
@@ -275,7 +260,6 @@ attrs = lasso_lime.attribute(
 print('Attribution range:', attrs.min().item(), 'to', attrs.max().item())
 show_attr(attrs)
 
-
 # As shown in the heat map, our ResNet does present right belief about the chair segment. However, it gets hindered by the television segment in the foreground. This may also explain why the model feels less confident about the chairs than the television.
 
 # ### 1.4 Understand the sampling process
@@ -294,7 +278,6 @@ for _ in range(SAMPLE_INDEX + 1):
     sample_interp_inp = next(pertubed_genertator)
     
 print('Perturbed interpretable sample:', sample_interp_inp)
-
 
 # Our input sample `[1, 1, 0, 1]` means the third segment (television) is absent while other three segments stay. 
 # 
@@ -320,7 +303,6 @@ plt.imshow(invert_norm(pertubed_img).squeeze(0).permute(1, 2, 0).numpy())
 plt.axis('off')
 plt.show()
 
-
 # As shown above, compared with the original image, the absent feature, i.e., the television segment, gets masked in the perturbed image, while the rest present features stay unchanged. With the perturbed image, Lime is able to find out the model's prediction. Let us still use "television" as our attribution target, so the label of perturbed sample is the value of the model's prediction on "television". Just for curiosity, we can also check how the model's prediction changes with the perturbation.
 
 # In[19]:
@@ -335,7 +317,6 @@ perturbed_output_probs = F.softmax(perturbed_outputs, dim=0)
 print_result(perturbed_output_probs, topk=5)
 print(f'\ntelevision ({label_idx.item()}):', perturbed_output_probs[label_idx].item())
 
-
 # Reasonably, our ImageNet no longer feel confident about classifying the image as television.
 # 
 # At last, because Lime focuses on the local interpretability, it will calculate the similarity between the perturbed and original images to reweight the loss of this data point. Note the calculation is based on the input space instead of the interpretable space. This step is simply passing the two image tensors into the given `similarity_func` argument which is the exponential kernel of euclidean distance in our case.
@@ -345,7 +326,6 @@ print(f'\ntelevision ({label_idx.item()}):', perturbed_output_probs[label_idx].i
 
 sample_similarity = exp_eucl_distance(img.unsqueeze(0), pertubed_img, None)
 print('Sample similarity:', sample_similarity)
-
 
 # This is basically how Lime create a single training data point of `sample_interp_inp`, `sample_label`, and `sample_similarity`. By repeating this process `n_samples` times, it collects a dataset to train the interpretable model.
 # 
@@ -369,7 +349,6 @@ from collections import Counter
 
 from IPython.core.display import HTML, display
 
-
 # ### 2.1 Load the data and define the model
 
 # `torchtext` has included the AG_NEWS dataset but since it is only split into train & test, we need to further cut a validation set from the original train split. Then we build the vocabulary of the frequent words based on our train split.
@@ -392,7 +371,6 @@ print('Vocabulary size:', len(voc))
 num_class = len(set(label for label, _ in ag_train))
 print('Num of classes:', num_class)
 
-
 # The model we use is composed of an embedding-bag, which averages the word embeddings as the latent text representation, and a final linear layer, which maps the latent vector to the logits. Unconventially, `pytorch`'s embedding-bag does not assume the first dimension is batch. Instead, it requires a flattened vector of indices with an additional offset tensor to mark the starting position of each example. You can refer to its [documentation](https://pytorch.org/docs/stable/generated/torch.nn.EmbeddingBag.html#embeddingbag) for details.
 
 # In[23]:
@@ -407,7 +385,6 @@ class EmbeddingBagModel(nn.Module):
     def forward(self, inputs, offsets):
         embedded = self.embedding(inputs, offsets)
         return self.linear(embedded)
-
 
 # ### 2.2 Training and Baseline Classification
 
@@ -435,7 +412,6 @@ train_loader = DataLoader(ag_train, batch_size=BATCH_SIZE,
                           shuffle=True, collate_fn=collate_batch)
 val_loader = DataLoader(ag_val, batch_size=BATCH_SIZE,
                         shuffle=False, collate_fn=collate_batch)
-
 
 # We will then train our embedding-bag model with the common cross-entropy loss and Adam optimizer. Due to the simplicity of this task, 5 epochs should be enough to give us a stable 90% validation accuracy. 
 
@@ -491,7 +467,6 @@ def train_model(train_loader, val_loader):
         
 eb_model = torch.load(CHECKPOINT) if USE_PRETRAINED else train_model(train_loader, val_loader)
 
-
 # Now, let us take the following sports news and test how our model performs.
 
 # In[26]:
@@ -507,7 +482,6 @@ test_labels, test_text, test_offsets = collate_batch([(test_label, test_line)])
 
 probs = F.softmax(eb_model(test_text, test_offsets), dim=1).squeeze(0)
 print('Prediction probability:', round(probs[test_labels[0]].item(), 4))
-
 
 # Our embedding-bag does successfully identify the above news as sports with pretty high confidence.
 
@@ -557,7 +531,6 @@ lasso_lime_base = LimeBase(
     to_interp_rep_transform=None
 )
 
-
 # The attribution call is the same as the `Lime` class. Just remember to add the dummy batch dimension to the text input and put the offsets in the `additional_forward_args` because it is not a feature for the classification but a metadata for the text input.
 
 # In[28]:
@@ -572,7 +545,6 @@ attrs = lasso_lime_base.attribute(
 ).squeeze(0)
 
 print('Attribution range:', attrs.min().item(), 'to', attrs.max().item())
-
 
 # At last, let us create a simple visualization to highlight the influential words where green stands for positive correlation and red for negative.
 
@@ -590,7 +562,6 @@ def show_text_attr(attrs):
     display(HTML('<p>' + ' '.join(token_marks) + '</p>'))
     
 show_text_attr(attrs)
-
 
 # The above visulization should render something like the image below where the model links the "Sports" subject to many reasonable words, like "match" and "medals".
 # 

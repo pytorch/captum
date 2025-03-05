@@ -27,7 +27,6 @@ sys.path.append(os.path.realpath(f"{PROJECT_DIR}/pytorch-vqa"))
 # is slightly different from the original resnet model and performs better on this particular VQA task
 sys.path.append(os.path.realpath(f"{PROJECT_DIR}/pytorch-resnet"))
 
-
 # In[ ]:
 
 
@@ -58,12 +57,10 @@ from captum.attr import (
 )
 from captum.attr._utils.input_layer_wrapper import ModelInputWrapper
 
-
 # In[ ]:
 
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-
 
 # # Loading VQA model
 
@@ -102,7 +99,6 @@ vqa_net = torch.nn.DataParallel(Net(num_tokens))
 vqa_net.load_state_dict(saved_state['weights'])
 vqa_net.to(device)
 vqa_net.eval()
-
 
 # Converting string question into a tensor. `encode_question` function is similar to original implementation of `encode_question` method in pytorch-vqa source code.
 # https://github.com/Cyanogenoid/pytorch-vqa/blob/master/data.py#L110
@@ -172,7 +168,6 @@ class VQA_Resnet_Model(Net):
         answer = self.classifier(combined)
         return answer
 
-
 # In order to explain text features, we must let integrated gradients attribute on the embeddings, not the indices. The reason for this is simply due to Integrated Gradients being a gradient-based attribution method, as we are unable to compute gradients with respect to integers.
 # 
 # Hence, we have two options:
@@ -187,7 +182,6 @@ class VQA_Resnet_Model(Net):
 
 
 USE_INTEPRETABLE_EMBEDDING_LAYER = False  # set to True for option (1)
-
 
 # Updating weights from the saved model and removing the old model from the memory. And wrap the model with `ModelInputWrapper`.
 
@@ -224,7 +218,6 @@ del vqa_net
 if USE_INTEPRETABLE_EMBEDDING_LAYER:
     interpretable_embedding = configure_interpretable_embedding_layer(vqa_resnet, 'module.module.text.embedding')
 
-
 # Below function will help us to transform and image into a tensor.
 
 # In[ ]:
@@ -240,7 +233,6 @@ def image_to_features(img):
     img_batch = img_transformed.unsqueeze(0).to(device)
     return img_batch
 
-
 # Creating reference aka baseline / background for questions. This is specifically necessary for baseline-based model interpretability algorithms. In this case for integrated gradients. More details can be found in the original paper: https://arxiv.org/pdf/1703.01365.pdf
 
 # In[ ]:
@@ -249,13 +241,11 @@ def image_to_features(img):
 PAD_IND = token_to_index['pad']
 token_reference = TokenReferenceBase(reference_token_idx=PAD_IND)
 
-
 # In[ ]:
 
 
 # this is necessary for the backpropagation of RNNs models in eval mode
 torch.backends.cudnn.enabled=False
-
 
 # Creating an instance of layer integrated gradients for option (2); otherwise create an instance of integrated gradients for option (1). Both are equivalent methods to interpret the model's outputs.
 
@@ -266,7 +256,6 @@ if USE_INTEPRETABLE_EMBEDDING_LAYER:
     attr = IntegratedGradients(vqa_resnet)
 else:
     attr = LayerIntegratedGradients(vqa_resnet, [vqa_resnet.module.input_maps["v"], vqa_resnet.module.module.text.embedding])
-
 
 # Defining default cmap that will be used for image visualizations 
 
@@ -287,7 +276,6 @@ default_cmap = LinearSegmentedColormap.from_list('custom blue',
 images = ['./img/vqa/siamese.jpg',
           './img/vqa/elephant.jpg',
           './img/vqa/zebra.jpg']
-
 
 # In[ ]:
 
@@ -365,14 +353,12 @@ vqa_resnet_interpret(images[image_idx], [
     "where is the elephant"
 ], ['elephant', 'gray', 'zoo'])
 
-
 # In[1]:
 
 
 import IPython
 # Above cell generates an output similar to this:
 IPython.display.Image(filename='img/vqa/elephant_attribution.jpg')
-
 
 # In[ ]:
 
@@ -388,13 +374,11 @@ vqa_resnet_interpret(images[image_idx], [
     "where is the cat"
 ], ['cat', 'blue', 'cat', 'white and brown', '2', 'at the wall'])
 
-
 # In[2]:
 
 
 # Above cell generates an output similar to this:
 IPython.display.Image(filename='img/vqa/siamese_attribution.jpg')
-
 
 # In[ ]:
 
@@ -408,13 +392,11 @@ vqa_resnet_interpret(images[image_idx], [
     "where are the zebras"
 ], ['zebra', 'black and white', '2', 'zoo'])
 
-
 # In[3]:
 
 
 # Above cell generates an output similar to this:
 IPython.display.Image(filename='img/vqa/zebra_attribution.jpg')
-
 
 # As mentioned above, after we are done with interpretation, we have to remove Interpretable Embedding Layer and set the original embeddings layer back to the model.
 
@@ -423,4 +405,3 @@ IPython.display.Image(filename='img/vqa/zebra_attribution.jpg')
 
 if USE_INTEPRETABLE_EMBEDDING_LAYER:
     remove_interpretable_embedding_layer(vqa_resnet, interpretable_embedding)
-

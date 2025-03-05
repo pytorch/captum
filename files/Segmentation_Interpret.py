@@ -26,14 +26,12 @@ from captum.attr import LayerGradCam, FeatureAblation, LayerActivation, LayerAtt
 # Default device
 device = "cuda:0" if torch.cuda.is_available() else "cpu"
 
-
 # We can now load the pre-trained segmentation model from torchvision, which is trained on a subset of COCO Train 2017 and define input preprocessing transforms.
 
 # In[2]:
 
 
 fcn = models.segmentation.fcn_resnet101(pretrained=True).to(device).eval()
-
 
 # In[3]:
 
@@ -77,14 +75,12 @@ def decode_segmap(image, nc=21):
     rgb = np.stack([r, g, b], axis=2)
     return rgb
 
-
 # Let us now obtain an image from the COCO training set to evaluate and interpret the segmentation model.
 
 # In[5]:
 
 
-get_ipython().system('wget -nv --directory-prefix=img/segmentation/ https://farm8.staticflickr.com/7301/8862358875_eecba9fb10_z.jpg')
-
+!wget -nv --directory-prefix=img/segmentation/ https://farm8.staticflickr.com/7301/8862358875_eecba9fb10_z.jpg
 
 # Display original image
 
@@ -154,7 +150,6 @@ def agg_segmentation_wrapper(inp):
 
 lgc = LayerGradCam(agg_segmentation_wrapper, fcn.backbone.layer4[2].conv3)
 
-
 # We can now compute LayerGradCAM attributions by providing the preprocessed input and the desired target segmentation class (between 0 and 20), which is the index of the output.
 # 
 # In this example, we attribute with respect to target=6, which corresponds to bus. See the decode_segmap helper method for a mapping of target class indices to text.
@@ -163,7 +158,6 @@ lgc = LayerGradCam(agg_segmentation_wrapper, fcn.backbone.layer4[2].conv3)
 
 
 gc_attr = lgc.attribute(normalized_inp, target=6)
-
 
 # We can first confirm that the Layer GradCAM attributions match the dimensions of the layer activations. We can obtain the intermediate layer activation using the LayerActivation attribution method.
 
@@ -176,14 +170,12 @@ print("Input Shape:", normalized_inp.shape)
 print("Layer Activation Shape:", activation.shape)
 print("Layer GradCAM Shape:", gc_attr.shape)
 
-
 # We can now visualize the Layer GradCAM attributions using the Captum visualization utilities.
 
 # In[12]:
 
 
 viz.visualize_image_attr(gc_attr[0].cpu().permute(1,2,0).detach().numpy(),sign="all")
-
 
 # We'd like to understand this better by overlaying it on the original image. In order to do this, we need to upsample the layer GradCAM attributions to match the input size.
 
@@ -193,12 +185,10 @@ viz.visualize_image_attr(gc_attr[0].cpu().permute(1,2,0).detach().numpy(),sign="
 upsampled_gc_attr = LayerAttribution.interpolate(gc_attr,normalized_inp.shape[2:])
 print("Upsampled Shape:",upsampled_gc_attr.shape)
 
-
 # In[14]:
 
 
 viz.visualize_image_attr_multiple(upsampled_gc_attr[0].cpu().permute(1,2,0).detach().numpy(),original_image=preproc_img.permute(1,2,0).numpy(),signs=["all", "positive", "negative"],methods=["original_image", "blended_heat_map","blended_heat_map"])
-
 
 # We can now attribute using a perturbation-based method, Feature Ablation to interpret the model in a different way. The idea of feature ablation is to ablate each feature by setting it equal to some baseline value (e.g. 0) and compute the difference in output with and without the feature. This can be done pixel-wise, but that can often by computationally intensive for large images. We also provide the option to group features and ablate them together. In this case, we can group pixels based on their segmentation class to understand how the presence of each class affects a particular output.
 
@@ -210,7 +200,6 @@ viz.visualize_image_attr_multiple(upsampled_gc_attr[0].cpu().permute(1,2,0).deta
 img_without_train = (1 - (out_max == 19).float())[0].cpu() * preproc_img
 plt.imshow(img_without_train.permute(1,2,0))
 
-
 # Feature ablation performs this process on each segment, comparing the output with and without ablating the segment. All pixels in the segment have the same attribution score corresponding to the change in output. This can be done using the FeatureAblation attribution class. We provide a feature mask defining the desired grouping of pixels (based on output class of each pixel). The perturbations_per_eval argument controls the number of perturbations processed in one batch, this may need to be set to a lower value if limited memory is available.
 # **Note**: This may take up to a few minutes to complete.
 
@@ -220,14 +209,12 @@ plt.imshow(img_without_train.permute(1,2,0))
 fa = FeatureAblation(agg_segmentation_wrapper)
 fa_attr = fa.attribute(normalized_inp, feature_mask=out_max, perturbations_per_eval=2, target=6)
 
-
 # We can now visualize the attributions based on Feature Ablation.
 
 # In[17]:
 
 
 viz.visualize_image_attr(fa_attr[0].cpu().detach().permute(1,2,0).numpy(),sign="all")
-
 
 # Clearly, the bus region is most salient as expected, since that is the target we are interpreting. To better visualize the relative importance of the remaining regions, we can set the attributions of the bus area to 0 and visualize the remaining area.
 
@@ -241,6 +228,5 @@ fa_attr_without_max = (1 - (out_max == 6).float())[0] * fa_attr
 
 
 viz.visualize_image_attr(fa_attr_without_max[0].cpu().detach().permute(1,2,0).numpy(),sign="all")
-
 
 # Between the remaining regions, it seems that the background and humans contribute positively to the bus prediction, as does the train. Ablating the bicycle appears to have no effect on the bus prediction.
