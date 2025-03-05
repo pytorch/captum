@@ -24,6 +24,7 @@ TensorOrTupleOfTensorsGeneric = TypeVar(
 TupleOrTensorOrBoolGeneric = TypeVar(
     "TupleOrTensorOrBoolGeneric", Tuple[Tensor, ...], Tensor, bool
 )
+PassThroughOutputType = TypeVar("PassThroughOutputType")
 ModuleOrModuleList = TypeVar("ModuleOrModuleList", Module, List[Module])
 TargetType = Union[None, int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]]
 BaselineTupleType = Union[None, Tuple[Union[Tensor, int, float], ...]]
