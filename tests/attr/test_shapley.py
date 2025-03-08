@@ -806,6 +806,30 @@ class Test(BaseTest):
             lambda *inp: func_to_use(*inp), use_future=use_future
         )
 
+    @parameterized.expand([True, False])
+    def test_mutli_inp_shapley_batch_scalar_tensor_expanded(self, use_future) -> None:
+        def func(*inp):
+            sum_val = torch.sum(net(*inp)).item()
+            return torch.tensor([sum_val, sum_val + 2.0, sum_val + 3.0])
+
+        def func_future(*inp):
+            temp = net_fut(*inp)
+            temp.wait()
+            sum_val = torch.sum(temp.value()).item()
+            fut = Future()
+            fut.set_result(torch.tensor([sum_val, sum_val + 2.0, sum_val + 3.0]))
+            return fut
+
+        if use_future:
+            net_fut = BasicModel_MultiLayer_MultiInput_with_Future()
+            func_to_use = func_future
+        else:
+            net = BasicModel_MultiLayer_MultiInput()
+            func_to_use = func
+        self._multi_input_batch_scalar_shapley_assert(
+            lambda *inp: func_to_use(*inp), use_future=use_future, expanded_output=True
+        )
+
     @unittest.mock.patch("sys.stderr", new_callable=io.StringIO)
     def test_shapley_sampling_with_show_progress(self, mock_stderr) -> None:
         net = BasicModel_MultiLayer()
@@ -947,7 +971,7 @@ class Test(BaseTest):
             )
 
     def _multi_input_batch_scalar_shapley_assert(
-        self, func: Callable, use_future: bool = False
+        self, func: Callable, use_future: bool = False, expanded_output: bool = False
     ) -> None:
         inp1 = torch.tensor([[23.0, 100.0, 0.0], [20.0, 50.0, 30.0]])
         inp2 = torch.tensor([[20.0, 50.0, 30.0], [0.0, 100.0, 0.0]])
@@ -955,10 +979,11 @@ class Test(BaseTest):
         mask1 = torch.tensor([[1, 1, 1]])
         mask2 = torch.tensor([[0, 1, 2]])
         mask3 = torch.tensor([[0, 1, 2]])
+        out_mult = 3 if expanded_output else 1
         expected = (
-            [[3850.6666, 3850.6666, 3850.6666]],
-            [[306.6666, 3850.6666, 410.6666]],
-            [[306.6666, 3850.6666, 410.6666]],
+            [[3850.6666, 3850.6666, 3850.6666]] * out_mult,
+            [[306.6666, 3850.6666, 410.6666]] * out_mult,
+            [[306.6666, 3850.6666, 410.6666]] * out_mult,
         )
         if use_future:
             self._shapley_test_assert_future(
