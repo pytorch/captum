@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 # pyre-strict
-from typing import Any, Callable, Optional, Tuple, Union
+from typing import Any, Callable, List, Optional, Tuple, Union
 
 import torch
 from captum._utils.typing import BaselineType, TargetType, TensorOrTupleOfTensorsGeneric
@@ -26,7 +26,7 @@ def _permute_feature(x: Tensor, feature_mask: Tensor) -> Tensor:
 
 
 def _permute_features_across_tensors(
-    inputs: Tuple[Tensor, ...], feature_masks: Tuple[Tensor, ...]
+    inputs: Tuple[Tensor, ...], feature_masks: Tuple[Optional[Tensor], ...]
 ) -> Tuple[Tensor, ...]:
     """
     Permutes features across multiple input tensors using the corresponding
@@ -34,7 +34,7 @@ def _permute_features_across_tensors(
     """
     permuted_outputs = []
     for input_tensor, feature_mask in zip(inputs, feature_masks):
-        if not feature_mask.any():
+        if feature_mask is None or not feature_mask.any():
             permuted_outputs.append(input_tensor)
             continue
         n = input_tensor.size(0)
@@ -103,7 +103,7 @@ class FeaturePermutation(FeatureAblation):
         forward_func: Callable[..., Union[int, float, Tensor, Future[Tensor]]],
         perm_func: Callable[[Tensor, Tensor], Tensor] = _permute_feature,
         perm_func_cross_tensor: Callable[
-            [Tuple[Tensor, ...], Tuple[Tensor, ...]], Tuple[Tensor, ...]
+            [Tuple[Tensor, ...], Tuple[Optional[Tensor], ...]], Tuple[Tensor, ...]
         ] = _permute_features_across_tensors,
     ) -> None:
         r"""
@@ -392,9 +392,14 @@ class FeaturePermutation(FeatureAblation):
         input_mask: Tuple[Tensor, ...],
         baselines: BaselineType,
         feature_idx: int,
-    ) -> Tuple[Tuple[Tensor, ...], Tuple[Tensor, ...]]:
-        feature_masks = tuple(
-            (mask == feature_idx).to(inputs[0].device) for mask in input_mask
-        )
+        tensor_idxs: List[int],
+    ) -> Tuple[Tuple[Tensor, ...], Tuple[Optional[Tensor], ...]]:
+        current_masks: List[Optional[Tensor]] = []
+        for i, mask in enumerate(input_mask):
+            if i in tensor_idxs:
+                current_masks.append((mask == feature_idx).to(inputs[0].device))
+            else:
+                current_masks.append(None)
+        feature_masks = tuple(current_masks)
         permuted_outputs = self.perm_func_cross_tensor(inputs, feature_masks)
         return permuted_outputs, feature_masks
