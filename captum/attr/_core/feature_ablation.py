@@ -3,7 +3,18 @@
 # pyre-strict
 
 import math
-from typing import Any, Callable, cast, Generator, List, Optional, Tuple, TypeVar, Union
+from typing import (
+    Any,
+    Callable,
+    cast,
+    Dict,
+    Generator,
+    List,
+    Optional,
+    Tuple,
+    TypeVar,
+    Union,
+)
 
 import torch
 from captum._utils.common import (
@@ -465,6 +476,13 @@ class FeatureAblation(PerturbationAttribution):
         attrib_type: dtype,
         **kwargs: Any,
     ) -> Tuple[List[Tensor], List[Tensor]]:
+        feature_idx_to_tensor_idx: Dict[int, List[int]] = {}
+        for i, mask in enumerate(formatted_feature_mask):
+            for feature_idx in torch.unique(mask):
+                if feature_idx.item() not in feature_idx_to_tensor_idx:
+                    feature_idx_to_tensor_idx[feature_idx.item()] = []
+                feature_idx_to_tensor_idx[feature_idx.item()].append(i)
+
         for (
             current_inputs,
             current_mask,
@@ -472,6 +490,7 @@ class FeatureAblation(PerturbationAttribution):
             formatted_inputs,
             baselines,
             formatted_feature_mask,
+            feature_idx_to_tensor_idx,
             **kwargs,
         ):
             # modified_eval has (n_feature_perturbed * n_outputs) elements
@@ -511,27 +530,28 @@ class FeatureAblation(PerturbationAttribution):
         inputs: Tuple[Tensor, ...],
         baselines: BaselineType,
         input_mask: Tuple[Tensor, ...],
+        feature_idx_to_tensor_idx: Dict[int, List[int]],
         **kwargs: Any,
     ) -> Generator[
         Tuple[
             Tuple[Tensor, ...],
-            Tuple[Tensor, ...],
+            Tuple[Optional[Tensor], ...],
         ],
         None,
         None,
     ]:
-        unique_feature_ids = torch.unique(
-            torch.cat([mask.flatten() for mask in input_mask])
-        ).tolist()
-
         if isinstance(baselines, torch.Tensor):
             baselines = baselines.reshape((1,) + tuple(baselines.shape))
 
         # Process one feature per time, rather than processing every input tensor
-        for feature_idx in unique_feature_ids:
+        for feature_idx in feature_idx_to_tensor_idx.keys():
             ablated_inputs, current_masks = (
                 self._construct_ablated_input_across_tensors(
-                    inputs, input_mask, baselines, feature_idx
+                    inputs,
+                    input_mask,
+                    baselines,
+                    feature_idx,
+                    feature_idx_to_tensor_idx[feature_idx],
                 )
             )
             yield ablated_inputs, current_masks
@@ -542,18 +562,17 @@ class FeatureAblation(PerturbationAttribution):
         input_mask: Tuple[Tensor, ...],
         baselines: BaselineType,
         feature_idx: int,
-    ) -> Tuple[Tuple[Tensor, ...], Tuple[Tensor, ...]]:
+        tensor_idxs: List[int],
+    ) -> Tuple[Tuple[Tensor, ...], Tuple[Optional[Tensor], ...]]:
 
         ablated_inputs = []
-        current_masks = []
+        current_masks: List[Optional[Tensor]] = []
         for i, input_tensor in enumerate(inputs):
-            mask = input_mask[i]
-            tensor_mask = mask == feature_idx
-            if not tensor_mask.any():
+            if i not in tensor_idxs:
                 ablated_inputs.append(input_tensor)
-                current_masks.append(torch.zeros_like(tensor_mask))
+                current_masks.append(None)
                 continue
-            tensor_mask = tensor_mask.to(input_tensor.device).long()
+            tensor_mask = (input_mask[i] == feature_idx).to(input_tensor.device).long()
             baseline = baselines[i] if isinstance(baselines, tuple) else baselines
             if isinstance(baseline, torch.Tensor):
                 baseline = baseline.reshape(
@@ -1173,7 +1192,7 @@ class FeatureAblation(PerturbationAttribution):
     def _process_ablated_out_full(
         self,
         modified_eval: Tensor,
-        current_mask: Tuple[Tensor, ...],
+        current_mask: Tuple[Optional[Tensor], ...],
         flattened_initial_eval: Tensor,
         inputs: TensorOrTupleOfTensorsGeneric,
         n_outputs: int,
@@ -1195,9 +1214,10 @@ class FeatureAblation(PerturbationAttribution):
 
         if self.use_weights:
             for weight, mask in zip(weights, current_mask):
-                weight += mask.float().sum(dim=0)
+                if mask is not None:
+                    weight += mask.float().sum(dim=0)
         for i, mask in enumerate(current_mask):
-            if inputs[i].numel() == 0:
+            if mask is None or inputs[i].numel() == 0:
                 continue
             eval_diff = eval_diff.reshape(
                 eval_diff_shape + (inputs[i].dim() - 1) * (1,)
