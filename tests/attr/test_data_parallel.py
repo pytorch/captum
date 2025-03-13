@@ -41,7 +41,7 @@ schema described there.
 """
 
 # Distributed Data Parallel env setup
-os.environ["MASTER_ADDR"] = "127.0.0.1"
+os.environ["MASTER_ADDR"] = "localhost"
 os.environ["MASTER_PORT"] = "29500"
 dist.init_process_group(backend="gloo", rank=0, world_size=1)
 

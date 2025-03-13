@@ -364,7 +364,7 @@ def _find_output_mode_and_verify(
                     "returns a scalar."
                 )
     else:
-        agg_output_mode = False
+        agg_output_mode = perturbations_per_eval == 1
         if not allow_multi_outputs:
             assert (
                 isinstance(initial_eval, torch.Tensor) and initial_eval[0].numel() == 1
