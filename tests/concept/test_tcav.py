@@ -792,7 +792,7 @@ class Test(BaseTest):
         attribute_to_layer_input: bool = False,
     ) -> None:
         def wrap_in_list_if_not_already(
-            input: Union[str, float, List[float], List[str]]
+            input: Union[str, float, List[float], List[str]],
         ) -> Union[List[Union[float, str]], List[float], List[str]]:
             return (
                 input

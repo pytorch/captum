@@ -137,7 +137,8 @@ class Test(BaseTest):
             self,
             # last input for second layer is first input =>
             # add the attributions
-            (attribs_inputs[0] + attribs_inputs[1][-1],) + attribs_inputs[1][0:-1],
+            (attribs_inputs[0] + attribs_inputs[1][-1],)  # type: ignore
+            + attribs_inputs[1][0:-1],  # type: ignore
             attribs_inputs_regular_ig,
             delta=1e-5,
         )
@@ -183,7 +184,7 @@ class Test(BaseTest):
 
         assertTensorTuplesAlmostEqual(
             self,
-            (attribs_inputs[0],) + attribs_inputs[1],
+            (attribs_inputs[0],) + attribs_inputs[1],  # type: ignore
             attribs_inputs_regular_ig,
             delta=1e-7,
         )

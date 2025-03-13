@@ -25,8 +25,6 @@ of integrated gradients, saliency maps, smoothgrad, vargrad and others for
 PyTorch models. It has quick integration for models built with domain-specific
 libraries such as torchvision, torchtext, and others.
 
-*Captum is currently in beta and under active development!*
-
 
 #### About Captum
 
@@ -92,6 +90,7 @@ pip install -e .
 To customize the installation, you can also run the following variants of the
 above:
 * `pip install -e .[insights]`: Also installs all packages necessary for running Captum Insights.
+**NOTE**: Captum Insights is being deprecated. See further details [below](#captum-insights).
 * `pip install -e .[dev]`: Also installs all tools necessary for development
   (testing, linting, docs building; see [Contributing](#contributing) below).
 * `pip install -e .[tutorials]`: Also installs all packages necessary for running the tutorial notebooks.
@@ -387,6 +386,10 @@ Captum on different types of models can be found in our tutorials.
 
 
 ## Captum Insights
+
+**NOTE**: *Support for Captum Insights is being deprecated in an upcoming release.
+While the code will still be available, there will no longer be active
+development or support for it.*
 
 Captum provides a web interface called Insights for easy visualization and
 access to a number of our interpretability algorithms.

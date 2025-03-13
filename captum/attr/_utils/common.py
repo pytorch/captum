@@ -364,7 +364,7 @@ def _find_output_mode_and_verify(
                     "returns a scalar."
                 )
     else:
-        agg_output_mode = False
+        agg_output_mode = perturbations_per_eval == 1
         if not allow_multi_outputs:
             assert (
                 isinstance(initial_eval, torch.Tensor) and initial_eval[0].numel() == 1
@@ -373,7 +373,7 @@ def _find_output_mode_and_verify(
 
 
 def _construct_default_feature_mask(
-    inputs: Tuple[Tensor, ...]
+    inputs: Tuple[Tensor, ...],
 ) -> Tuple[Tuple[Tensor, ...], int]:
     feature_mask = []
     current_num_features = 0

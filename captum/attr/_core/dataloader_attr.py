@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 # pyre-strict
+
 from collections import defaultdict
 from copy import copy
 from typing import Callable, cast, Dict, Iterable, List, Optional, Tuple, Union
@@ -30,7 +31,6 @@ SUPPORTED_METHODS = {FeatureAblation}
 
 
 # default reducer wehn reduce is None. Simply concat the outputs by the batch dimension
-# pyre-fixme[2]: Parameter must be annotated.
 def _concat_tensors(accum: Optional[Tensor], cur_output: Tensor, _) -> Tensor:
     return cur_output if accum is None else torch.cat([accum, cur_output])
 
@@ -87,9 +87,7 @@ def _perturb_inputs(
         else:
             baseline = baselines[attr_inp_count]
 
-            # pyre-fixme[58]: `*` is not supported for operand types `object` and
-            #  `Tensor`.
-            perturbed_inp = inp * pert_mask + baseline * (1 - pert_mask)
+            perturbed_inp = cast(Tensor, inp) * pert_mask + baseline * (1 - pert_mask)
             perturbed_inputs.append(perturbed_inp)
 
         attr_inp_count += 1

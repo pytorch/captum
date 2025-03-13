@@ -338,7 +338,7 @@ class _DatasetFromList(Dataset):
 
 def _format_inputs_dataset(
     # pyre-fixme[2]: Parameter annotation cannot contain `Any`.
-    inputs_dataset: Union[Tuple[Any, ...], DataLoader]
+    inputs_dataset: Union[Tuple[Any, ...], DataLoader],
 ) -> DataLoader:
     # if `inputs_dataset` is not a `DataLoader`, turn it into one.
     # `_DatasetFromList` turns a list into a `Dataset` where `__getitem__`
@@ -604,7 +604,7 @@ def _flatten_params(_params: Tuple[Tensor, ...]) -> Tensor:
 
 # pyre-fixme[3]: Return type must be annotated.
 def _unflatten_params_factory(
-    param_shapes: Union[List[Tuple[int, ...]], Tuple[Tensor, ...]]
+    param_shapes: Union[List[Tuple[int, ...]], Tuple[Tensor, ...]],
 ):
     """
     returns a function which is the inverse of `_flatten_params`

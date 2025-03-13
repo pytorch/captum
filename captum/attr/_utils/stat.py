@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 
 # pyre-strict
-from typing import Any, Callable, List, Optional, TYPE_CHECKING
+
+from typing import Any, Callable, cast, List, Optional, TYPE_CHECKING
 
 import torch
 from torch import Tensor
@@ -117,20 +118,18 @@ class Mean(Stat):
         return self.rolling_mean
 
     def init(self) -> None:
-        # pyre-fixme[8]: Attribute has type `Optional[Count]`; used as `Optional[Stat]`.
-        self.n = self._get_stat(Count())  # type: ignore
+        self.n = cast(Count, self._get_stat(Count()))
 
     def update(self, x: Tensor) -> None:
-        # pyre-fixme[16]: `Optional` has no attribute `get`.
-        n = self.n.get()  # type: ignore
+        n = cast(Count, self.n).get()
 
         if self.rolling_mean is None:
             # Ensures rolling_mean is a float tensor
             self.rolling_mean = x.clone() if x.is_floating_point() else x.double()
         else:
             delta = x - self.rolling_mean
-            # pyre-fixme[16]: `Optional` has no attribute `__iadd__`.
-            self.rolling_mean += delta / n
+            # pyre-ignore[16]: `Optional` has no attribute `__iadd__` (false positive)
+            self.rolling_mean += delta / cast(int, n)
 
 
 class MSE(Stat):

@@ -69,7 +69,7 @@ DEV_REQUIRES = (
     + [
         "black",
         "flake8",
-        "sphinx",
+        "sphinx<8.2.0",
         "sphinx-autodoc-typehints",
         "sphinxcontrib-katex",
         "mypy>=0.760",
@@ -133,12 +133,16 @@ if __name__ == "__main__":
         keywords=[
             "Model Interpretability",
             "Model Understanding",
+            "Model Interpretability",
+            "Model Understanding",
             "Feature Importance",
             "Neuron Importance",
+            "Data Attribution",
+            "Explainable AI",
             "PyTorch",
         ],
         classifiers=[
-            "Development Status :: 4 - Beta",
+            "Development Status :: 5 - Production/Stable",
             "Intended Audience :: Developers",
             "Intended Audience :: Education",
             "Intended Audience :: Science/Research",
@@ -148,7 +152,10 @@ if __name__ == "__main__":
         ],
         long_description=long_description,
         long_description_content_type="text/markdown",
-        python_requires=">=3.9",
+        python_requires=">={required_major}.{required_minor}".format(
+            required_minor=REQUIRED_MINOR,
+            required_major=REQUIRED_MAJOR,
+        ),
         install_requires=[
             "matplotlib",
             "numpy<2.0",

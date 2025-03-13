@@ -7,7 +7,7 @@ from typing import Any, Callable, List, Tuple
 import torch
 from captum.attr._core.feature_permutation import _permute_feature, FeaturePermutation
 from captum.testing.helpers import BaseTest
-from captum.testing.helpers.basic import assertTensorAlmostEqual
+from captum.testing.helpers.basic import assertTensorAlmostEqual, set_all_random_seeds
 from captum.testing.helpers.basic_models import BasicModelWithSparseInputs
 from torch import Tensor
 
@@ -103,12 +103,14 @@ class Test(BaseTest):
 
         inp[:, 0] = constant_value
         zeros = torch.zeros_like(inp[:, 0])
-
-        attribs = feature_importance.attribute(inp)
-
-        self.assertTrue(attribs.squeeze(0).size() == (batch_size,) + input_size)
-        assertTensorAlmostEqual(self, attribs[:, 0], zeros, delta=0.05, mode="max")
-        self.assertTrue((attribs[:, 1 : input_size[0]].abs() > 0).all())
+        for enable_cross_tensor_attribution in (True, False):
+            attribs = feature_importance.attribute(
+                inp,
+                enable_cross_tensor_attribution=enable_cross_tensor_attribution,
+            )
+            self.assertTrue(attribs.squeeze(0).size() == (batch_size,) + input_size)
+            assertTensorAlmostEqual(self, attribs[:, 0], zeros, delta=0.05, mode="max")
+            self.assertTrue((attribs[:, 1 : input_size[0]].abs() > 0).all())
 
     def test_single_input_with_future(
         self,
@@ -166,12 +168,63 @@ class Test(BaseTest):
 
         feature_mask = (
             torch.arange(inp[0][0].numel()).view_as(inp[0][0]).unsqueeze(0),
-            torch.arange(inp[1][0].numel()).view_as(inp[1][0]).unsqueeze(0),
+            torch.arange(inp[0][0].numel(), inp[0][0].numel() + inp[1][0].numel())
+            .view_as(inp[1][0])
+            .unsqueeze(0),
         )
 
         inp[1][:, :, 1] = 4
+        for enable_cross_tensor_attribution in (True, False):
+            attribs = feature_importance.attribute(
+                inp,
+                feature_mask=feature_mask,
+                enable_cross_tensor_attribution=enable_cross_tensor_attribution,
+            )
 
-        attribs = feature_importance.attribute(inp, feature_mask=feature_mask)
+            self.assertTrue(isinstance(attribs, tuple))
+            self.assertTrue(len(attribs) == 2)
+
+            self.assertTrue(attribs[0].squeeze(0).size() == inp1_size)
+            self.assertTrue(attribs[1].squeeze(0).size() == inp2_size)
+
+            self.assertTrue((attribs[1][:, :, 1] == 0).all())
+            self.assertTrue((attribs[1][:, :, 2] == 0).all())
+
+            self.assertTrue((attribs[0] != 0).all())
+            self.assertTrue((attribs[1][:, :, 0] != 0).all())
+
+    def test_multi_input_group_across_input_tensors(
+        self,
+    ) -> None:
+        batch_size = 20
+        inp1_size = (5, 2)
+        inp2_size = (5, 3)
+
+        labels: Tensor = torch.randn(batch_size)
+
+        def forward_func(*x: Tensor) -> Tensor:
+            y = torch.zeros(x[0].shape[0:2])
+            for xx in x:
+                y += xx[:, :, 0] * xx[:, :, 1]
+            y = y.sum(dim=-1)
+
+            # pyre-fixme[58]: `**` is not supported for operand types `Tensor` and
+            #  `int`.
+            return torch.mean((y - labels) ** 2)
+
+        feature_importance = FeaturePermutation(forward_func=forward_func)
+
+        inp = (
+            torch.randn((batch_size,) + inp1_size),
+            torch.randn((batch_size,) + inp2_size),
+        )
+        # Group all features together
+        feature_mask = tuple(
+            torch.zeros_like(inp_tensor[0]).unsqueeze(0) for inp_tensor in inp
+        )
+        attribs = feature_importance.attribute(
+            inp, feature_mask=feature_mask, enable_cross_tensor_attribution=True
+        )
 
         self.assertTrue(isinstance(attribs, tuple))
         self.assertTrue(len(attribs) == 2)
@@ -179,11 +232,11 @@ class Test(BaseTest):
         self.assertTrue(attribs[0].squeeze(0).size() == inp1_size)
         self.assertTrue(attribs[1].squeeze(0).size() == inp2_size)
 
-        self.assertTrue((attribs[1][:, :, 1] == 0).all())
-        self.assertTrue((attribs[1][:, :, 2] == 0).all())
-
-        self.assertTrue((attribs[0] != 0).all())
-        self.assertTrue((attribs[1][:, :, 0] != 0).all())
+        first_elem_first_attrib = attribs[0].flatten()[0]
+        first_elem_second_attrib = attribs[1].flatten()[0]
+        self.assertTrue(torch.all(attribs[0] == first_elem_first_attrib))
+        self.assertTrue(torch.all(attribs[0] == first_elem_second_attrib))
+        self.assertEqual(first_elem_first_attrib, first_elem_second_attrib)
 
     def test_multi_input_with_future(
         self,
@@ -324,26 +377,30 @@ class Test(BaseTest):
             torch.tensor([[0, 1, 2, 3]]),
             torch.tensor([[[0, 1, 2, 3], [3, 3, 4, 5], [6, 6, 4, 6], [7, 8, 9, 10]]]),
         ]
+        for enable_cross_tensor_attribution in (True, False):
+            for mask in masks:
 
-        for mask in masks:
-
-            attribs = feature_importance.attribute(inp, feature_mask=mask)
-            self.assertTrue(attribs is not None)
-            self.assertTrue(attribs.shape == inp.shape)
-
-            fm = mask.expand_as(inp[0])
-
-            features = set(mask.flatten())
-            for feature in features:
-                m = (fm == feature).bool()
-                attribs_for_feature = attribs[:, m]
-                assertTensorAlmostEqual(
-                    self,
-                    attribs_for_feature[0],
-                    -attribs_for_feature[1],
-                    delta=0.05,
-                    mode="max",
+                attribs = feature_importance.attribute(
+                    inp,
+                    feature_mask=mask,
+                    enable_cross_tensor_attribution=enable_cross_tensor_attribution,
                 )
+                self.assertTrue(attribs is not None)
+                self.assertTrue(attribs.shape == inp.shape)
+
+                fm = mask.expand_as(inp[0])
+
+                features = set(mask.flatten())
+                for feature in features:
+                    m = (fm == feature).bool()
+                    attribs_for_feature = attribs[:, m]
+                    assertTensorAlmostEqual(
+                        self,
+                        attribs_for_feature[0],
+                        -attribs_for_feature[1],
+                        delta=0.05,
+                        mode="max",
+                    )
 
     def test_broadcastable_masks_with_future(
         self,
@@ -399,9 +456,13 @@ class Test(BaseTest):
 
         # test empty sparse tensor
         feature_importance = FeaturePermutation(model)
-        attr1, attr2 = feature_importance.attribute((inp1, inp2))
-        self.assertEqual(attr1.shape, (1, 3))
-        self.assertEqual(attr2.shape, (1,))
+        for enable_cross_tensor_attribution in (True, False):
+            attr1, attr2 = feature_importance.attribute(
+                (inp1, inp2),
+                enable_cross_tensor_attribution=enable_cross_tensor_attribution,
+            )
+            self.assertEqual(attr1.shape, (1, 3))
+            self.assertEqual(attr2.shape, (1,))
 
     def test_sparse_features(self) -> None:
         model = BasicModelWithSparseInputs()
@@ -410,14 +471,22 @@ class Test(BaseTest):
         inp2 = torch.tensor([1, 7, 2, 4, 5, 3, 6])
 
         feature_importance = FeaturePermutation(model)
-        total_attr1, total_attr2 = feature_importance.attribute((inp1, inp2))
 
-        for _ in range(50):
-            attr1, attr2 = feature_importance.attribute((inp1, inp2))
-            total_attr1 += attr1
-            total_attr2 += attr2
-        total_attr1 /= 50
-        total_attr2 /= 50
-        self.assertEqual(total_attr2.shape, (1,))
-        assertTensorAlmostEqual(self, total_attr1, torch.zeros_like(total_attr1))
-        assertTensorAlmostEqual(self, total_attr2, [-6.0], delta=0.2)
+        for enable_cross_tensor_attribution in [True, False]:
+            set_all_random_seeds(1234)
+            total_attr1, total_attr2 = feature_importance.attribute(
+                (inp1, inp2),
+                enable_cross_tensor_attribution=enable_cross_tensor_attribution,
+            )
+            for _ in range(50):
+                attr1, attr2 = feature_importance.attribute(
+                    (inp1, inp2),
+                    enable_cross_tensor_attribution=enable_cross_tensor_attribution,
+                )
+                total_attr1 += attr1
+                total_attr2 += attr2
+            total_attr1 /= 50
+            total_attr2 /= 50
+            self.assertEqual(total_attr2.shape, (1,))
+            assertTensorAlmostEqual(self, total_attr1, torch.zeros_like(total_attr1))
+            assertTensorAlmostEqual(self, total_attr2, [-6.0], delta=0.2)

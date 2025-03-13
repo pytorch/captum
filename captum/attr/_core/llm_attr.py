@@ -559,12 +559,19 @@ class LLMAttribution(BaseLLMAttribution):
                         outputs.past_key_values = DynamicCache.from_legacy_cache(
                             outputs.past_key_values
                         )
+                    # nn.Module typing suggests non-base attributes are modules or
+                    # tensors
+                    _update_model_kwargs_for_generation = (
+                        self.model._update_model_kwargs_for_generation
+                    )
                     # pyre-fixme[29]: `Union[Module, Tensor]` is not a function.
-                    model_kwargs = self.model._update_model_kwargs_for_generation(
+                    model_kwargs = _update_model_kwargs_for_generation(  # type: ignore
                         outputs, model_kwargs
                     )
+                # nn.Module typing suggests non-base attributes are modules or tensors
+                prep_inputs_for_generation = self.model.prepare_inputs_for_generation
                 # pyre-fixme[29]: `Union[Module, Tensor]` is not a function.
-                model_inputs = self.model.prepare_inputs_for_generation(
+                model_inputs = prep_inputs_for_generation(  # type: ignore
                     model_inp, **model_kwargs
                 )
                 outputs = self.model.forward(**model_inputs)
