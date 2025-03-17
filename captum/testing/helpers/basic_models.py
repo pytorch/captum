@@ -418,7 +418,7 @@ class BasicEmbeddingModel(nn.Module):
         return self.linear2(self.relu(self.linear1(embeddings))).sum(1)
 
 
-class GradientUnsupportedLayerOutput(nn.Module):
+class PassThroughLayerOutput(nn.Module):
     """
     This layer is used to test the case where the model returns a layer that
     is not supported by the gradient computation.
@@ -428,10 +428,8 @@ class GradientUnsupportedLayerOutput(nn.Module):
         super().__init__()
 
     @no_type_check
-    def forward(
-        self, unsupported_layer_output: PassThroughOutputType
-    ) -> PassThroughOutputType:
-        return unsupported_layer_output
+    def forward(self, output: PassThroughOutputType) -> PassThroughOutputType:
+        return output
 
 
 class BasicModel_GradientLayerAttribution(nn.Module):
@@ -456,7 +454,7 @@ class BasicModel_GradientLayerAttribution(nn.Module):
 
         self.relu = nn.ReLU(inplace=inplace)
         self.relu_alt = nn.ReLU(inplace=False)
-        self.unsupportedLayer = GradientUnsupportedLayerOutput()
+        self.unsupported_layer = PassThroughLayerOutput()
 
         self.linear2 = nn.Linear(4, 2)
         self.linear2.weight = nn.Parameter(torch.ones(2, 4))
@@ -465,6 +463,8 @@ class BasicModel_GradientLayerAttribution(nn.Module):
         self.linear3 = nn.Linear(4, 2)
         self.linear3.weight = nn.Parameter(torch.ones(2, 4))
         self.linear3.bias = nn.Parameter(torch.tensor([-1.0, 1.0]))
+
+        self.int_layer = PassThroughLayerOutput()  # sample layer with an int ouput
 
     @no_type_check
     def forward(
@@ -476,7 +476,7 @@ class BasicModel_GradientLayerAttribution(nn.Module):
         lin1_out_alt = self.linear1_alt(lin0_out)
 
         if self.unsupported_layer_output is not None:
-            self.unsupportedLayer(self.unsupported_layer_output)
+            self.unsupported_layer(self.unsupported_layer_output)
             # unsupportedLayer is unused in the forward func.
         self.relu_alt(
             lin1_out_alt
@@ -485,9 +485,10 @@ class BasicModel_GradientLayerAttribution(nn.Module):
         relu_out = self.relu(lin1_out)
         lin2_out = self.linear2(relu_out)
 
-        lin3_out = self.linear3(lin1_out_alt).to(torch.int64)
+        lin3_out = self.linear3(lin1_out_alt)
+        int_output = self.int_layer(lin3_out.to(torch.int64))
 
-        output_tensors = torch.cat((lin2_out, lin3_out), dim=1)
+        output_tensors = torch.cat((lin2_out, int_output), dim=1)
 
         # we return a dictionary of tensors as an output to test the case
         # where an output accessor is required
