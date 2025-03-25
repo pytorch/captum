@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 # pyre-strict
-from typing import Any, Callable, List, Optional, Tuple, Union
+from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
 import torch
 from captum._utils.typing import BaselineType, TargetType, TensorOrTupleOfTensorsGeneric
@@ -391,15 +391,41 @@ class FeaturePermutation(FeatureAblation):
         inputs: Tuple[Tensor, ...],
         input_mask: Tuple[Tensor, ...],
         baselines: BaselineType,
-        feature_idx: int,
-        tensor_idxs: List[int],
+        feature_idxs: List[int],
+        feature_idx_to_tensor_idx: Dict[int, List[int]],
+        current_num_ablated_features: int,
     ) -> Tuple[Tuple[Tensor, ...], Tuple[Optional[Tensor], ...]]:
         current_masks: List[Optional[Tensor]] = []
-        for i, mask in enumerate(input_mask):
-            if i in tensor_idxs:
-                current_masks.append((mask == feature_idx).to(inputs[0].device))
-            else:
+        tensor_idxs = {
+            tensor_idx
+            for sublist in (
+                feature_idx_to_tensor_idx[feature_idx] for feature_idx in feature_idxs
+            )
+            for tensor_idx in sublist
+        }
+        permuted_inputs = []
+        for i, input_tensor in enumerate(inputs):
+            if i not in tensor_idxs:
                 current_masks.append(None)
-        feature_masks = tuple(current_masks)
-        permuted_outputs = self.perm_func_cross_tensor(inputs, feature_masks)
-        return permuted_outputs, feature_masks
+                permuted_inputs.append(input_tensor)
+                continue
+            tensor_mask = []
+            permuted_input = input_tensor.clone()
+            for j, feature_idx in enumerate(feature_idxs):
+                original_input_size = (
+                    input_tensor.shape[0] // current_num_ablated_features
+                )
+                start_idx = j * original_input_size
+                end_idx = (j + 1) * original_input_size
+
+                mask = (input_mask[i] == feature_idx).to(input_tensor.device).bool()
+                if mask.ndim == 0:
+                    mask = mask.reshape((1,) * input_tensor.dim())
+                tensor_mask.append(mask)
+                permuted_input[start_idx:end_idx] = self.perm_func(
+                    input_tensor[start_idx:end_idx], mask
+                )
+            current_masks.append(torch.stack(tensor_mask, dim=0))
+            permuted_inputs.append(permuted_input)
+
+        return tuple(permuted_inputs), tuple(current_masks)
