@@ -164,8 +164,65 @@ class Test(BaseTest):
             perturbations_per_eval=(1, 2, 3),
         )
 
+    def test_multi_sample_ablation_with_mask_weighted(self) -> None:
+        ablation_algo = FeatureAblation(BasicModel_MultiLayer())
+        ablation_algo.use_weights = True
+        inp = torch.tensor([[2.0, 10.0, 3.0], [20.0, 50.0, 30.0]])
+        mask = torch.tensor([[0, 0, 1], [1, 1, 0]])
+        self._ablation_test_assert(
+            ablation_algo,
+            inp,
+            [[41.0, 41.0, 12.0], [280.0, 280.0, 120.0]],
+            feature_mask=mask,
+            perturbations_per_eval=(1, 2, 3),
+        )
+
     def test_multi_input_ablation_with_mask(self) -> None:
         ablation_algo = FeatureAblation(BasicModel_MultiLayer_MultiInput())
+        inp1 = torch.tensor([[23.0, 100.0, 0.0], [20.0, 50.0, 30.0]])
+        inp2 = torch.tensor([[20.0, 50.0, 30.0], [0.0, 100.0, 0.0]])
+        inp3 = torch.tensor([[0.0, 100.0, 10.0], [2.0, 10.0, 3.0]])
+        mask1 = torch.tensor([[1, 1, 1], [0, 1, 0]])
+        mask2 = torch.tensor([[3, 4, 2]])
+        mask3 = torch.tensor([[5, 6, 7], [5, 5, 5]])
+        expected = (
+            [[492.0, 492.0, 492.0], [200.0, 200.0, 200.0]],
+            [[80.0, 200.0, 120.0], [0.0, 400.0, 0.0]],
+            [[0.0, 400.0, 40.0], [60.0, 60.0, 60.0]],
+        )
+        self._ablation_test_assert(
+            ablation_algo,
+            (inp1, inp2, inp3),
+            expected,
+            additional_input=(1,),
+            feature_mask=(mask1, mask2, mask3),
+        )
+        self._ablation_test_assert(
+            ablation_algo,
+            (inp1, inp2),
+            expected[0:1],
+            additional_input=(inp3, 1),
+            feature_mask=(mask1, mask2),
+            perturbations_per_eval=(1, 2, 3),
+        )
+        expected_with_baseline = (
+            [[468.0, 468.0, 468.0], [184.0, 192.0, 184.0]],
+            [[68.0, 188.0, 108.0], [-12.0, 388.0, -12.0]],
+            [[-16.0, 384.0, 24.0], [12.0, 12.0, 12.0]],
+        )
+        self._ablation_test_assert(
+            ablation_algo,
+            (inp1, inp2, inp3),
+            expected_with_baseline,
+            additional_input=(1,),
+            feature_mask=(mask1, mask2, mask3),
+            baselines=(2, 3.0, 4),
+            perturbations_per_eval=(1, 2, 3),
+        )
+
+    def test_multi_input_ablation_with_mask_weighted(self) -> None:
+        ablation_algo = FeatureAblation(BasicModel_MultiLayer_MultiInput())
+        ablation_algo.use_weights = True
         inp1 = torch.tensor([[23.0, 100.0, 0.0], [20.0, 50.0, 30.0]])
         inp2 = torch.tensor([[20.0, 50.0, 30.0], [0.0, 100.0, 0.0]])
         inp3 = torch.tensor([[0.0, 100.0, 10.0], [2.0, 10.0, 3.0]])
