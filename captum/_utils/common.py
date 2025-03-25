@@ -194,17 +194,18 @@ def _is_mask_valid(mask: Tensor, inp: Tensor) -> bool:
 def _format_feature_mask(
     feature_mask: Union[None, Tensor, Tuple[Tensor, ...]],
     inputs: Tuple[Tensor, ...],
+    start_idx: int = 0,
 ) -> Tuple[Tensor, ...]:
     """
     Format a feature mask into a tuple of tensors.
     The `inputs` should be correctly formatted first
     If `feature_mask` is None, assign each non-batch dimension with a consecutive
-    integer from 0.
+    integer from `start_idx`.
     If `feature_mask` is a tensor, wrap it in a tuple.
     """
     if feature_mask is None:
         formatted_mask = []
-        current_num_features = 0
+        current_num_features = start_idx
         for inp in inputs:
             # the following can handle empty tensor where numel is 0
             # empty tensor will be added to the feature mask

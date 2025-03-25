@@ -662,6 +662,16 @@ class BasicModel_MultiLayer_MultiInput(nn.Module):
         return self.model(scale * (x1 + x2 + x3))
 
 
+class BasicModel_MultiLayer_TupleInput(nn.Module):
+    def __init__(self) -> None:
+        super().__init__()
+        self.model = BasicModel_MultiLayer()
+
+    @no_type_check
+    def forward(self, x: Tuple[Tensor, Tensor, Tensor]) -> Tensor:
+        return self.model(x[0] + x[1] + x[2])
+
+
 class BasicModel_MultiLayer_MultiInput_with_Future(nn.Module):
     def __init__(self) -> None:
         super().__init__()
