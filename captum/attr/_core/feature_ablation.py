@@ -87,6 +87,10 @@ class FeatureAblation(PerturbationAttribution):
         # behavior stays consistent and no longer check again
         self._is_output_shape_valid = False
 
+        # Minimum number of elements needed in each input tensor, otherwise the
+        # attribution for the tensor will be skipped
+        self._min_examples_per_batch = 1
+
     @log_usage()
     def attribute(
         self,
@@ -408,8 +412,10 @@ class FeatureAblation(PerturbationAttribution):
     ) -> Tuple[List[Tensor], List[Tensor]]:
         # Iterate through each feature tensor for ablation
         for i in range(len(formatted_inputs)):
-            # Skip any empty input tensors
-            if torch.numel(formatted_inputs[i]) == 0:
+            if (
+                torch.numel(formatted_inputs[i]) == 0
+                or formatted_inputs[i].shape[0] < self._min_examples_per_batch
+            ):
                 continue
 
             for (
