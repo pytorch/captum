@@ -25,31 +25,6 @@ def _permute_feature(x: Tensor, feature_mask: Tensor) -> Tensor:
     )
 
 
-def _permute_features_across_tensors(
-    inputs: Tuple[Tensor, ...], feature_masks: Tuple[Optional[Tensor], ...]
-) -> Tuple[Tensor, ...]:
-    """
-    Permutes features across multiple input tensors using the corresponding
-    feature masks.
-    """
-    permuted_outputs = []
-    for input_tensor, feature_mask in zip(inputs, feature_masks):
-        if feature_mask is None or not feature_mask.any():
-            permuted_outputs.append(input_tensor)
-            continue
-        n = input_tensor.size(0)
-        assert n > 1, "cannot permute features with batch_size = 1"
-        perm = torch.randperm(n)
-        no_perm = torch.arange(n)
-        while (perm == no_perm).all():
-            perm = torch.randperm(n)
-        permuted_x = (
-            input_tensor[perm] * feature_mask.to(dtype=input_tensor.dtype)
-        ) + (input_tensor * feature_mask.bitwise_not().to(dtype=input_tensor.dtype))
-        permuted_outputs.append(permuted_x)
-    return tuple(permuted_outputs)
-
-
 class FeaturePermutation(FeatureAblation):
     r"""
     A perturbation based approach to compute attribution, which
@@ -102,9 +77,6 @@ class FeaturePermutation(FeatureAblation):
         self,
         forward_func: Callable[..., Union[int, float, Tensor, Future[Tensor]]],
         perm_func: Callable[[Tensor, Tensor], Tensor] = _permute_feature,
-        perm_func_cross_tensor: Callable[
-            [Tuple[Tensor, ...], Tuple[Optional[Tensor], ...]], Tuple[Tensor, ...]
-        ] = _permute_features_across_tensors,
     ) -> None:
         r"""
         Args:
@@ -117,14 +89,9 @@ class FeaturePermutation(FeatureAblation):
                 which applies a random permutation, this argument only needs
                 to be provided if a custom permutation behavior is desired.
                 Default: `_permute_feature`
-            perm_func_cross_tensor (Callable, optional): Similar to perm_func,
-                except it can permute grouped features across multiple input
-                tensors, rather than taking each input tensor independently.
-                Default: `_permute_features_across_tensors`
         """
         FeatureAblation.__init__(self, forward_func=forward_func)
         self.perm_func = perm_func
-        self.perm_func_cross_tensor = perm_func_cross_tensor
 
     # suppressing error caused by the child class not having a matching
     # signature to the parent
