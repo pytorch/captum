@@ -33,7 +33,7 @@ src="/_sphinx/documentation_options.js"></script>
 <h1>Feature Permutation<a class="headerlink" href="#feature-permutation" title="Link to this heading">¶</a></h1>
 <dl class="py class">
 <dt class="sig sig-object py" id="captum.attr.FeaturePermutation">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">captum.attr.</span></span><span class="sig-name descname"><span class="pre">FeaturePermutation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">forward_func</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">perm_func</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">_permute_feature</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">perm_func_cross_tensor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">_permute_features_across_tensors</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/feature_permutation.html#FeaturePermutation"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum.attr.FeaturePermutation" title="Link to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">captum.attr.</span></span><span class="sig-name descname"><span class="pre">FeaturePermutation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">forward_func</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">perm_func</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">_permute_feature</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/feature_permutation.html#FeaturePermutation"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum.attr.FeaturePermutation" title="Link to this definition">¶</a></dt>
 <dd><p>A perturbation based approach to compute attribution, which
 takes each input feature, permutes the feature values within a batch,
 and computes the difference between original and shuffled outputs for
@@ -84,10 +84,6 @@ feature mask across the batch. This defaults to a function
 which applies a random permutation, this argument only needs
 to be provided if a custom permutation behavior is desired.
 Default: <cite>_permute_feature</cite></p></li>
-<li><p><strong>perm_func_cross_tensor</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Callable" title="(in Python v3.13)"><em>Callable</em></a><em>, </em><em>optional</em>) – Similar to perm_func,
-except it can permute grouped features across multiple input
-tensors, rather than taking each input tensor independently.
-Default: <cite>_permute_features_across_tensors</cite></p></li>
 </ul>
 </dd>
 </dl>

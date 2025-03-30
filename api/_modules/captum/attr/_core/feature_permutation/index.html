@@ -57,31 +57,6 @@ src="/_sphinx/documentation_options.js"></script>
     <span class="p">)</span>
 
 
-<span class="k">def</span> <span class="nf">_permute_features_across_tensors</span><span class="p">(</span>
-    <span class="n">inputs</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span> <span class="n">feature_masks</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Optional</span><span class="p">[</span><span class="n">Tensor</span><span class="p">],</span> <span class="o">...</span><span class="p">]</span>
-<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span>
-<span class="w">    </span><span class="sd">"""</span>
-<span class="sd">    Permutes features across multiple input tensors using the corresponding</span>
-<span class="sd">    feature masks.</span>
-<span class="sd">    """</span>
-    <span class="n">permuted_outputs</span> <span class="o">=</span> <span class="p">[]</span>
-    <span class="k">for</span> <span class="n">input_tensor</span><span class="p">,</span> <span class="n">feature_mask</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">feature_masks</span><span class="p">):</span>
-        <span class="k">if</span> <span class="n">feature_mask</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">feature_mask</span><span class="o">.</span><span class="n">any</span><span class="p">():</span>
-            <span class="n">permuted_outputs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">input_tensor</span><span class="p">)</span>
-            <span class="k">continue</span>
-        <span class="n">n</span> <span class="o">=</span> <span class="n">input_tensor</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
-        <span class="k">assert</span> <span class="n">n</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">"cannot permute features with batch_size = 1"</span>
-        <span class="n">perm</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">randperm</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
-        <span class="n">no_perm</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
-        <span class="k">while</span> <span class="p">(</span><span class="n">perm</span> <span class="o">==</span> <span class="n">no_perm</span><span class="p">)</span><span class="o">.</span><span class="n">all</span><span class="p">():</span>
-            <span class="n">perm</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">randperm</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
-        <span class="n">permuted_x</span> <span class="o">=</span> <span class="p">(</span>
-            <span class="n">input_tensor</span><span class="p">[</span><span class="n">perm</span><span class="p">]</span> <span class="o">*</span> <span class="n">feature_mask</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="n">input_tensor</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
-        <span class="p">)</span> <span class="o">+</span> <span class="p">(</span><span class="n">input_tensor</span> <span class="o">*</span> <span class="n">feature_mask</span><span class="o">.</span><span class="n">bitwise_not</span><span class="p">()</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="n">input_tensor</span><span class="o">.</span><span class="n">dtype</span><span class="p">))</span>
-        <span class="n">permuted_outputs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">permuted_x</span><span class="p">)</span>
-    <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">permuted_outputs</span><span class="p">)</span>
-
-
 <div class="viewcode-block" id="FeaturePermutation">
 <a class="viewcode-back" href="../../../../feature_permutation.html#captum.attr.FeaturePermutation">[docs]</a>
 <span class="k">class</span> <span class="nc">FeaturePermutation</span><span class="p">(</span><span class="n">FeatureAblation</span><span class="p">):</span>
@@ -136,9 +111,6 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">forward_func</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="n">Tensor</span><span class="p">,</span> <span class="n">Future</span><span class="p">[</span><span class="n">Tensor</span><span class="p">]]],</span>
         <span class="n">perm_func</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">Tensor</span><span class="p">],</span> <span class="n">Tensor</span><span class="p">]</span> <span class="o">=</span> <span class="n">_permute_feature</span><span class="p">,</span>
-        <span class="n">perm_func_cross_tensor</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[</span>
-            <span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Optional</span><span class="p">[</span><span class="n">Tensor</span><span class="p">],</span> <span class="o">...</span><span class="p">]],</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span>
-        <span class="p">]</span> <span class="o">=</span> <span class="n">_permute_features_across_tensors</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        Args:</span>
@@ -151,14 +123,9 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">                which applies a random permutation, this argument only needs</span>
 <span class="sd">                to be provided if a custom permutation behavior is desired.</span>
 <span class="sd">                Default: `_permute_feature`</span>
-<span class="sd">            perm_func_cross_tensor (Callable, optional): Similar to perm_func,</span>
-<span class="sd">                except it can permute grouped features across multiple input</span>
-<span class="sd">                tensors, rather than taking each input tensor independently.</span>
-<span class="sd">                Default: `_permute_features_across_tensors`</span>
 <span class="sd">        """</span>
         <span class="n">FeatureAblation</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">forward_func</span><span class="o">=</span><span class="n">forward_func</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">perm_func</span> <span class="o">=</span> <span class="n">perm_func</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">perm_func_cross_tensor</span> <span class="o">=</span> <span class="n">perm_func_cross_tensor</span>
 
     <span class="c1"># suppressing error caused by the child class not having a matching</span>
     <span class="c1"># signature to the parent</span>
