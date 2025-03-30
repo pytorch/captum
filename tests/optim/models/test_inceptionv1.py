@@ -5,7 +5,7 @@ import torch
 from captum.optim.models import googlenet
 from captum.optim.models._common import RedirectedReluLayer, SkipLayer
 from packaging import version
-from tests.helpers.basic import BaseTest, assertTensorAlmostEqual
+from captum.testing.helpers.basic BaseTest, assertTensorAlmostEqual
 from tests.optim.helpers.models import check_layer_in_model
 
 

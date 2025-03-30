@@ -7,7 +7,7 @@ import torch
 from captum.optim._param.image import images
 from captum.optim._param.image.transforms import SymmetricPadding, ToRGB
 from packaging import version
-from tests.helpers.basic import BaseTest, assertTensorAlmostEqual
+from captum.testing.helpers.basic BaseTest, assertTensorAlmostEqual
 from tests.optim.helpers import numpy_image
 
 

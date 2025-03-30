@@ -7,7 +7,7 @@ import torch
 import torch.nn.functional as F
 from captum.optim.models import googlenet
 from packaging import version
-from tests.helpers.basic import BaseTest, assertTensorAlmostEqual
+from captum.testing.helpers.basic BaseTest, assertTensorAlmostEqual
 
 
 class TestConv2dSame(BaseTest):

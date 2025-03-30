@@ -5,8 +5,8 @@ from typing import List
 import captum.optim as opt
 import torch
 from packaging import version
-from tests.helpers.basic import BaseTest
-from tests.helpers.basic_models import BasicModel_ConvNet_Optim
+from captum.testing.helpers.basic BaseTest
+from captum.testing.helpers.basic_models import BasicModel_ConvNet_Optim
 
 
 class TestInputOptimization(BaseTest):
