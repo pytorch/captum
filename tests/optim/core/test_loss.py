@@ -308,7 +308,7 @@ class TestL2(BaseTest):
         model = torch.nn.Identity()
         loss = opt_loss.L2(model)
         self.assertEqual(loss.constant, 0.0)
-        self.assertEqual(loss.epsilon, 1e-6)
+        self.assertEqual(loss.eps, 1e-6)
 
     def test_l2(self) -> None:
         model = BasicModel_ConvNet_Optim()
