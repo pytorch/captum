@@ -14,6 +14,7 @@ from ._image.clip_resnet50x4_text import CLIP_ResNet50x4Text  # noqa: F401
 from ._image.clip_resnet50x4_text import clip_resnet50x4_text  # noqa: F401
 from ._image.inception5h_classes import INCEPTION5H_CLASSES  # noqa: F401
 from ._image.inception_v1 import InceptionV1, googlenet  # noqa: F401
+
 from ._image.inception_v1_places365 import (  # noqa: F401
     InceptionV1Places365,
     googlenet_places365,
@@ -22,6 +23,7 @@ from ._image.inception_v1_places365_classes import (  # noqa: F401
     INCEPTIONV1_PLACES365_CLASSES,
 )
 
+from ._image.vgg import VGG, vgg16  # noqa: F401
 
 __all__ = [
     "Conv2dSame",
@@ -42,4 +44,6 @@ __all__ = [
     "clip_resnet50x4_image",
     "CLIP_ResNet50x4Text",
     "clip_resnet50x4_text",
+    "VGG",
+    "vgg16",
 ]
