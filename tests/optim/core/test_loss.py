@@ -668,7 +668,7 @@ class TestL2Mean(BaseTest):
         model = BasicModel_ConvNet_Optim()
         constant = 0.5
         loss = opt_loss.L2Mean(model.layer, constant=constant)
-        output = get_loss_value(model, loss)
+        output = get_loss_value(model, loss).item()
 
         expected = (CHANNEL_ACTIVATION_0_LOSS - constant) ** 2
         self.assertAlmostEqual(output, expected, places=6)
@@ -677,7 +677,7 @@ class TestL2Mean(BaseTest):
         model = BasicModel_ConvNet_Optim()
         constant = 0.0
         loss = opt_loss.L2Mean(model.layer, channel_index=0, constant=constant)
-        output = get_loss_value(model, loss)
+        output = get_loss_value(model, loss).item()
 
         expected = (CHANNEL_ACTIVATION_0_LOSS - constant) ** 2
         self.assertAlmostEqual(output, expected, places=6)
@@ -696,14 +696,14 @@ class TestVectorLoss(BaseTest):
         model = BasicModel_ConvNet_Optim()
         vec = torch.tensor([0, 1]).float()
         loss = opt_loss.VectorLoss(model.layer, vec=vec)
-        output = get_loss_value(model, loss, model_input=[1, 3, 6, 6])
+        output = get_loss_value(model, loss, model_input=[1, 3, 6, 6]).item()
         self.assertAlmostEqual(output, CHANNEL_ACTIVATION_1_LOSS, places=6)
 
     def test_vectorloss_multiple_channels(self) -> None:
         model = BasicModel_ConvNet_Optim()
         vec = torch.tensor([1, 1]).float()
         loss = opt_loss.VectorLoss(model.layer, vec=vec)
-        output = get_loss_value(model, loss, model_input=[1, 3, 6, 6])
+        output = get_loss_value(model, loss, model_input=[1, 3, 6, 6]).item()
         self.assertAlmostEqual(output, CHANNEL_ACTIVATION_1_LOSS * 2, places=6)
 
 
@@ -735,7 +735,7 @@ class TestFacetLoss(BaseTest):
             vec=vec,
             facet_weights=facet_weights,
         )
-        output = get_loss_value(model, loss, model_input=[1, 3, 6, 6])
+        output = get_loss_value(model, loss, model_input=[1, 3, 6, 6]).item()
         expected = (CHANNEL_ACTIVATION_0_LOSS * 2) * 1.5
         self.assertAlmostEqual(output, expected / 10.0, places=6)
 
@@ -754,7 +754,7 @@ class TestFacetLoss(BaseTest):
             vec=vec,
             facet_weights=facet_weights,
         )
-        output = get_loss_value(model, loss, model_input=[1, 3, 6, 6])
+        output = get_loss_value(model, loss, model_input=[1, 3, 6, 6]).item()
         self.assertAlmostEqual(output, 1.560000, places=6)
 
     def test_facetloss_strength(self) -> None:
@@ -774,7 +774,7 @@ class TestFacetLoss(BaseTest):
             strength=strength,
         )
         self.assertEqual(loss.strength, strength)
-        output = get_loss_value(model, loss, model_input=[1, 3, 6, 6])
+        output = get_loss_value(model, loss, model_input=[1, 3, 6, 6]).item()
         self.assertAlmostEqual(output, 0.1950000, places=6)
 
     def test_facetloss_strength_batch(self) -> None:
@@ -811,7 +811,7 @@ class TestFacetLoss(BaseTest):
             vec=vec,
             facet_weights=facet_weights,
         )
-        output = get_loss_value(model, loss, model_input=[1, 3, 6, 6])
+        output = get_loss_value(model, loss, model_input=[1, 3, 6, 6]).item()
         expected = (CHANNEL_ACTIVATION_0_LOSS * 2) * 1.5
         self.assertAlmostEqual(output, expected / 10.0, places=6)
 
@@ -830,7 +830,7 @@ class TestFacetLoss(BaseTest):
             vec=vec,
             facet_weights=facet_weights,
         )
-        output = get_loss_value(model, loss, model_input=[1, 3, 6, 6])
+        output = get_loss_value(model, loss, model_input=[1, 3, 6, 6]).item()
         self.assertAlmostEqual(output, 1.560000, places=6)
 
 
