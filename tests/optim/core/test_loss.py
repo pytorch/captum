@@ -53,7 +53,7 @@ class TestModuleOP(BaseTest):
         loss = opt_loss.ChannelActivation(model.layer, 0)
         composed_loss = opt_loss.module_op(loss, None, operator.neg)
 
-        expected_name = "ChannelActivation [Conv2d(3, 2, ke..., 0]"
+        expected_name = "ChannelActivation"
         self.assertEqual(composed_loss.__name__, expected_name)
         output = get_loss_value(model, composed_loss)
         expected = -torch.as_tensor([CHANNEL_ACTIVATION_0_LOSS]).sum().item()
@@ -69,7 +69,7 @@ class TestModuleOP(BaseTest):
         loss = opt_loss.ChannelActivation(model.layer, 0)
         composed_loss = opt_loss.module_op(loss, 1.0, operator.add)
 
-        expected_name = "ChannelActivation [Conv2d(3, 2, ke..., 0]"
+        expected_name = "ChannelActivation"
         self.assertEqual(composed_loss.__name__, expected_name)
         output = get_loss_value(model, composed_loss)
         expected = torch.tensor([CHANNEL_ACTIVATION_0_LOSS]) + 1.0
@@ -86,10 +86,7 @@ class TestModuleOP(BaseTest):
         loss2 = opt_loss.ChannelActivation(model.layer, 1)
         composed_loss = opt_loss.module_op(loss1, loss2, operator.add)
 
-        expected_name = (
-            "Compose(ChannelActivation [Conv2d(3, 2, ke..., 0], "
-            + "ChannelActivation [Conv2d(3, 2, ke..., 1])"
-        )
+        expected_name = "Compose(ChannelActivation, ChannelActivation)"
         self.assertEqual(composed_loss.__name__, expected_name)
         output = get_loss_value(model, composed_loss)
         expected = (
