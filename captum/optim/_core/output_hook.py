@@ -32,13 +32,13 @@ class ModuleOutputsHook:
 
     def _forward_hook(self) -> Callable:
         """
-        Return the forward_hook function.
+        Return the module_outputs_forward_hook forward hook function.
 
         Returns:
-            forward_hook (Callable): The forward_hook function.
+            forward_hook (Callable): The module_outputs_forward_hook function.
         """
 
-        def forward_hook(
+        def module_outputs_forward_hook(
             module: nn.Module, input: Tuple[torch.Tensor], output: torch.Tensor
         ) -> None:
             assert module in self.outputs.keys()
@@ -56,7 +56,7 @@ class ModuleOutputsHook:
                     "that you are passing model layers in your losses."
                 )
 
-        return forward_hook
+        return module_outputs_forward_hook
 
     def consume_outputs(self) -> ModuleOutputMapping:
         """

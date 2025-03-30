@@ -12,6 +12,10 @@ from captum.optim._utils.typing import ModuleOutputMapping, TupleOfTensorsOrTens
 def get_model_layers(model: nn.Module) -> List[str]:
     """
     Return a list of hookable layers for the target model.
+
+    Args:
+
+        model (nn.Module): A PyTorch model or module instance to collect layers from.
     """
     layers = []
 
@@ -155,14 +159,59 @@ class Conv2dSame(nn.Conv2d):
         groups: int = 1,
         bias: bool = True,
     ) -> None:
+        """
+        See nn.Conv2d for more details on the possible arguments:
+        https://pytorch.org/docs/stable/generated/torch.nn.Conv2d.html
+
+        Args:
+
+           in_channels (int): The expected number of channels in the input tensor.
+           out_channels (int): The desired number of channels in the output tensor.
+           kernel_size (int or tuple of int): The desired kernel size to use.
+           stride (int or tuple of int, optional): The desired stride for the
+               cross-correlation.
+               Default: 1
+           padding (int or tuple of int, optional): This value is always set to 0.
+               Default: 0
+           dilation (int or tuple of int, optional): The desired spacing between the
+               kernel points.
+               Default: 1
+           groups (int, optional): Number of blocked connections from input channels
+               to output channels. Both in_channels and out_channels must be divisable
+               by groups.
+               Default: 1
+           bias (bool, optional): Whether or not to apply a learnable bias to the
+               output.
+        """
         super().__init__(
             in_channels, out_channels, kernel_size, stride, 0, dilation, groups, bias
         )
 
     def calc_same_pad(self, i: int, k: int, s: int, d: int) -> int:
+        """
+        Calculate the required padding for a dimension.
+
+        Args:
+
+            i (int): The specific size of the tensor dimension requiring padding.
+            k (int): The size of the Conv2d weight dimension.
+            s (int): The Conv2d stride value for the dimension.
+            d (int): The Conv2d dilation value for the dimension.
+
+        Returns:
+            padding_vale (int): The calculated padding value.
+        """
         return max((math.ceil(i / s) - 1) * s + (k - 1) * d + 1 - i, 0)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
+        """
+        Args:
+
+            x (torch.tensor): The input tensor to apply 2D convolution to.
+
+        Returns
+            x (torch.Tensor): The input tensor after the 2D convolution was applied.
+        """
         ih, iw = x.size()[-2:]
         kh, kw = self.weight.size()[-2:]
         pad_h = self.calc_same_pad(i=ih, k=kh, s=self.stride[0], d=self.dilation[0])
@@ -190,12 +239,25 @@ def collect_activations(
 ) -> ModuleOutputMapping:
     """
     Collect target activations for a model.
+
+    Args:
+
+        model (nn.Module): A PyTorch model instance.
+        targets (nn.Module or list of nn.Module): One or more layer targets for the
+            given model.
+        model_input (torch.Tensor or tuple of torch.Tensor, optional): Optionally
+            provide an input tensor to use when collecting the target activations.
+            Default: torch.zeros(1, 3, 224, 224)
+
+    Returns:
+        activ_dict (ModuleOutputMapping): A dictionary of collected activations where
+            the keys are the target layers.
     """
     if not isinstance(targets, list):
         targets = [targets]
     catch_activ = ActivationFetcher(model, targets)
-    activ_out = catch_activ(model_input)
-    return activ_out
+    activ_dict = catch_activ(model_input)
+    return activ_dict
 
 
 class SkipLayer(torch.nn.Module):

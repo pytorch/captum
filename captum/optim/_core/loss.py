@@ -5,7 +5,11 @@ from typing import Any, Callable, List, Optional, Tuple, Union
 
 import torch
 import torch.nn as nn
-from captum.optim._utils.image.common import _dot_cossim, get_neuron_pos
+from captum.optim._utils.image.common import (
+    _create_new_vector,
+    _dot_cossim,
+    get_neuron_pos,
+)
 from captum.optim._utils.typing import ModuleOutputMapping
 
 
@@ -193,6 +197,14 @@ def loss_wrapper(cls: Any) -> Callable:
 class LayerActivation(BaseLoss):
     """
     Maximize activations at the target layer.
+    This is the most basic loss available and it simply returns the activations in
+    their original form.
+
+    Args:
+        target (nn.Module):  The layer to optimize for.
+        batch_index (int, optional):  The index of the image to optimize if we
+            optimizing a batch of images. If unspecified, defaults to all images
+            in the batch.
     """
 
     def __call__(self, targets_to_values: ModuleOutputMapping) -> torch.Tensor:
@@ -205,6 +217,15 @@ class LayerActivation(BaseLoss):
 class ChannelActivation(BaseLoss):
     """
     Maximize activations at the target layer and target channel.
+    This loss maximizes the activations of a target channel in a specified target
+    layer, and can be useful to determine what features the channel is excited by.
+
+    Args:
+        target (nn.Module):  The layer to containing the channel to optimize for.
+        channel_index (int):  The index of the channel to optimize for.
+        batch_index (int, optional):  The index of the image to optimize if we
+            optimizing a batch of images. If unspecified, defaults to all images
+            in the batch.
     """
 
     def __init__(
@@ -228,6 +249,26 @@ class ChannelActivation(BaseLoss):
 
 @loss_wrapper
 class NeuronActivation(BaseLoss):
+    """
+    This loss maximizes the activations of a target neuron in the specified channel
+    from the specified layer. This loss is useful for determining the type of features
+    that excite a neuron, and thus is often used for circuits and neuron related
+    research.
+
+    Args:
+        target (nn.Module):  The layer to containing the channel to optimize for.
+        channel_index (int):  The index of the channel to optimize for.
+        x (int, optional):  The x coordinate of the neuron to optimize for. If
+            unspecified, defaults to center, or one unit left of center for even
+            lengths.
+        y (int, optional):  The y coordinate of the neuron to optimize for. If
+            unspecified, defaults to center, or one unit up of center for even
+            heights.
+        batch_index (int, optional):  The index of the image to optimize if we
+            optimizing a batch of images. If unspecified, defaults to all images
+            in the batch.
+    """
+
     def __init__(
         self,
         target: nn.Module,
@@ -262,6 +303,16 @@ class DeepDream(BaseLoss):
     """
     Maximize 'interestingness' at the target layer.
     Mordvintsev et al., 2015.
+    https://github.com/google/deepdream
+    This loss returns the squared layer activations. When combined with a negative
+    mean loss summarization, this loss will create hallucinogenic visuals commonly
+    referred to as 'Deep Dream'.
+
+    Args:
+        target (nn.Module):  The layer to optimize for.
+        batch_index (int, optional):  The index of the image to optimize if we
+            optimizing a batch of images. If unspecified, defaults to all images
+            in the batch.
     """
 
     def __call__(self, targets_to_values: ModuleOutputMapping) -> torch.Tensor:
@@ -276,6 +327,15 @@ class TotalVariation(BaseLoss):
     Total variation denoising penalty for activations.
     See Mahendran, V. 2014. Understanding Deep Image Representations by Inverting Them.
     https://arxiv.org/abs/1412.0035
+    This loss attempts to smooth / denoise the target by performing total variance
+    denoising. The target is most often the image that’s being optimized. This loss is
+    often used to remove unwanted visual artifacts.
+
+    Args:
+        target (nn.Module):  The layer to optimize for.
+        batch_index (int, optional):  The index of the image to optimize if we
+            optimizing a batch of images. If unspecified, defaults to all images
+            in the batch.
     """
 
     def __call__(self, targets_to_values: ModuleOutputMapping) -> torch.Tensor:
@@ -290,6 +350,14 @@ class TotalVariation(BaseLoss):
 class L1(BaseLoss):
     """
     L1 norm of the target layer, generally used as a penalty.
+
+    Args:
+        target (nn.Module):  The layer to optimize for.
+        constant (float):  Constant threshold to deduct from the activations.
+            Defaults to 0.
+        batch_index (int, optional):  The index of the image to optimize if we
+            optimizing a batch of images. If unspecified, defaults to all images
+            in the batch.
     """
 
     def __init__(
@@ -311,6 +379,15 @@ class L1(BaseLoss):
 class L2(BaseLoss):
     """
     L2 norm of the target layer, generally used as a penalty.
+
+    Args:
+        target (nn.Module):  The layer to optimize for.
+        constant (float):  Constant threshold to deduct from the activations.
+            Defaults to 0.
+        epsilon (float):  Small value to add to L2 prior to sqrt. Defaults to 1e-6.
+        batch_index (int, optional):  The index of the image to optimize if we
+            optimizing a batch of images. If unspecified, defaults to all images
+            in the batch.
     """
 
     def __init__(
@@ -338,6 +415,14 @@ class Diversity(BaseLoss):
     Use a cosine similarity penalty to extract features from a polysemantic neuron.
     Olah, Mordvintsev & Schubert, 2017.
     https://distill.pub/2017/feature-visualization/#diversity
+    This loss helps break up polysemantic layers, channels, and neurons by encouraging
+    diversity across the different batches. This loss is to be used along with a main
+    loss.
+
+    Args:
+        target (nn.Module):  The layer to optimize for.
+        batch_index (int, optional):  Unused here since we are optimizing for diversity
+            across the batch.
     """
 
     def __call__(self, targets_to_values: ModuleOutputMapping) -> torch.Tensor:
@@ -363,6 +448,16 @@ class ActivationInterpolation(BaseLoss):
     Interpolate between two different layers & channels.
     Olah, Mordvintsev & Schubert, 2017.
     https://distill.pub/2017/feature-visualization/#Interaction-between-Neurons
+    This loss helps to interpolate or mix visualizations from two activations (layer or
+    channel) by interpolating a linear sum between the two activations.
+
+    Args:
+        target1 (nn.Module):  The first layer to optimize for.
+        channel_index1 (int):  Index of channel in first layer to optimize. Defaults to
+            all channels.
+        target2 (nn.Module):  The first layer to optimize for.
+        channel_index2 (int):  Index of channel in first layer to optimize. Defaults to
+            all channels.
     """
 
     def __init__(
@@ -414,6 +509,14 @@ class Alignment(BaseLoss):
     similarity between them.
     Olah, Mordvintsev & Schubert, 2017.
     https://distill.pub/2017/feature-visualization/#Interaction-between-Neurons
+    When interpolating between activations, it may be desirable to keep image landmarks
+    in the same position for visual comparison. This loss helps to minimize L2 distance
+    between neighbouring images.
+
+    Args:
+        target (nn.Module):  The layer to optimize for.
+        decay_ratio (float):  How much to decay penalty as images move apart in batch.
+            Defaults to 2.
     """
 
     def __init__(self, target: nn.Module, decay_ratio: float = 2.0) -> None:
@@ -442,6 +545,18 @@ class Direction(BaseLoss):
     Visualize a general direction vector.
     Carter, et al., "Activation Atlas", Distill, 2019.
     https://distill.pub/2019/activation-atlas/#Aggregating-Multiple-Images
+    This loss helps to visualize a specific vector direction in a layer, by maximizing
+    the alignment between the input vector and the layer’s activation vector. The
+    dimensionality of the vector should correspond to the number of channels in the
+    layer.
+
+    Args:
+        target (nn.Module):  The layer to optimize for.
+        vec (torch.Tensor):  Vector representing direction to align to.
+        cossim_pow (float, optional):  The desired cosine similarity power to use.
+        batch_index (int, optional):  The index of the image to optimize if we
+            optimizing a batch of images. If unspecified, defaults to all images
+            in the batch.
     """
 
     def __init__(
@@ -452,14 +567,14 @@ class Direction(BaseLoss):
         batch_index: Optional[int] = None,
     ) -> None:
         BaseLoss.__init__(self, target, batch_index)
-        self.direction = vec.reshape((1, -1, 1, 1))
+        self.vec = vec.reshape((1, -1, 1, 1))
         self.cossim_pow = cossim_pow
 
     def __call__(self, targets_to_values: ModuleOutputMapping) -> torch.Tensor:
         activations = targets_to_values[self.target]
-        assert activations.size(1) == self.direction.size(1)
+        assert activations.size(1) == self.vec.size(1)
         activations = activations[self.batch_index[0] : self.batch_index[1]]
-        return _dot_cossim(self.direction, activations, cossim_pow=self.cossim_pow)
+        return _dot_cossim(self.vec, activations, cossim_pow=self.cossim_pow)
 
 
 @loss_wrapper
@@ -468,6 +583,23 @@ class NeuronDirection(BaseLoss):
     Visualize a single (x, y) position for a direction vector.
     Carter, et al., "Activation Atlas", Distill, 2019.
     https://distill.pub/2019/activation-atlas/#Aggregating-Multiple-Images
+    Extends Direction loss by focusing on visualizing a single neuron within the
+    kernel.
+
+    Args:
+        target (nn.Module):  The layer to optimize for.
+        vec (torch.Tensor):  Vector representing direction to align to.
+        x (int, optional):  The x coordinate of the neuron to optimize for. If
+            unspecified, defaults to center, or one unit left of center for even
+            lengths.
+        y (int, optional):  The y coordinate of the neuron to optimize for. If
+            unspecified, defaults to center, or one unit up of center for even
+            heights.
+        channel_index (int):  The index of the channel to optimize for.
+        cossim_pow (float, optional):  The desired cosine similarity power to use.
+        batch_index (int, optional):  The index of the image to optimize if we
+            optimizing a batch of images. If unspecified, defaults to all images
+            in the batch.
     """
 
     def __init__(
@@ -481,7 +613,7 @@ class NeuronDirection(BaseLoss):
         batch_index: Optional[int] = None,
     ) -> None:
         BaseLoss.__init__(self, target, batch_index)
-        self.direction = vec.reshape((1, -1, 1, 1))
+        self.vec = vec.reshape((1, -1, 1, 1))
         self.x = x
         self.y = y
         self.channel_index = channel_index
@@ -500,7 +632,7 @@ class NeuronDirection(BaseLoss):
         ]
         if self.channel_index is not None:
             activations = activations[:, self.channel_index, ...][:, None, ...]
-        return _dot_cossim(self.direction, activations, cossim_pow=self.cossim_pow)
+        return _dot_cossim(self.vec, activations, cossim_pow=self.cossim_pow)
 
 
 @loss_wrapper
@@ -597,6 +729,15 @@ class TensorDirection(BaseLoss):
     Visualize a tensor direction vector.
     Carter, et al., "Activation Atlas", Distill, 2019.
     https://distill.pub/2019/activation-atlas/#Aggregating-Multiple-Images
+    Extends Direction loss by allowing batch-wise direction visualization.
+
+    Args:
+        target (nn.Module):  The layer to optimize for.
+        vec (torch.Tensor):  Vector representing direction to align to.
+        cossim_pow (float, optional):  The desired cosine similarity power to use.
+        batch_index (int, optional):  The index of the image to optimize if we
+            optimizing a batch of images. If unspecified, defaults to all images
+            in the batch.
     """
 
     def __init__(
@@ -607,7 +748,8 @@ class TensorDirection(BaseLoss):
         batch_index: Optional[int] = None,
     ) -> None:
         BaseLoss.__init__(self, target, batch_index)
-        self.direction = vec
+        assert vec.dim() == 4
+        self.vec = vec
         self.cossim_pow = cossim_pow
 
     def __call__(self, targets_to_values: ModuleOutputMapping) -> torch.Tensor:
@@ -615,8 +757,8 @@ class TensorDirection(BaseLoss):
 
         assert activations.dim() == 4
 
-        H_direction, W_direction = self.direction.size(2), self.direction.size(3)
-        H_activ, W_activ = activations.size(2), activations.size(3)
+        H_direction, W_direction = self.vec.shape[2:]
+        H_activ, W_activ = activations.shape[2:]
 
         H = (H_activ - H_direction) // 2
         W = (W_activ - W_direction) // 2
@@ -627,13 +769,30 @@ class TensorDirection(BaseLoss):
             H : H + H_direction,
             W : W + W_direction,
         ]
-        return _dot_cossim(self.direction, activations, cossim_pow=self.cossim_pow)
+        return _dot_cossim(self.vec, activations, cossim_pow=self.cossim_pow)
 
 
 @loss_wrapper
 class ActivationWeights(BaseLoss):
     """
     Apply weights to channels, neurons, or spots in the target.
+    This loss weighs specific channels or neurons in a given layer, via a weight
+    vector.
+
+    Args:
+        target (nn.Module):  The layer to optimize for.
+        weights (torch.Tensor): Weights to apply to targets.
+        neuron (bool): Whether target is a neuron. Defaults to False.
+        x (int, optional):  The x coordinate of the neuron to optimize for. If
+            unspecified, defaults to center, or one unit left of center for even
+            lengths.
+        y (int, optional):  The y coordinate of the neuron to optimize for. If
+            unspecified, defaults to center, or one unit up of center for even
+            heights.
+        wx (int, optional):  Length of neurons to apply the weights to, along the
+            x-axis.
+        wy (int, optional):  Length of neurons to apply the weights to, along the
+            y-axis.
     """
 
     def __init__(
@@ -680,6 +839,221 @@ class ActivationWeights(BaseLoss):
         else:
             activations = activations * self.weights.view(1, -1, 1, 1)
         return activations
+
+
+@loss_wrapper
+class L2Mean(BaseLoss):
+    """
+    Simple L2Loss penalty where the mean is used instead of the square root of the
+    sum.
+
+    Used for CLIP models in https://distill.pub/2021/multimodal-neurons/ as per the
+    supplementary code:
+    https://github.com/openai/CLIP-featurevis/blob/master/example_facets.py
+    """
+
+    def __init__(
+        self,
+        target: torch.nn.Module,
+        channel_index: Optional[int] = None,
+        constant: float = 0.5,
+        batch_index: Optional[Union[int, List[int]]] = None,
+    ) -> None:
+        """
+        Args:
+
+            target (nn.Module): A target layer, transform, or image parameterization
+                instance.
+            channel_index (int, optional): Optionally only target a specific channel.
+                If set to ``None``, all channels with be used.
+                Default: ``None``
+            constant (float, optional): Constant value to deduct from the activations.
+                Default: ``0.5``
+            batch_index (int or list of int, optional): The index or index range of
+                activations to optimize if optimizing a batch of activations. If set
+                to ``None``, defaults to all activations in the batch. Index ranges
+                should be in the format of: [start, end].
+                Default: ``None``
+        """
+        BaseLoss.__init__(self, target, batch_index)
+        self.constant = constant
+        self.channel_index = channel_index
+
+    def __call__(self, targets_to_values: ModuleOutputMapping) -> torch.Tensor:
+        activations = targets_to_values[self.target][
+            self.batch_index[0] : self.batch_index[1]
+        ]
+        if self.channel_index is not None:
+            activations = activations[:, self.channel_index : self.channel_index + 1]
+        return ((activations - self.constant) ** 2).mean()
+
+
+@loss_wrapper
+class VectorLoss(BaseLoss):
+    """
+    This objective is useful for optimizing towards channel directions. This can
+    helpful for visualizing models like OpenAI's CLIP.
+
+    This loss objective is similar to the Direction objective, except it computes the
+    matrix product of the activations and vector, rather than the cosine similarity.
+    In addition to optimizing towards channel directions, this objective can also
+    perform a similar role to the ChannelActivation objective by using one-hot 1D
+    vectors.
+
+    See here for more details:
+    https://distill.pub/2021/multimodal-neurons/
+    https://github.com/openai/CLIP-featurevis/blob/master/example_facets.py
+    """
+
+    def __init__(
+        self,
+        target: torch.nn.Module,
+        vec: torch.Tensor,
+        activation_fn: Optional[Callable] = torch.nn.functional.relu,
+        move_channel_dim_to_final_dim: bool = True,
+        batch_index: Optional[Union[int, List[int]]] = None,
+    ) -> None:
+        """
+        Args:
+
+            target (nn.Module): A target layer instance.
+            vec (torch.Tensor): A 1D channel vector with the same size as the
+                channel / feature dimension of the target layer instance.
+            activation_fn (callable, optional): An optional activation function to
+                apply to the activations before computing the matrix product. If set
+                to ``None``, then no activation function will be used.
+                Default: ``torch.nn.functional.relu``
+            move_channel_dim_to_final_dim (bool, optional): Whether or not to move the
+                channel dimension to the last dimension before computing the matrix
+                product. Set to ``False`` if the using the channels last format.
+                Default: ``True``
+            batch_index (int or list of int, optional): The index or index range of
+                activations to optimize if optimizing a batch of activations. If set
+                to ``None``, defaults to all activations in the batch. Index ranges
+                should be in the format of: [start, end].
+                Default: ``None``
+        """
+        BaseLoss.__init__(self, target, batch_index)
+        assert vec.dim() == 1
+        self.vec = vec
+        self.activation_fn = activation_fn
+        self.move_channel_dim_to_final_dim = move_channel_dim_to_final_dim
+
+    def __call__(self, targets_to_values: ModuleOutputMapping) -> torch.Tensor:
+        activations = targets_to_values[self.target]
+        activations = activations[self.batch_index[0] : self.batch_index[1]]
+        return _create_new_vector(
+            activations,
+            vec=self.vec,
+            activation_fn=self.activation_fn,
+            move_channel_dim_to_final_dim=self.move_channel_dim_to_final_dim,
+        ).mean()
+
+
+@loss_wrapper
+class FacetLoss(BaseLoss):
+    """
+    The Facet loss objective used for Faceted Feature Visualization as described in:
+    https://distill.pub/2021/multimodal-neurons/#faceted-feature-visualization
+    https://github.com/openai/CLIP-featurevis/blob/master/example_facets.py
+
+    The FacetLoss objective allows us to steer feature visualization towards a
+    particular theme / concept. This is done by using the weights from linear probes
+    trained on the lower layers of a model to discriminate between a certain theme or
+    concept and generic natural images.
+    """
+
+    def __init__(
+        self,
+        vec: torch.Tensor,
+        ultimate_target: torch.nn.Module,
+        layer_target: Union[torch.nn.Module, List[torch.nn.Module]],
+        facet_weights: torch.Tensor,
+        strength: Optional[Union[float, List[float]]] = None,
+        batch_index: Optional[Union[int, List[int]]] = None,
+    ) -> None:
+        """
+        Args:
+
+            vec (torch.Tensor): A 1D channel vector with the same size as the
+                channel / feature dimension of ultimate_target.
+            ultimate_target (nn.Module): The main target layer that we are
+                visualizing targets from. This is normally the penultimate layer of
+                the model.
+            layer_target (nn.Module): A layer that we have facet_weights for. This
+                target layer should be below the ``ultimate_target`` layer in the
+                model.
+            facet_weights (torch.Tensor): Weighting that steers the objective
+                towards a particular theme or concept. These weight values should
+                come from linear probes trained on ``layer_target``.
+            strength (float, list of float, optional): A single float or list of floats
+                to use for batch dimension weighting. If using a single value, then it
+                will be applied to all batch dimensions equally. Otherwise a list of
+                floats with a shape of: [start, end] should be used for
+                :func:`torch.linspace` to calculate the step values in between. Default
+                is set to ``None`` for no weighting.
+                Default: ``None``
+            batch_index (int or list of int, optional): The index or index range of
+                activations to optimize if optimizing a batch of activations. If set
+                to ``None``, defaults to all activations in the batch. Index ranges
+                should be in the format of: [start, end].
+                Default: ``None``
+        """
+        BaseLoss.__init__(self, [ultimate_target, layer_target], batch_index)
+        self.ultimate_target = ultimate_target
+        self.layer_target = layer_target
+        assert vec.dim() == 1
+        self.vec = vec
+        if isinstance(strength, (tuple, list)):
+            assert len(strength) == 2
+        self.strength = strength
+        assert facet_weights.dim() == 4 or facet_weights.dim() == 2
+        self.facet_weights = facet_weights
+
+    def __call__(self, targets_to_values: ModuleOutputMapping) -> torch.Tensor:
+        activations_ultimate = targets_to_values[self.ultimate_target]
+        activations_ultimate = activations_ultimate[
+            self.batch_index[0] : self.batch_index[1]
+        ]
+        new_vec = _create_new_vector(activations_ultimate, self.vec)
+        target_activations = targets_to_values[self.layer_target]
+
+        layer_grad = torch.autograd.grad(
+            outputs=new_vec,
+            inputs=target_activations,
+            grad_outputs=torch.ones_like(new_vec),
+            retain_graph=True,
+        )[0].detach()[self.batch_index[0] : self.batch_index[1]]
+        layer = target_activations[self.batch_index[0] : self.batch_index[1]]
+
+        flat_attr = layer * torch.nn.functional.relu(layer_grad)
+        if self.facet_weights.dim() == 2 and flat_attr.dim() == 4:
+            flat_attr = torch.sum(flat_attr, dim=(2, 3))
+
+        if self.strength:
+            if isinstance(self.strength, (tuple, list)):
+                strength_t = torch.linspace(
+                    self.strength[0],
+                    self.strength[1],
+                    steps=flat_attr.shape[0],
+                    device=flat_attr.device,
+                ).reshape(flat_attr.shape[0], *[1] * (flat_attr.dim() - 1))
+            else:
+                strength_t = self.strength
+            flat_attr = strength_t * flat_attr
+
+        if (
+            self.facet_weights.dim() == 4
+            and layer.dim() == 4
+            and self.facet_weights.shape[2:] != layer.shape[2:]
+        ):
+            facet_weights = torch.nn.functional.interpolate(
+                self.facet_weights, size=layer.shape[2:]
+            )
+        else:
+            facet_weights = self.facet_weights
+
+        return torch.sum(flat_attr * facet_weights)
 
 
 def sum_loss_list(
@@ -753,6 +1127,9 @@ __all__ = [
     "AngledNeuronDirection",
     "TensorDirection",
     "ActivationWeights",
+    "L2Mean",
+    "VectorLoss",
+    "FacetLoss",
     "sum_loss_list",
     "default_loss_summarize",
 ]

@@ -8,6 +8,8 @@ from captum.optim._param.image.images import ImageTensor  # noqa: F401
 from captum.optim._utils import circuits, reducer  # noqa: F401
 from captum.optim._utils.image import atlas  # noqa: F401
 from captum.optim._utils.image.common import (  # noqa: F401
+    hue_to_rgb,
+    make_grid_image,
     nchannels_to_rgb,
     save_tensor_as_image,
     show,
@@ -24,7 +26,9 @@ __all__ = [
     "circuits",
     "models",
     "reducer",
+    "make_grid_image",
     "atlas",
+    "hue_to_rgb",
     "nchannels_to_rgb",
     "save_tensor_as_image",
     "show",
