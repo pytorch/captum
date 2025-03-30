@@ -682,16 +682,6 @@ class TestL2Mean(BaseTest):
         expected = (CHANNEL_ACTIVATION_0_LOSS - constant) ** 2
         self.assertAlmostEqual(output, expected, places=6)
 
-    def test_l2mean_batch_index(self) -> None:
-        raise unittest.SkipTest("Remove after PR merged")
-        model = torch.nn.Identity()
-        batch_index = 1
-        loss = opt_loss.L2Mean(model, batch_index=batch_index)
-
-        model_input = torch.arange(0, 5 * 4 * 5 * 5).view(5, 4, 5, 5).float()
-        output = get_loss_value(model, loss, model_input)
-        self.assertEqual(output.item(), 23034.25)
-
 
 class TestVectorLoss(BaseTest):
     def test_vectorloss_init(self) -> None:
@@ -715,17 +705,6 @@ class TestVectorLoss(BaseTest):
         loss = opt_loss.VectorLoss(model.layer, vec=vec)
         output = get_loss_value(model, loss, model_input=[1, 3, 6, 6])
         self.assertAlmostEqual(output, CHANNEL_ACTIVATION_1_LOSS * 2, places=6)
-
-    def test_vectorloss_batch_index(self) -> None:
-        raise unittest.SkipTest("Remove after PR merged")
-        model = torch.nn.Identity()
-        batch_index = 1
-        vec = torch.tensor([0, 1, 0, 0]).float()
-        loss = opt_loss.VectorLoss(model, vec=vec, batch_index=batch_index)
-
-        model_input = torch.arange(0, 5 * 4 * 5 * 5).view(5, 4, 5, 5).float()
-        output = get_loss_value(model, loss, model_input)
-        self.assertEqual(output.item(), 137.0)
 
 
 class TestFacetLoss(BaseTest):
@@ -835,27 +814,6 @@ class TestFacetLoss(BaseTest):
         output = get_loss_value(model, loss, model_input=[1, 3, 6, 6])
         expected = (CHANNEL_ACTIVATION_0_LOSS * 2) * 1.5
         self.assertAlmostEqual(output, expected / 10.0, places=6)
-
-    def test_facetloss_batch_index(self) -> None:
-        raise unittest.SkipTest("Remove after PR merged")
-        batch_index = 1
-        layer = torch.nn.Conv2d(2, 3, 1, bias=True)
-        layer.weight.data.fill_(0.1)  # type: ignore
-        layer.bias.data.fill_(1)  # type: ignore
-        model = torch.nn.Sequential(BasicModel_ConvNet_Optim(), layer)
-
-        vec = torch.tensor([0, 1, 0]).float()
-        facet_weights = torch.ones([1, 2, 5, 5]) * 1.5
-        loss = opt_loss.FacetLoss(
-            ultimate_target=model[1],
-            layer_target=model[0].layer,
-            vec=vec,
-            facet_weights=facet_weights,
-            batch_index=batch_index,
-        )
-        model_input = torch.arange(0, 5 * 3 * 5 * 5).view(5, 3, 5, 5).float()
-        output = get_loss_value(model, loss, model_input)
-        self.assertAlmostEqual(output.item(), 10.38000202178955, places=5)
 
     def test_facetloss_resize_4d(self) -> None:
         layer = torch.nn.Conv2d(2, 3, 1, bias=True)
