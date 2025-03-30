@@ -1,11 +1,14 @@
 #!/usr/bin/env python3
 
+# pyre-strict
+
 import unittest
 
 import torch
 from captum.module.binary_concrete_stochastic_gates import BinaryConcreteStochasticGates
+from captum.testing.helpers import BaseTest
+from captum.testing.helpers.basic import assertTensorAlmostEqual
 from parameterized import parameterized_class
-from tests.helpers.basic import assertTensorAlmostEqual, BaseTest
 
 
 @parameterized_class(
@@ -15,14 +18,21 @@ from tests.helpers.basic import assertTensorAlmostEqual, BaseTest
     ]
 )
 class TestBinaryConcreteStochasticGates(BaseTest):
-    def setUp(self):
+    # pyre-fixme[13]: Attribute `testing_device` is never initialized.
+    testing_device: str
+
+    def setUp(self) -> None:
         super().setUp()
+        # pyre-fixme[16]: `TestBinaryConcreteStochasticGates` has no attribute
+        #  `testing_device`.
         if self.testing_device == "cuda" and not torch.cuda.is_available():
             raise unittest.SkipTest("Skipping GPU test since CUDA not available.")
 
     def test_bcstg_1d_input(self) -> None:
 
         dim = 3
+        # pyre-fixme[16]: `TestBinaryConcreteStochasticGates` has no attribute
+        #  `testing_device`.
         bcstg = BinaryConcreteStochasticGates(dim).to(self.testing_device)
         input_tensor = torch.tensor(
             [
@@ -39,6 +49,7 @@ class TestBinaryConcreteStochasticGates(BaseTest):
         elif self.testing_device == "cuda":
             expected_gated_input = [[0.0000, 0.0985, 0.1149], [0.2329, 0.0497, 0.5000]]
 
+        # pyre-fixme[61]: `expected_gated_input` is undefined, or not always defined.
         assertTensorAlmostEqual(self, gated_input, expected_gated_input, mode="max")
         assertTensorAlmostEqual(self, reg, expected_reg)
 
@@ -46,6 +57,8 @@ class TestBinaryConcreteStochasticGates(BaseTest):
 
         dim = 3
         mean_bcstg = BinaryConcreteStochasticGates(dim, reg_reduction="mean").to(
+            # pyre-fixme[16]: `TestBinaryConcreteStochasticGates` has no attribute
+            #  `testing_device`.
             self.testing_device
         )
         none_bcstg = BinaryConcreteStochasticGates(dim, reg_reduction="none").to(
@@ -69,6 +82,8 @@ class TestBinaryConcreteStochasticGates(BaseTest):
     def test_bcstg_1d_input_with_n_gates_error(self) -> None:
 
         dim = 3
+        # pyre-fixme[16]: `TestBinaryConcreteStochasticGates` has no attribute
+        #  `testing_device`.
         bcstg = BinaryConcreteStochasticGates(dim).to(self.testing_device)
         input_tensor = torch.tensor([0.0, 0.1, 0.2]).to(self.testing_device)
 
@@ -80,10 +95,14 @@ class TestBinaryConcreteStochasticGates(BaseTest):
         mask = torch.tensor([0, 0, 1])  # only two distinct masks, but given dim is 3
 
         with self.assertRaises(AssertionError):
+            # pyre-fixme[16]: `TestBinaryConcreteStochasticGates` has no attribute
+            #  `testing_device`.
             BinaryConcreteStochasticGates(dim, mask=mask).to(self.testing_device)
 
     def test_gates_values_matching_dim_when_eval(self) -> None:
         dim = 3
+        # pyre-fixme[16]: `TestBinaryConcreteStochasticGates` has no attribute
+        #  `testing_device`.
         bcstg = BinaryConcreteStochasticGates(dim).to(self.testing_device)
         input_tensor = torch.tensor(
             [
@@ -99,6 +118,8 @@ class TestBinaryConcreteStochasticGates(BaseTest):
     def test_bcstg_1d_input_with_mask(self) -> None:
 
         dim = 2
+        # pyre-fixme[16]: `TestBinaryConcreteStochasticGates` has no attribute
+        #  `testing_device`.
         mask = torch.tensor([0, 0, 1]).to(self.testing_device)
         bcstg = BinaryConcreteStochasticGates(dim, mask=mask).to(self.testing_device)
         input_tensor = torch.tensor(
@@ -116,12 +137,15 @@ class TestBinaryConcreteStochasticGates(BaseTest):
         elif self.testing_device == "cuda":
             expected_gated_input = [[0.0000, 0.0000, 0.1971], [0.1737, 0.2317, 0.3888]]
 
+        # pyre-fixme[61]: `expected_gated_input` is undefined, or not always defined.
         assertTensorAlmostEqual(self, gated_input, expected_gated_input, mode="max")
         assertTensorAlmostEqual(self, reg, expected_reg)
 
     def test_bcstg_2d_input(self) -> None:
 
         dim = 3 * 2
+        # pyre-fixme[16]: `TestBinaryConcreteStochasticGates` has no attribute
+        #  `testing_device`.
         bcstg = BinaryConcreteStochasticGates(dim).to(self.testing_device)
 
         # shape(2,3,2)
@@ -154,12 +178,15 @@ class TestBinaryConcreteStochasticGates(BaseTest):
                 [[0.1840, 0.1571], [0.4612, 0.7937], [0.2975, 0.7393]],
             ]
 
+        # pyre-fixme[61]: `expected_gated_input` is undefined, or not always defined.
         assertTensorAlmostEqual(self, gated_input, expected_gated_input, mode="max")
         assertTensorAlmostEqual(self, reg, expected_reg)
 
     def test_bcstg_2d_input_with_n_gates_error(self) -> None:
 
         dim = 5
+        # pyre-fixme[16]: `TestBinaryConcreteStochasticGates` has no attribute
+        #  `testing_device`.
         bcstg = BinaryConcreteStochasticGates(dim).to(self.testing_device)
         input_tensor = torch.tensor(
             [
@@ -183,6 +210,8 @@ class TestBinaryConcreteStochasticGates(BaseTest):
                 [1, 1],
                 [0, 2],
             ]
+            # pyre-fixme[16]: `TestBinaryConcreteStochasticGates` has no attribute
+            #  `testing_device`.
         ).to(self.testing_device)
         bcstg = BinaryConcreteStochasticGates(dim, mask=mask).to(self.testing_device)
 
@@ -216,12 +245,15 @@ class TestBinaryConcreteStochasticGates(BaseTest):
                 [[0.4658, 0.0870], [0.0994, 0.1119], [0.7764, 1.1000]],
             ]
 
+        # pyre-fixme[61]: `expected_gated_input` is undefined, or not always defined.
         assertTensorAlmostEqual(self, gated_input, expected_gated_input, mode="max")
         assertTensorAlmostEqual(self, reg, expected_reg)
 
     def test_get_gate_values_1d_input(self) -> None:
 
         dim = 3
+        # pyre-fixme[16]: `TestBinaryConcreteStochasticGates` has no attribute
+        #  `testing_device`.
         bcstg = BinaryConcreteStochasticGates(dim).to(self.testing_device)
         input_tensor = torch.tensor(
             [
@@ -241,6 +273,8 @@ class TestBinaryConcreteStochasticGates(BaseTest):
 
         dim = 2
         mask = torch.tensor([0, 1, 1])
+        # pyre-fixme[16]: `TestBinaryConcreteStochasticGates` has no attribute
+        #  `testing_device`.
         bcstg = BinaryConcreteStochasticGates(dim, mask=mask).to(self.testing_device)
         input_tensor = torch.tensor(
             [
@@ -259,6 +293,8 @@ class TestBinaryConcreteStochasticGates(BaseTest):
     def test_get_gate_values_2d_input(self) -> None:
 
         dim = 3 * 2
+        # pyre-fixme[16]: `TestBinaryConcreteStochasticGates` has no attribute
+        #  `testing_device`.
         bcstg = BinaryConcreteStochasticGates(dim).to(self.testing_device)
 
         # shape(2,3,2)
@@ -287,7 +323,11 @@ class TestBinaryConcreteStochasticGates(BaseTest):
     def test_get_gate_values_clamp(self) -> None:
         # enlarge the bounds & extremify log_alpha to mock gate  values beyond 0 & 1
         bcstg = BinaryConcreteStochasticGates._from_pretrained(
-            torch.tensor([10.0, -10.0, 10.0]), lower_bound=-2, upper_bound=2
+            torch.tensor([10.0, -10.0, 10.0]),
+            lower_bound=-2,
+            upper_bound=2,
+            # pyre-fixme[16]: `TestBinaryConcreteStochasticGates` has no attribute
+            #  `testing_device`.
         ).to(self.testing_device)
 
         clamped_gate_values = bcstg.get_gate_values().cpu().tolist()
@@ -310,6 +350,8 @@ class TestBinaryConcreteStochasticGates(BaseTest):
                 [0, 2],
             ]
         )
+        # pyre-fixme[16]: `TestBinaryConcreteStochasticGates` has no attribute
+        #  `testing_device`.
         bcstg = BinaryConcreteStochasticGates(dim, mask=mask).to(self.testing_device)
 
         input_tensor = torch.tensor(
@@ -337,6 +379,8 @@ class TestBinaryConcreteStochasticGates(BaseTest):
     def test_get_gate_active_probs_1d_input(self) -> None:
 
         dim = 3
+        # pyre-fixme[16]: `TestBinaryConcreteStochasticGates` has no attribute
+        #  `testing_device`.
         bcstg = BinaryConcreteStochasticGates(dim).to(self.testing_device)
         input_tensor = torch.tensor(
             [
@@ -358,6 +402,8 @@ class TestBinaryConcreteStochasticGates(BaseTest):
 
         dim = 2
         mask = torch.tensor([0, 1, 1])
+        # pyre-fixme[16]: `TestBinaryConcreteStochasticGates` has no attribute
+        #  `testing_device`.
         bcstg = BinaryConcreteStochasticGates(dim, mask=mask).to(self.testing_device)
         input_tensor = torch.tensor(
             [
@@ -378,6 +424,8 @@ class TestBinaryConcreteStochasticGates(BaseTest):
     def test_get_gate_active_probs_2d_input(self) -> None:
 
         dim = 3 * 2
+        # pyre-fixme[16]: `TestBinaryConcreteStochasticGates` has no attribute
+        #  `testing_device`.
         bcstg = BinaryConcreteStochasticGates(dim).to(self.testing_device)
 
         # shape(2,3,2)
@@ -415,6 +463,8 @@ class TestBinaryConcreteStochasticGates(BaseTest):
                 [0, 2],
             ]
         )
+        # pyre-fixme[16]: `TestBinaryConcreteStochasticGates` has no attribute
+        #  `testing_device`.
         bcstg = BinaryConcreteStochasticGates(dim, mask=mask).to(self.testing_device)
 
         input_tensor = torch.tensor(

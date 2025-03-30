@@ -1,6 +1,18 @@
 Utilities
 ==========
 
+Interpretable Input
+^^^^^^^^^^^^^^^^^^^^^
+.. autoclass:: captum.attr.InterpretableInput
+    :members:
+
+.. autoclass:: captum.attr.TextTemplateInput
+    :members:
+
+.. autoclass:: captum.attr.TextTokenInput
+    :members:
+
+
 Visualization
 ^^^^^^^^^^^^^^
 
@@ -47,4 +59,10 @@ Linear Models
 .. autoclass:: captum._utils.models.linear_model.SGDLasso
     :members:
 .. autoclass:: captum._utils.models.linear_model.SGDRidge
+    :members:
+
+Baselines
+^^^^^^^^^^^^^^^^
+
+.. autoclass:: captum.attr.ProductBaselines
     :members:

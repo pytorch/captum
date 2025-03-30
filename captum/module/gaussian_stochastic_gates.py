@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
+
+# pyre-strict
 import math
-from typing import Optional
+from typing import Any, Optional
 
 import torch
 from captum.module.stochastic_gates_base import StochasticGatesBase
@@ -46,7 +48,7 @@ class GaussianStochasticGates(StochasticGatesBase):
         reg_weight: Optional[float] = 1.0,
         std: Optional[float] = 0.5,
         reg_reduction: str = "sum",
-    ):
+    ) -> None:
         """
         Args:
             n_gates (int): number of gates.
@@ -75,14 +77,21 @@ class GaussianStochasticGates(StochasticGatesBase):
                 Default: ``'sum'``
         """
         super().__init__(
-            n_gates, mask=mask, reg_weight=reg_weight, reg_reduction=reg_reduction
+            n_gates,
+            mask=mask,
+            # pyre-fixme[6]: For 3rd argument expected `float` but got
+            #  `Optional[float]`.
+            reg_weight=reg_weight,  # type: ignore
+            reg_reduction=reg_reduction,
         )
 
         mu = torch.empty(n_gates)
         nn.init.normal_(mu, mean=0.5, std=0.01)
         self.mu = nn.Parameter(mu)
 
-        assert 0 < std, f"the standard deviation should be positive, received {std}"
+        # pyre-fixme[58]: `<` is not supported for operand types `int` and
+        #  `Optional[float]`.
+        assert 0 < std, f"the standard deviation should be positive, received {std}"  # type: ignore  # noqa: E501 line too long
         self.std = std
 
     def _sample_gate_values(self, batch_size: int) -> Tensor:
@@ -98,7 +107,9 @@ class GaussianStochasticGates(StochasticGatesBase):
 
         if self.training:
             n = torch.empty(batch_size, self.n_gates, device=self.mu.device)
-            n.normal_(mean=0, std=self.std)
+            # pyre-fixme[6]: For 2nd argument expected `float` but got
+            #  `Optional[float]`.
+            n.normal_(mean=0, std=self.std)  # type: ignore
             return self.mu + n
 
         return self.mu.expand(batch_size, self.n_gates)
@@ -122,11 +133,15 @@ class GaussianStochasticGates(StochasticGatesBase):
             probs (Tensor): probabilities tensor of the gates are active
                 in shape(n_gates)
         """
-        x = self.mu / self.std
+        std = self.std
+        assert std is not None, "std should not be None"
+        x = self.mu / std
         return 0.5 * (1 + torch.erf(x / math.sqrt(2)))
 
     @classmethod
-    def _from_pretrained(cls, mu: Tensor, *args, **kwargs):
+    def _from_pretrained(
+        cls, mu: Tensor, *args: Any, **kwargs: Any
+    ) -> "GaussianStochasticGates":
         """
         Private factory method to create an instance with pretrained parameters
 

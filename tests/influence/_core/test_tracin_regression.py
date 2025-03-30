@@ -1,17 +1,21 @@
+# pyre-strict
+
 import os
 import tempfile
-from typing import Callable, cast, Optional
+from typing import Any, Callable, Dict, List, Optional, Tuple
 
 import torch
 import torch.nn as nn
+from captum.influence._core.arnoldi_influence_function import ArnoldiInfluenceFunction
+from captum.influence._core.influence_function import NaiveInfluenceFunction
 from captum.influence._core.tracincp import TracInCP
 from captum.influence._core.tracincp_fast_rand_proj import (
     TracInCPFast,
     TracInCPFastRandProj,
 )
-from parameterized import parameterized
-from tests.helpers.basic import assertTensorAlmostEqual, BaseTest
-from tests.influence._utils.common import (
+from captum.testing.helpers import BaseTest
+from captum.testing.helpers.basic import assertTensorAlmostEqual
+from captum.testing.helpers.influence.common import (
     _isSorted,
     _wrap_model_in_dataparallel,
     build_test_name_func,
@@ -20,12 +24,14 @@ from tests.influence._utils.common import (
     IdentityDataset,
     RangeDataset,
 )
+from parameterized import parameterized
+from torch import Tensor
 
 
 class TestTracInRegression(BaseTest):
     def _test_tracin_regression_setup(
         self, tmpdir: str, features: int, use_gpu: bool = False
-    ):
+    ) -> Tuple[RangeDataset, Dict[str, Any]]:  # fixme (return type)
         low = 1
         high = 17
         dataset = RangeDataset(low, high, features, use_gpu)
@@ -42,7 +48,8 @@ class TestTracInRegression(BaseTest):
             checkpoint_name = "-".join(["checkpoint-reg", str(i + 1) + ".pt"])
             torch.save(net_adjusted.state_dict(), os.path.join(tmpdir, checkpoint_name))
 
-        return dataset, net_adjusted
+        # pyre-fixme[61]: `net_adjusted` is undefined, or not always defined.
+        return dataset, net_adjusted  # type: ignore
 
     use_gpu_list = (
         [True, False]
@@ -50,10 +57,12 @@ class TestTracInRegression(BaseTest):
         else [False]
     )
 
-    param_list = []
+    param_list: List[Tuple[Optional[str], DataInfluenceConstructor, str, int, bool]] = (
+        []
+    )
     for use_gpu in use_gpu_list:
         for dim in [1, 20]:
-            for (mode, reduction, constructor) in [
+            for mode, reduction, constructor in [
                 (
                     "check_idx",
                     "none",
@@ -132,6 +141,10 @@ class TestTracInRegression(BaseTest):
                 if not (mode == "sample_wise_trick" and use_gpu):
                     param_list.append((reduction, constructor, mode, dim, use_gpu))
 
+    # pyre-fixme[56]: Pyre was not able to infer the type of argument
+    # `captum.testing.helpers.influence.common.build_test_name_func
+    # ($parameter$args_to_skip = ["reduction"])` to decorator factory
+    # `parameterized.parameterized.expand`.
     @parameterized.expand(
         param_list,
         name_func=build_test_name_func(args_to_skip=["reduction"]),
@@ -139,6 +152,7 @@ class TestTracInRegression(BaseTest):
     def test_tracin_regression(
         self,
         reduction: Optional[str],
+        # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
         tracin_constructor: Callable,
         mode: str,
         features: int,
@@ -172,8 +186,8 @@ class TestTracInRegression(BaseTest):
 
             if mode == "check_idx":
 
-                self.assertTrue(isinstance(reduction, str))
-                criterion = nn.MSELoss(reduction=cast(str, reduction))
+                assert isinstance(reduction, str)
+                criterion = nn.MSELoss(reduction=reduction)
 
                 tracin = tracin_constructor(
                     net,
@@ -183,6 +197,7 @@ class TestTracInRegression(BaseTest):
                     criterion,
                 )
 
+                # pyre-fixme[16]: `object` has no attribute `influence`.
                 train_scores = tracin.influence((train_inputs, train_labels))
                 idx, _ = tracin.influence(
                     (train_inputs, train_labels), k=len(dataset), proponents=True
@@ -242,6 +257,9 @@ class TestTracInRegression(BaseTest):
                     self, test_scores, test_scores_sample_wise_trick
                 )
 
+    # pyre-fixme[56]: Pyre was not able to infer the type of argument
+    # `captum.testing.helpers.influence.common.build_test_name_func()`
+    # to decorator factory `parameterized.parameterized.expand`.
     @parameterized.expand(
         [
             (
@@ -256,7 +274,10 @@ class TestTracInRegression(BaseTest):
         name_func=build_test_name_func(),
     )
     def test_tracin_regression_1D_numerical(
-        self, reduction: str, tracin_constructor: Callable
+        self,
+        reduction: str,
+        # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
+        tracin_constructor: Callable,
     ) -> None:
 
         low = 1
@@ -264,8 +285,7 @@ class TestTracInRegression(BaseTest):
         features = 1
         dataset = RangeDataset(low, high, features)
         net = CoefficientNet()
-        self.assertTrue(isinstance(reduction, str))
-        criterion = nn.MSELoss(reduction=cast(str, reduction))
+        criterion = nn.MSELoss(reduction=reduction)
         batch_size = 4
         weights = [0.4379, 0.1653, 0.5132, 0.3651, 0.9992]
 
@@ -288,6 +308,7 @@ class TestTracInRegression(BaseTest):
                 criterion,
             )
 
+            # pyre-fixme[16]: `object` has no attribute `influence`.
             train_scores = tracin.influence((train_inputs, train_labels), k=None)
 
             r"""
@@ -312,7 +333,9 @@ class TestTracInRegression(BaseTest):
                         self, torch.sum(num), train_scores[i][j], delta=0.1
                     )
 
-    def _test_tracin_identity_regression_setup(self, tmpdir: str):
+    def _test_tracin_identity_regression_setup(
+        self, tmpdir: str
+    ) -> Tuple[IdentityDataset, CoefficientNet]:
         num_features = 7
         dataset = IdentityDataset(num_features)
         net = CoefficientNet()
@@ -320,12 +343,15 @@ class TestTracInRegression(BaseTest):
         num_checkpoints = 5
 
         for i in range(num_checkpoints):
-            net.fc1.weight.data = torch.rand((1, num_features))
+            net.fc1.weight.data = torch.rand((1, num_features)) * 100
             checkpoint_name = "-".join(["checkpoint-reg", str(i) + ".pt"])
             torch.save(net.state_dict(), os.path.join(tmpdir, checkpoint_name))
 
         return dataset, net
 
+    # pyre-fixme[56]: Pyre was not able to infer the type of argument
+    # `captum.testing.helpers.influence.common.build_test_name_func()`
+    # to decorator factory `parameterized.parameterized.expand`
     @parameterized.expand(
         [
             ("check_idx", "none", DataInfluenceConstructor(TracInCP)),
@@ -340,11 +366,25 @@ class TestTracInRegression(BaseTest):
             ("check_idx", "sum", DataInfluenceConstructor(TracInCPFastRandProj)),
             ("check_idx", "mean", DataInfluenceConstructor(TracInCPFast)),
             ("check_idx", "mean", DataInfluenceConstructor(TracInCPFastRandProj)),
+            ("check_idx", "none", DataInfluenceConstructor(NaiveInfluenceFunction)),
+            (
+                "check_idx",
+                "none",
+                DataInfluenceConstructor(
+                    ArnoldiInfluenceFunction,
+                    arnoldi_tol=1e-8,  # needs to be small to avoid empty arnoldi basis
+                    hessian_reg=2e-3,
+                ),
+            ),
         ],
         name_func=build_test_name_func(),
     )
     def test_tracin_identity_regression(
-        self, mode: str, reduction: Optional[str], tracin_constructor: Callable
+        self,
+        mode: str,
+        reduction: Optional[str],
+        # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
+        tracin_constructor: Callable,
     ) -> None:
         """
         This test uses a linear model with positive coefficients, where input feature
@@ -369,8 +409,8 @@ class TestTracInRegression(BaseTest):
 
             if mode == "check_idx":
 
-                self.assertTrue(isinstance(reduction, str))
-                criterion = nn.MSELoss(reduction=cast(str, reduction))
+                assert isinstance(reduction, str)
+                criterion = nn.MSELoss(reduction=reduction)
 
                 tracin = tracin_constructor(
                     net,
@@ -382,6 +422,7 @@ class TestTracInRegression(BaseTest):
 
                 # check influence scores of training data
 
+                # pyre-fixme[16]: `object` has no attribute `influence`.
                 train_scores = tracin.influence((train_inputs, train_labels))
                 idx, _ = tracin.influence(
                     (train_inputs, train_labels), k=len(dataset), proponents=True
@@ -423,6 +464,9 @@ class TestTracInRegression(BaseTest):
                     self, train_scores, train_scores_tracin_sample_wise_trick
                 )
 
+    # pyre-fixme[56]: Pyre was not able to infer the type of argument
+    # `captum.testing.helpers.influence.common.build_test_name_func()`
+    # to decorator factory `parameterized.parameterized.expand`.
     @parameterized.expand(
         [
             ("none", "none", DataInfluenceConstructor(TracInCP)),
@@ -435,6 +479,14 @@ class TestTracInRegression(BaseTest):
             ("mean", "mean", DataInfluenceConstructor(TracInCPFast)),
             ("sum", "sum", DataInfluenceConstructor(TracInCPFastRandProj)),
             ("mean", "mean", DataInfluenceConstructor(TracInCPFastRandProj)),
+            ("none", "none", DataInfluenceConstructor(NaiveInfluenceFunction)),
+            # (
+            #    "none",
+            #    "none",
+            #    DataInfluenceConstructor(ArnoldiInfluenceFunction, arnoldi_tol=1e-9),
+            #    # need to set `arnoldi_tol` small. otherwise, arnoldi iteration
+            #    # terminates early and get 'Arnoldi basis is empty' exception.
+            # ),
         ],
         name_func=build_test_name_func(),
     )
@@ -442,6 +494,7 @@ class TestTracInRegression(BaseTest):
         self,
         reduction: Optional[str],
         test_reduction: Optional[str],
+        # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
         tracin_constructor: Callable,
     ) -> None:
         """
@@ -471,19 +524,19 @@ class TestTracInRegression(BaseTest):
 
             self.assertTrue(callable(tracin_constructor))
 
-            self.assertTrue(isinstance(reduction, str))
-            criterion = nn.MSELoss(reduction=cast(str, reduction))
+            assert isinstance(reduction, str)
+            criterion = nn.MSELoss(reduction=reduction)
 
             # the output of `net`, i.e. `input` for the loss functions below, is a
             # batch_size x 1 2D tensor
             if test_reduction == "none":
                 # loss function returns 1D tensor of all 0's, so is constant
-                def test_loss_fn(input, target):
+                def test_loss_fn(input: Tensor, target: int) -> Tensor:
                     return input.squeeze() * 0.0
 
             elif test_reduction in ["sum", "mean"]:
                 # loss function returns scalar tensor of all 0's, so is constant
-                def test_loss_fn(input, target):
+                def test_loss_fn(input: Tensor, target: int) -> Tensor:
                     return input.mean() * 0.0
 
             tracin = tracin_constructor(
@@ -492,9 +545,11 @@ class TestTracInRegression(BaseTest):
                 tmpdir,
                 batch_size,
                 criterion,
+                # pyre-fixme[61]: `test_loss_fn` is undefined, or not always defined.
                 test_loss_fn=test_loss_fn,
             )
 
             # check influence scores of training data. they should all be 0
+            # pyre-fixme[16]: `object` has no attribute `influence`.
             train_scores = tracin.influence((train_inputs, train_labels), k=None)
             assertTensorAlmostEqual(self, train_scores, torch.zeros(train_scores.shape))

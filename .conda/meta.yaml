@@ -13,11 +13,14 @@ build:
 
 requirements:
   host:
-    - python>=3.6
+    - python>=3.9
+    - setuptools
   run:
-    - numpy
-    - pytorch>=1.6
+    - numpy<2.0
+    - pytorch>=1.10
     - matplotlib-base
+    - tqdm
+    - packaging
 
 test:
   imports:
@@ -25,8 +28,14 @@ test:
 
 about:
   home: https://captum.ai
-  license: BSD
+  license: BSD-3
   license_file: LICENSE
   summary: Model interpretability for PyTorch
+  description: |
+    Captum is a model interpretability and understanding library for PyTorch.
+    Captum means comprehension in Latin and contains general purpose implementations
+    of integrated gradients, saliency maps, smoothgrad, vargrad and others for
+    PyTorch models. It has quick integration for models built with domain-specific
+    libraries such as torchvision, torchtext, and others.
   doc_url: https://captum.ai
   dev_url: https://github.com/pytorch/captum

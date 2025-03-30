@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+# pyre-strict
+
 import unittest
 from typing import Any, Callable, cast, List, Tuple, Union
 
@@ -7,12 +9,15 @@ import torch
 from captum._utils.typing import BaselineType, TensorOrTupleOfTensorsGeneric
 from captum.attr._core.layer.layer_conductance import LayerConductance
 from captum.attr._core.neuron.neuron_conductance import NeuronConductance
-from tests.helpers.basic import assertTensorAlmostEqual, BaseTest
-from tests.helpers.basic_models import (
+from captum.testing.helpers import BaseTest
+from captum.testing.helpers.basic import assertTensorAlmostEqual
+from captum.testing.helpers.basic_models import (
     BasicModel_ConvNet,
     BasicModel_MultiLayer,
     BasicModel_MultiLayer_MultiInput,
 )
+
+from packaging import version
 from torch import Tensor
 from torch.nn import Module
 
@@ -142,10 +147,39 @@ class Test(BaseTest):
             for j in range(layer_attr[i].shape[1]):
                 neuron_attr = nc.attribute(
                     inp,
-                    lambda x: x[i][:, j],
+                    lambda x, i=i, j=j: x[i][:, j],
                     target=0,
                     n_steps=500,
                     method="gausslegendre",
+                )
+                self.assertAlmostEqual(
+                    neuron_attr.sum().item(),
+                    layer_attr[i][0][j].item(),
+                    delta=0.005,
+                )
+
+    def test_relu_neuron_conductance_with_unused_layer(self) -> None:
+        if version.parse(torch.__version__) < version.parse("2.1.0"):
+            raise unittest.SkipTest(
+                "Skipping unused layed gradient test since it is not supported "
+                "by torch version < 2.1"
+            )
+
+        net = BasicModel_MultiLayer(multi_input_module=True)
+        inp = torch.tensor([[0.0, 6.0, 0.0]])
+
+        lc = LayerConductance(net, net.multi_relu)
+        layer_attr = lc.attribute(inp, target=0, n_steps=500, method="gausslegendre")
+        nc = NeuronConductance(net, net.multi_relu)
+        for i in range(len(layer_attr)):
+            for j in range(layer_attr[i].shape[1]):
+                neuron_attr = nc.attribute(
+                    inp,
+                    lambda x, i=i, j=j: x[i][:, j],
+                    target=0,
+                    n_steps=500,
+                    method="gausslegendre",
+                    grad_kwargs={"materialize_grads": True},
                 )
                 self.assertAlmostEqual(
                     neuron_attr.sum().item(),
@@ -158,8 +192,11 @@ class Test(BaseTest):
         model: Module,
         target_layer: Module,
         test_input: TensorOrTupleOfTensorsGeneric,
+        # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
         test_neuron: Union[int, Tuple[int, ...], Callable],
         expected_input_conductance: Union[List[float], Tuple[List[List[float]], ...]],
+        # pyre-fixme[2]: Parameter `additional_input` has type `None` but type
+        # `Any` is specified.
         additional_input: Any = None,
         multiply_by_inputs: bool = True,
     ) -> None:
@@ -209,7 +246,7 @@ class Test(BaseTest):
         target_layer: Module,
         test_input: TensorOrTupleOfTensorsGeneric,
         test_baseline: BaselineType = None,
-    ):
+    ) -> None:
         layer_cond = LayerConductance(model, target_layer)
         attributions = cast(
             Tensor,
@@ -236,7 +273,13 @@ class Test(BaseTest):
                     for n in range(attributions.shape[0]):
                         self.assertAlmostEqual(
                             torch.sum(neuron_vals[n]).item(),
+                            # pyre-fixme[6]: For 2nd argument expected
+                            #  `SupportsRSub[Variable[_T],
+                            #  SupportsAbs[SupportsRound[object]]]` but got
+                            #  `Union[bool, float, int]`.
                             attributions[n, i, j, k].item(),
+                            # pyre-fixme[6]: For 3rd argument expected `None` but
+                            #  got `float`.
                             delta=0.005,
                         )
 

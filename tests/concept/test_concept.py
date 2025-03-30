@@ -1,11 +1,13 @@
 #!/usr/bin/env python3import
 
+# pyre-unsafe
+
 from typing import cast, Iterable
 
 import torch
 from captum.concept._core.concept import Concept
 from captum.concept._utils.data_iterator import dataset_to_dataloader
-from tests.helpers.basic import BaseTest
+from captum.testing.helpers import BaseTest
 from torch.utils.data import IterableDataset
 
 

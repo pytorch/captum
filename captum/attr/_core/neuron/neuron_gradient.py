@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
-from typing import Any, Callable, List, Tuple, Union
+
+# pyre-strict
+from typing import Callable, List, Optional, Tuple, Union
 
 from captum._utils.common import (
     _format_additional_forward_args,
@@ -12,9 +14,10 @@ from captum._utils.gradient import (
     apply_gradient_requirements,
     undo_gradient_requirements,
 )
-from captum._utils.typing import TensorOrTupleOfTensorsGeneric
+from captum._utils.typing import SliceIntType, TensorOrTupleOfTensorsGeneric
 from captum.attr._utils.attribution import GradientAttribution, NeuronAttribution
 from captum.log import log_usage
+from torch import Tensor
 from torch.nn import Module
 
 
@@ -26,7 +29,7 @@ class NeuronGradient(NeuronAttribution, GradientAttribution):
 
     def __init__(
         self,
-        forward_func: Callable,
+        forward_func: Callable[..., Union[int, float, Tensor]],
         layer: Module,
         device_ids: Union[None, List[int]] = None,
     ) -> None:
@@ -57,8 +60,12 @@ class NeuronGradient(NeuronAttribution, GradientAttribution):
     def attribute(
         self,
         inputs: TensorOrTupleOfTensorsGeneric,
-        neuron_selector: Union[int, Tuple[Union[int, slice], ...], Callable],
-        additional_forward_args: Any = None,
+        neuron_selector: Union[
+            int,
+            Tuple[Union[int, SliceIntType], ...],
+            Callable[[Union[Tensor, Tuple[Tensor, ...]]], Tensor],
+        ],
+        additional_forward_args: Optional[object] = None,
         attribute_to_neuron_input: bool = False,
     ) -> TensorOrTupleOfTensorsGeneric:
         r"""
@@ -159,11 +166,11 @@ class NeuronGradient(NeuronAttribution, GradientAttribution):
             >>> attribution = neuron_ig.attribute(input, (4,1,2))
         """
         is_inputs_tuple = _is_tuple(inputs)
-        inputs = _format_tensor_into_tuples(inputs)
+        inputs_tuple = _format_tensor_into_tuples(inputs)
         additional_forward_args = _format_additional_forward_args(
             additional_forward_args
         )
-        gradient_mask = apply_gradient_requirements(inputs)
+        gradient_mask = apply_gradient_requirements(inputs_tuple)
 
         _, input_grads = _forward_layer_eval_with_neuron_grads(
             self.forward_func,
@@ -175,5 +182,9 @@ class NeuronGradient(NeuronAttribution, GradientAttribution):
             attribute_to_layer_input=attribute_to_neuron_input,
         )
 
-        undo_gradient_requirements(inputs, gradient_mask)
+        undo_gradient_requirements(inputs_tuple, gradient_mask)
+
+        # pyre-fixme[7]: Expected `Variable[TensorOrTupleOfTensorsGeneric <:
+        # [Tensor, typing.Tuple[Tensor, ...]]]` but got `Union[Tensor,
+        # typing.Tuple[Tensor, ...]]`.
         return _format_output(is_inputs_tuple, input_grads)

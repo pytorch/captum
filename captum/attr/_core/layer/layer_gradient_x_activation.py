@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
-from typing import Any, Callable, List, Tuple, Union
+
+# pyre-strict
+from typing import Any, Callable, cast, Dict, List, Optional, Tuple, Union
 
 from captum._utils.common import (
     _format_additional_forward_args,
@@ -22,7 +24,7 @@ class LayerGradientXActivation(LayerAttribution, GradientAttribution):
 
     def __init__(
         self,
-        forward_func: Callable,
+        forward_func: Callable[..., Tensor],
         layer: ModuleOrModuleList,
         device_ids: Union[None, List[int]] = None,
         multiply_by_inputs: bool = True,
@@ -66,7 +68,7 @@ class LayerGradientXActivation(LayerAttribution, GradientAttribution):
         self._multiply_by_inputs = multiply_by_inputs
 
     @property
-    def multiplies_by_inputs(self):
+    def multiplies_by_inputs(self) -> bool:
         return self._multiply_by_inputs
 
     @log_usage()
@@ -74,8 +76,9 @@ class LayerGradientXActivation(LayerAttribution, GradientAttribution):
         self,
         inputs: Union[Tensor, Tuple[Tensor, ...]],
         target: TargetType = None,
-        additional_forward_args: Any = None,
+        additional_forward_args: Optional[object] = None,
         attribute_to_layer_input: bool = False,
+        grad_kwargs: Optional[Dict[str, Any]] = None,
     ) -> Union[Tensor, Tuple[Tensor, ...], List[Union[Tensor, Tuple[Tensor, ...]]]]:
         r"""
         Args:
@@ -132,7 +135,9 @@ class LayerGradientXActivation(LayerAttribution, GradientAttribution):
                         layer input, otherwise it will be computed with respect
                         to layer output.
                         Default: False
-
+            grad_kwargs (Dict[str, Any], optional): Additional keyword
+                        arguments for torch.autograd.grad.
+                        Default: None
         Returns:
             *Tensor* or *tuple[Tensor, ...]* or list of **attributions**:
             - **attributions** (*Tensor*, *tuple[Tensor, ...]*, or *list*):
@@ -175,11 +180,15 @@ class LayerGradientXActivation(LayerAttribution, GradientAttribution):
             additional_forward_args,
             device_ids=self.device_ids,
             attribute_to_layer_input=attribute_to_layer_input,
+            grad_kwargs=grad_kwargs,
         )
         if isinstance(self.layer, Module):
             return _format_output(
                 len(layer_evals) > 1,
-                self.multiply_gradient_acts(layer_gradients, layer_evals),
+                self.multiply_gradient_acts(
+                    cast(Tuple[Tensor, ...], layer_gradients),
+                    cast(Tuple[Tensor, ...], layer_evals),
+                ),
             )
         else:
             return [
@@ -194,8 +203,10 @@ class LayerGradientXActivation(LayerAttribution, GradientAttribution):
         self, gradients: Tuple[Tensor, ...], evals: Tuple[Tensor, ...]
     ) -> Tuple[Tensor, ...]:
         return tuple(
-            single_gradient * single_eval
-            if self.multiplies_by_inputs
-            else single_gradient
+            (
+                single_gradient * single_eval
+                if self.multiplies_by_inputs
+                else single_gradient
+            )
             for single_gradient, single_eval in zip(gradients, evals)
         )

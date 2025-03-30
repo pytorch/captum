@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+# pyre-strict
+
 import typing
 from typing import Any, cast, Dict, List, Tuple, Type, Union
 
@@ -24,10 +26,13 @@ def gen_test_name(
 
 
 def parse_test_config(
+    # pyre-fixme[24]: Generic type `dict` expects 2 type parameters, use
+    #  `typing.Dict[<key type>, <value type>]` to avoid runtime subscripting errors.
     test_config: Dict,
 ) -> Tuple[List[Type[Attribution]], Module, Dict[str, Any], Module, bool, bool]:
     algorithms = cast(List[Type[Attribution]], test_config["algorithms"])
     model = test_config["model"]
+    # pyre-fixme[33]: Given annotation cannot contain `Any`.
     args = cast(Dict[str, Any], test_config["attribute_args"])
     layer = test_config["layer"] if "layer" in test_config else None
     noise_tunnel = (
@@ -36,7 +41,7 @@ def parse_test_config(
     baseline_distr = (
         test_config["baseline_distr"] if "baseline_distr" in test_config else False
     )
-    return algorithms, model, args, layer, noise_tunnel, baseline_distr
+    return algorithms, model, args, layer, noise_tunnel, baseline_distr  # type: ignore
 
 
 def should_create_generated_test(algorithm: Type[Attribution]) -> bool:
@@ -55,13 +60,11 @@ def should_create_generated_test(algorithm: Type[Attribution]) -> bool:
 
 
 @typing.overload
-def get_target_layer(model: Module, layer_name: str) -> Module:
-    ...
+def get_target_layer(model: Module, layer_name: str) -> Module: ...
 
 
 @typing.overload
-def get_target_layer(model: Module, layer_name: List[str]) -> List[Module]:
-    ...
+def get_target_layer(model: Module, layer_name: List[str]) -> List[Module]: ...
 
 
 def get_target_layer(

@@ -1,8 +1,12 @@
 #!/usr/bin/env python3
 
-import os
-from typing import Any, Dict, List
+# pyre-strict
 
+import os
+from contextlib import AbstractContextManager, nullcontext
+from typing import Any, Dict, List, Optional, TYPE_CHECKING
+
+import numpy as np
 import torch
 from captum.concept._core.concept import Concept
 from captum.concept._utils.common import concepts_to_str
@@ -21,7 +25,7 @@ class CAV:
         self,
         concepts: List[Concept],
         layer: str,
-        stats: Dict[str, Any] = None,
+        stats: Optional[Dict[str, Any]] = None,
         save_path: str = "./cav/",
         model_id: str = "default_model_id",
     ) -> None:
@@ -87,7 +91,7 @@ class CAV:
         file_name = concepts_to_str(concepts) + "-" + layer + ".pkl"
         return os.path.join(path, model_id, file_name)
 
-    def save(self):
+    def save(self) -> None:
         r"""
         Saves a dictionary of the CAV computed values into a pickle file in the
         location returned by the "assemble_save_path" static methods. The
@@ -134,7 +138,9 @@ class CAV:
             os.makedirs(cav_model_id_path)
 
     @staticmethod
-    def load(cavs_path: str, model_id: str, concepts: List[Concept], layer: str):
+    def load(
+        cavs_path: str, model_id: str, concepts: List[Concept], layer: str
+    ) -> Optional["CAV"]:
         r"""
         Loads CAV dictionary from a pickle file for given input
         `layer` and `concepts`.
@@ -162,7 +168,29 @@ class CAV:
         cavs_path = CAV.assemble_save_path(cavs_path, model_id, concepts, layer)
 
         if os.path.exists(cavs_path):
-            save_dict = torch.load(cavs_path)
+            # Necessary for Python >=3.7 and <3.9!
+            if TYPE_CHECKING:
+                ctx: AbstractContextManager[None, None]
+            else:
+                ctx: AbstractContextManager
+            if hasattr(torch.serialization, "safe_globals"):
+                safe_globals = [
+                    # pyre-ignore[16]: Module `numpy.core.multiarray` has no attribute
+                    # `_reconstruct`
+                    np.core.multiarray._reconstruct,  # type: ignore[attr-defined]
+                    np.ndarray,
+                    np.dtype,
+                ]
+                if hasattr(np, "dtypes"):
+                    # pyre-ignore[16]: Module `numpy` has no attribute `dtypes`.
+                    safe_globals.extend([np.dtypes.UInt32DType, np.dtypes.Int32DType])
+                ctx = torch.serialization.safe_globals(safe_globals)
+            else:
+                # safe globals not in existence in this version of torch yet. Use a
+                # dummy context manager instead
+                ctx = nullcontext()
+            with ctx:
+                save_dict = torch.load(cavs_path)
 
             concept_names = save_dict["concept_names"]
             concept_ids = save_dict["concept_ids"]

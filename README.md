@@ -6,7 +6,6 @@
 [![GitHub - License](https://img.shields.io/github/license/pytorch/captum?logo=github&style=flat&color=green)][#github-license]
 [![Conda](https://img.shields.io/conda/vn/pytorch/captum?logo=anaconda&style=flat&color=orange)](https://anaconda.org/pytorch/captum)
 [![PyPI](https://img.shields.io/pypi/v/captum.svg)][#pypi-package]
-[![CircleCI](https://circleci.com/gh/pytorch/captum.svg?style=shield)](https://circleci.com/gh/pytorch/captum)
 [![Conda - Platform](https://img.shields.io/conda/pn/conda-forge/captum?logo=anaconda&style=flat)][#conda-forge-package]
 [![Conda (channel only)](https://img.shields.io/conda/vn/conda-forge/captum?logo=anaconda&style=flat&color=orange)][#conda-forge-package]
 [![Conda Recipe](https://img.shields.io/static/v1?logo=conda-forge&style=flat&color=green&label=recipe&message=captum)][#conda-forge-feedstock]
@@ -26,14 +25,12 @@ of integrated gradients, saliency maps, smoothgrad, vargrad and others for
 PyTorch models. It has quick integration for models built with domain-specific
 libraries such as torchvision, torchtext, and others.
 
-*Captum is currently in beta and under active development!*
-
 
 #### About Captum
 
-With the increase in model complexity and the resulting lack of transparency, model interpretability methods have become increasingly important. Model understanding is both an active area of research as well as an area of focus for practical applications across industries using machine learning. Captum provides state-of-the-art algorithms, including Integrated Gradients, to provide researchers and developers with an easy way to understand which features are contributing to a model’s output.
+With the increase in model complexity and the resulting lack of transparency, model interpretability methods have become increasingly important. Model understanding is both an active area of research as well as an area of focus for practical applications across industries using machine learning. Captum provides state-of-the-art algorithms such as Integrated Gradients, Testing with Concept Activation Vectors (TCAV), TracIn influence functions, just to name a few, that provide researchers and developers with an easy way to understand which features, training examples or concepts contribute to a models' predictions and in general what and how the model learns. In addition to that, Captum also provides adversarial attacks and minimal input perturbation capabilities that can be used both for generating counterfactual explanations and adversarial perturbations.
 
-For model developers, Captum can be used to improve and troubleshoot models by facilitating the identification of different features that contribute to a model’s output in order to design better models and troubleshoot unexpected model outputs.
+<!--For model developers, Captum can be used to improve and troubleshoot models by facilitating the identification of different features that contribute to a model’s output in order to design better models and troubleshoot unexpected model outputs. -->
 
 Captum helps ML researchers more easily implement interpretability algorithms that can interact with PyTorch models. Captum also allows researchers to quickly benchmark their work against other existing algorithms available in the library.
 
@@ -41,15 +38,15 @@ Captum helps ML researchers more easily implement interpretability algorithms th
 
 #### Target Audience
 
-The primary audiences for Captum are model developers who are looking to improve their models and understand which features are important and interpretability researchers focused on identifying algorithms that can better interpret many types of models.
+The primary audiences for Captum are model developers who are looking to improve their models and understand which concepts, features or training examples are important and interpretability researchers focused on identifying algorithms that can better interpret many types of models.
 
 Captum can also be used by application engineers who are using trained models in production. Captum provides easier troubleshooting through improved model interpretability, and the potential for delivering better explanations to end users on why they’re seeing a specific piece of content, such as a movie recommendation.
 
 ## Installation
 
 **Installation Requirements**
-- Python >= 3.6
-- PyTorch >= 1.6
+- Python >= 3.9
+- PyTorch >= 1.10
 
 
 ##### Installing the latest release
@@ -93,6 +90,7 @@ pip install -e .
 To customize the installation, you can also run the following variants of the
 above:
 * `pip install -e .[insights]`: Also installs all packages necessary for running Captum Insights.
+**NOTE**: Captum Insights is being deprecated. See further details [below](#captum-insights).
 * `pip install -e .[dev]`: Also installs all tools necessary for development
   (testing, linting, docs building; see [Contributing](#contributing) below).
 * `pip install -e .[tutorials]`: Also installs all packages necessary for running the tutorial notebooks.
@@ -389,13 +387,17 @@ Captum on different types of models can be found in our tutorials.
 
 ## Captum Insights
 
+**NOTE**: *Support for Captum Insights is being deprecated in an upcoming release.
+While the code will still be available, there will no longer be active
+development or support for it.*
+
 Captum provides a web interface called Insights for easy visualization and
 access to a number of our interpretability algorithms.
 
 To analyze a sample model on CIFAR10 via Captum Insights run
 
 ```
-python -m captum.insights.example
+python -m captum.insights.attr_vis.example
 ```
 
 and navigate to the URL specified in the output.
@@ -462,7 +464,11 @@ You can watch the recorded talk [here](https://www.youtube.com/watch?v=ayhBHZYje
 
 **ICLR 2021 workshop on Responsible AI**:
 - [Paper](https://arxiv.org/abs/2009.07896) on the Captum Library
-- [Paper](https://arxiv.org/abs/2106.07475) on Invesitgating Sanity Checks for Saliency Maps
+- [Paper](https://arxiv.org/abs/2106.07475) on Investigating Sanity Checks for Saliency Maps
+
+
+Summer school on medical imaging at University of Lyon. A class on model explainability (link to the video)
+https://www.youtube.com/watch?v=vn-jLzY67V0
 
 ## References of Algorithms
 
@@ -486,6 +492,10 @@ Image Classification Models and Saliency Maps, K. Simonyan, et. al. 2014](https:
 * `Shapley Value`: [A value for n-person games. Contributions to the Theory of Games 2.28 (1953): 307-317](https://apps.dtic.mil/dtic/tr/fulltext/u2/604084.pdf)
 * `Shapley Value Sampling`: [Polynomial calculation of the Shapley value based on sampling](https://www.sciencedirect.com/science/article/pii/S0305054808000804)
 * `Infidelity and Sensitivity`: [On the (In)fidelity and Sensitivity for Explanations](https://arxiv.org/abs/1901.09392)
+* `TracInCP, TracInCPFast, TracInCPRandProj`: [Estimating Training Data Influence by Tracing Gradient Descent](https://arxiv.org/abs/2002.08484)
+* `SimilarityInfluence`: [Pairwise similarities between train and test examples based on predefined similarity metrics]
+* `BinaryConcreteStochasticGates`: [Stochastic Gates with Binary Concrete Distribution](https://arxiv.org/abs/1712.01312)
+* `GaussianStochasticGates`: [Stochastic Gates with Gaussian Distribution](https://arxiv.org/abs/1810.04247)
 
 More details about the above mentioned [attribution algorithms](https://captum.ai/docs/attribution_algorithms) and their pros and cons can be found on our [web-site](https://captum.ai/docs/algorithms_comparison_matrix).
 

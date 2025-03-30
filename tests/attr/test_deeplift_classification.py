@@ -1,23 +1,27 @@
 #!/usr/bin/env python3
 
-from typing import Union
+# pyre-unsafe
+
+from typing import TypeVar, Union
 
 import torch
 from captum._utils.typing import TargetType
 from captum.attr._core.deep_lift import DeepLift, DeepLiftShap
 from captum.attr._core.integrated_gradients import IntegratedGradients
-from tests.helpers.basic import assertAttributionComparision, BaseTest
-from tests.helpers.basic_models import (
+from captum.testing.helpers.basic import assertAttributionComparision, BaseTest
+from captum.testing.helpers.basic_models import (
     BasicModel_ConvNet,
     BasicModel_ConvNet_MaxPool1d,
     BasicModel_ConvNet_MaxPool3d,
 )
-from tests.helpers.classification_models import (
+from captum.testing.helpers.classification_models import (
     SigmoidDeepLiftModel,
     SoftmaxDeepLiftModel,
 )
 from torch import Tensor
 from torch.nn import Module
+
+DeepLiftAttrMethod = TypeVar("DeepLiftAttrMethod", DeepLift, DeepLiftShap)
 
 
 class Test(BaseTest):
@@ -63,9 +67,13 @@ class Test(BaseTest):
 
     def test_softmax_classification_batch_multi_target(self) -> None:
         num_in = 40
-        inputs = torch.arange(0.0, num_in * 3.0, requires_grad=True).reshape(3, num_in)
-        baselines = torch.arange(1.0, num_in + 1).reshape(1, num_in)
-        model = SoftmaxDeepLiftModel(num_in, 20, 10)
+        inputs = (
+            torch.arange(0.0, num_in * 3.0, requires_grad=True)
+            .reshape(3, num_in)
+            .double()
+        )
+        baselines = torch.arange(1.0, num_in + 1).reshape(1, num_in).double()
+        model = SoftmaxDeepLiftModel(num_in, 20, 10).double()
         dl = DeepLift(model)
 
         self.softmax_classification(
@@ -149,12 +157,17 @@ class Test(BaseTest):
     def softmax_classification(
         self,
         model: Module,
-        attr_method: Union[DeepLift, DeepLiftShap],
+        attr_method: DeepLiftAttrMethod,
         input: Tensor,
-        baselines,
+        baselines: Union[float, int, Tensor],
         target: TargetType,
     ) -> None:
         # TODO add test cases for multiple different layers
+        if isinstance(attr_method, DeepLiftShap):
+            assert isinstance(
+                baselines, Tensor
+            ), "Non-tensor baseline not supported for DeepLiftShap"
+
         model.zero_grad()
         attributions, delta = attr_method.attribute(
             input, baselines=baselines, target=target, return_convergence_delta=True

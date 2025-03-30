@@ -1,5 +1,8 @@
 #!/usr/bin/env python3
+
+# pyre-strict
 import torch.nn as nn
+from torch import Tensor
 
 
 class Addition_Module(nn.Module):
@@ -10,5 +13,5 @@ class Addition_Module(nn.Module):
     def __init__(self) -> None:
         super().__init__()
 
-    def forward(self, x1, x2):
+    def forward(self, x1: Tensor, x2: Tensor) -> Tensor:
         return x1 + x2

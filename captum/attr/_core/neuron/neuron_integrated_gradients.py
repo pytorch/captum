@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
-from typing import Any, Callable, List, Tuple, Union
+
+# pyre-strict
+from typing import Callable, List, Optional, Tuple, Union
 
 from captum._utils.gradient import construct_neuron_grad_fn
-from captum._utils.typing import TensorOrTupleOfTensorsGeneric
+from captum._utils.typing import SliceIntType, TensorOrTupleOfTensorsGeneric
 from captum.attr._core.integrated_gradients import IntegratedGradients
 from captum.attr._utils.attribution import GradientAttribution, NeuronAttribution
 from captum.log import log_usage
@@ -25,7 +27,7 @@ class NeuronIntegratedGradients(NeuronAttribution, GradientAttribution):
 
     def __init__(
         self,
-        forward_func: Callable,
+        forward_func: Callable[..., Tensor],
         layer: Module,
         device_ids: Union[None, List[int]] = None,
         multiply_by_inputs: bool = True,
@@ -73,9 +75,13 @@ class NeuronIntegratedGradients(NeuronAttribution, GradientAttribution):
     def attribute(
         self,
         inputs: TensorOrTupleOfTensorsGeneric,
-        neuron_selector: Union[int, Tuple[Union[int, slice], ...], Callable],
+        neuron_selector: Union[
+            int,
+            Tuple[Union[int, SliceIntType], ...],
+            Callable[[Union[Tensor, Tuple[Tensor, ...]]], Tensor],
+        ],
         baselines: Union[None, Tensor, Tuple[Tensor, ...]] = None,
-        additional_forward_args: Any = None,
+        additional_forward_args: Optional[object] = None,
         n_steps: int = 50,
         method: str = "gausslegendre",
         internal_batch_size: Union[None, int] = None,
@@ -248,5 +254,5 @@ class NeuronIntegratedGradients(NeuronAttribution, GradientAttribution):
         )
 
     @property
-    def multiplies_by_inputs(self):
+    def multiplies_by_inputs(self) -> bool:
         return self._multiply_by_inputs

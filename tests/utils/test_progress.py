@@ -1,11 +1,13 @@
 #!/usr/bin/env python3
 
+# pyre-unsafe
+
 import io
 import unittest
 import unittest.mock
 
 from captum._utils.progress import NullProgress, progress
-from tests.helpers.basic import BaseTest
+from captum.testing.helpers import BaseTest
 
 
 class Test(BaseTest):

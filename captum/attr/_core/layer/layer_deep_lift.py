@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
+
+# pyre-strict
 import typing
-from typing import Any, Callable, cast, Sequence, Tuple, Union
+from typing import Any, Callable, cast, Dict, Literal, Optional, Sequence, Tuple, Union
 
 import torch
 from captum._utils.common import (
@@ -11,12 +13,7 @@ from captum._utils.common import (
     ExpansionTypes,
 )
 from captum._utils.gradient import compute_layer_gradients_and_eval
-from captum._utils.typing import (
-    BaselineType,
-    Literal,
-    TargetType,
-    TensorOrTupleOfTensorsGeneric,
-)
+from captum._utils.typing import BaselineType, TargetType, TensorOrTupleOfTensorsGeneric
 from captum.attr._core.deep_lift import DeepLift, DeepLiftShap
 from captum.attr._utils.attribution import LayerAttribution
 from captum.attr._utils.common import (
@@ -104,12 +101,13 @@ class LayerDeepLift(LayerAttribution, DeepLift):
         inputs: Union[Tensor, Tuple[Tensor, ...]],
         baselines: BaselineType = None,
         target: TargetType = None,
-        additional_forward_args: Any = None,
-        return_convergence_delta: Literal[False] = False,
+        additional_forward_args: Optional[object] = None,
+        *,
+        return_convergence_delta: Literal[True],
         attribute_to_layer_input: bool = False,
         custom_attribution_func: Union[None, Callable[..., Tuple[Tensor, ...]]] = None,
-    ) -> Union[Tensor, Tuple[Tensor, ...]]:
-        ...
+        grad_kwargs: Optional[Dict[str, Any]] = None,
+    ) -> Tuple[Union[Tensor, Tuple[Tensor, ...]], Tensor]: ...
 
     @typing.overload
     def attribute(
@@ -117,24 +115,26 @@ class LayerDeepLift(LayerAttribution, DeepLift):
         inputs: Union[Tensor, Tuple[Tensor, ...]],
         baselines: BaselineType = None,
         target: TargetType = None,
-        additional_forward_args: Any = None,
-        *,
-        return_convergence_delta: Literal[True],
+        additional_forward_args: Optional[object] = None,
+        return_convergence_delta: Literal[False] = False,
         attribute_to_layer_input: bool = False,
         custom_attribution_func: Union[None, Callable[..., Tuple[Tensor, ...]]] = None,
-    ) -> Tuple[Union[Tensor, Tuple[Tensor, ...]], Tensor]:
-        ...
+        grad_kwargs: Optional[Dict[str, Any]] = None,
+    ) -> Union[Tensor, Tuple[Tensor, ...]]: ...
 
     @log_usage()
+    # pyre-fixme[43]: This definition does not have the same decorators as the
+    #  preceding overload(s).
     def attribute(
         self,
         inputs: Union[Tensor, Tuple[Tensor, ...]],
         baselines: BaselineType = None,
         target: TargetType = None,
-        additional_forward_args: Any = None,
+        additional_forward_args: Optional[object] = None,
         return_convergence_delta: bool = False,
         attribute_to_layer_input: bool = False,
         custom_attribution_func: Union[None, Callable[..., Tuple[Tensor, ...]]] = None,
+        grad_kwargs: Optional[Dict[str, Any]] = None,
     ) -> Union[
         Tensor, Tuple[Tensor, ...], Tuple[Union[Tensor, Tuple[Tensor, ...]], Tensor]
     ]:
@@ -142,9 +142,9 @@ class LayerDeepLift(LayerAttribution, DeepLift):
         Args:
 
             inputs (Tensor or tuple[Tensor, ...]): Input for which layer
-                        attributions are computed. If forward_func takes a
+                        attributions are computed. If model takes a
                         single tensor as input, a single input tensor should be
-                        provided. If forward_func takes multiple tensors as input,
+                        provided. If model takes multiple tensors as input,
                         a tuple of the input tensors should be provided. It is
                         assumed that for all given input tensors, dimension 0
                         corresponds to the number of examples (aka batch size),
@@ -214,7 +214,7 @@ class LayerDeepLift(LayerAttribution, DeepLift):
                         argument of a Tensor or arbitrary (non-tuple) type or a tuple
                         containing multiple additional arguments including tensors
                         or any arbitrary python types. These arguments are provided to
-                        forward_func in order, following the arguments in inputs.
+                        model in order, following the arguments in inputs.
                         Note that attributions are not computed with respect
                         to these arguments.
                         Default: None
@@ -250,6 +250,9 @@ class LayerDeepLift(LayerAttribution, DeepLift):
                         `custom_attribution_func` returns a tuple of attribution
                         tensors that have the same length as the `inputs`.
                         Default: None
+            grad_kwargs (Dict[str, Any], optional): Additional keyword
+                        arguments for torch.autograd.grad.
+                        Default: None
 
         Returns:
             **attributions** or 2-element tuple of **attributions**, **delta**:
@@ -264,7 +267,7 @@ class LayerDeepLift(LayerAttribution, DeepLift):
                 of tensors is returned.
             - **delta** (*Tensor*, returned if return_convergence_delta=True):
                 This is computed using the property that the total sum of
-                forward_func(inputs) - forward_func(baselines) must equal the
+                model(inputs) - model(baselines) must equal the
                 total sum of the attributions computed based on DeepLift's
                 rescale rule.
                 Delta is calculated per example, meaning that the number of
@@ -275,6 +278,7 @@ class LayerDeepLift(LayerAttribution, DeepLift):
                 meaning that the `custom_attribution_func=None`, otherwise
                 it is not guaranteed and depends on the specifics of the
                 `custom_attribution_func`.
+
 
         Examples::
 
@@ -317,7 +321,9 @@ class LayerDeepLift(LayerAttribution, DeepLift):
                 additional_forward_args,
             )
 
-            def chunk_output_fn(out: TensorOrTupleOfTensorsGeneric) -> Sequence:
+            def chunk_output_fn(
+                out: TensorOrTupleOfTensorsGeneric,
+            ) -> Sequence[Union[Tensor, Sequence[Tensor]]]:
                 if isinstance(out, Tensor):
                     return out.chunk(2)
                 return tuple(out_sub.chunk(2) for out_sub in out)
@@ -328,11 +334,12 @@ class LayerDeepLift(LayerAttribution, DeepLift):
                 inputs,
                 attribute_to_layer_input=attribute_to_layer_input,
                 output_fn=lambda out: chunk_output_fn(out),
+                grad_kwargs=grad_kwargs,
             )
 
-            attr_inputs = tuple(map(lambda attr: attr[0], attrs))
-            attr_baselines = tuple(map(lambda attr: attr[1], attrs))
-            gradients = tuple(map(lambda grad: grad[0], gradients))
+            attr_inputs = tuple(attr[0] for attr in attrs)
+            attr_baselines = tuple(attr[1] for attr in attrs)
+            gradients = tuple(grad[0] for grad in gradients)
 
             if custom_attribution_func is None:
                 if self.multiplies_by_inputs:
@@ -364,7 +371,7 @@ class LayerDeepLift(LayerAttribution, DeepLift):
         )
 
     @property
-    def multiplies_by_inputs(self):
+    def multiplies_by_inputs(self) -> bool:
         return self._multiply_by_inputs
 
 
@@ -435,30 +442,14 @@ class LayerDeepLiftShap(LayerDeepLift, DeepLiftShap):
             Tensor, Tuple[Tensor, ...], Callable[..., Union[Tensor, Tuple[Tensor, ...]]]
         ],
         target: TargetType = None,
-        additional_forward_args: Any = None,
-        return_convergence_delta: Literal[False] = False,
-        attribute_to_layer_input: bool = False,
-        custom_attribution_func: Union[None, Callable[..., Tuple[Tensor, ...]]] = None,
-    ) -> Union[Tensor, Tuple[Tensor, ...]]:
-        ...
-
-    @typing.overload
-    def attribute(
-        self,
-        inputs: Union[Tensor, Tuple[Tensor, ...]],
-        baselines: Union[
-            Tensor, Tuple[Tensor, ...], Callable[..., Union[Tensor, Tuple[Tensor, ...]]]
-        ],
-        target: TargetType = None,
-        additional_forward_args: Any = None,
+        additional_forward_args: Optional[Tuple[object, ...]] = None,
         *,
         return_convergence_delta: Literal[True],
         attribute_to_layer_input: bool = False,
         custom_attribution_func: Union[None, Callable[..., Tuple[Tensor, ...]]] = None,
-    ) -> Tuple[Union[Tensor, Tuple[Tensor, ...]], Tensor]:
-        ...
+    ) -> Tuple[Union[Tensor, Tuple[Tensor, ...]], Tensor]: ...
 
-    @log_usage()
+    @typing.overload  # type: ignore
     def attribute(
         self,
         inputs: Union[Tensor, Tuple[Tensor, ...]],
@@ -466,7 +457,23 @@ class LayerDeepLiftShap(LayerDeepLift, DeepLiftShap):
             Tensor, Tuple[Tensor, ...], Callable[..., Union[Tensor, Tuple[Tensor, ...]]]
         ],
         target: TargetType = None,
-        additional_forward_args: Any = None,
+        additional_forward_args: Optional[Tuple[object, ...]] = None,
+        return_convergence_delta: Literal[False] = False,
+        attribute_to_layer_input: bool = False,
+        custom_attribution_func: Union[None, Callable[..., Tuple[Tensor, ...]]] = None,
+    ) -> Union[Tensor, Tuple[Tensor, ...]]: ...
+
+    @log_usage()
+    # pyre-fixme[43]: This definition does not have the same decorators as the
+    #  preceding overload(s).
+    def attribute(
+        self,
+        inputs: Union[Tensor, Tuple[Tensor, ...]],
+        baselines: Union[
+            Tensor, Tuple[Tensor, ...], Callable[..., Union[Tensor, Tuple[Tensor, ...]]]
+        ],
+        target: TargetType = None,
+        additional_forward_args: Optional[Tuple[object, ...]] = None,
         return_convergence_delta: bool = False,
         attribute_to_layer_input: bool = False,
         custom_attribution_func: Union[None, Callable[..., Tuple[Tensor, ...]]] = None,
@@ -477,9 +484,9 @@ class LayerDeepLiftShap(LayerDeepLift, DeepLiftShap):
         Args:
 
             inputs (Tensor or tuple[Tensor, ...]): Input for which layer
-                        attributions are computed. If forward_func takes a single
+                        attributions are computed. If model takes a single
                         tensor as input, a single input tensor should be provided.
-                        If forward_func takes multiple tensors as input, a tuple
+                        If model takes multiple tensors as input, a tuple
                         of the input tensors should be provided. It is assumed
                         that for all given input tensors, dimension 0 corresponds
                         to the number of examples (aka batch size), and if
@@ -542,7 +549,7 @@ class LayerDeepLiftShap(LayerDeepLift, DeepLiftShap):
                         argument of a Tensor or arbitrary (non-tuple) type or a tuple
                         containing multiple additional arguments including tensors
                         or any arbitrary python types. These arguments are provided to
-                        forward_func in order, following the arguments in inputs.
+                        model in order, following the arguments in inputs.
                         Note that attributions are not computed with respect
                         to these arguments.
                         Default: None
@@ -594,7 +601,7 @@ class LayerDeepLiftShap(LayerDeepLift, DeepLiftShap):
                         outputs of a single tensor are not.
             - **delta** (*Tensor*, returned if return_convergence_delta=True):
                         This is computed using the property that the
-                        total sum of forward_func(inputs) - forward_func(baselines)
+                        total sum of model(inputs) - model(baselines)
                         must be very close to the total sum of attributions
                         computed based on approximated SHAP values using
                         DeepLift's rescale rule.
@@ -644,20 +651,25 @@ class LayerDeepLiftShap(LayerDeepLift, DeepLiftShap):
         ) = DeepLiftShap._expand_inputs_baselines_targets(
             self, baselines, inputs, target, additional_forward_args
         )
-        attributions = LayerDeepLift.attribute.__wrapped__(  # type: ignore
+        attribs_layer_deeplift = LayerDeepLift.attribute.__wrapped__(  # type: ignore
             self,
             exp_inp,
             exp_base,
             target=exp_target,
             additional_forward_args=exp_addit_args,
             return_convergence_delta=cast(
-                Literal[True, False], return_convergence_delta
+                Literal[True, False],
+                return_convergence_delta,
             ),
             attribute_to_layer_input=attribute_to_layer_input,
             custom_attribution_func=custom_attribution_func,
         )
+        delta: Tensor
+        attributions: Union[Tensor, Tuple[Tensor, ...]]
         if return_convergence_delta:
-            attributions, delta = attributions
+            attributions, delta = attribs_layer_deeplift
+        else:
+            attributions = attribs_layer_deeplift
         if isinstance(attributions, tuple):
             attributions = tuple(
                 DeepLiftShap._compute_mean_across_baselines(
@@ -672,8 +684,15 @@ class LayerDeepLiftShap(LayerDeepLift, DeepLiftShap):
         if return_convergence_delta:
             return attributions, delta
         else:
-            return attributions
+            return cast(
+                Union[
+                    Tensor,
+                    Tuple[Tensor, ...],
+                    Tuple[Union[Tensor, Tuple[Tensor, ...]], Tensor],
+                ],
+                attributions,
+            )
 
     @property
-    def multiplies_by_inputs(self):
+    def multiplies_by_inputs(self) -> bool:
         return self._multiply_by_inputs

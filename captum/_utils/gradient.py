@@ -1,9 +1,22 @@
 #!/usr/bin/env python3
+
+# pyre-strict
 import threading
 import typing
 import warnings
 from collections import defaultdict
-from typing import Any, Callable, cast, Dict, List, Optional, Sequence, Tuple, Union
+from typing import (
+    Any,
+    Callable,
+    cast,
+    Dict,
+    List,
+    Literal,
+    Optional,
+    Sequence,
+    Tuple,
+    Union,
+)
 
 import torch
 from captum._utils.common import (
@@ -14,8 +27,8 @@ from captum._utils.common import (
 )
 from captum._utils.sample_gradient import SampleGradientWrapper
 from captum._utils.typing import (
-    Literal,
     ModuleOrModuleList,
+    SliceIntType,
     TargetType,
     TensorOrTupleOfTensorsGeneric,
 )
@@ -50,13 +63,15 @@ def apply_gradient_requirements(
                     """Input Tensor %d has a dtype of %s.
                     Gradients cannot be activated
                     for these data types."""
-                    % (index, str(inputs_dtype))
+                    % (index, str(inputs_dtype)),
+                    stacklevel=2,
                 )
         elif not input.requires_grad:
             if warn:
                 warnings.warn(
                     "Input Tensor %d did not already require gradients, "
-                    "required_grads has been set automatically." % index
+                    "required_grads has been set automatically." % index,
+                    stacklevel=2,
                 )
             input.requires_grad_()
     return grad_required
@@ -86,10 +101,11 @@ def undo_gradient_requirements(
 
 
 def compute_gradients(
+    # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
     forward_fn: Callable,
     inputs: Union[Tensor, Tuple[Tensor, ...]],
     target_ind: TargetType = None,
-    additional_forward_args: Any = None,
+    additional_forward_args: Optional[object] = None,
 ) -> Tuple[Tensor, ...]:
     r"""
     Computes gradients of the output with respect to inputs for an
@@ -110,6 +126,10 @@ def compute_gradients(
     with torch.autograd.set_grad_enabled(True):
         # runs forward pass
         outputs = _run_forward(forward_fn, inputs, target_ind, additional_forward_args)
+        # _run_forward may return future of Tensor,
+        # but we don't support it here now
+        # And it will fail before here.
+        outputs = cast(Tensor, outputs)
         assert outputs[0].numel() == 1, (
             "Target not provided when necessary, cannot"
             " take gradient with respect to multiple outputs."
@@ -124,6 +144,7 @@ def _neuron_gradients(
     inputs: Union[Tensor, Tuple[Tensor, ...]],
     saved_layer: Dict[device, Tuple[Tensor, ...]],
     key_list: List[device],
+    # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
     gradient_neuron_selector: Union[int, Tuple[Union[int, slice], ...], Callable],
 ) -> Tuple[Tensor, ...]:
     with torch.autograd.set_grad_enabled(True):
@@ -134,9 +155,11 @@ def _neuron_gradients(
             )
             gradient_tensors.append(
                 torch.autograd.grad(
-                    torch.unbind(current_out_tensor)
-                    if current_out_tensor.numel() > 1
-                    else current_out_tensor,
+                    (
+                        torch.unbind(current_out_tensor)
+                        if current_out_tensor.numel() > 1
+                        else current_out_tensor
+                    ),
                     inputs,
                 )
             )
@@ -145,36 +168,41 @@ def _neuron_gradients(
 
 
 @typing.overload
+# pyre-fixme[43]: The implementation of `_forward_layer_eval` does not accept all
+#  possible arguments of overload defined on line `170`.
 def _forward_layer_eval(
-    forward_fn: Callable,
-    inputs: Union[Tensor, Tuple[Tensor, ...]],
-    layer: Module,
-    additional_forward_args: Any = None,
-    device_ids: Union[None, List[int]] = None,
-    attribute_to_layer_input: bool = False,
-    grad_enabled: bool = False,
-) -> Tuple[Tensor, ...]:
-    ...
-
-
-@typing.overload
-def _forward_layer_eval(
+    # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
     forward_fn: Callable,
     inputs: Union[Tensor, Tuple[Tensor, ...]],
     layer: List[Module],
-    additional_forward_args: Any = None,
+    additional_forward_args: Optional[object] = None,
     device_ids: Union[None, List[int]] = None,
     attribute_to_layer_input: bool = False,
     grad_enabled: bool = False,
-) -> List[Tuple[Tensor, ...]]:
-    ...
+) -> List[Tuple[Tensor, ...]]: ...
+
+
+@typing.overload
+# pyre-fixme[43]: The implementation of `_forward_layer_eval` does not accept all
+#  possible arguments of overload defined on line `158`.
+def _forward_layer_eval(
+    # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
+    forward_fn: Callable,
+    inputs: Union[Tensor, Tuple[Tensor, ...]],
+    layer: Module,
+    additional_forward_args: Optional[object] = None,
+    device_ids: Union[None, List[int]] = None,
+    attribute_to_layer_input: bool = False,
+    grad_enabled: bool = False,
+) -> Tuple[Tensor, ...]: ...
 
 
 def _forward_layer_eval(
+    # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
     forward_fn: Callable,
     inputs: Union[Tensor, Tuple[Tensor, ...]],
     layer: ModuleOrModuleList,
-    additional_forward_args: Any = None,
+    additional_forward_args: Optional[object] = None,
     device_ids: Union[None, List[int]] = None,
     attribute_to_layer_input: bool = False,
     grad_enabled: bool = False,
@@ -182,6 +210,8 @@ def _forward_layer_eval(
     return _forward_layer_eval_with_neuron_grads(
         forward_fn,
         inputs,
+        # pyre-fixme[6]: For 3rd argument expected `Module` but got
+        #  `ModuleOrModuleList`.
         layer,
         additional_forward_args=additional_forward_args,
         gradient_neuron_selector=None,
@@ -192,40 +222,46 @@ def _forward_layer_eval(
 
 
 @typing.overload
+# pyre-fixme[43]: The implementation of `_forward_layer_distributed_eval` does not
+#  accept all possible arguments of overload defined on line `203`.
 def _forward_layer_distributed_eval(
+    # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
     forward_fn: Callable,
+    # pyre-fixme[2]: Parameter annotation cannot be `Any`.
     inputs: Any,
     layer: ModuleOrModuleList,
     target_ind: TargetType = None,
-    additional_forward_args: Any = None,
+    additional_forward_args: Optional[object] = None,
     attribute_to_layer_input: bool = False,
     forward_hook_with_return: Literal[False] = False,
     require_layer_grads: bool = False,
-) -> Dict[Module, Dict[device, Tuple[Tensor, ...]]]:
-    ...
+) -> Dict[Module, Dict[device, Tuple[Tensor, ...]]]: ...
 
 
 @typing.overload
+# pyre-fixme[43]: The implementation of `_forward_layer_distributed_eval` does not
+#  accept all possible arguments of overload defined on line `216`.
 def _forward_layer_distributed_eval(
+    # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
     forward_fn: Callable,
     inputs: Any,
     layer: ModuleOrModuleList,
     target_ind: TargetType = None,
-    additional_forward_args: Any = None,
+    additional_forward_args: Optional[object] = None,
     attribute_to_layer_input: bool = False,
     *,
     forward_hook_with_return: Literal[True],
     require_layer_grads: bool = False,
-) -> Tuple[Dict[Module, Dict[device, Tuple[Tensor, ...]]], Tensor]:
-    ...
+) -> Tuple[Dict[Module, Dict[device, Tuple[Tensor, ...]]], Tensor]: ...
 
 
 def _forward_layer_distributed_eval(
+    # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
     forward_fn: Callable,
     inputs: Any,
     layer: ModuleOrModuleList,
     target_ind: TargetType = None,
-    additional_forward_args: Any = None,
+    additional_forward_args: Optional[object] = None,
     attribute_to_layer_input: bool = False,
     forward_hook_with_return: bool = False,
     require_layer_grads: bool = False,
@@ -245,13 +281,22 @@ def _forward_layer_distributed_eval(
     """
     saved_layer: Dict[Module, Dict[device, Tuple[Tensor, ...]]] = defaultdict(dict)
     lock = threading.Lock()
+    # pyre-fixme[9]: all_layers has type `List[Module]`; used as
+    #  `Union[List[Variable[ModuleOrModuleList <: [Module, List[Module]]]],
+    #  Variable[ModuleOrModuleList <: [Module, List[Module]]]]`.
     all_layers: List[Module] = [layer] if isinstance(layer, Module) else layer
 
     # Set a forward hook on specified module and run forward pass to
     # get layer output tensor(s).
     # For DataParallel models, each partition adds entry to dictionary
     # with key as device and value as corresponding Tensor.
+    # pyre-fixme[3]: Return type must be annotated.
+    # pyre-fixme[2]: Parameter must be annotated.
     def hook_wrapper(original_module):
+        # pyre-fixme[53]: Captured variable `lock` is not annotated.
+        # pyre-fixme[53]: Captured variable `original_module` is not annotated.
+        # pyre-fixme[3]: Return type must be annotated.
+        # pyre-fixme[2]: Parameter must be annotated.
         def forward_hook(module, inp, out=None):
             eval_tsrs = inp if attribute_to_layer_input else out
             is_eval_tuple = isinstance(eval_tsrs, tuple)
@@ -297,6 +342,10 @@ def _forward_layer_distributed_eval(
             target=target_ind,
             additional_forward_args=additional_forward_args,
         )
+        # _run_forward may return future of Tensor,
+        # but we don't support it here now
+        # And it will fail before here.
+        output = cast(Tensor, output)
     finally:
         for hook in all_hooks:
             hook.remove()
@@ -331,6 +380,7 @@ def _gather_distributed_tensors(
 
 
 def _extract_device_ids(
+    # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
     forward_fn: Callable,
     saved_layer: Dict[Module, Dict[device, Tuple[Tensor, ...]]],
     device_ids: Union[None, List[int]],
@@ -350,8 +400,10 @@ def _extract_device_ids(
     ):
         if (
             hasattr(forward_fn, "device_ids")
+            # pyre-fixme[33]: Given annotation cannot be `Any`.
             and cast(Any, forward_fn).device_ids is not None
         ):
+            # pyre-fixme[33]: Given annotation cannot be `Any`.
             device_ids = cast(Any, forward_fn).device_ids
         else:
             raise AssertionError(
@@ -365,53 +417,62 @@ def _extract_device_ids(
 
 
 @typing.overload
+# pyre-fixme[43]: The implementation of `_forward_layer_eval_with_neuron_grads` does
+#  not accept all possible arguments of overload defined on line `378`.
 def _forward_layer_eval_with_neuron_grads(
+    # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
     forward_fn: Callable,
     inputs: Union[Tensor, Tuple[Tensor, ...]],
     layer: Module,
-    additional_forward_args: Any = None,
+    additional_forward_args: Optional[object] = None,
     *,
+    # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
     gradient_neuron_selector: Union[int, Tuple[Union[int, slice], ...], Callable],
     grad_enabled: bool = False,
     device_ids: Union[None, List[int]] = None,
     attribute_to_layer_input: bool = False,
-) -> Tuple[Tuple[Tensor, ...], Tuple[Tensor, ...]]:
-    ...
+) -> Tuple[Tuple[Tensor, ...], Tuple[Tensor, ...]]: ...
 
 
 @typing.overload
+# pyre-fixme[43]: The implementation of `_forward_layer_eval_with_neuron_grads` does
+#  not accept all possible arguments of overload defined on line `405`.
 def _forward_layer_eval_with_neuron_grads(
-    forward_fn: Callable,
-    inputs: Union[Tensor, Tuple[Tensor, ...]],
-    layer: Module,
-    additional_forward_args: Any = None,
-    gradient_neuron_selector: None = None,
-    grad_enabled: bool = False,
-    device_ids: Union[None, List[int]] = None,
-    attribute_to_layer_input: bool = False,
-) -> Tuple[Tensor, ...]:
-    ...
-
-
-@typing.overload
-def _forward_layer_eval_with_neuron_grads(
+    # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
     forward_fn: Callable,
     inputs: Union[Tensor, Tuple[Tensor, ...]],
     layer: List[Module],
-    additional_forward_args: Any = None,
+    additional_forward_args: Optional[object] = None,
     gradient_neuron_selector: None = None,
     grad_enabled: bool = False,
     device_ids: Union[None, List[int]] = None,
     attribute_to_layer_input: bool = False,
-) -> List[Tuple[Tensor, ...]]:
-    ...
+) -> List[Tuple[Tensor, ...]]: ...
+
+
+@typing.overload
+# pyre-fixme[43]: The implementation of `_forward_layer_eval_with_neuron_grads` does
+#  not accept all possible arguments of overload defined on line `392`.
+def _forward_layer_eval_with_neuron_grads(
+    # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
+    forward_fn: Callable,
+    inputs: Union[Tensor, Tuple[Tensor, ...]],
+    layer: Module,
+    additional_forward_args: Optional[object] = None,
+    gradient_neuron_selector: None = None,
+    grad_enabled: bool = False,
+    device_ids: Union[None, List[int]] = None,
+    attribute_to_layer_input: bool = False,
+) -> Tuple[Tensor, ...]: ...
 
 
 def _forward_layer_eval_with_neuron_grads(
+    # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
     forward_fn: Callable,
     inputs: Union[Tensor, Tuple[Tensor, ...]],
     layer: ModuleOrModuleList,
-    additional_forward_args: Any = None,
+    additional_forward_args: Optional[object] = None,
+    # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
     gradient_neuron_selector: Union[
         None, int, Tuple[Union[int, slice], ...], Callable
     ] = None,
@@ -476,63 +537,80 @@ def _forward_layer_eval_with_neuron_grads(
 
 
 @typing.overload
+# pyre-fixme[43]: The implementation of `compute_layer_gradients_and_eval` does not
+#  accept all possible arguments of overload defined on line `486`.
 def compute_layer_gradients_and_eval(
+    # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
     forward_fn: Callable,
     layer: Module,
     inputs: Union[Tensor, Tuple[Tensor, ...]],
     target_ind: TargetType = None,
-    additional_forward_args: Any = None,
+    additional_forward_args: Optional[object] = None,
     *,
+    # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
     gradient_neuron_selector: Union[int, Tuple[Union[int, slice], ...], Callable],
     device_ids: Union[None, List[int]] = None,
     attribute_to_layer_input: bool = False,
+    # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
     output_fn: Union[None, Callable] = None,
-) -> Tuple[Tuple[Tensor, ...], Tuple[Tensor, ...], Tuple[Tensor, ...]]:
-    ...
+    grad_kwargs: Optional[Dict[str, Any]] = None,
+) -> Tuple[Tuple[Tensor, ...], Tuple[Tensor, ...], Tuple[Tensor, ...]]: ...
 
 
 @typing.overload
+# pyre-fixme[43]: The implementation of `compute_layer_gradients_and_eval` does not
+#  accept all possible arguments of overload defined on line `502`.
 def compute_layer_gradients_and_eval(
+    # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
     forward_fn: Callable,
     layer: List[Module],
     inputs: Union[Tensor, Tuple[Tensor, ...]],
     target_ind: TargetType = None,
-    additional_forward_args: Any = None,
+    additional_forward_args: Optional[object] = None,
     gradient_neuron_selector: None = None,
     device_ids: Union[None, List[int]] = None,
     attribute_to_layer_input: bool = False,
+    # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
     output_fn: Union[None, Callable] = None,
-) -> Tuple[List[Tuple[Tensor, ...]], List[Tuple[Tensor, ...]]]:
-    ...
+    grad_kwargs: Optional[Dict[str, Any]] = None,
+) -> Tuple[List[Tuple[Tensor, ...]], List[Tuple[Tensor, ...]]]: ...
 
 
 @typing.overload
+# pyre-fixme[43]: The implementation of `compute_layer_gradients_and_eval` does not
+#  accept all possible arguments of overload defined on line `517`.
 def compute_layer_gradients_and_eval(
+    # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
     forward_fn: Callable,
     layer: Module,
     inputs: Union[Tensor, Tuple[Tensor, ...]],
     target_ind: TargetType = None,
-    additional_forward_args: Any = None,
+    additional_forward_args: Optional[object] = None,
     gradient_neuron_selector: None = None,
     device_ids: Union[None, List[int]] = None,
     attribute_to_layer_input: bool = False,
+    # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
     output_fn: Union[None, Callable] = None,
-) -> Tuple[Tuple[Tensor, ...], Tuple[Tensor, ...]]:
-    ...
+    grad_kwargs: Optional[Dict[str, Any]] = None,
+) -> Tuple[Tuple[Tensor, ...], Tuple[Tensor, ...]]: ...
 
 
 def compute_layer_gradients_and_eval(
+    # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
     forward_fn: Callable,
     layer: ModuleOrModuleList,
     inputs: Union[Tensor, Tuple[Tensor, ...]],
     target_ind: TargetType = None,
-    additional_forward_args: Any = None,
+    additional_forward_args: Optional[object] = None,
+    # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
     gradient_neuron_selector: Union[
         None, int, Tuple[Union[int, slice], ...], Callable
     ] = None,
     device_ids: Union[None, List[int]] = None,
     attribute_to_layer_input: bool = False,
+    # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
     output_fn: Union[None, Callable] = None,
+    grad_kwargs: Optional[Dict[str, Any]] = None,
 ) -> Union[
     Tuple[Tuple[Tensor, ...], Tuple[Tensor, ...]],
     Tuple[Tuple[Tensor, ...], Tuple[Tensor, ...], Tuple[Tensor, ...]],
@@ -577,6 +655,7 @@ def compute_layer_gradients_and_eval(
         args:       Additional input arguments that forward function requires.
                     It takes an empty tuple (no additional arguments) if no
                     additional arguments are required
+        grad_kwargs: Additional keyword arguments for torch.autograd.grad
 
 
     Returns:
@@ -604,6 +683,8 @@ def compute_layer_gradients_and_eval(
             " take gradient with respect to multiple outputs."
         )
 
+        # pyre-fixme[6]: For 2nd argument expected `Dict[Module, Dict[device,
+        #  typing.Tuple[Tensor, ...]]]` but got `Module`.
         device_ids = _extract_device_ids(forward_fn, saved_layer, device_ids)
 
         # Identifies correct device ordering based on device ids.
@@ -616,9 +697,11 @@ def compute_layer_gradients_and_eval(
         if isinstance(layer, Module):
             all_outputs = _reduce_list(
                 [
-                    saved_layer[layer][device_id]
-                    if output_fn is None
-                    else output_fn(saved_layer[layer][device_id])
+                    (
+                        saved_layer[layer][device_id]
+                        if output_fn is None
+                        else output_fn(saved_layer[layer][device_id])
+                    )
                     for device_id in key_list
                 ]
             )
@@ -626,14 +709,19 @@ def compute_layer_gradients_and_eval(
             all_outputs = [
                 _reduce_list(
                     [
-                        saved_layer[single_layer][device_id]
-                        if output_fn is None
-                        else output_fn(saved_layer[single_layer][device_id])
+                        (
+                            saved_layer[single_layer][device_id]
+                            if output_fn is None
+                            else output_fn(saved_layer[single_layer][device_id])
+                        )
                         for device_id in key_list
                     ]
                 )
                 for single_layer in layer
             ]
+        # pyre-fixme[9]: all_layers has type `List[Module]`; used as
+        #  `Union[List[Variable[ModuleOrModuleList <: [Module, List[Module]]]],
+        #  Variable[ModuleOrModuleList <: [Module, List[Module]]]]`.
         all_layers: List[Module] = [layer] if isinstance(layer, Module) else layer
         grad_inputs = tuple(
             layer_tensor
@@ -641,7 +729,12 @@ def compute_layer_gradients_and_eval(
             for device_id in key_list
             for layer_tensor in saved_layer[single_layer][device_id]
         )
-        saved_grads = torch.autograd.grad(torch.unbind(output), grad_inputs)
+        saved_grads = torch.autograd.grad(
+            # pyre-fixme[6]: For 1st argument expected `Tensor` but got `Module`.
+            outputs=torch.unbind(output),
+            inputs=grad_inputs,
+            **grad_kwargs or {},
+        )
 
         offset = 0
         all_grads: List[Tuple[Tensor, ...]] = []
@@ -683,15 +776,21 @@ def compute_layer_gradients_and_eval(
 
 def construct_neuron_grad_fn(
     layer: Module,
-    neuron_selector: Union[int, Tuple[Union[int, slice], ...], Callable],
+    neuron_selector: Union[
+        int,
+        Tuple[Union[int, SliceIntType], ...],
+        Callable[[Union[Tensor, Tuple[Tensor, ...]]], Tensor],
+    ],
     device_ids: Union[None, List[int]] = None,
     attribute_to_neuron_input: bool = False,
+    # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
 ) -> Callable:
     def grad_fn(
+        # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
         forward_fn: Callable,
         inputs: TensorOrTupleOfTensorsGeneric,
         target_ind: TargetType = None,
-        additional_forward_args: Any = None,
+        additional_forward_args: Optional[object] = None,
     ) -> Tuple[Tensor, ...]:
         _, grads = _forward_layer_eval_with_neuron_grads(
             forward_fn,
@@ -707,6 +806,8 @@ def construct_neuron_grad_fn(
     return grad_fn
 
 
+# pyre-fixme[3]: Return type must be annotated.
+# pyre-fixme[2]: Parameter must be annotated.
 def _extract_parameters_from_layers(layer_modules):
     layer_parameters = []
     if layer_modules is not None:
@@ -723,10 +824,12 @@ def _extract_parameters_from_layers(layer_modules):
 
 def _compute_jacobian_wrt_params(
     model: Module,
+    # pyre-fixme[2]: Parameter annotation cannot contain `Any`.
     inputs: Tuple[Any, ...],
     labels: Optional[Tensor] = None,
+    # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
     loss_fn: Optional[Union[Module, Callable]] = None,
-    layer_modules: List[Module] = None,
+    layer_modules: Optional[List[Module]] = None,
 ) -> Tuple[Tensor, ...]:
     r"""
     Computes the Jacobian of a batch of test examples given a model, and optional
@@ -780,6 +883,8 @@ def _compute_jacobian_wrt_params(
                 outputs=out[i],
                 inputs=cast(
                     Union[Tensor, Sequence[Tensor]],
+                    # pyre-fixme[61]: `layer_parameters` is undefined, or not always
+                    #  defined.
                     model.parameters() if layer_modules is None else layer_parameters,
                 ),
                 grad_outputs=torch.ones_like(out[i]),
@@ -792,13 +897,16 @@ def _compute_jacobian_wrt_params(
         return tuple(grads)
 
 
+# pyre-fixme[3]: Return annotation cannot contain `Any`.
 def _compute_jacobian_wrt_params_with_sample_wise_trick(
     model: Module,
+    # pyre-fixme[2]: Parameter annotation cannot contain `Any`.
     inputs: Tuple[Any, ...],
     labels: Optional[Tensor] = None,
+    # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
     loss_fn: Optional[Union[Module, Callable]] = None,
     reduction_type: Optional[str] = "sum",
-    layer_modules: List[Module] = None,
+    layer_modules: Optional[List[Module]] = None,
 ) -> Tuple[Any, ...]:
     r"""
     Computes the Jacobian of a batch of test examples given a model, and optional
@@ -880,14 +988,22 @@ def _compute_jacobian_wrt_params_with_sample_wise_trick(
                 out = loss
 
             sample_grad_wrapper.compute_param_sample_gradients(
-                out, loss_mode=reduction_type
+                out,
+                # pyre-fixme[6]: In call `SampleGradientWrapper.
+                # compute_param_sample_gradients`, for argument `loss_mode`,
+                # expected `str` but got `Optional[str]`.
+                loss_mode=reduction_type,  # type: ignore
             )
             if layer_modules is not None:
                 layer_parameters = _extract_parameters_from_layers(layer_modules)
             grads = tuple(
                 param.sample_grad  # type: ignore
                 for param in (
-                    model.parameters() if layer_modules is None else layer_parameters
+                    model.parameters()
+                    if layer_modules is None
+                    # pyre-fixme[61]: `layer_parameters` is undefined, or not always
+                    #  defined.
+                    else layer_parameters
                 )
                 if hasattr(param, "sample_grad")
             )

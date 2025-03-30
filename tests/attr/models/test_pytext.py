@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-from __future__ import print_function
+# pyre-strict
 
 import os
 import tempfile
@@ -19,12 +19,20 @@ try:
     from pytext.config.component import create_featurizer, create_model
     from pytext.config.doc_classification import ModelInputConfig, TargetConfig
     from pytext.config.field_config import FeatureConfig, WordFeatConfig
-    from pytext.data import CommonMetadata
-    from pytext.data.doc_classification_data_handler import DocClassificationDataHandler
+    from pytext.data.data_handler import CommonMetadata
+
+    # pyre-fixme[21]: Could not find module
+    #  `pytext.data.doc_classification_data_handler`.
+    from pytext.data.doc_classification_data_handler import (  # @manual=//pytext:main_lib  # noqa
+        DocClassificationDataHandler,
+    )
     from pytext.data.featurizer import SimpleFeaturizer
     from pytext.fields import FieldMeta
     from pytext.models.decoders.mlp_decoder import MLPDecoder
-    from pytext.models.doc_model import DocModel_Deprecated
+
+    # pyre-fixme[21]: Could not find name `DocModel_Deprecated` in
+    #  `pytext.models.doc_model`.
+    from pytext.models.doc_model import DocModel_Deprecated  # @manual=//pytext:main_lib
     from pytext.models.embeddings.word_embedding import WordEmbedding
     from pytext.models.representations.bilstm_doc_attention import BiLSTMDocAttention
 except ImportError:
@@ -33,7 +41,11 @@ except ImportError:
 
 class VocabStub:
     def __init__(self) -> None:
+        # pyre-fixme[24]: Generic type `list` expects 1 type parameter,
+        # use `typing.List[<element type>]` to avoid runtime subscripting errors.
         self.itos: List = []
+        # pyre-fixme[24]: Generic type `list` expects 1 type parameter,
+        # use `typing.List[<element type>]` to avoid runtime subscripting errors.
         self.stoi: Dict = {}
 
 
@@ -41,9 +53,9 @@ class VocabStub:
 
 
 class TestWordEmbeddings(unittest.TestCase):
-    def setUp(self):
+    def setUp(self) -> None:
         if not HAS_PYTEXT:
-            return self.skipTest("Skip the test since PyText is not installed")
+            raise unittest.SkipTest("Skip the test since PyText is not installed")
 
         self.embedding_file, self.embedding_path = tempfile.mkstemp()
         self.word_embedding_file, self.word_embedding_path = tempfile.mkstemp()
@@ -94,6 +106,7 @@ class TestWordEmbeddings(unittest.TestCase):
             )
         )
 
+    # pyre-fixme[3]: Return type is not specified.
     def _create_dummy_data_handler(self):
         feat = WordFeatConfig(
             vocab_size=4,
@@ -105,7 +118,11 @@ class TestWordEmbeddings(unittest.TestCase):
         featurizer = create_featurizer(
             SimpleFeaturizer.Config(), FeatureConfig(word_feat=feat)
         )
+        # pyre-fixme[16]: Module `pytext.data` has no attribute
+        # `doc_classification_data_handler`.
         data_handler = DocClassificationDataHandler.from_config(
+            # pyre-fixme[16]: Module `pytext.data` has no attribute
+            # `doc_classification_data_handler`.
             DocClassificationDataHandler.Config(),
             ModelInputConfig(word_feat=feat),
             TargetConfig(),
@@ -124,12 +141,19 @@ class TestWordEmbeddings(unittest.TestCase):
 
         return data_handler
 
+    # pyre-fixme[3]: Return type is not specified.
     def _create_dummy_model(self):
         return create_model(
+            # pyre-fixme[16]: Module `pytext.models.doc_model` has no attribute
+            # `DocModel_Deprecated`.
             DocModel_Deprecated.Config(
+                # pyre-fixme[28]: Unexpected keyword argument `save_path` to call
+                # `object.__init__`.
                 representation=BiLSTMDocAttention.Config(
                     save_path=self.representation_path
                 ),
+                # pyre-fixme[28]: Unexpected keyword argument `save_path` to call
+                # `object.__init__`.
                 decoder=MLPDecoder.Config(save_path=self.decoder_path),
             ),
             FeatureConfig(
@@ -141,14 +165,22 @@ class TestWordEmbeddings(unittest.TestCase):
             self._create_dummy_meta_data(),
         )
 
-    def _create_dummy_meta_data(self):
+    def _create_dummy_meta_data(self) -> "CommonMetadata":
         text_field_meta = FieldMeta()
+        # pyre-fixme[8]: Attribute `vocab` declared in class
+        # `pytext.fields.field.FieldMeta` has type `Vocab` but is used as type
+        # `VocabStub`.
         text_field_meta.vocab = VocabStub()
         text_field_meta.vocab_size = 4
         text_field_meta.unk_token_idx = 1
         text_field_meta.pad_token_idx = 0
+        # pyre-fixme[16]: `pytext.fields.field.FieldMeta` has no attribute
+        # `pretrained_embeds_weight`.
         text_field_meta.pretrained_embeds_weight = None
         label_meta = FieldMeta()
+        # pyre-fixme[8]: Attribute `vocab` declared in class
+        # `pytext.fields.field.FieldMeta` has type `Vocab` but is used as type
+        # `VocabStub`.
         label_meta.vocab = VocabStub()
         label_meta.vocab_size = 3
         metadata = CommonMetadata()

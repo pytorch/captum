@@ -1,9 +1,22 @@
 #!/usr/bin/env python3
 
+# pyre-strict
+
 import threading
 import warnings
 from collections import defaultdict
-from typing import Any, Callable, cast, Dict, Iterator, List, Optional, Tuple, Union
+from typing import (
+    Any,
+    Callable,
+    cast,
+    Dict,
+    Iterable,
+    Iterator,
+    List,
+    Optional,
+    Tuple,
+    Union,
+)
 
 import torch
 from captum._utils.common import _get_module_from_name, _sort_key_list
@@ -84,10 +97,14 @@ class TracInCPFast(TracInCPBase):
         model: Module,
         final_fc_layer: Union[Module, str],
         train_dataset: Union[Dataset, DataLoader],
+        # pyre-fixme[24]: Generic type `Iterator` expects 1 type parameter.
         checkpoints: Union[str, List[str], Iterator],
+        # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
         checkpoints_load_func: Callable = _load_flexible_state_dict,
+        # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
         loss_fn: Optional[Union[Module, Callable]] = None,
         batch_size: Union[int, None] = 1,
+        # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
         test_loss_fn: Optional[Union[Module, Callable]] = None,
         vectorize: bool = False,
     ) -> None:
@@ -96,11 +113,9 @@ class TracInCPFast(TracInCPBase):
 
             model (torch.nn.Module): An instance of pytorch model. This model should
                     define all of its layers as attributes of the model.
-            final_fc_layer (torch.nn.Module or str): The last fully connected layer in
+            final_fc_layer (torch.nn.Module): The last fully connected layer in
                     the network for which gradients will be approximated via fast random
-                    projection method. Can be either the layer module itself, or the
-                    fully qualified name of the layer if it is a defined attribute of
-                    the passed `model`.
+                    projection method.
             train_dataset (torch.utils.data.Dataset or torch.utils.data.DataLoader):
                     In the `influence` method, we compute the influence score of
                     training examples on examples in a test batch.
@@ -185,27 +200,46 @@ class TracInCPFast(TracInCPBase):
         self.vectorize = vectorize
 
         # TODO: restore prior state
-        self.final_fc_layer = final_fc_layer
-        if isinstance(self.final_fc_layer, str):
-            self.final_fc_layer = _get_module_from_name(model, self.final_fc_layer)
-        assert isinstance(self.final_fc_layer, Module)
+        self.final_fc_layer = cast(Module, final_fc_layer)
         for param in self.final_fc_layer.parameters():
             param.requires_grad = True
 
         assert loss_fn is not None, "loss function must not be none"
 
         # check `loss_fn`
+        # pyre-fixme[4]: Attribute must be annotated.
         self.reduction_type = _check_loss_fn(self, loss_fn, "loss_fn")
         # check `test_loss_fn` if it was provided
+        # pyre-fixme[4]: Attribute must be annotated.
         self.test_reduction_type = (
             self.reduction_type
             if test_loss_fn is None
             else _check_loss_fn(self, test_loss_fn, "test_loss_fn")
         )
 
+    @property
+    def final_fc_layer(self) -> Module:
+        # pyre-fixme[16]: `TracInCPFast` has no attribute `_final_fc_layer`.
+        return self._final_fc_layer
+
+    @final_fc_layer.setter
+    def final_fc_layer(self, layer: Union[Module, str]) -> None:
+        if isinstance(layer, str):
+            try:
+                self._final_fc_layer = _get_module_from_name(self.model, layer)
+                if not isinstance(self._final_fc_layer, Module):
+                    raise Exception("No module found for final_fc_layer")
+            except Exception as ex:
+                raise ValueError(
+                    f'Invalid final_fc_layer str: "{layer}" provided!'
+                ) from ex
+        else:
+            self._final_fc_layer = layer
+
     @log_usage()
     def influence(  # type: ignore[override]
         self,
+        # pyre-fixme[2]: Parameter annotation cannot contain `Any`.
         inputs: Tuple[Any, ...],
         k: Optional[int] = None,
         proponents: bool = True,
@@ -293,9 +327,12 @@ class TracInCPFast(TracInCPBase):
             show_progress=show_progress,
         )
 
+    # pyre-fixme[3]: Return type must be annotated.
     def _influence_batch_tracincp_fast(
         self,
+        # pyre-fixme[2]: Parameter annotation cannot contain `Any`.
         test_batch: Tuple[Any, ...],
+        # pyre-fixme[2]: Parameter annotation cannot contain `Any`.
         train_batch: Tuple[Any, ...],
     ):
         """
@@ -304,6 +341,8 @@ class TracInCPFast(TracInCPBase):
         described in the `TracInCPFast` class description.
         """
 
+        # pyre-fixme[3]: Return type must be annotated.
+        # pyre-fixme[2]: Parameter must be annotated.
         def get_checkpoint_contribution(checkpoint):
 
             assert (
@@ -349,6 +388,7 @@ class TracInCPFast(TracInCPBase):
 
     def _influence(  # type: ignore[override]
         self,
+        # pyre-fixme[2]: Parameter annotation cannot contain `Any`.
         inputs: Tuple[Any, ...],
         show_progress: bool = False,
     ) -> Tensor:
@@ -389,10 +429,13 @@ class TracInCPFast(TracInCPBase):
         """
 
         train_dataloader = self.train_dataloader
+        train_dataloader_iterable: Union[DataLoader, Iterable[Tuple[object, ...]]] = (
+            train_dataloader
+        )
 
         if show_progress:
-            train_dataloader = progress(
-                train_dataloader,
+            train_dataloader_iterable = progress(
+                cast(Iterable[Tuple[object, ...]], train_dataloader),
                 desc=(
                     f"Using {self.get_name()} to compute "
                     "influence for training batches"
@@ -403,13 +446,14 @@ class TracInCPFast(TracInCPBase):
         return torch.cat(
             [
                 self._influence_batch_tracincp_fast(inputs, batch)
-                for batch in train_dataloader
+                for batch in train_dataloader_iterable
             ],
             dim=1,
         )
 
     def _get_k_most_influential(  # type: ignore[override]
         self,
+        # pyre-fixme[2]: Parameter annotation cannot contain `Any`.
         inputs: Tuple[Any, ...],
         k: int = 5,
         proponents: bool = True,
@@ -481,6 +525,7 @@ class TracInCPFast(TracInCPBase):
 
     def _self_influence_by_checkpoints(
         self,
+        # pyre-fixme[2]: Parameter annotation cannot contain `Any`.
         inputs: Union[Tuple[Any, ...], DataLoader],
         show_progress: bool = False,
     ) -> Tensor:
@@ -547,9 +592,13 @@ class TracInCPFast(TracInCPBase):
                     "Therefore, if showing the progress of the computation of self "
                     "influence scores, only the number of batches processed can be "
                     "displayed, and not the percentage completion of the computation, "
-                    "nor any time estimates."
+                    "nor any time estimates.",
+                    stacklevel=1,
                 )
 
+        # pyre-fixme[53]: Captured variable `inputs_len` is not annotated.
+        # pyre-fixme[3]: Return type must be annotated.
+        # pyre-fixme[2]: Parameter must be annotated.
         def get_checkpoint_contribution(checkpoint):
             # This function returns a 1D tensor representing the contribution to the
             # self influence score for the given checkpoint, for all batches in
@@ -591,7 +640,11 @@ class TracInCPFast(TracInCPBase):
                 )
 
                 checkpoint_contribution.append(
+                    # pyre-fixme[58]: `**` is not supported for operand types
+                    #  `Tensor` and `int`.
                     torch.sum(batch_jacobian**2, dim=1)
+                    # pyre-fixme[58]: `**` is not supported for operand types
+                    #  `Tensor` and `int`.
                     * torch.sum(batch_layer_input**2, dim=1)
                     * learning_rate
                 )
@@ -627,6 +680,7 @@ class TracInCPFast(TracInCPBase):
     @log_usage()
     def self_influence(
         self,
+        # pyre-fixme[2]: Parameter annotation cannot contain `Any`.
         inputs: Optional[Union[Tuple[Any, ...], DataLoader]] = None,
         show_progress: bool = False,
         outer_loop_by_checkpoints: bool = False,
@@ -703,11 +757,13 @@ class TracInCPFast(TracInCPBase):
 
 def _basic_computation_tracincp_fast(
     influence_instance: TracInCPFast,
+    # pyre-fixme[2]: Parameter annotation cannot contain `Any`.
     inputs: Tuple[Any, ...],
     targets: Tensor,
+    # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
     loss_fn: Optional[Union[Module, Callable]] = None,
     reduction_type: Optional[str] = None,
-):
+) -> Tuple[Tensor, Tensor]:
     """
     For instances of TracInCPFast and children classes, computation of influence scores
     or self influence scores repeatedly calls this function for different checkpoints
@@ -749,7 +805,11 @@ def _basic_computation_tracincp_fast(
     layer_inputs: Dict[device, Tuple[Tensor, ...]] = defaultdict()
     lock = threading.Lock()
 
+    # pyre-fixme[3]: Return type must be annotated.
+    # pyre-fixme[2]: Parameter must be annotated.
     def hook_wrapper(original_module):
+        # pyre-fixme[53]: Captured variable `lock` is not annotated.
+        # pyre-fixme[2]: Parameter must be annotated.
         def _capture_inputs(layer, input, output) -> None:
             r"""Save activations into layer_inputs in forward pass"""
             with lock:
@@ -784,9 +844,11 @@ def _basic_computation_tracincp_fast(
 
     device_ids = cast(
         Union[None, List[int]],
-        influence_instance.model.device_ids
-        if hasattr(influence_instance.model, "device_ids")
-        else None,
+        (
+            influence_instance.model.device_ids
+            if hasattr(influence_instance.model, "device_ids")
+            else None
+        ),
     )
     key_list = _sort_key_list(list(layer_inputs.keys()), device_ids)
 
@@ -852,16 +914,20 @@ class TracInCPFastRandProj(TracInCPFast):
     def __init__(
         self,
         model: Module,
-        final_fc_layer: Union[Module, str],
+        final_fc_layer: Module,
         train_dataset: Union[Dataset, DataLoader],
+        # pyre-fixme[24]: Generic type `Iterator` expects 1 type parameter.
         checkpoints: Union[str, List[str], Iterator],
+        # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
         checkpoints_load_func: Callable = _load_flexible_state_dict,
+        # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
         loss_fn: Optional[Union[Module, Callable]] = None,
         batch_size: Union[int, None] = 1,
+        # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
         test_loss_fn: Optional[Union[Module, Callable]] = None,
         vectorize: bool = False,
         nearest_neighbors: Optional[NearestNeighbors] = None,
-        projection_dim: int = None,
+        projection_dim: Optional[int] = None,
         seed: int = 0,
     ) -> None:
         r"""
@@ -869,11 +935,9 @@ class TracInCPFastRandProj(TracInCPFast):
 
             model (torch.nn.Module): An instance of pytorch model. This model should
                     define all of its layers as attributes of the model.
-            final_fc_layer (torch.nn.Module or str): The last fully connected layer in
+            final_fc_layer (torch.nn.Module): The last fully connected layer in
                     the network for which gradients will be approximated via fast random
-                    projection method. Can be either the layer module itself, or the
-                    fully qualified name of the layer if it is a defined attribute of
-                    the passed `model`.
+                    projection method.
             train_dataset (torch.utils.data.Dataset or torch.utils.data.DataLoader):
                     In the `influence` method, we compute the influence score of
                     training examples on examples in a test batch.
@@ -990,9 +1054,11 @@ class TracInCPFastRandProj(TracInCPFast):
                 "each call to `influence` to compute influence scores or proponents "
                 "will be slower, but may avoid running out of memory."
             )
-            % "`TracInCPFast`"
+            % "`TracInCPFast`",
+            stacklevel=1,
         )
 
+        # pyre-fixme[4]: Attribute must be annotated.
         self.nearest_neighbors = (
             AnnoyNearestNeighbors() if nearest_neighbors is None else nearest_neighbors
         )
@@ -1000,10 +1066,12 @@ class TracInCPFastRandProj(TracInCPFast):
         self.projection_dim = projection_dim
 
         torch.manual_seed(seed)  # for reproducibility
+        # pyre-fixme[4]: Attribute must be annotated.
         self.projection_quantities = self._set_projections_tracincp_fast_rand_proj(
             self.train_dataloader,
         )
 
+        # pyre-fixme[4]: Attribute must be annotated.
         self.src_intermediate_quantities = (
             self._get_intermediate_quantities_tracincp_fast_rand_proj(
                 self.train_dataloader,
@@ -1017,6 +1085,7 @@ class TracInCPFastRandProj(TracInCPFast):
 
     def _influence(  # type: ignore[override]
         self,
+        # pyre-fixme[2]: Parameter annotation cannot contain `Any`.
         inputs: Tuple[Any, ...],
     ) -> Tensor:
         r"""
@@ -1053,6 +1122,7 @@ class TracInCPFastRandProj(TracInCPFast):
 
     def _get_k_most_influential(  # type: ignore[override]
         self,
+        # pyre-fixme[2]: Parameter annotation cannot contain `Any`.
         inputs: Tuple[Any, ...],
         k: int = 5,
         proponents: bool = True,
@@ -1109,6 +1179,7 @@ class TracInCPFastRandProj(TracInCPFast):
     @log_usage()
     def self_influence(
         self,
+        # pyre-fixme[2]: Parameter annotation cannot contain `Any`.
         inputs: Optional[Union[Tuple[Any, ...], DataLoader]] = None,
         show_progress: bool = False,
         outer_loop_by_checkpoints: bool = False,
@@ -1174,13 +1245,15 @@ class TracInCPFastRandProj(TracInCPFast):
                 "random projections results only in approximate self influence "
                 "scores, there is no reason to use `TracInCPFastRandProj` when "
                 "calculating self influence scores."
-            )
+            ),
+            stacklevel=1,
         )
         raise NotImplementedError
 
     @log_usage()
     def influence(  # type: ignore[override]
         self,
+        # pyre-fixme[2]: Parameter annotation cannot contain `Any`.
         inputs: Optional[Tuple[Any, ...]] = None,
         k: int = 5,
         proponents: bool = True,
@@ -1350,7 +1423,7 @@ class TracInCPFastRandProj(TracInCPFast):
     def _process_src_intermediate_quantities_tracincp_fast_rand_proj(
         self,
         src_intermediate_quantities: torch.Tensor,
-    ):
+    ) -> None:
         """
         Assumes `self._get_intermediate_quantities_tracin_fast_rand_proj` returns
         vector representations for each example, and that influence between a
@@ -1374,6 +1447,7 @@ class TracInCPFastRandProj(TracInCPFast):
 
     def _get_intermediate_quantities_tracincp_fast_rand_proj(
         self,
+        # pyre-fixme[2]: Parameter annotation cannot contain `Any`.
         inputs: Union[Tuple[Any, ...], DataLoader],
         projection_quantities: Optional[Tuple[torch.Tensor, torch.Tensor]],
         test: bool = False,
@@ -1443,13 +1517,15 @@ class TracInCPFastRandProj(TracInCPFast):
 
         # for each checkpoint, we will populate a list containing the contribution of
         # the checkpoint for each batch
+        # pyre-fixme[24]: Generic type `list` expects 1 type parameter, use
+        #  `typing.List[<element type>]` to avoid runtime subscripting errors.
         checkpoint_contributions: List[Union[List, Tensor]] = [
             [] for _ in self.checkpoints
         ]
 
         # the "embedding" vector is the concatenation of contributions from each
         # checkpoint, which we compute one by one
-        for (j, checkpoint) in enumerate(self.checkpoints):
+        for j, checkpoint in enumerate(self.checkpoints):
 
             assert (
                 checkpoint is not None
@@ -1480,8 +1556,12 @@ class TracInCPFastRandProj(TracInCPFast):
                 # if doing projection, project those two quantities
                 if project:
 
+                    # pyre-fixme[61]: `jacobian_projection` is undefined, or not
+                    #  always defined.
                     input_jacobians = torch.matmul(input_jacobians, jacobian_projection)
 
+                    # pyre-fixme[61]: `layer_input_projection` is undefined, or not
+                    #  always defined.
                     layer_inputs = torch.matmul(layer_inputs, layer_input_projection)
 
                 # for an example, the contribution to the "embedding" vector from each
@@ -1489,6 +1569,8 @@ class TracInCPFastRandProj(TracInCPFast):
                 # `layer_input`, flattened to a 1D tensor. here, we perform this
                 # for the entire batch. we append the contribution to a list containing
                 # the contribution of all batches, from the checkpoint.
+                # pyre-fixme[24]: Generic type `list` expects 1 type parameter, use
+                #  `typing.List[<element type>]` to avoid runtime subscripting errors.
                 cast(list, checkpoint_contributions[j]).append(
                     torch.matmul(
                         torch.unsqueeze(
@@ -1527,6 +1609,7 @@ class TracInCPFastRandProj(TracInCPFast):
     @log_usage()
     def compute_intermediate_quantities(
         self,
+        # pyre-fixme[2]: Parameter annotation cannot contain `Any`.
         inputs: Union[Tuple[Any, ...], DataLoader],
     ) -> Tensor:
         """

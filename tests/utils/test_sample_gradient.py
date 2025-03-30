@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 
-import unittest
-from typing import Callable, Tuple
+# pyre-strict
+
+from typing import Callable, List, Tuple
 
 import torch
 from captum._utils.gradient import apply_gradient_requirements
@@ -10,9 +11,9 @@ from captum._utils.sample_gradient import (
     SampleGradientWrapper,
     SUPPORTED_MODULES,
 )
-from packaging import version
-from tests.helpers.basic import assertTensorAlmostEqual, BaseTest
-from tests.helpers.basic_models import (
+from captum.testing.helpers import BaseTest
+from captum.testing.helpers.basic import assertTensorAlmostEqual
+from captum.testing.helpers.basic_models import (
     BasicModel_ConvNet_One_Conv,
     BasicModel_ConvNetWithPaddingDilation,
     BasicModel_MultiLayer,
@@ -43,12 +44,6 @@ class Test(BaseTest):
         self._compare_sample_grads_per_sample(model, inp, lambda x: torch.mean(x))
 
     def test_sample_grads_modified_conv_mean(self) -> None:
-        if version.parse(torch.__version__) < version.parse("1.8.0"):
-            raise unittest.SkipTest(
-                "Skipping sample gradient test with 3D linear module"
-                "since torch version < 1.8"
-            )
-
         model = BasicModel_ConvNetWithPaddingDilation()
         inp = (20 * torch.randn(6, 1, 5, 5),)
         self._compare_sample_grads_per_sample(
@@ -56,12 +51,6 @@ class Test(BaseTest):
         )
 
     def test_sample_grads_modified_conv_sum(self) -> None:
-        if version.parse(torch.__version__) < version.parse("1.8.0"):
-            raise unittest.SkipTest(
-                "Skipping sample gradient test with 3D linear module"
-                "since torch version < 1.8"
-            )
-
         model = BasicModel_ConvNetWithPaddingDilation()
         inp = (20 * torch.randn(6, 1, 5, 5),)
         self._compare_sample_grads_per_sample(model, inp, lambda x: torch.sum(x), "sum")
@@ -70,9 +59,10 @@ class Test(BaseTest):
         self,
         model: Module,
         inputs: Tuple[Tensor, ...],
+        # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
         loss_fn: Callable,
         loss_type: str = "mean",
-    ):
+    ) -> None:
         wrapper = SampleGradientWrapper(model)
         wrapper.add_hooks()
         apply_gradient_requirements(inputs)
@@ -100,7 +90,7 @@ class Test(BaseTest):
                         mode="max",
                     )
 
-    def test_sample_grads_layer_modules(self):
+    def test_sample_grads_layer_modules(self) -> None:
         """
         tests that if `layer_modules` argument is specified for `SampleGradientWrapper`
         that only per-sample gradients for the specified layers are calculated
@@ -110,7 +100,13 @@ class Test(BaseTest):
 
         # possible candidates for `layer_modules`, which are the modules whose
         # parameters we want to compute sample grads for
-        layer_moduless = [[model.conv1], [model.fc1], [model.conv1, model.fc1]]
+        # pyre-fixme[9]: layer_moduless has type `List[List[Module]]`; used as
+        #  `List[Union[List[Union[Conv2d, Linear]], List[Conv2d], List[Linear]]]`.
+        layer_moduless: List[List[Module]] = [
+            [model.conv1],
+            [model.fc1],
+            [model.conv1, model.fc1],
+        ]
         # hard coded all modules we want to check
         all_modules = [model.conv1, model.fc1]
 
@@ -135,10 +131,12 @@ class Test(BaseTest):
                     # So, check that we did calculate sample grads for the desired
                     # layers via the above checking approach.
                     for parameter in module.parameters():
-                        assert not isinstance(parameter.sample_grad, int)
+                        assert not isinstance(
+                            parameter.sample_grad, int  # type: ignore
+                        )
                 else:
                     # For the layers we do not want sample grads for, their
                     # `sample_grad` should still be 0, since they should not have been
                     # over-written.
                     for parameter in module.parameters():
-                        assert parameter.sample_grad == 0
+                        assert parameter.sample_grad == 0  # type: ignore

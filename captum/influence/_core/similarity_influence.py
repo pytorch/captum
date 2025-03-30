@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+# pyre-strict
+
 import warnings
 from functools import partial
 from typing import Any, Callable, Dict, List, Optional, Tuple, Union
@@ -18,7 +20,7 @@ Additional helper functions to calculate similarity metrics.
 """
 
 
-def euclidean_distance(test, train) -> Tensor:
+def euclidean_distance(test: Tensor, train: Tensor) -> Tensor:
     r"""
     Calculates the pairwise euclidean distance for batches of feature vectors.
     Tensors test and train have shape (batch_size_1, *), and (batch_size_2, *).
@@ -31,7 +33,7 @@ def euclidean_distance(test, train) -> Tensor:
     return similarity
 
 
-def cosine_similarity(test, train, replace_nan=0) -> Tensor:
+def cosine_similarity(test: Tensor, train: Tensor, replace_nan: int = 0) -> Tensor:
     r"""
     Calculates the pairwise cosine similarity for batches of feature vectors.
     Tensors test and train have shape (batch_size_1, *), and (batch_size_2, *).
@@ -40,12 +42,8 @@ def cosine_similarity(test, train, replace_nan=0) -> Tensor:
     test = test.view(test.shape[0], -1)
     train = train.view(train.shape[0], -1)
 
-    if common._parse_version(torch.__version__) <= (1, 6, 0):
-        test_norm = torch.norm(test, p=None, dim=1, keepdim=True)
-        train_norm = torch.norm(train, p=None, dim=1, keepdim=True)
-    else:
-        test_norm = torch.linalg.norm(test, ord=2, dim=1, keepdim=True)
-        train_norm = torch.linalg.norm(train, ord=2, dim=1, keepdim=True)
+    test_norm = torch.linalg.norm(test, ord=2, dim=1, keepdim=True)
+    train_norm = torch.linalg.norm(train, ord=2, dim=1, keepdim=True)
 
     test = torch.where(test_norm != 0.0, test / test_norm, Tensor([replace_nan]))
     train = torch.where(train_norm != 0.0, train / train_norm, Tensor([replace_nan])).T
@@ -73,6 +71,7 @@ class SimilarityInfluence(DataInfluence):
         influence_src_dataset: Dataset,
         activation_dir: str,
         model_id: str = "",
+        # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
         similarity_metric: Callable = cosine_similarity,
         similarity_direction: str = "max",
         batch_size: int = 1,
@@ -129,6 +128,7 @@ class SimilarityInfluence(DataInfluence):
                     implementation of `DataInfluence` abstract class.
         """
         self.module = module
+        # pyre-fixme[4]: Attribute must be annotated.
         self.layers = [layers] if isinstance(layers, str) else layers
         self.influence_src_dataset = influence_src_dataset
         self.activation_dir = activation_dir
@@ -136,6 +136,7 @@ class SimilarityInfluence(DataInfluence):
         self.batch_size = batch_size
 
         if similarity_direction == "max" or similarity_direction == "min":
+            # pyre-fixme[4]: Attribute must be annotated.
             self.similarity_direction = similarity_direction
         else:
             raise ValueError(
@@ -145,6 +146,7 @@ class SimilarityInfluence(DataInfluence):
 
         if similarity_metric is cosine_similarity:
             if "replace_nan" in kwargs:
+                # pyre-fixme[4]: Attribute must be annotated.
                 self.replace_nan = kwargs["replace_nan"]
             else:
                 self.replace_nan = -2 if self.similarity_direction == "max" else 2
@@ -152,6 +154,7 @@ class SimilarityInfluence(DataInfluence):
 
         self.similarity_metric = similarity_metric
 
+        # pyre-fixme[4]: Attribute must be annotated.
         self.influence_src_dataloader = DataLoader(
             influence_src_dataset, batch_size, shuffle=False
         )
@@ -160,9 +163,12 @@ class SimilarityInfluence(DataInfluence):
         self,
         inputs: Union[Tensor, Tuple[Tensor, ...]],
         top_k: int = 1,
+        # pyre-fixme[2]: Parameter annotation cannot be `Any`.
         additional_forward_args: Optional[Any] = None,
         load_src_from_disk: bool = True,
         **kwargs: Any,
+        # pyre-fixme[24]: Generic type `dict` expects 2 type parameters, use
+        #  `typing.Dict[<key type>, <value type>]` to avoid runtime subscripting errors.
     ) -> Dict:
         r"""
         Args:
@@ -291,7 +297,11 @@ class SimilarityInfluence(DataInfluence):
                     "returned as a tensor with [inputs_idx, src_dataset_idx] pairs "
                     "which may have corrupted similarity scores."
                 )
-                warnings.warn(zero_warning, RuntimeWarning)
+                warnings.warn(
+                    zero_warning,
+                    RuntimeWarning,
+                    stacklevel=1,
+                )
                 key = "-".join(["zero_acts", layer])
                 influences[key] = zero_acts
 

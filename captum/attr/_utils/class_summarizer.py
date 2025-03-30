@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
+
+# pyre-strict
 from collections import defaultdict
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, cast, Dict, Generic, List, Optional, TypeVar, Union
 
 from captum._utils.common import _format_tensor_into_tuples
 from captum._utils.typing import TargetType, TensorOrTupleOfTensorsGeneric
@@ -9,8 +11,10 @@ from captum.attr._utils.summarizer import Summarizer
 from captum.log import log_usage
 from torch import Tensor
 
+KeyType = TypeVar("KeyType")
 
-class ClassSummarizer(Summarizer):
+
+class ClassSummarizer(Summarizer, Generic[KeyType]):
     r"""
     Used to keep track of summaries for associated classes. The
     classes/labels can be of any type that are supported by `dict`.
@@ -21,7 +25,7 @@ class ClassSummarizer(Summarizer):
     @log_usage()
     def __init__(self, stats: List[Stat]) -> None:
         Summarizer.__init__.__wrapped__(self, stats)
-        self.summaries: Dict[Any, Summarizer] = defaultdict(
+        self.summaries: Dict[KeyType, Summarizer] = defaultdict(
             lambda: Summarizer(stats=stats)
         )
 
@@ -29,7 +33,7 @@ class ClassSummarizer(Summarizer):
         self,
         x: TensorOrTupleOfTensorsGeneric,
         labels: TargetType = None,
-    ):
+    ) -> None:
         r"""
         Updates the stats of the summarizer, optionally associated to classes.
 
@@ -50,10 +54,13 @@ class ClassSummarizer(Summarizer):
             super().update(x)
             return
 
+        # pyre-fixme[9]: x has type `TensorOrTupleOfTensorsGeneric`; used as
+        #  `Tuple[Tensor, ...]`.
         x = _format_tensor_into_tuples(x)
 
         num_labels = 1
 
+        # pyre-fixme[33]: Given annotation cannot contain `Any`.
         labels_typed: Union[List[Any], Tensor]
         if isinstance(labels, list) or isinstance(labels, Tensor):
             labels_typed = labels
@@ -78,14 +85,15 @@ class ClassSummarizer(Summarizer):
             tensors_to_summarize_copy = tuple(tensor[i].clone() for tensor in x)
             label = labels_typed[0] if len(labels_typed) == 1 else labels_typed[i]
 
-            self.summaries[label].update(tensors_to_summarize)
+            self.summaries[cast(KeyType, label)].update(tensors_to_summarize)
             super().update(tensors_to_summarize_copy)
 
     @property
     def class_summaries(
         self,
     ) -> Dict[
-        Any, Union[None, Dict[str, Optional[Tensor]], List[Dict[str, Optional[Tensor]]]]
+        KeyType,
+        Union[None, Dict[str, Optional[Tensor]], List[Dict[str, Optional[Tensor]]]],
     ]:
         r"""
         Returns:

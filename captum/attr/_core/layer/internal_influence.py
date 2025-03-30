@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
-from typing import Any, Callable, List, Tuple, Union
+
+# pyre-strict
+from typing import Any, Callable, cast, Dict, List, Optional, Tuple, Union
 
 import torch
 from captum._utils.common import (
@@ -39,7 +41,7 @@ class InternalInfluence(LayerAttribution, GradientAttribution):
 
     def __init__(
         self,
-        forward_func: Callable,
+        forward_func: Callable[..., Tensor],
         layer: Module,
         device_ids: Union[None, List[int]] = None,
     ) -> None:
@@ -69,11 +71,12 @@ class InternalInfluence(LayerAttribution, GradientAttribution):
         inputs: Union[Tensor, Tuple[Tensor, ...]],
         baselines: BaselineType = None,
         target: TargetType = None,
-        additional_forward_args: Any = None,
+        additional_forward_args: Optional[object] = None,
         n_steps: int = 50,
         method: str = "gausslegendre",
         internal_batch_size: Union[None, int] = None,
         attribute_to_layer_input: bool = False,
+        grad_kwargs: Optional[Dict[str, Any]] = None,
     ) -> Union[Tensor, Tuple[Tensor, ...]]:
         r"""
         Args:
@@ -185,6 +188,9 @@ class InternalInfluence(LayerAttribution, GradientAttribution):
                         attribute to the input or output, is a single tensor.
                         Support for multiple tensors will be added later.
                         Default: False
+            grad_kwargs (Dict[str, Any], optional): Additional keyword
+                        arguments for torch.autograd.grad.
+                        Default: None
 
         Returns:
             *Tensor* or *tuple[Tensor, ...]* of **attributions**:
@@ -236,6 +242,7 @@ class InternalInfluence(LayerAttribution, GradientAttribution):
                 n_steps=n_steps,
                 method=method,
                 attribute_to_layer_input=attribute_to_layer_input,
+                grad_kwargs=grad_kwargs,
             )
 
         return attrs
@@ -245,11 +252,12 @@ class InternalInfluence(LayerAttribution, GradientAttribution):
         inputs: Tuple[Tensor, ...],
         baselines: Tuple[Union[Tensor, int, float], ...],
         target: TargetType = None,
-        additional_forward_args: Any = None,
+        additional_forward_args: Optional[object] = None,
         n_steps: int = 50,
         method: str = "gausslegendre",
         attribute_to_layer_input: bool = False,
         step_sizes_and_alphas: Union[None, Tuple[List[float], List[float]]] = None,
+        grad_kwargs: Optional[Dict[str, Any]] = None,
     ) -> Union[Tensor, Tuple[Tensor, ...]]:
         if step_sizes_and_alphas is None:
             # retrieve step size and scaling factor for specified approximation method
@@ -284,12 +292,13 @@ class InternalInfluence(LayerAttribution, GradientAttribution):
         # Returns gradient of output with respect to hidden layer.
         layer_gradients, _ = compute_layer_gradients_and_eval(
             forward_fn=self.forward_func,
-            layer=self.layer,
+            layer=cast(Module, self.layer),
             inputs=scaled_features_tpl,
             target_ind=expanded_target,
             additional_forward_args=input_additional_args,
             device_ids=self.device_ids,
             attribute_to_layer_input=attribute_to_layer_input,
+            grad_kwargs=grad_kwargs,
         )
         # flattening grads so that we can multiply it with step-size
         # calling contiguous to avoid `memory whole` problems
@@ -302,7 +311,10 @@ class InternalInfluence(LayerAttribution, GradientAttribution):
         # aggregates across all steps for each tensor in the input tuple
         attrs = tuple(
             _reshape_and_sum(
-                scaled_grad, n_steps, inputs[0].shape[0], layer_grad.shape[1:]
+                scaled_grad,
+                n_steps,
+                inputs[0].shape[0],
+                tuple(layer_grad.shape[1:]),
             )
             for scaled_grad, layer_grad in zip(scaled_grads, layer_gradients)
         )

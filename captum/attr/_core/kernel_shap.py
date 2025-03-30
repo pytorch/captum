@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 
-from typing import Any, Callable, Generator, Tuple, Union
+# pyre-strict
+
+from typing import Callable, cast, Generator, Optional, Tuple, Union
 
 import torch
 from captum._utils.models.linear_model import SkLearnLinearRegression
@@ -25,7 +27,7 @@ class KernelShap(Lime):
     https://arxiv.org/abs/1705.07874
     """
 
-    def __init__(self, forward_func: Callable) -> None:
+    def __init__(self, forward_func: Callable[..., Tensor]) -> None:
         r"""
         Args:
 
@@ -47,7 +49,7 @@ class KernelShap(Lime):
         inputs: TensorOrTupleOfTensorsGeneric,
         baselines: BaselineType = None,
         target: TargetType = None,
-        additional_forward_args: Any = None,
+        additional_forward_args: Optional[object] = None,
         feature_mask: Union[None, Tensor, Tuple[Tensor, ...]] = None,
         n_samples: int = 25,
         perturbations_per_eval: int = 1,
@@ -275,7 +277,7 @@ class KernelShap(Lime):
         )
         num_features_list = torch.arange(num_interp_features, dtype=torch.float)
         denom = num_features_list * (num_interp_features - num_features_list)
-        probs = (num_interp_features - 1) / denom
+        probs = torch.tensor((num_interp_features - 1)) / denom
         probs[0] = 0.0
         return self._attribute_kwargs(
             inputs=inputs,
@@ -290,8 +292,19 @@ class KernelShap(Lime):
             show_progress=show_progress,
         )
 
+    # pyre-fixme[24] Generic type `Callable` expects 2 type parameters.
+    def attribute_future(self) -> Callable:
+        r"""
+        This method is not implemented for KernelShap.
+        """
+        raise NotImplementedError("attribute_future is not implemented for KernelShap")
+
     def kernel_shap_similarity_kernel(
-        self, _, __, interpretable_sample: Tensor, **kwargs
+        self,
+        _,
+        __,
+        interpretable_sample: Tensor,
+        **kwargs: object,
     ) -> Tensor:
         assert (
             "num_interp_features" in kwargs
@@ -311,7 +324,9 @@ class KernelShap(Lime):
         return torch.tensor([similarities])
 
     def kernel_shap_perturb_generator(
-        self, original_inp: Union[Tensor, Tuple[Tensor, ...]], **kwargs
+        self,
+        original_inp: Union[Tensor, Tuple[Tensor, ...]],
+        **kwargs: object,
     ) -> Generator[Tensor, None, None]:
         r"""
         Perturbations are sampled by the following process:
@@ -339,11 +354,13 @@ class KernelShap(Lime):
             device = original_inp.device
         else:
             device = original_inp[0].device
-        num_features = kwargs["num_interp_features"]
+        num_features = cast(int, kwargs["num_interp_features"])
         yield torch.ones(1, num_features, device=device, dtype=torch.long)
         yield torch.zeros(1, num_features, device=device, dtype=torch.long)
         while True:
-            num_selected_features = kwargs["num_select_distribution"].sample()
+            num_selected_features = cast(
+                Categorical, kwargs["num_select_distribution"]
+            ).sample()
             rand_vals = torch.randn(1, num_features)
             threshold = torch.kthvalue(
                 rand_vals, num_features - num_selected_features

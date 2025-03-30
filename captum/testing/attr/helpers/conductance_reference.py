@@ -1,4 +1,8 @@
 #!/usr/bin/env python3
+
+# pyre-strict
+from typing import cast, Tuple, Union
+
 import numpy as np
 import torch
 from captum._utils.gradient import (
@@ -8,6 +12,8 @@ from captum._utils.gradient import (
 from captum.attr._utils.approximation_methods import approximation_parameters
 from captum.attr._utils.attribution import LayerAttribution
 from captum.attr._utils.common import _reshape_and_sum
+from torch import Tensor
+from torch.utils.hooks import RemovableHandle
 
 """
 Note: This implementation of conductance follows the procedure described in the original
@@ -23,6 +29,7 @@ that of the main implementation.
 
 
 class ConductanceReference(LayerAttribution):
+    # pyre-fixme[2]: Parameter must be annotated.
     def __init__(self, forward_func, layer) -> None:
         r"""
         Args
@@ -33,12 +40,22 @@ class ConductanceReference(LayerAttribution):
         """
         super().__init__(forward_func, layer)
 
-    def _conductance_grads(self, forward_fn, input, target_ind=None):
+    def _conductance_grads(
+        self,
+        # pyre-fixme[2]: Parameter must be annotated.
+        forward_fn,
+        # pyre-fixme[2]: Parameter must be annotated.
+        input,
+        # pyre-fixme[2]: Parameter must be annotated.
+        target_ind=None,
+    ) -> Tuple[Tensor, Tensor, int]:
         with torch.autograd.set_grad_enabled(True):
             # Set a forward hook on specified module and run forward pass to
             # get output tensor size.
             saved_tensor = None
 
+            # pyre-fixme[3]: Return type must be annotated.
+            # pyre-fixme[2]: Parameter must be annotated.
             def forward_hook(module, inp, out):
                 nonlocal saved_tensor
                 saved_tensor = out
@@ -50,7 +67,7 @@ class ConductanceReference(LayerAttribution):
             # The hidden layer tensor is assumed to have dimension (num_hidden, ...)
             # where the product of the dimensions >= 1 correspond to the total
             # number of hidden neurons in the layer.
-            layer_size = tuple(saved_tensor.size())[1:]
+            layer_size = tuple(cast(Tensor, saved_tensor).size())[1:]
             layer_units = int(np.prod(layer_size))
 
             # Remove unnecessary forward hook.
@@ -60,6 +77,10 @@ class ConductanceReference(LayerAttribution):
             # just the gradient of each hidden unit with respect to input.
             saved_grads = None
 
+            # pyre-fixme[53]: Captured variable `layer_size` is not annotated.
+            # pyre-fixme[53]: Captured variable `layer_units` is not annotated.
+            # pyre-fixme[3]: Return type must be annotated.
+            # pyre-fixme[2]: Parameter must be annotated.
             def backward_hook(grads):
                 nonlocal saved_grads
                 saved_grads = grads
@@ -80,6 +101,8 @@ class ConductanceReference(LayerAttribution):
             # tensor. Save backward hook in order to remove hook appropriately.
             back_hook = None
 
+            # pyre-fixme[3]: Return type must be annotated.
+            # pyre-fixme[2]: Parameter must be annotated.
             def forward_hook_register_back(module, inp, out):
                 nonlocal back_hook
                 back_hook = out.register_hook(backward_hook)
@@ -96,12 +119,12 @@ class ConductanceReference(LayerAttribution):
             input_grads = torch.autograd.grad(torch.unbind(output), expanded_input)
 
             # Remove backwards hook
-            back_hook.remove()
+            cast(RemovableHandle, back_hook).remove()
 
             # Remove duplicates in gradient with respect to hidden layer,
             # choose one for each layer_units indices.
             output_mid_grads = torch.index_select(
-                saved_grads,
+                cast(Tensor, saved_grads),
                 0,
                 torch.tensor(range(0, input_grads[0].shape[0], layer_units)),
             )
@@ -109,12 +132,14 @@ class ConductanceReference(LayerAttribution):
 
     def attribute(
         self,
+        # pyre-fixme[2]: Parameter must be annotated.
         inputs,
-        baselines=None,
+        baselines: Union[None, int, Tensor] = None,
+        # pyre-fixme[2]: Parameter must be annotated.
         target=None,
-        n_steps=500,
-        method="riemann_trapezoid",
-    ):
+        n_steps: int = 500,
+        method: str = "riemann_trapezoid",
+    ) -> Tensor:
         r"""
         Computes conductance using gradients along the path, applying
         riemann's method or gauss-legendre.
@@ -147,7 +172,12 @@ class ConductanceReference(LayerAttribution):
 
         # compute scaled inputs from baseline to final input.
         scaled_features = torch.cat(
-            [baselines + alpha * (inputs - baselines) for alpha in alphas], dim=0
+            # pyre-fixme[6]: For 1st argument expected `Union[List[Tensor],
+            #  typing.Tuple[Tensor, ...]]` but got `List[float]`.
+            # pyre-fixme[58]: `+` is not supported for operand types `Union[int,
+            #  torch._tensor.Tensor]` and `float`.
+            [baselines + alpha * (inputs - baselines) for alpha in alphas],
+            dim=0,
         )
 
         # Conductance Gradients - Returns gradient of output with respect to
@@ -184,5 +214,6 @@ class ConductanceReference(LayerAttribution):
             scaled_grads.view(mid_layer_gradients.shape) * summed_input_grads,
             n_steps,
             inputs.shape[0],
+            # pyre-fixme[6]: For 4th argument expected `Tuple[int, ...]` but got `Size`.
             mid_layer_gradients.shape[1:],
         )

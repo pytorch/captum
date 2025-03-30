@@ -1,13 +1,20 @@
 #!/usr/bin/env python3
-from typing import Any, Callable, List, Tuple, Union
+
+# pyre-strict
+from typing import Any, Callable, cast, List, Optional, Tuple, Union
 
 import torch
 from captum._utils.common import _verify_select_neuron
 from captum._utils.gradient import _forward_layer_eval
-from captum._utils.typing import BaselineType, TensorOrTupleOfTensorsGeneric
+from captum._utils.typing import (
+    BaselineType,
+    SliceIntType,
+    TensorOrTupleOfTensorsGeneric,
+)
 from captum.attr._core.feature_ablation import FeatureAblation
 from captum.attr._utils.attribution import NeuronAttribution, PerturbationAttribution
 from captum.log import log_usage
+from torch import Tensor
 from torch.nn import Module
 
 
@@ -28,7 +35,7 @@ class NeuronFeatureAblation(NeuronAttribution, PerturbationAttribution):
 
     def __init__(
         self,
-        forward_func: Callable,
+        forward_func: Callable[..., Union[int, float, Tensor]],
         layer: Module,
         device_ids: Union[None, List[int]] = None,
     ) -> None:
@@ -57,9 +64,13 @@ class NeuronFeatureAblation(NeuronAttribution, PerturbationAttribution):
     def attribute(
         self,
         inputs: TensorOrTupleOfTensorsGeneric,
-        neuron_selector: Union[int, Tuple[Union[int, slice], ...], Callable],
+        neuron_selector: Union[
+            int,
+            Tuple[Union[int, SliceIntType], ...],
+            Callable[[Union[Tensor, Tuple[Tensor, ...]]], Tensor],
+        ],
         baselines: BaselineType = None,
-        additional_forward_args: Any = None,
+        additional_forward_args: Optional[object] = None,
         feature_mask: Union[None, TensorOrTupleOfTensorsGeneric] = None,
         attribute_to_neuron_input: bool = False,
         perturbations_per_eval: int = 1,
@@ -245,7 +256,7 @@ class NeuronFeatureAblation(NeuronAttribution, PerturbationAttribution):
             >>>                          feature_mask=feature_mask)
         """
 
-        def neuron_forward_func(*args: Any):
+        def neuron_forward_func(*args: Any) -> Tensor:
             with torch.no_grad():
                 layer_eval = _forward_layer_eval(
                     self.forward_func,
@@ -254,7 +265,9 @@ class NeuronFeatureAblation(NeuronAttribution, PerturbationAttribution):
                     device_ids=self.device_ids,
                     attribute_to_layer_input=attribute_to_neuron_input,
                 )
-                return _verify_select_neuron(layer_eval, neuron_selector)
+                return _verify_select_neuron(
+                    cast(Tuple[Tensor, ...], layer_eval), neuron_selector
+                )
 
         ablator = FeatureAblation(neuron_forward_func)
 

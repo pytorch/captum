@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
+
+# pyre-strict
 import typing
-from typing import Any, Callable, List, Tuple, Union
+from typing import Callable, List, Literal, Optional, Tuple, Union
 
 import torch
 from captum._utils.common import (
@@ -10,12 +12,7 @@ from captum._utils.common import (
     _format_output,
     _is_tuple,
 )
-from captum._utils.typing import (
-    BaselineType,
-    Literal,
-    TargetType,
-    TensorOrTupleOfTensorsGeneric,
-)
+from captum._utils.typing import BaselineType, TargetType, TensorOrTupleOfTensorsGeneric
 from captum.attr._utils.approximation_methods import approximation_parameters
 from captum.attr._utils.attribution import GradientAttribution
 from captum.attr._utils.batching import _batch_attribution
@@ -47,7 +44,7 @@ class IntegratedGradients(GradientAttribution):
 
     def __init__(
         self,
-        forward_func: Callable,
+        forward_func: Callable[..., Tensor],
         multiply_by_inputs: bool = True,
     ) -> None:
         r"""
@@ -82,28 +79,28 @@ class IntegratedGradients(GradientAttribution):
         inputs: TensorOrTupleOfTensorsGeneric,
         baselines: BaselineType = None,
         target: TargetType = None,
-        additional_forward_args: Any = None,
-        n_steps: int = 50,
-        method: str = "gausslegendre",
-        internal_batch_size: Union[None, int] = None,
-        return_convergence_delta: Literal[False] = False,
-    ) -> TensorOrTupleOfTensorsGeneric:
-        ...
-
-    @typing.overload
-    def attribute(
-        self,
-        inputs: TensorOrTupleOfTensorsGeneric,
-        baselines: BaselineType = None,
-        target: TargetType = None,
-        additional_forward_args: Any = None,
+        additional_forward_args: Optional[object] = None,
         n_steps: int = 50,
         method: str = "gausslegendre",
         internal_batch_size: Union[None, int] = None,
         *,
         return_convergence_delta: Literal[True],
-    ) -> Tuple[TensorOrTupleOfTensorsGeneric, Tensor]:
-        ...
+    ) -> Tuple[TensorOrTupleOfTensorsGeneric, Tensor]: ...
+
+    @typing.overload
+    # pyre-fixme[43]: The implementation of `attribute` does not accept all possible
+    #  arguments of overload defined on line `82`.
+    def attribute(
+        self,
+        inputs: TensorOrTupleOfTensorsGeneric,
+        baselines: BaselineType = None,
+        target: TargetType = None,
+        additional_forward_args: Optional[object] = None,
+        n_steps: int = 50,
+        method: str = "gausslegendre",
+        internal_batch_size: Union[None, int] = None,
+        return_convergence_delta: Literal[False] = False,
+    ) -> TensorOrTupleOfTensorsGeneric: ...
 
     @log_usage()
     def attribute(  # type: ignore
@@ -111,7 +108,7 @@ class IntegratedGradients(GradientAttribution):
         inputs: TensorOrTupleOfTensorsGeneric,
         baselines: BaselineType = None,
         target: TargetType = None,
-        additional_forward_args: Any = None,
+        additional_forward_args: Optional[object] = None,
         n_steps: int = 50,
         method: str = "gausslegendre",
         internal_batch_size: Union[None, int] = None,
@@ -265,27 +262,33 @@ class IntegratedGradients(GradientAttribution):
         # converting it into a tuple.
         is_inputs_tuple = _is_tuple(inputs)
 
-        inputs, baselines = _format_input_baseline(inputs, baselines)
+        # pyre-fixme[9]: inputs has type `TensorOrTupleOfTensorsGeneric`; used as
+        #  `Tuple[Tensor, ...]`.
+        formatted_inputs, formatted_baselines = _format_input_baseline(
+            inputs, baselines
+        )
 
-        _validate_input(inputs, baselines, n_steps, method)
+        # pyre-fixme[6]: For 1st argument expected `Tuple[Tensor, ...]` but got
+        #  `TensorOrTupleOfTensorsGeneric`.
+        _validate_input(formatted_inputs, formatted_baselines, n_steps, method)
 
         if internal_batch_size is not None:
-            num_examples = inputs[0].shape[0]
+            num_examples = formatted_inputs[0].shape[0]
             attributions = _batch_attribution(
                 self,
                 num_examples,
                 internal_batch_size,
                 n_steps,
-                inputs=inputs,
-                baselines=baselines,
+                inputs=formatted_inputs,
+                baselines=formatted_baselines,
                 target=target,
                 additional_forward_args=additional_forward_args,
                 method=method,
             )
         else:
             attributions = self._attribute(
-                inputs=inputs,
-                baselines=baselines,
+                inputs=formatted_inputs,
+                baselines=formatted_baselines,
                 target=target,
                 additional_forward_args=additional_forward_args,
                 n_steps=n_steps,
@@ -302,15 +305,29 @@ class IntegratedGradients(GradientAttribution):
                 additional_forward_args=additional_forward_args,
                 target=target,
             )
+            # pyre-fixme[7]: Expected `Union[Tuple[Variable[TensorOrTupleOfTensorsGen...
             return _format_output(is_inputs_tuple, attributions), delta
+        # pyre-fixme[7]: Expected
+        #  `Union[Tuple[Variable[TensorOrTupleOfTensorsGeneric <: [Tensor,
+        #  typing.Tuple[Tensor, ...]]], Tensor], Variable[TensorOrTupleOfTensorsGeneric
+        #  <: [Tensor, typing.Tuple[Tensor, ...]]]]` but got `Tuple[Tensor, ...]`.
         return _format_output(is_inputs_tuple, attributions)
+
+    # pyre-fixme[24] Generic type `Callable` expects 2 type parameters.
+    def attribute_future(self) -> Callable:
+        r"""
+        This method is not implemented for IntegratedGradients.
+        """
+        raise NotImplementedError(
+            "attribute_future is not implemented for IntegratedGradients"
+        )
 
     def _attribute(
         self,
         inputs: Tuple[Tensor, ...],
         baselines: Tuple[Union[Tensor, int, float], ...],
         target: TargetType = None,
-        additional_forward_args: Any = None,
+        additional_forward_args: Optional[object] = None,
         n_steps: int = 50,
         method: str = "gausslegendre",
         step_sizes_and_alphas: Union[None, Tuple[List[float], List[float]]] = None,
@@ -359,7 +376,7 @@ class IntegratedGradients(GradientAttribution):
         # calling contiguous to avoid `memory whole` problems
         scaled_grads = [
             grad.contiguous().view(n_steps, -1)
-            * torch.tensor(step_sizes).view(n_steps, 1).to(grad.device)
+            * torch.tensor(step_sizes).float().view(n_steps, 1).to(grad.device)
             for grad in grads
         ]
 
@@ -387,5 +404,5 @@ class IntegratedGradients(GradientAttribution):
         return True
 
     @property
-    def multiplies_by_inputs(self):
+    def multiplies_by_inputs(self) -> bool:
         return self._multiply_by_inputs

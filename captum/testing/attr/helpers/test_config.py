@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+# pyre-strict
+
 import torch
 from captum.attr._core.deep_lift import DeepLift, DeepLiftShap
 from captum.attr._core.feature_ablation import FeatureAblation
@@ -38,8 +40,8 @@ from captum.attr._core.occlusion import Occlusion
 from captum.attr._core.saliency import Saliency
 from captum.attr._core.shapley_value import ShapleyValueSampling
 from captum.attr._utils.input_layer_wrapper import ModelInputWrapper
-from tests.helpers.basic import set_all_random_seeds
-from tests.helpers.basic_models import (
+from captum.testing.helpers.basic import set_all_random_seeds
+from captum.testing.helpers.basic_models import (
     BasicModel_ConvNet,
     BasicModel_MultiLayer,
     BasicModel_MultiLayer_MultiInput,
@@ -87,6 +89,7 @@ config and creates relevant test cases based on the config.
 # Set random seeds to ensure deterministic behavior
 set_all_random_seeds(1234)
 
+# pyre-fixme[5]: Global expression must be annotated.
 config = [
     # Attribution Method Configs
     # Primary Methods (Generic Configs)
@@ -108,6 +111,19 @@ config = [
         ],
         "model": BasicModel_MultiLayer(),
         "attribute_args": {"inputs": torch.randn(4, 3), "target": 1},
+    },
+    {
+        "name": "basic_single_target_cross_tensor_attributions",
+        "algorithms": [
+            FeatureAblation,
+            FeaturePermutation,
+        ],
+        "model": BasicModel_MultiLayer(),
+        "attribute_args": {
+            "inputs": torch.randn(4, 3),
+            "target": 1,
+            "enable_cross_tensor_attribution": True,
+        },
     },
     {
         "name": "basic_multi_input",
@@ -177,6 +193,21 @@ config = [
         "dp_delta": 0.0005,
     },
     {
+        "name": "basic_multi_input_multi_target_cross_tensor_attributions",
+        "algorithms": [
+            FeatureAblation,
+            FeaturePermutation,
+        ],
+        "model": BasicModel_MultiLayer_MultiInput(),
+        "attribute_args": {
+            "inputs": (10 * torch.randn(6, 3), 5 * torch.randn(6, 3)),
+            "additional_forward_args": (2 * torch.randn(6, 3), 5),
+            "target": [0, 1, 1, 0, 0, 1],
+            "enable_cross_tensor_attribution": True,
+        },
+        "dp_delta": 0.0005,
+    },
+    {
         "name": "basic_multiple_tuple_target",
         "algorithms": [
             IntegratedGradients,
@@ -197,6 +228,20 @@ config = [
             "inputs": torch.randn(4, 3),
             "target": [(1, 0, 0), (0, 1, 1), (1, 1, 1), (0, 0, 0)],
             "additional_forward_args": (None, True),
+        },
+    },
+    {
+        "name": "basic_multiple_tuple_target_cross_tensor_attributions",
+        "algorithms": [
+            FeatureAblation,
+            FeaturePermutation,
+        ],
+        "model": BasicModel_MultiLayer(),
+        "attribute_args": {
+            "inputs": torch.randn(4, 3),
+            "target": [(1, 0, 0), (0, 1, 1), (1, 1, 1), (0, 0, 0)],
+            "additional_forward_args": (None, True),
+            "enable_cross_tensor_attribution": True,
         },
     },
     {
@@ -240,6 +285,19 @@ config = [
             "target": torch.tensor([1, 1, 0, 0]),
         },
     },
+    {
+        "name": "basic_tensor_multi_target_cross_tensor_attributions",
+        "algorithms": [
+            FeatureAblation,
+            FeaturePermutation,
+        ],
+        "model": BasicModel_MultiLayer(),
+        "attribute_args": {
+            "inputs": torch.randn(4, 3),
+            "target": torch.tensor([1, 1, 0, 0]),
+            "enable_cross_tensor_attribution": True,
+        },
+    },
     # Primary Configs with Baselines
     {
         "name": "basic_multiple_tuple_target_with_baselines",
@@ -260,6 +318,20 @@ config = [
         },
     },
     {
+        "name": "basic_multiple_tuple_target_with_baselines_cross_tensor_attributions",
+        "algorithms": [
+            FeatureAblation,
+        ],
+        "model": BasicModel_MultiLayer(),
+        "attribute_args": {
+            "inputs": torch.randn(4, 3),
+            "baselines": 0.5 * torch.randn(4, 3),
+            "target": [(1, 0, 0), (0, 1, 1), (1, 1, 1), (0, 0, 0)],
+            "additional_forward_args": (None, True),
+            "enable_cross_tensor_attribution": True,
+        },
+    },
+    {
         "name": "basic_tensor_single_target_with_baselines",
         "algorithms": [
             IntegratedGradients,
@@ -274,6 +346,19 @@ config = [
             "inputs": torch.randn(4, 3),
             "baselines": 0.5 * torch.randn(4, 3),
             "target": torch.tensor([0]),
+        },
+    },
+    {
+        "name": "basic_tensor_single_target_with_baselines_cross_tensor_attributions",
+        "algorithms": [
+            FeatureAblation,
+        ],
+        "model": BasicModel_MultiLayer(),
+        "attribute_args": {
+            "inputs": torch.randn(4, 3),
+            "baselines": 0.5 * torch.randn(4, 3),
+            "target": torch.tensor([0]),
+            "enable_cross_tensor_attribution": True,
         },
     },
     # Primary Configs with Internal Batching

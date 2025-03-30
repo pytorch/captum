@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+
+# pyre-strict
 import base64
 import warnings
 from collections import namedtuple
@@ -8,11 +10,16 @@ from typing import Callable, List, Optional, Union
 from captum._utils.common import safe_div
 from captum.attr._utils import visualization as viz
 from captum.insights.attr_vis._utils.transforms import format_transforms
+from matplotlib.figure import Figure
+from torch import Tensor
 
+
+# pyre-fixme[4]: Attribute annotation cannot be `Any`.
+# pyre-fixme[2]: Parameter annotation cannot be `Any`.
 FeatureOutput = namedtuple("FeatureOutput", "name base modified type contribution")
 
 
-def _convert_figure_base64(fig):
+def _convert_figure_base64(fig: Figure) -> str:
     buff = BytesIO()
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
@@ -34,8 +41,11 @@ class BaseFeature:
     def __init__(
         self,
         name: str,
+        # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
         baseline_transforms: Optional[Union[Callable, List[Callable]]],
+        # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
         input_transforms: Optional[Union[Callable, List[Callable]]],
+        # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
         visualization_transform: Optional[Callable],
     ) -> None:
         r"""
@@ -59,7 +69,9 @@ class BaseFeature:
                         specified in ``captum/captum/insights/frontend/App.js``.
         """
         self.name = name
+        # pyre-fixme[4]: Attribute must be annotated.
         self.baseline_transforms = format_transforms(baseline_transforms)
+        # pyre-fixme[4]: Attribute must be annotated.
         self.input_transforms = format_transforms(input_transforms)
         self.visualization_transform = visualization_transform
 
@@ -67,6 +79,7 @@ class BaseFeature:
     def visualization_type() -> str:
         raise NotImplementedError
 
+    # pyre-fixme[2]: Parameter must be annotated.
     def visualize(self, attribution, data, contribution_frac) -> FeatureOutput:
         raise NotImplementedError
 
@@ -81,8 +94,11 @@ class ImageFeature(BaseFeature):
     def __init__(
         self,
         name: str,
-        baseline_transforms: Union[Callable, List[Callable]],
-        input_transforms: Union[Callable, List[Callable]],
+        # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
+        baseline_transforms: Optional[Union[Callable, List[Callable]]],
+        # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
+        input_transforms: Optional[Union[Callable, List[Callable]]],
+        # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
         visualization_transform: Optional[Callable] = None,
     ) -> None:
         r"""
@@ -114,6 +130,7 @@ class ImageFeature(BaseFeature):
     def visualization_type() -> str:
         return "image"
 
+    # pyre-fixme[2]: Parameter must be annotated.
     def visualize(self, attribution, data, contribution_frac) -> FeatureOutput:
         if self.visualization_transform:
             data = self.visualization_transform(data)
@@ -156,9 +173,12 @@ class TextFeature(BaseFeature):
     def __init__(
         self,
         name: str,
-        baseline_transforms: Union[Callable, List[Callable]],
-        input_transforms: Union[Callable, List[Callable]],
-        visualization_transform: Callable,
+        # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
+        baseline_transforms: Optional[Union[Callable, List[Callable]]],
+        # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
+        input_transforms: Optional[Union[Callable, List[Callable]]],
+        # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
+        visualization_transform: Optional[Callable],
     ) -> None:
         r"""
         Args:
@@ -200,7 +220,8 @@ class TextFeature(BaseFeature):
     def visualization_type() -> str:
         return "text"
 
-    def visualize(self, attribution, data, contribution_frac) -> FeatureOutput:
+    # pyre-fixme[2]: Parameter must be annotated.
+    def visualize(self, attribution: Tensor, data, contribution_frac) -> FeatureOutput:
         if self.visualization_transform:
             text = self.visualization_transform(data)
         else:
@@ -255,7 +276,8 @@ class GeneralFeature(BaseFeature):
     def visualization_type() -> str:
         return "general"
 
-    def visualize(self, attribution, data, contribution_frac) -> FeatureOutput:
+    # pyre-fixme[2]: Parameter must be annotated.
+    def visualize(self, attribution: Tensor, data, contribution_frac) -> FeatureOutput:
         attribution = attribution.squeeze(0)
         data = data.squeeze(0)
 
@@ -279,8 +301,11 @@ class EmptyFeature(BaseFeature):
     def __init__(
         self,
         name: str = "empty",
+        # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
         baseline_transforms: Optional[Union[Callable, List[Callable]]] = None,
+        # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
         input_transforms: Optional[Union[Callable, List[Callable]]] = None,
+        # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
         visualization_transform: Optional[Callable] = None,
     ) -> None:
         super().__init__(
@@ -294,7 +319,8 @@ class EmptyFeature(BaseFeature):
     def visualization_type() -> str:
         return "empty"
 
-    def visualize(self, _attribution, _data, contribution_frac) -> FeatureOutput:
+    # pyre-fixme[2]: Parameter must be annotated.
+    def visualize(self, attribution, data, contribution_frac) -> FeatureOutput:
         return FeatureOutput(
             name=self.name,
             base=None,

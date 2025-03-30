@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
-from typing import Any, Callable, List, Tuple, Union
+
+# pyre-strict
+from typing import Any, Callable, cast, Dict, List, Optional, Tuple, Type, Union
 
 import torch
 from captum._utils.common import (
@@ -35,7 +37,7 @@ class LayerFeatureAblation(LayerAttribution, PerturbationAttribution):
 
     def __init__(
         self,
-        forward_func: Callable,
+        forward_func: Callable[..., Tensor],
         layer: Module,
         device_ids: Union[None, List[int]] = None,
     ) -> None:
@@ -67,7 +69,7 @@ class LayerFeatureAblation(LayerAttribution, PerturbationAttribution):
         inputs: Union[Tensor, Tuple[Tensor, ...]],
         layer_baselines: BaselineType = None,
         target: TargetType = None,
-        additional_forward_args: Any = None,
+        additional_forward_args: Optional[object] = None,
         layer_mask: Union[None, Tensor, Tuple[Tensor, ...]] = None,
         attribute_to_layer_input: bool = False,
         perturbations_per_eval: int = 1,
@@ -221,16 +223,21 @@ class LayerFeatureAblation(LayerAttribution, PerturbationAttribution):
         >>>                          layer_mask=layer_mask)
         """
 
-        def layer_forward_func(*args):
-            layer_length = args[-1]
-            layer_input = args[:layer_length]
-            original_inputs = args[layer_length:-1]
+        def layer_forward_func(*args: Any) -> Union[Tensor]:
+            r"""
+            Args:
+                args (Any): Tensors comprising the layer input and the original
+                    inputs, and an int representing the length of the layer input
+            """
+            layer_length: int = args[-1]
+            layer_input: Tuple[Tensor, ...] = args[:layer_length]
+            original_inputs: Tuple[Tensor, ...] = args[layer_length:-1]
 
             device_ids = self.device_ids
             if device_ids is None:
                 device_ids = getattr(self.forward_func, "device_ids", None)
 
-            all_layer_inputs = {}
+            all_layer_inputs: Dict[torch.device, Tuple[Tensor, ...]] = {}
             if device_ids is not None:
                 scattered_layer_input = scatter(layer_input, target_gpus=device_ids)
                 for device_tensors in scattered_layer_input:
@@ -238,7 +245,11 @@ class LayerFeatureAblation(LayerAttribution, PerturbationAttribution):
             else:
                 all_layer_inputs[layer_input[0].device] = layer_input
 
-            def forward_hook(module, inp, out=None):
+            def forward_hook(
+                module: Module,
+                inp: Union[None, Tensor, Tuple[Tensor, ...]],
+                out: Union[None, Tensor, Tuple[Tensor, ...]] = None,
+            ) -> Union[Tensor, Tuple[Tensor, ...]]:
                 device = _extract_device(module, inp, out)
                 is_layer_tuple = (
                     isinstance(out, tuple)
@@ -266,7 +277,11 @@ class LayerFeatureAblation(LayerAttribution, PerturbationAttribution):
             finally:
                 if hook is not None:
                     hook.remove()
-            return eval
+
+            # _run_forward may return future of Tensor,
+            # but we don't support it here now
+            # And it will fail before here.
+            return cast(Tensor, eval)
 
         with torch.no_grad():
             inputs = _format_tensor_into_tuples(inputs)
@@ -288,7 +303,7 @@ class LayerFeatureAblation(LayerAttribution, PerturbationAttribution):
                 else inputs + layer_eval_len
             )
 
-            ablator = FeatureAblation(layer_forward_func)
+            ablator = self.attributor(layer_forward_func)
 
             layer_attribs = ablator.attribute.__wrapped__(
                 ablator,  # self
@@ -300,3 +315,7 @@ class LayerFeatureAblation(LayerAttribution, PerturbationAttribution):
             )
             _attr = _format_output(len(layer_attribs) > 1, layer_attribs)
         return _attr
+
+    @property
+    def attributor(self) -> Type[FeatureAblation]:
+        return FeatureAblation

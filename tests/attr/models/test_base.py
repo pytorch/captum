@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+# pyre-unsafe
+
 from __future__ import print_function
 
 import unittest
@@ -10,8 +12,8 @@ from captum.attr._models.base import (
     InterpretableEmbeddingBase,
     remove_interpretable_embedding_layer,
 )
-from tests.helpers.basic import assertTensorAlmostEqual
-from tests.helpers.basic_models import BasicEmbeddingModel, TextModule
+from captum.testing.helpers.basic import assertTensorAlmostEqual
+from captum.testing.helpers.basic_models import BasicEmbeddingModel, TextModule
 from torch.nn import Embedding
 
 
@@ -113,7 +115,7 @@ class Test(unittest.TestCase):
         interpretable_embedding,
         embedding_dim=None,
         num_embeddings=None,
-    ):
+    ) -> None:
         if interpretable_embedding.embedding_dim is not None:
             self.assertEqual(embedding_dim, interpretable_embedding.embedding_dim)
             self.assertEqual(num_embeddings, interpretable_embedding.num_embeddings)

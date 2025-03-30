@@ -1,10 +1,13 @@
 #!/usr/bin/env python3
 
+# pyre-strict
+
 from abc import ABC, abstractmethod
+from typing import cast, Dict, List, Union
 
 import torch
-
-from ..._utils.common import _format_tensor_into_tuples
+from captum._utils.common import _format_tensor_into_tuples
+from torch import Tensor
 
 
 class PropagationRule(ABC):
@@ -13,24 +16,37 @@ class PropagationRule(ABC):
     STABILITY_FACTOR is used to assure that no zero divison occurs.
     """
 
+    relevance_input: Dict[torch.device, Union[torch.Tensor, List[torch.Tensor]]] = {}
+    relevance_output: Dict[torch.device, torch.Tensor] = {}
+
     STABILITY_FACTOR = 1e-9
 
+    # pyre-fixme[3]: Return type must be annotated.
+    # pyre-fixme[2]: Parameter must be annotated.
     def forward_hook(self, module, inputs, outputs):
         """Register backward hooks on input and output
         tensors of linear layers in the model."""
         inputs = _format_tensor_into_tuples(inputs)
+        # pyre-fixme[16]: `PropagationRule` has no attribute `_has_single_input`.
+        # pyre-fixme[6]: For 1st argument expected `pyre_extensions.ReadOnly[Sized]`
+        #  but got `None`.
         self._has_single_input = len(inputs) == 1
+        # pyre-fixme[16]: `PropagationRule` has no attribute `_handle_input_hooks`.
         self._handle_input_hooks = []
+        # pyre-fixme[16]: `None` has no attribute `__iter__`.
         for input in inputs:
             if not hasattr(input, "hook_registered"):
                 input_hook = self._create_backward_hook_input(input.data)
                 self._handle_input_hooks.append(input.register_hook(input_hook))
                 input.hook_registered = True
         output_hook = self._create_backward_hook_output(outputs.data)
+        # pyre-fixme[16]: `PropagationRule` has no attribute `_handle_output_hook`.
         self._handle_output_hook = outputs.register_hook(output_hook)
         return outputs.clone()
 
     @staticmethod
+    # pyre-fixme[3]: Return type must be annotated.
+    # pyre-fixme[2]: Parameter must be annotated.
     def backward_hook_activation(module, grad_input, grad_output):
         """Backward hook to propagate relevance over non-linear activations."""
         # replace_out is set in _backward_hook_input, this is necessary
@@ -41,14 +57,21 @@ class PropagationRule(ABC):
             return hook_out
         return grad_output
 
+    # pyre-fixme[3]: Return type must be annotated.
+    # pyre-fixme[2]: Parameter must be annotated.
     def _create_backward_hook_input(self, inputs):
+        # pyre-fixme[53]: Captured variable `inputs` is not annotated.
+        # pyre-fixme[3]: Return type must be annotated.
+        # pyre-fixme[2]: Parameter must be annotated.
         def _backward_hook_input(grad):
             relevance = grad * inputs
             device = grad.device
+            # pyre-fixme[16]: `PropagationRule` has no attribute `_has_single_input`.
             if self._has_single_input:
+                # pyre-fixme[16]: `PropagationRule` has no attribute `relevance_input`.
                 self.relevance_input[device] = relevance.data
             else:
-                self.relevance_input[device].append(relevance.data)
+                cast(List[Tensor], self.relevance_input[device]).append(relevance.data)
 
             # replace_out is needed since two hooks are set on the same tensor
             # The output of this hook is needed in backward_hook_activation
@@ -57,17 +80,23 @@ class PropagationRule(ABC):
 
         return _backward_hook_input
 
-    def _create_backward_hook_output(self, outputs):
+    # pyre-fixme[3]: Return type must be annotated.
+    def _create_backward_hook_output(self, outputs: torch.Tensor):
+        # pyre-fixme[53]: Captured variable `outputs` is not annotated.
+        # pyre-fixme[3]: Return type must be annotated.
+        # pyre-fixme[2]: Parameter must be annotated.
         def _backward_hook_output(grad):
             sign = torch.sign(outputs)
             sign[sign == 0] = 1
             relevance = grad / (outputs + sign * self.STABILITY_FACTOR)
+            # pyre-fixme[16]: `PropagationRule` has no attribute `relevance_output`.
             self.relevance_output[grad.device] = grad.data
             return relevance
 
         return _backward_hook_output
 
-    def forward_hook_weights(self, module, inputs, outputs):
+    # pyre-fixme[2]: Parameter must be annotated.
+    def forward_hook_weights(self, module, inputs, outputs) -> None:
         """Save initial activations a_j before modules are changed"""
         device = inputs[0].device if isinstance(inputs, tuple) else inputs.device
         if hasattr(module, "activations") and device in module.activations:
@@ -81,9 +110,13 @@ class PropagationRule(ABC):
         self._manipulate_weights(module, inputs, outputs)
 
     @abstractmethod
+    # pyre-fixme[3]: Return type must be annotated.
+    # pyre-fixme[2]: Parameter must be annotated.
     def _manipulate_weights(self, module, inputs, outputs):
         raise NotImplementedError
 
+    # pyre-fixme[3]: Return type must be annotated.
+    # pyre-fixme[2]: Parameter must be annotated.
     def forward_pre_hook_activations(self, module, inputs):
         """Pass initial activations to graph generation pass"""
         device = inputs[0].device if isinstance(inputs, tuple) else inputs.device
@@ -104,10 +137,12 @@ class EpsilonRule(PropagationRule):
         discriminator during propagation.
     """
 
-    def __init__(self, epsilon=1e-9) -> None:
+    def __init__(self, epsilon: float = 1e-9) -> None:
+        # pyre-fixme[4]: Attribute must be annotated.
         self.STABILITY_FACTOR = epsilon
 
-    def _manipulate_weights(self, module, inputs, outputs):
+    # pyre-fixme[2]: Parameter must be annotated.
+    def _manipulate_weights(self, module, inputs, outputs) -> None:
         pass
 
 
@@ -123,11 +158,14 @@ class GammaRule(PropagationRule):
         the positive relevance is increased.
     """
 
-    def __init__(self, gamma=0.25, set_bias_to_zero=False) -> None:
+    def __init__(self, gamma: float = 0.25, set_bias_to_zero: bool = False) -> None:
+        # pyre-fixme[4]: Attribute must be annotated.
         self.gamma = gamma
+        # pyre-fixme[4]: Attribute must be annotated.
         self.set_bias_to_zero = set_bias_to_zero
 
-    def _manipulate_weights(self, module, inputs, outputs):
+    # pyre-fixme[2]: Parameter must be annotated.
+    def _manipulate_weights(self, module, inputs, outputs) -> None:
         if hasattr(module, "weight"):
             module.weight.data = (
                 module.weight.data + self.gamma * module.weight.data.clamp(min=0)
@@ -149,10 +187,12 @@ class Alpha1_Beta0_Rule(PropagationRule):
     Use for lower layers.
     """
 
-    def __init__(self, set_bias_to_zero=False) -> None:
+    def __init__(self, set_bias_to_zero: bool = False) -> None:
+        # pyre-fixme[4]: Attribute must be annotated.
         self.set_bias_to_zero = set_bias_to_zero
 
-    def _manipulate_weights(self, module, inputs, outputs):
+    # pyre-fixme[2]: Parameter must be annotated.
+    def _manipulate_weights(self, module, inputs, outputs) -> None:
         if hasattr(module, "weight"):
             module.weight.data = module.weight.data.clamp(min=0)
         if self.set_bias_to_zero and hasattr(module, "bias"):
@@ -169,8 +209,13 @@ class IdentityRule(EpsilonRule):
     Can be used for BatchNorm2D.
     """
 
+    # pyre-fixme[3]: Return type must be annotated.
+    # pyre-fixme[2]: Parameter must be annotated.
     def _create_backward_hook_input(self, inputs):
+        # pyre-fixme[3]: Return type must be annotated.
+        # pyre-fixme[2]: Parameter must be annotated.
         def _backward_hook_input(grad):
+            # pyre-fixme[16]: `IdentityRule` has no attribute `relevance_output`.
             return self.relevance_output[grad.device]
 
         return _backward_hook_input

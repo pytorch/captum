@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+# pyre-strict
+
 import glob
 import warnings
 from abc import abstractmethod
@@ -7,9 +9,10 @@ from os.path import join
 from typing import (
     Any,
     Callable,
+    cast,
+    Iterable,
     Iterator,
     List,
-    NamedTuple,
     Optional,
     Tuple,
     Type,
@@ -18,20 +21,19 @@ from typing import (
 
 import torch
 from captum._utils.av import AV
-from captum._utils.common import _get_module_from_name, _parse_version
-from captum._utils.gradient import (
-    _compute_jacobian_wrt_params,
-    _compute_jacobian_wrt_params_with_sample_wise_trick,
-)
 from captum._utils.progress import NullProgress, progress
 from captum.influence._core.influence import DataInfluence
 from captum.influence._utils.common import (
     _check_loss_fn,
+    _compute_jacobian_sample_wise_grads_per_batch,
     _format_inputs_dataset,
     _get_k_most_influential_helper,
     _gradient_dot_product,
+    _influence_route_to_helpers,
     _load_flexible_state_dict,
     _self_influence_by_batches_helper,
+    _set_active_parameters,
+    KMostInfluentialResults,
 )
 from captum.log import log_usage
 from torch import Tensor
@@ -69,24 +71,6 @@ checkpoint_type (Enum = [Parameters | Loss_Grad]): For performance,
 """
 
 
-class KMostInfluentialResults(NamedTuple):
-    """
-    This namedtuple stores the results of using the `influence` method. This method
-    is implemented by all subclasses of `TracInCPBase` to calculate
-    proponents / opponents. The `indices` field stores the indices of the
-    proponents / opponents for each example in the test dataset. For example, if
-    finding opponents, `indices[i][j]` stores the index in the training data of the
-    example with the `j`-th highest influence score on the `i`-th example in the test
-    dataset. Similarly, the `influence_scores` field stores the actual influence scores,
-    so that `influence_scores[i][j]` is the influence score of example `indices[i][j]`
-    in the training data on example `i` of the test dataset. Please see
-    `TracInCPBase.influence` for more details.
-    """
-
-    indices: Tensor
-    influence_scores: Tensor
-
-
 class TracInCPBase(DataInfluence):
     """
     To implement the `influence` method, classes inheriting from `TracInCPBase` will
@@ -99,10 +83,14 @@ class TracInCPBase(DataInfluence):
         self,
         model: Module,
         train_dataset: Union[Dataset, DataLoader],
-        checkpoints: Union[str, List[str], Iterator],
-        checkpoints_load_func: Callable = _load_flexible_state_dict,
+        checkpoints: Union[str, List[str], Iterator[str]],
+        checkpoints_load_func: Callable[
+            [Module, str], float
+        ] = _load_flexible_state_dict,
+        # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
         loss_fn: Optional[Union[Module, Callable]] = None,
         batch_size: Union[int, None] = 1,
+        # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
         test_loss_fn: Optional[Union[Module, Callable]] = None,
     ) -> None:
         r"""
@@ -168,20 +156,13 @@ class TracInCPBase(DataInfluence):
                     Default: None
         """
 
-        self.model = model
-
-        if isinstance(checkpoints, str):
-            self.checkpoints = AV.sort_files(glob.glob(join(checkpoints, "*")))
-        elif isinstance(checkpoints, List) and isinstance(checkpoints[0], str):
-            self.checkpoints = AV.sort_files(checkpoints)
-        else:
-            self.checkpoints = list(checkpoints)  # cast to avoid mypy error
-        if isinstance(self.checkpoints, List):
-            assert len(self.checkpoints) > 0, "No checkpoints saved!"
-
+        self.model: Module = model
+        self.checkpoints = checkpoints  # type: ignore
+        self._checkpoints: List[str] = self.checkpoints
         self.checkpoints_load_func = checkpoints_load_func
         self.loss_fn = loss_fn
         # If test_loss_fn not provided, it's assumed to be same as loss_fn
+        # pyre-fixme[4]: Attribute must be annotated.
         self.test_loss_fn = loss_fn if test_loss_fn is None else test_loss_fn
         self.batch_size = batch_size
 
@@ -190,6 +171,7 @@ class TracInCPBase(DataInfluence):
                 "since the `train_dataset` argument was a `Dataset`, "
                 "`batch_size` must be an int."
             )
+            # pyre-fixme[4]: Attribute must be annotated.
             self.train_dataloader = DataLoader(train_dataset, batch_size, shuffle=False)
         else:
             self.train_dataloader = train_dataset
@@ -206,12 +188,32 @@ class TracInCPBase(DataInfluence):
                 "Unable to determine the number of batches in training dataset "
                 "`train_dataset`. Therefore, if showing the progress of computations, "
                 "only the number of batches processed can be displayed, and not the "
-                "percentage completion of the computation, nor any time estimates."
+                "percentage completion of the computation, nor any time estimates.",
+                stacklevel=1,
+            )
+
+    @property
+    def checkpoints(self) -> List[str]:
+        return self._checkpoints
+
+    @checkpoints.setter
+    def checkpoints(self, checkpoints: Union[str, List[str], Iterator[str]]) -> None:
+        if isinstance(checkpoints, str):
+            self._checkpoints = AV.sort_files(glob.glob(join(checkpoints, "*")))
+        elif isinstance(checkpoints, List) and isinstance(checkpoints[0], str):
+            self._checkpoints = AV.sort_files(checkpoints)
+        else:
+            self._checkpoints = list(checkpoints)  # cast to avoid mypy error
+
+        if len(self._checkpoints) <= 0:
+            raise ValueError(
+                f"Invalid checkpoints provided for TracIn class: {checkpoints}!"
             )
 
     @abstractmethod
     def self_influence(
         self,
+        # pyre-fixme[2]: Parameter annotation cannot contain `Any`.
         inputs: Optional[Union[Tuple[Any, ...], DataLoader]] = None,
         show_progress: bool = False,
     ) -> Tensor:
@@ -272,7 +274,8 @@ class TracInCPBase(DataInfluence):
     @abstractmethod
     def _get_k_most_influential(
         self,
-        inputs: Tuple[Any, ...],
+        # pyre-fixme[2]: Parameter annotation cannot contain `Any`.
+        inputs: Union[Tuple[Any, ...], DataLoader],
         k: int = 5,
         proponents: bool = True,
         show_progress: bool = False,
@@ -323,7 +326,8 @@ class TracInCPBase(DataInfluence):
     @abstractmethod
     def _influence(
         self,
-        inputs: Tuple[Any, ...],
+        # pyre-fixme[2]: Parameter annotation cannot contain `Any`.
+        inputs: Union[Tuple[Any, ...], DataLoader],
         show_progress: bool = False,
     ) -> Tensor:
         r"""
@@ -358,7 +362,8 @@ class TracInCPBase(DataInfluence):
     @abstractmethod
     def influence(  # type: ignore[override]
         self,
-        inputs: Tuple[Any, ...],
+        # pyre-fixme[2]: Parameter annotation cannot contain `Any`.
+        inputs: Union[Tuple[Any, ...], DataLoader],
         k: Optional[int] = None,
         proponents: bool = True,
         unpack_inputs: bool = True,
@@ -416,7 +421,7 @@ class TracInCPBase(DataInfluence):
 
             - influence score mode: if this mode is run (`k` is None), returns a 2D
               tensor `influence_scores` of shape `(input_size, train_dataset_size)`,
-              where `input_size` is the number of examples in the test dataset, and
+              where `input_size` is the number of examples in the test batch, and
               `train_dataset_size` is the number of examples in training dataset
               `train_dataset`. In other words, `influence_scores[i][j]` is the
               influence score of the `j`-th example in `train_dataset` on the `i`-th
@@ -448,44 +453,20 @@ class TracInCPBase(DataInfluence):
         return cls.__name__
 
 
-def _influence_route_to_helpers(
-    influence_instance: TracInCPBase,
-    inputs: Tuple[Any, ...],
-    k: Optional[int] = None,
-    proponents: bool = True,
-    **kwargs,
-) -> Union[Tensor, KMostInfluentialResults]:
-    """
-    This is a helper function called by `TracInCP.influence` and
-    `TracInCPFast.influence`. Those methods share a common logic in that they assume
-    an instance of their respective classes implement 2 private methods
-    (``_influence`, `_get_k_most_influential`), and the logic of
-    which private method to call is common, as described in the documentation of the
-    `influence` method. The arguments and return values of this function are the exact
-    same as the `influence` method. Note that `influence_instance` refers to the
-    instance for which the `influence` method was called.
-    """
-    if k is None:
-        return influence_instance._influence(inputs, **kwargs)
-    else:
-        return influence_instance._get_k_most_influential(
-            inputs,
-            k,
-            proponents,
-            **kwargs,
-        )
-
-
 class TracInCP(TracInCPBase):
     def __init__(
         self,
         model: Module,
         train_dataset: Union[Dataset, DataLoader],
-        checkpoints: Union[str, List[str], Iterator],
-        checkpoints_load_func: Callable = _load_flexible_state_dict,
+        checkpoints: Union[str, List[str], Iterator[str]],
+        checkpoints_load_func: Callable[
+            [Module, str], float
+        ] = _load_flexible_state_dict,
         layers: Optional[List[str]] = None,
+        # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
         loss_fn: Optional[Union[Module, Callable]] = None,
         batch_size: Union[int, None] = 1,
+        # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
         test_loss_fn: Optional[Union[Module, Callable]] = None,
         sample_wise_grads_per_batch: bool = False,
     ) -> None:
@@ -611,11 +592,11 @@ class TracInCP(TracInCPBase):
         self.sample_wise_grads_per_batch = sample_wise_grads_per_batch
 
         # check `loss_fn`
-        self.reduction_type = _check_loss_fn(
+        self.reduction_type: str = _check_loss_fn(
             self, loss_fn, "loss_fn", sample_wise_grads_per_batch
         )
         # check `test_loss_fn` if it was provided
-        self.test_reduction_type = (
+        self.test_reduction_type: str = (
             self.reduction_type
             if test_loss_fn is None
             else _check_loss_fn(
@@ -628,45 +609,32 @@ class TracInCP(TracInCPBase):
         within influence to restore after every influence call)? or make a copy so that
         changes to grad_requires aren't persistent after using TracIn.
         """
-        self.layer_modules = None
+        self.layer_modules: Optional[List[Module]] = None
         if layers is not None:
-            assert isinstance(layers, List), "`layers` should be a list!"
-            assert len(layers) > 0, "`layers` cannot be empty!"
-            assert isinstance(
-                layers[0], str
-            ), "`layers` should contain str layer names."
-            self.layer_modules = [
-                _get_module_from_name(self.model, layer) for layer in layers
-            ]
-            for layer, layer_module in zip(layers, self.layer_modules):
-                for name, param in layer_module.named_parameters():
-                    if not param.requires_grad:
-                        warnings.warn(
-                            "Setting required grads for layer: {}, name: {}".format(
-                                ".".join(layer), name
-                            )
-                        )
-                        param.requires_grad = True
+            self.layer_modules = _set_active_parameters(model, layers)
 
     @log_usage()
     def influence(  # type: ignore[override]
         self,
-        inputs: Tuple[Any, ...],
+        # pyre-fixme[2]: Parameter annotation cannot contain `Any`.
+        inputs: Union[Tuple[Any, ...], DataLoader],
         k: Optional[int] = None,
         proponents: bool = True,
         show_progress: bool = False,
+        aggregate: bool = False,
     ) -> Union[Tensor, KMostInfluentialResults]:
         r"""
         This is the key method of this class, and can be run in 2 different modes,
-        where the mode that is run depends on the arguments passed to this method:
+        where the mode that is run depends on the arguments passed to this method.
+        Below, we describe the 2 modes, when `aggregate` is false:
 
         - influence score mode: This mode is used if `k` is None. This mode computes
           the influence score of every example in training dataset `train_dataset`
-          on every example in the test batch represented by `inputs`.
+          on every example in the test dataset represented by `inputs`.
         - k-most influential mode: This mode is used if `k` is not None, and an int.
           This mode computes the proponents or opponents of every example in the
-          test batch represented by `inputs`. In particular, for each test example in
-          the test batch, this mode computes its proponents (resp. opponents),
+          test dataset represented by `inputs`. In particular, for each test example in
+          the test dataset, this mode computes its proponents (resp. opponents),
           which are the indices in the training dataset `train_dataset` of the
           training examples with the `k` highest (resp. lowest) influence scores on the
           test example. Proponents are computed if `proponents` is True. Otherwise,
@@ -674,15 +642,35 @@ class TracInCP(TracInCPBase):
           actual influence score of each proponent (resp. opponent) on the test
           example.
 
+        When `aggregate` is True, this method computes "aggregate" influence scores,
+        which for a given training example, is the *sum* of its influence scores over
+        all examples in the test dataset. Below, we describe the 2 modes, when
+        `aggregate` is True:
+
+        - influence score mode: This mode is used if `k` is None. This mode computes
+          the aggregate influence score of each example in training dataset
+          `train_dataset` on the test dataset.
+        - k-most influential mode: This mode is used if `k` is not None, and an int.
+          This mode computes the "aggregate" proponents (resp. opponents), which are
+          the indices in the training dataset `train_dataset` of the examples with the
+          `k` highest (resp. lowest) aggregate influence scores on the test dataset.
+          Proponents are computed if `proponents` is True. Otherwise, opponents are
+          computed. This method also returns the actual aggregate influence scores
+          of each proponent (resp. opponent) on the test dataset.
+
         Args:
 
-            inputs (tuple): `inputs` is the test batch and is a tuple of
-                    any, where the last element is assumed to be the labels for the
-                    batch. That is, `model(*batch[0:-1])` produces the output for
-                    `model`, and `batch[-1]` are the labels, if any. This is the same
-                    assumption made for each batch yielded by training dataset
-                    `train_dataset` - please see its documentation in `__init__` for
-                    more details on the assumed structure of a batch.
+            inputs (Tuple, or DataLoader): Either a single tuple of any, or a
+                    `DataLoader`, where each batch yielded is a tuple of any. In
+                    either case, the tuple represents a single batch, where the last
+                    element is assumed to be the labels for the batch. That is,
+                    `model(*batch[0:-1])` produces the output for `model`, and
+                    and `batch[-1]` are the labels, if any. Here, `model` is model
+                    provided in initialization. This is the same assumption made for
+                    each batch yielded by training dataset `train_dataset`. Please see
+                    documentation for the `train_dataset` argument to
+                    `TracInCPFastRandProj.__init__` for more details on the assumed
+                    structure of a batch.
             k (int, optional): If not provided or `None`, the influence score mode will
                     be run. Otherwise, the k-most influential mode will be run,
                     and `k` is the number of proponents / opponents to return per
@@ -702,28 +690,50 @@ class TracInCP(TracInCPBase):
                     advanced features (e.g. time estimation). Otherwise, it will
                     fallback to a simple output of progress.
                     Default: False
+            aggregate (bool, optional): If true, return "aggregate" influence scores or
+                    examples with the highest / lowest aggregate influence scores on
+                    the test dataset, depending on the mode.
 
         Returns:
-            The return value of this method depends on which mode is run.
+            The return value of this method depends on which mode is run, and whether
+            `aggregate` is True of False.
+
+            Below are the return values for the 2 modes, when `aggregate` is False:
 
             - influence score mode: if this mode is run (`k` is None), returns a 2D
               tensor `influence_scores` of shape `(input_size, train_dataset_size)`,
-              where `input_size` is the number of examples in the test batch, and
+              where `input_size` is the number of examples in the test dataset, and
               `train_dataset_size` is the number of examples in training dataset
               `train_dataset`. In other words, `influence_scores[i][j]` is the
               influence score of the `j`-th example in `train_dataset` on the `i`-th
-              example in the test batch.
+              example in the test dataset.
             - k-most influential mode: if this mode is run (`k` is an int), returns
               a namedtuple `(indices, influence_scores)`. `indices` is a 2D tensor of
               shape `(input_size, k)`, where `input_size` is the number of examples in
-              the test batch. If computing proponents (resp. opponents),
+              the test dataset. If computing proponents (resp. opponents),
               `indices[i][j]` is the index in training dataset `train_dataset` of the
               example with the `j`-th highest (resp. lowest) influence score (out of
               the examples in `train_dataset`) on the `i`-th example in the test
-              batch. `influence_scores` contains the corresponding influence scores.
+              dataset. `influence_scores` contains the corresponding influence scores.
               In particular, `influence_scores[i][j]` is the influence score of example
-              `indices[i][j]` in `train_dataset` on example `i` in the test batch
+              `indices[i][j]` in `train_dataset` on example `i` in the test dataset
               represented by `inputs`.
+
+            Below are the return values for the 2 modes, when `aggregate` is True:
+
+            - influence score mode: if this mode is run (`k` is None), returns a 2D
+              tensor `influence_scores` of shape `(1, train_dataset_size)`, where
+              `influence_scores[0][j] is the aggregate influence score of the `j`-th
+              example in `train_dataset` on the test dataset.
+            - k-most influential mode: if this mode is run (`k` is an int), returns a
+              namedtuple `(indices, influence_scores)`. `indices` is a 2D tensor of
+              shape `(1, k)`. If computing proponents (resp. opponents),
+              `indices[0][j]` is the index in training dataset `train_dataset` of the
+              example with the `j`-th highest (resp. lowest) aggregate influence score
+              on the test dataset. `influence_scores` contains the corresponding
+              aggregate influence scores. In particular, `influence_scores[0][j]` is
+              the aggregate influence score of example `indices[0][j]` on the test
+              dataset.
         """
 
         assert inputs is not None, (
@@ -737,14 +747,16 @@ class TracInCP(TracInCPBase):
             k,
             proponents,
             show_progress=show_progress,
+            aggregate=aggregate,
         )
 
     def _sum_jacobians(
         self,
         inputs: DataLoader,
+        # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
         loss_fn: Optional[Union[Module, Callable]] = None,
         reduction_type: Optional[str] = None,
-    ):
+    ) -> Tuple[Tensor, ...]:
         """
         sums the jacobians of all examples in `inputs`. result is of the
         same format as layer_jacobians, but the batch dimension has size 1
@@ -753,7 +765,8 @@ class TracInCP(TracInCPBase):
 
         inputs_batch = next(inputs_iter)
 
-        def get_batch_contribution(inputs_batch):
+        # pyre-fixme[2]: Parameter `inputs_batch` must have a type that does not contain `Any`. # noqa: E501
+        def get_batch_contribution(inputs_batch: Tuple[Any, ...]) -> Tuple[Tensor, ...]:
             _input_jacobians = self._basic_computation_tracincp(
                 inputs_batch[0:-1],
                 inputs_batch[-1],
@@ -783,9 +796,10 @@ class TracInCP(TracInCPBase):
     def _concat_jacobians(
         self,
         inputs: DataLoader,
+        # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
         loss_fn: Optional[Union[Module, Callable]] = None,
         reduction_type: Optional[str] = None,
-    ):
+    ) -> Tuple[Tensor, ...]:
         all_inputs_batch_jacobians = [
             self._basic_computation_tracincp(
                 inputs_batch[0:-1],
@@ -804,6 +818,7 @@ class TracInCP(TracInCPBase):
     @log_usage()
     def compute_intermediate_quantities(
         self,
+        # pyre-fixme[2]: Parameter annotation cannot contain `Any`.
         inputs: Union[Tuple[Any, ...], DataLoader],
         aggregate: bool = False,
     ) -> Tensor:
@@ -860,10 +875,10 @@ class TracInCP(TracInCPBase):
                     the variable d in the top of page 15 of the TracIn paper:
                     https://arxiv.org/pdf/2002.08484.pdf.
         """
-        # If `inputs` is not a `DataLoader`, turn it into one.
-        inputs = _format_inputs_dataset(inputs)
+        f_inputs: DataLoader = _format_inputs_dataset(inputs)
 
-        def get_checkpoint_contribution(checkpoint):
+        def get_checkpoint_contribution(checkpoint: str) -> Tensor:
+            nonlocal f_inputs
             assert (
                 checkpoint is not None
             ), "None returned from `checkpoints`, cannot load."
@@ -872,11 +887,15 @@ class TracInCP(TracInCPBase):
             # get jacobians as tuple of tensors
             if aggregate:
                 inputs_jacobians = self._sum_jacobians(
-                    inputs, self.loss_fn, self.reduction_type
+                    f_inputs,
+                    self.loss_fn,
+                    self.reduction_type,
                 )
             else:
                 inputs_jacobians = self._concat_jacobians(
-                    inputs, self.loss_fn, self.reduction_type
+                    f_inputs,
+                    self.loss_fn,
+                    self.reduction_type,
                 )
             # flatten into single tensor
             return learning_rate * torch.cat(
@@ -897,14 +916,21 @@ class TracInCP(TracInCPBase):
 
     def _influence_batch_tracincp(
         self,
-        test_batch: Tuple[Any, ...],
+        # pyre-fixme[2]: Parameter annotation cannot contain `Any`.
+        input_checkpoint_jacobians: List[Tuple[Any, ...]],
+        # pyre-fixme[2]: Parameter annotation cannot contain `Any`.
         train_batch: Tuple[Any, ...],
-    ):
+    ) -> Tensor:
         """
-        computes influence scores for a single training batch
+        computes influence scores for a single training batch.
+        `input_checkpoint_jacobians` is the output of
+        `_basic_computation_tracincp` applied to the test batch, for each checkpoint,
+        computed by `_get_checkpoint_jacobians`.
         """
 
-        def get_checkpoint_contribution(checkpoint):
+        def get_checkpoint_contribution(
+            input_jacobians: Tuple[Tensor, ...], checkpoint: str
+        ) -> Tensor:
 
             assert (
                 checkpoint is not None
@@ -912,12 +938,6 @@ class TracInCP(TracInCPBase):
 
             learning_rate = self.checkpoints_load_func(self.model, checkpoint)
 
-            input_jacobians = self._basic_computation_tracincp(
-                test_batch[0:-1],
-                test_batch[-1],
-                self.test_loss_fn,
-                self.test_reduction_type,
-            )
             return (
                 _gradient_dot_product(
                     input_jacobians,
@@ -931,34 +951,70 @@ class TracInCP(TracInCPBase):
                 * learning_rate
             )
 
-        batch_tracin_scores = get_checkpoint_contribution(self.checkpoints[0])
+        batch_tracin_scores = get_checkpoint_contribution(
+            input_checkpoint_jacobians[0], self.checkpoints[0]
+        )
 
-        for checkpoint in self.checkpoints[1:]:
-            batch_tracin_scores += get_checkpoint_contribution(checkpoint)
+        for input_jacobians, checkpoint in zip(
+            input_checkpoint_jacobians[1:], self.checkpoints[1:]
+        ):
+            batch_tracin_scores += get_checkpoint_contribution(
+                input_jacobians, checkpoint
+            )
 
         return batch_tracin_scores
 
+    def _get_checkpoint_jacobians(
+        self,
+        inputs_dataset: DataLoader,
+        aggregate: bool,
+        # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
+        loss_fn: Optional[Union[Module, Callable]] = None,
+    ) -> List[Tuple[Tensor, ...]]:
+        """
+        computes the jacobians of all examples in `inputs_dataset`, for all
+        checkpoints. if `aggregate` is True, the jacobians for examples are summed.
+        returns a list where each element corresponds to a checkpoint. this logic is
+        separated into a helper function because it is used by both `_influence` and
+        `_get_k_most_influential`.
+        """
+        inputs_checkpoint_jacobians = []
+        for checkpoint in self.checkpoints:
+            self.checkpoints_load_func(self.model, checkpoint)
+            if aggregate:
+                inputs_checkpoint_jacobians.append(
+                    self._sum_jacobians(inputs_dataset, loss_fn, self.reduction_type)
+                )
+            else:
+                inputs_checkpoint_jacobians.append(
+                    self._concat_jacobians(inputs_dataset, loss_fn, self.reduction_type)
+                )
+        return inputs_checkpoint_jacobians
+
     def _influence(
         self,
-        inputs: Tuple[Any, ...],
+        # pyre-fixme[2]: Parameter annotation cannot contain `Any`.
+        inputs: Union[Tuple[Any, ...], DataLoader],
         show_progress: bool = False,
+        aggregate: bool = False,
     ) -> Tensor:
         r"""
         Computes the influence of examples in training dataset `train_dataset`
-        on the examples in the test batch represented by `inputs`.
+        on the examples in the test dataset represented by `inputs`.
         This implementation does not require knowing the number of training examples
         in advance. Instead, the number of training examples is inferred from the
         output of `self._basic_computation_tracincp`.
 
         Args:
 
-            inputs (tuple): `inputs` is the test batch and is a tuple of
-                    any, where the last element is assumed to be the labels for the
-                    batch. That is, `model(*batch[0:-1])` produces the output for
-                    `model`, and `batch[-1]` are the labels, if any. This is the same
-                    assumption made for each batch yielded by training dataset
-                    `train_dataset` - please see its documentation in `__init__` for
-                    more details on the assumed structure of a batch.
+            inputs_dataset (Tuple, or DataLoader): Either a single tuple of any, or a
+                    `DataLoader`, where each batch yielded is a tuple of any. In
+                    either case, the tuple represents a single batch, where the last
+                    element is assumed to be the labels for the batch. That is,
+                    `model(*batch[0:-1])` produces the output for `model`, and
+                    and `batch[-1]` are the labels, if any. Here, `model` is model
+                    provided in initialization. This is the same assumption made for
+                    each batch yielded by training dataset `train_dataset`.
             show_progress (bool, optional): To compute the influence of examples in
                     training dataset `train_dataset`, we compute the influence
                     of each batch. If `show_progress` is true, the progress of this
@@ -968,21 +1024,32 @@ class TracInCP(TracInCPBase):
                     estimation). Otherwise, it will fallback to a simple output of
                     progress.
                     Default: False
+            aggregate (bool): Whether to return "aggregate" influence scores (see their
+                    definition in `influence`).
+                    Default: False
 
         Returns:
-            influence_scores (Tensor): Influence scores from the TracInCP method.
-            Its shape is `(input_size, train_dataset_size)`, where `input_size`
-            is the number of examples in the test batch, and
+            influence_scores (Tensor): If `aggregate` is False, influence scores are
+            returned as a 2D tensor whose shape is `(input_size, train_dataset_size)`,
+            where `input_size` is the number of examples in the test dataset, and
             `train_dataset_size` is the number of examples in
             training dataset `train_dataset`. For example:
             `influence_scores[i][j]` is the influence score for the j-th training
-            example to the i-th example in the test batch.
+            example to the i-th example in the test dataset. If `aggregate` is True,
+            "aggregate" influence scores are returned as a 2D tensor whose shape is
+            `(1, train_dataset_size)`. For example: `influence_scores[0][j]` is the
+            aggregate influence score of the j-th training example on the test dataset.
         """
-        train_dataloader = self.train_dataloader
+        # If `inputs` is not a `DataLoader`, turn it into one.
+        inputs = _format_inputs_dataset(inputs)
 
+        train_dataloader = self.train_dataloader
+        data_iterable: Union[Iterable[Tuple[object, ...]], DataLoader] = (
+            train_dataloader
+        )
         if show_progress:
-            train_dataloader = progress(
-                train_dataloader,
+            data_iterable = progress(
+                cast(Iterable[Tuple[object, ...]], train_dataloader),
                 desc=(
                     f"Using {self.get_name()} to compute "
                     "influence for training batches"
@@ -990,31 +1057,40 @@ class TracInCP(TracInCPBase):
                 total=self.train_dataloader_len,
             )
 
+        # create list of the outputs of `_basic_computation_tracincp`, for each
+        # checkpoint, which are jacobians
+        inputs_checkpoint_jacobians = self._get_checkpoint_jacobians(
+            inputs, aggregate, self.test_loss_fn
+        )
+
         return torch.cat(
             [
-                self._influence_batch_tracincp(inputs, batch)
-                for batch in train_dataloader
+                self._influence_batch_tracincp(inputs_checkpoint_jacobians, batch)
+                for batch in data_iterable
             ],
             dim=1,
         )
 
     def _get_k_most_influential(
         self,
-        inputs: Tuple[Any, ...],
+        # pyre-fixme[2]: Parameter annotation cannot contain `Any`.
+        inputs: Union[Tuple[Any, ...], DataLoader],
         k: int = 5,
         proponents: bool = True,
         show_progress: bool = False,
+        aggregate: bool = False,
     ) -> KMostInfluentialResults:
         r"""
         Args:
 
-            inputs (tuple): `inputs` is the test batch and is a tuple of
-                    any, where the last element is assumed to be the labels for the
-                    batch. That is, `model(*batch[0:-1])` produces the output for
-                    `model`, and `batch[-1]` are the labels, if any. This is the same
-                    assumption made for each batch yielded by training dataset
-                    `train_dataset` - please see its documentation in `__init__` for
-                    more details on the assumed structure of a batch.
+            inputs (Tuple, or DataLoader): Either a single tuple of any, or a
+                    `DataLoader`, where each batch yielded is a tuple of any. In
+                    either case, the tuple represents a single batch, where the last
+                    element is assumed to be the labels for the batch. That is,
+                    `model(*batch[0:-1])` produces the output for `model`, and
+                    and `batch[-1]` are the labels, if any. Here, `model` is model
+                    provided in initialization. This is the same assumption made for
+                    each batch yielded by training dataset `train_dataset`.
             k (int, optional): The number of proponents or opponents to return per test
                     example.
                     Default: 5
@@ -1030,22 +1106,32 @@ class TracInCP(TracInCPBase):
                     available for advanced features (e.g. time estimation). Otherwise,
                     it will fallback to a simple output of progress.
                     Default: False
+            aggregate (bool): Whether to return with the highest / lowest "aggregate"
+                    influence scores (see their definition in `influence`).
 
         Returns:
-            (indices, influence_scores) (namedtuple): `indices` is a torch.long Tensor
-                    that contains the indices of the proponents (or opponents) for each
-                    test example. Its dimension is `(inputs_batch_size, k)`, where
-                    `inputs_batch_size` is the number of examples in `inputs`. For
-                    example, if `proponents==True`, `indices[i][j]` is the index of the
-                    example in training dataset `train_dataset` with the
-                    k-th highest influence score for the j-th example in `inputs`.
-                    `indices` is a `torch.long` tensor so that it can directly be used
-                    to index other tensors. Each row of `influence_scores` contains the
-                    influence scores for a different test example, in sorted order. In
+            (indices, influence_scores) (namedtuple): If `aggregate` is False,
+                    `indices` is a 2D tensor of shape `(input_size, k)`, where
+                    `input_size` is the number of examples in the test dataset. If
+                    computing proponents (resp. opponents), `indices[i][j]` is the
+                    index in training dataset `train_dataset` of the example with the
+                    `j`-th highest (resp. lowest) influence score (out of the examples
+                    in `train_dataset`) on the `i`-th example in the test dataset.
+                    `influence_scores` contains the corresponding influence scores. In
                     particular, `influence_scores[i][j]` is the influence score of
-                    example `indices[i][j]` in training dataset `train_dataset`
-                    on example `i` in the test batch represented by `inputs`.
+                    example `indices[i][j]` in `train_dataset` on example `i` in the
+                    test dataset represented by `inputs`. If `aggregate` is True,
+                    `indices` is a 2D tensor of shape `(1, k)`. If computing proponents
+                    (resp. opponents), `indices[0][j]` is the index in training dataset
+                    `train_dataset` of the example with the `j`-th highest (resp.
+                    lowest) aggregate influence score on the test dataset.
+                    `influence_scores` contains the corresponding aggregate influence
+                    scores. In particular, `influence_scores[0][j]` is the aggregate
+                    influence score of example `indices[0][j]` on the test dataset.
         """
+        # If `inputs` is not a `DataLoader`, turn it into one.
+        inputs = _format_inputs_dataset(inputs)
+
         desc = (
             None
             if not show_progress
@@ -1057,11 +1143,18 @@ class TracInCP(TracInCPBase):
                 )
             )
         )
+
+        # create list of the outputs of `_basic_computation_tracincp`, for each
+        # checkpoint, which are jacobians
+        inputs_checkpoint_jacobians = self._get_checkpoint_jacobians(
+            inputs, aggregate, self.test_loss_fn
+        )
+
         return KMostInfluentialResults(
             *_get_k_most_influential_helper(
                 self.train_dataloader,
                 self._influence_batch_tracincp,
-                inputs,
+                inputs_checkpoint_jacobians,
                 k,
                 proponents,
                 show_progress,
@@ -1071,6 +1164,7 @@ class TracInCP(TracInCPBase):
 
     def _self_influence_by_checkpoints(
         self,
+        # pyre-fixme[2]: Parameter annotation cannot contain `Any`.
         inputs: Union[Tuple[Any, ...], DataLoader],
         show_progress: bool = False,
     ) -> Tensor:
@@ -1128,7 +1222,7 @@ class TracInCP(TracInCPBase):
         if show_progress:
             # Try to determine length of inner progress bar if possible, with a default
             # of `None`.
-            inputs_len = None
+            inputs_len: Optional[int] = None
             try:
                 inputs_len = len(inputs)
             except TypeError:
@@ -1137,10 +1231,11 @@ class TracInCP(TracInCPBase):
                     "Therefore, if showing the progress of the computation of self "
                     "influence scores, only the number of batches processed can be "
                     "displayed, and not the percentage completion of the computation, "
-                    "nor any time estimates."
+                    "nor any time estimates.",
+                    stacklevel=1,
                 )
 
-        def calculate_via_vector_norm(layer_jacobian):
+        def calculate_via_vector_norm(layer_jacobian: Tensor) -> Tensor:
             # Helper to efficiently calculate vector norm if pytorch version permits.
             return (
                 torch.linalg.vector_norm(
@@ -1150,10 +1245,8 @@ class TracInCP(TracInCPBase):
                 ** 2
             )
 
-        def calculate_via_flatten(layer_jacobian):
-            return torch.sum(layer_jacobian.flatten(start_dim=1) ** 2, dim=1)
-
-        def get_checkpoint_contribution(checkpoint):
+        def get_checkpoint_contribution(checkpoint: str) -> Tensor:
+            nonlocal inputs_len
             # This function returns a 1D tensor representing the contribution to the
             # self influence score for the given checkpoint, for all batches in
             # `inputs`. The length of the 1D tensor is the total number of
@@ -1170,7 +1263,7 @@ class TracInCP(TracInCPBase):
             # the same)
             checkpoint_contribution = []
 
-            _inputs = inputs
+            _inputs: Union[DataLoader, Iterable[Tuple[Tensor, ...]]] = inputs
             # If `show_progress` is true, create an inner progress bar that keeps track
             # of how many batches have been processed for the current checkpoint
             if show_progress:
@@ -1186,8 +1279,8 @@ class TracInCP(TracInCPBase):
             for batch in _inputs:
 
                 layer_jacobians = self._basic_computation_tracincp(
-                    batch[0:-1],
-                    batch[-1],
+                    cast(Tuple[Tensor, ...], batch)[0:-1],
+                    cast(Tuple[Tensor, ...], batch)[-1],
                     self.loss_fn,
                     self.reduction_type,
                 )
@@ -1199,18 +1292,14 @@ class TracInCP(TracInCPBase):
                 # `layer_jacobian` is of shape (batch_size, *). For each layer, we need
                 # the squared jacobian for each example. So we square the jacobian and
                 # sum over all dimensions except the 0-th (the batch dimension). We then
-                # sum the contribution over all layers.  For Pytorch > 1.10 we use the
-                # optimized torch.linalg.vector_norm as opposed to the explicit flatten.
-
-                calculate_fn = calculate_via_flatten
-                if _parse_version(torch.__version__) >= (1, 10, 0):
-                    calculate_fn = calculate_via_vector_norm
+                # sum the contribution over all layers.  We use the optimized
+                # torch.linalg.vector_norm as opposed to the explicit flatten.
 
                 checkpoint_contribution.append(
                     torch.sum(
                         torch.stack(
                             [
-                                calculate_fn(layer_jacobian)
+                                calculate_via_vector_norm(layer_jacobian)
                                 for layer_jacobian in layer_jacobians
                             ],
                             dim=0,
@@ -1252,6 +1341,7 @@ class TracInCP(TracInCPBase):
     @log_usage()
     def self_influence(
         self,
+        # pyre-fixme[2]: Parameter annotation cannot contain `Any`.
         inputs: Optional[Union[Tuple[Any, ...], DataLoader]] = None,
         show_progress: bool = False,
         outer_loop_by_checkpoints: bool = False,
@@ -1327,8 +1417,10 @@ class TracInCP(TracInCPBase):
 
     def _basic_computation_tracincp(
         self,
+        # pyre-fixme[2]: Parameter annotation cannot contain `Any`.
         inputs: Tuple[Any, ...],
         targets: Optional[Tensor] = None,
+        # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
         loss_fn: Optional[Union[Module, Callable]] = None,
         reduction_type: Optional[str] = None,
     ) -> Tuple[Tensor, ...]:
@@ -1353,19 +1445,6 @@ class TracInCP(TracInCPBase):
                     argument is only used if `sample_wise_grads_per_batch` was true in
                     initialization.
         """
-        if self.sample_wise_grads_per_batch:
-            return _compute_jacobian_wrt_params_with_sample_wise_trick(
-                self.model,
-                inputs,
-                targets,
-                loss_fn,
-                reduction_type,
-                self.layer_modules,
-            )
-        return _compute_jacobian_wrt_params(
-            self.model,
-            inputs,
-            targets,
-            loss_fn,
-            self.layer_modules,
+        return _compute_jacobian_sample_wise_grads_per_batch(
+            self, inputs, targets, loss_fn, reduction_type
         )

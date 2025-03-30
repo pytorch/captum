@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+# pyre-strict
+
 from typing import Callable, Union
 
 import torch
@@ -7,7 +9,6 @@ from torch.nn import Module
 
 
 class Concept:
-
     r"""
     Concepts are human-friendly abstract representations that can be
     numerically encoded into torch tensors. They can be illustrated as
@@ -22,7 +23,6 @@ class Concept:
     def __init__(
         self, id: int, name: str, data_iter: Union[None, torch.utils.data.DataLoader]
     ) -> None:
-
         r"""
         Args:
             id (int): The unique identifier of the concept.
@@ -58,6 +58,7 @@ class Concept:
         return "Concept(%r, %r)" % (self.id, self.name)
 
 
+# pyre-fixme[13]: Attribute `interpret` is never initialized.
 class ConceptInterpreter:
     r"""
     An abstract class that exposes an abstract interpret method
@@ -72,6 +73,8 @@ class ConceptInterpreter:
         """
         self.model = model
 
+    # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
+    # pyre-fixme[13]: Attribute `interpret` is never initialized.
     interpret: Callable
     r"""
     An abstract interpret method that performs concept-based model interpretability

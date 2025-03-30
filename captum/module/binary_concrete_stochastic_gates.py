@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
+
+# pyre-strict
 import math
-from typing import Optional
+from typing import Any, Optional
 
 import torch
 from captum.module.stochastic_gates_base import StochasticGatesBase
@@ -14,14 +16,6 @@ def _torch_empty(batch_size: int, n_gates: int, device: torch.device) -> Tensor:
 # torch.fx is introduced in 1.8.0
 if hasattr(torch, "fx"):
     torch.fx.wrap(_torch_empty)
-
-
-def _logit(inp):
-    # torch.logit is introduced in 1.7.0
-    if hasattr(torch, "logit"):
-        return torch.logit(inp)
-    else:
-        return torch.log(inp) - torch.log(1 - inp)
 
 
 class BinaryConcreteStochasticGates(StochasticGatesBase):
@@ -69,7 +63,7 @@ class BinaryConcreteStochasticGates(StochasticGatesBase):
         upper_bound: float = 1.1,
         eps: float = 1e-8,
         reg_reduction: str = "sum",
-    ):
+    ) -> None:
         """
         Args:
             n_gates (int): number of gates.
@@ -139,6 +133,7 @@ class BinaryConcreteStochasticGates(StochasticGatesBase):
         self.eps = eps
 
         # pre-calculate the fixed term used in active prob
+        # pyre-fixme[4]: Attribute must be annotated.
         self.active_prob_offset = temperature * math.log(-lower_bound / upper_bound)
 
     def _sample_gate_values(self, batch_size: int) -> Tensor:
@@ -157,7 +152,9 @@ class BinaryConcreteStochasticGates(StochasticGatesBase):
                 batch_size, self.n_gates, device=self.log_alpha_param.device
             )
             u.uniform_(self.eps, 1 - self.eps)
-            s = torch.sigmoid((_logit(u) + self.log_alpha_param) / self.temperature)
+            s = torch.sigmoid(
+                (torch.logit(u) + self.log_alpha_param) / self.temperature
+            )
 
         else:
             s = torch.sigmoid(self.log_alpha_param)
@@ -193,7 +190,9 @@ class BinaryConcreteStochasticGates(StochasticGatesBase):
         return torch.sigmoid(self.log_alpha_param - self.active_prob_offset)
 
     @classmethod
-    def _from_pretrained(cls, log_alpha_param: Tensor, *args, **kwargs):
+    def _from_pretrained(
+        cls, log_alpha_param: Tensor, *args: Any, **kwargs: Any
+    ) -> "BinaryConcreteStochasticGates":
         """
         Private factory method to create an instance with pretrained parameters
 

@@ -1,21 +1,30 @@
 #!/usr/bin/env python3
-from typing import Any, Callable, List, Tuple, Union
+
+# pyre-strict
+
+import unittest
+from typing import Any, Callable, List, Optional, Tuple, Union
 
 import torch
+
 from captum._utils.typing import TargetType, TensorOrTupleOfTensorsGeneric
 from captum.attr._core.gradient_shap import GradientShap
-from captum.attr._core.layer.layer_gradient_shap import LayerGradientShap
-from tests.attr.test_gradient_shap import _assert_attribution_delta
-from tests.helpers.basic import (
+from captum.attr._core.layer.layer_gradient_shap import (
+    LayerGradientShap,
+    LayerInputBaselineXGradient,
+)
+from captum.testing.attr.helpers.attribution_delta_util import assert_attribution_delta
+from captum.testing.helpers.basic import (
     assertTensorAlmostEqual,
     assertTensorTuplesAlmostEqual,
     BaseTest,
 )
-from tests.helpers.basic_models import (
+from captum.testing.helpers.basic_models import (
     BasicModel_MultiLayer,
     BasicModel_MultiLayer_MultiInput,
 )
-from tests.helpers.classification_models import SoftmaxModel
+from captum.testing.helpers.classification_models import SoftmaxModel
+from packaging import version
 from torch import Tensor
 from torch.nn import Module
 
@@ -99,7 +108,7 @@ class Test(BaseTest):
         )
 
     def test_classification(self) -> None:
-        def custom_baseline_fn(inputs):
+        def custom_baseline_fn(inputs: Tensor) -> Tensor:
             num_in = inputs.shape[1]
             return torch.arange(0.0, num_in * 4.0).reshape(4, num_in)
 
@@ -129,11 +138,37 @@ class Test(BaseTest):
             net, net.model.linear2, inputs, baselines, 0, expected, add_args=add_args
         )
 
+    def test_relu_grad_shap_with_unused_layer(self) -> None:
+        if version.parse(torch.__version__) < version.parse("2.1.0"):
+            raise unittest.SkipTest(
+                "Skipping unused layed gradient test since it is not supported "
+                "by torch version < 2.1"
+            )
+
+        model = BasicModel_MultiLayer(inplace=True, multi_input_module=True)
+        model.eval()
+
+        inputs = torch.tensor([[1.0, -20.0, 10.0]], requires_grad=True)
+        baselines = torch.zeros(3, 3)
+        lgs = LayerInputBaselineXGradient(model, model.relu, multiply_by_inputs=False)
+        attrs = lgs.attribute(
+            inputs, baselines, target=0, grad_kwargs={"materialize_grads": True}
+        )
+
+        assertTensorAlmostEqual(
+            self,
+            attrs,
+            torch.tensor(
+                [[0.0, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0]]
+            ),
+        )
+
     def _assert_attributions(
         self,
         model: Module,
         layer: Module,
         inputs: TensorOrTupleOfTensorsGeneric,
+        # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
         baselines: Union[TensorOrTupleOfTensorsGeneric, Callable],
         target: TargetType,
         expected: Union[
@@ -144,9 +179,11 @@ class Test(BaseTest):
             Tuple[List[float], ...],
             Tuple[List[List[float]], ...],
         ],
-        expected_delta: Tensor = None,
+        expected_delta: Optional[Tensor] = None,
         n_samples: int = 5,
         attribute_to_layer_input: bool = False,
+        # pyre-fixme[2]: Parameter `add_args` has type `None`
+        # but type `Any` is specified.
         add_args: Any = None,
     ) -> None:
         lgs = LayerGradientShap(model, layer)
@@ -162,8 +199,14 @@ class Test(BaseTest):
         )
         assertTensorTuplesAlmostEqual(self, attrs, expected, delta=0.005)
         if expected_delta is None:
-            _assert_attribution_delta(
-                self, inputs, attrs, n_samples, delta, is_layer=True
+            assert_attribution_delta(
+                # pyre-fixme[6]: For 1st argument expected `FbBaseTest` but got `Test`.
+                self,  # type: ignore
+                inputs,
+                attrs,
+                n_samples,
+                delta,
+                is_layer=True,
             )
         else:
             for delta_i, expected_delta_i in zip(delta, expected_delta):

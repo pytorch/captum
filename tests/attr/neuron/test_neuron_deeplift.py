@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+# pyre-unsafe
+
 from __future__ import print_function
 
 from typing import Tuple, Union
@@ -7,12 +9,13 @@ from typing import Tuple, Union
 import torch
 from captum._utils.typing import TensorOrTupleOfTensorsGeneric
 from captum.attr._core.neuron.neuron_deep_lift import NeuronDeepLift, NeuronDeepLiftShap
-from tests.attr.layer.test_layer_deeplift import (
-    _create_inps_and_base_for_deeplift_neuron_layer_testing,
-    _create_inps_and_base_for_deepliftshap_neuron_layer_testing,
+from captum.testing.attr.helpers.neuron_layer_testing_util import (
+    create_inps_and_base_for_deeplift_neuron_layer_testing,
+    create_inps_and_base_for_deepliftshap_neuron_layer_testing,
 )
-from tests.helpers.basic import assertTensorAlmostEqual, BaseTest
-from tests.helpers.basic_models import (
+from captum.testing.helpers import BaseTest
+from captum.testing.helpers.basic import assertTensorAlmostEqual
+from captum.testing.helpers.basic_models import (
     BasicModel_ConvNet,
     BasicModel_ConvNet_MaxPool3d,
     LinearMaxPoolLinearModel,
@@ -52,7 +55,7 @@ class Test(BaseTest):
 
     def test_linear_neuron_deeplift(self) -> None:
         model = ReLULinearModel()
-        inputs, baselines = _create_inps_and_base_for_deeplift_neuron_layer_testing()
+        inputs, baselines = create_inps_and_base_for_deeplift_neuron_layer_testing()
 
         neuron_dl = NeuronDeepLift(model, model.l3)
         attributions = neuron_dl.attribute(
@@ -70,7 +73,7 @@ class Test(BaseTest):
 
     def test_linear_neuron_deeplift_wo_inp_marginal_effects(self) -> None:
         model = ReLULinearModel()
-        inputs, baselines = _create_inps_and_base_for_deeplift_neuron_layer_testing()
+        inputs, baselines = create_inps_and_base_for_deeplift_neuron_layer_testing()
 
         neuron_dl = NeuronDeepLift(model, model.l3, multiply_by_inputs=False)
         attributions = neuron_dl.attribute(
@@ -81,7 +84,7 @@ class Test(BaseTest):
 
     def test_relu_deeplift_with_custom_attr_func(self) -> None:
         model = ReLULinearModel()
-        inputs, baselines = _create_inps_and_base_for_deeplift_neuron_layer_testing()
+        inputs, baselines = create_inps_and_base_for_deeplift_neuron_layer_testing()
         neuron_dl = NeuronDeepLift(model, model.l3)
         expected = ([[0.0, 0.0, 0.0]], [[0.0, 0.0, 0.0]])
         self._relu_custom_attr_func_assert(neuron_dl, inputs, baselines, expected)
@@ -91,7 +94,7 @@ class Test(BaseTest):
         (
             inputs,
             baselines,
-        ) = _create_inps_and_base_for_deepliftshap_neuron_layer_testing()
+        ) = create_inps_and_base_for_deepliftshap_neuron_layer_testing()
 
         neuron_dl = NeuronDeepLiftShap(model, model.relu)
 
@@ -106,7 +109,7 @@ class Test(BaseTest):
         (
             inputs,
             baselines,
-        ) = _create_inps_and_base_for_deepliftshap_neuron_layer_testing()
+        ) = create_inps_and_base_for_deepliftshap_neuron_layer_testing()
 
         neuron_dl = NeuronDeepLiftShap(model, model.l3)
         attributions = neuron_dl.attribute(
@@ -128,7 +131,7 @@ class Test(BaseTest):
         (
             inputs,
             baselines,
-        ) = _create_inps_and_base_for_deepliftshap_neuron_layer_testing()
+        ) = create_inps_and_base_for_deepliftshap_neuron_layer_testing()
 
         neuron_dl = NeuronDeepLiftShap(model, model.l3, multiply_by_inputs=False)
         attributions = neuron_dl.attribute(
@@ -150,7 +153,7 @@ class Test(BaseTest):
         (
             inputs,
             baselines,
-        ) = _create_inps_and_base_for_deepliftshap_neuron_layer_testing()
+        ) = create_inps_and_base_for_deepliftshap_neuron_layer_testing()
         neuron_dl = NeuronDeepLiftShap(model, model.l3)
         expected = (torch.zeros(1, 3), torch.zeros(1, 3))
         self._relu_custom_attr_func_assert(neuron_dl, inputs, baselines, expected)

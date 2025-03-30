@@ -1,16 +1,20 @@
 #!/usr/bin/env python3
 
+# pyre-unsafe
+
 import unittest
-from typing import Any, Tuple, Union
+from typing import Any, Dict, Optional, Tuple, Union
 
 import torch
 from captum._utils.typing import TensorLikeList
 from captum.attr._core.layer.grad_cam import LayerGradCam
-from tests.helpers.basic import assertTensorTuplesAlmostEqual, BaseTest
-from tests.helpers.basic_models import (
+from captum.testing.helpers import BaseTest
+from captum.testing.helpers.basic import assertTensorTuplesAlmostEqual
+from captum.testing.helpers.basic_models import (
     BasicModel_ConvNet_One_Conv,
     BasicModel_MultiLayer,
 )
+from packaging import version
 from torch import Tensor
 from torch.nn import Module
 
@@ -118,7 +122,8 @@ class Test(BaseTest):
         attribute_to_layer_input: bool = False,
         relu_attributions: bool = False,
         attr_dim_summation: bool = True,
-    ):
+        grad_kwargs: Optional[Dict[str, Any]] = None,
+    ) -> None:
         layer_gc = LayerGradCam(model, target_layer)
         self.assertFalse(layer_gc.multiplies_by_inputs)
         attributions = layer_gc.attribute(
@@ -128,10 +133,29 @@ class Test(BaseTest):
             attribute_to_layer_input=attribute_to_layer_input,
             relu_attributions=relu_attributions,
             attr_dim_summation=attr_dim_summation,
+            grad_kwargs=grad_kwargs,
         )
         assertTensorTuplesAlmostEqual(
             self, attributions, expected_activation, delta=0.01
         )
+
+    def test_relu_gradcam_with_unused_layer(self) -> None:
+        if version.parse(torch.__version__) < version.parse("2.1.0"):
+            raise unittest.SkipTest(
+                "Skipping unused layed gradient test since it is not supported "
+                "by torch version < 2.1"
+            )
+        net = BasicModel_MultiLayer(multi_input_module=True)
+        inp = torch.tensor([[0.0, 6.0, 0.0]], requires_grad=True)
+        gradcam = LayerGradCam(net, net.relu)
+        attributions = gradcam.attribute(
+            inputs=inp,
+            target=0,
+            grad_kwargs={"materialize_grads": True},
+        )
+        self.assertEqual(len(attributions), 1)
+        self.assertEqual(list(attributions[0].shape), [1])
+        self.assertAlmostEqual(attributions[0].sum(), 0)
 
 
 if __name__ == "__main__":

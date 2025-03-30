@@ -1,17 +1,19 @@
 #!/usr/bin/env python3
 
+# pyre-unsafe
+
 from inspect import signature
-from typing import Callable, List, Tuple, Union
+from typing import Callable, List, Optional, Tuple, Union
 
 import torch
 from captum.attr._core.deep_lift import DeepLift, DeepLiftShap
 from captum.attr._core.integrated_gradients import IntegratedGradients
-from tests.helpers.basic import (
+from captum.testing.helpers.basic import (
     assertAttributionComparision,
     assertTensorAlmostEqual,
     BaseTest,
 )
-from tests.helpers.basic_models import (
+from captum.testing.helpers.basic_models import (
     BasicModelWithReusedModules,
     Conv1dSeqModel,
     LinearMaxPoolLinearModel,
@@ -295,13 +297,21 @@ class Test(BaseTest):
         assertTensorAlmostEqual(self, attrs, expected, 0.0001)
         assertTensorAlmostEqual(self, delta, expected_delta, 0.0001)
 
+    def test_futures_not_implemented(self) -> None:
+        model = ReLUDeepLiftModel()
+        dl = DeepLift(model, multiply_by_inputs=False)
+        attributions = None
+        with self.assertRaises(NotImplementedError):
+            attributions = dl.attribute_future()
+        self.assertEqual(attributions, None)
+
     def _deeplift_assert(
         self,
         model: Module,
         attr_method: Union[DeepLift, DeepLiftShap],
         inputs: Tuple[Tensor, ...],
         baselines,
-        custom_attr_func: Callable[..., Tuple[Tensor, ...]] = None,
+        custom_attr_func: Optional[Callable[..., Tuple[Tensor, ...]]] = None,
     ) -> None:
         input_bsz = len(inputs[0])
         if callable(baselines):

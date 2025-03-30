@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
+
+# pyre-strict
 from enum import Enum
-from typing import Callable, List, Tuple
+from typing import Callable, cast, List, Tuple
 
 import torch
 
@@ -19,7 +21,7 @@ SUPPORTED_RIEMANN_METHODS = [
     "riemann_trapezoid",
 ]
 
-SUPPORTED_METHODS = SUPPORTED_RIEMANN_METHODS + ["gausslegendre"]
+SUPPORTED_METHODS: List[str] = SUPPORTED_RIEMANN_METHODS + ["gausslegendre"]
 
 
 def approximation_parameters(
@@ -91,9 +93,9 @@ def riemann_builders(
     return step_sizes, alphas
 
 
-def gauss_legendre_builders() -> Tuple[
-    Callable[[int], List[float]], Callable[[int], List[float]]
-]:
+def gauss_legendre_builders() -> (
+    Tuple[Callable[[int], List[float]], Callable[[int], List[float]]]
+):
     r"""Numpy's `np.polynomial.legendre` function helps to compute step sizes
     and alpha coefficients using gauss-legendre quadrature rule.
     Since numpy returns the integration parameters in different scales we need to
@@ -119,15 +121,20 @@ def gauss_legendre_builders() -> Tuple[
 
     # allow using riemann even without np
     import numpy as np
+    from numpy.typing import NDArray
 
     def step_sizes(n: int) -> List[float]:
         assert n > 0, "The number of steps has to be larger than zero"
         # Scaling from 2 to 1
-        return list(0.5 * np.polynomial.legendre.leggauss(n)[1])
+        return cast(
+            NDArray[np.float64], 0.5 * np.polynomial.legendre.leggauss(n)[1]
+        ).tolist()
 
     def alphas(n: int) -> List[float]:
         assert n > 0, "The number of steps has to be larger than zero"
         # Scaling from [-1, 1] to [0, 1]
-        return list(0.5 * (1 + np.polynomial.legendre.leggauss(n)[0]))
+        return cast(
+            NDArray[np.float64], 0.5 * (1 + np.polynomial.legendre.leggauss(n)[0])
+        ).tolist()
 
     return step_sizes, alphas

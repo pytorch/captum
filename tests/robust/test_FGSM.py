@@ -1,11 +1,18 @@
 #!/usr/bin/env python3
+
+# pyre-unsafe
 from typing import Any, Callable, List, Optional, Tuple, Union
 
 import torch
-from captum._utils.typing import TensorLikeList, TensorOrTupleOfTensorsGeneric
+from captum._utils.typing import TensorOrTupleOfTensorsGeneric
 from captum.robust import FGSM
-from tests.helpers.basic import assertTensorAlmostEqual, BaseTest
-from tests.helpers.basic_models import BasicModel, BasicModel2, BasicModel_MultiLayer
+from captum.testing.helpers import BaseTest
+from captum.testing.helpers.basic import assertTensorAlmostEqual
+from captum.testing.helpers.basic_models import (
+    BasicModel,
+    BasicModel2,
+    BasicModel_MultiLayer,
+)
 from torch import Tensor
 from torch.nn import CrossEntropyLoss
 
@@ -188,8 +195,8 @@ class Test(BaseTest):
         inputs: TensorOrTupleOfTensorsGeneric,
         target: Any,
         epsilon: float,
-        answer: Union[TensorLikeList, Tuple[TensorLikeList, ...]],
-        targeted=False,
+        answer: Union[List, Tuple[List, ...]],
+        targeted: bool = False,
         additional_inputs: Any = None,
         lower_bound: float = float("-inf"),
         upper_bound: float = float("inf"),

@@ -47,6 +47,10 @@
       "title": "Interpreting vision and text models with LIME"
     },
     {
+      "id": "Llama2_LLM_Attribution",
+      "title": "Understanding Llama2 with Captum LLM Attribution"
+    },
+    {
       "title": "Interpreting BERT",
       "children": [
         {

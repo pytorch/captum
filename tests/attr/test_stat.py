@@ -1,12 +1,16 @@
 #!/usr/bin/env python3
+
+# pyre-unsafe
 import random
+from typing import Callable, List
 
 import torch
 from captum.attr import Max, Mean, Min, MSE, StdDev, Sum, Summarizer, Var
-from tests.helpers.basic import assertTensorAlmostEqual, BaseTest
+from captum.testing.helpers import BaseTest
+from captum.testing.helpers.basic import assertTensorAlmostEqual
 
 
-def get_values(n=100, lo=None, hi=None, integers=False):
+def get_values(n: int = 100, lo=None, hi=None, integers: bool = False):
     for _ in range(n):
         if integers:
             yield random.randint(lo, hi)
@@ -113,7 +117,7 @@ class Test(BaseTest):
             mode="max",
         )
 
-    def test_stats_random_data(self):
+    def test_stats_random_data(self) -> None:
         N = 1000
         BIG_VAL = 100000
         _values = list(get_values(lo=-BIG_VAL, hi=BIG_VAL, n=N))
@@ -140,7 +144,7 @@ class Test(BaseTest):
             "sum",
             "mse",
         ]
-        gt_fns = [
+        gt_fns: List[Callable] = [
             torch.mean,
             lambda x: torch.var(x, unbiased=False),
             lambda x: torch.var(x, unbiased=True),

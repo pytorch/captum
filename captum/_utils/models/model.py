@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+# pyre-strict
+
 from abc import ABC, abstractmethod
 from typing import Dict, Optional, Union
 
@@ -18,7 +20,10 @@ class Model(ABC):
 
     @abstractmethod
     def fit(
-        self, train_data: DataLoader, **kwargs
+        self,
+        train_data: DataLoader,
+        # pyre-fixme[2]: Parameter must be annotated.
+        **kwargs,
     ) -> Optional[Dict[str, Union[int, float, Tensor]]]:
         r"""
         Override this method to actually train your model.

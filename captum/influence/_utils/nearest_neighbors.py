@@ -1,3 +1,4 @@
+# pyre-strict
 from abc import ABC, abstractmethod
 from typing import Tuple
 
@@ -138,8 +139,10 @@ class AnnoyNearestNeighbors(NearestNeighbors):
 
         data = data.view((len(data), -1))
         projection_dim = data.shape[1]
+        # pyre-fixme[16]: `AnnoyNearestNeighbors` has no attribute `knn_index`.
+        # pyre-fixme[16]: Module `annoy` has no attribute `AnnoyIndex`.
         self.knn_index = annoy.AnnoyIndex(projection_dim, "dot")
-        for (i, projection) in enumerate(data):
+        for i, projection in enumerate(data):
             self.knn_index.add_item(i, projection)
         self.knn_index.build(self.num_trees)
 
@@ -178,6 +181,7 @@ class AnnoyNearestNeighbors(NearestNeighbors):
         """
         query = query.view((len(query), -1))
         indices_and_distances = [
+            # pyre-fixme[16]: `AnnoyNearestNeighbors` has no attribute `knn_index`.
             self.knn_index.get_nns_by_vector(instance, k, include_distances=True)
             for instance in query
         ]

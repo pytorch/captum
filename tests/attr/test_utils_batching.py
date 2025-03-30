@@ -1,12 +1,15 @@
 #!/usr/bin/env python3
 
+# pyre-unsafe
+
 import torch
 from captum.attr._utils.batching import (
     _batched_generator,
     _batched_operator,
     _tuple_splice_range,
 )
-from tests.helpers.basic import assertTensorAlmostEqual, BaseTest
+from captum.testing.helpers import BaseTest
+from captum.testing.helpers.basic import assertTensorAlmostEqual
 
 
 class Test(BaseTest):

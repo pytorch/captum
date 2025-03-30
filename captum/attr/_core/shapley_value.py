@@ -1,31 +1,37 @@
 #!/usr/bin/env python3
 
+# pyre-strict
+
 import itertools
 import math
 import warnings
-from typing import Any, Callable, Iterable, Sequence, Tuple, Union
+from typing import Callable, cast, Iterable, List, Optional, Sequence, Tuple, Union
 
 import torch
 from captum._utils.common import (
     _expand_additional_forward_args,
     _expand_target,
     _format_additional_forward_args,
+    _format_feature_mask,
     _format_output,
     _format_tensor_into_tuples,
+    _get_max_feature_index,
+    _is_mask_valid,
     _is_tuple,
     _run_forward,
 )
+from captum._utils.exceptions import ShapleyValueFutureError
 from captum._utils.progress import progress
 from captum._utils.typing import BaselineType, TargetType, TensorOrTupleOfTensorsGeneric
 from captum.attr._utils.attribution import PerturbationAttribution
 from captum.attr._utils.common import (
-    _construct_default_feature_mask,
     _find_output_mode_and_verify,
     _format_input_baseline,
     _tensorize_baseline,
 )
 from captum.log import log_usage
-from torch import Tensor
+from torch import dtype, Size, Tensor
+from torch.futures import collect_all, Future
 
 
 def _all_perm_generator(num_features: int, num_samples: int) -> Iterable[Sequence[int]]:
@@ -36,6 +42,27 @@ def _all_perm_generator(num_features: int, num_samples: int) -> Iterable[Sequenc
 def _perm_generator(num_features: int, num_samples: int) -> Iterable[Sequence[int]]:
     for _ in range(num_samples):
         yield torch.randperm(num_features).tolist()
+
+
+def _shape_feature_mask(
+    feature_mask: Tuple[Tensor, ...], inputs: Tuple[Tensor, ...]
+) -> Tuple[Tensor, ...]:
+    """
+    ensure feature_mask has the same number of dims as the inputs
+    i.e., prepend dummy dims of 1 to the masks that broadcastable to inputs
+    """
+    mask_list = []
+    for i, (mask, inp) in enumerate(zip(feature_mask, inputs)):
+        assert _is_mask_valid(mask, inp), (
+            f"the shape of feature mask (index {i}) is invalid,"
+            f"input shape: {inp.shape}, feature mask shape {mask.shape}"
+        )
+        if mask.dim() < inp.dim():
+            mask = mask.reshape((1,) * (inp.dim() - mask.dim()) + tuple(mask.shape))
+
+        mask_list.append(mask)
+
+    return tuple(mask_list)
 
 
 class ShapleyValueSampling(PerturbationAttribution):
@@ -62,7 +89,7 @@ class ShapleyValueSampling(PerturbationAttribution):
     https://pdfs.semanticscholar.org/7715/bb1070691455d1fcfc6346ff458dbca77b2c.pdf
     """
 
-    def __init__(self, forward_func: Callable) -> None:
+    def __init__(self, forward_func: Callable[..., Union[int, float, Tensor]]) -> None:
         r"""
         Args:
 
@@ -83,7 +110,7 @@ class ShapleyValueSampling(PerturbationAttribution):
         inputs: TensorOrTupleOfTensorsGeneric,
         baselines: BaselineType = None,
         target: TargetType = None,
-        additional_forward_args: Any = None,
+        additional_forward_args: Optional[Tuple[object, ...]] = None,
         feature_mask: Union[None, TensorOrTupleOfTensorsGeneric] = None,
         n_samples: int = 25,
         perturbations_per_eval: int = 1,
@@ -273,30 +300,24 @@ class ShapleyValueSampling(PerturbationAttribution):
         # Keeps track whether original input is a tuple or not before
         # converting it into a tuple.
         is_inputs_tuple = _is_tuple(inputs)
-        inputs, baselines = _format_input_baseline(inputs, baselines)
+        inputs_tuple, baselines = _format_input_baseline(inputs, baselines)
         additional_forward_args = _format_additional_forward_args(
             additional_forward_args
         )
-        feature_mask = (
-            _format_tensor_into_tuples(feature_mask)
-            if feature_mask is not None
-            else None
+        formatted_feature_mask = _format_feature_mask(feature_mask, inputs_tuple)
+        reshaped_feature_mask = _shape_feature_mask(
+            formatted_feature_mask, inputs_tuple
         )
+
         assert (
             isinstance(perturbations_per_eval, int) and perturbations_per_eval >= 1
         ), "Ablations per evaluation must be at least 1."
 
         with torch.no_grad():
-            baselines = _tensorize_baseline(inputs, baselines)
-            num_examples = inputs[0].shape[0]
+            baselines = _tensorize_baseline(inputs_tuple, baselines)
+            num_examples = inputs_tuple[0].shape[0]
 
-            if feature_mask is None:
-                feature_mask, total_features = _construct_default_feature_mask(inputs)
-            else:
-                total_features = int(
-                    max(torch.max(single_mask).item() for single_mask in feature_mask)
-                    + 1
-                )
+            total_features = _get_max_feature_index(reshaped_feature_mask) + 1
 
             if show_progress:
                 attr_progress = progress(
@@ -308,7 +329,7 @@ class ShapleyValueSampling(PerturbationAttribution):
                 )
                 attr_progress.update(0)
 
-            initial_eval = _run_forward(
+            initial_eval = self._strict_run_forward(
                 self.forward_func, baselines, target, additional_forward_args
             )
 
@@ -316,15 +337,24 @@ class ShapleyValueSampling(PerturbationAttribution):
                 attr_progress.update()
 
             agg_output_mode = _find_output_mode_and_verify(
-                initial_eval, num_examples, perturbations_per_eval, feature_mask
+                initial_eval,
+                num_examples,
+                perturbations_per_eval,
+                reshaped_feature_mask,
+                allow_multi_outputs=True,
             )
 
             # Initialize attribution totals and counts
+            output_shape = initial_eval.shape
+
+            # attr shape (*output_shape, *input_feature_shape)
             total_attrib = [
-                torch.zeros_like(
-                    input[0:1] if agg_output_mode else input, dtype=torch.float
+                torch.zeros(
+                    tuple(output_shape) + tuple(input.shape[1:]),
+                    dtype=torch.float,
+                    device=inputs_tuple[0].device,
                 )
-                for input in inputs
+                for input in inputs_tuple
             ]
 
             iter_count = 0
@@ -341,11 +371,11 @@ class ShapleyValueSampling(PerturbationAttribution):
                     current_target,
                     current_masks,
                 ) in self._perturbation_generator(
-                    inputs,
+                    inputs_tuple,
                     additional_forward_args,
                     target,
                     baselines,
-                    feature_mask,
+                    reshaped_feature_mask,
                     feature_permutation,
                     perturbations_per_eval,
                 ):
@@ -353,11 +383,12 @@ class ShapleyValueSampling(PerturbationAttribution):
                         warnings.warn(
                             "Feature mask is missing some integers between 0 and "
                             "num_features, for optimal performance, make sure each"
-                            " consecutive integer corresponds to a feature."
+                            " consecutive integer corresponds to a feature.",
+                            stacklevel=1,
                         )
                     # modified_eval dimensions: 1D tensor with length
                     # equal to #num_examples * #features in batch
-                    modified_eval = _run_forward(
+                    modified_eval = self._strict_run_forward(
                         self.forward_func,
                         current_inputs,
                         current_target,
@@ -365,29 +396,49 @@ class ShapleyValueSampling(PerturbationAttribution):
                     )
                     if show_progress:
                         attr_progress.update()
-
                     if agg_output_mode:
                         eval_diff = modified_eval - prev_results
                         prev_results = modified_eval
                     else:
+                        # when perturb_per_eval > 1, every num_examples stands for
+                        # one perturb. Since the perturbs are from a consecutive
+                        # perumuation, each diff of a perturb is its eval minus
+                        # the eval of the previous perturb
                         all_eval = torch.cat((prev_results, modified_eval), dim=0)
                         eval_diff = all_eval[num_examples:] - all_eval[:-num_examples]
                         prev_results = all_eval[-num_examples:]
-                    for j in range(len(total_attrib)):
-                        current_eval_diff = eval_diff
-                        if not agg_output_mode:
-                            # current_eval_diff dimensions:
-                            # (#features in batch, #num_examples, 1,.. 1)
-                            # (contains 1 more dimension than inputs). This adds extra
-                            # dimensions of 1 to make the tensor broadcastable with the
-                            # inputs tensor.
-                            current_eval_diff = current_eval_diff.reshape(
-                                (-1, num_examples) + (len(inputs[j].shape) - 1) * (1,)
-                            )
-                        total_attrib[j] += (
-                            current_eval_diff * current_masks[j].float()
-                        ).sum(dim=0)
 
+                    for j in range(len(total_attrib)):
+                        # format eval_diff to shape
+                        # (n_perturb, *output_shape, 1,.. 1)
+                        # where n_perturb may not be perturb_per_eval
+                        # Append n_input_feature dim of 1 to make the tensor
+                        # have the same dim as the mask tensor.
+                        formatted_eval_diff = eval_diff.reshape(
+                            (-1,)
+                            + tuple(output_shape)
+                            + (len(inputs_tuple[j].shape) - 1) * (1,)
+                        )
+
+                        # mask in shape (n_perturb, *mask_shape_broadcastable_to_input)
+                        # reshape to
+                        # (
+                        #     n_perturb,
+                        #     *broadcastable_to_output_shape
+                        #     *broadcastable_to_input_feature_shape
+                        # )
+                        cur_mask = current_masks[j]
+                        cur_mask = cur_mask.reshape(
+                            tuple(cur_mask.shape[:2])
+                            + (len(output_shape) - 1) * (1,)
+                            + tuple(cur_mask.shape[2:])
+                        )
+
+                        # aggregate n_perturb
+                        cur_attr = (formatted_eval_diff * cur_mask.float()).sum(dim=0)
+
+                        # (*output_shape, *input_feature_shape)
+                        total_attrib[j] += cur_attr
             if show_progress:
                 attr_progress.close()
 
@@ -397,18 +448,332 @@ class ShapleyValueSampling(PerturbationAttribution):
                 tensor_attrib_total / iter_count for tensor_attrib_total in total_attrib
             )
             formatted_attr = _format_output(is_inputs_tuple, attrib)
+        # pyre-fixme[7]: Expected `TensorOrTupleOfTensorsGeneric` but got
+        #  `Tuple[Tensor, ...]`.
+        return formatted_attr
+
+    def attribute_future(
+        self,
+        inputs: TensorOrTupleOfTensorsGeneric,
+        baselines: BaselineType = None,
+        target: TargetType = None,
+        additional_forward_args: Optional[Tuple[object, ...]] = None,
+        feature_mask: Union[None, TensorOrTupleOfTensorsGeneric] = None,
+        n_samples: int = 25,
+        perturbations_per_eval: int = 1,
+        show_progress: bool = False,
+    ) -> Future[TensorOrTupleOfTensorsGeneric]:
+        r"""
+        This method is not implemented for ShapleyValueSampling.
+        """
+        is_inputs_tuple = _is_tuple(inputs)
+        inputs_tuple, baselines = _format_input_baseline(inputs, baselines)
+        additional_forward_args = _format_additional_forward_args(
+            additional_forward_args
+        )
+        formatted_feature_mask = _format_feature_mask(feature_mask, inputs_tuple)
+        reshaped_feature_mask = _shape_feature_mask(
+            formatted_feature_mask, inputs_tuple
+        )
+
+        assert (
+            isinstance(perturbations_per_eval, int) and perturbations_per_eval >= 1
+        ), "Ablations per evaluation must be at least 1."
+
+        with torch.no_grad():
+            baselines = _tensorize_baseline(inputs_tuple, baselines)
+            num_examples = inputs_tuple[0].shape[0]
+
+            total_features = _get_max_feature_index(reshaped_feature_mask) + 1
+
+            if show_progress:
+                attr_progress = progress(
+                    desc=f"{self.get_name()} attribution",
+                    total=self._get_n_evaluations(
+                        total_features, n_samples, perturbations_per_eval
+                    )
+                    + 1,  # add 1 for the initial eval
+                )
+                attr_progress.update(0)
+
+            initial_eval: Future[Tensor] = self._strict_run_forward_future(
+                self.forward_func, baselines, target, additional_forward_args
+            )
+
+            if show_progress:
+                attr_progress.update()
+
+            prev_result_tuple: Future[
+                Tuple[Tensor, Tensor, Size, List[Tensor], bool]
+            ] = initial_eval.then(
+                lambda inp=initial_eval: self._initialEvalToPrevResultsTuple(  # type: ignore # noqa: E501 line too long
+                    inp,
+                    num_examples,
+                    perturbations_per_eval,
+                    reshaped_feature_mask,
+                    inputs_tuple,
+                )
+            )
+
+            iter_count = 0
+            # Iterate for number of samples, generate a permutation of the features
+            # and evalute the incremental increase for each feature.
+            for feature_permutation in self.permutation_generator(
+                total_features, n_samples
+            ):
+                prev_result_tuple = prev_result_tuple.then(
+                    lambda inp=prev_result_tuple: self._setPrevResultsToInitialEval(inp)  # type: ignore # noqa: E501 line too long
+                )
+
+                iter_count += 1
+                for (
+                    current_inputs,
+                    current_add_args,
+                    current_target,
+                    current_masks,
+                ) in self._perturbation_generator(
+                    inputs_tuple,
+                    additional_forward_args,
+                    target,
+                    baselines,
+                    reshaped_feature_mask,
+                    feature_permutation,
+                    perturbations_per_eval,
+                ):
+                    if sum(torch.sum(mask).item() for mask in current_masks) == 0:
+                        warnings.warn(
+                            "Feature mask is missing some integers between 0 and "
+                            "num_features, for optimal performance, make sure each"
+                            " consecutive integer corresponds to a feature.",
+                            stacklevel=1,
+                        )
+                    # modified_eval dimensions: 1D tensor with length
+                    # equal to #num_examples * #features in batch
+                    modified_eval = self._strict_run_forward_future(
+                        self.forward_func,
+                        current_inputs,
+                        current_target,
+                        current_add_args,
+                    )
+                    if show_progress:
+                        attr_progress.update()
+
+                    assert isinstance(modified_eval, torch.Future), (
+                        "when using futures method, modified_eval should have "
+                        f"Future type rather than {type(modified_eval)}"
+                    )
+                    eval_futs: Future[
+                        List[
+                            Future[
+                                Union[
+                                    Tuple[Tensor, Tensor, Size, List[Tensor], bool],
+                                    Tensor,
+                                ]
+                            ]
+                        ]
+                    ] = collect_all([prev_result_tuple, modified_eval])
+
+                    prev_result_tuple = eval_futs.then(
+                        lambda evals=eval_futs, masks=current_masks: self._evalFutToPrevResultsTuple(  # type: ignore # noqa: E501 line too long
+                            evals, num_examples, inputs_tuple, masks
+                        )
+                    )
+
+            if show_progress:
+                attr_progress.close()
+
+            # Divide total attributions by number of random permutations and return
+            # formatted attributions.
+            formatted_attr: Future[Union[Tensor, tuple[Tensor, ...]]] = (
+                prev_result_tuple.then(
+                    lambda inp=prev_result_tuple: self._prevResultTupleToFormattedAttr(  # type: ignore # noqa: E501 line too long
+                        inp, iter_count, is_inputs_tuple
+                    )
+                )
+            )
+        # pyre-fixme[7]: Expected `TensorOrTupleOfTensorsGeneric` but got
+        #  `Tuple[Tensor, ...]`.
+        return formatted_attr  # type: ignore
+
+    def _initialEvalToPrevResultsTuple(
+        self,
+        initial_eval: Future[Tensor],
+        num_examples: int,
+        perturbations_per_eval: int,
+        reshaped_feature_mask: TensorOrTupleOfTensorsGeneric,
+        inputs_tuple: Tuple[Tensor, ...],
+    ) -> Tuple[Tensor, Tensor, Size, List[Tensor], bool]:
+        """Since the initial eval is a Future, it is easier to bundle the prev_result,
+        agg_output_mode, output_shape, and total_attrib together
+        as Shapley Value Feature Attributions are being calculated"""
+        try:
+            initial_eval_processed = initial_eval.value()
+            prev_result = initial_eval_processed
+            if not isinstance(initial_eval_processed, Tensor):
+                raise AssertionError(
+                    "initial_eval_to_processed_initial_eval_fut: "
+                    "initial_eval should be a Tensor"
+                )
+            agg_output_mode = _find_output_mode_and_verify(
+                initial_eval_processed,
+                num_examples,
+                perturbations_per_eval,
+                reshaped_feature_mask,
+                allow_multi_outputs=True,
+            )
+            output_shape = initial_eval_processed.shape
+            total_attrib: List[Tensor] = [
+                torch.zeros(
+                    tuple(output_shape) + tuple(input.shape[1:]),
+                    dtype=torch.float,
+                    device=inputs_tuple[0].device,
+                )
+                for input in inputs_tuple
+            ]
+            result = (
+                initial_eval_processed,
+                prev_result,
+                output_shape,
+                total_attrib,
+                agg_output_mode,
+            )
+        except ShapleyValueFutureError as e:
+            raise ShapleyValueFutureError(
+                "_initial_eval_to_prev_results_tuple func failed"
+            ) from e
+        return result
+
+    def _setPrevResultsToInitialEval(
+        self,
+        processed_initial_eval: Future[Tuple[Tensor, Tensor, Size, List[Tensor], bool]],
+    ) -> Tuple[Tensor, Tensor, Size, List[Tensor], bool]:
+        """At the beginning of each feature permutation, the prev_results is
+        reset to the initial eval, and this method helps set that up"""
+        (initial_eval, prev_results, output_shape, total_attrib, agg_output_mode) = (
+            processed_initial_eval.value()
+        )
+        prev_results = initial_eval
+        return (initial_eval, prev_results, output_shape, total_attrib, agg_output_mode)
+
+    def _evalFutToPrevResultsTuple(
+        self,
+        eval_futs: Future[
+            List[
+                Union[
+                    Future[Tuple[Tensor, Tensor, Size, List[Tensor], bool]],
+                    Future[Tensor],
+                ]
+            ]
+        ],
+        num_examples: int,
+        inputs_tuple: Tuple[Tensor, ...],
+        current_masks: Tuple[Tensor, ...],
+    ) -> Tuple[Tensor, Tensor, Size, List[Tensor], bool]:
+        """Helper method responsible for calculating
+        eval differences between the modified eval and prev_results
+        Tensor and storing them in total_attrib. Returns prev_results_tuple
+        with modified total_attrib and prev_results"""
+        prev_results_tuple = eval_futs.value()[0].value()
+        modified_eval = eval_futs.value()[1].value()
+        if not isinstance(modified_eval, Tensor) or not isinstance(
+            prev_results_tuple, tuple
+        ):
+            raise ShapleyValueFutureError(
+                "_eval_fut_to_prev_results_tuple func failed due to type mismatch"
+            )
+        (
+            initial_eval,
+            prev_results,
+            output_shape,
+            total_attrib,
+            agg_output_mode,
+        ) = prev_results_tuple
+        if agg_output_mode:
+            eval_diff = modified_eval - prev_results
+            prev_results = modified_eval
+        else:
+            # when perturb_per_eval > 1, every num_examples stands for
+            # one perturb. Since the perturbs are from a consecutive
+            # perumuation, each diff of a perturb is its eval minus
+            # the eval of the previous perturb
+
+            all_eval = torch.cat((prev_results, modified_eval), dim=0)
+            eval_diff = all_eval[num_examples:] - all_eval[:-num_examples]
+            prev_results = all_eval[-num_examples:]
+
+        for j in range(len(total_attrib)):
+            # format eval_diff to shape
+            # (n_perturb, *output_shape, 1,.. 1)
+            # where n_perturb may not be perturb_per_eval
+            # Append n_input_feature dim of 1 to make the tensor
+            # have the same dim as the mask tensor.
+            formatted_eval_diff = eval_diff.reshape(
+                (-1,) + tuple(output_shape) + (len(inputs_tuple[j].shape) - 1) * (1,)
+            )
+
+            # mask in shape (n_perturb, *mask_shape_broadcastable_to_input)
+            # reshape to
+            # (
+            #     n_perturb,
+            #     *broadcastable_to_output_shape
+            #     *broadcastable_to_input_feature_shape
+            # )
+            cur_mask = current_masks[j]
+            cur_mask = cur_mask.reshape(
+                tuple(cur_mask.shape[:2])
+                + (len(output_shape) - 1) * (1,)
+                + tuple(cur_mask.shape[2:])
+            )
+
+            # aggregate n_perturb
+            cur_attr = (formatted_eval_diff * cur_mask.float()).sum(dim=0)
+            # (*output_shape, *input_feature_shape)
+            total_attrib[j] += cur_attr
+
+        result = (
+            initial_eval,
+            prev_results,
+            output_shape,
+            total_attrib,
+            agg_output_mode,
+        )
+        return result
+
+    def _prevResultTupleToFormattedAttr(
+        self,
+        prev_result_tuple: Future[
+            Tuple[Tensor, Tensor, Tuple[int], List[Tensor], bool]
+        ],
+        iter_count: int,
+        is_inputs_tuple: bool,
+    ) -> Union[Tensor, Tuple[Tensor, ...]]:
+        """Helper method to format total_attrib, which is a
+        list of tensors, into formatted attributions, which
+        are either a single tensor or a tuple of tensors"""
+
+        (
+            _,
+            _,
+            _,
+            total_attrib,
+            _,
+        ) = prev_result_tuple.value()
+        attrib = tuple(
+            tensor_attrib_total / iter_count for tensor_attrib_total in total_attrib
+        )
+        formatted_attr = _format_output(is_inputs_tuple, attrib)
         return formatted_attr
 
     def _perturbation_generator(
         self,
         inputs: Tuple[Tensor, ...],
-        additional_args: Any,
+        additional_args: Optional[Tuple[object, ...]],
         target: TargetType,
         baselines: Tuple[Tensor, ...],
         input_masks: TensorOrTupleOfTensorsGeneric,
         feature_permutation: Sequence[int],
         perturbations_per_eval: int,
-    ) -> Iterable[Tuple[Tuple[Tensor, ...], Any, TargetType, Tuple[Tensor, ...]]]:
+    ) -> Iterable[Tuple[Tuple[Tensor, ...], object, TargetType, Tuple[Tensor, ...]]]:
         """
         This method is a generator which yields each perturbation to be evaluated
         including inputs, additional_forward_args, targets, and mask.
@@ -480,9 +845,70 @@ class ShapleyValueSampling(PerturbationAttribution):
                 combined_masks,
             )
 
-    def _get_n_evaluations(self, total_features, n_samples, perturbations_per_eval):
+    def _get_n_evaluations(
+        self, total_features: int, n_samples: int, perturbations_per_eval: int
+    ) -> int:
         """return the total number of forward evaluations needed"""
         return math.ceil(total_features / perturbations_per_eval) * n_samples
+
+    # pyre-fixme[2]: Parameter must be annotated.
+    def _strict_run_forward(self, *args, **kwargs) -> Tensor:
+        """
+        A temp wrapper for global _run_forward util to force forward output
+        type assertion & conversion.
+        Remove after the strict logic is supported by all attr classes
+        """
+        forward_output = _run_forward(*args, **kwargs)
+        if isinstance(forward_output, Tensor):
+            # format scalar to shape (1) so we can always assume non-empty output_shape
+            if not forward_output.shape:
+                forward_output = forward_output.reshape(1)
+
+            return forward_output
+
+        output_type = type(forward_output)
+        assert output_type is int or output_type is float, (
+            "the return of forward_func must be a tensor, int, or float,"
+            f" received: {forward_output}"
+        )
+
+        # using python built-in type as torch dtype
+        # int -> torch.int64, float -> torch.float64
+        # ref: https://github.com/pytorch/pytorch/pull/21215
+        return torch.tensor([forward_output], dtype=cast(dtype, output_type))
+
+    # pyre-fixme[2]: Parameter must be annotated.
+    def _strict_run_forward_future(self, *args, **kwargs) -> Future[Tensor]:
+        """
+        A temp wrapper for global _run_forward util to force
+        forward outputtype assertion & conversion, but takes
+        into account the Future tensor type
+        """
+
+        def process_strict_run_forward(fut: Future[Tensor]) -> Tensor:
+            output = fut.value()
+            if isinstance(output, Tensor):
+                # format scalar to shape (1) so we can always
+                # assume non-empty output_shape
+                if not output.shape:
+                    output = output.reshape(1)
+                return output
+            output_type = type(output)
+            assert output_type is int or output_type is float, (
+                "the return of forward_func must be a Future of tensor, int, or float,"
+                f" received: {output_type}"
+            )
+            output = torch.tensor([output], dtype=cast(dtype, output_type))
+            return output
+
+        forward_output = _run_forward(*args, **kwargs)
+        assert isinstance(forward_output, torch.Future), (
+            "The return type of forward_func must be a Future"
+            f" received: {type(forward_output)}"
+        )
+
+        return_output = forward_output.then(process_strict_run_forward)
+        return return_output
 
 
 class ShapleyValues(ShapleyValueSampling):
@@ -516,7 +942,7 @@ class ShapleyValues(ShapleyValueSampling):
     evaluations, and we plan to add this approach in the future.
     """
 
-    def __init__(self, forward_func: Callable) -> None:
+    def __init__(self, forward_func: Callable[..., Union[int, float, Tensor]]) -> None:
         r"""
         Args:
 
@@ -537,7 +963,7 @@ class ShapleyValues(ShapleyValueSampling):
         inputs: TensorOrTupleOfTensorsGeneric,
         baselines: BaselineType = None,
         target: TargetType = None,
-        additional_forward_args: Any = None,
+        additional_forward_args: Optional[object] = None,
         feature_mask: Union[None, TensorOrTupleOfTensorsGeneric] = None,
         perturbations_per_eval: int = 1,
         show_progress: bool = False,
@@ -731,7 +1157,8 @@ class ShapleyValues(ShapleyValueSampling):
             warnings.warn(
                 "You are attempting to compute Shapley Values with at least 10 "
                 "features, which will likely be very computationally expensive."
-                "Consider using Shapley Value Sampling instead."
+                "Consider using Shapley Value Sampling instead.",
+                stacklevel=1,
             )
 
         return super().attribute.__wrapped__(
@@ -745,7 +1172,9 @@ class ShapleyValues(ShapleyValueSampling):
             show_progress=show_progress,
         )
 
-    def _get_n_evaluations(self, total_features, n_samples, perturbations_per_eval):
+    def _get_n_evaluations(
+        self, total_features: int, n_samples: int, perturbations_per_eval: int
+    ) -> int:
         """return the total number of forward evaluations needed"""
         return math.ceil(total_features / perturbations_per_eval) * math.factorial(
             total_features

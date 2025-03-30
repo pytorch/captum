@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+
+# pyre-strict
 from abc import ABC, abstractmethod
 from typing import Optional, Tuple
 
@@ -34,7 +36,7 @@ class StochasticGatesBase(Module, ABC):
         mask: Optional[Tensor] = None,
         reg_weight: float = 1.0,
         reg_reduction: str = "sum",
-    ):
+    ) -> None:
         """
         Args:
             n_gates (int): number of gates.

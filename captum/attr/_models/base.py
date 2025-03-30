@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+# pyre-strict
+
 import warnings
 from functools import reduce
 
@@ -19,14 +21,21 @@ class InterpretableEmbeddingBase(Module):
     precomputed embedding vectors to the layers below.
     """
 
+    # pyre-fixme[2]: Parameter must be annotated.
     def __init__(self, embedding, full_name) -> None:
         Module.__init__(self)
+        # pyre-fixme[4]: Attribute must be annotated.
         self.num_embeddings = getattr(embedding, "num_embeddings", None)
+        # pyre-fixme[4]: Attribute must be annotated.
         self.embedding_dim = getattr(embedding, "embedding_dim", None)
 
+        # pyre-fixme[4]: Attribute must be annotated.
         self.embedding = embedding
+        # pyre-fixme[4]: Attribute must be annotated.
         self.full_name = full_name
 
+    # pyre-fixme[3]: Return type must be annotated.
+    # pyre-fixme[2]: Parameter must be annotated.
     def forward(self, *inputs, **kwargs):
         r"""
         The forward function of a wrapper embedding layer that takes and returns
@@ -70,6 +79,8 @@ class InterpretableEmbeddingBase(Module):
         )
         return inputs[0] if len(inputs) > 0 else list(kwargs.values())[0]
 
+    # pyre-fixme[3]: Return type must be annotated.
+    # pyre-fixme[2]: Parameter must be annotated.
     def indices_to_embeddings(self, *input, **kwargs):
         r"""
         Maps indices to corresponding embedding vectors. E.g. word embeddings
@@ -102,6 +113,7 @@ class TokenReferenceBase:
     def __init__(self, reference_token_idx: int = 0) -> None:
         self.reference_token_idx = reference_token_idx
 
+    # pyre-fixme[2]: Parameter must be annotated.
     def generate_reference(self, sequence_length, device: torch.device) -> torch.Tensor:
         r"""
         Generated reference tensor of given `sequence_length` using
@@ -120,6 +132,8 @@ class TokenReferenceBase:
         return torch.tensor([self.reference_token_idx] * sequence_length, device=device)
 
 
+# pyre-fixme[3]: Return type must be annotated.
+# pyre-fixme[2]: Parameter must be annotated.
 def _get_deep_layer_name(obj, layer_names):
     r"""
     Traverses through the layer names that are separated by
@@ -128,7 +142,8 @@ def _get_deep_layer_name(obj, layer_names):
     return reduce(getattr, layer_names.split("."), obj)
 
 
-def _set_deep_layer_value(obj, layer_names, value):
+# pyre-fixme[2]: Parameter must be annotated.
+def _set_deep_layer_value(obj, layer_names, value) -> None:
     r"""
     Traverses through the layer names that are separated by
     dot in order to access the embedding layer and update its value.
@@ -196,7 +211,8 @@ def configure_interpretable_embedding_layer(
         "embeddings and compute attributions for each embedding dimension. "
         "The original embedding layer must be set "
         "back by calling `remove_interpretable_embedding_layer` function "
-        "after model interpretation is finished. "
+        "after model interpretation is finished. ",
+        stacklevel=1,
     )
     interpretable_emb = InterpretableEmbeddingBase(
         embedding_layer, embedding_layer_name

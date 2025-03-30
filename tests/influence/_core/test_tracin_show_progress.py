@@ -1,19 +1,20 @@
+# pyre-strict
+
 import io
 import tempfile
-import unittest
 import unittest.mock
 from typing import Callable
 
 import torch.nn as nn
 from captum.influence._core.tracincp import TracInCP
 from captum.influence._core.tracincp_fast_rand_proj import TracInCPFast
-from parameterized import parameterized
-from tests.helpers.basic import BaseTest
-from tests.influence._utils.common import (
+from captum.testing.helpers import BaseTest
+from captum.testing.helpers.influence.common import (
     build_test_name_func,
     DataInfluenceConstructor,
     get_random_model_and_data,
 )
+from parameterized import parameterized
 from torch.utils.data import DataLoader
 
 
@@ -35,7 +36,7 @@ class TestTracInShowProgress(BaseTest):
         msg: str,
         msg_multiplicity: int,
         greater_than: bool = True,
-    ):
+    ) -> None:
         """
         Checks that in `mock_stderr`, the error msg `msg` occurs `msg_multiplicity`
         times. If 'greater_than' is true, it checks that the `msg` occurs at least
@@ -65,6 +66,16 @@ class TestTracInShowProgress(BaseTest):
                 error_msg,
             )
 
+    # pyre-fixme[56]: Pyre was not able to infer the type of argument
+    # `comprehension((reduction, constr, mode) for
+    # generators(generator((reduction, constr) in
+    # [("none", captum.testing.helpers.influence.common.DataInfluenceConstructor
+    # (captum.influence._core.tracincp.TracInCP)),
+    # ("sum", captum.testing.helpers.influence.common.DataInfluenceConstructor
+    # (captum.influence._core.tracincp_fast_rand_proj.TracInCPFast))] if ),
+    # generators(generator(mode in ["self influence by checkpoints",
+    # "self influence by batches", "influence", "k-most"] if ))))`
+    # to decorator factory `parameterized.parameterized.expand`.
     @parameterized.expand(
         [
             (
@@ -94,6 +105,7 @@ class TestTracInShowProgress(BaseTest):
     def test_tracin_show_progress(
         self,
         reduction: str,
+        # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
         tracin_constructor: Callable,
         mode: str,
     ) -> None:
@@ -130,6 +142,7 @@ class TestTracInShowProgress(BaseTest):
                     # `outer_loop_by_checkpoints` is True. In this case, we should see a
                     # single outer progress bar over checkpoints, and for every
                     # checkpoints, a separate progress bar over batches
+                    # pyre-fixme[16]: `object` has no attribute `self_influence`.
                     tracin.self_influence(
                         DataLoader(train_dataset, batch_size=batch_size),
                         show_progress=True,
@@ -143,6 +156,7 @@ class TestTracInShowProgress(BaseTest):
                     self._check_error_msg_multiplicity(
                         mock_stderr,
                         (
+                            # pyre-fixme[16]: `object` has no attribute `get_name`.
                             f"Using {tracin.get_name()} to compute self influence. "
                             "Processing checkpoint: 100%"
                         ),
@@ -156,6 +170,7 @@ class TestTracInShowProgress(BaseTest):
                             f"Using {tracin.get_name()} to compute self influence. "
                             "Processing batch: 100%"
                         ),
+                        # pyre-fixme[16]: `object` has no attribute `checkpoints`.
                         len(tracin.checkpoints),
                     )
                 elif mode == "self influence by batches":
@@ -177,6 +192,7 @@ class TestTracInShowProgress(BaseTest):
                     )
                 elif mode == "influence":
 
+                    # pyre-fixme[16]: `object` has no attribute `influence`.
                     tracin.influence(
                         (test_samples, test_labels),
                         k=None,

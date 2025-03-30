@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
+
+# pyre-unsafe
 import torch
 from captum.attr import CommonStats, Summarizer
-from tests.helpers.basic import BaseTest
+from captum.testing.helpers import BaseTest
 
 
 class Test(BaseTest):

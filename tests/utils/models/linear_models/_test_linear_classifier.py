@@ -1,20 +1,29 @@
+# pyre-strict
 import argparse
 import random
-from typing import Optional
+from typing import cast, Optional
 
 import captum._utils.models.linear_model.model as pytorch_model_module
 import numpy as np
+import numpy.typing as npt
 import sklearn.datasets as datasets
 import torch
-from tests.utils.test_linear_model import _evaluate
+from captum.testing.helpers.evaluate_linear_model import evaluate
 from torch.utils.data import DataLoader, TensorDataset
 
 
+# pyre-fixme[3]: Return type must be annotated.
 def sklearn_dataset_to_loaders(
-    data, train_prop=0.7, batch_size=64, num_workers=4, shuffle=False, one_hot=False
+    # pyre-fixme[2]: Parameter must be annotated.
+    data,
+    train_prop: float = 0.7,
+    batch_size: int = 64,
+    num_workers: int = 4,
+    shuffle: bool = False,
+    one_hot: bool = False,
 ):
     xs, ys = data
-    if one_hot and ys.dtype != np.float:
+    if one_hot and ys.dtype != float:
         oh = np.zeros((ys.size, ys.max() + 1))
         oh[np.arange(ys.size), ys] = 1
         ys = oh
@@ -41,6 +50,7 @@ def sklearn_dataset_to_loaders(
     return train_loader, val_loader, xs.shape[1], xs.shape[0]
 
 
+# pyre-fixme[3]: Return type must be annotated.
 def compare_to_sk_learn(
     max_epoch: int,
     train_loader: DataLoader,
@@ -75,11 +85,11 @@ def compare_to_sk_learn(
         alpha=alpha,
     )
 
-    sklearn_stats.update(_evaluate(val_loader, sklearn_classifier))
-    pytorch_stats.update(_evaluate(val_loader, pytorch_classifier))
+    sklearn_stats.update(evaluate(val_loader, sklearn_classifier))
+    pytorch_stats.update(evaluate(val_loader, pytorch_classifier))
 
-    train_stats_pytorch = _evaluate(train_loader, pytorch_classifier)
-    train_stats_sklearn = _evaluate(train_loader, sklearn_classifier)
+    train_stats_pytorch = evaluate(train_loader, pytorch_classifier)
+    train_stats_sklearn = evaluate(train_loader, sklearn_classifier)
 
     o_pytorch = {"l2": train_stats_pytorch["l2"]}
     o_sklearn = {"l2": train_stats_sklearn["l2"]}
@@ -87,15 +97,21 @@ def compare_to_sk_learn(
     pytorch_h = pytorch_classifier.representation()
     sklearn_h = sklearn_classifier.representation()
     if objective == "ridge":
+        # pyre-fixme[6]: For 2nd argument expected `Tensor` but got `float`.
         o_pytorch["l2_reg"] = alpha * pytorch_h.norm(p=2, dim=-1)
+        # pyre-fixme[6]: For 2nd argument expected `Tensor` but got `float`.
         o_sklearn["l2_reg"] = alpha * sklearn_h.norm(p=2, dim=-1)
     elif objective == "lasso":
+        # pyre-fixme[6]: For 2nd argument expected `Tensor` but got `float`.
         o_pytorch["l1_reg"] = alpha * pytorch_h.norm(p=1, dim=-1)
+        # pyre-fixme[6]: For 2nd argument expected `Tensor` but got `float`.
         o_sklearn["l1_reg"] = alpha * sklearn_h.norm(p=1, dim=-1)
 
-    rel_diff = (sum(o_sklearn.values()) - sum(o_pytorch.values())) / abs(
-        sum(o_sklearn.values())
-    )
+    rel_diff = cast(
+        npt.NDArray,
+        # pyre-fixme[6]: For 1st argument expected `int` but got `Union[int, Tensor]`.
+        (sum(o_sklearn.values()) - sum(o_pytorch.values())),
+    ) / abs(sum(o_sklearn.values()))
     return (
         {
             "objective_rel_diff": rel_diff.tolist(),
@@ -107,7 +123,8 @@ def compare_to_sk_learn(
     )
 
 
-def main(args):
+# pyre-fixme[2]: Parameter must be annotated.
+def main(args) -> None:
     if args.seed:
         torch.manual_seed(0)
         random.seed(0)
@@ -190,5 +207,5 @@ if __name__ == "__main__":
     parser.add_argument("--init_scheme", type=str, default="xavier")
     parser.add_argument("--norm_sklearn", default=False, action="store_true")
     parser.add_argument("--objective", type=str, default="lasso")
-    args = parser.parse_args()
+    args: argparse.Namespace = parser.parse_args()
     main(args)

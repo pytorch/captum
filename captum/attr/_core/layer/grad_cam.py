@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
-from typing import Any, Callable, List, Tuple, Union
+
+# pyre-strict
+from typing import Any, Callable, cast, Dict, List, Optional, Tuple, Union
 
 import torch
 import torch.nn.functional as F
@@ -52,7 +54,7 @@ class LayerGradCam(LayerAttribution, GradientAttribution):
 
     def __init__(
         self,
-        forward_func: Callable,
+        forward_func: Callable[..., Tensor],
         layer: Module,
         device_ids: Union[None, List[int]] = None,
     ) -> None:
@@ -79,10 +81,11 @@ class LayerGradCam(LayerAttribution, GradientAttribution):
         self,
         inputs: Union[Tensor, Tuple[Tensor, ...]],
         target: TargetType = None,
-        additional_forward_args: Any = None,
+        additional_forward_args: Optional[object] = None,
         attribute_to_layer_input: bool = False,
         relu_attributions: bool = False,
         attr_dim_summation: bool = True,
+        grad_kwargs: Optional[Dict[str, Any]] = None,
     ) -> Union[Tensor, Tuple[Tensor, ...]]:
         r"""
         Args:
@@ -154,6 +157,9 @@ class LayerGradCam(LayerAttribution, GradientAttribution):
                         sum attributions along dimension 1 (usually channel).
                         The default (True) means to sum along dimension 1.
                         Default: True
+            grad_kwargs (Dict[str, Any], optional): Additional keyword
+                        arguments for torch.autograd.grad.
+                        Default: None
 
         Returns:
             *Tensor* or *tuple[Tensor, ...]* of **attributions**:
@@ -194,22 +200,25 @@ class LayerGradCam(LayerAttribution, GradientAttribution):
         # hidden layer and hidden layer evaluated at each input.
         layer_gradients, layer_evals = compute_layer_gradients_and_eval(
             self.forward_func,
-            self.layer,
+            cast(Module, self.layer),
             inputs,
             target,
             additional_forward_args,
             device_ids=self.device_ids,
             attribute_to_layer_input=attribute_to_layer_input,
+            grad_kwargs=grad_kwargs,
         )
 
         summed_grads = tuple(
-            torch.mean(
-                layer_grad,
-                dim=tuple(x for x in range(2, len(layer_grad.shape))),
-                keepdim=True,
+            (
+                torch.mean(
+                    layer_grad,
+                    dim=tuple(x for x in range(2, len(layer_grad.shape))),
+                    keepdim=True,
+                )
+                if len(layer_grad.shape) > 2
+                else layer_grad
             )
-            if len(layer_grad.shape) > 2
-            else layer_grad
             for layer_grad in layer_gradients
         )
 

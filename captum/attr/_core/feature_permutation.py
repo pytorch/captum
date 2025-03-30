@@ -1,11 +1,14 @@
 #!/usr/bin/env python3
-from typing import Any, Callable, Tuple, Union
+
+# pyre-strict
+from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
 import torch
-from captum._utils.typing import TargetType, TensorOrTupleOfTensorsGeneric
+from captum._utils.typing import BaselineType, TargetType, TensorOrTupleOfTensorsGeneric
 from captum.attr._core.feature_ablation import FeatureAblation
 from captum.log import log_usage
 from torch import Tensor
+from torch.futures import Future
 
 
 def _permute_feature(x: Tensor, feature_mask: Tensor) -> Tensor:
@@ -52,7 +55,8 @@ class FeaturePermutation(FeatureAblation):
     of examples to compute attributions and cannot be performed on a single example.
 
     By default, each scalar value within
-    each input tensor is taken as a feature and shuffled independently. Passing
+    each input tensor is taken as a feature and shuffled independently, *unless*
+    attribute() is called with enable_cross_tensor_attribution=True. Passing
     a feature mask, allows grouping features to be shuffled together.
     Each input scalar in the group will be given the same attribution value
     equal to the change in target as a result of shuffling the entire feature
@@ -70,7 +74,9 @@ class FeaturePermutation(FeatureAblation):
     """
 
     def __init__(
-        self, forward_func: Callable, perm_func: Callable = _permute_feature
+        self,
+        forward_func: Callable[..., Union[int, float, Tensor, Future[Tensor]]],
+        perm_func: Callable[[Tensor, Tensor], Tensor] = _permute_feature,
     ) -> None:
         r"""
         Args:
@@ -94,10 +100,11 @@ class FeaturePermutation(FeatureAblation):
         self,
         inputs: TensorOrTupleOfTensorsGeneric,
         target: TargetType = None,
-        additional_forward_args: Any = None,
+        additional_forward_args: Optional[object] = None,
         feature_mask: Union[None, TensorOrTupleOfTensorsGeneric] = None,
         perturbations_per_eval: int = 1,
         show_progress: bool = False,
+        enable_cross_tensor_attribution: bool = False,
         **kwargs: Any,
     ) -> TensorOrTupleOfTensorsGeneric:
         r"""
@@ -171,14 +178,16 @@ class FeaturePermutation(FeatureAblation):
                             corresponding to the same feature should have the
                             same value.  Note that features within each input
                             tensor are ablated independently (not across
-                            tensors).
+                            tensors), unless enable_cross_tensor_attribution is
+                            True.
 
                             The first dimension of each mask must be 1, as we require
                             to have the same group of features for each input sample.
 
                             If None, then a feature mask is constructed which assigns
                             each scalar within a tensor as a separate feature, which
-                            is permuted independently.
+                            is permuted independently, unless
+                            enable_cross_tensor_attribution is True.
                             Default: None
                 perturbations_per_eval (int, optional): Allows permutations
                             of multiple features to be processed simultaneously
@@ -196,6 +205,10 @@ class FeaturePermutation(FeatureAblation):
                             It will try to use tqdm if available for advanced features
                             (e.g. time estimation). Otherwise, it will fallback to
                             a simple output of progress.
+                            Default: False
+                enable_cross_tensor_attribution (bool, optional): If True, then
+                            features can be grouped across input tensors depending on
+                            the values in the feature mask.
                             Default: False
                 **kwargs (Any, optional): Any additional arguments used by child
                             classes of :class:`.FeatureAblation` (such as
@@ -255,7 +268,36 @@ class FeaturePermutation(FeatureAblation):
             >>> attr = feature_perm.attribute(input, target=1,
             >>>                               feature_mask=feature_mask)
         """
+        # Remove baselines from kwargs if provided so we don't specify this field
+        # twice in the FeatureAblation.attribute call below.
+        if isinstance(kwargs, dict) and "baselines" in kwargs:
+            del kwargs["baselines"]
         return FeatureAblation.attribute.__wrapped__(
+            self,
+            inputs,
+            baselines=None,
+            target=target,
+            additional_forward_args=additional_forward_args,
+            feature_mask=feature_mask,
+            perturbations_per_eval=perturbations_per_eval,
+            show_progress=show_progress,
+            enable_cross_tensor_attribution=enable_cross_tensor_attribution,
+            **kwargs,
+        )
+
+    def attribute_future(
+        self,
+        inputs: TensorOrTupleOfTensorsGeneric,
+        target: TargetType = None,
+        additional_forward_args: Optional[object] = None,
+        feature_mask: Union[None, TensorOrTupleOfTensorsGeneric] = None,
+        perturbations_per_eval: int = 1,
+        show_progress: bool = False,
+        **kwargs: Any,
+    ) -> Future[TensorOrTupleOfTensorsGeneric]:
+        if isinstance(kwargs, dict) and "baselines" in kwargs:
+            del kwargs["baselines"]
+        return FeatureAblation.attribute_future.__wrapped__(
             self,
             inputs,
             baselines=None,
@@ -270,8 +312,8 @@ class FeaturePermutation(FeatureAblation):
     def _construct_ablated_input(
         self,
         expanded_input: Tensor,
-        input_mask: Tensor,
-        baseline: Union[int, float, Tensor],
+        input_mask: Union[None, Tensor, Tuple[Tensor, ...]],
+        baseline: Union[None, float, Tensor],
         start_feature: int,
         end_feature: int,
         **kwargs: Any,
@@ -290,13 +332,18 @@ class FeaturePermutation(FeatureAblation):
         Since `baselines` is set to None for `FeatureAblation.attribute, this
         will be the zero tensor, however, it is not used.
         """
-        assert input_mask.shape[0] == 1, (
+        assert (
+            input_mask is not None
+            and not isinstance(input_mask, tuple)
+            and input_mask.shape[0] == 1
+        ), (
             "input_mask.shape[0] != 1: pass in one mask in order to permute"
             "the same features for each input"
         )
         current_mask = torch.stack(
             [input_mask == j for j in range(start_feature, end_feature)], dim=0
         ).bool()
+        current_mask = current_mask.to(expanded_input.device)
 
         output = torch.stack(
             [
@@ -305,3 +352,47 @@ class FeaturePermutation(FeatureAblation):
             ]
         )
         return output, current_mask
+
+    def _construct_ablated_input_across_tensors(
+        self,
+        inputs: Tuple[Tensor, ...],
+        input_mask: Tuple[Tensor, ...],
+        baselines: BaselineType,
+        feature_idxs: List[int],
+        feature_idx_to_tensor_idx: Dict[int, List[int]],
+        current_num_ablated_features: int,
+    ) -> Tuple[Tuple[Tensor, ...], Tuple[Optional[Tensor], ...]]:
+        current_masks: List[Optional[Tensor]] = []
+        tensor_idxs = {
+            tensor_idx
+            for sublist in (
+                feature_idx_to_tensor_idx[feature_idx] for feature_idx in feature_idxs
+            )
+            for tensor_idx in sublist
+        }
+        permuted_inputs = []
+        for i, input_tensor in enumerate(inputs):
+            if i not in tensor_idxs:
+                current_masks.append(None)
+                permuted_inputs.append(input_tensor)
+                continue
+            tensor_mask = []
+            permuted_input = input_tensor.clone()
+            for j, feature_idx in enumerate(feature_idxs):
+                original_input_size = (
+                    input_tensor.shape[0] // current_num_ablated_features
+                )
+                start_idx = j * original_input_size
+                end_idx = (j + 1) * original_input_size
+
+                mask = (input_mask[i] == feature_idx).to(input_tensor.device).bool()
+                if mask.ndim == 0:
+                    mask = mask.reshape((1,) * input_tensor.dim())
+                tensor_mask.append(mask)
+                permuted_input[start_idx:end_idx] = self.perm_func(
+                    input_tensor[start_idx:end_idx], mask
+                )
+            current_masks.append(torch.stack(tensor_mask, dim=0))
+            permuted_inputs.append(permuted_input)
+
+        return tuple(permuted_inputs), tuple(current_masks)

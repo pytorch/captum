@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
-from typing import Any, Callable, Tuple, Union
+
+# pyre-strict
+from typing import Any, Callable, Optional, Tuple, Union
 
 import numpy as np
 import torch
@@ -35,7 +37,7 @@ class Occlusion(FeatureAblation):
     /tensorflow/methods.py#L401
     """
 
-    def __init__(self, forward_func: Callable) -> None:
+    def __init__(self, forward_func: Callable[..., Tensor]) -> None:
         r"""
         Args:
 
@@ -55,7 +57,7 @@ class Occlusion(FeatureAblation):
         ] = None,
         baselines: BaselineType = None,
         target: TargetType = None,
-        additional_forward_args: Any = None,
+        additional_forward_args: Optional[object] = None,
         perturbations_per_eval: int = 1,
         show_progress: bool = False,
     ) -> TensorOrTupleOfTensorsGeneric:
@@ -267,11 +269,18 @@ class Occlusion(FeatureAblation):
             show_progress=show_progress,
         )
 
+    # pyre-fixme[24] Generic type `Callable` expects 2 type parameters.
+    def attribute_future(self) -> Callable:
+        r"""
+        This method is not implemented for Occlusion.
+        """
+        raise NotImplementedError("attribute_future is not implemented for Occlusion")
+
     def _construct_ablated_input(
         self,
         expanded_input: Tensor,
-        input_mask: Union[None, Tensor],
-        baseline: Union[Tensor, int, float],
+        input_mask: Union[None, Tensor, Tuple[Tensor, ...]],
+        baseline: Union[None, float, Tensor],
         start_feature: int,
         end_feature: int,
         **kwargs: Any,
@@ -307,12 +316,15 @@ class Occlusion(FeatureAblation):
             ],
             dim=0,
         ).long()
+        assert baseline is not None, "baseline should not be None"
         ablated_tensor = (
             expanded_input
             * (
                 torch.ones(1, dtype=torch.long, device=expanded_input.device)
                 - input_mask
             ).to(expanded_input.dtype)
+            # pyre-fixme[58]: `*` is not supported for operand types `Union[None, float,
+            #  Tensor]` and `Tensor`.
         ) + (baseline * input_mask.to(expanded_input.dtype))
         return ablated_tensor, input_mask
 
@@ -366,14 +378,19 @@ class Occlusion(FeatureAblation):
         padded_tensor = torch.nn.functional.pad(
             sliding_window_tsr, tuple(pad_values)  # type: ignore
         )
-        return padded_tensor.reshape((1,) + padded_tensor.shape)
+        return padded_tensor.reshape((1,) + tuple(padded_tensor.shape))
 
     def _get_feature_range_and_mask(
-        self, input: Tensor, input_mask: Tensor, **kwargs: Any
-    ) -> Tuple[int, int, None]:
-        feature_max = np.prod(kwargs["shift_counts"])
+        self, input: Tensor, input_mask: Optional[Tensor], **kwargs: Any
+    ) -> Tuple[int, int, Union[None, Tensor, Tuple[Tensor, ...]]]:
+        feature_max = int(np.prod(kwargs["shift_counts"]))
         return 0, feature_max, None
 
-    def _get_feature_counts(self, inputs, feature_mask, **kwargs):
+    def _get_feature_counts(
+        self,
+        inputs: TensorOrTupleOfTensorsGeneric,
+        feature_mask: Tuple[Tensor, ...],
+        **kwargs: Any,
+    ) -> Tuple[int, ...]:
         """return the numbers of possible input features"""
         return tuple(np.prod(counts).astype(int) for counts in kwargs["shift_counts"])

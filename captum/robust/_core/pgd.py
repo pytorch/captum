@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+
+# pyre-strict
 from typing import Any, Callable, Optional, Tuple, Union
 
 import torch
@@ -37,8 +39,10 @@ class PGD(Perturbation):
 
     def __init__(
         self,
+        # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
         forward_func: Callable,
-        loss_func: Callable = None,
+        # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
+        loss_func: Optional[Callable] = None,
         lower_bound: float = float("-inf"),
         upper_bound: float = float("inf"),
     ) -> None:
@@ -64,6 +68,7 @@ class PGD(Perturbation):
         super().__init__()
         self.forward_func = forward_func
         self.fgsm = FGSM(forward_func, loss_func)
+        # pyre-fixme[4]: Attribute must be annotated.
         self.bound = lambda x: torch.clamp(x, min=lower_bound, max=upper_bound)
 
     @log_usage()
@@ -73,8 +78,9 @@ class PGD(Perturbation):
         radius: float,
         step_size: float,
         step_num: int,
+        # pyre-fixme[2]: Parameter annotation cannot be `Any`.
         target: Any,
-        additional_forward_args: Any = None,
+        additional_forward_args: Optional[object] = None,
         targeted: bool = False,
         random_start: bool = False,
         norm: str = "Linf",
@@ -162,8 +168,12 @@ class PGD(Perturbation):
             else:
                 raise AssertionError("Norm constraint must be L2 or Linf.")
 
+        # pyre-fixme[6]: For 1st argument expected `Tensor` but got
+        #  `TensorOrTupleOfTensorsGeneric`.
         is_inputs_tuple = _is_tuple(inputs)
         formatted_inputs = _format_tensor_into_tuples(inputs)
+        # pyre-fixme[9]: formatted_masks has type `Union[typing.Tuple[int, ...],
+        #  typing.Tuple[Tensor, ...]]`; used as `Tuple[Union[int, Tensor], ...]`.
         formatted_masks: Union[Tuple[int, ...], Tuple[Tensor, ...]] = (
             _format_tensor_into_tuples(mask)
             if (mask is not None)
@@ -197,6 +207,8 @@ class PGD(Perturbation):
                 self.bound(perturbed_inputs[j]).detach()
                 for j in range(len(perturbed_inputs))
             )
+        # pyre-fixme[7]: Expected `TensorOrTupleOfTensorsGeneric` but got
+        #  `Tuple[Tensor, ...]`.
         return _format_output(is_inputs_tuple, perturbed_inputs)
 
     def _random_point(
@@ -210,7 +222,11 @@ class PGD(Perturbation):
             u = torch.randn_like(center)
             unit_u = F.normalize(u.view(u.size(0), -1)).view(u.size())
             d = torch.numel(center[0])
+            # pyre-fixme[58]: `**` is not supported for operand types `Tensor` and
+            #  `float`.
             r = (torch.rand(u.size(0)) ** (1.0 / d)) * radius
+            # pyre-fixme[16]: `float` has no attribute `__getitem__`.
+            # pyre-fixme[16]: `float` has no attribute `dim`.
             r = r[(...,) + (None,) * (r.dim() - 1)]
             x = r * unit_u
             return center + (x * mask)

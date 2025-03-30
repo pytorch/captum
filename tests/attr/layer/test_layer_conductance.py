@@ -1,22 +1,25 @@
 #!/usr/bin/env python3
 
+# pyre-unsafe
+
 import unittest
-from typing import Any, cast, List, Tuple, Union
+from typing import Any, cast, Dict, List, Optional, Tuple, Union
 
 import torch
 from captum._utils.typing import BaselineType
 from captum.attr._core.layer.layer_conductance import LayerConductance
-from tests.attr.helpers.conductance_reference import ConductanceReference
-from tests.helpers.basic import (
+from captum.testing.attr.helpers.conductance_reference import ConductanceReference
+from captum.testing.helpers.basic import (
     assertTensorAlmostEqual,
     assertTensorTuplesAlmostEqual,
     BaseTest,
 )
-from tests.helpers.basic_models import (
+from captum.testing.helpers.basic_models import (
     BasicModel_ConvNet,
     BasicModel_MultiLayer,
     BasicModel_MultiLayer_MultiInput,
 )
+from packaging import version
 from torch import Tensor
 from torch.nn import Module
 
@@ -131,6 +134,25 @@ class Test(BaseTest):
         baseline = 100 * torch.randn(3, 1, 10, 10, requires_grad=True)
         self._conductance_reference_test_assert(net, net.fc1, inp, baseline)
 
+    def test_layer_conductance_with_unused_layer(self) -> None:
+        if version.parse(torch.__version__) < version.parse("2.1.0"):
+            raise unittest.SkipTest(
+                "Skipping unused layed gradient test since it is not supported "
+                "by torch version < 2.1"
+            )
+        net = BasicModel_MultiLayer_MultiInput()
+        inp1 = torch.tensor([[0.0, 10.0, 1.0], [0.0, 0.0, 10.0]])
+        inp2 = torch.tensor([[0.0, 4.0, 5.0], [0.0, 0.0, 10.0]])
+        inp3 = torch.tensor([[0.0, 0.0, 0.0], [0.0, 0.0, 5.0]])
+        self._conductance_test_assert(
+            net,
+            net.model.relu,
+            (inp1, inp2),
+            [[90.0, 100.0, 100.0, 100.0], [100.0, 100.0, 100.0, 100.0]],
+            additional_args=(inp3, 5),
+            grad_kwargs={"materialize_grads": True},
+        )
+
     def _conductance_test_assert(
         self,
         model: Module,
@@ -139,6 +161,7 @@ class Test(BaseTest):
         expected_conductance: Union[List[List[float]], Tuple[List[List[float]], ...]],
         baselines: BaselineType = None,
         additional_args: Any = None,
+        grad_kwargs: Optional[Dict[str, Any]] = None,
     ) -> None:
         cond = LayerConductance(model, target_layer)
         self.assertTrue(cond.multiplies_by_inputs)
@@ -152,6 +175,7 @@ class Test(BaseTest):
                 additional_forward_args=additional_args,
                 internal_batch_size=internal_batch_size,
                 return_convergence_delta=True,
+                grad_kwargs=grad_kwargs,
             )
             delta_condition = (delta.abs() < 0.01).all()
             self.assertTrue(
@@ -170,7 +194,7 @@ class Test(BaseTest):
         target_layer: Module,
         test_input: Tensor,
         test_baseline: Union[None, Tensor] = None,
-        n_steps=300,
+        n_steps: int = 300,
     ) -> None:
         layer_output = None
 
@@ -229,9 +253,11 @@ class Test(BaseTest):
                     Tensor,
                     cond.attribute(
                         test_input[i : i + 1],
-                        baselines=test_baseline[i : i + 1]
-                        if test_baseline is not None
-                        else None,
+                        baselines=(
+                            test_baseline[i : i + 1]
+                            if test_baseline is not None
+                            else None
+                        ),
                         target=target_index,
                         n_steps=n_steps,
                         method="gausslegendre",

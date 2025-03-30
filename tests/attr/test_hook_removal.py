@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+# pyre-unsafe
+
 from enum import Enum
 from typing import Any, Callable, cast, Dict, Optional, Tuple, Type
 
@@ -7,19 +9,20 @@ import torch
 from captum.attr._core.noise_tunnel import NoiseTunnel
 from captum.attr._models.base import _set_deep_layer_value
 from captum.attr._utils.attribution import Attribution, InternalAttribution
-from tests.attr.helpers.gen_test_utils import (
+from captum.testing.attr.helpers.gen_test_utils import (
     gen_test_name,
     get_target_layer,
     parse_test_config,
     should_create_generated_test,
 )
-from tests.attr.helpers.test_config import config
-from tests.helpers.basic import BaseTest, deep_copy_args
+from captum.testing.attr.helpers.test_config import config
+from captum.testing.helpers import BaseTest
+from captum.testing.helpers.basic import deep_copy_args
 from torch.nn import Module
 
 """
 Tests in this file are dynamically generated based on the config
-defined in tests/attr/helpers/test_config.py. To add new test cases,
+defined in captum/testing/attr/helpers/test_config.py. To add new test cases,
 read the documentation in test_config.py and add cases based on the
 schema described there.
 """

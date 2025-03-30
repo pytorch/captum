@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+
+# pyre-strict
 from collections import namedtuple
 from itertools import cycle
 from typing import (
@@ -35,7 +37,7 @@ _CONTEXT_IPYTHON = "_CONTEXT_IPYTHON"
 _CONTEXT_NONE = "_CONTEXT_NONE"
 
 
-def _get_context():
+def _get_context() -> str:
     """Determine the most specific context that we're in.
     Implementation from TensorBoard: https://git.io/JvObD.
 
@@ -51,6 +53,10 @@ def _get_context():
     # returned by `IPython.get_ipython` does not have a `get_trait`
     # method.
     try:
+        # To avoid fbsource//third-party/pypi/google-cloud-pubsub:google-cloud-pubsub
+        # which will cause "Duplicate extension: grpc/_cython/cygrpc.so!"
+        # @manual
+        # pyre-fixme[21]: Could not find module `google.colab`.
         import google.colab  # noqa: F401
         import IPython
     except ImportError:
@@ -75,10 +81,16 @@ def _get_context():
     return _CONTEXT_NONE
 
 
+# pyre-fixme[4]: Attribute annotation cannot be `Any`.
+# pyre-fixme[2]: Parameter annotation cannot be `Any`.
 VisualizationOutput = namedtuple(
     "VisualizationOutput", "feature_outputs actual predicted active_index model_index"
 )
+# pyre-fixme[4]: Attribute annotation cannot be `Any`.
+# pyre-fixme[2]: Parameter annotation cannot be `Any`.
 Contribution = namedtuple("Contribution", "name percent")
+# pyre-fixme[4]: Attribute annotation cannot be `Any`.
+# pyre-fixme[2]: Parameter annotation cannot be `Any`.
 SampleCache = namedtuple("SampleCache", "inputs additional_forward_args label")
 
 
@@ -101,6 +113,7 @@ class Batch:
         self,
         inputs: Union[Tensor, Tuple[Tensor, ...]],
         labels: Optional[Tensor],
+        # pyre-fixme[2]: Parameter must be annotated.
         additional_args=None,
     ) -> None:
         r"""
@@ -133,6 +146,7 @@ class Batch:
         """
         self.inputs = inputs
         self.labels = labels
+        # pyre-fixme[4]: Attribute must be annotated.
         self.additional_args = additional_args
 
 
@@ -143,6 +157,7 @@ class AttributionVisualizer:
         classes: List[str],
         features: Union[List[BaseFeature], BaseFeature],
         dataset: Iterable[Batch],
+        # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
         score_func: Optional[Callable] = None,
         use_label_for_attr: bool = True,
     ) -> None:
@@ -198,6 +213,7 @@ class AttributionVisualizer:
         )
         self._outputs: List[VisualizationOutput] = []
         self._config = FilterConfig(prediction="all", classes=[], num_examples=4)
+        # pyre-fixme[4]: Attribute must be annotated.
         self._dataset_iter = iter(dataset)
         self._dataset_cache: List[Batch] = []
 
@@ -217,7 +233,8 @@ class AttributionVisualizer:
             return None
         return result[0]
 
-    def _update_config(self, settings):
+    # pyre-fixme[2]: Parameter must be annotated.
+    def _update_config(self, settings) -> None:
         self._config = FilterConfig(
             attribution_method=settings["attribution_method"],
             attribution_arguments=settings["arguments"],
@@ -227,8 +244,8 @@ class AttributionVisualizer:
         )
 
     @log_usage()
-    def render(self, debug=True):
-        from captum.insights.attr_vis.widget import CaptumInsights
+    def render(self, debug: bool = True) -> None:
+        from captum.insights.attr_vis.widget.widget import CaptumInsights
         from IPython.display import display
 
         widget = CaptumInsights(visualizer=self)
@@ -237,7 +254,15 @@ class AttributionVisualizer:
             display(widget.out)
 
     @log_usage()
-    def serve(self, blocking=False, debug=False, port=None, bind_all=False):
+    # pyre-fixme[3]: Return type must be annotated.
+    def serve(
+        self,
+        blocking: bool = False,
+        debug: bool = False,
+        # pyre-fixme[2]: Parameter must be annotated.
+        port=None,
+        bind_all: bool = False,
+    ):
         context = _get_context()
         if context == _CONTEXT_COLAB:
             return self._serve_colab(blocking=blocking, debug=debug, port=port)
@@ -246,14 +271,28 @@ class AttributionVisualizer:
                 blocking=blocking, debug=debug, port=port, bind_all=bind_all
             )
 
-    def _serve(self, blocking=False, debug=False, port=None, bind_all=False):
+    # pyre-fixme[3]: Return type must be annotated.
+    def _serve(
+        self,
+        blocking: bool = False,
+        debug: bool = False,
+        # pyre-fixme[2]: Parameter must be annotated.
+        port=None,
+        bind_all: bool = False,
+    ):
         from captum.insights.attr_vis.server import start_server
 
         return start_server(
             self, blocking=blocking, debug=debug, _port=port, bind_all=bind_all
         )
 
-    def _serve_colab(self, blocking=False, debug=False, port=None):
+    def _serve_colab(
+        self,
+        blocking: bool = False,
+        debug: bool = False,
+        # pyre-fixme[2]: Parameter must be annotated.
+        port=None,
+    ) -> None:
         import ipywidgets as widgets
         from captum.insights.attr_vis.server import start_server
         from IPython.display import display, HTML
@@ -350,10 +389,15 @@ class AttributionVisualizer:
 
     def _calculate_vis_output(
         self,
+        # pyre-fixme[2]: Parameter must be annotated.
         inputs,
+        # pyre-fixme[2]: Parameter must be annotated.
         additional_forward_args,
+        # pyre-fixme[2]: Parameter must be annotated.
         label,
+        # pyre-fixme[2]: Parameter must be annotated.
         target=None,
+        # pyre-fixme[2]: Parameter must be annotated.
         single_model_index=None,
     ) -> Optional[List[VisualizationOutput]]:
         # Use all models, unless the user wants to render data for a particular one
@@ -363,6 +407,8 @@ class AttributionVisualizer:
             else self.models
         )
         results = []
+        # pyre-fixme[6]: For 1st argument expected `Iterable[_T]` but got
+        #  `Union[List[Any], Module]`.
         for model_index, model in enumerate(models_used):
             # Get list of model visualizations for each input
             actual_label_output = None
@@ -415,7 +461,13 @@ class AttributionVisualizer:
             features_per_input = [
                 feature.visualize(attr, data, contrib)
                 for feature, attr, data, contrib in zip(
-                    self.features, attrs_per_feature, inputs, net_contrib
+                    # pyre-fixme[6]: For 1st argument expected
+                    #  `Iterable[Variable[_T1]]` but got `Union[List[BaseFeature],
+                    #  BaseFeature]`.
+                    self.features,
+                    attrs_per_feature,
+                    inputs,
+                    net_contrib,
                 )
             ]
 
@@ -424,14 +476,16 @@ class AttributionVisualizer:
                     feature_outputs=features_per_input,
                     actual=actual_label_output,
                     predicted=predicted_scores,
-                    active_index=target
-                    if target is not None
-                    else actual_label_output.index,
+                    active_index=(
+                        target if target is not None else actual_label_output.index
+                    ),
                     # Even if we only iterated over one model, the index should be fixed
                     # to show the index the model would have had in the list
-                    model_index=single_model_index
-                    if single_model_index is not None
-                    else model_index,
+                    model_index=(
+                        single_model_index
+                        if single_model_index is not None
+                        else model_index
+                    ),
                 )
             )
 
@@ -476,13 +530,17 @@ class AttributionVisualizer:
         return vis_outputs
 
     @log_usage()
+    # pyre-fixme[3]: Return type must be annotated.
     def visualize(self):
         self._outputs = []
         while len(self._outputs) < self._config.num_examples:
+            # pyre-fixme[6]: For 1st argument expected
+            #  `Iterable[VisualizationOutput]` but got
+            #  `List[Tuple[List[VisualizationOutput], SampleCache]]`.
             self._outputs.extend(self._get_outputs())
         return [o[0] for o in self._outputs]
 
-    def get_insights_config(self):
+    def get_insights_config(self) -> Dict[str, Any]:
         return {
             "classes": self.classes,
             "methods": list(ATTRIBUTION_NAMES_TO_METHODS.keys()),

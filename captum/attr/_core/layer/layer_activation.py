@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
-from typing import Any, Callable, List, Tuple, Union
+
+# pyre-strict
+from typing import Callable, cast, List, Optional, Tuple, Union
 
 import torch
 from captum._utils.common import _format_output
@@ -18,7 +20,7 @@ class LayerActivation(LayerAttribution):
 
     def __init__(
         self,
-        forward_func: Callable,
+        forward_func: Callable[..., Union[int, float, Tensor]],
         layer: ModuleOrModuleList,
         device_ids: Union[None, List[int]] = None,
     ) -> None:
@@ -48,7 +50,7 @@ class LayerActivation(LayerAttribution):
     def attribute(
         self,
         inputs: Union[Tensor, Tuple[Tensor, ...]],
-        additional_forward_args: Any = None,
+        additional_forward_args: Optional[object] = None,
         attribute_to_layer_input: bool = False,
     ) -> Union[Tensor, Tuple[Tensor, ...], List[Union[Tensor, Tuple[Tensor, ...]]]]:
         r"""
@@ -112,7 +114,7 @@ class LayerActivation(LayerAttribution):
             >>> input = torch.randn(2, 3, 32, 32, requires_grad=True)
             >>> # Computes layer activation.
             >>> # attribution is layer output, with size Nx12x32x32
-            >>> attribution = layer_cond.attribute(input)
+            >>> attribution = layer_act.attribute(input)
         """
         with torch.no_grad():
             layer_eval = _forward_layer_eval(
@@ -124,7 +126,9 @@ class LayerActivation(LayerAttribution):
                 attribute_to_layer_input=attribute_to_layer_input,
             )
         if isinstance(self.layer, Module):
-            return _format_output(len(layer_eval) > 1, layer_eval)
+            return _format_output(
+                len(layer_eval) > 1, cast(Tuple[Tensor, ...], layer_eval)
+            )
         else:
             return [
                 _format_output(len(single_layer_eval) > 1, single_layer_eval)
@@ -132,5 +136,5 @@ class LayerActivation(LayerAttribution):
             ]
 
     @property
-    def multiplies_by_inputs(self):
+    def multiplies_by_inputs(self) -> bool:
         return True

@@ -1,24 +1,40 @@
 #!/usr/bin/env python3
+
+# pyre-strict
 import typing
 from enum import Enum
 from functools import reduce
 from inspect import signature
-from typing import Any, Callable, cast, Dict, List, overload, Tuple, Union
+from typing import (
+    Any,
+    Callable,
+    cast,
+    Dict,
+    List,
+    Literal,
+    Optional,
+    overload,
+    Sequence,
+    Tuple,
+    Union,
+)
 
 import numpy as np
 import torch
 from captum._utils.typing import (
     BaselineType,
-    Literal,
     TargetType,
     TensorOrTupleOfTensorsGeneric,
     TupleOrTensorOrBoolGeneric,
 )
+
 from torch import device, Tensor
+
+from torch.futures import Future
 from torch.nn import Module
 
 
-def _parse_version(v: str) -> Tuple[int, ...]:
+def parse_version(v: str) -> Tuple[int, ...]:
     """
     Parse version strings into tuples for comparison.
 
@@ -34,9 +50,9 @@ def _parse_version(v: str) -> Tuple[int, ...]:
         version_tuple (tuple[int]): A tuple of integer values to use for version
             comparison.
     """
-    v = [n for n in v.split(".") if n.isdigit()]
-    assert v != []
-    return tuple(map(int, v))
+    version_list = [n for n in v.split(".") if n.isdigit()]
+    assert version_list != []
+    return tuple(map(int, version_list))
 
 
 class ExpansionTypes(Enum):
@@ -66,13 +82,17 @@ def safe_div(
 
 
 @typing.overload
-def _is_tuple(inputs: Tensor) -> Literal[False]:
-    ...
+def _is_tuple(inputs: Tuple[Tensor, ...]) -> Literal[True]: ...
 
 
 @typing.overload
-def _is_tuple(inputs: Tuple[Tensor, ...]) -> Literal[True]:
-    ...
+def _is_tuple(inputs: Tensor) -> Literal[False]: ...
+
+
+@typing.overload
+def _is_tuple(
+    inputs: TensorOrTupleOfTensorsGeneric,  # type: ignore
+) -> bool: ...
 
 
 def _is_tuple(inputs: Union[Tensor, Tuple[Tensor, ...]]) -> bool:
@@ -157,20 +177,68 @@ def _format_baseline(
     return baselines
 
 
-@overload
-def _format_tensor_into_tuples(inputs: None) -> None:
-    ...
+def _is_mask_valid(mask: Tensor, inp: Tensor) -> bool:
+    """
+    Checks whether the mask is valid for the given input.
+    """
+    if mask.dim() > inp.dim():
+        return False
+
+    for mask_d, inp_d in zip(mask.shape[::-1], inp.shape[::-1]):
+        if mask_d != 1 and mask_d != inp_d:
+            return False
+
+    return True
 
 
-@overload
-def _format_tensor_into_tuples(
-    inputs: Union[Tensor, Tuple[Tensor, ...]]
+def _format_feature_mask(
+    feature_mask: Union[None, Tensor, Tuple[Tensor, ...]],
+    inputs: Tuple[Tensor, ...],
+    start_idx: int = 0,
 ) -> Tuple[Tensor, ...]:
-    ...
+    """
+    Format a feature mask into a tuple of tensors.
+    The `inputs` should be correctly formatted first
+    If `feature_mask` is None, assign each non-batch dimension with a consecutive
+    integer from `start_idx`.
+    If `feature_mask` is a tensor, wrap it in a tuple.
+    """
+    if feature_mask is None:
+        formatted_mask = []
+        current_num_features = start_idx
+        for inp in inputs:
+            # the following can handle empty tensor where numel is 0
+            # empty tensor will be added to the feature mask
+            num_features = torch.numel(inp[0:1])
+
+            formatted_mask.append(
+                current_num_features
+                + torch.reshape(
+                    torch.arange(num_features, device=inp.device),
+                    inp[0:1].shape,
+                )
+            )
+            current_num_features += num_features
+        formatted_mask = tuple(formatted_mask)
+
+    else:
+        formatted_mask = _format_tensor_into_tuples(feature_mask)
+
+    return formatted_mask
+
+
+@overload
+def _format_tensor_into_tuples(inputs: None) -> None: ...
+
+
+@overload
+def _format_tensor_into_tuples(
+    inputs: Union[Tensor, Tuple[Tensor, ...]],
+) -> Tuple[Tensor, ...]: ...
 
 
 def _format_tensor_into_tuples(
-    inputs: Union[None, Tensor, Tuple[Tensor, ...]]
+    inputs: Union[None, Tensor, Tuple[Tensor, ...]],
 ) -> Union[None, Tuple[Tensor, ...]]:
     if inputs is None:
         return None
@@ -183,6 +251,8 @@ def _format_tensor_into_tuples(
     return inputs
 
 
+# pyre-fixme[3]: Return annotation cannot be `Any`.
+# pyre-fixme[2]: Parameter annotation cannot be `Any`.
 def _format_inputs(inputs: Any, unpack_inputs: bool = True) -> Any:
     return (
         inputs
@@ -192,7 +262,7 @@ def _format_inputs(inputs: Any, unpack_inputs: bool = True) -> Any:
 
 
 def _format_float_or_tensor_into_tuples(
-    inputs: Union[float, Tensor, Tuple[Union[float, Tensor], ...]]
+    inputs: Union[float, Tensor, Tuple[Union[float, Tensor], ...]],
 ) -> Tuple[Union[float, Tensor], ...]:
     if not isinstance(inputs, tuple):
         assert isinstance(
@@ -205,23 +275,24 @@ def _format_float_or_tensor_into_tuples(
 
 
 @overload
-def _format_additional_forward_args(additional_forward_args: None) -> None:
-    ...
-
-
-@overload
 def _format_additional_forward_args(
-    additional_forward_args: Union[Tensor, Tuple]
-) -> Tuple:
-    ...
+    # pyre-fixme[24]: Generic type `tuple` expects at least 1 type parameter.
+    additional_forward_args: Union[Tensor, Tuple],
+    # pyre-fixme[24]: Generic type `tuple` expects at least 1 type parameter.
+) -> Tuple: ...
 
 
 @overload
-def _format_additional_forward_args(additional_forward_args: Any) -> Union[None, Tuple]:
-    ...
+def _format_additional_forward_args(  # type: ignore
+    additional_forward_args: Optional[object],
+    # pyre-fixme[24]: Generic type `tuple` expects at least 1 type parameter.
+) -> Union[None, Tuple]: ...
 
 
-def _format_additional_forward_args(additional_forward_args: Any) -> Union[None, Tuple]:
+def _format_additional_forward_args(
+    additional_forward_args: Optional[object],
+    # pyre-fixme[24]: Generic type `tuple` expects at least 1 type parameter.
+) -> Union[None, Tuple]:
     if additional_forward_args is not None and not isinstance(
         additional_forward_args, tuple
     ):
@@ -230,9 +301,11 @@ def _format_additional_forward_args(additional_forward_args: Any) -> Union[None,
 
 
 def _expand_additional_forward_args(
-    additional_forward_args: Any,
+    # pyre-fixme[24]: Generic type `tuple` expects at least 1 type parameter.
+    additional_forward_args: Union[None, Tuple],
     n_steps: int,
     expansion_type: ExpansionTypes = ExpansionTypes.repeat,
+    # pyre-fixme[24]: Generic type `tuple` expects at least 1 type parameter.
 ) -> Union[None, Tuple]:
     def _expand_tensor_forward_arg(
         additional_forward_arg: Tensor,
@@ -255,9 +328,11 @@ def _expand_additional_forward_args(
         return None
 
     return tuple(
-        _expand_tensor_forward_arg(additional_forward_arg, n_steps, expansion_type)
-        if isinstance(additional_forward_arg, torch.Tensor)
-        else additional_forward_arg
+        (
+            _expand_tensor_forward_arg(additional_forward_arg, n_steps, expansion_type)
+            if isinstance(additional_forward_arg, torch.Tensor)
+            else additional_forward_arg
+        )
         for additional_forward_arg in additional_forward_args
     )
 
@@ -297,24 +372,32 @@ def _expand_target(
 
 def _expand_feature_mask(
     feature_mask: Union[Tensor, Tuple[Tensor, ...]], n_samples: int
-):
+) -> Tuple[Tensor, ...]:
+    # pyre-fixme[6]: For 1st argument expected `Tensor` but got `Union[Tensor,
+    #  typing.Tuple[Tensor, ...]]`.
     is_feature_mask_tuple = _is_tuple(feature_mask)
     feature_mask = _format_tensor_into_tuples(feature_mask)
     feature_mask_new = tuple(
-        feature_mask_elem.repeat_interleave(n_samples, dim=0)
-        if feature_mask_elem.size(0) > 1
-        else feature_mask_elem
+        (
+            feature_mask_elem.repeat_interleave(n_samples, dim=0)
+            if feature_mask_elem.size(0) > 1
+            else feature_mask_elem
+        )
         for feature_mask_elem in feature_mask
     )
-    return _format_output(is_feature_mask_tuple, feature_mask_new)
+    return _format_output(is_feature_mask_tuple, feature_mask_new)  # type: ignore
 
 
 def _expand_and_update_baselines(
     inputs: Tuple[Tensor, ...],
     n_samples: int,
+    # pyre-fixme[24]: Generic type `dict` expects 2 type parameters, use
+    #  `typing.Dict[<key type>, <value type>]` to avoid runtime subscripting errors.
     kwargs: dict,
     draw_baseline_from_distrib: bool = False,
-):
+) -> None:
+    # pyre-fixme[3]: Return type must be annotated.
+    # pyre-fixme[2]: Parameter must be annotated.
     def get_random_baseline_indices(bsz, baseline):
         num_ref_samples = baseline.shape[0]
         return np.random.choice(num_ref_samples, n_samples * bsz).tolist()
@@ -332,25 +415,31 @@ def _expand_and_update_baselines(
     if draw_baseline_from_distrib:
         bsz = inputs[0].shape[0]
         baselines = tuple(
-            baseline[get_random_baseline_indices(bsz, baseline)]
-            if isinstance(baseline, torch.Tensor)
-            else baseline
+            (
+                baseline[get_random_baseline_indices(bsz, baseline)]
+                if isinstance(baseline, torch.Tensor)
+                else baseline
+            )
             for baseline in baselines
         )
     else:
         baselines = tuple(
-            baseline.repeat_interleave(n_samples, dim=0)
-            if isinstance(baseline, torch.Tensor)
-            and baseline.shape[0] == input.shape[0]
-            and baseline.shape[0] > 1
-            else baseline
+            (
+                baseline.repeat_interleave(n_samples, dim=0)
+                if isinstance(baseline, torch.Tensor)
+                and baseline.shape[0] == input.shape[0]
+                and baseline.shape[0] > 1
+                else baseline
+            )
             for input, baseline in zip(inputs, baselines)
         )
     # update kwargs with expanded baseline
     kwargs["baselines"] = baselines
 
 
-def _expand_and_update_additional_forward_args(n_samples: int, kwargs: dict):
+# pyre-fixme[24]: Generic type `dict` expects 2 type parameters, use
+#  `typing.Dict[<key type>, <value type>]` to avoid runtime subscripting errors.
+def _expand_and_update_additional_forward_args(n_samples: int, kwargs: dict) -> None:
     if "additional_forward_args" not in kwargs:
         return
     additional_forward_args = kwargs["additional_forward_args"]
@@ -366,7 +455,9 @@ def _expand_and_update_additional_forward_args(n_samples: int, kwargs: dict):
     kwargs["additional_forward_args"] = additional_forward_args
 
 
-def _expand_and_update_target(n_samples: int, kwargs: dict):
+# pyre-fixme[24]: Generic type `dict` expects 2 type parameters, use
+#  `typing.Dict[<key type>, <value type>]` to avoid runtime subscripting errors.
+def _expand_and_update_target(n_samples: int, kwargs: dict) -> None:
     if "target" not in kwargs:
         return
     target = kwargs["target"]
@@ -377,7 +468,9 @@ def _expand_and_update_target(n_samples: int, kwargs: dict):
     kwargs["target"] = target
 
 
-def _expand_and_update_feature_mask(n_samples: int, kwargs: dict):
+# pyre-fixme[24]: Generic type `dict` expects 2 type parameters, use
+#  `typing.Dict[<key type>, <value type>]` to avoid runtime subscripting errors.
+def _expand_and_update_feature_mask(n_samples: int, kwargs: dict) -> None:
     if "feature_mask" not in kwargs:
         return
 
@@ -391,23 +484,22 @@ def _expand_and_update_feature_mask(n_samples: int, kwargs: dict):
 
 @typing.overload
 def _format_output(
-    is_inputs_tuple: Literal[True], output: Tuple[Tensor, ...]
-) -> Tuple[Tensor, ...]:
-    ...
+    is_inputs_tuple: Literal[True],
+    output: Tuple[Tensor, ...],
+) -> Tuple[Tensor, ...]: ...
 
 
 @typing.overload
 def _format_output(
-    is_inputs_tuple: Literal[False], output: Tuple[Tensor, ...]
-) -> Tensor:
-    ...
+    is_inputs_tuple: Literal[False],
+    output: Tuple[Tensor, ...],
+) -> Tensor: ...
 
 
 @typing.overload
 def _format_output(
     is_inputs_tuple: bool, output: Tuple[Tensor, ...]
-) -> Union[Tensor, Tuple[Tensor, ...]]:
-    ...
+) -> Union[Tensor, Tuple[Tensor, ...]]: ...
 
 
 def _format_output(
@@ -423,28 +515,29 @@ def _format_output(
         "The input is a single tensor however the output isn't."
         "The number of output tensors is: {}".format(len(output))
     )
+    # pyre-fixme[7]: Expected `Union[Tensor, typing.Tuple[Tensor, ...]]` but got
+    #  `Union[tuple[Tensor], Tensor]`.
     return output if is_inputs_tuple else output[0]
 
 
 @typing.overload
 def _format_outputs(
-    is_multiple_inputs: Literal[False], outputs: List[Tuple[Tensor, ...]]
-) -> Union[Tensor, Tuple[Tensor, ...]]:
-    ...
+    is_multiple_inputs: Literal[False],
+    outputs: List[Tuple[Tensor, ...]],
+) -> Union[Tensor, Tuple[Tensor, ...]]: ...
 
 
 @typing.overload
 def _format_outputs(
-    is_multiple_inputs: Literal[True], outputs: List[Tuple[Tensor, ...]]
-) -> List[Union[Tensor, Tuple[Tensor, ...]]]:
-    ...
+    is_multiple_inputs: Literal[True],
+    outputs: List[Tuple[Tensor, ...]],
+) -> List[Union[Tensor, Tuple[Tensor, ...]]]: ...
 
 
 @typing.overload
 def _format_outputs(
     is_multiple_inputs: bool, outputs: List[Tuple[Tensor, ...]]
-) -> Union[Tensor, Tuple[Tensor, ...], List[Union[Tensor, Tuple[Tensor, ...]]]]:
-    ...
+) -> Union[Tensor, Tuple[Tensor, ...], List[Union[Tensor, Tuple[Tensor, ...]]]]: ...
 
 
 def _format_outputs(
@@ -463,12 +556,26 @@ def _format_outputs(
     )
 
 
+# pyre-fixme[24] Callable requires 2 arguments
+def _construct_future_forward(original_forward: Callable) -> Callable:
+    # pyre-fixme[3] return type not specified
+    def future_forward(*args: Any, **kwargs: Any):
+        # pyre-fixme[29]: `typing.Type[torch.futures.Future]` is not a function.
+        fut: torch.futures.Future[Tensor] = torch.futures.Future()
+        fut.set_result(original_forward(*args, **kwargs))
+        return fut
+
+    return future_forward
+
+
 def _run_forward(
+    # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
     forward_func: Callable,
+    # pyre-fixme[2]: Parameter annotation cannot be `Any`.
     inputs: Any,
     target: TargetType = None,
-    additional_forward_args: Any = None,
-) -> Tensor:
+    additional_forward_args: Optional[object] = None,
+) -> Union[Tensor, Future[Tensor]]:
     forward_func_args = signature(forward_func).parameters
     if len(forward_func_args) == 0:
         output = forward_func()
@@ -480,14 +587,57 @@ def _run_forward(
     additional_forward_args = _format_additional_forward_args(additional_forward_args)
 
     output = forward_func(
-        *(*inputs, *additional_forward_args)
-        if additional_forward_args is not None
-        else inputs
+        *(
+            # pyre-fixme[60]: Concatenation not yet support for multiple variadic
+            #  tuples: `*inputs, *additional_forward_args`.
+            (*inputs, *additional_forward_args)
+            if additional_forward_args is not None
+            else inputs
+        )
     )
+    if isinstance(output, torch.futures.Future):
+        return output.then(lambda x: _select_targets(x.value(), target))
     return _select_targets(output, target)
 
 
 def _select_targets(output: Tensor, target: TargetType) -> Tensor:
+    """
+    IMPORTANT:
+    please avoid patching this function. The existing behavior is very
+    unpredictable. We should be more opinionated about the type and format of
+    the target so that we can stop supporting some unpredictable cases.
+    Or better, we should encourage users to wrapping their forward function to
+    return the attr targets themselves, instead of passing target.
+
+    This legacy function behaves based on
+    - the type of target
+    - if the target has the length of the output
+
+    If the target is int or scalar tensor, the target is seen as the
+    index of the last dimensions of every example in the output. E.g., if the
+    output is of shape (Batch, ..., X, Y), the selected output will be (Batch, ..., X)
+
+    If the target is tuple[int], the target is seens as the last indices of every
+    example in the output. E.g., if the
+    output is of shape (Batch, ..., X, Y, Z) and the target is tuple(y, z),
+    the selected output will be (Batch, ..., X)
+
+    If the target is a non-scalar tensor, it must be a 1D tensor of the output length
+    and the output must be a 2D tensor. The target is then seen as the indices of the
+    2nd dim of the output. E.g., if the output is of shape (Batch, X) and the target is
+    in shape (X,), the selected output will be (Batch,)
+
+    If the target is a list[int], it must has the same length as the output. The output
+    must be a 2D tensor and each int element of the target is seen as the 2nd dim of it.
+    E.g., if the output is of shape (Batch, X) and the target is [x1, x2, ...],
+    the selected output will be (Batch,)
+
+    If the target is a list[tuple], it must has the same length as the output. Each
+    tuple element of the target is seen as the leading dim behind the batch dim
+    of the output. E.g., if the output is of shape (Batch, X, Y, Z, ...) and
+    the target is [(x1, y1), (x2, y2), ...], the selected output
+    will be in shape (Batch, Z, ...)
+    """
     if target is None:
         return output
 
@@ -501,7 +651,7 @@ def _select_targets(output: Tensor, target: TargetType) -> Tensor:
             return _verify_select_column(output, cast(int, target.item()))
         elif len(target.shape) == 1 and torch.numel(target) == num_examples:
             assert dims == 2, "Output must be 2D to select tensor of targets."
-            return torch.gather(output, 1, target.reshape(len(output), 1))
+            return torch.gather(output, 1, target.reshape(len(output), 1)).squeeze(-1)
         else:
             raise AssertionError(
                 "Tensor target dimension %r is not valid. %r"
@@ -513,10 +663,12 @@ def _select_targets(output: Tensor, target: TargetType) -> Tensor:
             assert dims == 2, "Output must be 2D to select tensor of targets."
             return torch.gather(
                 output, 1, torch.tensor(target, device=device).reshape(len(output), 1)
-            )
+            ).squeeze(-1)
         elif isinstance(target[0], tuple):
             return torch.stack(
                 [
+                    # pyre-fixme[24]: Generic type `tuple` expects at least 1 type
+                    #  parameter.
                     output[(i,) + cast(Tuple, targ_elem)]
                     for i, targ_elem in enumerate(target)
                 ]
@@ -529,6 +681,7 @@ def _select_targets(output: Tensor, target: TargetType) -> Tensor:
         raise AssertionError(f"Target type {type(target)} is not valid.")
 
 
+# pyre-fixme[24]: Generic type `slice` expects 3 type parameters.
 def _contains_slice(target: Union[int, Tuple[Union[int, slice], ...]]) -> bool:
     if isinstance(target, tuple):
         for index in target:
@@ -539,7 +692,9 @@ def _contains_slice(target: Union[int, Tuple[Union[int, slice], ...]]) -> bool:
 
 
 def _verify_select_column(
-    output: Tensor, target: Union[int, Tuple[Union[int, slice], ...]]
+    output: Tensor,
+    # pyre-fixme[24]: Generic type `slice` expects 3 type parameters.
+    target: Union[int, Tuple[Union[int, slice], ...]],
 ) -> Tensor:
     target = (target,) if isinstance(target, int) else target
     assert (
@@ -550,9 +705,11 @@ def _verify_select_column(
 
 def _verify_select_neuron(
     layer_output: Tuple[Tensor, ...],
+    # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
     selector: Union[int, Tuple[Union[int, slice], ...], Callable],
 ) -> Tensor:
     if callable(selector):
+        # pyre-fixme[7]: Expected `Tensor` but got `object`.
         return selector(layer_output if len(layer_output) > 1 else layer_output[0])
 
     assert len(layer_output) == 1, (
@@ -598,7 +755,10 @@ def _extract_device(
 
 
 def _reduce_list(
-    val_list: List[TupleOrTensorOrBoolGeneric],
+    val_list: Sequence[TupleOrTensorOrBoolGeneric],
+    # pyre-fixme[2]: Parameter annotation cannot contain `Any`.
+    # pyre-fixme[24]: Generic type `list` expects 1 type parameter, use
+    #  `typing.List[<element type>]` to avoid runtime subscripting errors.
     red_func: Callable[[List], Any] = torch.cat,
 ) -> TupleOrTensorOrBoolGeneric:
     """
@@ -613,14 +773,20 @@ def _reduce_list(
     """
     assert len(val_list) > 0, "Cannot reduce empty list!"
     if isinstance(val_list[0], torch.Tensor):
-        first_device = val_list[0].device
-        return red_func([elem.to(first_device) for elem in val_list])
+        first_device = cast(Tensor, val_list[0]).device
+        return red_func(
+            [elem.to(first_device) for elem in cast(List[Tensor], val_list)]
+        )
     elif isinstance(val_list[0], bool):
+        # pyre-fixme[7]: Expected `TupleOrTensorOrBoolGeneric` but got `bool`.
         return any(val_list)
     elif isinstance(val_list[0], tuple):
         final_out = []
+        # pyre-fixme[6]: For 1st argument expected `pyre_extensions.ReadOnly[Sized]`
+        #  but got `TupleOrTensorOrBoolGeneric`.
         for i in range(len(val_list[0])):
             final_out.append(
+                # pyre-fixme[16]: `bool` has no attribute `__getitem__`.
                 _reduce_list([val_elem[i] for val_elem in val_list], red_func)
             )
     else:
@@ -628,6 +794,7 @@ def _reduce_list(
             "Elements to be reduced can only be"
             "either Tensors or tuples containing Tensors."
         )
+    # pyre-fixme[7]: Expected `TupleOrTensorOrBoolGeneric` but got `Tuple[Any, ...]`.
     return tuple(final_out)
 
 
@@ -667,6 +834,7 @@ def _flatten_tensor_or_tuple(inp: TensorOrTupleOfTensorsGeneric) -> Tensor:
     return torch.cat([single_inp.flatten() for single_inp in inp])
 
 
+# pyre-fixme[3]: Return annotation cannot be `Any`.
 def _get_module_from_name(model: Module, layer_name: str) -> Any:
     r"""
     Returns the module (layer) object, given its (string) name
@@ -683,7 +851,10 @@ def _get_module_from_name(model: Module, layer_name: str) -> Any:
 
 
 def _register_backward_hook(
-    module: Module, hook: Callable, attr_obj: Any
+    module: Module,
+    # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
+    hook: Callable,
+    attr_obj: Union[object, None],
 ) -> List[torch.utils.hooks.RemovableHandle]:
     grad_out: Dict[device, Tensor] = {}
 
@@ -693,9 +864,9 @@ def _register_backward_hook(
         out: Union[Tensor, Tuple[Tensor, ...]],
     ) -> None:
         nonlocal grad_out
-        grad_out = {}
 
         def output_tensor_hook(output_grad: Tensor) -> None:
+            nonlocal grad_out
             grad_out[output_grad.device] = output_grad
 
         if isinstance(out, tuple):
@@ -706,14 +877,19 @@ def _register_backward_hook(
         else:
             out.register_hook(output_tensor_hook)
 
-    def pre_hook(module, inp):
-        def input_tensor_hook(input_grad: Tensor):
+    def pre_hook(module: Module, inp: Union[Tensor, Tuple[Tensor, ...]]) -> Tensor:
+        def input_tensor_hook(
+            input_grad: Tensor,
+        ) -> Union[None, Tensor, Tuple[Tensor, ...]]:
+            nonlocal grad_out
+
             if len(grad_out) == 0:
-                return
+                return None
             hook_out = hook(module, input_grad, grad_out[input_grad.device])
 
             if hook_out is not None:
                 return hook_out[0] if isinstance(hook_out, tuple) else hook_out
+            return None
 
         if isinstance(inp, tuple):
             assert (
@@ -729,3 +905,15 @@ def _register_backward_hook(
         module.register_forward_pre_hook(pre_hook),
         module.register_forward_hook(forward_hook),
     ]
+
+
+def _get_max_feature_index(feature_mask: Tuple[Tensor, ...]) -> int:
+    """
+    Returns the max feature mask index
+    The feature mask should be formatted to tuple of tensors at first.
+
+    Note: This util is commonly used to identify the number of features (max_index + 1),
+    as we expect user to be resposible to ensure consecutive feature mask indices from 0
+    """
+
+    return int(max(torch.max(mask).item() for mask in feature_mask if mask.numel()))

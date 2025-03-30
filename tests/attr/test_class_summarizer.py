@@ -1,11 +1,15 @@
 #!/usr/bin/env python3
+
+# pyre-unsafe
+from typing import List
+
 import torch
 from captum.attr import ClassSummarizer, CommonStats
-from tests.helpers.basic import BaseTest
+from captum.testing.helpers import BaseTest
 
 
 class Test(BaseTest):
-    def class_test(self, data, classes, x_sizes):
+    def class_test(self, data, classes, x_sizes) -> None:
         summarizer = ClassSummarizer(stats=CommonStats())
         for x, y in data:
             summarizer.update(x, y)
@@ -39,13 +43,13 @@ class Test(BaseTest):
         self.assertEqual(len(all_keys), 0)
         self.assertEqual(all_classes.sum(), len(classes))
 
-    def test_classes(self):
+    def test_classes(self) -> None:
         sizes_to_test = [
             # ((1,),),
             ((3, 2, 10, 3), (1,)),
             # ((20,),),
         ]
-        list_of_classes = [
+        list_of_classes: List[List] = [
             list(range(100)),
             ["%d" % i for i in range(100)],
             list(range(300, 400)),
@@ -53,7 +57,9 @@ class Test(BaseTest):
         for batch_size in [None, 1, 4]:
             for sizes, classes in zip(sizes_to_test, list_of_classes):
 
-                def create_batch_labels(batch_idx):
+                def create_batch_labels(
+                    batch_idx, batch_size=batch_size, classes=classes
+                ):
                     if batch_size is None:
                         # batch_size = 1
                         return classes[batch_idx]
