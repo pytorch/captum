@@ -67,6 +67,9 @@ class Loss(ABC):
     def __rpow__(self, other: Union[int, float, "Loss"]) -> "CompositeLoss":
         return rmodule_op(self, other, operator.pow)
 
+    def __round__(self, ndigits: Optional[int] = None) -> "CompositeLoss":
+        return module_op(self, ndigits, round)
+
 
 def module_op(
     self: Loss, other: Union[None, int, float, Loss], math_op: Callable
