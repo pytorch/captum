@@ -133,6 +133,7 @@ if __name__ == "__main__":
             "Model Understanding",
             "Feature Importance",
             "Neuron Importance",
+            "Feature Visualization",
             "PyTorch",
         ],
         classifiers=[
@@ -147,7 +148,7 @@ if __name__ == "__main__":
         long_description=long_description,
         long_description_content_type="text/markdown",
         python_requires=">=3.6",
-        install_requires=["matplotlib", "numpy", "torch>=1.6"],
+        install_requires=["matplotlib", "numpy", "packaging", "torch>=1.6"],
         packages=find_packages(exclude=("tests", "tests.*")),
         extras_require={
             "dev": DEV_REQUIRES,

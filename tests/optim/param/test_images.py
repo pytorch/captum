@@ -443,7 +443,7 @@ class TestSimpleTensorParameterization(BaseTest):
         self.assertTrue(image_param.tensor.requires_grad)
 
     def test_simple_tensor_parameterization_jit_module_with_grad(self) -> None:
-        if torch.__version__ <= "1.8.0":
+        if version.parse(torch.__version__) <= version.parse("1.8.0"):
             raise unittest.SkipTest(
                 "Skipping SimpleTensorParameterization JIT module test due to"
                 + "  insufficient Torch version."

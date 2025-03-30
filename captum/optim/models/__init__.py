@@ -1,10 +1,12 @@
 from ._common import (  # noqa: F401
+    MaxPool2dRelaxed,
     RedirectedReluLayer,
     SkipLayer,
     collect_activations,
     get_model_layers,
     replace_layers,
     skip_layers,
+    Conv2dSame,
 )
 from ._image.clip_resnet50x4_image import CLIP_ResNet50x4Image  # noqa: F401
 from ._image.clip_resnet50x4_image import clip_resnet50x4_image  # noqa: F401
@@ -22,6 +24,8 @@ from ._image.inception_v1_places365_classes import (  # noqa: F401
 
 
 __all__ = [
+    "Conv2dSame",
+    "MaxPool2dRelaxed",
     "RedirectedReluLayer",
     "SkipLayer",
     "collect_activations",

@@ -78,6 +78,7 @@ def calc_grid_indices(
     ]
 
     Args:
+
         xy_grid (torch.tensor): The xy coordinate grid activation samples, with a shape
             of: [n_points, 2].
         grid_size (Tuple[int, int]): The grid_size of grid cells to use. The grid_size
@@ -86,6 +87,7 @@ def calc_grid_indices(
             Default: (0.0, 1.0)
         y_extent (Tuple[float, float], optional): The y axis range to use.
             Default: (0.0, 1.0)
+
     Returns:
         indices (list of list of torch.Tensors): List of lists of grid indices
             stored inside tensors to use. Each 1D tensor of indices has a size of:

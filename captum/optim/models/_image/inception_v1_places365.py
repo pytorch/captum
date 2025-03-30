@@ -18,35 +18,44 @@ def googlenet_places365(
     **kwargs: Any,
 ) -> "InceptionV1Places365":
     r"""GoogLeNet (also known as Inception v1 & Inception 5h) model architecture from
-    `"Going Deeper with Convolutions" <http://arxiv.org/abs/1409.4842>`_.
+    `"Going Deeper with Convolutions" <https://arxiv.org/abs/1409.4842>`_.
 
     The pretrained GoogleNet model was trained using the MIT Places365 Standard
     dataset. See here for more information: https://arxiv.org/abs/1610.02055
 
+    Example::
+
+        >>> model = opt.models.googlenet_places365(pretrained=True)
+        >>> output = model(torch.zeros(1, 3, 224, 224))
+
     Args:
-        pretrained (bool, optional): If True, returns a model pre-trained on the MIT
-            Places365 Standard dataset.
-            Default: False
-        progress (bool, optional): If True, displays a progress bar of the download to
-            stderr
-            Default: True
-        model_path (str, optional): Optional path for InceptionV1 model file.
-            Default: None
-        replace_relus_with_redirectedrelu (bool, optional): If True, return pretrained
-            model with Redirected ReLU in place of ReLU layers.
-            Default: *True* when pretrained is True otherwise *False*
-        use_linear_modules_only (bool, optional): If True, return pretrained
+
+        pretrained (bool, optional): If ``True``, returns a model pre-trained on the
+            MIT Places365 Standard dataset.
+            Default: ``False``
+        progress (bool, optional): If ``True``, displays a progress bar of the
+            download to stderr.
+            Default: ``True``
+        model_path (str, optional): Optional path for the InceptionV1 model file.
+            Default: ``None``
+        replace_relus_with_redirectedrelu (bool, optional): If ``True``, return
+            pretrained model with :class:`.RedirectedReLU` in place of ReLU layers.
+            Default: *``True``* when pretrained is True otherwise *``False``*
+        use_linear_modules_only (bool, optional): If ``True``, return pretrained
             model with all nonlinear layers replaced with linear equivalents.
-            Default: False
-        aux_logits (bool, optional): If True, adds two auxiliary branches that can
+            Default: ``False``
+        aux_logits (bool, optional): If ``True``, adds two auxiliary branches that can
             improve training.
-            Default: True
+            Default: ``True``
         out_features (int, optional): Number of output features in the model used for
-            training. Default: 365 when pretrained is True.
-            Default: 365
+            training.
+            Default: ``365``
         transform_input (bool, optional): If True, preprocesses the input according to
             the method with which it was trained on Places365.
-            Default: True
+            Default: ``True``
+
+    Returns:
+        model (InceptionV1Places365): An InceptionV1 Places365 model instance.
     """
 
     if pretrained:
@@ -95,19 +104,19 @@ class InceptionV1Places365(nn.Module):
 
             out_features (int, optional): Number of output features in the model used
                 for training.
-                Default: 365
-            aux_logits (bool, optional): If True, adds two auxiliary branches that can
-                improve training.
-                Default: True
-            transform_input (bool, optional): If True, preprocesses the input according
-                to the method with which it was trained on Places365.
-                Default: True
-            replace_relus_with_redirectedrelu (bool, optional): If True, return
-                pretrained model with Redirected ReLU in place of ReLU layers.
-                Default: False
-            use_linear_modules_only (bool, optional): If True, return pretrained model
-                with all nonlinear layers replaced with linear equivalents.
-                Default: False
+                Default: ``365``
+            aux_logits (bool, optional): If ``True``, adds two auxiliary branches that
+                can improve training.
+                Default: ``True``
+            transform_input (bool, optional): If ``True``, preprocesses the input
+                according to the method with which it was trained on Places365.
+                Default: ``True``
+            replace_relus_with_redirectedrelu (bool, optional): If ``True``, return
+                pretrained model with :class:`.RedirectedReLU` in place of ReLU layers.
+                Default: ``False``
+            use_linear_modules_only (bool, optional): If ``True``, return pretrained
+                model with all nonlinear layers replaced with linear equivalents.
+                Default: ``False``
         """
         super().__init__()
         self.aux_logits = aux_logits
@@ -281,20 +290,26 @@ class InceptionModule(nn.Module):
         """
         Args:
 
-            in_channels (int, optional): The number of input channels to use for the
-                inception module.
-            c1x1 (int, optional):
-            c3x3reduce (int, optional):
-            c3x3 (int, optional):
-            c5x5reduce (int, optional):
-            c5x5 (int, optional):
-            pool_proj (int, optional):
+            in_channels (int): The number of input channels to use for the first
+                layers of the inception module branches.
+            c1x1 (int): The number of output channels to use for the first layer in
+                the c1x1 branch.
+            c3x3reduce (int): The number of output channels to use for the first layer
+                in the c3x3 branch.
+            c3x3 (int): The number of output channels to use for the second layer in
+                the c3x3 branch.
+            c5x5reduce (int): The number of output channels to use for the first layer
+                in the c5x5 branch.
+            c5x5 (int): The number of output channels to use for the second layer in
+                the c5x5 branch.
+            pool_proj (int): The number of output channels to use for the second layer
+                in the pool branch.
             activ (type of nn.Module, optional): The nn.Module class type to use for
                 activation layers.
-                Default: nn.ReLU
+                Default: :class:`torch.nn.ReLU`
             p_layer (type of nn.Module, optional): The nn.Module class type to use for
                 pooling layers.
-                Default: nn.MaxPool2d
+                Default: :class:`torch.nn.MaxPool2d`
         """
         super().__init__()
         self.conv_1x1 = nn.Conv2d(
@@ -388,13 +403,13 @@ class AuxBranch(nn.Module):
 
             in_channels (int, optional): The number of input channels to use for the
                 auxiliary branch.
-                Default: 508
+                Default: ``508``
             out_features (int, optional): The number of output features to use for the
                 auxiliary branch.
-                Default: 1008
-            activ (type of nn.Module, optional): The nn.Module class type to use for
-                activation layers.
-                Default: nn.ReLU
+                Default: ``1008``
+            activ (type of nn.Module, optional): The ``nn.Module`` class type to use
+                for activation layers.
+                Default: :class:`torch.nn.ReLU`
         """
         super().__init__()
         self.avg_pool = nn.AdaptiveAvgPool2d((4, 4))
