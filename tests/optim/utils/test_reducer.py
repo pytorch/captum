@@ -4,7 +4,7 @@ import unittest
 import captum.optim._utils.reducer as reducer
 import numpy as np
 import torch
-from captum.testing.helpers.basic BaseTest
+from captum.testing.helpers.basic import BaseTest
 
 
 class FakeReductionAlgorithm(object):

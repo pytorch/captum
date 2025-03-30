@@ -4,7 +4,7 @@ import unittest
 import captum.optim._utils.image.common as common
 import torch
 from packaging import version
-from captum.testing.helpers.basic BaseTest, assertTensorAlmostEqual
+from captum.testing.helpers.basic import BaseTest, assertTensorAlmostEqual
 
 
 class TestGetNeuronPos(unittest.TestCase):

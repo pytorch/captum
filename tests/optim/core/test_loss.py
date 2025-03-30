@@ -7,7 +7,7 @@ import captum.optim._core.loss as opt_loss
 import torch
 from captum.optim.models import collect_activations
 from packaging import version
-from captum.testing.helpers.basic BaseTest, assertTensorAlmostEqual
+from captum.testing.helpers.basic import BaseTest, assertTensorAlmostEqual
 from captum.testing.helpers.basic_models import BasicModel_ConvNet_Optim
 
 CHANNEL_ACTIVATION_0_LOSS = 1.3

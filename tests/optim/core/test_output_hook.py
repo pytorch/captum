@@ -5,7 +5,7 @@ from typing import List, Optional, cast
 import captum.optim._core.output_hook as output_hook
 import torch
 from captum.optim.models import googlenet
-from captum.testing.helpers.basic BaseTest, assertTensorAlmostEqual
+from captum.testing.helpers.basic import BaseTest, assertTensorAlmostEqual
 
 
 def _count_forward_hooks(

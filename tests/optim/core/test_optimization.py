@@ -5,7 +5,7 @@ from typing import List
 import captum.optim as opt
 import torch
 from packaging import version
-from captum.testing.helpers.basic BaseTest
+from captum.testing.helpers.basic import BaseTest
 from captum.testing.helpers.basic_models import BasicModel_ConvNet_Optim
 
 

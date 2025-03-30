@@ -5,7 +5,7 @@ import captum.optim._utils.circuits as circuits
 import torch
 from captum.optim.models import googlenet
 from packaging import version
-from captum.testing.helpers.basic BaseTest
+from captum.testing.helpers.basic import BaseTest
 
 
 class TestGetExpandedWeights(BaseTest):
