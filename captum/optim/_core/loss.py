@@ -68,7 +68,7 @@ class Loss(ABC):
         return rmodule_op(self, other, operator.pow)
 
     def __round__(self, ndigits: Optional[int] = None) -> "CompositeLoss":
-        return module_op(self, ndigits, round)
+        return module_op(self, ndigits, torch.round)
 
 
 def module_op(
