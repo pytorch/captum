@@ -41,9 +41,7 @@ class FFTImage:
             )  # names=["C", "H_f", "W_f", "complex"]
             fourier_coeffs = random_coeffs / 50
         else:
-            fourier_coeffs = (
-                np.fft.rfftn(init, s=self.size).view("(2,)float") / spectrum_scale
-            )
+            fourier_coeffs = np.stack([np.fft.rfftn(init, s=self.size).real, np.fft.rfftn(init, s=self.size).imag], axis=-1) / spectrum_scale
 
         self.fourier_coeffs = fourier_coeffs
 
