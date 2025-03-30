@@ -49,7 +49,7 @@ Captum can also be used by application engineers who are using trained models in
 
 **Installation Requirements**
 - Python >= 3.6
-- PyTorch >= 1.2
+- PyTorch >= 1.6
 
 
 ##### Installing the latest release
@@ -159,8 +159,7 @@ model.eval()
 Next, we need to define simple input and baseline tensors.
 Baselines belong to the input space and often carry no predictive signal.
 Zero tensor can serve as a baseline for many tasks.
-Some interpretability algorithms such as `Integrated
-Gradients`, `Deeplift` and `GradientShap` are designed to attribute the change
+Some interpretability algorithms such as `IntegratedGradients`, `Deeplift` and `GradientShap` are designed to attribute the change
 between the input and baseline to a predictive class or a value that the neural
 network outputs.
 
@@ -472,23 +471,23 @@ You can watch the recorded talk [here](https://www.youtube.com/watch?v=ayhBHZYje
 * `SmoothGrad`: [SmoothGrad: removing noise by adding noise, Daniel Smilkov et al. 2017](https://arxiv.org/abs/1706.03825)
 * `NoiseTunnel`: [Sanity Checks for Saliency Maps, Julius Adebayo et al. 2018](https://arxiv.org/abs/1810.03292)
 * `NeuronConductance`: [How Important is a neuron?, Kedar Dhamdhere et al. 2018](https://arxiv.org/abs/1805.12233)
-* `LayerConductance`: [Computationally Efficient Measures of Internal Neuron Importance, Avanti Shrikumar et al. 2018](https://arxiv.org/pdf/1807.09946.pdf)
-* `DeepLift`, `NeuronDeepLift`, `LayerDeepLift`: [Learning Important Features Through Propagating Activation Differences, Avanti Shrikumar et al. 2017](https://arxiv.org/pdf/1704.02685.pdf) and [Towards better understanding of gradient-based attribution methods for deep neural networks, Marco Ancona et al. 2018](https://openreview.net/pdf?id=Sy21R9JAW)
-* `NeuronIntegratedGradients`: [Computationally Efficient Measures of Internal Neuron Importance, Avanti Shrikumar et al. 2018](https://arxiv.org/pdf/1807.09946.pdf)
+* `LayerConductance`: [Computationally Efficient Measures of Internal Neuron Importance, Avanti Shrikumar et al. 2018](https://arxiv.org/abs/1807.09946)
+* `DeepLift`, `NeuronDeepLift`, `LayerDeepLift`: [Learning Important Features Through Propagating Activation Differences, Avanti Shrikumar et al. 2017](https://arxiv.org/abs/1704.02685) and [Towards better understanding of gradient-based attribution methods for deep neural networks, Marco Ancona et al. 2018](https://openreview.net/pdf?id=Sy21R9JAW)
+* `NeuronIntegratedGradients`: [Computationally Efficient Measures of Internal Neuron Importance, Avanti Shrikumar et al. 2018](https://arxiv.org/abs/1807.09946)
 * `GradientShap`, `NeuronGradientShap`, `LayerGradientShap`, `DeepLiftShap`, `NeuronDeepLiftShap`, `LayerDeepLiftShap`: [A Unified Approach to Interpreting Model Predictions, Scott M. Lundberg et al. 2017](http://papers.nips.cc/paper/7062-a-unified-approach-to-interpreting-model-predictions)
-* `InternalInfluence`: [Influence-Directed Explanations for Deep Convolutional Networks, Klas Leino et al. 2018](https://arxiv.org/pdf/1802.03788.pdf)
+* `InternalInfluence`: [Influence-Directed Explanations for Deep Convolutional Networks, Klas Leino et al. 2018](https://arxiv.org/abs/1802.03788)
 * `Saliency`, `NeuronGradient`: [Deep Inside Convolutional Networks: Visualising
-Image Classification Models and Saliency Maps, K. Simonyan, et. al. 2014](https://arxiv.org/pdf/1312.6034.pdf)
-* `GradCAM`, `Guided GradCAM`: [Grad-CAM: Visual Explanations from Deep Networks via Gradient-based Localization, Ramprasaath R. Selvaraju et al. 2017](https://arxiv.org/abs/1610.02391.pdf)
-* `Deconvolution`, `Neuron Deconvolution`: [Visualizing and Understanding Convolutional Networks, Matthew D Zeiler et al. 2014](https://arxiv.org/pdf/1311.2901.pdf)
-* `Guided Backpropagation`, `Neuron Guided Backpropagation`: [Striving for Simplicity: The All Convolutional Net, Jost Tobias Springenberg et al. 2015](https://arxiv.org/pdf/1412.6806.pdf)
+Image Classification Models and Saliency Maps, K. Simonyan, et. al. 2014](https://arxiv.org/abs/1312.6034)
+* `GradCAM`, `Guided GradCAM`: [Grad-CAM: Visual Explanations from Deep Networks via Gradient-based Localization, Ramprasaath R. Selvaraju et al. 2017](https://arxiv.org/abs/1610.02391)
+* `Deconvolution`, `Neuron Deconvolution`: [Visualizing and Understanding Convolutional Networks, Matthew D Zeiler et al. 2014](https://arxiv.org/abs/1311.2901)
+* `Guided Backpropagation`, `Neuron Guided Backpropagation`: [Striving for Simplicity: The All Convolutional Net, Jost Tobias Springenberg et al. 2015](https://arxiv.org/abs/1412.6806)
 * `Feature Permutation`: [Permutation Feature Importance](https://christophm.github.io/interpretable-ml-book/feature-importance.html)
 * `Occlusion`: [Visualizing and Understanding Convolutional Networks](https://arxiv.org/abs/1311.2901)
 * `Shapley Value`: [A value for n-person games. Contributions to the Theory of Games 2.28 (1953): 307-317](https://apps.dtic.mil/dtic/tr/fulltext/u2/604084.pdf)
 * `Shapley Value Sampling`: [Polynomial calculation of the Shapley value based on sampling](https://www.sciencedirect.com/science/article/pii/S0305054808000804)
 * `Infidelity and Sensitivity`: [On the (In)fidelity and Sensitivity for Explanations](https://arxiv.org/abs/1901.09392)
 
-More details about the above mentioned [algorithms](https://captum.ai/docs/algorithms) and their pros and cons can be found on our [web-site](https://captum.ai/docs/algorithms_comparison_matrix).
+More details about the above mentioned [attribution algorithms](https://captum.ai/docs/attribution_algorithms) and their pros and cons can be found on our [web-site](https://captum.ai/docs/algorithms_comparison_matrix).
 
 ## License
 Captum is BSD licensed, as found in the [LICENSE](LICENSE) file.

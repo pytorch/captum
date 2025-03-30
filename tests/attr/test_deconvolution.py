@@ -2,7 +2,6 @@
 
 from __future__ import print_function
 
-import copy
 import unittest
 from typing import Any, Tuple, Union
 
@@ -126,8 +125,7 @@ class Test(BaseTest):
         test_input: TensorOrTupleOfTensorsGeneric,
     ) -> None:
         out = model(test_input)
-        model_copy = copy.deepcopy(model)
-        attrib = Deconvolution(model_copy)
+        attrib = Deconvolution(model)
         self.assertFalse(attrib.multiplies_by_inputs)
         neuron_attrib = NeuronDeconvolution(model, output_layer)
         for i in range(out.shape[1]):

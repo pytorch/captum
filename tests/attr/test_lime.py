@@ -3,10 +3,12 @@
 import io
 import unittest
 import unittest.mock
-from typing import Any, Callable, Generator, List, Tuple, Union
+from functools import partial
+from typing import Any, Callable, Generator, List, Optional, Tuple, Union
 
 import torch
-from captum._utils.models.linear_model import SkLearnLasso
+from captum._utils.models.linear_model import SGDLasso, SkLearnLasso
+from captum._utils.models.model import Model
 from captum._utils.typing import BaselineType, TensorOrTupleOfTensorsGeneric
 from captum.attr._core.lime import get_exp_kernel_similarity_function, Lime, LimeBase
 from captum.attr._utils.batching import _batch_example_iterator
@@ -118,6 +120,22 @@ class Test(BaseTest):
             n_samples=500,
             expected_coefs_only=[[73.3716, 193.3349, 113.3349]],
             test_generator=True,
+        )
+
+    def test_simple_lime_sgd_model(self) -> None:
+        net = BasicModel_MultiLayer()
+        inp = torch.tensor([[20.0, 50.0, 30.0]], requires_grad=True)
+        interpretable_model = SGDLasso()
+        interpretable_model.fit = partial(  # type: ignore
+            interpretable_model.fit, initial_lr=0.1, max_epoch=500
+        )
+        self._lime_test_assert(
+            net,
+            inp,
+            [[73.3716, 193.3349, 113.3349]],
+            n_samples=1000,
+            expected_coefs_only=[[73.3716, 193.3349, 113.3349]],
+            interpretable_model=interpretable_model,
         )
 
     def test_simple_lime_with_mask(self) -> None:
@@ -487,12 +505,15 @@ class Test(BaseTest):
         batch_attr: bool = False,
         test_generator: bool = False,
         show_progress: bool = False,
+        interpretable_model: Optional[Model] = None,
     ) -> None:
         for batch_size in perturbations_per_eval:
             lime = Lime(
                 model,
                 similarity_func=get_exp_kernel_similarity_function("cosine", 10.0),
-                interpretable_model=SkLearnLasso(alpha=1.0),
+                interpretable_model=interpretable_model
+                if interpretable_model
+                else SkLearnLasso(alpha=1.0),
             )
             attributions = lime.attribute(
                 test_input,
@@ -526,7 +547,9 @@ class Test(BaseTest):
 
                 lime_alt = LimeBase(
                     model,
-                    SkLearnLasso(alpha=1.0),
+                    interpretable_model
+                    if interpretable_model
+                    else SkLearnLasso(alpha=1.0),
                     get_exp_kernel_similarity_function("euclidean", 1000.0),
                     alt_perturb_generator if test_generator else alt_perturb_func,
                     False,

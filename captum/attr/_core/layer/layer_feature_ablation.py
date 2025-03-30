@@ -42,7 +42,7 @@ class LayerFeatureAblation(LayerAttribution, PerturbationAttribution):
         r"""
         Args:
 
-            forward_func (callable):  The forward function of the model or any
+            forward_func (Callable): The forward function of the model or any
                           modification of it
             layer (torch.nn.Module): Layer for which attributions are computed.
                           Output size of attribute matches this layer's input or
@@ -50,7 +50,7 @@ class LayerFeatureAblation(LayerAttribution, PerturbationAttribution):
                           the inputs or outputs of the layer, corresponding to
                           attribution of each neuron in the input or output of
                           this layer.
-            device_ids (list(int)): Device ID list, necessary only if forward_func
+            device_ids (list[int]): Device ID list, necessary only if forward_func
                           applies a DataParallel model. This allows reconstruction of
                           intermediate outputs from batched results across devices.
                           If forward_func is given as the DataParallel model itself
@@ -75,7 +75,7 @@ class LayerFeatureAblation(LayerAttribution, PerturbationAttribution):
         r"""
         Args:
 
-            inputs (tensor or tuple of tensors):  Input for which layer
+            inputs (Tensor or tuple[Tensor, ...]): Input for which layer
                         attributions are computed. If forward_func takes a single
                         tensor as input, a single input tensor should be provided.
                         If forward_func takes multiple tensors as input, a tuple
@@ -83,7 +83,7 @@ class LayerFeatureAblation(LayerAttribution, PerturbationAttribution):
                         that for all given input tensors, dimension 0 corresponds
                         to the number of examples, and if multiple input tensors
                         are provided, the examples must be aligned appropriately.
-            layer_baselines (scalar, tensor, tuple of scalars or tensors, optional):
+            layer_baselines (scalar, Tensor, tuple of scalar, or Tensor, optional):
                         Layer baselines define reference values which replace each
                         layer input / output value when ablated.
                         Layer baselines should be a single tensor with dimensions
@@ -94,7 +94,7 @@ class LayerFeatureAblation(LayerAttribution, PerturbationAttribution):
                         In the cases when `baselines` is not provided, we internally
                         use zero as the baseline for each neuron.
                         Default: None
-            target (int, tuple, tensor or list, optional):  Output indices for
+            target (int, tuple, Tensor, or list, optional): Output indices for
                         which gradients are computed (for classification cases,
                         this is usually the target class).
                         If the network returns a scalar value per example,
@@ -119,7 +119,7 @@ class LayerFeatureAblation(LayerAttribution, PerturbationAttribution):
                           target for the corresponding example.
 
                         Default: None
-            additional_forward_args (any, optional): If the forward function
+            additional_forward_args (Any, optional): If the forward function
                         requires additional arguments other than the inputs for
                         which attributions should not be computed, this argument
                         can be provided. It must be either a single additional
@@ -131,7 +131,7 @@ class LayerFeatureAblation(LayerAttribution, PerturbationAttribution):
                         Note that attributions are not computed with respect
                         to these arguments.
                         Default: None
-            layer_mask (tensor or tuple of tensors, optional):
+            layer_mask (Tensor or tuple[Tensor, ...], optional):
                         layer_mask defines a mask for the layer, grouping
                         elements of the layer input / output which should be
                         ablated together.
@@ -171,8 +171,8 @@ class LayerFeatureAblation(LayerAttribution, PerturbationAttribution):
                         Default: 1
 
         Returns:
-            *tensor* or tuple of *tensors* of **attributions**:
-            - **attributions** (*tensor* or tuple of *tensors*):
+            *Tensor* or *tuple[Tensor, ...]* of **attributions**:
+            - **attributions** (*Tensor* or *tuple[Tensor, ...]*):
                         Attribution of each neuron in given layer input or
                         output. Attributions will always be the same size as
                         the input or output of the given layer, depending on

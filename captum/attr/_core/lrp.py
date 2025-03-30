@@ -45,14 +45,11 @@ class LRP(GradientAttribution):
         r"""
         Args:
 
-            model (module): The forward function of the model or any modification of
+            model (Module): The forward function of the model or any modification of
                 it. Custom rules for a given layer need to be defined as attribute
                 `module.rule` and need to be of type PropagationRule. If no rule is
                 specified for a layer, a pre-defined default rule for the module type
-                is used. Model cannot contain any in-place nonlinear submodules;
-                these are not supported by the register_full_backward_hook
-                PyTorch API starting from PyTorch v1.9.
-
+                is used.
         """
         GradientAttribution.__init__(self, model)
         self.model = model
@@ -98,7 +95,8 @@ class LRP(GradientAttribution):
     ]:
         r"""
         Args:
-            inputs (tensor or tuple of tensors):  Input for which relevance is
+
+            inputs (Tensor or tuple[Tensor, ...]): Input for which relevance is
                         propagated. If forward_func takes a single
                         tensor as input, a single input tensor should be provided.
                         If forward_func takes multiple tensors as input, a tuple
@@ -106,12 +104,13 @@ class LRP(GradientAttribution):
                         that for all given input tensors, dimension 0 corresponds
                         to the number of examples, and if multiple input tensors
                         are provided, the examples must be aligned appropriately.
-            target (int, tuple, tensor or list, optional):  Output indices for
-                        which gradients are computed (for classification cases,
-                        this is usually the target class).
-                        If the network returns a scalar value per example,
-                        no target index is necessary.
-                        For general 2D outputs, targets can be either:
+
+            target (int, tuple, Tensor, or list, optional): Output indices for
+                    which gradients are computed (for classification cases,
+                    this is usually the target class).
+                    If the network returns a scalar value per example,
+                    no target index is necessary.
+                    For general 2D outputs, targets can be either:
 
                     - a single integer or a tensor containing a single
                         integer, which is applied to all input examples
@@ -153,9 +152,10 @@ class LRP(GradientAttribution):
                     of rules is printed during propagation.
 
         Returns:
-            *tensor* or tuple of *tensors* of **attributions**
-            or 2-element tuple of **attributions**, **delta**::
-            - **attributions** (*tensor* or tuple of *tensors*):
+            *Tensor* or *tuple[Tensor, ...]* of **attributions**
+            or 2-element tuple of **attributions**, **delta**:
+
+              - **attributions** (*Tensor* or *tuple[Tensor, ...]*):
                         The propagated relevance values with respect to each
                         input feature. The values are normalized by the output score
                         value (sum(relevance)=1). To obtain values comparable to other
@@ -168,10 +168,12 @@ class LRP(GradientAttribution):
                         corresponding sized tensors is returned. The sum of attributions
                         is one and not corresponding to the prediction score as in other
                         implementations.
-            - **delta** (*tensor*, returned if return_convergence_delta=True):
+
+              - **delta** (*Tensor*, returned if return_convergence_delta=True):
                         Delta is calculated per example, meaning that the number of
                         elements in returned delta tensor is equal to the number of
                         of examples in the inputs.
+
         Examples::
 
                 >>> # ImageClassifier takes a single input tensor of images Nx3x32x32,
@@ -241,7 +243,7 @@ class LRP(GradientAttribution):
 
         Args:
 
-            attributions (tensor or tuple of tensors): Attribution scores that
+            attributions (Tensor or tuple[Tensor, ...]): Attribution scores that
                         are precomputed by an attribution algorithm.
                         Attributions can be provided in form of a single tensor
                         or a tuple of those. It is assumed that attribution
@@ -249,12 +251,13 @@ class LRP(GradientAttribution):
                         examples, and if multiple input tensors are provided,
                         the examples must be aligned appropriately.
 
-            output (tensor with single element): The output value with respect to which
+            output (Tensor): The output value with respect to which
                         the attribution values are computed. This value corresponds to
-                        the target score of a classification model.
+                        the target score of a classification model. The given tensor
+                        should only have a single element.
 
         Returns:
-            *tensor*:
+            *Tensor*:
             - **delta** Difference of relevance in output layer and input layer.
         """
         if isinstance(attributions, tuple):
@@ -314,10 +317,10 @@ class LRP(GradientAttribution):
     def _register_forward_hooks(self) -> None:
         for layer in self.layers:
             if type(layer) in SUPPORTED_NON_LINEAR_LAYERS:
-                backward_handle = _register_backward_hook(
+                backward_handles = _register_backward_hook(
                     layer, PropagationRule.backward_hook_activation, self
                 )
-                self.backward_handles.append(backward_handle)
+                self.backward_handles.extend(backward_handles)
             else:
                 forward_handle = layer.register_forward_hook(
                     layer.rule.forward_hook  # type: ignore

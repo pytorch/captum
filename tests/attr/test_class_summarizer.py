@@ -78,7 +78,7 @@ class Test(BaseTest):
                 ):
                     self.class_test(data, classes, sizes)
 
-    def test_no_class(self):
+    def test_no_class(self) -> None:
         size = (30, 20)
         summarizer = ClassSummarizer(stats=CommonStats())
         for _ in range(10):
@@ -95,7 +95,7 @@ class Test(BaseTest):
         self.assertIsInstance(summarizer.class_summaries, dict)
         self.assertEqual(len(summarizer.class_summaries), 0)
 
-    def test_single_label(self):
+    def test_single_label(self) -> None:
         size = (4, 3, 2, 1)
         data = torch.randn((100,) + size)
 

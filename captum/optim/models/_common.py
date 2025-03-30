@@ -16,6 +16,9 @@ def get_model_layers(model: nn.Module) -> List[str]:
     Args:
 
         model (nn.Module): A PyTorch model or module instance to collect layers from.
+
+    Returns:
+        model_layers (list of str): A list of hookable layers in the model.
     """
     layers = []
 
@@ -68,6 +71,14 @@ class RedirectedReluLayer(nn.Module):
 
     @torch.jit.ignore
     def forward(self, input: torch.Tensor) -> torch.Tensor:
+        """
+        Args:
+
+            x (torch.Tensor): A tensor to pass through RedirectedReLU.
+
+        Returns:
+            x (torch.Tensor): The output of RedirectedReLU.
+        """
         return RedirectedReLU.apply(input)
 
 
@@ -82,16 +93,24 @@ def replace_layers(
     Replace all target layers with new layers inside the specified model,
     possibly with the same initialization variables.
 
+    Example::
+
+        >>> model = opt.models.googlenet(pretrained=True)
+        >>> # Replace MaxPool2d layers with their AvgPool2d equivalents
+        >>> opt.models.replace_layers(model, nn.MaxPool2d, nn.AvgPool2d, True)
+
     Args:
-        model: (nn.Module): A PyTorch model instance.
-        layer1: (Type[nn.Module]): The layer class that you want to transfer
+
+        model (nn.Module): A PyTorch model instance.
+        layer1 (Type[nn.Module]): The layer class that you want to transfer
             initialization variables from.
-        layer2: (Type[nn.Module]): The layer class to create with the variables
-            from layer1.
-        transfer_vars (bool, optional): Wether or not to try and copy
-            initialization variables from layer1 instances to the replacement
-            layer2 instances.
-        kwargs: (Any, optional): Any additional variables to use when creating
+        layer2 (Type[nn.Module]): The layer class to create with the variables
+            from ``layer1``.
+        transfer_vars (bool, optional): Whether or not to try and copy
+            initialization variables from ``layer1`` instances to the replacement
+            ``layer2`` instances.
+            Default: ``False``
+        kwargs (Any, optional): Any additional variables to use when creating
             the new layer.
     """
 
@@ -112,13 +131,16 @@ def _transfer_layer_vars(
     """
     Given a layer instance, create a new layer instance of another class
     with the same initialization variables as the original layer.
+
     Args:
-        layer1: (nn.Module): A layer instance that you want to transfer
+
+        layer1 (nn.Module): A layer instance that you want to transfer
             initialization variables from.
-        layer2: (nn.Module): The layer class to create with the variables
+        layer2 (nn.Module): The layer class to create with the variables
             from of layer1.
-        kwargs: (Any, optional): Any additional variables to use when creating
+        kwargs (Any, optional): Any additional variables to use when creating
             the new layer.
+
     Returns:
         layer2 instance (nn.Module): An instance of layer2 with the initialization
             variables that it shares with layer1, and any specified additional
@@ -144,8 +166,7 @@ def _transfer_layer_vars(
 class Conv2dSame(nn.Conv2d):
     """
     Tensorflow like 'SAME' convolution wrapper for 2D convolutions.
-    TODO: Replace with torch.nn.Conv2d when support for padding='same'
-    is in stable version
+    torch.nn.Conv2d with padding='same' can be used when the stride is equal to 1.
     """
 
     def __init__(
@@ -170,24 +191,25 @@ class Conv2dSame(nn.Conv2d):
            kernel_size (int or tuple of int): The desired kernel size to use.
            stride (int or tuple of int, optional): The desired stride for the
                cross-correlation.
-               Default: 1
+               Default: ``1``
            padding (int or tuple of int, optional): This value is always set to 0.
-               Default: 0
+               Default: ``0``
            dilation (int or tuple of int, optional): The desired spacing between the
                kernel points.
-               Default: 1
+               Default: ``1``
            groups (int, optional): Number of blocked connections from input channels
-               to output channels. Both in_channels and out_channels must be divisable
+               to output channels. Both in_channels and out_channels must be divisible
                by groups.
-               Default: 1
+               Default: ``1``
            bias (bool, optional): Whether or not to apply a learnable bias to the
                output.
+               Default: ``True``
         """
         super().__init__(
             in_channels, out_channels, kernel_size, stride, 0, dilation, groups, bias
         )
 
-    def calc_same_pad(self, i: int, k: int, s: int, d: int) -> int:
+    def _calc_same_pad(self, i: int, k: int, s: int, d: int) -> int:
         """
         Calculate the required padding for a dimension.
 
@@ -207,15 +229,15 @@ class Conv2dSame(nn.Conv2d):
         """
         Args:
 
-            x (torch.tensor): The input tensor to apply 2D convolution to.
+            x (torch.Tensor): The input tensor to apply 2D convolution to.
 
         Returns
             x (torch.Tensor): The input tensor after the 2D convolution was applied.
         """
         ih, iw = x.size()[-2:]
         kh, kw = self.weight.size()[-2:]
-        pad_h = self.calc_same_pad(i=ih, k=kh, s=self.stride[0], d=self.dilation[0])
-        pad_w = self.calc_same_pad(i=iw, k=kw, s=self.stride[1], d=self.dilation[1])
+        pad_h = self._calc_same_pad(i=ih, k=kh, s=self.stride[0], d=self.dilation[0])
+        pad_w = self._calc_same_pad(i=iw, k=kw, s=self.stride[1], d=self.dilation[1])
 
         if pad_h > 0 or pad_w > 0:
             x = F.pad(
@@ -240,6 +262,13 @@ def collect_activations(
     """
     Collect target activations for a model.
 
+    Example::
+
+        >>> model = opt.models.googlenet(pretrained=True)
+        >>> target = model.mixed4c  # Target layer
+        >>> activ_dict = opt.models.collect_activations(model, target)
+        >>> activations = activ_dict[target]  # Get activations from dict
+
     Args:
 
         model (nn.Module): A PyTorch model instance.
@@ -247,14 +276,15 @@ def collect_activations(
             given model.
         model_input (torch.Tensor or tuple of torch.Tensor, optional): Optionally
             provide an input tensor to use when collecting the target activations.
-            Default: torch.zeros(1, 3, 224, 224)
+            Default: ``torch.zeros(1, 3, 224, 224)``
 
     Returns:
-        activ_dict (ModuleOutputMapping): A dictionary of collected activations where
-            the keys are the target layers.
+        activ_dict (dict[nn.Module, torch.Tensor]): A dictionary of collected
+            activations where the keys are the target layers.
     """
-    if not isinstance(targets, list):
+    if not isinstance(targets, (list, tuple)):
         targets = [targets]
+    targets = list(dict.fromkeys(targets))
     catch_activ = ActivationFetcher(model, targets)
     activ_dict = catch_activ(model_input)
     return activ_dict
@@ -266,32 +296,35 @@ class SkipLayer(torch.nn.Module):
     during the forward pass. Use cases include removing nonlinear activation layers
     like ReLU for circuits research.
 
-    This layer works almost exactly the same way that nn.Indentiy does, except it also
-    ignores any additional arguments passed to the forward function. Any layer replaced
-    by SkipLayer must have the same input and output shapes.
+    This layer works almost exactly the same way that :class:`torch.nn.Identity` does,
+    except it also ignores any additional arguments passed to the forward function.
+    Any layer replaced by SkipLayer must have the same input and output shapes.
 
     See nn.Identity for more details:
     https://pytorch.org/docs/stable/generated/torch.nn.Identity.html
-
-    Args:
-        args (Any): Any argument. Arguments will be safely ignored.
-        kwargs (Any) Any keyword argument. Arguments will be safely ignored.
     """
 
     def __init__(self, *args, **kwargs) -> None:
-        super().__init__()
-
-    def forward(
-        self, x: Union[torch.Tensor, Tuple[torch.Tensor]], *args, **kwargs
-    ) -> Union[torch.Tensor, Tuple[torch.Tensor]]:
         """
         Args:
-            x (torch.Tensor or tuple of torch.Tensor): The input tensor or tensors.
-            args (Any): Any argument. Arguments will be safely ignored.
-            kwargs (Any) Any keyword argument. Arguments will be safely ignored.
+
+            args (Any, optional): Any argument. Arguments will be safely ignored.
+            kwargs (Any, optional) Any keyword argument. Arguments will be safely
+                ignored.
+        """
+        super().__init__()
+
+    def forward(self, x: torch.Tensor, *args, **kwargs) -> torch.Tensor:
+        """
+        Args:
+
+            x (torch.Tensor): The input tensor.
+            args (Any, optional): Any argument. Arguments will be safely ignored.
+            kwargs (Any, optional) Any keyword argument. Arguments will be safely
+                ignored.
+
         Returns:
-            x (torch.Tensor or tuple of torch.Tensor): The unmodified input tensor or
-                tensors.
+            x (torch.Tensor): The unmodified input tensor.
         """
         return x
 
@@ -300,17 +333,17 @@ def skip_layers(
     model: nn.Module, layers: Union[List[Type[nn.Module]], Type[nn.Module]]
 ) -> None:
     """
-    This function is a wrapper function for
-    replace_layers and replaces the target layer
-    with layers that do nothing.
-    This is useful for removing the nonlinear ReLU
-    layers when creating expanded weights.
+    This function is a wrapper function for :func:`.replace_layers` and replaces the
+    target layer with layers that do nothing. This is useful for removing the nonlinear
+    ReLU layers when creating expanded weights.
+
     Args:
+
         model (nn.Module): A PyTorch model instance.
-        layers (nn.Module or list of nn.Module): The layer
-            class type to replace in the model.
+        layers (nn.Module or list of nn.Module): The layer class type to replace in the
+            model.
     """
-    if not hasattr(layers, "__iter__"):
+    if not isinstance(layers, (tuple, list)):
         layers = cast(Type[nn.Module], layers)
         replace_layers(model, layers, SkipLayer)
     else:
@@ -329,9 +362,10 @@ class MaxPool2dRelaxed(torch.nn.Module):
     attributions of spatial posititions can be estimated using the rate at which
     increasing the neuron affects the output classes.
 
-    This layer peforms a MaxPool2d operation on the input, while using an equivalent
-    AvgPool2d layer to compute the gradient. This means that the forward pass returns
-    nn.MaxPool2d(input) while the backward pass uses nn.AvgPool2d(input).
+    This layer peforms a :class:`torch.nn.MaxPool2d` operation on the input, while
+    using an equivalent :class:`torch.nn.AvgPool2d` layer to compute the gradient.
+    This means that the forward pass returns ``nn.MaxPool2d(input)`` while the
+    backward pass uses ``nn.AvgPool2d(input)``.
 
     Carter, et al., "Activation Atlas", Distill, 2019.
     https://distill.pub/2019/activation-atlas/
@@ -347,24 +381,29 @@ class MaxPool2dRelaxed(torch.nn.Module):
 
     def __init__(
         self,
-        kernel_size: Union[int, Tuple[int, ...]],
-        stride: Optional[Union[int, Tuple[int, ...]]] = None,
-        padding: Union[int, Tuple[int, ...]] = 0,
+        kernel_size: Union[int, Tuple[int, int]],
+        stride: Optional[Union[int, Tuple[int, int]]] = None,
+        padding: Union[int, Tuple[int, int]] = 0,
         ceil_mode: bool = False,
     ) -> None:
         """
         Args:
 
-            kernel_size (int or tuple of int): The size of the window to perform max &
-            average pooling with.
+            kernel_size (int or tuple of int): The size of the window to perform max
+                and average pooling with. Either a single int to use for both the
+                height & width or a tuple of 2 integers in format of: (height, width).
             stride (int or tuple of int, optional): The stride window size to use.
-                Default: None
+                Either a single int to use for both the height & width or a tuple of 2
+                integers in format of: (height, width).
+                Default: ``None``
             padding (int or tuple of int): The amount of zero padding to add to both
-                sides in the nn.MaxPool2d & nn.AvgPool2d modules.
-                Default: 0
+                sides in the ``nn.MaxPool2d`` & ``nn.AvgPool2d`` modules. Either a
+                single int to use for both the height & width or a tuple of 2 integers
+                in format of: (height, width).
+                Default: ``0``
             ceil_mode (bool, optional): Whether to use ceil or floor for creating the
                 output shape.
-                Default: False
+                Default: ``False``
         """
         super().__init__()
         self.maxpool = torch.nn.MaxPool2d(

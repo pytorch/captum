@@ -75,9 +75,9 @@ class FeaturePermutation(FeatureAblation):
         r"""
         Args:
 
-            forward_func (callable): The forward function of the model or
-                any modification of it
-            perm_func (callable, optional): A function that accepts a batch of
+            forward_func (Callable): The forward function of the model or
+                any modification of it.
+            perm_func (Callable, optional): A function that accepts a batch of
                 inputs and a feature mask, and "permutes" the feature using
                 feature mask across the batch. This defaults to a function
                 which applies a random permutation, this argument only needs
@@ -101,14 +101,16 @@ class FeaturePermutation(FeatureAblation):
         **kwargs: Any,
     ) -> TensorOrTupleOfTensorsGeneric:
         r"""
-        This function is almost equivalent to `FeatureAblation.attribute`. The
-        main difference is the way ablated examples are generated. Specifically
-        they are generated through the `perm_func`, as we set the baselines for
-        `FeatureAblation.attribute` to None.
+        This function is almost equivalent to
+        :func:`FeatureAblation.attribute <captum.attr.FeatureAblation.attribute>`. The
+        main difference is the way ablated examples are generated. Specifically they
+        are generated through the ``perm_func``, as we set the baselines for
+        :func:`FeatureAblation.attribute <captum.attr.FeatureAblation.attribute>` to
+        ``None``.
 
 
         Args:
-                inputs (tensor or tuple of tensors):  Input for which
+                inputs (Tensor or tuple[Tensor, ...]): Input for which
                             permutation attributions are computed. If
                             forward_func takes a single tensor as input, a
                             single input tensor should be provided.  If
@@ -118,7 +120,7 @@ class FeaturePermutation(FeatureAblation):
                             0 corresponds to the number of examples (aka batch
                             size), and if multiple input tensors are provided,
                             the examples must be aligned appropriately.
-                target (int, tuple, tensor or list, optional):  Output indices for
+                target (int, tuple, Tensor, or list, optional): Output indices for
                             which difference is computed (for classification cases,
                             this is usually the target class).
                             If the network returns a scalar value per example,
@@ -143,7 +145,7 @@ class FeaturePermutation(FeatureAblation):
                               target for the corresponding example.
 
                             Default: None
-                additional_forward_args (any, optional): If the forward function
+                additional_forward_args (Any, optional): If the forward function
                             requires additional arguments other than the inputs for
                             which attributions should not be computed, this argument
                             can be provided. It must be either a single additional
@@ -158,7 +160,7 @@ class FeaturePermutation(FeatureAblation):
                             Note that attributions are not computed with respect
                             to these arguments.
                             Default: None
-                feature_mask (tensor or tuple of tensors, optional):
+                feature_mask (Tensor or tuple[Tensor, ...], optional):
                             feature_mask defines a mask for the input, grouping
                             features which should be ablated together. feature_mask
                             should contain the same number of tensors as inputs.
@@ -196,14 +198,14 @@ class FeaturePermutation(FeatureAblation):
                             a simple output of progress.
                             Default: False
                 **kwargs (Any, optional): Any additional arguments used by child
-                            classes of FeatureAblation (such as Occlusion) to construct
-                            ablations. These arguments are ignored when using
-                            FeatureAblation directly.
+                            classes of :class:`.FeatureAblation` (such as
+                            :class:`.Occlusion`) to construct ablations. These
+                            arguments are ignored when using FeatureAblation directly.
                             Default: None
 
         Returns:
-            *tensor* or tuple of *tensors* of **attributions**:
-            - **attributions** (*tensor* or tuple of *tensors*):
+            *Tensor* or *tuple[Tensor, ...]* of **attributions**:
+            - **attributions** (*Tensor* or *tuple[Tensor, ...]*):
                         The attributions with respect to each input feature.
                         If the forward function returns
                         a scalar value per example, attributions will be

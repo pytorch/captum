@@ -121,7 +121,7 @@ class TestLinearModel(BaseTest):
                 h /= h.norm(p=2)
             assertTensorAlmostEqual(self, h, expected_hyperplane, delta=delta)
 
-    def test_simple_linear_regression(self):
+    def test_simple_linear_regression(self) -> None:
         xs = torch.randn(TestLinearModel.MAX_POINTS, 1)
         ys = 3 * xs + 1
 
@@ -152,7 +152,7 @@ class TestLinearModel(BaseTest):
             delta=0.2,
         )
 
-    def test_simple_multi_output(self):
+    def test_simple_multi_output(self) -> None:
         xs = torch.randn(TestLinearModel.MAX_POINTS, 1)
         y1 = 3 * xs + 1
         y2 = -5 * xs
@@ -167,7 +167,7 @@ class TestLinearModel(BaseTest):
             objective="ols",
         )
 
-    def test_simple_linear_classification(self):
+    def test_simple_linear_classification(self) -> None:
         xs = torch.tensor([[0.5, 0.5], [-0.5, -0.5], [0.5, -0.5], [-0.5, 0.5]])
         ys = torch.tensor([1.0, -1.0, 1.0, -1.0])
         self.train_and_compare(
@@ -201,7 +201,7 @@ class TestLinearModel(BaseTest):
             SGDRidge, xs, ys, expected_loss=0.25, expected_reg=0, objective="ridge"
         )
 
-    def test_simple_xor_problem(self):
+    def test_simple_xor_problem(self) -> None:
         r"""
            ^
          o | x
@@ -246,7 +246,7 @@ class TestLinearModel(BaseTest):
             bias=False,
         )
 
-    def test_weighted_problem(self):
+    def test_weighted_problem(self) -> None:
         r"""
            ^
          0 | x

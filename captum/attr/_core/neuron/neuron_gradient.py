@@ -33,7 +33,7 @@ class NeuronGradient(NeuronAttribution, GradientAttribution):
         r"""
         Args:
 
-            forward_func (callable):  The forward function of the model or any
+            forward_func (Callable): The forward function of the model or any
                           modification of it
             layer (torch.nn.Module): Layer for which attributions are computed.
                           Output size of attribute matches this layer's input or
@@ -44,7 +44,7 @@ class NeuronGradient(NeuronAttribution, GradientAttribution):
                           Currently, it is assumed that the inputs or the outputs
                           of the layer, depending on which one is used for
                           attribution, can only be a single tensor.
-            device_ids (list(int)): Device ID list, necessary only if forward_func
+            device_ids (list[int]): Device ID list, necessary only if forward_func
                           applies a DataParallel model. This allows reconstruction of
                           intermediate outputs from batched results across devices.
                           If forward_func is given as the DataParallel model itself,
@@ -64,7 +64,7 @@ class NeuronGradient(NeuronAttribution, GradientAttribution):
         r"""
         Args:
 
-            inputs (tensor or tuple of tensors):  Input for which neuron
+            inputs (Tensor or tuple[Tensor, ...]): Input for which neuron
                         gradients are computed. If forward_func takes a single
                         tensor as input, a single input tensor should be provided.
                         If forward_func takes multiple tensors as input, a tuple
@@ -72,7 +72,7 @@ class NeuronGradient(NeuronAttribution, GradientAttribution):
                         that for all given input tensors, dimension 0 corresponds
                         to the number of examples, and if multiple input tensors
                         are provided, the examples must be aligned appropriately.
-            neuron_selector (int, callable, or tuple of ints or slices):
+            neuron_selector (int, Callable, tuple[int], or slice):
                         Selector for neuron
                         in given layer for which attribution is desired.
                         Neuron selector can be provided as:
@@ -93,7 +93,7 @@ class NeuronGradient(NeuronAttribution, GradientAttribution):
                           indexed output tensor is used for attribution. Note
                           that specifying a slice of a tensor would amount to
                           computing the attribution of the sum of the specified
-                          neurons, and not the individual neurons independantly.
+                          neurons, and not the individual neurons independently.
 
                         - a callable, which should
                           take the target layer as input (single tensor or tuple
@@ -105,7 +105,7 @@ class NeuronGradient(NeuronAttribution, GradientAttribution):
                           this function returns either a tensor with one element
                           or a 1D tensor with length equal to batch_size (one scalar
                           per input example)
-            additional_forward_args (any, optional): If the forward function
+            additional_forward_args (Any, optional): If the forward function
                         requires additional arguments other than the inputs for
                         which attributions should not be computed, this argument
                         can be provided. It must be either a single additional
@@ -130,8 +130,8 @@ class NeuronGradient(NeuronAttribution, GradientAttribution):
                         Default: False
 
         Returns:
-            *tensor* or tuple of *tensors* of **attributions**:
-            - **attributions** (*tensor* or tuple of *tensors*):
+            *Tensor* or *tuple[Tensor, ...]* of **attributions**:
+            - **attributions** (*Tensor* or *tuple[Tensor, ...]*):
                         Gradients of particular neuron with respect to each input
                         feature. Attributions will always be the same size as the
                         provided inputs, with each value providing the attribution

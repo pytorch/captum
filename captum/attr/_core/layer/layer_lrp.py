@@ -42,14 +42,10 @@ class LayerLRP(LRP, LayerAttribution):
         """
         Args:
 
-            model (module): The forward function of the model or
+            model (Module): The forward function of the model or
                         any modification of it. Custom rules for a given layer need to
                         be defined as attribute
                         `module.rule` and need to be of type PropagationRule.
-                        Model cannot contain any in-place nonlinear submodules;
-                        these are not supported by the register_full_backward_hook
-                        PyTorch API starting from PyTorch v1.9.
-
 
             layer (torch.nn.Module or list(torch.nn.Module)): Layer or layers
                           for which attributions are computed.
@@ -110,9 +106,9 @@ class LayerLRP(LRP, LayerAttribution):
         ],
     ]:
         r"""
-
         Args:
-            inputs (tensor or tuple of tensors):  Input for which relevance is
+
+            inputs (Tensor or tuple[Tensor, ...]): Input for which relevance is
                         propagated.
                         If forward_func takes a single
                         tensor as input, a single input tensor should be provided.
@@ -121,12 +117,12 @@ class LayerLRP(LRP, LayerAttribution):
                         that for all given input tensors, dimension 0 corresponds
                         to the number of examples, and if multiple input tensors
                         are provided, the examples must be aligned appropriately.
-            target (int, tuple, tensor or list, optional):  Output indices for
-                        which gradients are computed (for classification cases,
-                        this is usually the target class).
-                        If the network returns a scalar value per example,
-                        no target index is necessary.
-                        For general 2D outputs, targets can be either:
+            target (int, tuple, Tensor, or list, optional): Output indices for
+                    which gradients are computed (for classification cases,
+                    this is usually the target class).
+                    If the network returns a scalar value per example,
+                    no target index is necessary.
+                    For general 2D outputs, targets can be either:
 
                     - a single integer or a tensor containing a single
                         integer, which is applied to all input examples
@@ -176,9 +172,10 @@ class LayerLRP(LRP, LayerAttribution):
                     Default: False
 
         Returns:
-            *tensor* or tuple of *tensors* of **attributions** or 2-element tuple of
-                **attributions**, **delta** or lists of **attributions** and **delta**:
-            - **attributions** (*tensor* or tuple of *tensors*):
+            *Tensor* or *tuple[Tensor, ...]* of **attributions** or 2-element tuple of
+            **attributions**, **delta** or list of **attributions** and **delta**:
+
+              - **attributions** (*Tensor* or *tuple[Tensor, ...]*):
                         The propagated relevance values with respect to each
                         input feature. Attributions will always
                         be the same size as the provided inputs, with each value
@@ -190,24 +187,25 @@ class LayerLRP(LRP, LayerAttribution):
                         implementations. If attributions for all layers are returned
                         (layer=None) a list of tensors or tuples of tensors is returned
                         with entries for each layer.
-            - **delta** (*tensor* or list of *tensors*
-                         returned if return_convergence_delta=True):
+              - **delta** (*Tensor* or list of *Tensor*
+                        returned if return_convergence_delta=True):
                         Delta is calculated per example, meaning that the number of
                         elements in returned delta tensor is equal to the number of
-                        of examples in input.
+                        examples in input.
                         If attributions for all layers are returned (layer=None) a list
                         of tensors is returned with entries for
                         each layer.
+
         Examples::
 
                 >>> # ImageClassifier takes a single input tensor of images Nx3x32x32,
                 >>> # and returns an Nx10 tensor of class probabilities. It has one
                 >>> # Conv2D and a ReLU layer.
                 >>> net = ImageClassifier()
-                >>> lrp = LRP(net, net.conv1)
+                >>> layer_lrp = LayerLRP(net, net.conv1)
                 >>> input = torch.randn(3, 3, 32, 32)
                 >>> # Attribution size matches input size: 3x3x32x32
-                >>> attribution = lrp.attribute(input, target=5)
+                >>> attribution = layer_lrp.attribute(input, target=5)
 
         """
         self.verbose = verbose

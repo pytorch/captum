@@ -20,15 +20,15 @@ class Saliency(GradientAttribution):
     the default, the absolute value of the gradients is returned.
 
     More details about the approach can be found in the following paper:
-        https://arxiv.org/pdf/1312.6034.pdf
+        https://arxiv.org/abs/1312.6034
     """
 
     def __init__(self, forward_func: Callable) -> None:
         r"""
         Args:
 
-            forward_func (callable): The forward function of the model or
-                        any modification of it
+            forward_func (Callable): The forward function of the model or
+                        any modification of it.
         """
         GradientAttribution.__init__(self, forward_func)
 
@@ -43,16 +43,16 @@ class Saliency(GradientAttribution):
         r"""
         Args:
 
-            inputs (tensor or tuple of tensors):  Input for which integrated
-                        gradients are computed. If forward_func takes a single
-                        tensor as input, a single input tensor should be provided.
+            inputs (Tensor or tuple[Tensor, ...]): Input for which saliency
+                        is computed. If forward_func takes a single tensor
+                        as input, a single input tensor should be provided.
                         If forward_func takes multiple tensors as input, a tuple
                         of the input tensors should be provided. It is assumed
                         that for all given input tensors, dimension 0 corresponds
                         to the number of examples (aka batch size), and if
                         multiple input tensors are provided, the examples must
                         be aligned appropriately.
-            target (int, tuple, tensor or list, optional):  Output indices for
+            target (int, tuple, Tensor, or list, optional): Output indices for
                         which gradients are computed (for classification cases,
                         this is usually the target class).
                         If the network returns a scalar value per example,
@@ -81,7 +81,7 @@ class Saliency(GradientAttribution):
                         to True, otherwise returns the (signed) gradients if
                         False.
                         Default: True
-            additional_forward_args (any, optional): If the forward function
+            additional_forward_args (Any, optional): If the forward function
                         requires additional arguments other than the inputs for
                         which attributions should not be computed, this argument
                         can be provided. It must be either a single additional
@@ -95,8 +95,8 @@ class Saliency(GradientAttribution):
                         Default: None
 
         Returns:
-            *tensor* or tuple of *tensors* of **attributions**:
-            - **attributions** (*tensor* or tuple of *tensors*):
+            *Tensor* or *tuple[Tensor, ...]* of **attributions**:
+            - **attributions** (*Tensor* or *tuple[Tensor, ...]*):
                         The gradients with respect to each input feature.
                         Attributions will always be
                         the same size as the provided inputs, with each value

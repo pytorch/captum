@@ -27,7 +27,7 @@ class ModifiedReluGradientAttribution(GradientAttribution):
         r"""
         Args:
 
-            model (nn.Module):  The reference to PyTorch model instance.
+            model (nn.Module): The reference to PyTorch model instance.
         """
         GradientAttribution.__init__(self, model)
         self.model = model
@@ -79,8 +79,8 @@ class ModifiedReluGradientAttribution(GradientAttribution):
 
     def _register_hooks(self, module: Module):
         if isinstance(module, torch.nn.ReLU):
-            hook = _register_backward_hook(module, self._backward_hook, self)
-            self.backward_hooks.append(hook)
+            hooks = _register_backward_hook(module, self._backward_hook, self)
+            self.backward_hooks.extend(hooks)
 
     def _backward_hook(
         self,
@@ -121,9 +121,7 @@ class GuidedBackprop(ModifiedReluGradientAttribution):
         r"""
         Args:
 
-            model (nn.Module):  The reference to PyTorch model instance. Model cannot
-                        contain any in-place ReLU submodules; these are not
-                        supported by the register_full_backward_hook PyTorch API.
+            model (nn.Module):  The reference to PyTorch model instance.
         """
         ModifiedReluGradientAttribution.__init__(
             self, model, use_relu_grad_output=False
@@ -139,7 +137,7 @@ class GuidedBackprop(ModifiedReluGradientAttribution):
         r"""
         Args:
 
-            inputs (tensor or tuple of tensors):  Input for which
+            inputs (Tensor or tuple[Tensor, ...]): Input for which
                         attributions are computed. If forward_func takes a single
                         tensor as input, a single input tensor should be provided.
                         If forward_func takes multiple tensors as input, a tuple
@@ -148,7 +146,7 @@ class GuidedBackprop(ModifiedReluGradientAttribution):
                         to the number of examples (aka batch size), and if
                         multiple input tensors are provided, the examples must
                         be aligned appropriately.
-            target (int, tuple, tensor or list, optional):  Output indices for
+            target (int, tuple, Tensor, or list, optional): Output indices for
                         which gradients are computed (for classification cases,
                         this is usually the target class).
                         If the network returns a scalar value per example,
@@ -173,7 +171,7 @@ class GuidedBackprop(ModifiedReluGradientAttribution):
                           target for the corresponding example.
 
                         Default: None
-            additional_forward_args (any, optional): If the forward function
+            additional_forward_args (Any, optional): If the forward function
                         requires additional arguments other than the inputs for
                         which attributions should not be computed, this argument
                         can be provided. It must be either a single additional
@@ -186,8 +184,8 @@ class GuidedBackprop(ModifiedReluGradientAttribution):
                         Default: None
 
         Returns:
-            *tensor* or tuple of *tensors* of **attributions**:
-            - **attributions** (*tensor* or tuple of *tensors*):
+            *Tensor* or *tuple[Tensor, ...]* of **attributions**:
+            - **attributions** (*Tensor* or *tuple[Tensor, ...]*):
                         The guided backprop gradients with respect to each
                         input feature. Attributions will always
                         be the same size as the provided inputs, with each value
@@ -234,9 +232,7 @@ class Deconvolution(ModifiedReluGradientAttribution):
         r"""
         Args:
 
-            model (nn.Module):  The reference to PyTorch model instance. Model cannot
-                        contain any in-place ReLU submodules; these are not
-                        supported by the register_full_backward_hook PyTorch API.
+            model (nn.Module):  The reference to PyTorch model instance.
         """
         ModifiedReluGradientAttribution.__init__(self, model, use_relu_grad_output=True)
 
@@ -250,7 +246,7 @@ class Deconvolution(ModifiedReluGradientAttribution):
         r"""
         Args:
 
-            inputs (tensor or tuple of tensors):  Input for which
+            inputs (Tensor or tuple[Tensor, ...]): Input for which
                         attributions are computed. If forward_func takes a single
                         tensor as input, a single input tensor should be provided.
                         If forward_func takes multiple tensors as input, a tuple
@@ -259,7 +255,7 @@ class Deconvolution(ModifiedReluGradientAttribution):
                         to the number of examples (aka batch size), and if
                         multiple input tensors are provided, the examples must
                         be aligned appropriately.
-            target (int, tuple, tensor or list, optional):  Output indices for
+            target (int, tuple, Tensor, or list, optional): Output indices for
                         which gradients are computed (for classification cases,
                         this is usually the target class).
                         If the network returns a scalar value per example,
@@ -284,7 +280,7 @@ class Deconvolution(ModifiedReluGradientAttribution):
                           target for the corresponding example.
 
                         Default: None
-            additional_forward_args (any, optional): If the forward function
+            additional_forward_args (Any, optional): If the forward function
                         requires additional arguments other than the inputs for
                         which attributions should not be computed, this argument
                         can be provided. It must be either a single additional
@@ -297,8 +293,8 @@ class Deconvolution(ModifiedReluGradientAttribution):
                         Default: None
 
         Returns:
-            *tensor* or tuple of *tensors* of **attributions**:
-            - **attributions** (*tensor* or tuple of *tensors*):
+            *Tensor* or *tuple[Tensor, ...]* of **attributions**:
+            - **attributions** (*Tensor* or *tuple[Tensor, ...]*):
                         The deconvolution attributions with respect to each
                         input feature. Attributions will always
                         be the same size as the provided inputs, with each value

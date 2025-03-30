@@ -12,20 +12,23 @@ from captum.influence._core.tracincp_fast_rand_proj import (
 from parameterized import parameterized
 from tests.helpers.basic import assertTensorAlmostEqual, BaseTest
 from tests.influence._utils.common import (
+    _isSorted,
+    _wrap_model_in_dataparallel,
     build_test_name_func,
     CoefficientNet,
     DataInfluenceConstructor,
     IdentityDataset,
-    isSorted,
     RangeDataset,
 )
 
 
 class TestTracInRegression(BaseTest):
-    def _test_tracin_regression_setup(self, tmpdir: str, features: int):
+    def _test_tracin_regression_setup(
+        self, tmpdir: str, features: int, use_gpu: bool = False
+    ):
         low = 1
         high = 17
-        dataset = RangeDataset(low, high, features)
+        dataset = RangeDataset(low, high, features, use_gpu)
         net = CoefficientNet(in_features=features)
 
         checkpoint_name = "-".join(["checkpoint-reg", "0" + ".pt"])
@@ -35,33 +38,102 @@ class TestTracInRegression(BaseTest):
 
         for i, weight in enumerate(weights):
             net.fc1.weight.data.fill_(weight)
+            net_adjusted = _wrap_model_in_dataparallel(net) if use_gpu else net
             checkpoint_name = "-".join(["checkpoint-reg", str(i + 1) + ".pt"])
-            torch.save(net.state_dict(), os.path.join(tmpdir, checkpoint_name))
+            torch.save(net_adjusted.state_dict(), os.path.join(tmpdir, checkpoint_name))
 
-        return dataset, net
+        return dataset, net_adjusted
 
-    @parameterized.expand(
-        [
-            (reduction, constructor, mode, dim)
-            for dim in [1, 20]
+    use_gpu_list = (
+        [True, False]
+        if torch.cuda.is_available() and torch.cuda.device_count() != 0
+        else [False]
+    )
+
+    param_list = []
+    for use_gpu in use_gpu_list:
+        for dim in [1, 20]:
             for (mode, reduction, constructor) in [
-                ("check_idx", "none", DataInfluenceConstructor(TracInCP)),
-                ("sample_wise_trick", None, DataInfluenceConstructor(TracInCP)),
-                ("check_idx", "sum", DataInfluenceConstructor(TracInCPFast)),
-                ("check_idx", "sum", DataInfluenceConstructor(TracInCPFastRandProj)),
-                ("check_idx", "mean", DataInfluenceConstructor(TracInCPFast)),
-                ("check_idx", "mean", DataInfluenceConstructor(TracInCPFastRandProj)),
+                (
+                    "check_idx",
+                    "none",
+                    DataInfluenceConstructor(TracInCP, name="TracInCP_all_layers"),
+                ),
+                (
+                    "check_idx",
+                    "none",
+                    DataInfluenceConstructor(
+                        TracInCP,
+                        name="TracInCP_fc1",
+                        layers=["module.fc1"] if use_gpu else ["fc1"],
+                    ),
+                ),
+                (
+                    "sample_wise_trick",
+                    None,
+                    DataInfluenceConstructor(TracInCP, name="TracInCP_fc1"),
+                ),
+                (
+                    "check_idx",
+                    "sum",
+                    DataInfluenceConstructor(
+                        TracInCPFast, name="TracInCPFast_last_fc_layer"
+                    ),
+                ),
+                (
+                    "check_idx",
+                    "sum",
+                    DataInfluenceConstructor(
+                        TracInCPFastRandProj, name="TracInCPFast_last_fc_layer"
+                    ),
+                ),
+                (
+                    "check_idx",
+                    "mean",
+                    DataInfluenceConstructor(
+                        TracInCPFast, name="TracInCPFast_last_fc_layer"
+                    ),
+                ),
+                (
+                    "check_idx",
+                    "mean",
+                    DataInfluenceConstructor(
+                        TracInCPFastRandProj, name="TracInCPFastRandProj_last_fc_layer"
+                    ),
+                ),
                 (
                     "check_idx",
                     "sum",
                     DataInfluenceConstructor(
                         TracInCPFastRandProj,
-                        name="TracInCPFastRandProj1DimensionalProjection",
+                        name="TracInCPFastRandProj1DimensionalProjection_last_fc_layer",
                         projection_dim=1,
                     ),
                 ),
-            ]
-        ],
+                (
+                    "check_idx",
+                    "mean",
+                    DataInfluenceConstructor(
+                        TracInCPFast,
+                        name="TracInCPFastDuplicateLossFn",
+                        duplicate_loss_fn=True,
+                    ),
+                ),  # add a test where `duplicate_loss_fn` is True
+                (
+                    "check_idx",
+                    "mean",
+                    DataInfluenceConstructor(
+                        TracInCPFastRandProj,
+                        name="TracInCPFastRandProjDuplicateLossFn",
+                        duplicate_loss_fn=True,
+                    ),  # add a test where `duplicate_loss_fn` is True
+                ),
+            ]:
+                if not (mode == "sample_wise_trick" and use_gpu):
+                    param_list.append((reduction, constructor, mode, dim, use_gpu))
+
+    @parameterized.expand(
+        param_list,
         name_func=build_test_name_func(args_to_skip=["reduction"]),
     )
     def test_tracin_regression(
@@ -70,12 +142,17 @@ class TestTracInRegression(BaseTest):
         tracin_constructor: Callable,
         mode: str,
         features: int,
+        use_gpu: bool,
     ) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
 
             batch_size = 4
 
-            dataset, net = self._test_tracin_regression_setup(tmpdir, features)
+            dataset, net = self._test_tracin_regression_setup(
+                tmpdir,
+                features,
+                use_gpu,
+            )  # and not mode == 'sample_wise_trick'
 
             # check influence scores of training data
 
@@ -85,6 +162,10 @@ class TestTracInRegression(BaseTest):
             test_inputs = (
                 torch.arange(17, 33, dtype=torch.float).unsqueeze(1).repeat(1, features)
             )
+
+            if use_gpu:
+                test_inputs = test_inputs.cuda()
+
             test_labels = test_inputs
 
             self.assertTrue(callable(tracin_constructor))
@@ -102,9 +183,9 @@ class TestTracInRegression(BaseTest):
                     criterion,
                 )
 
-                train_scores = tracin.influence(train_inputs, train_labels)
+                train_scores = tracin.influence((train_inputs, train_labels))
                 idx, _ = tracin.influence(
-                    train_inputs, train_labels, k=len(dataset), proponents=True
+                    (train_inputs, train_labels), k=len(dataset), proponents=True
                 )
                 # check that top influence is one with maximal value
                 # (and hence gradient)
@@ -112,14 +193,14 @@ class TestTracInRegression(BaseTest):
                     self.assertEqual(idx[i][0], 15)
 
                 # check influence scores of test data
-                test_scores = tracin.influence(test_inputs, test_labels)
+                test_scores = tracin.influence((test_inputs, test_labels))
                 idx, _ = tracin.influence(
-                    test_inputs, test_labels, k=len(test_inputs), proponents=True
+                    (test_inputs, test_labels), k=len(test_inputs), proponents=True
                 )
                 # check that top influence is one with maximal value
                 # (and hence gradient)
                 for i in range(len(idx)):
-                    self.assertTrue(isSorted(idx[i]))
+                    self.assertTrue(_isSorted(idx[i]))
 
             if mode == "sample_wise_trick":
 
@@ -145,17 +226,17 @@ class TestTracInRegression(BaseTest):
                     sample_wise_grads_per_batch=True,
                 )
 
-                train_scores = tracin.influence(train_inputs, train_labels)
+                train_scores = tracin.influence((train_inputs, train_labels))
                 train_scores_sample_wise_trick = tracin_sample_wise_trick.influence(
-                    train_inputs, train_labels
+                    (train_inputs, train_labels)
                 )
                 assertTensorAlmostEqual(
                     self, train_scores, train_scores_sample_wise_trick
                 )
 
-                test_scores = tracin.influence(test_inputs, test_labels)
+                test_scores = tracin.influence((test_inputs, test_labels))
                 test_scores_sample_wise_trick = tracin_sample_wise_trick.influence(
-                    test_inputs, test_labels
+                    (test_inputs, test_labels)
                 )
                 assertTensorAlmostEqual(
                     self, test_scores, test_scores_sample_wise_trick
@@ -207,7 +288,7 @@ class TestTracInRegression(BaseTest):
                 criterion,
             )
 
-            train_scores = tracin.influence(train_inputs, train_labels, k=None)
+            train_scores = tracin.influence((train_inputs, train_labels), k=None)
 
             r"""
             Derivation for gradient / resulting TracIn score:
@@ -248,7 +329,13 @@ class TestTracInRegression(BaseTest):
     @parameterized.expand(
         [
             ("check_idx", "none", DataInfluenceConstructor(TracInCP)),
+            ("check_idx", "none", DataInfluenceConstructor(TracInCP, layers=["fc1"])),
             ("sample_wise_trick", None, DataInfluenceConstructor(TracInCP)),
+            (
+                "sample_wise_trick",
+                None,
+                DataInfluenceConstructor(TracInCP, layers=["fc1"]),
+            ),
             ("check_idx", "sum", DataInfluenceConstructor(TracInCPFast)),
             ("check_idx", "sum", DataInfluenceConstructor(TracInCPFastRandProj)),
             ("check_idx", "mean", DataInfluenceConstructor(TracInCPFast)),
@@ -295,9 +382,9 @@ class TestTracInRegression(BaseTest):
 
                 # check influence scores of training data
 
-                train_scores = tracin.influence(train_inputs, train_labels)
+                train_scores = tracin.influence((train_inputs, train_labels))
                 idx, _ = tracin.influence(
-                    train_inputs, train_labels, k=len(dataset), proponents=True
+                    (train_inputs, train_labels), k=len(dataset), proponents=True
                 )
 
                 # check that top influence for an instance is itself
@@ -328,10 +415,86 @@ class TestTracInRegression(BaseTest):
                     sample_wise_grads_per_batch=True,
                 )
 
-                train_scores = tracin.influence(train_inputs, train_labels)
+                train_scores = tracin.influence((train_inputs, train_labels))
                 train_scores_tracin_sample_wise_trick = (
-                    tracin_sample_wise_trick.influence(train_inputs, train_labels)
+                    tracin_sample_wise_trick.influence((train_inputs, train_labels))
                 )
                 assertTensorAlmostEqual(
                     self, train_scores, train_scores_tracin_sample_wise_trick
                 )
+
+    @parameterized.expand(
+        [
+            ("none", "none", DataInfluenceConstructor(TracInCP)),
+            (
+                "mean",
+                "mean",
+                DataInfluenceConstructor(TracInCP, sample_wise_grads_per_batch=True),
+            ),
+            ("sum", "sum", DataInfluenceConstructor(TracInCPFast)),
+            ("mean", "mean", DataInfluenceConstructor(TracInCPFast)),
+            ("sum", "sum", DataInfluenceConstructor(TracInCPFastRandProj)),
+            ("mean", "mean", DataInfluenceConstructor(TracInCPFastRandProj)),
+        ],
+        name_func=build_test_name_func(),
+    )
+    def test_tracin_constant_test_loss_fn(
+        self,
+        reduction: Optional[str],
+        test_reduction: Optional[str],
+        tracin_constructor: Callable,
+    ) -> None:
+        """
+        All implementations of `TracInCPBase` can accept `test_loss_fn` in
+        initialization, which sets the loss function applied to test examples, which
+        can thus be different from the loss function applied to training examples.
+        This test passes `test_loss_fn` to be a constant function. Then, the influence
+        scores should all be 0, because gradients w.r.t. `test_loss_fn` will all be 0.
+        It re-uses the dataset and model from `test_tracin_identity_regression`.
+
+        The reduction for `loss_fn` and `test_loss_fn` initialization arguments is
+        the same for all parameterized tests, for simplicity, and also because for
+        `TracInCP`, both loss functions must both be reduction loss functions (i.e.
+        reduction is "mean" or "sum"), or both be per-example loss functions (i.e.
+        reduction is "none"). Recall that for `TracInCP`, the
+        `sample_wise_grads_per_batch` initialization argument determines which of
+        those cases holds.
+        """
+        with tempfile.TemporaryDirectory() as tmpdir:
+
+            batch_size = 4
+
+            dataset, net = self._test_tracin_identity_regression_setup(tmpdir)
+
+            train_inputs = dataset.samples
+            train_labels = dataset.labels
+
+            self.assertTrue(callable(tracin_constructor))
+
+            self.assertTrue(isinstance(reduction, str))
+            criterion = nn.MSELoss(reduction=cast(str, reduction))
+
+            # the output of `net`, i.e. `input` for the loss functions below, is a
+            # batch_size x 1 2D tensor
+            if test_reduction == "none":
+                # loss function returns 1D tensor of all 0's, so is constant
+                def test_loss_fn(input, target):
+                    return input.squeeze() * 0.0
+
+            elif test_reduction in ["sum", "mean"]:
+                # loss function returns scalar tensor of all 0's, so is constant
+                def test_loss_fn(input, target):
+                    return input.mean() * 0.0
+
+            tracin = tracin_constructor(
+                net,
+                dataset,
+                tmpdir,
+                batch_size,
+                criterion,
+                test_loss_fn=test_loss_fn,
+            )
+
+            # check influence scores of training data. they should all be 0
+            train_scores = tracin.influence((train_inputs, train_labels), k=None)
+            assertTensorAlmostEqual(self, train_scores, torch.zeros(train_scores.shape))

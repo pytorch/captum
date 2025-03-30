@@ -18,7 +18,7 @@ class NeuronGradientShap(NeuronAttribution, GradientAttribution):
     #deep-learning-example-with-gradientexplainer-tensorflowkeraspytorch-models
 
     A Unified Approach to Interpreting Model Predictions
-    http://papers.nips.cc/paper\
+    https://papers.nips.cc/paper\
     7062-a-unified-approach-to-interpreting-model-predictions
 
     GradientShap approximates SHAP values by computing the expectations of
@@ -41,7 +41,7 @@ class NeuronGradientShap(NeuronAttribution, GradientAttribution):
     In some sense it can be viewed as an approximation of integrated gradients
     by computing the expectations of gradients for different baselines.
 
-    Current implementation uses Smoothgrad from `NoiseTunnel` in order to
+    Current implementation uses Smoothgrad from :class:`.NoiseTunnel` in order to
     randomly draw samples from the distribution of baselines, add noise to input
     samples and compute the expectation (smoothgrad).
     """
@@ -56,17 +56,17 @@ class NeuronGradientShap(NeuronAttribution, GradientAttribution):
         r"""
         Args:
 
-            forward_func (callable):  The forward function of the model or any
+            forward_func (Callable): The forward function of the model or any
                         modification of it
             layer (torch.nn.Module): Layer for which neuron attributions are computed.
                         The output size of the attribute method matches the
-                        dimensions of the inputs or ouputs of the neuron with
+                        dimensions of the inputs or outputs of the neuron with
                         index `neuron_selector` in this layer, depending on whether
                         we attribute to the inputs or outputs of the neuron.
                         Currently, it is assumed that the inputs or the outputs
                         of the neurons in this layer, depending on which one is
                         used for attribution, can only be a single tensor.
-            device_ids (list(int)): Device ID list, necessary only if forward_func
+            device_ids (list[int]): Device ID list, necessary only if forward_func
                         applies a DataParallel model. This allows reconstruction of
                         intermediate outputs from batched results across devices.
                         If forward_func is given as the DataParallel model itself,
@@ -106,7 +106,7 @@ class NeuronGradientShap(NeuronAttribution, GradientAttribution):
         r"""
         Args:
 
-            inputs (tensor or tuple of tensors):  Input for which SHAP attribution
+            inputs (Tensor or tuple[Tensor, ...]): Input for which SHAP attribution
                         values are computed. If `forward_func` takes a single
                         tensor as input, a single input tensor should be provided.
                         If `forward_func` takes multiple tensors as input, a tuple
@@ -114,7 +114,7 @@ class NeuronGradientShap(NeuronAttribution, GradientAttribution):
                         that for all given input tensors, dimension 0 corresponds
                         to the number of examples, and if multiple input tensors
                         are provided, the examples must be aligned appropriately.
-            neuron_selector (int, callable, or tuple of ints or slices):
+            neuron_selector (int, Callable, tuple[int], or slice):
                         Selector for neuron
                         in given layer for which attribution is desired.
                         Neuron selector can be provided as:
@@ -135,7 +135,7 @@ class NeuronGradientShap(NeuronAttribution, GradientAttribution):
                           indexed output tensor is used for attribution. Note
                           that specifying a slice of a tensor would amount to
                           computing the attribution of the sum of the specified
-                          neurons, and not the individual neurons independantly.
+                          neurons, and not the individual neurons independently.
 
                         - a callable, which should
                           take the target layer as input (single tensor or tuple
@@ -147,7 +147,7 @@ class NeuronGradientShap(NeuronAttribution, GradientAttribution):
                           this function returns either a tensor with one element
                           or a 1D tensor with length equal to batch_size (one scalar
                           per input example)
-            baselines (tensor, tuple of tensors, callable):
+            baselines (Tensor, tuple[Tensor, ...], or Callable):
                         Baselines define the starting point from which expectation
                         is computed and can be provided as:
 
@@ -170,11 +170,11 @@ class NeuronGradientShap(NeuronAttribution, GradientAttribution):
 
                         It is recommended that the number of samples in the baselines'
                         tensors is larger than one.
-            n_samples (int, optional):  The number of randomly generated examples
+            n_samples (int, optional): The number of randomly generated examples
                         per sample in the input batch. Random examples are
                         generated by adding gaussian random noise to each sample.
                         Default: `5` if `n_samples` is not provided.
-            stdevs    (float, or a tuple of floats optional): The standard deviation
+            stdevs    (float or tuple of float, optional): The standard deviation
                         of gaussian noise with zero mean that is added to each
                         input in the batch. If `stdevs` is a single float value
                         then that same value is used for all inputs. If it is
@@ -183,7 +183,7 @@ class NeuronGradientShap(NeuronAttribution, GradientAttribution):
                         corresponds to the input with the same index in the inputs
                         tuple.
                         Default: 0.0
-            additional_forward_args (any, optional): If the forward function
+            additional_forward_args (Any, optional): If the forward function
                         requires additional arguments other than the inputs for
                         which attributions should not be computed, this argument
                         can be provided. It can contain a tuple of ND tensors or
@@ -209,7 +209,7 @@ class NeuronGradientShap(NeuronAttribution, GradientAttribution):
 
         Returns:
             **attributions** or 2-element tuple of **attributions**, **delta**:
-            - **attributions** (*tensor* or tuple of *tensors*):
+            - **attributions** (*Tensor* or *tuple[Tensor, ...]*):
                         Attribution score computed based on GradientSHAP with respect
                         to each input feature. Attributions will always be
                         the same size as the provided inputs, with each value

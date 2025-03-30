@@ -47,11 +47,21 @@ class FeatureAblation(PerturbationAttribution):
         r"""
         Args:
 
-            forward_func (callable): The forward function of the model or
-                        any modification of it
+            forward_func (Callable): The forward function of the model or
+                        any modification of it.
         """
         PerturbationAttribution.__init__(self, forward_func)
         self.use_weights = False
+
+        # only used when perturbations_per_eval > 1, where the 1st dim of forward_func's
+        # output must grow as the input batch size. If forward's output is aggregated,
+        # we cannot expand the input to include more perturbations in one call.
+        # If it's False, we will force the validation by comparing the outpus of
+        # the original input and the modified input whose batch size expanded based on
+        # perturbations_per_eval. Set the flag to True if the output of the modified
+        # input grow as expected. Once it turns to True, we will assume the model's
+        # behavior stays consistent and no longer check again
+        self._is_output_shape_valid = False
 
     @log_usage()
     def attribute(
@@ -68,7 +78,7 @@ class FeatureAblation(PerturbationAttribution):
         r"""
         Args:
 
-            inputs (tensor or tuple of tensors):  Input for which ablation
+            inputs (Tensor or tuple[Tensor, ...]): Input for which ablation
                         attributions are computed. If forward_func takes a single
                         tensor as input, a single input tensor should be provided.
                         If forward_func takes multiple tensors as input, a tuple
@@ -77,7 +87,7 @@ class FeatureAblation(PerturbationAttribution):
                         to the number of examples (aka batch size), and if
                         multiple input tensors are provided, the examples must
                         be aligned appropriately.
-            baselines (scalar, tensor, tuple of scalars or tensors, optional):
+            baselines (scalar, Tensor, tuple of scalar, or Tensor, optional):
                         Baselines define reference value which replaces each
                         feature when ablated.
                         Baselines can be provided as:
@@ -101,10 +111,11 @@ class FeatureAblation(PerturbationAttribution):
                           - or a scalar, corresponding to a tensor in the
                             inputs' tuple. This scalar value is broadcasted
                             for corresponding input tensor.
+
                         In the cases when `baselines` is not provided, we internally
                         use zero scalar corresponding to each input tensor.
                         Default: None
-            target (int, tuple, tensor or list, optional):  Output indices for
+            target (int, tuple, Tensor, or list, optional): Output indices for
                         which gradients are computed (for classification cases,
                         this is usually the target class).
                         If the network returns a scalar value per example,
@@ -129,7 +140,7 @@ class FeatureAblation(PerturbationAttribution):
                           target for the corresponding example.
 
                         Default: None
-            additional_forward_args (any, optional): If the forward function
+            additional_forward_args (Any, optional): If the forward function
                         requires additional arguments other than the inputs for
                         which attributions should not be computed, this argument
                         can be provided. It must be either a single additional
@@ -144,7 +155,7 @@ class FeatureAblation(PerturbationAttribution):
                         Note that attributions are not computed with respect
                         to these arguments.
                         Default: None
-            feature_mask (tensor or tuple of tensors, optional):
+            feature_mask (Tensor or tuple[Tensor, ...], optional):
                         feature_mask defines a mask for the input, grouping
                         features which should be ablated together. feature_mask
                         should contain the same number of tensors as inputs.
@@ -193,8 +204,8 @@ class FeatureAblation(PerturbationAttribution):
                         Default: None
 
         Returns:
-            *tensor* or tuple of *tensors* of **attributions**:
-            - **attributions** (*tensor* or tuple of *tensors*):
+            *Tensor* or *tuple[Tensor, ...]* of **attributions**:
+            - **attributions** (*Tensor* or *tuple[Tensor, ...]*):
                         The attributions with respect to each input feature.
                         If the forward function returns
                         a scalar value per example, attributions will be
@@ -278,45 +289,27 @@ class FeatureAblation(PerturbationAttribution):
 
             # Computes initial evaluation with all features, which is compared
             # to each ablated result.
-            initial_eval = _run_forward(
+            initial_eval = self._strict_run_forward(
                 self.forward_func, inputs, target, additional_forward_args
             )
 
             if show_progress:
                 attr_progress.update()
 
-            agg_output_mode = FeatureAblation._find_output_mode(
-                perturbations_per_eval, feature_mask
-            )
+            # number of elements in the output of forward_func
+            n_outputs = initial_eval.numel() if isinstance(initial_eval, Tensor) else 1
 
-            # get as a 2D tensor (if it is not a scalar)
-            if isinstance(initial_eval, torch.Tensor):
-                initial_eval = initial_eval.reshape(1, -1)
-                num_outputs = initial_eval.shape[1]
-            else:
-                num_outputs = 1
-
-            if not agg_output_mode:
-                assert (
-                    isinstance(initial_eval, torch.Tensor)
-                    and num_outputs == num_examples
-                ), (
-                    "expected output of `forward_func` to have "
-                    + "`batch_size` elements for perturbations_per_eval > 1 "
-                    + "and all feature_mask.shape[0] > 1"
-                )
+            # flatten eval outputs into 1D (n_outputs)
+            # add the leading dim for n_feature_perturbed
+            flattened_initial_eval = initial_eval.reshape(1, -1)
 
             # Initialize attribution totals and counts
-            attrib_type = cast(
-                dtype,
-                initial_eval.dtype
-                if isinstance(initial_eval, Tensor)
-                else type(initial_eval),
-            )
+            attrib_type = cast(dtype, flattened_initial_eval.dtype)
 
             total_attrib = [
+                # attribute w.r.t each output element
                 torch.zeros(
-                    (num_outputs,) + input.shape[1:],
+                    (n_outputs,) + input.shape[1:],
                     dtype=attrib_type,
                     device=input.device,
                 )
@@ -327,7 +320,7 @@ class FeatureAblation(PerturbationAttribution):
             if self.use_weights:
                 weights = [
                     torch.zeros(
-                        (num_outputs,) + input.shape[1:], device=input.device
+                        (n_outputs,) + input.shape[1:], device=input.device
                     ).float()
                     for input in inputs
                 ]
@@ -353,9 +346,12 @@ class FeatureAblation(PerturbationAttribution):
                     perturbations_per_eval,
                     **kwargs,
                 ):
-                    # modified_eval dimensions: 1D tensor with length
-                    # equal to #num_examples * #features in batch
-                    modified_eval = _run_forward(
+                    # modified_eval has (n_feature_perturbed * n_outputs) elements
+                    # shape:
+                    #   agg mode: (*initial_eval.shape)
+                    #   non-agg mode:
+                    #     (feature_perturbed * batch_size, *initial_eval.shape[1:])
+                    modified_eval = self._strict_run_forward(
                         self.forward_func,
                         current_inputs,
                         current_target,
@@ -365,25 +361,54 @@ class FeatureAblation(PerturbationAttribution):
                     if show_progress:
                         attr_progress.update()
 
-                    # (contains 1 more dimension than inputs). This adds extra
-                    # dimensions of 1 to make the tensor broadcastable with the inputs
-                    # tensor.
-                    if not isinstance(modified_eval, torch.Tensor):
-                        eval_diff = initial_eval - modified_eval
-                    else:
-                        if not agg_output_mode:
-                            assert (
-                                modified_eval.numel() == current_inputs[0].shape[0]
-                            ), """expected output of forward_func to grow with
-                            batch_size. If this is not the case for your model
-                            please set perturbations_per_eval = 1"""
+                    # if perturbations_per_eval > 1, the output shape must grow with
+                    # input and not be aggregated
+                    if perturbations_per_eval > 1 and not self._is_output_shape_valid:
+                        current_batch_size = current_inputs[0].shape[0]
 
-                        eval_diff = (
-                            initial_eval - modified_eval.reshape((-1, num_outputs))
-                        ).reshape((-1, num_outputs) + (len(inputs[i].shape) - 1) * (1,))
-                        eval_diff = eval_diff.to(total_attrib[i].device)
+                        # number of perturbation, which is not the same as
+                        # perturbations_per_eval when not enough features to perturb
+                        n_perturb = current_batch_size / num_examples
+
+                        current_output_shape = modified_eval.shape
+
+                        # use initial_eval as the forward of perturbations_per_eval = 1
+                        initial_output_shape = initial_eval.shape
+
+                        assert (
+                            # check if the output is not a scalar
+                            current_output_shape
+                            and initial_output_shape
+                            # check if the output grow in same ratio, i.e., not agg
+                            and current_output_shape[0]
+                            == n_perturb * initial_output_shape[0]
+                        ), (
+                            "When perturbations_per_eval > 1, forward_func's output "
+                            "should be a tensor whose 1st dim grow with the input "
+                            f"batch size: when input batch size is {num_examples}, "
+                            f"the output shape is {initial_output_shape}; "
+                            f"when input batch size is {current_batch_size}, "
+                            f"the output shape is {current_output_shape}"
+                        )
+
+                        self._is_output_shape_valid = True
+
+                    # reshape the leading dim for n_feature_perturbed
+                    # flatten each feature's eval outputs into 1D of (n_outputs)
+                    modified_eval = modified_eval.reshape(-1, n_outputs)
+                    # eval_diff in shape (n_feature_perturbed, n_outputs)
+                    eval_diff = flattened_initial_eval - modified_eval
+
+                    # append the shape of one input example
+                    # to make it broadcastable to mask
+                    eval_diff = eval_diff.reshape(
+                        eval_diff.shape + (inputs[i].dim() - 1) * (1,)
+                    )
+                    eval_diff = eval_diff.to(total_attrib[i].device)
+
                     if self.use_weights:
                         weights[i] += current_mask.float().sum(dim=0)
+
                     total_attrib[i] += (eval_diff * current_mask.to(attrib_type)).sum(
                         dim=0
                     )
@@ -414,10 +439,10 @@ class FeatureAblation(PerturbationAttribution):
         **kwargs,
     ):
         """
-        This method return an generator of ablation perturbations of the i-th input
+        This method returns a generator of ablation perturbations of the i-th input
 
         Returns:
-            ablation_iter (generator): yields each perturbation to be evaluated
+            ablation_iter (Generator): yields each perturbation to be evaluated
                         as a tuple (inputs, additional_forward_args, targets, mask).
         """
         extra_args = {}
@@ -568,24 +593,23 @@ class FeatureAblation(PerturbationAttribution):
             for inp, mask in zip(inputs, feature_mask)
         )
 
-    @staticmethod
-    def _find_output_mode(
-        perturbations_per_eval: int,
-        feature_mask: Union[None, TensorOrTupleOfTensorsGeneric],
-    ) -> bool:
+    def _strict_run_forward(self, *args, **kwargs) -> Tensor:
         """
-        Returns True if the output mode is "aggregation output mode"
-
-        Aggregation output mode is defined as: when there is no 1:1 correspondence
-        with the `num_examples` (`batch_size`) and the amount of outputs your model
-        produces, i.e. the model output does not grow in size as the input becomes
-        larger.
-
-        We assume this is the case if `perturbations_per_eval == 1`
-        and your feature mask is None or is associated to all
-        examples in a batch (fm.shape[0] == 1 for all fm in feature_mask).
+        A temp wrapper for global _run_forward util to force forward output
+        type assertion & conversion.
+        Remove after the strict logic is supported by all attr classes
         """
-        return perturbations_per_eval == 1 and (
-            feature_mask is None
-            or all(len(sm.shape) == 0 or sm.shape[0] == 1 for sm in feature_mask)
+        forward_output = _run_forward(*args, **kwargs)
+        if isinstance(forward_output, Tensor):
+            return forward_output
+
+        output_type = type(forward_output)
+        assert output_type is int or output_type is float, (
+            "the return of forward_func must be a tensor, int, or float,"
+            f" received: {forward_output}"
         )
+
+        # using python built-in type as torch dtype
+        # int -> torch.int64, float -> torch.float64
+        # ref: https://github.com/pytorch/pytorch/pull/21215
+        return torch.tensor(forward_output, dtype=output_type)

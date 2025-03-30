@@ -345,17 +345,6 @@ class Test(BaseTest):
         with self.assertRaises(AssertionError):
             _ = ablation.attribute(inp, perturbations_per_eval=2)
 
-    def test_error_agg_mode_incorrect_fm(self) -> None:
-        def forward_func(inp):
-            return inp[0].unsqueeze(0)
-
-        inp = torch.tensor([[1, 2, 3], [4, 5, 6]])
-        mask = torch.tensor([[0, 1, 2], [0, 0, 1]])
-
-        ablation = FeatureAblation(forward_func)
-        with self.assertRaises(AssertionError):
-            _ = ablation.attribute(inp, perturbations_per_eval=1, feature_mask=mask)
-
     def test_empty_sparse_features(self) -> None:
         ablation_algo = FeatureAblation(BasicModelWithSparseInputs())
         inp1 = torch.tensor([[1.0, -2.0, 3.0], [2.0, -1.0, 3.0]])
@@ -571,7 +560,7 @@ class Test(BaseTest):
         self._ablation_test_assert(
             ablation_algo,
             inp,
-            torch.tensor([[82.0, 82.0, 24.0]], dtype=dtype),
+            torch.tensor([[82.0, 82.0, 24.0]], dtype=torch.float32).to(dtype),
             feature_mask=mask,
             perturbations_per_eval=(1,),
             target=None,
@@ -588,7 +577,7 @@ class Test(BaseTest):
         self._ablation_test_assert(
             ablation_algo,
             inp,
-            torch.tensor([[642.0, 642.0, 264.0]], dtype=dtype),
+            torch.tensor([[642.0, 642.0, 264.0]], dtype=torch.float32).to(dtype),
             feature_mask=mask,
             perturbations_per_eval=(1,),
             target=None,

@@ -45,7 +45,7 @@ class HookRemovalMode(Enum):
 class ErrorModule(Module):
     def __init__(
         self,
-    ):
+    ) -> None:
         super().__init__()
         self.relu = torch.nn.ReLU()
 
