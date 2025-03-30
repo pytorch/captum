@@ -32,7 +32,7 @@ class LayerConductance(LayerAttribution, GradientAttribution):
 
     The details of the approach can be found here:
     https://arxiv.org/abs/1805.12233
-    https://arxiv.org/pdf/1807.09946.pdf
+    https://arxiv.org/abs/1807.09946
 
     Note that this provides the total conductance of each neuron in the
     layer's output. To obtain the breakdown of a neuron's conductance by input
@@ -49,7 +49,7 @@ class LayerConductance(LayerAttribution, GradientAttribution):
         r"""
         Args:
 
-            forward_func (callable):  The forward function of the model or any
+            forward_func (Callable): The forward function of the model or any
                           modification of it
             layer (torch.nn.Module): Layer for which attributions are computed.
                           Output size of attribute matches this layer's input or
@@ -57,7 +57,7 @@ class LayerConductance(LayerAttribution, GradientAttribution):
                           the inputs or outputs of the layer, corresponding to
                           attribution of each neuron in the input or output of
                           this layer.
-            device_ids (list(int)): Device ID list, necessary only if forward_func
+            device_ids (list[int]): Device ID list, necessary only if forward_func
                           applies a DataParallel model. This allows reconstruction of
                           intermediate outputs from batched results across devices.
                           If forward_func is given as the DataParallel model itself,
@@ -120,7 +120,7 @@ class LayerConductance(LayerAttribution, GradientAttribution):
         r"""
         Args:
 
-            inputs (tensor or tuple of tensors):  Input for which layer
+            inputs (Tensor or tuple[Tensor, ...]): Input for which layer
                         conductance is computed. If forward_func takes a single
                         tensor as input, a single input tensor should be provided.
                         If forward_func takes multiple tensors as input, a tuple
@@ -128,7 +128,7 @@ class LayerConductance(LayerAttribution, GradientAttribution):
                         that for all given input tensors, dimension 0 corresponds
                         to the number of examples, and if multiple input tensors
                         are provided, the examples must be aligned appropriately.
-            baselines (scalar, tensor, tuple of scalars or tensors, optional):
+            baselines (scalar, Tensor, tuple of scalar, or Tensor, optional):
                         Baselines define the starting point from which integral
                         is computed and can be provided as:
 
@@ -152,11 +152,12 @@ class LayerConductance(LayerAttribution, GradientAttribution):
                           - or a scalar, corresponding to a tensor in the
                             inputs' tuple. This scalar value is broadcasted
                             for corresponding input tensor.
+
                         In the cases when `baselines` is not provided, we internally
                         use zero scalar corresponding to each input tensor.
 
                         Default: None
-            target (int, tuple, tensor or list, optional):  Output indices for
+            target (int, tuple, Tensor, or list, optional): Output indices for
                         which gradients are computed (for classification cases,
                         this is usually the target class).
                         If the network returns a scalar value per example,
@@ -181,7 +182,7 @@ class LayerConductance(LayerAttribution, GradientAttribution):
                           target for the corresponding example.
 
                         Default: None
-            additional_forward_args (any, optional): If the forward function
+            additional_forward_args (Any, optional): If the forward function
                         requires additional arguments other than the inputs for
                         which attributions should not be computed, this argument
                         can be provided. It must be either a single additional
@@ -200,7 +201,7 @@ class LayerConductance(LayerAttribution, GradientAttribution):
                         Default: None
             n_steps (int, optional): The number of steps used by the approximation
                         method. Default: 50.
-            method (string, optional): Method for approximating the integral,
+            method (str, optional): Method for approximating the integral,
                         one of `riemann_right`, `riemann_left`, `riemann_middle`,
                         `riemann_trapezoid` or `gausslegendre`.
                         Default: `gausslegendre` if no method is provided.
@@ -234,7 +235,7 @@ class LayerConductance(LayerAttribution, GradientAttribution):
 
         Returns:
             **attributions** or 2-element tuple of **attributions**, **delta**:
-            - **attributions** (*tensor* or tuple of *tensors*):
+            - **attributions** (*Tensor* or *tuple[Tensor, ...]*):
                         Conductance of each neuron in given layer input or
                         output. Attributions will always be the same size as
                         the input or output of the given layer, depending on
@@ -244,7 +245,7 @@ class LayerConductance(LayerAttribution, GradientAttribution):
                         Attributions are returned in a tuple if
                         the layer inputs / outputs contain multiple tensors,
                         otherwise a single tensor is returned.
-            - **delta** (*tensor*, returned if return_convergence_delta=True):
+            - **delta** (*Tensor*, returned if return_convergence_delta=True):
                         The difference between the total
                         approximated and true conductance.
                         This is computed using the property that the total sum of
@@ -252,7 +253,7 @@ class LayerConductance(LayerAttribution, GradientAttribution):
                         the total sum of the attributions.
                         Delta is calculated per example, meaning that the number of
                         elements in returned delta tensor is equal to the number of
-                        of examples in inputs.
+                        examples in inputs.
 
         Examples::
 

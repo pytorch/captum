@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-from typing import Any, Callable, List, Tuple, Union
+from typing import Any, Callable, List, Optional, Tuple, Union
 
 import torch
 from captum._utils.typing import TensorLikeList, TensorOrTupleOfTensorsGeneric
@@ -128,6 +128,60 @@ class Test(BaseTest):
             upper_bound=5.0,
         )
 
+    def test_attack_masked_tensor(self) -> None:
+        model = BasicModel()
+        input = torch.tensor([[2.0, -9.0, 9.0, 1.0, -3.0]], requires_grad=True)
+        mask = torch.tensor([[1, 0, 0, 1, 1]])
+        self._FGSM_assert(
+            model, input, 1, 0.1, [[2.0, -9.0, 9.0, 1.0, -3.0]], mask=mask
+        )
+
+    def test_attack_masked_multiinput(self) -> None:
+        model = BasicModel2()
+        input1 = torch.tensor([[4.0, -1.0], [3.0, 10.0]], requires_grad=True)
+        input2 = torch.tensor([[2.0, -5.0], [-2.0, 1.0]], requires_grad=True)
+        mask1 = torch.tensor([[1, 0], [1, 0]])
+        mask2 = torch.tensor([[0, 0], [0, 0]])
+        self._FGSM_assert(
+            model,
+            (input1, input2),
+            0,
+            0.25,
+            ([[3.75, -1.0], [2.75, 10.0]], [[2.0, -5.0], [-2.0, 1.0]]),
+            mask=(mask1, mask2),
+        )
+
+    def test_attack_masked_loss_defined(self) -> None:
+        model = BasicModel_MultiLayer()
+        add_input = torch.tensor([[-1.0, 2.0, 2.0]])
+        input = torch.tensor([[1.0, 6.0, -3.0]])
+        labels = torch.tensor([0])
+        mask = torch.tensor([[0, 0, 1]])
+        loss_func = CrossEntropyLoss(reduction="none")
+        adv = FGSM(model, loss_func)
+        perturbed_input = adv.perturb(
+            input, 0.2, labels, additional_forward_args=(add_input,), mask=mask
+        )
+        assertTensorAlmostEqual(
+            self, perturbed_input, [[1.0, 6.0, -3.0]], delta=0.01, mode="max"
+        )
+
+    def test_attack_masked_bound(self) -> None:
+        model = BasicModel()
+        input = torch.tensor([[9.0, 10.0, -6.0, -1.0]])
+        mask = torch.tensor([[1, 0, 1, 0]])
+        self._FGSM_assert(
+            model,
+            input,
+            3,
+            0.2,
+            [[5.0, 5.0, -5.0, -1.0]],
+            targeted=True,
+            lower_bound=-5.0,
+            upper_bound=5.0,
+            mask=mask,
+        )
+
     def _FGSM_assert(
         self,
         model: Callable,
@@ -139,10 +193,11 @@ class Test(BaseTest):
         additional_inputs: Any = None,
         lower_bound: float = float("-inf"),
         upper_bound: float = float("inf"),
+        mask: Optional[TensorOrTupleOfTensorsGeneric] = None,
     ) -> None:
         adv = FGSM(model, lower_bound=lower_bound, upper_bound=upper_bound)
         perturbed_input = adv.perturb(
-            inputs, epsilon, target, additional_inputs, targeted
+            inputs, epsilon, target, additional_inputs, targeted, mask
         )
         if isinstance(perturbed_input, Tensor):
             assertTensorAlmostEqual(

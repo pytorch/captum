@@ -3,6 +3,7 @@
 import glob
 import os
 import tempfile
+import unittest
 from collections import defaultdict, OrderedDict
 from typing import (
     Any,
@@ -1191,6 +1192,12 @@ class Test(BaseTest):
 
     # Testing TCAV with default classifier and experimental sets of varying lengths
     def test_exp_sets_with_diffent_lengths(self) -> None:
+        try:
+            import sklearn
+            import sklearn.linear_model
+            import sklearn.svm  # noqa: F401
+        except ImportError:
+            raise unittest.SkipTest("sklearn is not available.")
         # Create Concepts
         concepts_dict = create_concepts()
 

@@ -14,7 +14,7 @@ class CustomIterableDataset(IterableDataset):
     An auxiliary class for iterating through an image dataset.
     """
 
-    def __init__(self, get_tensor_from_filename_func, path):
+    def __init__(self, get_tensor_from_filename_func, path) -> None:
         r"""
         Args:
 

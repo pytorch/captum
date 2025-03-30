@@ -43,34 +43,6 @@ from torch.nn import Module
 from torch.utils.hooks import RemovableHandle
 
 
-# Check if module backward hook can safely be used for the module that produced
-# this inputs / outputs mapping
-def _check_valid_module(inputs_grad_fn, outputs) -> bool:
-    def is_output_cloned(output_fn, input_grad_fn) -> bool:
-        """
-        Checks if the output has been cloned. This happens especially in case of
-        layer deeplift.
-        """
-        return (
-            output_fn[0].next_functions is not None
-            and output_fn[0].next_functions[0][0] == input_grad_fn
-        )
-
-    curr_fn = outputs.grad_fn
-    first_next = curr_fn.next_functions[0]
-    try:
-        # if `inputs` in the input to the network then the grad_fn is None and
-        # for that input backward_hook isn't computed. That's the reason why we
-        # need to check on `inputs_grad_fns[first_next[1]]` being None.
-        return (
-            inputs_grad_fn is None
-            or first_next[0] == inputs_grad_fn
-            or is_output_cloned(first_next, inputs_grad_fn)
-        )
-    except IndexError:
-        return False
-
-
 class DeepLift(GradientAttribution):
     r"""
     Implements DeepLIFT algorithm based on the following paper:
@@ -112,10 +84,7 @@ class DeepLift(GradientAttribution):
         r"""
         Args:
 
-            model (nn.Module):  The reference to PyTorch model instance. Model cannot
-                        contain any in-place nonlinear submodules; these are not
-                        supported by the register_full_backward_hook PyTorch API
-                        starting from PyTorch v1.9.
+            model (nn.Module):  The reference to PyTorch model instance.
             multiply_by_inputs (bool, optional): Indicates whether to factor
                         model inputs' multiplier in the final attribution scores.
                         In the literature this is also known as local vs global
@@ -185,7 +154,7 @@ class DeepLift(GradientAttribution):
         r"""
         Args:
 
-            inputs (tensor or tuple of tensors):  Input for which
+            inputs (Tensor or tuple[Tensor, ...]): Input for which
                         attributions are computed. If forward_func takes a single
                         tensor as input, a single input tensor should be provided.
                         If forward_func takes multiple tensors as input, a tuple
@@ -194,7 +163,7 @@ class DeepLift(GradientAttribution):
                         to the number of examples (aka batch size), and if
                         multiple input tensors are provided, the examples must
                         be aligned appropriately.
-            baselines (scalar, tensor, tuple of scalars or tensors, optional):
+            baselines (scalar, Tensor, tuple of scalar, or Tensor, optional):
                         Baselines define reference samples that are compared with
                         the inputs. In order to assign attribution scores DeepLift
                         computes the differences between the inputs/outputs and
@@ -226,7 +195,7 @@ class DeepLift(GradientAttribution):
                         use zero scalar corresponding to each input tensor.
 
                         Default: None
-            target (int, tuple, tensor or list, optional):  Output indices for
+            target (int, tuple, Tensor, or list, optional): Output indices for
                         which gradients are computed (for classification cases,
                         this is usually the target class).
                         If the network returns a scalar value per example,
@@ -251,7 +220,7 @@ class DeepLift(GradientAttribution):
                           target for the corresponding example.
 
                         Default: None
-            additional_forward_args (any, optional): If the forward function
+            additional_forward_args (Any, optional): If the forward function
                         requires additional arguments other than the inputs for
                         which attributions should not be computed, this argument
                         can be provided. It must be either a single additional
@@ -267,7 +236,7 @@ class DeepLift(GradientAttribution):
                         is set to True convergence delta will be returned in
                         a tuple following attributions.
                         Default: False
-            custom_attribution_func (callable, optional): A custom function for
+            custom_attribution_func (Callable, optional): A custom function for
                         computing final attribution scores. This function can take
                         at least one and at most three arguments with the
                         following signature:
@@ -288,7 +257,7 @@ class DeepLift(GradientAttribution):
 
         Returns:
             **attributions** or 2-element tuple of **attributions**, **delta**:
-            - **attributions** (*tensor* or tuple of *tensors*):
+            - **attributions** (*Tensor* or *tuple[Tensor, ...]*):
                 Attribution score computed based on DeepLift rescale rule with respect
                 to each input feature. Attributions will always be
                 the same size as the provided inputs, with each value
@@ -296,14 +265,14 @@ class DeepLift(GradientAttribution):
                 If a single tensor is provided as inputs, a single tensor is
                 returned. If a tuple is provided for inputs, a tuple of
                 corresponding sized tensors is returned.
-            - **delta** (*tensor*, returned if return_convergence_delta=True):
+            - **delta** (*Tensor*, returned if return_convergence_delta=True):
                 This is computed using the property that
                 the total sum of forward_func(inputs) - forward_func(baselines)
                 must equal the total sum of the attributions computed
                 based on DeepLift's rescale rule.
                 Delta is calculated per example, meaning that the number of
                 elements in returned delta tensor is equal to the number of
-                of examples in input.
+                examples in input.
                 Note that the logic described for deltas is guaranteed when the
                 default logic for attribution computations is used, meaning that the
                 `custom_attribution_func=None`, otherwise it is not guaranteed and
@@ -430,25 +399,6 @@ class DeepLift(GradientAttribution):
         """
         inputs = _format_tensor_into_tuples(inputs)
         module.input = inputs[0].clone().detach()
-        module.input_grad_fns = inputs[0].grad_fn  # type: ignore
-
-        def tensor_backward_hook(grad):
-            if module.saved_grad is None:
-                raise RuntimeError(
-                    """Module {} was detected as not supporting correctly module
-                        backward hook. You should modify your hook to ignore the given
-                        grad_inputs (recompute them by hand if needed) and save the
-                        newly computed grad_inputs in module.saved_grad. See MaxPool1d
-                        as an example.""".format(
-                        module
-                    )
-                )
-            return module.saved_grad
-
-        # the hook is set by default but it will be used only for
-        # failure cases and will be removed otherwise
-        handle = inputs[0].register_hook(tensor_backward_hook)
-        module.input_hook = handle
 
     def _forward_hook(
         self,
@@ -462,30 +412,13 @@ class DeepLift(GradientAttribution):
         """
         outputs = _format_tensor_into_tuples(outputs)
         module.output = outputs[0].clone().detach()
-        if not _check_valid_module(module.input_grad_fns, outputs[0]):
-            warnings.warn(
-                """An invalid module {} is detected. Saved gradients will
-                be used as the gradients of the module's input tensor.
-                See MaxPool1d as an example.""".format(
-                    module
-                )
-            )
-            module.is_invalid = True  # type: ignore
-            module.saved_grad = None  # type: ignore
-            self.forward_handles.append(cast(RemovableHandle, module.input_hook))
-        else:
-            module.is_invalid = False  # type: ignore
-            # removing the hook if there is no failure case
-            cast(RemovableHandle, module.input_hook).remove()
-        del module.input_hook
-        del module.input_grad_fns
 
     def _backward_hook(
         self,
         module: Module,
-        grad_input: Union[Tensor, Tuple[Tensor, ...]],
-        grad_output: Union[Tensor, Tuple[Tensor, ...]],
-    ):
+        grad_input: Tensor,
+        grad_output: Tensor,
+    ) -> Tensor:
         r"""
         `grad_input` is the gradient of the neuron with respect to its input
         `grad_output` is the gradient of the neuron with respect to its output
@@ -506,15 +439,14 @@ class DeepLift(GradientAttribution):
                 "Please, ensure that module is being used only once in the "
                 "network.".format(module)
             )
-        multipliers = tuple(
-            SUPPORTED_NON_LINEAR[type(module)](
-                module,
-                module.input,
-                module.output,
-                grad_input,
-                grad_output,
-                eps=self.eps,
-            )
+
+        multipliers = SUPPORTED_NON_LINEAR[type(module)](
+            module,
+            module.input,
+            module.output,
+            grad_input,
+            grad_output,
+            eps=self.eps,
         )
         # remove all the properies that we set for the inputs and output
         del module.input
@@ -545,10 +477,10 @@ class DeepLift(GradientAttribution):
         # adds forward hook to leaf nodes that are non-linear
         forward_handle = module.register_forward_hook(self._forward_hook)
         pre_forward_handle = module.register_forward_pre_hook(self._forward_pre_hook)
-        backward_handle = _register_backward_hook(module, self._backward_hook, self)
+        backward_handles = _register_backward_hook(module, self._backward_hook, self)
         self.forward_handles.append(forward_handle)
         self.forward_handles.append(pre_forward_handle)
-        self.backward_handles.append(backward_handle)
+        self.backward_handles.extend(backward_handles)
 
     def _remove_hooks(self, extra_hooks_to_remove: List[RemovableHandle]) -> None:
         for handle in extra_hooks_to_remove:
@@ -611,12 +543,14 @@ class DeepLiftShap(DeepLift):
     each baseline and averages resulting attributions.
     More details about the algorithm can be found here:
 
-    http://papers.nips.cc/paper/7062-a-unified-approach-to-interpreting-model-predictions.pdf
+    https://papers.nips.cc/paper/7062-a-unified-approach-to-interpreting-model-predictions.pdf
 
     Note that the explanation model:
+
         1. Assumes that input features are independent of one another
         2. Is linear, meaning that the explanations are modeled through
             the additive composition of feature effects.
+
     Although, it assumes a linear model for each explanation, the overall
     model across multiple explanations can be complex and non-linear.
     """
@@ -625,9 +559,7 @@ class DeepLiftShap(DeepLift):
         r"""
         Args:
 
-            model (nn.Module):  The reference to PyTorch model instance. Model cannot
-                        contain any in-place nonlinear submodules; these are not
-                        supported by the register_full_backward_hook PyTorch API.
+            model (nn.Module):  The reference to PyTorch model instance.
             multiply_by_inputs (bool, optional): Indicates whether to factor
                         model inputs' multiplier in the final attribution scores.
                         In the literature this is also known as local vs global
@@ -694,7 +626,7 @@ class DeepLiftShap(DeepLift):
         r"""
         Args:
 
-            inputs (tensor or tuple of tensors):  Input for which
+            inputs (Tensor or tuple[Tensor, ...]): Input for which
                         attributions are computed. If forward_func takes a single
                         tensor as input, a single input tensor should be provided.
                         If forward_func takes multiple tensors as input, a tuple
@@ -703,7 +635,7 @@ class DeepLiftShap(DeepLift):
                         to the number of examples (aka batch size), and if
                         multiple input tensors are provided, the examples must
                         be aligned appropriately.
-            baselines (tensor, tuple of tensors, callable):
+            baselines (Tensor, tuple[Tensor, ...], or Callable):
                         Baselines define reference samples that are compared with
                         the inputs. In order to assign attribution scores DeepLift
                         computes the differences between the inputs/outputs and
@@ -728,7 +660,7 @@ class DeepLiftShap(DeepLift):
 
                         It is recommended that the number of samples in the baselines'
                         tensors is larger than one.
-            target (int, tuple, tensor or list, optional):  Output indices for
+            target (int, tuple, Tensor, or list, optional): Output indices for
                         which gradients are computed (for classification cases,
                         this is usually the target class).
                         If the network returns a scalar value per example,
@@ -753,7 +685,7 @@ class DeepLiftShap(DeepLift):
                           target for the corresponding example.
 
                         Default: None
-            additional_forward_args (any, optional): If the forward function
+            additional_forward_args (Any, optional): If the forward function
                         requires additional arguments other than the inputs for
                         which attributions should not be computed, this argument
                         can be provided. It must be either a single additional
@@ -769,7 +701,7 @@ class DeepLiftShap(DeepLift):
                         is set to True convergence delta will be returned in
                         a tuple following attributions.
                         Default: False
-            custom_attribution_func (callable, optional): A custom function for
+            custom_attribution_func (Callable, optional): A custom function for
                         computing final attribution scores. This function can take
                         at least one and at most three arguments with the
                         following signature:
@@ -789,7 +721,7 @@ class DeepLiftShap(DeepLift):
 
         Returns:
             **attributions** or 2-element tuple of **attributions**, **delta**:
-            - **attributions** (*tensor* or tuple of *tensors*):
+            - **attributions** (*Tensor* or *tuple[Tensor, ...]*):
                         Attribution score computed based on DeepLift rescale rule with
                         respect to each input feature. Attributions will always be
                         the same size as the provided inputs, with each value
@@ -797,7 +729,7 @@ class DeepLiftShap(DeepLift):
                         If a single tensor is provided as inputs, a single tensor is
                         returned. If a tuple is provided for inputs, a tuple of
                         corresponding sized tensors is returned.
-            - **delta** (*tensor*, returned if return_convergence_delta=True):
+            - **delta** (*Tensor*, returned if return_convergence_delta=True):
                         This is computed using the property that the
                         total sum of forward_func(inputs) - forward_func(baselines)
                         must be very close to the total sum of attributions
@@ -939,7 +871,7 @@ def nonlinear(
     grad_input: Tensor,
     grad_output: Tensor,
     eps: float = 1e-10,
-):
+) -> Tensor:
     r"""
     grad_input: (dLoss / dprev_layer_out, dLoss / wij, dLoss / bij)
     grad_output: (dLoss / dlayer_out)
@@ -947,18 +879,10 @@ def nonlinear(
     """
     delta_in, delta_out = _compute_diffs(inputs, outputs)
 
-    new_grad_inp = list(grad_input)
-
-    # supported non-linear modules take only single tensor as input hence accessing
-    # only the first element in `grad_input` and `grad_output`
-    new_grad_inp[0] = torch.where(
-        abs(delta_in) < eps, new_grad_inp[0], grad_output[0] * delta_out / delta_in
+    new_grad_inp = torch.where(
+        abs(delta_in) < eps, grad_input, grad_output * delta_out / delta_in
     )
 
-    # If the module is invalid, save the newly computed gradients
-    # The original_grad_input will be overridden later in the Tensor hook
-    if module.is_invalid:
-        module.saved_grad = new_grad_inp[0]
     return new_grad_inp
 
 
@@ -972,15 +896,14 @@ def softmax(
 ):
     delta_in, delta_out = _compute_diffs(inputs, outputs)
 
-    new_grad_inp = list(grad_input)
     grad_input_unnorm = torch.where(
-        abs(delta_in) < eps, new_grad_inp[0], grad_output[0] * delta_out / delta_in
+        abs(delta_in) < eps, grad_input, grad_output * delta_out / delta_in
     )
     # normalizing
-    n = grad_input[0].numel()
+    n = grad_input.numel()
 
     # updating only the first half
-    new_grad_inp[0] = grad_input_unnorm - grad_input_unnorm.sum() * 1 / n
+    new_grad_inp = grad_input_unnorm - grad_input_unnorm.sum() * 1 / n
     return new_grad_inp
 
 
@@ -1071,7 +994,7 @@ def maxpool(
             module.ceil_mode,
             True,
         )
-        grad_output_updated = grad_output[0]
+        grad_output_updated = grad_output
         unpool_grad_out_delta, unpool_grad_out_ref_delta = torch.chunk(
             unpool_func(
                 grad_output_updated * delta_out,
@@ -1087,20 +1010,7 @@ def maxpool(
     unpool_grad_out_delta = unpool_grad_out_delta + unpool_grad_out_ref_delta
     unpool_grad_out_delta = torch.cat(2 * [unpool_grad_out_delta])
 
-    # If the module is invalid, we need to recompute the grad_input
-    if module.is_invalid:
-        original_grad_input = grad_input
-        grad_input = (
-            unpool_func(
-                grad_output_updated,
-                indices,
-                module.kernel_size,
-                module.stride,
-                module.padding,
-                list(cast(torch.Size, module.input.shape)),
-            ),
-        )
-    if grad_input[0].shape != inputs.shape:
+    if grad_input.shape != inputs.shape:
         raise AssertionError(
             "A problem occurred during maxpool modul's backward pass. "
             "The gradients with respect to inputs include only a "
@@ -1116,13 +1026,7 @@ def maxpool(
     new_grad_inp = torch.where(
         abs(delta_in) < eps, grad_input[0], unpool_grad_out_delta / delta_in
     )
-    # If the module is invalid, save the newly computed gradients
-    # The original_grad_input will be overridden later in the Tensor hook
-    if module.is_invalid:
-        module.saved_grad = new_grad_inp
-        return original_grad_input
-    else:
-        return (new_grad_inp,)
+    return new_grad_inp
 
 
 def _compute_diffs(inputs: Tensor, outputs: Tensor) -> Tuple[Tensor, Tensor]:

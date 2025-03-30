@@ -43,16 +43,16 @@ class BaseFeature:
 
             name (str): The label of the specific feature. For example, an
                         ImageFeature's name can be "Photo".
-            baseline_transforms (list, callable, optional): Optional list of
+            baseline_transforms (list, Callable, optional): Optional list of
                         callables (e.g. functions) to be called on the input tensor
                         to construct multiple baselines. Currently only one baseline
                         is supported. See
                         :py:class:`.IntegratedGradients` for more
                         information about baselines.
-            input_transforms (list, callable, optional): Optional list of callables
+            input_transforms (list, Callable, optional): Optional list of callables
                         (e.g. functions) called on the input tensor sequentially to
                         convert it into the format expected by the model.
-            visualization_transform (callable, optional): Optional callable (e.g.
+            visualization_transform (Callable, optional): Optional callable (e.g.
                         function) applied as a postprocessing step of the original
                         input data (before ``input_transforms``) to convert it to a
                         format to be understood by the frontend visualizer as
@@ -89,16 +89,16 @@ class ImageFeature(BaseFeature):
         Args:
             name (str): The label of the specific feature. For example, an
                         ImageFeature's name can be "Photo".
-            baseline_transforms (list, callable, optional): Optional list of
+            baseline_transforms (list, Callable, optional): Optional list of
                         callables (e.g. functions) to be called on the input tensor
                         to construct multiple baselines. Currently only one baseline
                         is supported. See
                         :py:class:`.IntegratedGradients` for more
                         information about baselines.
-            input_transforms (list, callable, optional): A list of transforms
+            input_transforms (list, Callable, optional): A list of transforms
                         or transform to be applied to the input. For images,
                         normalization is often applied here.
-            visualization_transform (callable, optional): Optional callable (e.g.
+            visualization_transform (Callable, optional): Optional callable (e.g.
                         function) applied as a postprocessing step of the original
                         input data (before input_transforms) to convert it to a
                         format to be visualized.
@@ -164,7 +164,7 @@ class TextFeature(BaseFeature):
         Args:
             name (str): The label of the specific feature. For example, an
                         ImageFeature's name can be "Photo".
-            baseline_transforms (list, callable, optional): Optional list of
+            baseline_transforms (list, Callable, optional): Optional list of
                         callables (e.g. functions) to be called on the input tensor
                         to construct multiple baselines. Currently only one baseline
                         is supported. See
@@ -174,7 +174,7 @@ class TextFeature(BaseFeature):
                         corresponding to PAD with the same size as the input
                         tensor. See :py:class:`.TokenReferenceBase` for more
                         information.
-            input_transforms (list, callable, optional): A list of transforms
+            input_transforms (list, Callable, optional): A list of transforms
                         or transform to be applied to the input. For text, a common
                         transform is to convert the tokenized input tensor into an
                         interpretable embedding. See
@@ -182,7 +182,7 @@ class TextFeature(BaseFeature):
                         and
                         :py:func:`~.configure_interpretable_embedding_layer`
                         for more information.
-            visualization_transform (callable, optional): Optional callable (e.g.
+            visualization_transform (Callable, optional): Optional callable (e.g.
                         function) applied as a postprocessing step of the original
                         input data (before ``input_transforms``) to convert it to a
                         suitable format for visualization. For text features,

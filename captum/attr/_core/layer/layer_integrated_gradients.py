@@ -41,7 +41,6 @@ class LayerIntegratedGradients(LayerAttribution, GradientAttribution):
     More details regarding the integrated gradients method can be found in the
     original paper:
     https://arxiv.org/abs/1703.01365
-
     """
 
     def __init__(
@@ -53,12 +52,12 @@ class LayerIntegratedGradients(LayerAttribution, GradientAttribution):
     ) -> None:
         r"""
         Args:
-            forward_func (callable):  The forward function of the model or any
+
+            forward_func (Callable): The forward function of the model or any
                         modification of it
-            layer (ModuleOrModuleList):
-                        Layer or list of layers for which attributions are computed.
-                        For each layer the output size of the attribute matches
-                        this layer's input or output dimensions, depending on
+            layer (ModuleOrModuleList): Layer or list of layers for which attributions
+                        are computed. For each layer the output size of the attribute
+                        matches this layer's input or output dimensions, depending on
                         whether we attribute to the inputs or outputs of the
                         layer, corresponding to the attribution of each neuron
                         in the input or output of this layer.
@@ -74,7 +73,7 @@ class LayerIntegratedGradients(LayerAttribution, GradientAttribution):
                         dependence, e.g.  if you pass in l2 you cannot pass in
                         l1 or l3.
 
-            device_ids (list(int)): Device ID list, necessary only if forward_func
+            device_ids (list[int]): Device ID list, necessary only if forward_func
                         applies a DataParallel model. This allows reconstruction of
                         intermediate outputs from batched results across devices.
                         If forward_func is given as the DataParallel model itself,
@@ -101,7 +100,7 @@ class LayerIntegratedGradients(LayerAttribution, GradientAttribution):
         if isinstance(layer, list) and len(layer) > 1:
             warnings.warn(
                 "Multiple layers provided. Please ensure that each layer is"
-                "**not** solely solely dependent on the outputs of"
+                "**not** solely dependent on the outputs of"
                 "another layer. Please refer to the documentation for more"
                 "detail."
             )
@@ -192,7 +191,7 @@ class LayerIntegratedGradients(LayerAttribution, GradientAttribution):
 
         Args:
 
-            inputs (tensor or tuple of tensors):  Input for which layer integrated
+            inputs (Tensor or tuple[Tensor, ...]): Input for which layer integrated
                         gradients are computed. If forward_func takes a single
                         tensor as input, a single input tensor should be provided.
                         If forward_func takes multiple tensors as input, a tuple
@@ -200,7 +199,7 @@ class LayerIntegratedGradients(LayerAttribution, GradientAttribution):
                         that for all given input tensors, dimension 0 corresponds
                         to the number of examples, and if multiple input tensors
                         are provided, the examples must be aligned appropriately.
-            baselines (scalar, tensor, tuple of scalars or tensors, optional):
+            baselines (scalar, Tensor, tuple of scalar, or Tensor, optional):
                         Baselines define the starting point from which integral
                         is computed and can be provided as:
 
@@ -214,6 +213,7 @@ class LayerIntegratedGradients(LayerAttribution, GradientAttribution):
 
                         - a tuple of tensors or scalars, the baseline corresponding
                           to each tensor in the inputs' tuple can be:
+
                             - either a tensor with matching dimensions to
                               corresponding tensor in the inputs' tuple
                               or the first dimension is one and the remaining
@@ -227,7 +227,7 @@ class LayerIntegratedGradients(LayerAttribution, GradientAttribution):
                         use zero scalar corresponding to each input tensor.
 
                         Default: None
-            target (int, tuple, tensor or list, optional):  Output indices for
+            target (int, tuple, Tensor, or list, optional): Output indices for
                         which gradients are computed (for classification cases,
                         this is usually the target class).
                         If the network returns a scalar value per example,
@@ -252,7 +252,7 @@ class LayerIntegratedGradients(LayerAttribution, GradientAttribution):
                           target for the corresponding example.
 
                         Default: None
-            additional_forward_args (any, optional): If the forward function
+            additional_forward_args (Any, optional): If the forward function
                         requires additional arguments other than the inputs for
                         which attributions should not be computed, this argument
                         can be provided. It must be either a single additional
@@ -261,17 +261,19 @@ class LayerIntegratedGradients(LayerAttribution, GradientAttribution):
                         tensors or any arbitrary python types. These arguments
                         are provided to forward_func in order following the
                         arguments in inputs.
+
                         For a tensor, the first dimension of the tensor must
                         correspond to the number of examples. It will be
                         repeated for each of `n_steps` along the integrated
                         path. For all other types, the given argument is used
                         for all forward evaluations.
+
                         Note that attributions are not computed with respect
                         to these arguments.
                         Default: None
             n_steps (int, optional): The number of steps used by the approximation
                         method. Default: 50.
-            method (string, optional): Method for approximating the integral,
+            method (str, optional): Method for approximating the integral,
                         one of `riemann_right`, `riemann_left`, `riemann_middle`,
                         `riemann_trapezoid` or `gausslegendre`.
                         Default: `gausslegendre` if no method is provided.
@@ -280,6 +282,7 @@ class LayerIntegratedGradients(LayerAttribution, GradientAttribution):
                         which are computed (forward / backward passes)
                         sequentially. internal_batch_size must be at least equal to
                         #examples.
+
                         For DataParallel models, each batch is split among the
                         available devices, so evaluations on each available
                         device contain internal_batch_size / num_devices examples.
@@ -297,54 +300,57 @@ class LayerIntegratedGradients(LayerAttribution, GradientAttribution):
                         then the attributions will be computed with respect to
                         layer input, otherwise it will be computed with respect
                         to layer output.
+
                         Note that currently it is assumed that either the input
                         or the output of internal layer, depending on whether we
                         attribute to the input or output, is a single tensor.
                         Support for multiple tensors will be added later.
                         Default: False
-            Returns:
-                **attributions** or 2-element tuple of **attributions**, **delta**:
-                - **attributions** (*tensor*, tuple of *tensors* or tuple of *tensors*):
-                        Integrated gradients with respect to `layer`'s inputs or
-                        outputs. Attributions will always be the same size and
-                        dimensionality as the input or output of the given layer,
-                        depending on whether we attribute to the inputs or outputs
-                        of the layer which is decided by the input flag
-                        `attribute_to_layer_input`.
 
-                        For a single layer, attributions are returned in a tuple if
-                        the layer inputs / outputs contain multiple tensors,
-                        otherwise a single tensor is returned.
+        Returns:
+            **attributions** or 2-element tuple of **attributions**, **delta**:
+            - **attributions** (*Tensor* or *tuple[Tensor, ...]*):
+                Integrated gradients with respect to `layer`'s inputs
+                or outputs. Attributions will always be the same size and
+                dimensionality as the input or output of the given layer,
+                depending on whether we attribute to the inputs or outputs
+                of the layer which is decided by the input flag
+                `attribute_to_layer_input`.
 
-                        For multiple layers, attributions will always be
-                        returned as a list. Each element in this list will be
-                        equivalent to that of a single layer output, i.e. in the
-                        case that one layer, in the given layers, inputs / outputs
-                        multiple tensors: the corresponding output element will be
-                        a tuple of tensors. The ordering of the outputs will be
-                        the same order as the layers given in the constructor.
-                - **delta** (*tensor*, returned if return_convergence_delta=True):
-                        The difference between the total approximated and true
-                        integrated gradients. This is computed using the property
-                        that the total sum of forward_func(inputs) -
-                        forward_func(baselines) must equal the total sum of the
-                        integrated gradient.
-                        Delta is calculated per example, meaning that the number of
-                        elements in returned delta tensor is equal to the number of
-                        of examples in inputs.
+                For a single layer, attributions are returned in a tuple if
+                the layer inputs / outputs contain multiple tensors,
+                otherwise a single tensor is returned.
 
-            Examples::
+                For multiple layers, attributions will always be
+                returned as a list. Each element in this list will be
+                equivalent to that of a single layer output, i.e. in the
+                case that one layer, in the given layers, inputs / outputs
+                multiple tensors: the corresponding output element will be
+                a tuple of tensors. The ordering of the outputs will be
+                the same order as the layers given in the constructor.
 
-                >>> # ImageClassifier takes a single input tensor of images Nx3x32x32,
-                >>> # and returns an Nx10 tensor of class probabilities.
-                >>> # It contains an attribute conv1, which is an instance of nn.conv2d,
-                >>> # and the output of this layer has dimensions Nx12x32x32.
-                >>> net = ImageClassifier()
-                >>> lig = LayerIntegratedGradients(net, net.conv1)
-                >>> input = torch.randn(2, 3, 32, 32, requires_grad=True)
-                >>> # Computes layer integrated gradients for class 3.
-                >>> # attribution size matches layer output, Nx12x32x32
-                >>> attribution = lig.attribute(input, target=3)
+            - **delta** (*Tensor*, returned if return_convergence_delta=True):
+                The difference between the total approximated and true
+                integrated gradients. This is computed using the property
+                that the total sum of forward_func(inputs) -
+                forward_func(baselines) must equal the total sum of the
+                integrated gradient.
+                Delta is calculated per example, meaning that the number of
+                elements in returned delta tensor is equal to the number of
+                examples in inputs.
+
+        Examples::
+
+            >>> # ImageClassifier takes a single input tensor of images Nx3x32x32,
+            >>> # and returns an Nx10 tensor of class probabilities.
+            >>> # It contains an attribute conv1, which is an instance of nn.conv2d,
+            >>> # and the output of this layer has dimensions Nx12x32x32.
+            >>> net = ImageClassifier()
+            >>> lig = LayerIntegratedGradients(net, net.conv1)
+            >>> input = torch.randn(2, 3, 32, 32, requires_grad=True)
+            >>> # Computes layer integrated gradients for class 3.
+            >>> # attribution size matches layer output, Nx12x32x32
+            >>> attribution = lig.attribute(input, target=3)
         """
         inps, baselines = _format_input_baseline(inputs, baselines)
         _validate_input(inps, baselines, n_steps, method)

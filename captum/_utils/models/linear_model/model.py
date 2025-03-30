@@ -20,7 +20,7 @@ class LinearModel(nn.Module, Model):
         Please note that this is an experimental feature.
 
         Args:
-            train_fn (callable)
+            train_fn (Callable)
                 The function to train with. See
                 `captum._utils.models.linear_model.train.sgd_train_linear_model`
                 and
@@ -65,14 +65,14 @@ class LinearModel(nn.Module, Model):
                 normalization parameters used.
             bias (bool):
                 Whether to add a bias term. Not needed if normalized input.
-            weight_values (tensor, optional):
+            weight_values (Tensor, optional):
                 The values to initialize the linear model with. This must be a
                 1D or 2D tensor, and of the form `(num_outputs, num_features)` or
                 `(num_features,)`. Additionally, if this is provided you need not
                 to provide `in_features` or `out_features`.
-            bias_value (tensor, optional):
+            bias_value (Tensor, optional):
                 The bias value to initialize the model with.
-            classes (tensor, optional):
+            classes (Tensor, optional):
                 The list of prediction classes supported by the model in case it
                 performs classificaton. In case of regression it is set to None.
                 Default: None

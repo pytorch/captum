@@ -21,6 +21,7 @@ from captum._utils.common import (
     _reduce_list,
 )
 from captum.attr import Max, Mean, Min, Summarizer
+from captum.log import log_usage
 from captum.robust._core.perturbation import Perturbation
 from torch import Tensor
 
@@ -60,15 +61,15 @@ class AttackComparator(Generic[MetricResultType]):
         self,
         forward_func: Callable,
         metric: Callable[..., MetricResultType],
-        preproc_fn: Callable = None,
+        preproc_fn: Optional[Callable] = None,
     ) -> None:
         r"""
         Args:
-            forward_func (callable or torch.nn.Module): This can either be an instance
+            forward_func (Callable or torch.nn.Module): This can either be an instance
                 of pytorch model or any modification of a model's forward
                 function.
 
-            metric (callable): This function is applied to the model output in
+            metric (Callable): This function is applied to the model output in
                 order to compute the desired performance metric or metrics.
                 This function should have the following signature::
 
@@ -85,9 +86,10 @@ class AttackComparator(Generic[MetricResultType]):
                 If tensor metrics represent results for the full batch, the size of the
                 first dimension should be 1.
 
-            preproc_fn (callable, optional): Optional method applied to inputs. Output
+            preproc_fn (Callable, optional): Optional method applied to inputs. Output
                 of preproc_fn is then provided as input to model, in addition to
                 additional_forward_args provided to evaluate.
+                Default: ``None``
         """
         self.forward_func = forward_func
         self.metric: Callable = metric
@@ -113,31 +115,38 @@ class AttackComparator(Generic[MetricResultType]):
         Adds attack to be evaluated when calling evaluate.
 
         Args:
-            attack (perturbation or callable): This can either be an instance
+
+            attack (Perturbation or Callable): This can either be an instance
                 of a Captum Perturbation / Attack
                 or any other perturbation or attack function such
                 as a torchvision transform.
 
-            name (optional, str): Name or identifier for attack, used as key for
+            name (str, optional): Name or identifier for attack, used as key for
                 attack results. This defaults to attack.__class__.__name__
                 if not provided and must be unique for all added attacks.
+                Default: ``None``
 
-            num_attempts (int): Number of attempts that attack should be
+            num_attempts (int, optional): Number of attempts that attack should be
                 repeated. This should only be set to > 1 for non-deterministic
                 attacks. The minimum, maximum, and average (best, worst, and
                 average case) are tracked for attack attempts.
+                Default: ``1``
 
-            apply_before_preproc (bool): Defines whether attack should be applied
-                before or after preproc function.
+            apply_before_preproc (bool, optional): Defines whether attack should be
+                applied before or after preproc function.
+                Default: ``True``
 
-            attack_kwargs (dict): Additional arguments to be provided to given attack.
-                This should be provided as a dictionary of keyword arguments.
+            attack_kwargs (dict, optional): Additional arguments to be provided to
+                given attack. This should be provided as a dictionary of keyword
+                arguments.
+                Default: ``None``
 
-            additional_attack_arg_names (list[str]): Any additional arguments for the
-                attack which are specific to the particular input example or batch.
-                An example of this is target, which is necessary for some attacks such
-                as FGSM or PGD. These arguments are included if provided as a kwarg
-                to evaluate.
+            additional_attack_arg_names (list[str], optional): Any additional
+                arguments for the attack which are specific to the particular input
+                example or batch. An example of this is target, which is necessary
+                for some attacks such as FGSM or PGD. These arguments are included
+                if provided as a kwarg to evaluate.
+                Default: ``None``
         """
         if name is None:
             name = attack.__class__.__name__
@@ -227,6 +236,7 @@ class AttackComparator(Generic[MetricResultType]):
                 batch_summarizers[key_list[i]].update(out_metric)
                 current_count += batch_size
 
+    @log_usage()
     def evaluate(
         self,
         inputs: Any,
@@ -239,7 +249,7 @@ class AttackComparator(Generic[MetricResultType]):
 
         Args:
 
-        inputs (any): Input for which attack metrics
+            inputs (Any): Input for which attack metrics
                 are computed. It can be provided as a tensor, tuple of tensors,
                 or any raw input type (e.g. PIL image or text string).
                 This input is provided directly as input to preproc function as well
@@ -247,7 +257,7 @@ class AttackComparator(Generic[MetricResultType]):
                 function is provided, this input is provided directly to the main
                 model and all attacks.
 
-        additional_forward_args (any, optional): If the forward function
+            additional_forward_args (Any, optional): If the forward function
                 requires additional arguments other than the preprocessing
                 outputs (or inputs if preproc_fn is None), this argument
                 can be provided. It must be either a single additional
@@ -259,8 +269,8 @@ class AttackComparator(Generic[MetricResultType]):
                 For a tensor, the first dimension of the tensor must
                 correspond to the number of examples. For all other types,
                 the given argument is used for all forward evaluations.
-                Default: None
-        perturbations_per_eval (int, optional): Allows perturbations of multiple
+                Default: ``None``
+            perturbations_per_eval (int, optional): Allows perturbations of multiple
                 attacks to be grouped and evaluated in one call of forward_fn
                 Each forward pass will contain a maximum of
                 perturbations_per_eval * #examples samples.
@@ -272,9 +282,10 @@ class AttackComparator(Generic[MetricResultType]):
                 In order to apply this functionality, the output of preproc_fn
                 (or inputs itself if no preproc_fn is provided) must be a tensor
                 or tuple of tensors.
-                Default: 1
-        kwargs (any, optional): Additional keyword arguments provided to metric function
-                as well as selected attacks based on chosen additional_args
+                Default: ``1``
+            kwargs (Any, optional): Additional keyword arguments provided to metric
+                function as well as selected attacks based on chosen additional_args.
+                Default: ``None``
 
         Returns:
 

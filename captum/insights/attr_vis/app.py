@@ -108,7 +108,7 @@ class Batch:
 
         Args:
 
-            inputs (tensor or tuple of tensors): Batch of inputs for a model.
+            inputs (Tensor or tuple[Tensor, ...]): Batch of inputs for a model.
                         These may be either a Tensor or tuple of tensors. Each tensor
                         must correspond to a feature for AttributionVisualizer, and
                         the corresponding input transform function of the feature
@@ -116,7 +116,7 @@ class Batch:
                         model. It is assumed that the first dimension of each
                         input tensor corresponds to the number of examples
                         (batch size) and is aligned for all input tensors.
-            labels (tensor): Tensor containing correct labels for input examples.
+            labels (Tensor): Tensor containing correct labels for input examples.
                         This must be a 1D tensor with length matching the first
                         dimension of each input tensor.
             additional_args (tuple, optional): If the forward function
@@ -149,11 +149,11 @@ class AttributionVisualizer:
         r"""
         Args:
 
-            models (torch.nn.module): One or more PyTorch modules (models) for
+            models (torch.nn.Module): One or more PyTorch modules (models) for
                           attribution visualization.
-            classes (list of string): List of strings corresponding to the names of
+            classes (list[str]): List of strings corresponding to the names of
                           classes for classification.
-            features (list of BaseFeature): List of BaseFeatures, which correspond
+            features (list[BaseFeature]): List of BaseFeatures, which correspond
                           to input arguments to the model. Each feature object defines
                           relevant transformations for converting to model input,
                           constructing baselines, and visualizing. The length of the
@@ -163,10 +163,10 @@ class AttributionVisualizer:
                           a single BaseFeature, while a multimodal classifier may
                           provide a list of features, each corresponding to a different
                           tensor input and potentially different modalities.
-            dataset (iterable of Batch): Defines the dataset to visualize attributions
+            dataset (Iterable of Batch): Defines the dataset to visualize attributions
                           for. This must be an iterable of batch objects, each of which
                           may contain multiple input examples.
-            score_func (callable, optional): This function is applied to the model
+            score_func (Callable, optional): This function is applied to the model
                           output to obtain the score for each class. For instance,
                           this function could be the softmax or final non-linearity
                           of the network, applied to the model output. The indices
@@ -175,7 +175,7 @@ class AttributionVisualizer:
                           are taken directly and assumed to correspond to the
                           class scores.
                           Default: None
-            use_label_for_attr (boolean, optional): If true, the class index is passed
+            use_label_for_attr (bool, optional): If true, the class index is passed
                           to the relevant attribution method. This is necessary in most
                           cases where there is an output neuron corresponding to each
                           class. When the model output is a scalar and class index

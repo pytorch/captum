@@ -37,7 +37,7 @@ export TERM=xterm
 # NOTE: All of the below installs use sudo, b/c otherwise pip will get
 # permission errors installing in the docker container. An alternative would be
 # to use a virtualenv, but that would lead to bifurcation of the CircleCI config
-# since we'd need to source the environemnt in each step.
+# since we'd need to source the environment in each step.
 
 # upgrade pip
 sudo pip install --upgrade pip
@@ -55,7 +55,7 @@ fi
 if [[ $PYTORCH_NIGHTLY == true ]]; then
   sudo pip install --upgrade --pre torch -f https://download.pytorch.org/whl/nightly/cpu/torch_nightly.html
 else
-  # If no version specified, upgrade to latest release.
+  # If no version is specified, upgrade to the latest release.
   if [[ $CHOSEN_TORCH_VERSION == -1 ]]; then
     sudo pip install --upgrade torch
   else

@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-import warnings
 from typing import Any, Callable, List, Tuple, Union
 
 from captum._utils.gradient import construct_neuron_grad_fn
@@ -35,10 +34,7 @@ class NeuronDeconvolution(NeuronAttribution, GradientAttribution):
         r"""
         Args:
 
-            model (nn.Module):  The reference to PyTorch model instance. Model cannot
-                          contain any in-place ReLU submodules; these are not
-                          supported by the register_full_backward_hook PyTorch API
-                          starting from PyTorch v1.9.
+            model (nn.Module):  The reference to PyTorch model instance.
             layer (Module): Layer for which attributions are computed.
                           Output size of attribute matches this layer's input or
                           output dimensions, depending on whether we attribute to
@@ -48,7 +44,7 @@ class NeuronDeconvolution(NeuronAttribution, GradientAttribution):
                           Currently, it is assumed that the inputs or the outputs
                           of the layer, depending on which one is used for
                           attribution, can only be a single tensor.
-            device_ids (list(int)): Device ID list, necessary only if forward_func
+            device_ids (list[int]): Device ID list, necessary only if forward_func
                           applies a DataParallel model. This allows reconstruction of
                           intermediate outputs from batched results across devices.
                           If forward_func is given as the DataParallel model itself,
@@ -69,7 +65,7 @@ class NeuronDeconvolution(NeuronAttribution, GradientAttribution):
         r"""
         Args:
 
-            inputs (tensor or tuple of tensors):  Input for which
+            inputs (Tensor or tuple[Tensor, ...]): Input for which
                         attributions are computed. If forward_func takes a single
                         tensor as input, a single input tensor should be provided.
                         If forward_func takes multiple tensors as input, a tuple
@@ -78,7 +74,7 @@ class NeuronDeconvolution(NeuronAttribution, GradientAttribution):
                         to the number of examples (aka batch size), and if
                         multiple input tensors are provided, the examples must
                         be aligned appropriately.
-            neuron_selector (int, callable, or tuple of ints or slices):
+            neuron_selector (int, Callable, tuple[int], or slice):
                         Selector for neuron
                         in given layer for which attribution is desired.
                         Neuron selector can be provided as:
@@ -99,7 +95,7 @@ class NeuronDeconvolution(NeuronAttribution, GradientAttribution):
                           indexed output tensor is used for attribution. Note
                           that specifying a slice of a tensor would amount to
                           computing the attribution of the sum of the specified
-                          neurons, and not the individual neurons independantly.
+                          neurons, and not the individual neurons independently.
 
                         - a callable, which should
                           take the target layer as input (single tensor or tuple
@@ -111,7 +107,7 @@ class NeuronDeconvolution(NeuronAttribution, GradientAttribution):
                           this function returns either a tensor with one element
                           or a 1D tensor with length equal to batch_size (one scalar
                           per input example)
-            additional_forward_args (any, optional): If the forward function
+            additional_forward_args (Any, optional): If the forward function
                         requires additional arguments other than the inputs for
                         which attributions should not be computed, this argument
                         can be provided. It must be either a single additional
@@ -134,8 +130,8 @@ class NeuronDeconvolution(NeuronAttribution, GradientAttribution):
                         Support for multiple tensors will be added later.
                         Default: False
         Returns:
-            *tensor* or tuple of *tensors* of **attributions**:
-            - **attributions** (*tensor* or tuple of *tensors*):
+            *Tensor* or *tuple[Tensor, ...]* of **attributions**:
+            - **attributions** (*Tensor* or *tuple[Tensor, ...]*):
                         Deconvolution attribution of
                         particular neuron with respect to each input feature.
                         Attributions will always be the same size as the provided
@@ -163,18 +159,6 @@ class NeuronDeconvolution(NeuronAttribution, GradientAttribution):
             >>> # index (4,1,2).
             >>> attribution = neuron_deconv.attribute(input, (4,1,2))
         """
-        if not attribute_to_neuron_input:
-            warnings.warn(
-                "Attribution to neuron output is no longer supported for"
-                " NeuronDeconvolution and will be deprecated in Captum"
-                " 0.6.0 due to changes in PyTorch's full backward hook"
-                " behavior. To obtain attributions for a neuron's"
-                " output, please attribute with respect to the next layer's input"
-            )
-            self.deconv.skip_new_hook_layer = self.layer  # type: ignore
-        else:
-            self.deconv.skip_new_hook_layer = None  # type: ignore
-
         self.deconv.gradient_func = construct_neuron_grad_fn(
             self.layer, neuron_selector, self.device_ids, attribute_to_neuron_input
         )
@@ -207,17 +191,14 @@ class NeuronGuidedBackprop(NeuronAttribution, GradientAttribution):
         r"""
         Args:
 
-            model (nn.Module):  The reference to PyTorch model instance. Model cannot
-                          contain any in-place ReLU submodules; these are not
-                          supported by the register_full_backward_hook PyTorch API
-                          starting from PyTorch v1.9.
+            model (nn.Module):  The reference to PyTorch model instance.
             layer (Module): Layer for which neuron attributions are computed.
                           Attributions for a particular neuron in the output of
                           this layer are computed using the argument neuron_selector
                           in the attribute method.
                           Currently, only layers with a single tensor output are
                           supported.
-            device_ids (list(int)): Device ID list, necessary only if forward_func
+            device_ids (list[int]): Device ID list, necessary only if forward_func
                           applies a DataParallel model. This allows reconstruction of
                           intermediate outputs from batched results across devices.
                           If forward_func is given as the DataParallel model itself,
@@ -238,7 +219,7 @@ class NeuronGuidedBackprop(NeuronAttribution, GradientAttribution):
         r"""
         Args:
 
-            inputs (tensor or tuple of tensors):  Input for which
+            inputs (Tensor or tuple[Tensor, ...]): Input for which
                         attributions are computed. If forward_func takes a single
                         tensor as input, a single input tensor should be provided.
                         If forward_func takes multiple tensors as input, a tuple
@@ -247,7 +228,7 @@ class NeuronGuidedBackprop(NeuronAttribution, GradientAttribution):
                         to the number of examples (aka batch size), and if
                         multiple input tensors are provided, the examples must
                         be aligned appropriately.
-            neuron_selector (int, callable, or tuple of ints or slices):
+            neuron_selector (int, Callable, tuple[int], or slice):
                         Selector for neuron
                         in given layer for which attribution is desired.
                         Neuron selector can be provided as:
@@ -268,7 +249,7 @@ class NeuronGuidedBackprop(NeuronAttribution, GradientAttribution):
                           indexed output tensor is used for attribution. Note
                           that specifying a slice of a tensor would amount to
                           computing the attribution of the sum of the specified
-                          neurons, and not the individual neurons independantly.
+                          neurons, and not the individual neurons independently.
 
                         - a callable, which should
                           take the target layer as input (single tensor or tuple
@@ -280,7 +261,7 @@ class NeuronGuidedBackprop(NeuronAttribution, GradientAttribution):
                           this function returns either a tensor with one element
                           or a 1D tensor with length equal to batch_size (one scalar
                           per input example)
-            additional_forward_args (any, optional): If the forward function
+            additional_forward_args (Any, optional): If the forward function
                         requires additional arguments other than the inputs for
                         which attributions should not be computed, this argument
                         can be provided. It must be either a single additional
@@ -303,8 +284,8 @@ class NeuronGuidedBackprop(NeuronAttribution, GradientAttribution):
                         Support for multiple tensors will be added later.
                         Default: False
         Returns:
-            *tensor* or tuple of *tensors* of **attributions**:
-            - **attributions** (*tensor* or tuple of *tensors*):
+            *Tensor* or *tuple[Tensor, ...]* of **attributions**:
+            - **attributions** (*Tensor* or *tuple[Tensor, ...]*):
                         Guided backprop attribution of
                         particular neuron with respect to each input feature.
                         Attributions will always be the same size as the provided
@@ -332,18 +313,6 @@ class NeuronGuidedBackprop(NeuronAttribution, GradientAttribution):
             >>> # index (4,1,2).
             >>> attribution = neuron_gb.attribute(input, (4,1,2))
         """
-        if not attribute_to_neuron_input:
-            warnings.warn(
-                "Attribution to neuron output is no longer supported for"
-                " NeuronGuidedBackprop and will be deprecated in Captum"
-                " 0.6.0 due to changes in PyTorch's full backward hook"
-                " behavior. To obtain attributions for a neuron's"
-                " output, please attribute with respect to the next layer's input"
-            )
-            self.guided_backprop.skip_new_hook_layer = self.layer  # type: ignore
-        else:
-            self.guided_backprop.skip_new_hook_layer = None  # type: ignore
-
         self.guided_backprop.gradient_func = construct_neuron_grad_fn(
             self.layer, neuron_selector, self.device_ids, attribute_to_neuron_input
         )

@@ -21,6 +21,29 @@ TORCH_VERSION = torch.__version__
 
 
 class ImageTensor(torch.Tensor):
+    r"""
+    A subclass of :class:`torch.Tensor` that provides functions for easy loading,
+    saving, and displaying image tensors.
+
+    Alias: ``captum.optim.ImageTensor``
+
+    Example using file path or URL::
+
+        >>> image_tensor = opt.images.ImageTensor.load(<path/to/image_file>)
+        >>> image_tensor.export(filename="image_tensor.jpg")  # Save image(s)
+        >>> image_tensor.show()  # Displays image(s) via Matplotlib
+
+    Example using ``torch.Tensor``::
+
+        >>> image_tensor = torch.randn(1, 3, 224, 224)
+        >>> image_tensor = opt.images.ImageTensor(image_tensor)
+
+    Example using ``np.ndarray``::
+
+        >>> image_tensor = np.random.rand(1, 3, 224, 224)
+        >>> image_tensor = opt.images.ImageTensor(image_tensor)
+    """
+
     @staticmethod
     def __new__(
         cls: Type["ImageTensor"],
@@ -32,10 +55,10 @@ class ImageTensor(torch.Tensor):
         Args:
 
             x (list or np.ndarray or torch.Tensor): A list, NumPy array, or PyTorch
-                tensor to create an `ImageTensor` from.
+                tensor to create an ``ImageTensor`` from.
 
         Returns:
-           x (ImageTensor): An `ImageTensor` instance.
+           x (ImageTensor): An ``ImageTensor`` instance.
         """
         if isinstance(x, torch.Tensor) and x.is_cuda:
             x.show = MethodType(cls.show, x)
@@ -45,17 +68,18 @@ class ImageTensor(torch.Tensor):
             return super().__new__(cls, x, *args, **kwargs)
 
     @classmethod
-    def open(cls, path: str, scale: float = 255.0, mode: str = "RGB") -> "ImageTensor":
+    def load(cls, path: str, scale: float = 255.0, mode: str = "RGB") -> "ImageTensor":
         """
-        Load an image file from a URL or local filepath directly into an `ImageTensor`.
+        Load an image file from a URL or local filepath directly into an
+        ``ImageTensor``.
 
         Args:
 
             path (str): A URL or filepath to an image.
             scale (float, optional): The image scale to use.
-                Default: 255.0
+                Default: ``255.0``
             mode (str, optional): The image loading mode / colorspace to use.
-                Default: "RGB"
+                Default: ``"RGB"``
 
         Returns:
            x (ImageTensor): An `ImageTensor` instance.
@@ -68,6 +92,11 @@ class ImageTensor(torch.Tensor):
             img = Image.open(path)
         img_np = np.array(img.convert(mode)).astype(np.float32)
         return cls(img_np.transpose(2, 0, 1) / scale)
+
+    @classmethod
+    def open(cls, path: str, scale: float = 255.0, mode: str = "RGB") -> "ImageTensor":
+        r"""Alias for :func:`load`."""
+        return cls.load(path=path, scale=scale, mode=mode)
 
     def __repr__(self) -> str:
         prefix = "ImageTensor("
@@ -104,24 +133,27 @@ class ImageTensor(torch.Tensor):
         pad_value: float = 0.0,
     ) -> None:
         """
-        Display an `ImageTensor`.
+        Display image(s) in the ``ImageTensor`` instance using
+        :func:`captum.optim.show`.
 
         Args:
 
-            figsize (Tuple[int, int], optional): height & width to use
-                for displaying the `ImageTensor` figure.
-            scale (float, optional): Value to multiply the `ImageTensor` by so that
+            figsize (tuple of int, optional): The height & width to use for displaying
+                the ``ImageTensor`` figure, in the format of: (height, width).
+                Default: ``None``
+            scale (float, optional): Value to multiply the ``ImageTensor`` by so that
                 it's value range is [0-255] for display.
-                Default: 255.0
+                Default: ``255.0``
             images_per_row (int, optional): The number of images per row to use for the
-                grid image. Default is set to None for no grid image creation.
-                Default: None
+                grid image. Default is set to ``None`` for no grid image creation.
+                Default: ``None``
             padding (int, optional): The amount of padding between images in the grid
-                images. This parameter only has an effect if `nrow` is not None.
-                Default: 2
+                images. This parameter only has an effect if ``images_per_row`` is not
+                ``None``.
+                Default: ``2``
             pad_value (float, optional): The value to use for the padding. This
-                parameter only has an effect if `nrow` is not None.
-                Default: 0.0
+                parameter only has an effect if ``images_per_row`` is not None.
+                Default: ``0.0``
         """
         show(
             self,
@@ -142,27 +174,29 @@ class ImageTensor(torch.Tensor):
         pad_value: float = 0.0,
     ) -> None:
         """
-        Save an `ImageTensor` as an image file.
+        Save image(s) in the `ImageTensor` instance as an image file, using
+        :func:`captum.optim.save_tensor_as_image`.
 
         Args:
 
-            filename (str): The filename to use when saving the `ImageTensor` as an
+            filename (str): The filename to use when saving the ``ImageTensor`` as an
                 image file.
-            scale (float, optional): Value to multiply the `ImageTensor` by so that
+            scale (float, optional): Value to multiply the ``ImageTensor`` by so that
                 it's value range is [0-255] for saving.
-                Default: 255.0
+                Default: ``255.0``
             mode (str, optional): A PIL / Pillow supported colorspace. Default is
                 set to None for automatic RGB / RGBA detection and usage.
-                Default: None
+                Default: ``None``
             images_per_row (int, optional): The number of images per row to use for the
                 grid image. Default is set to None for no grid image creation.
-                Default: None
+                Default: ``None``
             padding (int, optional): The amount of padding between images in the grid
-                images. This parameter only has an effect if `nrow` is not None.
-                Default: 2
+                images. This parameter only has an effect if ``images_per_row`` is not
+                ``None``.
+                Default: ``2``
             pad_value (float, optional): The value to use for the padding. This
-                parameter only has an effect if `nrow` is not None.
-                Default: 0.0
+                parameter only has an effect if ``images_per_row`` is not ``None``.
+                Default: ``0.0``
         """
         save_tensor_as_image(
             self,

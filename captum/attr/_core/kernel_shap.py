@@ -29,8 +29,8 @@ class KernelShap(Lime):
         r"""
         Args:
 
-            forward_func (callable): The forward function of the model or
-                        any modification of it
+            forward_func (Callable): The forward function of the model or
+                        any modification of it.
         """
         Lime.__init__(
             self,
@@ -86,7 +86,7 @@ class KernelShap(Lime):
 
         Args:
 
-            inputs (tensor or tuple of tensors):  Input for which KernelShap
+            inputs (Tensor or tuple[Tensor, ...]): Input for which KernelShap
                         is computed. If forward_func takes a single
                         tensor as input, a single input tensor should be provided.
                         If forward_func takes multiple tensors as input, a tuple
@@ -94,7 +94,7 @@ class KernelShap(Lime):
                         that for all given input tensors, dimension 0 corresponds
                         to the number of examples, and if multiple input tensors
                         are provided, the examples must be aligned appropriately.
-            baselines (scalar, tensor, tuple of scalars or tensors, optional):
+            baselines (scalar, Tensor, tuple of scalar, or Tensor, optional):
                         Baselines define the reference value which replaces each
                         feature when the corresponding interpretable feature
                         is set to 0.
@@ -120,10 +120,11 @@ class KernelShap(Lime):
                           - or a scalar, corresponding to a tensor in the
                             inputs' tuple. This scalar value is broadcasted
                             for corresponding input tensor.
+
                         In the cases when `baselines` is not provided, we internally
                         use zero scalar corresponding to each input tensor.
                         Default: None
-            target (int, tuple, tensor or list, optional):  Output indices for
+            target (int, tuple, Tensor, or list, optional): Output indices for
                         which surrogate model is trained
                         (for classification cases,
                         this is usually the target class).
@@ -149,7 +150,7 @@ class KernelShap(Lime):
                           target for the corresponding example.
 
                         Default: None
-            additional_forward_args (any, optional): If the forward function
+            additional_forward_args (Any, optional): If the forward function
                         requires additional arguments other than the inputs for
                         which attributions should not be computed, this argument
                         can be provided. It must be either a single additional
@@ -166,7 +167,7 @@ class KernelShap(Lime):
                         Note that attributions are not computed with respect
                         to these arguments.
                         Default: None
-            feature_mask (tensor or tuple of tensors, optional):
+            feature_mask (Tensor or tuple[Tensor, ...], optional):
                         feature_mask defines a mask for the input, grouping
                         features which correspond to the same
                         interpretable feature. feature_mask
@@ -184,7 +185,7 @@ class KernelShap(Lime):
                         If None, then a feature mask is constructed which assigns
                         each scalar within a tensor as a separate feature.
                         Default: None
-            n_samples (int, optional):  The number of samples of the original
+            n_samples (int, optional): The number of samples of the original
                         model used to train the surrogate interpretable model.
                         Default: `50` if `n_samples` is not provided.
             perturbations_per_eval (int, optional): Allows multiple samples
@@ -219,8 +220,8 @@ class KernelShap(Lime):
                         Default: False
 
         Returns:
-            *tensor* or tuple of *tensors* of **attributions**:
-            - **attributions** (*tensor* or tuple of *tensors*):
+            *Tensor* or *tuple[Tensor, ...]* of **attributions**:
+            - **attributions** (*Tensor* or *tuple[Tensor, ...]*):
                         The attributions with respect to each input feature.
                         If return_input_shape = True, attributions will be
                         the same size as the provided inputs, with each value
@@ -316,7 +317,9 @@ class KernelShap(Lime):
         Perturbations are sampled by the following process:
          - Choose k (number of selected features), based on the distribution
                 p(k) = (M - 1) / (k * (M - k))
+
             where M is the total number of features in the interpretable space
+
          - Randomly select a binary vector with k ones, each sample is equally
             likely. This is done by generating a random vector of normal
             values and thresholding based on the top k elements.

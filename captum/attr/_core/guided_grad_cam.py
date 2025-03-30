@@ -38,7 +38,7 @@ class GuidedGradCam(GradientAttribution):
 
     More details regarding GuidedGradCAM can be found in the original
     GradCAM paper here:
-    https://arxiv.org/pdf/1610.02391.pdf
+    https://arxiv.org/abs/1610.02391
 
     Warning: Ensure that all ReLU operations in the forward function of the
     given model are performed using a module (nn.module.ReLU).
@@ -51,14 +51,11 @@ class GuidedGradCam(GradientAttribution):
         r"""
         Args:
 
-            model (nn.Module):  The reference to PyTorch model instance. Model cannot
-                        contain any in-place ReLU submodules; these are not
-                        supported by the register_full_backward_hook PyTorch API
-                        starting from PyTorch v1.9.
+            model (nn.Module):  The reference to PyTorch model instance.
             layer (torch.nn.Module): Layer for which GradCAM attributions are computed.
                           Currently, only layers with a single tensor output are
                           supported.
-            device_ids (list(int)): Device ID list, necessary only if forward_func
+            device_ids (list[int]): Device ID list, necessary only if forward_func
                           applies a DataParallel model. This allows reconstruction of
                           intermediate outputs from batched results across devices.
                           If forward_func is given as the DataParallel model itself,
@@ -80,7 +77,7 @@ class GuidedGradCam(GradientAttribution):
         r"""
         Args:
 
-            inputs (tensor or tuple of tensors):  Input for which attributions
+            inputs (Tensor or tuple[Tensor, ...]): Input for which attributions
                         are computed. If forward_func takes a single
                         tensor as input, a single input tensor should be provided.
                         If forward_func takes multiple tensors as input, a tuple
@@ -88,7 +85,7 @@ class GuidedGradCam(GradientAttribution):
                         that for all given input tensors, dimension 0 corresponds
                         to the number of examples, and if multiple input tensors
                         are provided, the examples must be aligned appropriately.
-            target (int, tuple, tensor or list, optional):  Output indices for
+            target (int, tuple, Tensor, or list, optional): Output indices for
                         which gradients are computed (for classification cases,
                         this is usually the target class).
                         If the network returns a scalar value per example,
@@ -113,7 +110,7 @@ class GuidedGradCam(GradientAttribution):
                           target for the corresponding example.
 
                         Default: None
-            additional_forward_args (any, optional): If the forward function
+            additional_forward_args (Any, optional): If the forward function
                         requires additional arguments other than the inputs for
                         which attributions should not be computed, this argument
                         can be provided. It must be either a single additional
@@ -151,8 +148,8 @@ class GuidedGradCam(GradientAttribution):
                         Default: False
 
         Returns:
-            *tensor* of **attributions**:
-            - **attributions** (*tensor*):
+            *Tensor* of **attributions**:
+            - **attributions** (*Tensor*):
                     Element-wise product of (upsampled) GradCAM
                     and Guided Backprop attributions.
                     If a single tensor is provided as inputs, a single tensor is

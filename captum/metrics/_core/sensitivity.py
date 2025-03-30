@@ -30,8 +30,8 @@ def default_perturb_func(
 
     Args:
 
-        inputs (tensor or a tuple of tensors): The input tensors that we'd
-                like to perturb by adding a random noise sampled unifromly
+        inputs (Tensor or tuple[Tensor, ...]): The input tensors that we'd
+                like to perturb by adding a random noise sampled uniformly
                 random from an L_infinity ball with a radius `perturb_radius`.
 
         radius (float): A radius used for sampling from
@@ -39,8 +39,8 @@ def default_perturb_func(
 
     Returns:
 
-        perturbed_input (tuple(tensor)): A list of perturbed inputs that
-                are createed by adding noise sampled uniformly random
+        perturbed_input (tuple[Tensor, ...]): A list of perturbed inputs that
+                are created by adding noise sampled uniformly random
                 from L_infiniy ball with a radius `perturb_radius` to the
                 original inputs.
 
@@ -90,7 +90,7 @@ def sensitivity_max(
 
     More about the Lipschitz Continuity Metric can also be found here
     `On the Robustness of Interpretability Methods`
-    https://arxiv.org/pdf/1806.08049.pdf
+    https://arxiv.org/abs/1806.08049
     and
     `Towards Robust Interpretability with Self-Explaining Neural Networks`
     https://papers.nips.cc/paper\
@@ -99,16 +99,16 @@ def sensitivity_max(
 
     More details about sensitivity max can be found here:
     `On the (In)fidelity and Sensitivity of Explanations`
-    https://arxiv.org/pdf/1901.09392.pdf
+    https://arxiv.org/abs/1901.09392
 
     Args:
 
-        explanation_func (callable):
+        explanation_func (Callable):
                 This function can be the `attribute` method of an
                 attribution algorithm or any other explanation method
                 that returns the explanations.
 
-        inputs (tensor or tuple of tensors):  Input for which
+        inputs (Tensor or tuple[Tensor, ...]): Input for which
                 explanations are computed. If `explanation_func` takes a
                 single tensor as input, a single input tensor should
                 be provided.
@@ -119,7 +119,7 @@ def sensitivity_max(
                 multiple input tensors are provided, the examples must
                 be aligned appropriately.
 
-        perturb_func (callable):
+        perturb_func (Callable):
                 The perturbation function of model inputs. This function takes
                 model inputs and optionally `perturb_radius` if
                 the function takes more than one argument and returns
@@ -138,7 +138,7 @@ def sensitivity_max(
         perturb_radius (float, optional): The epsilon radius used for sampling.
             In the `default_perturb_func` it is used as the radius of
             the L-Infinity ball. In a general case it can serve as a radius of
-            any L_p nom.
+            any L_p norm.
             This argument is passed to `perturb_func` if it takes more than
             one argument.
 
@@ -149,10 +149,12 @@ def sensitivity_max(
                 `perturb_func` function.
 
                 Default: 10
-        norm_ord (int, float, inf, -inf, 'fro', 'nuc', optional): The type of norm
-                that is used to compute the
-                norm of the sensitivity matrix which is defined as the difference
-                between the explanation function at its input and perturbed input.
+        norm_ord (int, float, or str, optional): The type of norm that is used to
+                compute the norm of the sensitivity matrix which is defined as the
+                difference between the explanation function at its input and perturbed
+                input. Acceptable values are either a string of 'fro' or 'nuc', or a
+                number in the range of [-inf, inf] (including float("-inf") &
+                float("inf")).
 
                 Default: 'fro'
         max_examples_per_batch (int, optional): The number of maximum input
@@ -166,7 +168,7 @@ def sensitivity_max(
                 `input batch size * n_perturb_samples`.
 
                 Default: None
-         **kwargs (Any, optional): Contains a list of arguments that are passed
+        **kwargs (Any, optional): Contains a list of arguments that are passed
                 to `explanation_func` explanation function which in some cases
                 could be the `attribute` function of an attribution algorithm.
                 Any additional arguments that need be passed to the explanation
@@ -176,7 +178,7 @@ def sensitivity_max(
 
     Returns:
 
-        sensitivities (tensor): A tensor of scalar sensitivity scores per
+        sensitivities (Tensor): A tensor of scalar sensitivity scores per
                input example. The first dimension is equal to the
                number of examples in the input batch and the second
                dimension is one. Returned sensitivities are normalized by

@@ -16,7 +16,7 @@ class CustomIterableDataset(IterableDataset):
     def __init__(self, transform_filename_to_tensor: Callable, path: str) -> None:
         r"""
         Args:
-            transform_filename_to_tensor (callable): Function to read a data
+            transform_filename_to_tensor (Callable): Function to read a data
                         file from path and return a tensor from that file.
             path (str): Path to dataset files. This can be either a path to a
                         directory or a file where input examples are stored.

@@ -3,4 +3,4 @@ channels:
   - pytorch
 dependencies:
   - numpy
-  - pytorch>=1.2
+  - pytorch>=1.6

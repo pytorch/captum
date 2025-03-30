@@ -68,11 +68,11 @@ class TutorialHome extends React.Component {
                 We then interpret the output of an example with a series of overlays using Integrated Gradients and DeepLIFT.
                 Find the tutorial <a href="CIFAR_TorchVision_Interpret">here</a>.
 
-                <h4>Interpreting vision with ResNet:</h4>
+                <h4>Interpreting vision with Pretrained models:</h4>
                 Like the CIFAR based tutorial above, this tutorial demonstrates how to use Captum for interpreting vision-focused models.
-                This tutorial begins with a pretrained resnet18 model and demonstrates how to use Intergrated Gradients along with Noise Tunnel.
-                The tutorial finishes with a demonstration of how to use GradientShap.
-                Find the tutorial <a href="Resnet_TorchVision_Interpret">here</a>.
+                This tutorial begins with a pretrained resnet18 and VGG16 model and demonstrates how to use Intergrated Gradients along with Noise Tunnel,
+                GradientShap, Occlusion, and LRP.
+                Find the tutorial <a href="TorchVision_Interpret">here</a>.
 
                 <h4>Feature ablation on images:</h4>
                 This tutorial demonstrates feature ablation in Captum, applied on images as an example.
@@ -98,8 +98,8 @@ class TutorialHome extends React.Component {
                 are more meaningful compared to the vector norms.
                 Find the tutorial <a href="Bert_SQUAD_Interpret2">here</a>.
 
-                <h4>Interpreting a regression model of Boston house prices:</h4>
-                To demonstrate interpreting regression models we have chosen to look at the Boston house prices dataset.
+                <h4>Interpreting a regression model of California house prices:</h4>
+                To demonstrate interpreting regression models we have chosen to look at the California house prices dataset.
                 Using Captum and a variety of attribution methods, we evaluate feature importance as well as internal attribution to understand
                 the network function. Find the tutorial <a href="House_Prices_Regression_Interpret">here</a>.
 

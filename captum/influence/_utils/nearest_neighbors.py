@@ -34,7 +34,7 @@ class NearestNeighbors(ABC):
         so that `query` is 2D.
 
         Args:
-            query (tensor): tensor representing the batch of tensors for which k-nearest
+            query (Tensor): tensor representing the batch of tensors for which k-nearest
                     neighbors are desired. `query` is of shape (N, *), where N is the
                     size of the batch, i.e. the 0-th dimension of `query` indexes the
                     batch. * denotes an arbitrary shape, so that each tensor in the
@@ -68,7 +68,7 @@ class NearestNeighbors(ABC):
         dimension indexes the tensors in the stored tensors.
 
         Args:
-            data (tensor): A tensor of shape (N, *) representing the stored tensors.
+            data (Tensor): A tensor of shape (N, *) representing the stored tensors.
                     The 0-th dimension indexes the tensors in the stored tensors,
                     so that `data[i]` is the tensor with index `i`. The nearest
                     neighbors of a query will be referred to by their index.
@@ -92,7 +92,7 @@ class AnnoyNearestNeighbors(NearestNeighbors):
     but arbitrary shape *, and flatten them before storing in the Annoy data structure.
     """
 
-    def __init__(self, num_trees: int = 10):
+    def __init__(self, num_trees: int = 10) -> None:
         """
         Args:
             num_trees (int): The number of trees to use. Increasing this number gives
@@ -129,7 +129,7 @@ class AnnoyNearestNeighbors(NearestNeighbors):
         tensors.
 
         Args:
-            data (tensor): A tensor of shape (N, *) representing the stored tensors.
+            data (Tensor): A tensor of shape (N, *) representing the stored tensors.
                     The 0-th dimension indexes the tensors in the stored tensors,
                     so that `data[i]` is the tensor with index `i`. The nearest
                     neighbors of a query will be referred to by their index.
@@ -160,7 +160,7 @@ class AnnoyNearestNeighbors(NearestNeighbors):
         dot-product of the flattened version of tensors.
 
         Args:
-            query (tensor): tensor representing the batch of tensors for which k-nearest
+            query (Tensor): tensor representing the batch of tensors for which k-nearest
                     neighbors are desired. `query` is of shape (N, *), where N is the
                     size of the batch, i.e. the 0-th dimension of `query` indexes the
                     batch. * denotes an arbitrary shape, so that each tensor in the

@@ -12,13 +12,11 @@ class DataInfluence(ABC):
     An abstract class to define model data influence skeleton.
     """
 
-    def __init_(
-        self, model: Module, influence_src_dataset: Dataset, **kwargs: Any
-    ) -> None:
+    def __init_(self, model: Module, train_dataset: Dataset, **kwargs: Any) -> None:
         r"""
         Args:
             model (torch.nn.Module): An instance of pytorch model.
-            influence_src_dataset (torch.utils.data.Dataset): PyTorch Dataset that is
+            train_dataset (torch.utils.data.Dataset): PyTorch Dataset that is
                     used to create a PyTorch Dataloader to iterate over the dataset and
                     its labels. This is the dataset for which we will be seeking for
                     influential instances. In most cases this is the training dataset.
@@ -26,7 +24,7 @@ class DataInfluence(ABC):
                     implementation of `DataInfluence` abstract class.
         """
         self.model = model
-        self.influence_src_dataset = influence_src_dataset
+        self.train_dataset = train_dataset
 
     @abstractmethod
     def influence(self, inputs: Any = None, **kwargs: Any) -> Any:

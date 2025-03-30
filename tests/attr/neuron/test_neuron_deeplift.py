@@ -2,7 +2,6 @@
 
 from __future__ import print_function
 
-import copy
 from typing import Tuple, Union
 
 import torch
@@ -181,11 +180,10 @@ class Test(BaseTest):
         baselines = torch.tensor([[1, 2, 3, 9], [4, 8, 6, 7]]).float()
 
         model = LinearMaxPoolLinearModel()
-        model_copy = copy.deepcopy(model)
         ndl = NeuronDeepLift(model, model.pool1)
         attr = ndl.attribute(inputs, neuron_selector=(0), baselines=baselines)
 
-        ndl2 = NeuronDeepLift(model_copy, model_copy.lin2)
+        ndl2 = NeuronDeepLift(model, model.lin2)
         attr2 = ndl2.attribute(
             inputs,
             neuron_selector=(0),
@@ -197,12 +195,11 @@ class Test(BaseTest):
     def test_convnet_maxpool2d_classification(self) -> None:
         inputs = 100 * torch.randn(2, 1, 10, 10)
         model = BasicModel_ConvNet()
-        model_copy = copy.deepcopy(model)
 
         ndl = NeuronDeepLift(model, model.pool1)
         attr = ndl.attribute(inputs, neuron_selector=(0, 0, 0))
 
-        ndl2 = NeuronDeepLift(model_copy, model_copy.conv2)
+        ndl2 = NeuronDeepLift(model, model.conv2)
         attr2 = ndl2.attribute(
             inputs, neuron_selector=(0, 0, 0), attribute_to_neuron_input=True
         )
@@ -212,12 +209,11 @@ class Test(BaseTest):
     def test_convnet_maxpool3d_classification(self) -> None:
         inputs = 100 * torch.randn(2, 1, 10, 10, 10)
         model = BasicModel_ConvNet_MaxPool3d()
-        model_copy = copy.deepcopy(model)
 
         ndl = NeuronDeepLift(model, model.pool1)
         attr = ndl.attribute(inputs, neuron_selector=(0, 0, 0, 0))
 
-        ndl2 = NeuronDeepLift(model_copy, model_copy.conv2)
+        ndl2 = NeuronDeepLift(model, model.conv2)
         attr2 = ndl2.attribute(
             inputs, neuron_selector=(0, 0, 0, 0), attribute_to_neuron_input=True
         )

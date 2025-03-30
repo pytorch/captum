@@ -7,7 +7,7 @@
 #   BUILD_INSIGHTS
 #     enables Captum Insights build via yarn
 #
-
+b
 import os
 import re
 import subprocess
@@ -73,7 +73,7 @@ DEV_REQUIRES = (
         "sphinx-autodoc-typehints",
         "sphinxcontrib-katex",
         "mypy>=0.760",
-        "usort==0.6.4",
+        "usort==1.0.2",
         "ufmt",
         "scikit-learn",
         "annoy",
@@ -133,6 +133,7 @@ if __name__ == "__main__":
             "Model Understanding",
             "Feature Importance",
             "Neuron Importance",
+            "Feature Visualization",
             "PyTorch",
         ],
         classifiers=[
@@ -147,7 +148,7 @@ if __name__ == "__main__":
         long_description=long_description,
         long_description_content_type="text/markdown",
         python_requires=">=3.6",
-        install_requires=["matplotlib", "numpy", "torch>=1.6"],
+        install_requires=["matplotlib", "numpy", "packaging", "torch>=1.6"],
         packages=find_packages(exclude=("tests", "tests.*")),
         extras_require={
             "dev": DEV_REQUIRES,
@@ -160,8 +161,8 @@ if __name__ == "__main__":
             (
                 "share/jupyter/nbextensions/jupyter-captum-insights",
                 [
-                    "captum/insights/attr_vis/widget/static/extension.js",
-                    "captum/insights/attr_vis/widget/static/index.js",
+                    "captum/insights/attr_vis/frontend/widget/src/extension.js",
+                    "captum/insights/attr_vis/frontend/widget/src/index.js",
                 ],
             ),
             (

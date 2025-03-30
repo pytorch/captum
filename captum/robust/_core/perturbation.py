@@ -18,15 +18,15 @@ class Perturbation:
 
     Args:
 
-        inputs (tensor or tuple of tensors): Input for which adversarial attack
+        inputs (Tensor or tuple[Tensor, ...]): Input for which adversarial attack
                     is computed. It can be provided as a single tensor or
                     a tuple of multiple tensors. If multiple input tensors
-                    are provided, the batch sizes must be aligned accross all
+                    are provided, the batch sizes must be aligned across all
                     tensors.
 
     Returns:
 
-        - **perturbed inputs** (*tensor* or tuple of *tensors*):
+        - **perturbed inputs** (*Tensor* or *tuple[Tensor, ...]*):
                     Perturbed input for each
                     input tensor. The perturbed inputs have the same shape and
                     dimensionality as the inputs.

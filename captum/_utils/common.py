@@ -18,6 +18,27 @@ from torch import device, Tensor
 from torch.nn import Module
 
 
+def _parse_version(v: str) -> Tuple[int, ...]:
+    """
+    Parse version strings into tuples for comparison.
+
+    Versions should be in the form of "<major>.<minor>.<patch>", "<major>.<minor>",
+    or "<major>". The "dev", "post" and other letter portions of the given version will
+    be ignored.
+
+    Args:
+
+        v (str): A version string.
+
+    Returns:
+        version_tuple (tuple[int]): A tuple of integer values to use for version
+            comparison.
+    """
+    v = [n for n in v.split(".") if n.isdigit()]
+    assert v != []
+    return tuple(map(int, v))
+
+
 class ExpansionTypes(Enum):
     repeat = 1
     repeat_interleave = 2
@@ -154,9 +175,10 @@ def _format_tensor_into_tuples(
     if inputs is None:
         return None
     if not isinstance(inputs, tuple):
-        assert isinstance(
-            inputs, torch.Tensor
-        ), "`inputs` must have type " "torch.Tensor but {} found: ".format(type(inputs))
+        assert isinstance(inputs, torch.Tensor), (
+            "`inputs` must be a torch.Tensor or a tuple[torch.Tensor] "
+            f"but found: {type(inputs)}"
+        )
         inputs = (inputs,)
     return inputs
 
@@ -500,9 +522,11 @@ def _select_targets(output: Tensor, target: TargetType) -> Tensor:
                 ]
             )
         else:
-            raise AssertionError("Target element type in list is not valid.")
+            raise AssertionError(
+                f"Target element type {type(target[0])} in list is not valid."
+            )
     else:
-        raise AssertionError("Target type %r is not valid." % target)
+        raise AssertionError(f"Target type {type(target)} is not valid.")
 
 
 def _contains_slice(target: Union[int, Tuple[Union[int, slice], ...]]) -> bool:
@@ -660,20 +684,48 @@ def _get_module_from_name(model: Module, layer_name: str) -> Any:
 
 def _register_backward_hook(
     module: Module, hook: Callable, attr_obj: Any
-) -> torch.utils.hooks.RemovableHandle:
-    # Special case for supporting output attributions for neuron methods
-    # This can be removed after deprecation of neuron output attributions
-    # for NeuronDeepLift, NeuronDeconvolution, and NeuronGuidedBackprop
-    # in v0.6.0
-    if (
-        hasattr(attr_obj, "skip_new_hook_layer")
-        and attr_obj.skip_new_hook_layer == module
-    ):
-        return module.register_backward_hook(hook)
+) -> List[torch.utils.hooks.RemovableHandle]:
+    grad_out: Dict[device, Tensor] = {}
 
-    if torch.__version__ >= "1.9":
-        # Only supported for torch >= 1.9
-        return module.register_full_backward_hook(hook)
-    else:
-        # Fallback for previous versions of PyTorch
-        return module.register_backward_hook(hook)
+    def forward_hook(
+        module: Module,
+        inp: Union[Tensor, Tuple[Tensor, ...]],
+        out: Union[Tensor, Tuple[Tensor, ...]],
+    ) -> None:
+        nonlocal grad_out
+        grad_out = {}
+
+        def output_tensor_hook(output_grad: Tensor) -> None:
+            grad_out[output_grad.device] = output_grad
+
+        if isinstance(out, tuple):
+            assert (
+                len(out) == 1
+            ), "Backward hooks not supported for module with >1 output"
+            out[0].register_hook(output_tensor_hook)
+        else:
+            out.register_hook(output_tensor_hook)
+
+    def pre_hook(module, inp):
+        def input_tensor_hook(input_grad: Tensor):
+            if len(grad_out) == 0:
+                return
+            hook_out = hook(module, input_grad, grad_out[input_grad.device])
+
+            if hook_out is not None:
+                return hook_out[0] if isinstance(hook_out, tuple) else hook_out
+
+        if isinstance(inp, tuple):
+            assert (
+                len(inp) == 1
+            ), "Backward hooks not supported for module with >1 input"
+            inp[0].register_hook(input_tensor_hook)
+            return inp[0].clone()
+        else:
+            inp.register_hook(input_tensor_hook)
+            return inp.clone()
+
+    return [
+        module.register_forward_pre_hook(pre_hook),
+        module.register_forward_hook(forward_hook),
+    ]
