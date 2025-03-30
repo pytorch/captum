@@ -62,40 +62,10 @@ class Loss(ABC):
         return self.__mul__(other)
 
     def __rtruediv__(self, other: Union[int, float, "Loss"]) -> "CompositeLoss":
-        if isinstance(other, (int, float)):
-
-            def loss_fn(module: ModuleOutputMapping) -> torch.Tensor:
-                return operator.truediv(other, torch.mean(self(module)))
-
-            name = self.__name__
-            target = self.target
-        elif isinstance(other, Loss):
-            # This should never get called because __div__ will be called instead
-            pass
-        else:
-            raise TypeError(
-                "Can only apply math operations with int, float or Loss. Received type "
-                + str(type(other))
-            )
-        return CompositeLoss(loss_fn, name=name, target=target)
+        return rmodule_op(self, other, operator.truediv)
 
     def __rpow__(self, other: Union[int, float, "Loss"]) -> "CompositeLoss":
-        if isinstance(other, (int, float)):
-
-            def loss_fn(module: ModuleOutputMapping) -> torch.Tensor:
-                return operator.pow(other, torch.mean(self(module)))
-
-            name = self.__name__
-            target = self.target
-        elif isinstance(other, Loss):
-            # This should never get called because __pow__ will be called instead
-            pass
-        else:
-            raise TypeError(
-                "Can only apply math operations with int, float or Loss. Received type "
-                + str(type(other))
-            )
-        return CompositeLoss(loss_fn, name=name, target=target)
+        return rmodule_op(self, other, operator.pow)
 
 
 def module_op(
@@ -183,6 +153,31 @@ def module_op(
 
         # Filter out duplicate targets
         target = list(dict.fromkeys(target))
+    else:
+        raise TypeError(
+            "Can only apply math operations with int, float or Loss. Received type "
+            + str(type(other))
+        )
+    return CompositeLoss(loss_fn, name=name, target=target)
+
+
+def rmodule_op(
+    self: Loss, other: Union[int, float, Loss], math_op: Callable
+) -> "CompositeLoss":
+    """
+    This is a general function for applying the "r" versions of math operations to
+    Losses.
+    """
+    if isinstance(other, (int, float)):
+
+        def loss_fn(module: ModuleOutputMapping) -> torch.Tensor:
+            return math_op(other, self(module))
+
+        name = self.__name__
+        target = self.target
+    elif isinstance(other, Loss):
+        # This should never get called because __math_op__ will be called instead
+        pass
     else:
         raise TypeError(
             "Can only apply math operations with int, float or Loss. Received type "
