@@ -27,13 +27,13 @@ def make_grid_image(
 
         tiles (torch.Tensor or list of torch.Tensor): A stack of NCHW image tensors or
             a list of NCHW image tensors to create a grid from.
-        nrow (int, optional): The number of rows to use for the grid image.
-            Default: 4
+        images_per_row (int, optional): The number of rows to use for the grid image.
+            Default: ``4``
         padding (int, optional): The amount of padding between images in the grid
             images.
-            padding: 2
+            padding: ``2``
         pad_value (float, optional): The value to use for the padding.
-            Default: 0.0
+            Default: ``0.0``
 
     Returns:
         grid_img (torch.Tensor): The full NCHW grid image.
@@ -79,22 +79,27 @@ def show(
     """
     Show CHW & NCHW tensors as an image.
 
+    Alias: ``captum.optim.images.show``
+
     Args:
 
         x (torch.Tensor): The tensor you want to display as an image.
-        figsize (Tuple[int, int], optional): height & width to use
-            for displaying the image figure.
-        scale (float): Value to multiply the input tensor by so that
+        figsize (tuple of int, optional): The height & width to use for displaying the
+            ``ImageTensor`` figure, in the format of: (height, width).
+            Default: ``None``
+        scale (float, optional): Value to multiply the input tensor by so that
             it's value range is [0-255] for display.
+            Default: ``255.0``
         images_per_row (int, optional): The number of images per row to use for the
-            grid image. Default is set to None for no grid image creation.
-            Default: None
+            grid image. Default is set to ``None`` for no grid image creation.
+            Default: ``None``
         padding (int, optional): The amount of padding between images in the grid
-            images. This parameter only has an effect if `images_per_row` is not None.
-            Default: 2
+            images. This parameter only has an effect if ``images_per_row`` is not
+            ``None``.
+            Default: ``2``
         pad_value (float, optional): The value to use for the padding. This parameter
-            only has an effect if `images_per_row` is not None.
-            Default: 0.0
+            only has an effect if ``images_per_row`` is not ``None``.
+            Default: ``0.0``
     """
 
     if x.dim() not in [3, 4]:
@@ -127,24 +132,28 @@ def save_tensor_as_image(
     """
     Save RGB & RGBA image tensors with a shape of CHW or NCHW as images.
 
+    Alias: ``captum.optim.images.save_tensor_as_image``
+
     Args:
 
         x (torch.Tensor): The tensor you want to save as an image.
         filename (str): The filename to use when saving the image.
         scale (float, optional): Value to multiply the input tensor by so that
             it's value range is [0-255] for saving.
+            Default: ``255.0``
         mode (str, optional): A PIL / Pillow supported colorspace. Default is
             set to None for automatic RGB / RGBA detection and usage.
-            Default: None
+            Default: ``None``
         images_per_row (int, optional): The number of images per row to use for the
             grid image. Default is set to None for no grid image creation.
-            Default: None
+            Default: ``None``
         padding (int, optional): The amount of padding between images in the grid
-            images. This parameter only has an effect if `images_per_row` is not None.
-            Default: 2
+            images. This parameter only has an effect if ``images_per_row`` is not
+            ``None``.
+            Default: ``2``
         pad_value (float, optional): The value to use for the padding. This parameter
-            only has an effect if `images_per_row` is not None.
-            Default: 0.0
+            only has an effect if ``images_per_row`` is not ``None``.
+            Default: ``0.0``
     """
 
     if x.dim() not in [3, 4]:
@@ -170,14 +179,14 @@ def get_neuron_pos(
     """
     Args:
 
-        H (int) The height
-        W (int) The width
+        H (int): The h position to use.
+        W (int): The w position to use.
         x (int, optional): Optionally specify and exact x location of the neuron. If
-            set to None, then the center x location will be used.
-            Default: None
+            set to ``None``, then the center x location will be used.
+            Default: ``None``
         y (int, optional): Optionally specify and exact y location of the neuron. If
-            set to None, then the center y location will be used.
-            Default: None
+            set to ``None``, then the center y location will be used.
+            Default: ``None``
 
     Return:
         Tuple[_x, _y] (Tuple[int, int]): The x and y dimensions of the neuron.
@@ -214,13 +223,16 @@ def _dot_cossim(
         y (torch.Tensor): The tensor that you wish to compute the cosine similarity
             for in relation to tensor x.
         cossim_pow (float, optional): The desired cosine similarity power to use.
+            Default: ``0.0``
         dim (int, optional): The target dimension for computing cosine similarity.
+            Default: ``1``
         eps (float, optional): If cossim_pow is greater than zero, the desired
             epsilon value to use for cosine similarity calculations.
+            Default: ``1e-8``
 
     Returns:
         tensor (torch.Tensor): Dot cosine similarity between x and y, along the
-        specified dim.
+            specified dim.
     """
 
     dot = torch.sum(x * y, dim)
@@ -249,9 +261,9 @@ def hue_to_rgb(
         angle (float): The hue angle to create an RGB color for.
         device (torch.device, optional): The device to create the angle color tensor
             on.
-            Default: torch.device("cpu")
+            Default: ``torch.device("cpu")``
         warp (bool, optional): Whether or not to make colors more distinguishable.
-            Default: True
+            Default: ``True``
 
     Returns:
         color_vec (torch.Tensor): A color vector.
@@ -293,11 +305,11 @@ def nchannels_to_rgb(
 
     Args:
 
-        x (torch.Tensor):  NCHW image tensor to transform into RGB image.
-        warp (bool, optional):  Whether or not to make colors more distinguishable.
-            Default: True
+        x (torch.Tensor): NCHW image tensor to transform into RGB image.
+        warp (bool, optional): Whether or not to make colors more distinguishable.
+            Default: ``True``
         eps (float, optional): An optional epsilon value.
-            Default: 1e-4
+            Default: ``1e-4``
 
     Returns:
         tensor (torch.Tensor): An NCHW RGB image tensor.
@@ -333,13 +345,14 @@ def weights_to_heatmap_2d(
 
     Args:
 
-        weight (torch.Tensor):  A 2d tensor to create the heatmap from.
-        colors (list of str):  A list of 5 strings containing hex triplet
+        weight (torch.Tensor): A 2d tensor to create the heatmap from.
+        colors (list of str, optional): A list of 5 strings containing hex triplet
             (six digit), three-byte hexadecimal color values to use for coloring
             the heatmap.
+            Default: ``["0571b0", "92c5de", "f7f7f7", "f4a582", "ca0020"]``
 
     Returns:
-        color_tensor (torch.Tensor):  A weight heatmap.
+        color_tensor (torch.Tensor): A weight heatmap.
     """
 
     assert weight.dim() == 2

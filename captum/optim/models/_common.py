@@ -318,10 +318,9 @@ class SkipLayer(torch.nn.Module):
         """
         Args:
 
-            x (torch.Tensor): The input tensor.
-            args (Any, optional): Any argument. Arguments will be safely ignored.
-            kwargs (Any, optional) Any keyword argument. Arguments will be safely
-                ignored.
+            x (torch.Tensor or tuple of torch.Tensor): The input tensor or tensors.
+            args (Any): Any argument. Arguments will be safely ignored.
+            kwargs (Any) Any keyword argument. Arguments will be safely ignored.
 
         Returns:
             x (torch.Tensor): The unmodified input tensor.
@@ -333,9 +332,11 @@ def skip_layers(
     model: nn.Module, layers: Union[List[Type[nn.Module]], Type[nn.Module]]
 ) -> None:
     """
-    This function is a wrapper function for :func:`.replace_layers` and replaces the
-    target layer with layers that do nothing. This is useful for removing the nonlinear
-    ReLU layers when creating expanded weights.
+    This function is a wrapper function for
+    replace_layers and replaces the target layer
+    with layers that do nothing.
+    This is useful for removing the nonlinear ReLU
+    layers when creating expanded weights.
 
     Args:
 

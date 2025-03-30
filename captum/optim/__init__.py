@@ -1,6 +1,6 @@
 """optim submodule."""
 
-from captum.optim import models
+from captum.optim import models  # noqa: F401
 from captum.optim._core import loss, optimization  # noqa: F401
 from captum.optim._core.optimization import InputOptimization  # noqa: F401
 from captum.optim._param.image import images, transforms  # noqa: F401
