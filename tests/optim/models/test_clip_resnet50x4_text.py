@@ -3,8 +3,8 @@ import unittest
 
 import torch
 from captum.optim.models import clip_resnet50x4_text
+from captum.testing.helpers.basic import assertTensorAlmostEqual, BaseTest
 from packaging import version
-from captum.testing.helpers.basic import BaseTest, assertTensorAlmostEqual
 
 
 class TestCLIPResNet50x4Text(BaseTest):

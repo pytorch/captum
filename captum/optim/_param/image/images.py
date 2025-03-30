@@ -220,6 +220,7 @@ class InputParameterization(torch.nn.Module):
 
 class ImageParameterization(InputParameterization):
     r"""The base class for all Image Parameterizations"""
+
     pass
 
 

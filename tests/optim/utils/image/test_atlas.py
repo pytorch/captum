@@ -3,8 +3,8 @@ import unittest
 
 import captum.optim._utils.image.atlas as atlas
 import torch
+from captum.testing.helpers.basic import assertTensorAlmostEqual, BaseTest
 from packaging import version
-from captum.testing.helpers.basic import BaseTest, assertTensorAlmostEqual
 
 
 class TestNormalizeGrid(BaseTest):

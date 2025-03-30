@@ -1,5 +1,5 @@
 import math
-from typing import List, Optional, Tuple, Union, cast, no_type_check
+from typing import cast, List, no_type_check, Optional, Tuple, Union
 
 import numpy as np
 from captum.optim._utils.typing import IntSeqOrIntType

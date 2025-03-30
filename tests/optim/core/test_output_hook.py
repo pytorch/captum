@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 from collections import OrderedDict
-from typing import List, Optional, cast
+from typing import cast, List, Optional
 
 import captum.optim._core.output_hook as output_hook
 import torch
 from captum.optim.models import googlenet
-from captum.testing.helpers.basic import BaseTest, assertTensorAlmostEqual
+from captum.testing.helpers.basic import assertTensorAlmostEqual, BaseTest
 
 
 def _count_forward_hooks(

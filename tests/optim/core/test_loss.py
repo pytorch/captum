@@ -6,9 +6,9 @@ from typing import Any, List, Type, Union
 import captum.optim._core.loss as opt_loss
 import torch
 from captum.optim.models import collect_activations
-from packaging import version
-from captum.testing.helpers.basic import BaseTest, assertTensorAlmostEqual
+from captum.testing.helpers.basic import assertTensorAlmostEqual, BaseTest
 from captum.testing.helpers.basic_models import BasicModel_ConvNet_Optim
+from packaging import version
 
 CHANNEL_ACTIVATION_0_LOSS = 1.3
 CHANNEL_ACTIVATION_1_LOSS = 1.3

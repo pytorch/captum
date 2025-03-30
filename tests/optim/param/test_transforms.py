@@ -6,8 +6,8 @@ import captum.optim._param.image.transforms as transforms
 import numpy as np
 import torch
 import torch.nn.functional as F
+from captum.testing.helpers.basic import assertTensorAlmostEqual, BaseTest
 from packaging import version
-from captum.testing.helpers.basic import BaseTest, assertTensorAlmostEqual
 from tests.optim.helpers import numpy_transforms
 
 

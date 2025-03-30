@@ -1,4 +1,4 @@
-from typing import List, Optional, Type, Union, cast
+from typing import cast, List, Optional, Type, Union
 from warnings import warn
 
 import torch
@@ -22,7 +22,7 @@ def vgg16(
     pretrained: bool = False,
     progress: bool = True,
     model_path: Optional[str] = None,
-    **kwargs
+    **kwargs,
 ) -> "VGG":
     r"""
     The VGG-16 model Caffe that the Oxford Visual Geometry Group trained for the

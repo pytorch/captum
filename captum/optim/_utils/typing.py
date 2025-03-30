@@ -1,8 +1,7 @@
 import sys
 from typing import Callable, Dict, Iterable, List, Optional, Sequence, Tuple, Union
 
-from torch import Tensor
-from torch import distributions
+from torch import distributions, Tensor
 from torch.nn import Module
 from torch.optim import Optimizer
 
@@ -16,8 +15,7 @@ ParametersForOptimizers = Iterable[Union[Tensor, Dict[str, Tensor]]]
 
 
 class HasLoss(Protocol):
-    def loss(self) -> Tensor:
-        ...
+    def loss(self) -> Tensor: ...
 
 
 class Parameterized(Protocol):
