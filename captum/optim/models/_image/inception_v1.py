@@ -5,10 +5,7 @@ import torch
 import torch.nn as nn
 from captum.optim.models._common import Conv2dSame, RedirectedReluLayer, SkipLayer
 
-GS_SAVED_WEIGHTS_URL = (
-    "https://github.com/pytorch/captum/raw/"
-    + "optim-wip/captum/optim/models/_image/inception5h.pth"
-)
+GS_SAVED_WEIGHTS_URL = "https://pytorch.s3.amazonaws.com/models/captum/inception5h.pth"
 
 
 def googlenet(
