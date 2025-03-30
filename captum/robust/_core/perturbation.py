@@ -1,13 +1,18 @@
 #!/usr/bin/env python3
+
+# pyre-strict
 from typing import Callable
 
 
+# pyre-fixme[13]: Attribute `perturb` is never initialized.
 class Perturbation:
     r"""
     All perturbation and attack algorithms extend this class. It enforces
     its child classes to extend and override core `perturb` method.
     """
 
+    # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
+    # pyre-fixme[13]: Attribute `perturb` is never initialized.
     perturb: Callable
     r"""
     This method computes and returns the perturbed input for each input tensor.
@@ -18,15 +23,15 @@ class Perturbation:
 
     Args:
 
-        inputs (tensor or tuple of tensors): Input for which adversarial attack
+        inputs (Tensor or tuple[Tensor, ...]): Input for which adversarial attack
                     is computed. It can be provided as a single tensor or
                     a tuple of multiple tensors. If multiple input tensors
-                    are provided, the batch sizes must be aligned accross all
+                    are provided, the batch sizes must be aligned across all
                     tensors.
 
     Returns:
 
-        - **perturbed inputs** (*tensor* or tuple of *tensors*):
+        - **perturbed inputs** (*Tensor* or *tuple[Tensor, ...]*):
                     Perturbed input for each
                     input tensor. The perturbed inputs have the same shape and
                     dimensionality as the inputs.
@@ -35,5 +40,7 @@ class Perturbation:
                     corresponding sized tensors is returned.
     """
 
+    # pyre-fixme[3]: Return type must be annotated.
+    # pyre-fixme[2]: Parameter must be annotated.
     def __call__(self, *args, **kwargs):
         return self.perturb(*args, **kwargs)

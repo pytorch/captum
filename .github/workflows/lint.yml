@@ -1,0 +1,23 @@
+name: Captum Lint
+
+on:
+  pull_request:
+  push:
+    branches:
+      - master
+
+  workflow_dispatch:
+
+jobs:
+  tests:
+    uses: pytorch/test-infra/.github/workflows/linux_job.yml@main
+    with:
+      runner: linux.12xlarge
+      docker-image: cimg/python:3.11
+      repository: pytorch/captum
+      script: |
+        sudo chmod -R 777 .
+        ./scripts/install_via_pip.sh
+        ufmt check .
+        flake8
+        sphinx-build -WT --keep-going sphinx/source sphinx/build

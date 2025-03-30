@@ -1,12 +1,16 @@
 #!/usr/bin/env python3
 
+# pyre-strict
+
 import io
 import unittest
 import unittest.mock
-from typing import Any, Callable, Generator, List, Tuple, Union
+from functools import partial
+from typing import Any, Callable, Generator, List, Optional, Tuple, Union
 
 import torch
-from captum._utils.models.linear_model import SkLearnLasso
+from captum._utils.models.linear_model import SGDLasso, SkLearnLasso
+from captum._utils.models.model import Model
 from captum._utils.typing import BaselineType, TensorOrTupleOfTensorsGeneric
 from captum.attr._core.lime import get_exp_kernel_similarity_function, Lime, LimeBase
 from captum.attr._utils.batching import _batch_example_iterator
@@ -15,12 +19,12 @@ from captum.attr._utils.common import (
     _format_input_baseline,
     _format_tensor_into_tuples,
 )
-from tests.helpers.basic import (
+from captum.testing.helpers.basic import (
     assertTensorAlmostEqual,
     assertTensorTuplesAlmostEqual,
     BaseTest,
 )
-from tests.helpers.basic_models import (
+from captum.testing.helpers.basic_models import (
     BasicLinearModel,
     BasicModel_MultiLayer,
     BasicModel_MultiLayer_MultiInput,
@@ -30,7 +34,7 @@ from torch import Tensor
 
 
 def alt_perturb_func(
-    original_inp: TensorOrTupleOfTensorsGeneric, **kwargs
+    original_inp: TensorOrTupleOfTensorsGeneric, **kwargs: Any
 ) -> TensorOrTupleOfTensorsGeneric:
     if isinstance(original_inp, Tensor):
         device = original_inp.device
@@ -47,9 +51,13 @@ def alt_perturb_func(
         binary_mask = curr_sample[0][feature_mask]
         return binary_mask * original_inp + (1 - binary_mask) * kwargs["baselines"]
     else:
+        # pyre-fixme[9]: binary_mask has type `TensorOrTupleOfTensorsGeneric`; used
+        #  as `Tuple[Tensor, ...]`.
         binary_mask = tuple(
             curr_sample[0][feature_mask[j]] for j in range(len(feature_mask))
         )
+
+        # pyre-fixme[7]: incompatible return type
         return tuple(
             binary_mask[j] * original_inp[j]
             + (1 - binary_mask[j]) * kwargs["baselines"][j]
@@ -58,7 +66,7 @@ def alt_perturb_func(
 
 
 def alt_perturb_generator(
-    original_inp: TensorOrTupleOfTensorsGeneric, **kwargs
+    original_inp: TensorOrTupleOfTensorsGeneric, **kwargs: Any
 ) -> Generator[TensorOrTupleOfTensorsGeneric, None, None]:
     while True:
         yield alt_perturb_func(original_inp, **kwargs)
@@ -88,6 +96,8 @@ def alt_to_interp_rep(
                 torch.sum(torch.abs((mask == i).float() * (sample - inp)))
                 for inp, sample, mask in zip(original_input, curr_sample, feature_mask)
             )
+            # pyre-fixme[58]: `>` is not supported for operand types `Union[int,
+            #  torch._tensor.Tensor]` and `float`.
             if sum_diff > 0.001:
                 curr_total = 0
         binary_vector[0][i] = curr_total
@@ -118,6 +128,22 @@ class Test(BaseTest):
             n_samples=500,
             expected_coefs_only=[[73.3716, 193.3349, 113.3349]],
             test_generator=True,
+        )
+
+    def test_simple_lime_sgd_model(self) -> None:
+        net = BasicModel_MultiLayer()
+        inp = torch.tensor([[20.0, 50.0, 30.0]], requires_grad=True)
+        interpretable_model = SGDLasso()
+        interpretable_model.fit = partial(  # type: ignore
+            interpretable_model.fit, initial_lr=0.1, max_epoch=500
+        )
+        self._lime_test_assert(
+            net,
+            inp,
+            [[73.3716, 193.3349, 113.3349]],
+            n_samples=1000,
+            expected_coefs_only=[[73.3716, 193.3349, 113.3349]],
+            interpretable_model=interpretable_model,
         )
 
     def test_simple_lime_with_mask(self) -> None:
@@ -173,7 +199,9 @@ class Test(BaseTest):
         )
 
     @unittest.mock.patch("sys.stderr", new_callable=io.StringIO)
-    def test_simple_lime_with_show_progress(self, mock_stderr) -> None:
+    def test_simple_lime_with_show_progress(
+        self, mock_stderr: unittest.mock.Mock
+    ) -> None:
         net = BasicModel_MultiLayer()
         inp = torch.tensor([[20.0, 50.0, 30.0]], requires_grad=True)
 
@@ -408,6 +436,7 @@ class Test(BaseTest):
             lambda inp: int(torch.sum(net(inp)).item())
         )
 
+    # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
     def _single_input_scalar_lime_assert(self, func: Callable) -> None:
         inp = torch.tensor([[2.0, 10.0, 3.0]], requires_grad=True)
         mask = torch.tensor([[0, 0, 1]])
@@ -443,6 +472,20 @@ class Test(BaseTest):
         net = BasicModel_MultiLayer_MultiInput()
         self._multi_input_scalar_lime_assert(lambda *inp: torch.sum(net(*inp)).item())
 
+    def test_futures_not_implemented(self) -> None:
+        net = BasicLinearModel()
+        # no mask
+        lime = Lime(
+            net,
+            similarity_func=get_exp_kernel_similarity_function("cosine", 10.0),
+            interpretable_model=(SkLearnLasso(alpha=1.0)),
+        )
+        attributions = None
+        with self.assertRaises(NotImplementedError):
+            attributions = lime.attribute_future()
+        self.assertEqual(attributions, None)
+
+    # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
     def _multi_input_scalar_lime_assert(self, func: Callable) -> None:
         inp1 = torch.tensor([[23.0, 100.0, 0.0], [20.0, 50.0, 30.0]])
         inp2 = torch.tensor([[20.0, 50.0, 30.0], [0.0, 100.0, 0.0]])
@@ -451,9 +494,9 @@ class Test(BaseTest):
         mask2 = torch.tensor([[0, 1, 2]])
         mask3 = torch.tensor([[0, 1, 2]])
         expected = (
-            [[3850.6666, 3850.6666, 3850.6666]] * 2,
-            [[305.5, 3850.6666, 410.1]] * 2,
-            [[305.5, 3850.6666, 410.1]] * 2,
+            [[3850.6666, 3850.6666, 3850.6666]],
+            [[305.5, 3850.6666, 410.1]],
+            [[305.5, 3850.6666, 410.1]],
         )
 
         self._lime_test_assert(
@@ -473,11 +516,15 @@ class Test(BaseTest):
 
     def _lime_test_assert(
         self,
+        # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
         model: Callable,
         test_input: TensorOrTupleOfTensorsGeneric,
-        expected_attr,
-        expected_coefs_only=None,
+        # pyre-fixme[2]: Parameter `expected_attr` must have a type other than `Any`.
+        expected_attr: Any,
+        expected_coefs_only: Union[None, List[List[Union[int, float]]], Tensor] = None,
         feature_mask: Union[None, TensorOrTupleOfTensorsGeneric] = None,
+        # pyre-fixme[2]: Parameter `additional_input` has type `None`
+        # but type `Any` is specified.
         additional_input: Any = None,
         perturbations_per_eval: Tuple[int, ...] = (1,),
         baselines: BaselineType = None,
@@ -487,12 +534,17 @@ class Test(BaseTest):
         batch_attr: bool = False,
         test_generator: bool = False,
         show_progress: bool = False,
+        interpretable_model: Optional[Model] = None,
     ) -> None:
         for batch_size in perturbations_per_eval:
             lime = Lime(
                 model,
                 similarity_func=get_exp_kernel_similarity_function("cosine", 10.0),
-                interpretable_model=SkLearnLasso(alpha=1.0),
+                interpretable_model=(
+                    interpretable_model
+                    if interpretable_model
+                    else SkLearnLasso(alpha=1.0)
+                ),
             )
             attributions = lime.attribute(
                 test_input,
@@ -526,7 +578,11 @@ class Test(BaseTest):
 
                 lime_alt = LimeBase(
                     model,
-                    SkLearnLasso(alpha=1.0),
+                    (
+                        interpretable_model
+                        if interpretable_model
+                        else SkLearnLasso(alpha=1.0)
+                    ),
                     get_exp_kernel_similarity_function("euclidean", 1000.0),
                     alt_perturb_generator if test_generator else alt_perturb_func,
                     False,
@@ -557,9 +613,11 @@ class Test(BaseTest):
                     attributions = lime_alt.attribute(
                         test_input,
                         target=target,
-                        feature_mask=formatted_feature_mask
-                        if isinstance(test_input, tuple)
-                        else formatted_feature_mask[0],
+                        feature_mask=(
+                            formatted_feature_mask
+                            if isinstance(test_input, tuple)
+                            else formatted_feature_mask[0]
+                        ),
                         additional_forward_args=additional_input,
                         baselines=baselines,
                         perturbations_per_eval=batch_size,
@@ -586,9 +644,11 @@ class Test(BaseTest):
                     target,
                     additional_input,
                     baselines if isinstance(test_input, tuple) else baselines[0],
-                    formatted_feature_mask
-                    if isinstance(test_input, tuple)
-                    else formatted_feature_mask[0],
+                    (
+                        formatted_feature_mask
+                        if isinstance(test_input, tuple)
+                        else formatted_feature_mask[0]
+                    ),
                     expected_coefs_only,
                 ):
                     attributions = lime_alt.attribute(

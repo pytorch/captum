@@ -1,13 +1,20 @@
 #!/usr/bin/env python3
-from typing import Any, Callable, List, Tuple, Union
+
+# pyre-strict
+from typing import Any, Callable, cast, List, Optional, Tuple, Union
 
 import torch
 from captum._utils.common import _verify_select_neuron
 from captum._utils.gradient import _forward_layer_eval
-from captum._utils.typing import BaselineType, TensorOrTupleOfTensorsGeneric
+from captum._utils.typing import (
+    BaselineType,
+    SliceIntType,
+    TensorOrTupleOfTensorsGeneric,
+)
 from captum.attr._core.feature_ablation import FeatureAblation
 from captum.attr._utils.attribution import NeuronAttribution, PerturbationAttribution
 from captum.log import log_usage
+from torch import Tensor
 from torch.nn import Module
 
 
@@ -28,14 +35,14 @@ class NeuronFeatureAblation(NeuronAttribution, PerturbationAttribution):
 
     def __init__(
         self,
-        forward_func: Callable,
+        forward_func: Callable[..., Union[int, float, Tensor]],
         layer: Module,
         device_ids: Union[None, List[int]] = None,
     ) -> None:
         r"""
         Args:
 
-            forward_func (callable):  The forward function of the model or any
+            forward_func (Callable): The forward function of the model or any
                           modification of it
             layer (torch.nn.Module): Layer for which attributions are computed.
                           Attributions for a particular neuron in the input or output
@@ -44,7 +51,7 @@ class NeuronFeatureAblation(NeuronAttribution, PerturbationAttribution):
                           Currently, it is assumed that the inputs or the outputs
                           of the layer, depending on which one is used for
                           attribution, can only be a single tensor.
-            device_ids (list(int)): Device ID list, necessary only if forward_func
+            device_ids (list[int]): Device ID list, necessary only if forward_func
                           applies a DataParallel model. This allows reconstruction of
                           intermediate outputs from batched results across devices.
                           If forward_func is given as the DataParallel model itself,
@@ -57,9 +64,13 @@ class NeuronFeatureAblation(NeuronAttribution, PerturbationAttribution):
     def attribute(
         self,
         inputs: TensorOrTupleOfTensorsGeneric,
-        neuron_selector: Union[int, Tuple[Union[int, slice], ...], Callable],
+        neuron_selector: Union[
+            int,
+            Tuple[Union[int, SliceIntType], ...],
+            Callable[[Union[Tensor, Tuple[Tensor, ...]]], Tensor],
+        ],
         baselines: BaselineType = None,
-        additional_forward_args: Any = None,
+        additional_forward_args: Optional[object] = None,
         feature_mask: Union[None, TensorOrTupleOfTensorsGeneric] = None,
         attribute_to_neuron_input: bool = False,
         perturbations_per_eval: int = 1,
@@ -67,7 +78,7 @@ class NeuronFeatureAblation(NeuronAttribution, PerturbationAttribution):
         r"""
         Args:
 
-            inputs (tensor or tuple of tensors):  Input for which neuron
+            inputs (Tensor or tuple[Tensor, ...]): Input for which neuron
                         attributions are computed. If forward_func takes a single
                         tensor as input, a single input tensor should be provided.
                         If forward_func takes multiple tensors as input, a tuple
@@ -75,7 +86,7 @@ class NeuronFeatureAblation(NeuronAttribution, PerturbationAttribution):
                         that for all given input tensors, dimension 0 corresponds
                         to the number of examples, and if multiple input tensors
                         are provided, the examples must be aligned appropriately.
-            neuron_selector (int, callable, or tuple of ints or slices):
+            neuron_selector (int, Callable, tuple[int], or slice):
                         Selector for neuron
                         in given layer for which attribution is desired.
                         Neuron selector can be provided as:
@@ -96,7 +107,7 @@ class NeuronFeatureAblation(NeuronAttribution, PerturbationAttribution):
                           indexed output tensor is used for attribution. Note
                           that specifying a slice of a tensor would amount to
                           computing the attribution of the sum of the specified
-                          neurons, and not the individual neurons independantly.
+                          neurons, and not the individual neurons independently.
 
                         - a callable, which should
                           take the target layer as input (single tensor or tuple
@@ -108,7 +119,8 @@ class NeuronFeatureAblation(NeuronAttribution, PerturbationAttribution):
                           this function returns either a tensor with one element
                           or a 1D tensor with length equal to batch_size (one scalar
                           per input example)
-            baselines (scalar, tensor, tuple of scalars or tensors, optional):
+
+            baselines (scalar, Tensor, tuple of scalar, or Tensor, optional):
                         Baselines define reference value which replaces each
                         feature when ablated.
                         Baselines can be provided as:
@@ -132,10 +144,11 @@ class NeuronFeatureAblation(NeuronAttribution, PerturbationAttribution):
                           - or a scalar, corresponding to a tensor in the
                             inputs' tuple. This scalar value is broadcasted
                             for corresponding input tensor.
+
                         In the cases when `baselines` is not provided, we internally
                         use zero scalar corresponding to each input tensor.
                         Default: None
-            additional_forward_args (any, optional): If the forward function
+            additional_forward_args (Any, optional): If the forward function
                         requires additional arguments other than the inputs for
                         which attributions should not be computed, this argument
                         can be provided. It must be either a single additional
@@ -147,7 +160,7 @@ class NeuronFeatureAblation(NeuronAttribution, PerturbationAttribution):
                         Note that attributions are not computed with respect
                         to these arguments.
                         Default: None
-            feature_mask (tensor or tuple of tensors, optional):
+            feature_mask (Tensor or tuple[Tensor, ...], optional):
                         feature_mask defines a mask for the input, grouping
                         features which should be ablated together. feature_mask
                         should contain the same number of tensors as inputs.
@@ -187,8 +200,8 @@ class NeuronFeatureAblation(NeuronAttribution, PerturbationAttribution):
                         Default: 1
 
         Returns:
-            *tensor* or tuple of *tensors* of **attributions**:
-            - **attributions** (*tensor* or tuple of *tensors*):
+            *Tensor* or *tuple[Tensor, ...]* of **attributions**:
+            - **attributions** (*Tensor* or *tuple[Tensor, ...]*):
                         Attributions of particular neuron with respect to each input
                         feature. Attributions will always be the same size as the
                         provided inputs, with each value providing the attribution
@@ -243,7 +256,7 @@ class NeuronFeatureAblation(NeuronAttribution, PerturbationAttribution):
             >>>                          feature_mask=feature_mask)
         """
 
-        def neuron_forward_func(*args: Any):
+        def neuron_forward_func(*args: Any) -> Tensor:
             with torch.no_grad():
                 layer_eval = _forward_layer_eval(
                     self.forward_func,
@@ -252,7 +265,9 @@ class NeuronFeatureAblation(NeuronAttribution, PerturbationAttribution):
                     device_ids=self.device_ids,
                     attribute_to_layer_input=attribute_to_neuron_input,
                 )
-                return _verify_select_neuron(layer_eval, neuron_selector)
+                return _verify_select_neuron(
+                    cast(Tuple[Tensor, ...], layer_eval), neuron_selector
+                )
 
         ablator = FeatureAblation(neuron_forward_func)
 

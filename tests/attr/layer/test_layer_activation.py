@@ -1,17 +1,19 @@
 #!/usr/bin/env python3
 
+# pyre-unsafe
+
 import unittest
 from typing import Any, List, Tuple, Union
 
 import torch
 import torch.nn as nn
 from captum.attr._core.layer.layer_activation import LayerActivation
-from tests.helpers.basic import (
+from captum.testing.helpers.basic import (
     assertTensorAlmostEqual,
     assertTensorTuplesAlmostEqual,
     BaseTest,
 )
-from tests.helpers.basic_models import (
+from captum.testing.helpers.basic_models import (
     BasicModel_MultiLayer,
     BasicModel_MultiLayer_MultiInput,
     Conv1dSeqModel,
@@ -140,7 +142,7 @@ class Test(BaseTest):
         ],
         additional_input: Any = None,
         attribute_to_layer_input: bool = False,
-    ):
+    ) -> None:
         layer_act = LayerActivation(model, target_layer)
         self.assertTrue(layer_act.multiplies_by_inputs)
         attributions = layer_act.attribute(
@@ -162,7 +164,7 @@ class Test(BaseTest):
         ],
         additional_input: Any = None,
         attribute_to_layer_input: bool = False,
-    ):
+    ) -> None:
         layer_act = LayerActivation(model, target_layers)
         self.assertTrue(layer_act.multiplies_by_inputs)
         attributions = layer_act.attribute(

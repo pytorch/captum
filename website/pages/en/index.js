@@ -265,7 +265,6 @@ Convergence Delta: tensor([2.3842e-07, -4.7684e-07])
 
     return (
       <div>
-        <SocialBanner />
         <HomeSplash siteConfig={siteConfig} language={language} />
         <div className="landingPage mainContainer">
           <VideoContainer />
@@ -275,20 +274,6 @@ Convergence Delta: tensor([2.3842e-07, -4.7684e-07])
       </div>
     );
   }
-}
-
-function SocialBanner() {
-  return (
-    <div className="SocialBannerWrapper">
-      <div className="SocialBanner">
-        Support Ukraine 🇺🇦{' '}
-        <a href="https://opensource.fb.com/support-ukraine">
-          Help Provide Humanitarian Aid to Ukraine
-        </a>
-        .
-      </div>
-    </div>
-  );
 }
 
 function VideoContainer() {

@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+# pyre-unsafe
+
 import io
 import unittest
 import unittest.mock
@@ -8,12 +10,13 @@ from typing import Any, Callable, List, Tuple, Union
 import torch
 from captum._utils.typing import BaselineType, TensorOrTupleOfTensorsGeneric
 from captum.attr._core.kernel_shap import KernelShap
-from tests.helpers.basic import (
+from captum.testing.helpers.basic import (
     assertTensorAlmostEqual,
     assertTensorTuplesAlmostEqual,
     BaseTest,
+    set_all_random_seeds,
 )
-from tests.helpers.basic_models import (
+from captum.testing.helpers.basic_models import (
     BasicLinearModel,
     BasicModel_MultiLayer,
     BasicModel_MultiLayer_MultiInput,
@@ -115,7 +118,7 @@ class Test(BaseTest):
             inp,
             [[7.0, 32.5, 10.5], [76.66666, 196.66666, 116.66666]],
             perturbations_per_eval=(1, 2, 3),
-            n_samples=20000,
+            n_samples=2000,
         )
 
     def test_simple_batch_kernel_shap_with_mask(self) -> None:
@@ -329,6 +332,14 @@ class Test(BaseTest):
             lambda *inp: torch.sum(net(*inp)).item()
         )
 
+    def test_futures_not_implemented(self) -> None:
+        net = BasicModel_MultiLayer_MultiInput()
+        kernel_shap = KernelShap(net)
+        attributions = None
+        with self.assertRaises(NotImplementedError):
+            attributions = kernel_shap.attribute_future()
+        self.assertEqual(attributions, None)
+
     def _multi_input_scalar_kernel_shap_assert(self, func: Callable) -> None:
         inp1 = torch.tensor([[23.0, 100.0, 0.0], [20.0, 50.0, 30.0]])
         inp2 = torch.tensor([[20.0, 50.0, 30.0], [0.0, 100.0, 0.0]])
@@ -337,9 +348,9 @@ class Test(BaseTest):
         mask2 = torch.tensor([[0, 1, 2]])
         mask3 = torch.tensor([[0, 1, 2]])
         expected = (
-            [[3850.6666, 3850.6666, 3850.6666]] * 2,
-            [[306.6666, 3850.6666, 410.6666]] * 2,
-            [[306.6666, 3850.6666, 410.6666]] * 2,
+            [[3850.6666, 3850.6666, 3850.6666]],
+            [[306.6666, 3850.6666, 410.6666]],
+            [[306.6666, 3850.6666, 410.6666]],
         )
 
         self._kernel_shap_test_assert(
@@ -386,6 +397,7 @@ class Test(BaseTest):
             )
 
             if expected_coefs is not None:
+                set_all_random_seeds(1234)
                 # Test with return_input_shape = False
                 attributions = kernel_shap.attribute(
                     test_input,

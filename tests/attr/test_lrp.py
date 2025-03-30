@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+
+# pyre-unsafe
 from typing import cast, Tuple
 
 import torch
@@ -10,8 +12,9 @@ from captum.attr._utils.lrp_rules import (
     GammaRule,
     IdentityRule,
 )
-from tests.helpers.basic import assertTensorAlmostEqual, BaseTest
-from tests.helpers.basic_models import (
+from captum.testing.helpers import BaseTest
+from captum.testing.helpers.basic import assertTensorAlmostEqual
+from captum.testing.helpers.basic_models import (
     BasicModel_ConvNet_One_Conv,
     BasicModel_MultiLayer,
     BasicModelWithReusedLinear,
@@ -124,6 +127,19 @@ class Test(BaseTest):
         _ = lrp.attribute(inputs)
         output_after = model(inputs)
         assertTensorAlmostEqual(self, output, output_after)
+
+    def test_lrp_simple_inplaceReLU(self) -> None:
+        model_default, inputs = _get_simple_model()
+        model_inplace, _ = _get_simple_model(inplace=True)
+        for model in [model_default, model_inplace]:
+            model.eval()
+            model.linear.rule = EpsilonRule()  # type: ignore
+            model.linear2.rule = EpsilonRule()  # type: ignore
+        lrp_default = LRP(model_default)
+        lrp_inplace = LRP(model_inplace)
+        relevance_default = lrp_default.attribute(inputs)
+        relevance_inplace = lrp_inplace.attribute(inputs)
+        assertTensorAlmostEqual(self, relevance_default, relevance_inplace)
 
     def test_lrp_simple_tanh(self) -> None:
         class Model(nn.Module):
@@ -311,5 +327,13 @@ class Test(BaseTest):
         model = BasicModelWithReusedLinear()
         inp = torch.ones(2, 3)
         lrp = LRP(model)
-        with self.assertRaisesRegexp(RuntimeError, "more than once"):
+        with self.assertRaisesRegex(RuntimeError, "more than once"):
             lrp.attribute(inp, target=0)
+
+    def test_futures_not_implemented(self) -> None:
+        model = BasicModelWithReusedLinear()
+        lrp = LRP(model)
+        attributions = None
+        with self.assertRaises(NotImplementedError):
+            attributions = lrp.attribute_future()
+        self.assertEqual(attributions, None)

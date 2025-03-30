@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
+
+# pyre-strict
 import warnings
-from typing import Any, List, Union
+from typing import List, Optional, Union
 
 import torch
 from captum._utils.common import _format_output, _format_tensor_into_tuples, _is_tuple
@@ -38,7 +40,7 @@ class GuidedGradCam(GradientAttribution):
 
     More details regarding GuidedGradCAM can be found in the original
     GradCAM paper here:
-    https://arxiv.org/pdf/1610.02391.pdf
+    https://arxiv.org/abs/1610.02391
 
     Warning: Ensure that all ReLU operations in the forward function of the
     given model are performed using a module (nn.module.ReLU).
@@ -51,17 +53,14 @@ class GuidedGradCam(GradientAttribution):
         r"""
         Args:
 
-            model (nn.Module):  The reference to PyTorch model instance. Model cannot
-                        contain any in-place ReLU submodules; these are not
-                        supported by the register_full_backward_hook PyTorch API
-                        starting from PyTorch v1.9.
+            model (nn.Module):  The reference to PyTorch model instance.
             layer (torch.nn.Module): Layer for which GradCAM attributions are computed.
                           Currently, only layers with a single tensor output are
                           supported.
-            device_ids (list(int)): Device ID list, necessary only if forward_func
-                          applies a DataParallel model. This allows reconstruction of
+            device_ids (list[int]): Device ID list, necessary only if model
+                          is a DataParallel model. This allows reconstruction of
                           intermediate outputs from batched results across devices.
-                          If forward_func is given as the DataParallel model itself,
+                          If model is given as the DataParallel model itself,
                           then it is not necessary to provide this argument.
         """
         GradientAttribution.__init__(self, model)
@@ -73,22 +72,22 @@ class GuidedGradCam(GradientAttribution):
         self,
         inputs: TensorOrTupleOfTensorsGeneric,
         target: TargetType = None,
-        additional_forward_args: Any = None,
+        additional_forward_args: Optional[object] = None,
         interpolate_mode: str = "nearest",
         attribute_to_layer_input: bool = False,
     ) -> TensorOrTupleOfTensorsGeneric:
         r"""
         Args:
 
-            inputs (tensor or tuple of tensors):  Input for which attributions
-                        are computed. If forward_func takes a single
+            inputs (Tensor or tuple[Tensor, ...]): Input for which attributions
+                        are computed. If model takes a single
                         tensor as input, a single input tensor should be provided.
-                        If forward_func takes multiple tensors as input, a tuple
+                        If model takes multiple tensors as input, a tuple
                         of the input tensors should be provided. It is assumed
                         that for all given input tensors, dimension 0 corresponds
                         to the number of examples, and if multiple input tensors
                         are provided, the examples must be aligned appropriately.
-            target (int, tuple, tensor or list, optional):  Output indices for
+            target (int, tuple, Tensor, or list, optional): Output indices for
                         which gradients are computed (for classification cases,
                         this is usually the target class).
                         If the network returns a scalar value per example,
@@ -113,14 +112,14 @@ class GuidedGradCam(GradientAttribution):
                           target for the corresponding example.
 
                         Default: None
-            additional_forward_args (any, optional): If the forward function
+            additional_forward_args (Any, optional): If the forward function
                         requires additional arguments other than the inputs for
                         which attributions should not be computed, this argument
                         can be provided. It must be either a single additional
                         argument of a Tensor or arbitrary (non-tuple) type or a
                         tuple containing multiple additional arguments including
                         tensors or any arbitrary python types. These arguments
-                        are provided to forward_func in order following the
+                        are provided to model in order following the
                         arguments in inputs.
                         Note that attributions are not computed with respect
                         to these arguments.
@@ -151,8 +150,8 @@ class GuidedGradCam(GradientAttribution):
                         Default: False
 
         Returns:
-            *tensor* of **attributions**:
-            - **attributions** (*tensor*):
+            *Tensor* of **attributions**:
+            - **attributions** (*Tensor*):
                     Element-wise product of (upsampled) GradCAM
                     and Guided Backprop attributions.
                     If a single tensor is provided as inputs, a single tensor is
@@ -182,10 +181,10 @@ class GuidedGradCam(GradientAttribution):
             >>> attribution = guided_gc.attribute(input, 3)
         """
         is_inputs_tuple = _is_tuple(inputs)
-        inputs = _format_tensor_into_tuples(inputs)
+        inputs_tuple = _format_tensor_into_tuples(inputs)
         grad_cam_attr = self.grad_cam.attribute.__wrapped__(
             self.grad_cam,  # self
-            inputs=inputs,
+            inputs=inputs_tuple,
             target=target,
             additional_forward_args=additional_forward_args,
             attribute_to_layer_input=attribute_to_layer_input,
@@ -200,18 +199,18 @@ class GuidedGradCam(GradientAttribution):
 
         guided_backprop_attr = self.guided_backprop.attribute.__wrapped__(
             self.guided_backprop,  # self
-            inputs=inputs,
+            inputs=inputs_tuple,
             target=target,
             additional_forward_args=additional_forward_args,
         )
         output_attr: List[Tensor] = []
-        for i in range(len(inputs)):
+        for i in range(len(inputs_tuple)):
             try:
                 output_attr.append(
                     guided_backprop_attr[i]
                     * LayerAttribution.interpolate(
                         grad_cam_attr,
-                        inputs[i].shape[2:],
+                        tuple(inputs_tuple[i].shape[2:]),
                         interpolate_mode=interpolate_mode,
                     )
                 )
@@ -219,8 +218,11 @@ class GuidedGradCam(GradientAttribution):
                 warnings.warn(
                     "Couldn't appropriately interpolate GradCAM attributions for some "
                     "input tensors, returning empty tensor for corresponding "
-                    "attributions."
+                    "attributions.",
+                    stacklevel=1,
                 )
                 output_attr.append(torch.empty(0))
 
+        # pyre-fixme[7]: Expected `TensorOrTupleOfTensorsGeneric` but got
+        #  `Tuple[Tensor, ...]`.
         return _format_output(is_inputs_tuple, tuple(output_attr))

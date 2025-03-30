@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+
+# pyre-strict
 import inspect
 from collections import namedtuple
 from typing import (
@@ -23,6 +25,8 @@ from captum.insights.attr_vis.features import BaseFeature
 from torch import Tensor
 from torch.nn import Module
 
+# pyre-fixme[4]: Attribute annotation cannot be `Any`.
+# pyre-fixme[2]: Parameter annotation cannot be `Any`.
 OutputScore = namedtuple("OutputScore", "score index label")
 
 
@@ -32,6 +36,7 @@ class AttributionCalculation:
         models: Sequence[Module],
         classes: Sequence[str],
         features: List[BaseFeature],
+        # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
         score_func: Optional[Callable] = None,
         use_label_for_attr: bool = True,
     ) -> None:
@@ -40,11 +45,23 @@ class AttributionCalculation:
         self.features = features
         self.score_func = score_func
         self.use_label_for_attr = use_label_for_attr
+        # pyre-fixme[24]: Generic type `dict` expects 2 type parameters, use
+        #  `typing.Dict[<key type>, <value type>]` to avoid runtime subscripting
+        #  errors.
         self.baseline_cache: dict = {}
+        # pyre-fixme[24]: Generic type `dict` expects 2 type parameters, use
+        #  `typing.Dict[<key type>, <value type>]` to avoid runtime subscripting
+        #  errors.
         self.transformed_input_cache: dict = {}
 
     def calculate_predicted_scores(
-        self, inputs, additional_forward_args, model
+        self,
+        # pyre-fixme[2]: Parameter must be annotated.
+        inputs,
+        # pyre-fixme[2]: Parameter must be annotated.
+        additional_forward_args,
+        # pyre-fixme[2]: Parameter must be annotated.
+        model,
     ) -> Tuple[
         List[OutputScore], Optional[List[Tuple[Tensor, ...]]], Tuple[Tensor, ...]
     ]:
@@ -56,6 +73,8 @@ class AttributionCalculation:
         else:
             # Initialize baselines
             baseline_transforms_len = 1  # todo support multiple baselines
+            # pyre-fixme[9]: baselines has type `List[List[Optional[Tensor]]]`; used
+            #  as `List[List[None]]`.
             baselines: List[List[Optional[Tensor]]] = [
                 [None] * len(self.features) for _ in range(baseline_transforms_len)
             ]
@@ -76,6 +95,7 @@ class AttributionCalculation:
                             True,
                         )
 
+            # pyre-fixme[22]: The cast is redundant.
             baselines = cast(List[List[Optional[Tensor]]], baselines)
             baselines_group = [tuple(b) for b in baselines]
             self.baseline_cache[hashable_inputs] = baselines_group
@@ -86,6 +106,11 @@ class AttributionCalculation:
             tuple(transformed_inputs),
             additional_forward_args=additional_forward_args,
         )
+
+        # _run_forward may return future of Tensor,
+        # but we don't support it here now
+        # And it will fail before here.
+        outputs = cast(Tensor, outputs)
 
         if self.score_func is not None:
             outputs = self.score_func(outputs)
@@ -110,6 +135,9 @@ class AttributionCalculation:
         additional_forward_args: Optional[Tuple[Tensor, ...]],
         label: Optional[Union[Tensor]],
         attribution_method_name: str,
+        # pyre-fixme[24]: Generic type `dict` expects 2 type parameters, use
+        #  `typing.Dict[<key type>, <value type>]` to avoid runtime subscripting
+        #  errors.
         attribution_arguments: Dict,
         model: Module,
     ) -> Tuple[Tensor, ...]:
@@ -131,7 +159,7 @@ class AttributionCalculation:
         )
         if "baselines" in inspect.signature(attribution_method.attribute).parameters:
             attribution_arguments["baselines"] = baseline
-        attr = attribution_method.attribute.__wrapped__(
+        attr = attribution_method.attribute.__wrapped__(  # type: ignore
             attribution_method,  # self
             data,
             additional_forward_args=additional_forward_args,
@@ -157,7 +185,11 @@ class AttributionCalculation:
         return net_contrib.tolist()
 
     def _transform(
-        self, transforms: Iterable[Callable], inputs: Tensor, batch: bool = False
+        self,
+        # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
+        transforms: Iterable[Callable],
+        inputs: Tensor,
+        batch: bool = False,
     ) -> Tensor:
         transformed_inputs = inputs
         # TODO support batch size > 1

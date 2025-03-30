@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
-from typing import Any, Callable, List, Tuple, Union
+
+# pyre-strict
+from typing import Any, Callable, cast, Dict, List, Optional, Tuple, Union
 
 import torch
 from captum._utils.common import (
@@ -30,7 +32,7 @@ class InternalInfluence(LayerAttribution, GradientAttribution):
     given input.
     If no baseline is provided, the default baseline is the zero tensor.
     More details on this approach can be found here:
-    https://arxiv.org/pdf/1802.03788.pdf
+    https://arxiv.org/abs/1802.03788
 
     Note that this method is similar to applying integrated gradients and
     taking the layer as input, integrating the gradient of the layer with
@@ -39,14 +41,14 @@ class InternalInfluence(LayerAttribution, GradientAttribution):
 
     def __init__(
         self,
-        forward_func: Callable,
+        forward_func: Callable[..., Tensor],
         layer: Module,
         device_ids: Union[None, List[int]] = None,
     ) -> None:
         r"""
         Args:
 
-            forward_func (callable):  The forward function of the model or any
+            forward_func (Callable): The forward function of the model or any
                           modification of it
             layer (torch.nn.Module): Layer for which attributions are computed.
                           Output size of attribute matches this layer's input or
@@ -54,7 +56,7 @@ class InternalInfluence(LayerAttribution, GradientAttribution):
                           the inputs or outputs of the layer, corresponding to
                           attribution of each neuron in the input or output of
                           this layer.
-            device_ids (list(int)): Device ID list, necessary only if forward_func
+            device_ids (list[int]): Device ID list, necessary only if forward_func
                           applies a DataParallel model. This allows reconstruction of
                           intermediate outputs from batched results across devices.
                           If forward_func is given as the DataParallel model itself,
@@ -69,16 +71,17 @@ class InternalInfluence(LayerAttribution, GradientAttribution):
         inputs: Union[Tensor, Tuple[Tensor, ...]],
         baselines: BaselineType = None,
         target: TargetType = None,
-        additional_forward_args: Any = None,
+        additional_forward_args: Optional[object] = None,
         n_steps: int = 50,
         method: str = "gausslegendre",
         internal_batch_size: Union[None, int] = None,
         attribute_to_layer_input: bool = False,
+        grad_kwargs: Optional[Dict[str, Any]] = None,
     ) -> Union[Tensor, Tuple[Tensor, ...]]:
         r"""
         Args:
 
-            inputs (tensor or tuple of tensors):  Input for which internal
+            inputs (Tensor or tuple[Tensor, ...]): Input for which internal
                         influence is computed. If forward_func takes a single
                         tensor as input, a single input tensor should be provided.
                         If forward_func takes multiple tensors as input, a tuple
@@ -86,7 +89,7 @@ class InternalInfluence(LayerAttribution, GradientAttribution):
                         that for all given input tensors, dimension 0 corresponds
                         to the number of examples, and if multiple input tensors
                         are provided, the examples must be aligned appropriately.
-            baselines scalar, tensor, tuple of scalars or tensors, optional):
+            baselines (scalar, Tensor, tuple of scalar, or Tensor, optional):
                         Baselines define a starting point from which integral
                         is computed and can be provided as:
 
@@ -115,7 +118,7 @@ class InternalInfluence(LayerAttribution, GradientAttribution):
                         use zero scalar corresponding to each input tensor.
 
                         Default: None
-            target (int, tuple, tensor or list, optional):  Output indices for
+            target (int, tuple, Tensor, or list, optional): Output indices for
                         which gradients are computed (for classification cases,
                         this is usually the target class).
                         If the network returns a scalar value per example,
@@ -140,7 +143,7 @@ class InternalInfluence(LayerAttribution, GradientAttribution):
                           target for the corresponding example.
 
                         Default: None
-            additional_forward_args (any, optional): If the forward function
+            additional_forward_args (Any, optional): If the forward function
                         requires additional arguments other than the inputs for
                         which attributions should not be computed, this argument
                         can be provided. It must be either a single additional
@@ -159,7 +162,7 @@ class InternalInfluence(LayerAttribution, GradientAttribution):
                         Default: None
             n_steps (int, optional): The number of steps used by the approximation
                         method. Default: 50.
-            method (string, optional): Method for approximating the integral,
+            method (str, optional): Method for approximating the integral,
                         one of `riemann_right`, `riemann_left`, `riemann_middle`,
                         `riemann_trapezoid` or `gausslegendre`.
                         Default: `gausslegendre` if no method is provided.
@@ -185,15 +188,18 @@ class InternalInfluence(LayerAttribution, GradientAttribution):
                         attribute to the input or output, is a single tensor.
                         Support for multiple tensors will be added later.
                         Default: False
+            grad_kwargs (Dict[str, Any], optional): Additional keyword
+                        arguments for torch.autograd.grad.
+                        Default: None
 
         Returns:
-            *tensor* or tuple of *tensors* of **attributions**:
-            - **attributions** (*tensor* or tuple of *tensors*):
+            *Tensor* or *tuple[Tensor, ...]* of **attributions**:
+              - **attributions** (*Tensor* or *tuple[Tensor, ...]*):
                         Internal influence of each neuron in given
                         layer output. Attributions will always be the same size
                         as the output or input of the given layer depending on
                         whether `attribute_to_layer_input` is set to `False` or
-                        `True`respectively.
+                        `True` respectively.
                         Attributions are returned in a tuple if
                         the layer inputs / outputs contain multiple tensors,
                         otherwise a single tensor is returned.
@@ -236,6 +242,7 @@ class InternalInfluence(LayerAttribution, GradientAttribution):
                 n_steps=n_steps,
                 method=method,
                 attribute_to_layer_input=attribute_to_layer_input,
+                grad_kwargs=grad_kwargs,
             )
 
         return attrs
@@ -245,11 +252,12 @@ class InternalInfluence(LayerAttribution, GradientAttribution):
         inputs: Tuple[Tensor, ...],
         baselines: Tuple[Union[Tensor, int, float], ...],
         target: TargetType = None,
-        additional_forward_args: Any = None,
+        additional_forward_args: Optional[object] = None,
         n_steps: int = 50,
         method: str = "gausslegendre",
         attribute_to_layer_input: bool = False,
         step_sizes_and_alphas: Union[None, Tuple[List[float], List[float]]] = None,
+        grad_kwargs: Optional[Dict[str, Any]] = None,
     ) -> Union[Tensor, Tuple[Tensor, ...]]:
         if step_sizes_and_alphas is None:
             # retrieve step size and scaling factor for specified approximation method
@@ -284,12 +292,13 @@ class InternalInfluence(LayerAttribution, GradientAttribution):
         # Returns gradient of output with respect to hidden layer.
         layer_gradients, _ = compute_layer_gradients_and_eval(
             forward_fn=self.forward_func,
-            layer=self.layer,
+            layer=cast(Module, self.layer),
             inputs=scaled_features_tpl,
             target_ind=expanded_target,
             additional_forward_args=input_additional_args,
             device_ids=self.device_ids,
             attribute_to_layer_input=attribute_to_layer_input,
+            grad_kwargs=grad_kwargs,
         )
         # flattening grads so that we can multiply it with step-size
         # calling contiguous to avoid `memory whole` problems
@@ -302,7 +311,10 @@ class InternalInfluence(LayerAttribution, GradientAttribution):
         # aggregates across all steps for each tensor in the input tuple
         attrs = tuple(
             _reshape_and_sum(
-                scaled_grad, n_steps, inputs[0].shape[0], layer_grad.shape[1:]
+                scaled_grad,
+                n_steps,
+                inputs[0].shape[0],
+                tuple(layer_grad.shape[1:]),
             )
             for scaled_grad, layer_grad in zip(scaled_grads, layer_gradients)
         )

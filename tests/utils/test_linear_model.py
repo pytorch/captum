@@ -1,59 +1,19 @@
 #!/usr/bin/env python3
 
+# pyre-unsafe
+
+from typing import Optional, Union
+
 import torch
 from captum._utils.models.linear_model.model import (
     SGDLasso,
     SGDLinearRegression,
     SGDRidge,
 )
-from tests.helpers.basic import assertTensorAlmostEqual, BaseTest
-
-
-def _evaluate(test_data, classifier):
-    classifier.eval()
-
-    l1_loss = 0.0
-    l2_loss = 0.0
-    n = 0
-    l2_losses = []
-    with torch.no_grad():
-        for data in test_data:
-            if len(data) == 2:
-                x, y = data
-                w = None
-            else:
-                x, y, w = data
-
-            out = classifier(x)
-
-            y = y.view(x.shape[0], -1)
-            assert y.shape == out.shape
-
-            if w is None:
-                l1_loss += (out - y).abs().sum(0).to(dtype=torch.float64)
-                l2_loss += ((out - y) ** 2).sum(0).to(dtype=torch.float64)
-                l2_losses.append(((out - y) ** 2).to(dtype=torch.float64))
-            else:
-                l1_loss += (
-                    (w.view(-1, 1) * (out - y)).abs().sum(0).to(dtype=torch.float64)
-                )
-                l2_loss += (
-                    (w.view(-1, 1) * ((out - y) ** 2)).sum(0).to(dtype=torch.float64)
-                )
-                l2_losses.append(
-                    (w.view(-1, 1) * ((out - y) ** 2)).to(dtype=torch.float64)
-                )
-
-            n += x.shape[0]
-
-    l2_losses = torch.cat(l2_losses, dim=0)
-    assert n > 0
-
-    # just to double check
-    assert ((l2_losses.mean(0) - l2_loss / n).abs() <= 0.1).all()
-
-    classifier.train()
-    return {"l1": l1_loss / n, "l2": l2_loss / n}
+from captum.testing.helpers import BaseTest
+from captum.testing.helpers.basic import assertTensorAlmostEqual
+from captum.testing.helpers.evaluate_linear_model import evaluate
+from torch import Tensor
 
 
 class TestLinearModel(BaseTest):
@@ -64,16 +24,16 @@ class TestLinearModel(BaseTest):
         model_type,
         xs,
         ys,
-        expected_loss,
-        expected_reg=0.0,
-        expected_hyperplane=None,
-        norm_hyperplane=True,
+        expected_loss: Union[int, float, Tensor],
+        expected_reg: Union[float, Tensor] = 0.0,
+        expected_hyperplane: Optional[Tensor] = None,
+        norm_hyperplane: bool = True,
         weights=None,
-        delta=0.1,
-        init_scheme="zeros",
-        objective="lasso",
-        bias=True,
-    ):
+        delta: float = 0.1,
+        init_scheme: str = "zeros",
+        objective: str = "lasso",
+        bias: bool = True,
+    ) -> None:
         assert objective in ["lasso", "ridge", "ols"]
 
         if weights is None:
@@ -96,7 +56,7 @@ class TestLinearModel(BaseTest):
 
         self.assertTrue(model.bias() is not None if bias else model.bias() is None)
 
-        l2_loss = _evaluate(train_loader, model)["l2"]
+        l2_loss = evaluate(train_loader, model)["l2"]
 
         if objective == "lasso":
             reg = model.representation().norm(p=1).view_as(l2_loss)
@@ -121,7 +81,7 @@ class TestLinearModel(BaseTest):
                 h /= h.norm(p=2)
             assertTensorAlmostEqual(self, h, expected_hyperplane, delta=delta)
 
-    def test_simple_linear_regression(self):
+    def test_simple_linear_regression(self) -> None:
         xs = torch.randn(TestLinearModel.MAX_POINTS, 1)
         ys = 3 * xs + 1
 
@@ -152,7 +112,7 @@ class TestLinearModel(BaseTest):
             delta=0.2,
         )
 
-    def test_simple_multi_output(self):
+    def test_simple_multi_output(self) -> None:
         xs = torch.randn(TestLinearModel.MAX_POINTS, 1)
         y1 = 3 * xs + 1
         y2 = -5 * xs
@@ -167,7 +127,7 @@ class TestLinearModel(BaseTest):
             objective="ols",
         )
 
-    def test_simple_linear_classification(self):
+    def test_simple_linear_classification(self) -> None:
         xs = torch.tensor([[0.5, 0.5], [-0.5, -0.5], [0.5, -0.5], [-0.5, 0.5]])
         ys = torch.tensor([1.0, -1.0, 1.0, -1.0])
         self.train_and_compare(
@@ -201,7 +161,7 @@ class TestLinearModel(BaseTest):
             SGDRidge, xs, ys, expected_loss=0.25, expected_reg=0, objective="ridge"
         )
 
-    def test_simple_xor_problem(self):
+    def test_simple_xor_problem(self) -> None:
         r"""
            ^
          o | x
@@ -246,7 +206,7 @@ class TestLinearModel(BaseTest):
             bias=False,
         )
 
-    def test_weighted_problem(self):
+    def test_weighted_problem(self) -> None:
         r"""
            ^
          0 | x

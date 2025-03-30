@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
 
+# pyre-strict
+
 import typing
 from collections import defaultdict
-from typing import Any, cast, List, Tuple, Union
+from typing import Any, Callable, cast, Dict, List, Literal, Optional, Tuple, Union
 
 import torch.nn as nn
 from captum._utils.common import (
@@ -16,7 +18,7 @@ from captum._utils.gradient import (
     apply_gradient_requirements,
     undo_gradient_requirements,
 )
-from captum._utils.typing import Literal, TargetType, TensorOrTupleOfTensorsGeneric
+from captum._utils.typing import TargetType, TensorOrTupleOfTensorsGeneric
 from captum.attr._utils.attribution import GradientAttribution
 from captum.attr._utils.common import _sum_rows
 from captum.attr._utils.custom_modules import Addition_Module
@@ -41,18 +43,21 @@ class LRP(GradientAttribution):
     Ancona et al. [https://openreview.net/forum?id=Sy21R9JAW].
     """
 
+    verbose: bool = False
+    _original_state_dict: Dict[str, Any] = {}
+    layers: List[Module] = []
+    backward_handles: List[RemovableHandle] = []
+    forward_handles: List[RemovableHandle] = []
+
     def __init__(self, model: Module) -> None:
         r"""
         Args:
 
-            model (module): The forward function of the model or any modification of
+            model (Module): The forward function of the model or any modification of
                 it. Custom rules for a given layer need to be defined as attribute
                 `module.rule` and need to be of type PropagationRule. If no rule is
                 specified for a layer, a pre-defined default rule for the module type
-                is used. Model cannot contain any in-place nonlinear submodules;
-                these are not supported by the register_full_backward_hook
-                PyTorch API starting from PyTorch v1.9.
-
+                is used.
         """
         GradientAttribution.__init__(self, model)
         self.model = model
@@ -67,30 +72,30 @@ class LRP(GradientAttribution):
         self,
         inputs: TensorOrTupleOfTensorsGeneric,
         target: TargetType = None,
-        additional_forward_args: Any = None,
-        return_convergence_delta: Literal[False] = False,
+        additional_forward_args: Optional[object] = None,
+        *,
+        return_convergence_delta: Literal[True],
         verbose: bool = False,
-    ) -> TensorOrTupleOfTensorsGeneric:
-        ...
+    ) -> Tuple[TensorOrTupleOfTensorsGeneric, Tensor]: ...
 
     @typing.overload
     def attribute(
         self,
         inputs: TensorOrTupleOfTensorsGeneric,
         target: TargetType = None,
-        additional_forward_args: Any = None,
-        *,
-        return_convergence_delta: Literal[True],
+        additional_forward_args: Optional[object] = None,
+        return_convergence_delta: Literal[False] = False,
         verbose: bool = False,
-    ) -> Tuple[TensorOrTupleOfTensorsGeneric, Tensor]:
-        ...
+    ) -> TensorOrTupleOfTensorsGeneric: ...
 
     @log_usage()
+    # pyre-fixme[43]: This definition does not have the same decorators as the
+    #  preceding overload(s).
     def attribute(
         self,
         inputs: TensorOrTupleOfTensorsGeneric,
         target: TargetType = None,
-        additional_forward_args: Any = None,
+        additional_forward_args: Optional[object] = None,
         return_convergence_delta: bool = False,
         verbose: bool = False,
     ) -> Union[
@@ -98,20 +103,22 @@ class LRP(GradientAttribution):
     ]:
         r"""
         Args:
-            inputs (tensor or tuple of tensors):  Input for which relevance is
-                        propagated. If forward_func takes a single
+
+            inputs (Tensor or tuple[Tensor, ...]): Input for which relevance is
+                        propagated. If model takes a single
                         tensor as input, a single input tensor should be provided.
-                        If forward_func takes multiple tensors as input, a tuple
+                        If model takes multiple tensors as input, a tuple
                         of the input tensors should be provided. It is assumed
                         that for all given input tensors, dimension 0 corresponds
                         to the number of examples, and if multiple input tensors
                         are provided, the examples must be aligned appropriately.
-            target (int, tuple, tensor or list, optional):  Output indices for
-                        which gradients are computed (for classification cases,
-                        this is usually the target class).
-                        If the network returns a scalar value per example,
-                        no target index is necessary.
-                        For general 2D outputs, targets can be either:
+
+            target (int, tuple, Tensor, or list, optional): Output indices for
+                    which gradients are computed (for classification cases,
+                    this is usually the target class).
+                    If the network returns a scalar value per example,
+                    no target index is necessary.
+                    For general 2D outputs, targets can be either:
 
                     - a single integer or a tensor containing a single
                         integer, which is applied to all input examples
@@ -138,7 +145,7 @@ class LRP(GradientAttribution):
                     argument of a Tensor or arbitrary (non-tuple) type or a tuple
                     containing multiple additional arguments including tensors
                     or any arbitrary python types. These arguments are provided to
-                    forward_func in order, following the arguments in inputs.
+                    model in order, following the arguments in inputs.
                     Note that attributions are not computed with respect
                     to these arguments.
                     Default: None
@@ -153,9 +160,10 @@ class LRP(GradientAttribution):
                     of rules is printed during propagation.
 
         Returns:
-            *tensor* or tuple of *tensors* of **attributions**
-            or 2-element tuple of **attributions**, **delta**::
-            - **attributions** (*tensor* or tuple of *tensors*):
+            *Tensor* or *tuple[Tensor, ...]* of **attributions**
+            or 2-element tuple of **attributions**, **delta**:
+
+              - **attributions** (*Tensor* or *tuple[Tensor, ...]*):
                         The propagated relevance values with respect to each
                         input feature. The values are normalized by the output score
                         value (sum(relevance)=1). To obtain values comparable to other
@@ -168,10 +176,12 @@ class LRP(GradientAttribution):
                         corresponding sized tensors is returned. The sum of attributions
                         is one and not corresponding to the prediction score as in other
                         implementations.
-            - **delta** (*tensor*, returned if return_convergence_delta=True):
+
+              - **delta** (*Tensor*, returned if return_convergence_delta=True):
                         Delta is calculated per example, meaning that the number of
                         elements in returned delta tensor is equal to the number of
                         of examples in the inputs.
+
         Examples::
 
                 >>> # ImageClassifier takes a single input tensor of images Nx3x32x32,
@@ -186,26 +196,28 @@ class LRP(GradientAttribution):
         """
         self.verbose = verbose
         self._original_state_dict = self.model.state_dict()
-        self.layers: List[Module] = []
+        self.layers = []
         self._get_layers(self.model)
         self._check_and_attach_rules()
         self.backward_handles: List[RemovableHandle] = []
         self.forward_handles: List[RemovableHandle] = []
 
         is_inputs_tuple = _is_tuple(inputs)
-        inputs = _format_tensor_into_tuples(inputs)
-        gradient_mask = apply_gradient_requirements(inputs)
+        input_tuple = _format_tensor_into_tuples(inputs)
+        gradient_mask = apply_gradient_requirements(input_tuple)
 
         try:
             # 1. Forward pass: Change weights of layers according to selected rules.
             output = self._compute_output_and_change_weights(
-                inputs, target, additional_forward_args
+                input_tuple,
+                target,
+                additional_forward_args,
             )
             # 2. Forward pass + backward pass: Register hooks to configure relevance
             # propagation and execute back-propagation.
             self._register_forward_hooks()
             normalized_relevances = self.gradient_func(
-                self._forward_fn_wrapper, inputs, target, additional_forward_args
+                self._forward_fn_wrapper, input_tuple, target, additional_forward_args
             )
             relevances = tuple(
                 normalized_relevance
@@ -215,15 +227,23 @@ class LRP(GradientAttribution):
         finally:
             self._restore_model()
 
-        undo_gradient_requirements(inputs, gradient_mask)
+        undo_gradient_requirements(input_tuple, gradient_mask)
 
         if return_convergence_delta:
+            # pyre-fixme[7]: Expected `Union[Tuple[Variable[TensorOrTupleOfTensorsGen...
             return (
                 _format_output(is_inputs_tuple, relevances),
                 self.compute_convergence_delta(relevances, output),
             )
         else:
             return _format_output(is_inputs_tuple, relevances)  # type: ignore
+
+    # pyre-fixme[24] Generic type `Callable` expects 2 type parameters.
+    def attribute_future(self) -> Callable:
+        r"""
+        This method is not implemented for LRP.
+        """
+        raise NotImplementedError("attribute_future is not implemented for LRP")
 
     def has_convergence_delta(self) -> bool:
         return True
@@ -241,7 +261,7 @@ class LRP(GradientAttribution):
 
         Args:
 
-            attributions (tensor or tuple of tensors): Attribution scores that
+            attributions (Tensor or tuple[Tensor, ...]): Attribution scores that
                         are precomputed by an attribution algorithm.
                         Attributions can be provided in form of a single tensor
                         or a tuple of those. It is assumed that attribution
@@ -249,12 +269,13 @@ class LRP(GradientAttribution):
                         examples, and if multiple input tensors are provided,
                         the examples must be aligned appropriately.
 
-            output (tensor with single element): The output value with respect to which
+            output (Tensor): The output value with respect to which
                         the attribution values are computed. This value corresponds to
-                        the target score of a classification model.
+                        the target score of a classification model. The given tensor
+                        should only have a single element.
 
         Returns:
-            *tensor*:
+            *Tensor*:
             - **delta** Difference of relevance in output layer and input layer.
         """
         if isinstance(attributions, tuple):
@@ -314,10 +335,10 @@ class LRP(GradientAttribution):
     def _register_forward_hooks(self) -> None:
         for layer in self.layers:
             if type(layer) in SUPPORTED_NON_LINEAR_LAYERS:
-                backward_handle = _register_backward_hook(
+                backward_handles = _register_backward_hook(
                     layer, PropagationRule.backward_hook_activation, self
                 )
-                self.backward_handles.append(backward_handle)
+                self.backward_handles.extend(backward_handles)
             else:
                 forward_handle = layer.register_forward_hook(
                     layer.rule.forward_hook  # type: ignore
@@ -346,7 +367,7 @@ class LRP(GradientAttribution):
         self,
         inputs: Tuple[Tensor, ...],
         target: TargetType,
-        additional_forward_args: Any,
+        additional_forward_args: Optional[object],
     ) -> Tensor:
         try:
             self._register_weight_hooks()
@@ -357,7 +378,11 @@ class LRP(GradientAttribution):
         # adjustments as inputs to the layers with adjusted weights. This procedure
         # is important for graph generation in the 2nd forward pass.
         self._register_pre_hooks()
-        return output
+
+        # _run_forward may return future of Tensor,
+        # but we don't support it here now
+        # And it will fail before here.
+        return cast(Tensor, output)
 
     def _remove_forward_hooks(self) -> None:
         for forward_handle in self.forward_handles:

@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+# pyre-unsafe
+
 from __future__ import print_function
 
 import unittest
@@ -10,13 +12,13 @@ from captum.attr._models.base import (
     InterpretableEmbeddingBase,
     remove_interpretable_embedding_layer,
 )
-from tests.helpers.basic import assertTensorAlmostEqual
-from tests.helpers.basic_models import BasicEmbeddingModel, TextModule
+from captum.testing.helpers.basic import assertTensorAlmostEqual
+from captum.testing.helpers.basic_models import BasicEmbeddingModel, TextModule
 from torch.nn import Embedding
 
 
 class Test(unittest.TestCase):
-    def test_interpretable_embedding_base(self):
+    def test_interpretable_embedding_base(self) -> None:
         input1 = torch.tensor([2, 5, 0, 1])
         input2 = torch.tensor([3, 0, 0, 2])
         model = BasicEmbeddingModel()
@@ -59,7 +61,7 @@ class Test(unittest.TestCase):
         remove_interpretable_embedding_layer(model, interpretable_embedding1)
         self.assertTrue(model.embedding1.__class__ is Embedding)
 
-    def test_custom_module(self):
+    def test_custom_module(self) -> None:
         input1 = torch.tensor([[3, 2, 0], [1, 2, 4]])
         input2 = torch.tensor([[0, 1, 0], [1, 2, 3]])
         model = BasicEmbeddingModel()
@@ -81,7 +83,7 @@ class Test(unittest.TestCase):
         self.assertTrue(model.embedding2.__class__ is TextModule)
         self._assert_embeddings_equal(input2, output, interpretable_embedding)
 
-    def test_nested_multi_embeddings(self):
+    def test_nested_multi_embeddings(self) -> None:
         input1 = torch.tensor([[3, 2, 0], [1, 2, 4]])
         input2 = torch.tensor([[0, 1, 0], [2, 6, 8]])
         input3 = torch.tensor([[4, 1, 0], [2, 2, 8]])
@@ -113,7 +115,7 @@ class Test(unittest.TestCase):
         interpretable_embedding,
         embedding_dim=None,
         num_embeddings=None,
-    ):
+    ) -> None:
         if interpretable_embedding.embedding_dim is not None:
             self.assertEqual(embedding_dim, interpretable_embedding.embedding_dim)
             self.assertEqual(num_embeddings, interpretable_embedding.num_embeddings)

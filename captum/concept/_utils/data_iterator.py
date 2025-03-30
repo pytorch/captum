@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+# pyre-strict
+
 import glob
 import os
 from typing import Callable, Iterator
@@ -13,14 +15,16 @@ class CustomIterableDataset(IterableDataset):
     An auxiliary class for iterating through a dataset.
     """
 
+    # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
     def __init__(self, transform_filename_to_tensor: Callable, path: str) -> None:
         r"""
         Args:
-            transform_filename_to_tensor (callable): Function to read a data
+            transform_filename_to_tensor (Callable): Function to read a data
                         file from path and return a tensor from that file.
             path (str): Path to dataset files. This can be either a path to a
                         directory or a file where input examples are stored.
         """
+        # pyre-fixme[4]: Attribute must be annotated.
         self.file_itr = None
         self.path = path
 

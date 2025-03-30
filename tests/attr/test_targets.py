@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+# pyre-unsafe
+
 
 from typing import Any, Callable, cast, Dict, Optional, Tuple, Type
 
@@ -10,15 +12,19 @@ from captum.attr._core.integrated_gradients import IntegratedGradients
 from captum.attr._core.lime import Lime
 from captum.attr._core.noise_tunnel import NoiseTunnel
 from captum.attr._utils.attribution import Attribution, InternalAttribution
-from tests.attr.helpers.gen_test_utils import (
+from captum.testing.attr.helpers.gen_test_utils import (
     gen_test_name,
     get_target_layer,
     parse_test_config,
     should_create_generated_test,
 )
-from tests.attr.helpers.test_config import config
-from tests.helpers.basic import assertTensorTuplesAlmostEqual, BaseTest, deep_copy_args
-from tests.helpers.basic_models import BasicModel_MultiLayer
+from captum.testing.attr.helpers.test_config import config
+from captum.testing.helpers.basic import (
+    assertTensorTuplesAlmostEqual,
+    BaseTest,
+    deep_copy_args,
+)
+from captum.testing.helpers.basic_models import BasicModel_MultiLayer
 from torch import Tensor
 from torch.nn import Module
 
@@ -150,9 +156,11 @@ class TargetsMeta(type):
                 )
                 if original_additional_forward_args is not None:
                     args["additional_forward_args"] = tuple(
-                        single_add_arg[i : i + 1]
-                        if isinstance(single_add_arg, Tensor)
-                        else single_add_arg
+                        (
+                            single_add_arg[i : i + 1]
+                            if isinstance(single_add_arg, Tensor)
+                            else single_add_arg
+                        )
                         for single_add_arg in original_additional_forward_args
                     )
                 if replace_baselines:
@@ -160,9 +168,11 @@ class TargetsMeta(type):
                         args["baselines"] = original_baselines[i : i + 1]
                     elif isinstance(original_baselines, tuple):
                         args["baselines"] = tuple(
-                            single_baseline[i : i + 1]
-                            if isinstance(single_baseline, Tensor)
-                            else single_baseline
+                            (
+                                single_baseline[i : i + 1]
+                                if isinstance(single_baseline, Tensor)
+                                else single_baseline
+                            )
                             for single_baseline in original_baselines
                         )
                 # Since Lime methods compute attributions for a batch

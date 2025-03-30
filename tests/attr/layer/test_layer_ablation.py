@@ -1,13 +1,15 @@
 #!/usr/bin/env python3
 
+# pyre-unsafe
+
 import unittest
 from typing import Any, List, Tuple, Union
 
 import torch
 from captum._utils.typing import BaselineType
 from captum.attr._core.layer.layer_feature_ablation import LayerFeatureAblation
-from tests.helpers.basic import assertTensorTuplesAlmostEqual, BaseTest
-from tests.helpers.basic_models import (
+from captum.testing.helpers.basic import assertTensorTuplesAlmostEqual, BaseTest
+from captum.testing.helpers.basic_models import (
     BasicModel_ConvNet_One_Conv,
     BasicModel_MultiLayer,
     BasicModel_MultiLayer_MultiInput,
@@ -21,10 +23,10 @@ class Test(BaseTest):
         net = BasicModel_MultiLayer()
         inp = torch.tensor([[20.0, 50.0, 30.0]], requires_grad=True)
         self._ablation_test_assert(
-            net,
-            net.linear0,
-            inp,
-            ([280.0, 280.0, 120.0],),
+            model=net,
+            layer=net.linear0,
+            test_input=inp,
+            expected_ablation=([280.0, 280.0, 120.0],),
             layer_mask=torch.tensor([[0, 0, 1]]),
             perturbations_per_eval=(1, 2, 3),
             attribute_to_layer_input=True,
@@ -37,20 +39,20 @@ class Test(BaseTest):
         inp3 = torch.tensor([[0.0, 100.0, 10.0], [2.0, 10.0, 3.0]])
         baseline = torch.tensor([[1.0, 2.0, 3.0]])
         self._ablation_test_assert(
-            net,
-            net.model.linear1,
-            (inp1, inp2, inp3),
-            [[168.0, 992.0, 148.0], [84.0, 632.0, 120.0]],
+            model=net,
+            layer=net.model.linear1,
+            test_input=(inp1, inp2, inp3),
+            expected_ablation=[[168.0, 992.0, 148.0], [84.0, 632.0, 120.0]],
             additional_input=(1,),
             baselines=baseline,
             perturbations_per_eval=(1, 2, 3),
             attribute_to_layer_input=True,
         )
         self._ablation_test_assert(
-            net,
-            net.model.linear0,
-            (inp1, inp2, inp3),
-            [[168.0, 992.0, 148.0], [84.0, 632.0, 120.0]],
+            model=net,
+            layer=net.model.linear0,
+            test_input=(inp1, inp2, inp3),
+            expected_ablation=[[168.0, 992.0, 148.0], [84.0, 632.0, 120.0]],
             additional_input=(1,),
             baselines=baseline,
             perturbations_per_eval=(1, 2, 3),
@@ -65,10 +67,10 @@ class Test(BaseTest):
         baseline = torch.tensor([[1.0, 2.0, 3.0]])
         layer_mask = torch.tensor([[0, 1, 0], [0, 1, 2]])
         self._ablation_test_assert(
-            net,
-            net.model.linear1,
-            (inp1, inp2, inp3),
-            [[316.0, 992.0, 316.0], [84.0, 632.0, 120.0]],
+            model=net,
+            layer=net.model.linear1,
+            test_input=(inp1, inp2, inp3),
+            expected_ablation=[[316.0, 992.0, 316.0], [84.0, 632.0, 120.0]],
             additional_input=(1,),
             baselines=baseline,
             perturbations_per_eval=(1, 2, 3),
@@ -76,10 +78,10 @@ class Test(BaseTest):
             attribute_to_layer_input=True,
         )
         self._ablation_test_assert(
-            net,
-            net.model.linear0,
-            (inp1, inp2, inp3),
-            [[316.0, 992.0, 316.0], [84.0, 632.0, 120.0]],
+            model=net,
+            layer=net.model.linear0,
+            test_input=(inp1, inp2, inp3),
+            expected_ablation=[[316.0, 992.0, 316.0], [84.0, 632.0, 120.0]],
             additional_input=(1,),
             baselines=baseline,
             layer_mask=layer_mask,
@@ -91,17 +93,19 @@ class Test(BaseTest):
         inp = torch.arange(16, dtype=torch.float).view(1, 1, 4, 4)
         inp2 = torch.ones((1, 1, 4, 4))
         self._ablation_test_assert(
-            net,
-            net.relu1,
-            (inp, inp2),
-            [[[[4.0, 13.0], [40.0, 49.0]], [[0, 0], [-15.0, -24.0]]]],
+            model=net,
+            layer=net.relu1,
+            test_input=(inp, inp2),
+            expected_ablation=[[[[4.0, 13.0], [40.0, 49.0]], [[0, 0], [-15.0, -24.0]]]],
             perturbations_per_eval=(1, 2, 4, 8, 12, 16),
         )
         self._ablation_test_assert(
-            net,
-            net.relu1,
-            (inp, inp2),
-            ([[[4.0, 13.0], [40.0, 49.0]], [[0, 0], [-15.0, -24.0]]],),
+            model=net,
+            layer=net.relu1,
+            test_input=(inp, inp2),
+            expected_ablation=(
+                [[[4.0, 13.0], [40.0, 49.0]], [[0, 0], [-15.0, -24.0]]],
+            ),
             baselines=torch.tensor(
                 [[[-4.0, -13.0], [-2.0, -2.0]], [[0, 0], [0.0, 0.0]]]
             ),
@@ -109,10 +113,12 @@ class Test(BaseTest):
             attribute_to_layer_input=True,
         )
         self._ablation_test_assert(
-            net,
-            net.relu1,
-            (inp, inp2),
-            [[[[17.0, 17.0], [67.0, 67.0]], [[0, 0], [-39.0, -39.0]]]],
+            model=net,
+            layer=net.relu1,
+            test_input=(inp, inp2),
+            expected_ablation=[
+                [[[17.0, 17.0], [67.0, 67.0]], [[0, 0], [-39.0, -39.0]]]
+            ],
             perturbations_per_eval=(1, 2, 4),
             layer_mask=torch.tensor([[[[0, 0], [1, 1]], [[2, 2], [3, 3]]]]),
         )
@@ -121,17 +127,20 @@ class Test(BaseTest):
         net = BasicModel_MultiLayer(multi_input_module=True)
         inp = torch.tensor([[0.0, 6.0, 0.0]])
         self._ablation_test_assert(
-            net, net.multi_relu, inp, ([[0.0, 7.0, 7.0, 7.0]], [[0.0, 7.0, 7.0, 7.0]])
+            model=net,
+            layer=net.multi_relu,
+            test_input=inp,
+            expected_ablation=([[0.0, 7.0, 7.0, 7.0]], [[0.0, 7.0, 7.0, 7.0]]),
         )
 
     def test_simple_multi_output_input_ablation(self) -> None:
         net = BasicModel_MultiLayer(multi_input_module=True)
         inp = torch.tensor([[0.0, 6.0, 0.0]])
         self._ablation_test_assert(
-            net,
-            net.multi_relu,
-            inp,
-            ([[0.0, 7.0, 7.0, 7.0]], [[0.0, 7.0, 7.0, 7.0]]),
+            model=net,
+            layer=net.multi_relu,
+            test_input=inp,
+            expected_ablation=([[0.0, 7.0, 7.0, 7.0]], [[0.0, 7.0, 7.0, 7.0]]),
             attribute_to_layer_input=True,
         )
 
@@ -151,7 +160,7 @@ class Test(BaseTest):
         for batch_size in perturbations_per_eval:
             ablation = LayerFeatureAblation(model, layer)
             attributions = ablation.attribute(
-                test_input,
+                inputs=test_input,
                 target=target,
                 layer_mask=layer_mask,
                 additional_forward_args=additional_input,

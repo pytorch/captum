@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
 
+# pyre-strict
+
 from abc import ABC, abstractmethod
-from typing import Any
+from typing import Any, Type
 
 from torch.nn import Module
 from torch.utils.data import Dataset
@@ -12,23 +14,25 @@ class DataInfluence(ABC):
     An abstract class to define model data influence skeleton.
     """
 
-    def __init_(
-        self, model: Module, influence_src_dataset: Dataset, **kwargs: Any
-    ) -> None:
+    def __init_(self, model: Module, train_dataset: Dataset, **kwargs: Any) -> None:
         r"""
         Args:
             model (torch.nn.Module): An instance of pytorch model.
-            influence_src_dataset (torch.utils.data.Dataset): PyTorch Dataset that is
+            train_dataset (torch.utils.data.Dataset): PyTorch Dataset that is
                     used to create a PyTorch Dataloader to iterate over the dataset and
                     its labels. This is the dataset for which we will be seeking for
                     influential instances. In most cases this is the training dataset.
             **kwargs: Additional key-value arguments that are necessary for specific
                     implementation of `DataInfluence` abstract class.
         """
+        # pyre-fixme[16]: `DataInfluence` has no attribute `model`.
         self.model = model
-        self.influence_src_dataset = influence_src_dataset
+        # pyre-fixme[16]: `DataInfluence` has no attribute `train_dataset`.
+        self.train_dataset = train_dataset
 
     @abstractmethod
+    # pyre-fixme[3]: Return annotation cannot be `Any`.
+    # pyre-fixme[2]: Parameter annotation cannot be `Any`.
     def influence(self, inputs: Any = None, **kwargs: Any) -> Any:
         r"""
         Args:
@@ -44,3 +48,15 @@ class DataInfluence(ABC):
                     though this may change in the future.
         """
         pass
+
+    @classmethod
+    def get_name(cls: Type["DataInfluence"]) -> str:
+        r"""
+        Create readable class name.  Due to the nature of the names of `TracInCPBase`
+        subclasses, simply returns the class name.  For example, for a class called
+        TracInCP, we return the string TracInCP.
+
+        Returns:
+            name (str): a readable class name
+        """
+        return cls.__name__

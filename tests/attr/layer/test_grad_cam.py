@@ -1,16 +1,20 @@
 #!/usr/bin/env python3
 
+# pyre-unsafe
+
 import unittest
-from typing import Any, Tuple, Union
+from typing import Any, Dict, Optional, Tuple, Union
 
 import torch
 from captum._utils.typing import TensorLikeList
 from captum.attr._core.layer.grad_cam import LayerGradCam
-from tests.helpers.basic import assertTensorTuplesAlmostEqual, BaseTest
-from tests.helpers.basic_models import (
+from captum.testing.helpers import BaseTest
+from captum.testing.helpers.basic import assertTensorTuplesAlmostEqual
+from captum.testing.helpers.basic_models import (
     BasicModel_ConvNet_One_Conv,
     BasicModel_MultiLayer,
 )
+from packaging import version
 from torch import Tensor
 from torch.nn import Module
 
@@ -31,6 +35,23 @@ class Test(BaseTest):
         inp = torch.arange(16).view(1, 1, 4, 4).float()
         self._grad_cam_test_assert(
             net, net.conv1, inp, [[[[11.25, 13.5], [20.25, 22.5]]]]
+        )
+
+    def test_simple_input_conv_split_channels(self) -> None:
+        net = BasicModel_ConvNet_One_Conv()
+        inp = torch.arange(16).view(1, 1, 4, 4).float()
+        expected_result = [
+            [
+                [[-3.7500, 3.0000], [23.2500, 30.0000]],
+                [[15.0000, 10.5000], [-3.0000, -7.5000]],
+            ]
+        ]
+        self._grad_cam_test_assert(
+            net,
+            net.conv1,
+            inp,
+            expected_activation=expected_result,
+            attr_dim_summation=False,
         )
 
     def test_simple_input_conv_no_grad(self) -> None:
@@ -100,7 +121,9 @@ class Test(BaseTest):
         additional_input: Any = None,
         attribute_to_layer_input: bool = False,
         relu_attributions: bool = False,
-    ):
+        attr_dim_summation: bool = True,
+        grad_kwargs: Optional[Dict[str, Any]] = None,
+    ) -> None:
         layer_gc = LayerGradCam(model, target_layer)
         self.assertFalse(layer_gc.multiplies_by_inputs)
         attributions = layer_gc.attribute(
@@ -109,10 +132,30 @@ class Test(BaseTest):
             additional_forward_args=additional_input,
             attribute_to_layer_input=attribute_to_layer_input,
             relu_attributions=relu_attributions,
+            attr_dim_summation=attr_dim_summation,
+            grad_kwargs=grad_kwargs,
         )
         assertTensorTuplesAlmostEqual(
             self, attributions, expected_activation, delta=0.01
         )
+
+    def test_relu_gradcam_with_unused_layer(self) -> None:
+        if version.parse(torch.__version__) < version.parse("2.1.0"):
+            raise unittest.SkipTest(
+                "Skipping unused layed gradient test since it is not supported "
+                "by torch version < 2.1"
+            )
+        net = BasicModel_MultiLayer(multi_input_module=True)
+        inp = torch.tensor([[0.0, 6.0, 0.0]], requires_grad=True)
+        gradcam = LayerGradCam(net, net.relu)
+        attributions = gradcam.attribute(
+            inputs=inp,
+            target=0,
+            grad_kwargs={"materialize_grads": True},
+        )
+        self.assertEqual(len(attributions), 1)
+        self.assertEqual(list(attributions[0].shape), [1])
+        self.assertAlmostEqual(attributions[0].sum(), 0)
 
 
 if __name__ == "__main__":

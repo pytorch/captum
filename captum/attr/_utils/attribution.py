@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
-from typing import Any, Callable, cast, Generic, List, Tuple, Type, Union
+
+# pyre-strict
+from typing import Callable, cast, Generic, List, Optional, Tuple, Type, Union
 
 import torch
 import torch.nn.functional as F
@@ -22,21 +24,26 @@ from torch import Tensor
 from torch.nn import Module
 
 
+# pyre-fixme[13]: Attribute `attribute` is never initialized.
+# pyre-fixme[13]: Attribute `compute_convergence_delta` is never initialized.
 class Attribution:
     r"""
     All attribution algorithms extend this class. It enforces its child classes
     to extend and override core `attribute` method.
     """
 
+    # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
     def __init__(self, forward_func: Callable) -> None:
         r"""
         Args:
-            forward_func (callable or torch.nn.Module): This can either be an instance
+            forward_func (Callable or torch.nn.Module): This can either be an instance
                         of pytorch model or any modification of model's forward
                         function.
         """
         self.forward_func = forward_func
 
+    # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
+    # pyre-fixme[13]: Attribute `attribute` is never initialized.
     attribute: Callable
     r"""
     This method computes and returns the attribution values for each input tensor.
@@ -47,17 +54,17 @@ class Attribution:
 
     Args:
 
-        inputs (tensor or tuple of tensors):  Input for which attribution
+        inputs (Tensor or tuple[Tensor, ...]): Input for which attribution
                     is computed. It can be provided as a single tensor or
                     a tuple of multiple tensors. If multiple input tensors
-                    are provided, the batch sizes must be aligned accross all
+                    are provided, the batch sizes must be aligned across all
                     tensors.
 
 
     Returns:
 
-        *tensor* or tuple of *tensors* of **attributions**:
-        - **attributions** (*tensor* or tuple of *tensors*):
+        *Tensor* or *tuple[Tensor, ...]* of **attributions**:
+        - **attributions** (*Tensor* or *tuple[Tensor, ...]*):
                     Attribution values for each
                     input tensor. The `attributions` have the same shape and
                     dimensionality as the inputs.
@@ -67,8 +74,40 @@ class Attribution:
 
     """
 
+    # pyre-fixme[24] Generic type `Callable` expects 2 type parameters.
+    # pyre-fixme[13]: Attribute `attribute_future` is never initialized.
+    attribute_future: Callable
+
+    r"""
+    This method computes and returns a Future of attribution values for each input
+    tensor. Deriving classes are responsible for implementing its logic accordingly.
+
+    Specific attribution algorithms that extend this class take relevant
+    arguments.
+
+    Args:
+
+        inputs (Tensor or tuple[Tensor, ...]): Input for which attribution
+                    is computed. It can be provided as a single tensor or
+                    a tuple of multiple tensors. If multiple input tensors
+                    are provided, the batch sizes must be aligned across all
+                    tensors.
+
+
+    Returns:
+
+        *Future[Tensor]* or *Future[tuple[Tensor, ...]]* of **attributions**:
+        - **attributions** (*Future[Tensor]* or *Future[tuple[Tensor, ...]]*):
+                    Future of attribution values for each input tensor.
+                    The results should be the same as the attribute
+                    method, except that the results are returned as a Future.
+                    If a single tensor is provided as inputs, a single Future tensor
+                    is returned. If a tuple is provided for inputs, a Future of a
+                    tuple of corresponding sized tensors is returned.
+    """
+
     @property
-    def multiplies_by_inputs(self):
+    def multiplies_by_inputs(self) -> bool:
         return False
 
     def has_convergence_delta(self) -> bool:
@@ -88,6 +127,8 @@ class Attribution:
         """
         return False
 
+    # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
+    # pyre-fixme[13]: Attribute `compute_convergence_delta` is never initialized.
     compute_convergence_delta: Callable
     r"""
     The attribution algorithms which derive `Attribution` class and provide
@@ -97,21 +138,21 @@ class Attribution:
 
     Args:
 
-            attributions (tensor or tuple of tensors): Attribution scores that
+            attributions (Tensor or tuple[Tensor, ...]): Attribution scores that
                         are precomputed by an attribution algorithm.
                         Attributions can be provided in form of a single tensor
                         or a tuple of those. It is assumed that attribution
                         tensor's dimension 0 corresponds to the number of
                         examples, and if multiple input tensors are provided,
                         the examples must be aligned appropriately.
-            *args (optional): Additonal arguments that are used by the
+            *args (Any, optional): Additonal arguments that are used by the
                         sub-classes depending on the specific implementation
                         of `compute_convergence_delta`.
 
     Returns:
 
-            *tensor* of **deltas**:
-            - **deltas** (*tensor*):
+            *Tensor* of **deltas**:
+            - **deltas** (*Tensor*):
                 Depending on specific implementaion of
                 sub-classes, convergence delta can be returned per
                 sample in form of a tensor or it can be aggregated
@@ -146,15 +187,17 @@ class GradientAttribution(Attribution):
     that we want to interpret or the model itself.
     """
 
+    # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
     def __init__(self, forward_func: Callable) -> None:
         r"""
         Args:
 
-            forward_func (callable or torch.nn.Module): This can either be an instance
+            forward_func (Callable or torch.nn.Module): This can either be an instance
                         of pytorch model or any modification of model's forward
                         function.
         """
         Attribution.__init__(self, forward_func)
+        # pyre-fixme[4]: Attribute must be annotated.
         self.gradient_func = compute_gradients
 
     @log_usage()
@@ -166,7 +209,7 @@ class GradientAttribution(Attribution):
         ],
         end_point: Union[Tensor, Tuple[Tensor, ...]],
         target: TargetType = None,
-        additional_forward_args: Any = None,
+        additional_forward_args: Optional[object] = None,
     ) -> Tensor:
         r"""
         Here we provide a specific implementation for `compute_convergence_delta`
@@ -184,26 +227,26 @@ class GradientAttribution(Attribution):
 
         Args:
 
-                attributions (tensor or tuple of tensors): Precomputed attribution
+                attributions (Tensor or tuple[Tensor, ...]): Precomputed attribution
                             scores. The user can compute those using any attribution
-                            algorithm. It is assumed the the shape and the
+                            algorithm. It is assumed the shape and the
                             dimensionality of attributions must match the shape and
                             the dimensionality of `start_point` and `end_point`.
                             It also assumes that the attribution tensor's
                             dimension 0 corresponds to the number of
                             examples, and if multiple input tensors are provided,
                             the examples must be aligned appropriately.
-                start_point (tensor or tuple of tensors, optional): `start_point`
+                start_point (Tensor or tuple[Tensor, ...], optional): `start_point`
                             is passed as an input to model's forward function. It
                             is the starting point of attributions' approximation.
                             It is assumed that both `start_point` and `end_point`
                             have the same shape and dimensionality.
-                end_point (tensor or tuple of tensors):  `end_point`
+                end_point (Tensor or tuple[Tensor, ...]): `end_point`
                             is passed as an input to model's forward function. It
                             is the end point of attributions' approximation.
                             It is assumed that both `start_point` and `end_point`
                             have the same shape and dimensionality.
-                target (int, tuple, tensor or list, optional):  Output indices for
+                target (int, tuple, Tensor, or list, optional): Output indices for
                             which gradients are computed (for classification cases,
                             this is usually the target class).
                             If the network returns a scalar value per example,
@@ -228,7 +271,7 @@ class GradientAttribution(Attribution):
                               target for the corresponding example.
 
                             Default: None
-                additional_forward_args (any, optional): If the forward function
+                additional_forward_args (Any, optional): If the forward function
                             requires additional arguments other than the inputs for
                             which attributions should not be computed, this argument
                             can be provided. It must be either a single additional
@@ -245,8 +288,8 @@ class GradientAttribution(Attribution):
 
         Returns:
 
-                *tensor* of **deltas**:
-                - **deltas** (*tensor*):
+                *Tensor* of **deltas**:
+                - **deltas** (*Tensor*):
                     This implementation returns convergence delta per
                     sample. Deriving sub-classes may do any type of aggregation
                     of those values, if necessary.
@@ -276,17 +319,22 @@ class GradientAttribution(Attribution):
         _validate_target(num_samples, target)
 
         with torch.no_grad():
-            start_out_sum = _sum_rows(
-                _run_forward(
-                    self.forward_func, start_point, target, additional_forward_args
-                )
+            start_out_eval = _run_forward(
+                self.forward_func, start_point, target, additional_forward_args
             )
+            # _run_forward may return future of Tensor,
+            # but we don't support it here now
+            # And it will fail before here.
+            start_out_sum = _sum_rows(cast(Tensor, start_out_eval))
 
-            end_out_sum = _sum_rows(
-                _run_forward(
-                    self.forward_func, end_point, target, additional_forward_args
-                )
+            end_out_eval = _run_forward(
+                self.forward_func, end_point, target, additional_forward_args
             )
+            # _run_forward may return future of Tensor,
+            # but we don't support it here now
+            # And it will fail before here.
+            end_out_sum = _sum_rows(cast(Tensor, end_out_eval))
+
             row_sums = [_sum_rows(attribution) for attribution in attributions]
             attr_sum = torch.stack(
                 [cast(Tensor, sum(row_sum)) for row_sum in zip(*row_sums)]
@@ -302,30 +350,35 @@ class PerturbationAttribution(Attribution):
     that we want to interpret or the model itself.
     """
 
+    # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
     def __init__(self, forward_func: Callable) -> None:
         r"""
         Args:
 
-            forward_func (callable or torch.nn.Module): This can either be an instance
+            forward_func (Callable or torch.nn.Module): This can either be an instance
                         of pytorch model or any modification of model's forward
                         function.
         """
         Attribution.__init__(self, forward_func)
 
     @property
-    def multiplies_by_inputs(self):
+    def multiplies_by_inputs(self) -> bool:
         return True
 
 
-class InternalAttribution(Attribution, Generic[ModuleOrModuleList]):
-    layer: ModuleOrModuleList
+# mypy false positive "Free type variable expected in Generic[...]" but
+# ModuleOrModuleList is a TypeVar
+class InternalAttribution(Attribution, Generic[ModuleOrModuleList]):  # type: ignore
     r"""
     Shared base class for LayerAttrubution and NeuronAttribution,
     attribution types that require a model and a particular layer.
     """
 
+    layer: ModuleOrModuleList
+
     def __init__(
         self,
+        # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
         forward_func: Callable,
         layer: ModuleOrModuleList,
         device_ids: Union[None, List[int]] = None,
@@ -333,12 +386,12 @@ class InternalAttribution(Attribution, Generic[ModuleOrModuleList]):
         r"""
         Args:
 
-            forward_func (callable or torch.nn.Module):  This can either be an instance
+            forward_func (Callable or torch.nn.Module): This can either be an instance
                         of pytorch model or any modification of model's forward
                         function.
             layer (torch.nn.Module): Layer for which output attributions are computed.
                         Output size of attribute matches that of layer output.
-            device_ids (list(int)): Device ID list, necessary only if forward_func
+            device_ids (list[int]): Device ID list, necessary only if forward_func
                         applies a DataParallel model, which allows reconstruction of
                         intermediate outputs from batched results across devices.
                         If forward_func is given as the DataParallel model itself,
@@ -349,9 +402,10 @@ class InternalAttribution(Attribution, Generic[ModuleOrModuleList]):
         self.device_ids = device_ids
 
 
+# pyre-fixme[24]: Generic type `InternalAttribution` expects 1 type parameter.
 class LayerAttribution(InternalAttribution):
     r"""
-    Layer attribution provides attribution values for the given layer, quanitfying
+    Layer attribution provides attribution values for the given layer, quantifying
     the importance of each neuron within the given layer's output. The output
     attribution of calling attribute on a LayerAttribution object always matches
     the size of the layer output.
@@ -359,6 +413,7 @@ class LayerAttribution(InternalAttribution):
 
     def __init__(
         self,
+        # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
         forward_func: Callable,
         layer: ModuleOrModuleList,
         device_ids: Union[None, List[int]] = None,
@@ -366,12 +421,12 @@ class LayerAttribution(InternalAttribution):
         r"""
         Args:
 
-            forward_func (callable or torch.nn.Module):  This can either be an instance
+            forward_func (Callable or torch.nn.Module): This can either be an instance
                         of pytorch model or any modification of model's forward
                         function.
             layer (torch.nn.Module): Layer for which output attributions are computed.
                         Output size of attribute matches that of layer output.
-            device_ids (list(int)): Device ID list, necessary only if forward_func
+            device_ids (list[int]): Device ID list, necessary only if forward_func
                         applies a DataParallel model, which allows reconstruction of
                         intermediate outputs from batched results across devices.
                         If forward_func is given as the DataParallel model itself,
@@ -392,13 +447,13 @@ class LayerAttribution(InternalAttribution):
 
         Args:
 
-            layer_attribution (torch.Tensor):  Tensor of given layer attributions.
+            layer_attribution (Tensor): Tensor of given layer attributions.
             interpolate_dims (int or tuple): Upsampled dimensions. The
                         number of elements must be the number of dimensions
                         of layer_attribution - 2, since the first dimension
                         corresponds to number of examples and the second is
                         assumed to correspond to the number of channels.
-            interpolate_mode (str):  Method for interpolation, which
+            interpolate_mode (str): Method for interpolation, which
                         must be a valid input interpolation mode for
                         torch.nn.functional. These methods are
                         "nearest", "area", "linear" (3D-only), "bilinear"
@@ -407,8 +462,8 @@ class LayerAttribution(InternalAttribution):
                         attribution.
 
         Returns:
-            *tensor* of upsampled **attributions**:
-            - **attributions** (*tensor*):
+            *Tensor* of upsampled **attributions**:
+            - **attributions** (*Tensor*):
                 Upsampled layer attributions with first 2 dimensions matching
                 slayer_attribution and remaining dimensions given by
                 interpolate_dims.
@@ -416,9 +471,11 @@ class LayerAttribution(InternalAttribution):
         return F.interpolate(layer_attribution, interpolate_dims, mode=interpolate_mode)
 
 
+# pyre-fixme[13]: Attribute `attribute` is never initialized.
+# pyre-fixme[24]: Generic type `InternalAttribution` expects 1 type parameter.
 class NeuronAttribution(InternalAttribution):
     r"""
-    Neuron attribution provides input attribution for a given neuron, quanitfying
+    Neuron attribution provides input attribution for a given neuron, quantifying
     the importance of each input feature in the activation of a particular neuron.
     Calling attribute on a NeuronAttribution object requires also providing
     the index of the neuron in the output of the given layer for which attributions
@@ -429,6 +486,7 @@ class NeuronAttribution(InternalAttribution):
 
     def __init__(
         self,
+        # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
         forward_func: Callable,
         layer: Module,
         device_ids: Union[None, List[int]] = None,
@@ -436,12 +494,12 @@ class NeuronAttribution(InternalAttribution):
         r"""
         Args:
 
-            forward_func (callable or torch.nn.Module):  This can either be an instance
+            forward_func (Callable or torch.nn.Module): This can either be an instance
                         of pytorch model or any modification of model's forward
                         function.
             layer (torch.nn.Module): Layer for which output attributions are computed.
                         Output size of attribute matches that of layer output.
-            device_ids (list(int)): Device ID list, necessary only if forward_func
+            device_ids (list[int]): Device ID list, necessary only if forward_func
                         applies a DataParallel model, which allows reconstruction of
                         intermediate outputs from batched results across devices.
                         If forward_func is given as the DataParallel model itself,
@@ -449,6 +507,8 @@ class NeuronAttribution(InternalAttribution):
         """
         InternalAttribution.__init__(self, forward_func, layer, device_ids)
 
+    # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
+    # pyre-fixme[13]: Attribute `attribute` is never initialized.
     attribute: Callable
     r"""
     This method computes and returns the neuron attribution values for each
@@ -469,8 +529,8 @@ class NeuronAttribution(InternalAttribution):
 
     Returns:
 
-            *tensor* or tuple of *tensors* of **attributions**:
-            - **attributions** (*tensor* or tuple of *tensors*):
+            *Tensor* or *tuple[Tensor, ...]* of **attributions**:
+            - **attributions** (*Tensor* or *tuple[Tensor, ...]*):
                     Attribution values for
                     each input vector. The `attributions` have the
                     dimensionality of inputs.

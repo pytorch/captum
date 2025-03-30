@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+# pyre-strict
+import unittest
 from typing import Any, cast, List, Tuple, Union
 
 import torch
@@ -11,16 +13,17 @@ from captum.attr._models.base import (
     configure_interpretable_embedding_layer,
     remove_interpretable_embedding_layer,
 )
-from tests.helpers.basic import (
+from captum.testing.helpers.basic import (
     assertTensorAlmostEqual,
     assertTensorTuplesAlmostEqual,
     BaseTest,
 )
-from tests.helpers.basic_models import (
+from captum.testing.helpers.basic_models import (
     BasicEmbeddingModel,
     BasicModel_MultiLayer,
     BasicModel_MultiLayer_TrueMultiInput,
 )
+from packaging import version
 from torch import Tensor
 from torch.nn import Module
 
@@ -113,6 +116,8 @@ class Test(BaseTest):
 
         net = BasicModel_MultiLayer_TrueMultiInput()
 
+        # pyre-fixme[6]: For 2nd argument expected `ModuleOrModuleList` but got
+        #  `List[Union[BasicModel_MultiLayer, BasicModel_MultiLayer_MultiInput]]`.
         lig = LayerIntegratedGradients(net, layer=[net.m1, net.m234])
         ig = IntegratedGradients(net)
 
@@ -132,7 +137,8 @@ class Test(BaseTest):
             self,
             # last input for second layer is first input =>
             # add the attributions
-            (attribs_inputs[0] + attribs_inputs[1][-1],) + attribs_inputs[1][0:-1],
+            (attribs_inputs[0] + attribs_inputs[1][-1],)  # type: ignore
+            + attribs_inputs[1][0:-1],  # type: ignore
             attribs_inputs_regular_ig,
             delta=1e-5,
         )
@@ -159,6 +165,8 @@ class Test(BaseTest):
 
         net = BasicModel_MultiLayer_TrueMultiInput()
 
+        # pyre-fixme[6]: For 2nd argument expected `ModuleOrModuleList` but got
+        #  `List[Union[BasicModel_MultiLayer, BasicModel_MultiLayer_MultiInput]]`.
         lig = LayerIntegratedGradients(net, layer=[net.m1, net.m234])
         ig = IntegratedGradients(net)
 
@@ -176,7 +184,7 @@ class Test(BaseTest):
 
         assertTensorTuplesAlmostEqual(
             self,
-            (attribs_inputs[0],) + attribs_inputs[1],
+            (attribs_inputs[0],) + attribs_inputs[1],  # type: ignore
             attribs_inputs_regular_ig,
             delta=1e-7,
         )
@@ -223,9 +231,31 @@ class Test(BaseTest):
             attributions,
         )
 
+    def test_simple_multi_gradient_activation_with_unused_layer(self) -> None:
+        if version.parse(torch.__version__) < version.parse("2.1.0"):
+            raise unittest.SkipTest(
+                "Skipping unused layed gradient test since it is not supported "
+                "by torch version < 2.1"
+            )
+
+        model = BasicModel_MultiLayer(multi_input_module=True)
+        test_input = torch.tensor([[3.0, 4.0, 0.0]], requires_grad=True)
+        # pyre-fixme[6]: For 2nd argument expected `ModuleOrModuleList` but got
+        #  `List[Union[ReLU, Linear]]`.
+        layer_ig = LayerIntegratedGradients(model, [model.linear1, model.relu])
+        attributions = cast(
+            List[Tensor],
+            layer_ig.attribute(
+                inputs=test_input, target=0, grad_kwargs={"materialize_grads": True}
+            ),
+        )
+        self.assertEqual(len(attributions), 2)
+        self.assertEqual(list(attributions[0].shape), [1, 4])
+        self.assertEqual(list(attributions[1].shape), [1, 4])
+
     def _assert_compare_with_layer_conductance(
         self, model: Module, input: Tensor, attribute_to_layer_input: bool = False
-    ):
+    ) -> None:
         lc = LayerConductance(model, cast(Module, model.linear2))
         # For large number of steps layer conductance and layer integrated gradients
         # become very close
@@ -256,7 +286,7 @@ class Test(BaseTest):
         additional_args: Union[None, Tuple[Tensor, ...]],
         multiply_by_inputs: bool = True,
         multiple_emb: bool = False,
-    ):
+    ) -> None:
         model = BasicEmbeddingModel(nested_second_embedding=True)
         if multiple_emb:
             module_list: List[Module] = [model.embedding1, model.embedding2]
@@ -340,8 +370,10 @@ class Test(BaseTest):
         target_layer: Module,
         test_input: Union[Tensor, Tuple[Tensor, ...]],
         expected_ig: Tuple[List[List[float]], ...],
+        # pyre-fixme[2]: Parameter `additional_input` has type `None`
+        # but type `Any` is specified.
         additional_input: Any = None,
-    ):
+    ) -> None:
         layer_ig = LayerIntegratedGradients(model, target_layer)
         attributions = layer_ig.attribute(
             test_input, target=0, additional_forward_args=additional_input
