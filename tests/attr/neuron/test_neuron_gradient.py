@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+# pyre-unsafe
+
 import unittest
 from typing import Any, Callable, cast, List, Tuple, Union
 
@@ -8,12 +10,12 @@ from captum._utils.gradient import _forward_layer_eval
 from captum._utils.typing import TensorOrTupleOfTensorsGeneric
 from captum.attr._core.neuron.neuron_gradient import NeuronGradient
 from captum.attr._core.saliency import Saliency
-from tests.helpers.basic import (
+from captum.testing.helpers.basic import (
     assertTensorAlmostEqual,
     assertTensorTuplesAlmostEqual,
     BaseTest,
 )
-from tests.helpers.basic_models import (
+from captum.testing.helpers.basic_models import (
     BasicModel_ConvNet,
     BasicModel_MultiLayer,
     BasicModel_MultiLayer_MultiInput,
@@ -141,7 +143,7 @@ class Test(BaseTest):
             while len(neuron) < len(out.shape) - 1:
                 neuron = neuron + (0,)
             input_attrib = Saliency(
-                lambda x: _forward_layer_eval(
+                lambda x, neuron=neuron: _forward_layer_eval(
                     model, x, output_layer, grad_enabled=True
                 )[0][(slice(None), *neuron)]
             )

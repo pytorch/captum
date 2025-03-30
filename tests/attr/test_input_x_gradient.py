@@ -1,38 +1,44 @@
 #!/usr/bin/env python3
-from typing import Any, cast
+
+# pyre-unsafe
+from typing import cast, Optional
 
 import torch
 from captum._utils.typing import TensorOrTupleOfTensorsGeneric
 from captum.attr._core.input_x_gradient import InputXGradient
 from captum.attr._core.noise_tunnel import NoiseTunnel
-from tests.attr.test_saliency import _get_basic_config, _get_multiargs_basic_config
-from tests.helpers.basic import assertTensorAlmostEqual, BaseTest
-from tests.helpers.classification_models import SoftmaxModel
+from captum.testing.attr.helpers.get_config_util import (
+    get_basic_config,
+    get_multiargs_basic_config,
+)
+from captum.testing.helpers import BaseTest
+from captum.testing.helpers.basic import assertTensorAlmostEqual
+from captum.testing.helpers.classification_models import SoftmaxModel
 from torch import Tensor
 from torch.nn import Module
 
 
 class Test(BaseTest):
     def test_input_x_gradient_test_basic_vanilla(self) -> None:
-        self._input_x_gradient_base_assert(*_get_basic_config())
+        self._input_x_gradient_base_assert(*get_basic_config())
 
     def test_input_x_gradient_test_basic_smoothgrad(self) -> None:
-        self._input_x_gradient_base_assert(*_get_basic_config(), nt_type="smoothgrad")
+        self._input_x_gradient_base_assert(*get_basic_config(), nt_type="smoothgrad")
 
     def test_input_x_gradient_test_basic_vargrad(self) -> None:
-        self._input_x_gradient_base_assert(*_get_basic_config(), nt_type="vargrad")
+        self._input_x_gradient_base_assert(*get_basic_config(), nt_type="vargrad")
 
     def test_saliency_test_basic_multi_variable_vanilla(self) -> None:
-        self._input_x_gradient_base_assert(*_get_multiargs_basic_config())
+        self._input_x_gradient_base_assert(*get_multiargs_basic_config())
 
     def test_saliency_test_basic_multi_variable_smoothgrad(self) -> None:
         self._input_x_gradient_base_assert(
-            *_get_multiargs_basic_config(), nt_type="smoothgrad"
+            *get_multiargs_basic_config(), nt_type="smoothgrad"
         )
 
     def test_saliency_test_basic_multi_vargrad(self) -> None:
         self._input_x_gradient_base_assert(
-            *_get_multiargs_basic_config(), nt_type="vargrad"
+            *get_multiargs_basic_config(), nt_type="vargrad"
         )
 
     def test_input_x_gradient_classification_vanilla(self) -> None:
@@ -44,12 +50,20 @@ class Test(BaseTest):
     def test_input_x_gradient_classification_vargrad(self) -> None:
         self._input_x_gradient_classification_assert(nt_type="vargrad")
 
+    def test_futures_not_implemented(self) -> None:
+        model = SoftmaxModel(5, 20, 10)
+        input_x_grad = InputXGradient(model.forward)
+        attributions = None
+        with self.assertRaises(NotImplementedError):
+            attributions = input_x_grad.attribute_future()
+        self.assertEqual(attributions, None)
+
     def _input_x_gradient_base_assert(
         self,
         model: Module,
         inputs: TensorOrTupleOfTensorsGeneric,
         expected_grads: TensorOrTupleOfTensorsGeneric,
-        additional_forward_args: Any = None,
+        additional_forward_args: Optional[object] = None,
         nt_type: str = "vanilla",
     ) -> None:
         input_x_grad = InputXGradient(model)
@@ -80,11 +94,9 @@ class Test(BaseTest):
         elif isinstance(attributions, Tensor):
             if nt_type == "vanilla":
                 self._assert_attribution(expected_grads, inputs, attributions)
-            self.assertEqual(
-                cast(Tensor, inputs).shape, cast(Tensor, attributions).shape
-            )
+            self.assertEqual(cast(Tensor, inputs).shape, attributions.shape)
 
-    def _assert_attribution(self, expected_grad, input, attribution):
+    def _assert_attribution(self, expected_grad, input, attribution: Tensor) -> None:
         assertTensorAlmostEqual(
             self,
             attribution,
@@ -105,7 +117,9 @@ class Test(BaseTest):
             attributions = input_x_grad.attribute(input, target)
             output = model(input)[:, target]
             output.backward()
-            expected = input.grad * input
+            input_grad = input.grad
+            assert input_grad is not None
+            expected = input_grad * input
             assertTensorAlmostEqual(self, attributions, expected, 0.00001, "max")
         else:
             nt = NoiseTunnel(input_x_grad)

@@ -1,16 +1,19 @@
 #!/usr/bin/env python3
 
+# pyre-unsafe
+
 import torch
 from captum.attr._utils.batching import (
     _batched_generator,
     _batched_operator,
     _tuple_splice_range,
 )
-from tests.helpers.basic import assertTensorAlmostEqual, BaseTest
+from captum.testing.helpers import BaseTest
+from captum.testing.helpers.basic import assertTensorAlmostEqual
 
 
 class Test(BaseTest):
-    def test_tuple_splice_range(self):
+    def test_tuple_splice_range(self) -> None:
         test_tuple = (
             torch.tensor([[0, 1, 2], [3, 4, 5], [6, 7, 8]]),
             "test",
@@ -21,7 +24,7 @@ class Test(BaseTest):
         self.assertEqual(spliced_tuple[1], "test")
         assertTensorAlmostEqual(self, spliced_tuple[2], [[0, 1, 2], [3, 4, 5]])
 
-    def test_tuple_splice_range_3d(self):
+    def test_tuple_splice_range_3d(self) -> None:
         test_tuple = (
             torch.tensor([[[0, 1, 2], [3, 4, 5]], [[6, 7, 8], [6, 7, 8]]]),
             "test",
@@ -30,7 +33,7 @@ class Test(BaseTest):
         assertTensorAlmostEqual(self, spliced_tuple[0], [[[6, 7, 8], [6, 7, 8]]])
         self.assertEqual(spliced_tuple[1], "test")
 
-    def test_batched_generator(self):
+    def test_batched_generator(self) -> None:
         def sample_operator(inputs, additional_forward_args, target_ind, scale):
             return (
                 scale * (sum(inputs)),
@@ -55,12 +58,12 @@ class Test(BaseTest):
             self.assertEqual(add[1], 5)
             self.assertEqual(targ, 7)
 
-    def test_batched_operator_0_bsz(self):
+    def test_batched_operator_0_bsz(self) -> None:
         inp1 = torch.tensor([[0, 1, 2], [3, 4, 5], [6, 7, 8]])
         with self.assertRaises(AssertionError):
             _batched_operator(lambda x: x, inputs=inp1, internal_batch_size=0)
 
-    def test_batched_operator(self):
+    def test_batched_operator(self) -> None:
         def _sample_operator(inputs, additional_forward_args, target_ind, scale):
             return (
                 scale * (sum(inputs)),

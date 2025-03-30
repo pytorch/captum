@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
 
+# pyre-strict
+
 import unittest
-from typing import Any, cast, Tuple, Union
+from typing import cast, Optional, Tuple, Union
 
 import torch
 from captum._utils.common import _zeros
@@ -9,8 +11,9 @@ from captum._utils.typing import BaselineType, Tensor, TensorOrTupleOfTensorsGen
 from captum.attr._core.integrated_gradients import IntegratedGradients
 from captum.attr._core.noise_tunnel import NoiseTunnel
 from captum.attr._utils.common import _tensorize_baseline
-from tests.helpers.basic import assertTensorAlmostEqual, BaseTest
-from tests.helpers.basic_models import (
+from captum.testing.helpers import BaseTest
+from captum.testing.helpers.basic import assertTensorAlmostEqual
+from captum.testing.helpers.basic_models import (
     BasicModel,
     BasicModel2,
     BasicModel3,
@@ -152,6 +155,14 @@ class Test(BaseTest):
 
     def test_batched_multi_input_smoothgrad_sq_batch_size_3(self) -> None:
         self._assert_batched_tensor_multi_input("vargrad", "riemann_trapezoid", 3)
+
+    def test_futures_not_implemented(self) -> None:
+        model = BasicModel2()
+        ig = IntegratedGradients(model, multiply_by_inputs=True)
+        attributions = None
+        with self.assertRaises(NotImplementedError):
+            attributions = ig.attribute_future()
+        self.assertEqual(attributions, None)
 
     def _assert_multi_variable(
         self,
@@ -336,7 +347,7 @@ class Test(BaseTest):
         self,
         type: str,
         approximation_method: str = "gausslegendre",
-        nt_samples_batch_size: int = None,
+        nt_samples_batch_size: Optional[int] = None,
     ) -> None:
         model = BasicModel_MultiLayer()
         input = (
@@ -360,7 +371,7 @@ class Test(BaseTest):
         self,
         type: str,
         approximation_method: str = "gausslegendre",
-        nt_samples_batch_size: int = None,
+        nt_samples_batch_size: Optional[int] = None,
     ) -> None:
         model = BasicModel_MultiLayer()
         input = (
@@ -383,11 +394,11 @@ class Test(BaseTest):
         inputs: TensorOrTupleOfTensorsGeneric,
         baselines: BaselineType = None,
         target: Union[None, int] = None,
-        additional_forward_args: Any = None,
+        additional_forward_args: Optional[object] = None,
         type: str = "vanilla",
         approximation_method: str = "gausslegendre",
-        multiply_by_inputs=True,
-        nt_samples_batch_size=None,
+        multiply_by_inputs: bool = True,
+        nt_samples_batch_size: Optional[int] = None,
     ) -> Tuple[Tensor, ...]:
         r"""
         attrib_type: 'vanilla', 'smoothgrad', 'smoothgrad_sq', 'vargrad'
@@ -396,6 +407,7 @@ class Test(BaseTest):
         self.assertEqual(ig.multiplies_by_inputs, multiply_by_inputs)
         if not isinstance(inputs, tuple):
             inputs = (inputs,)  # type: ignore
+        # pyre-fixme[35]: Target cannot be annotated.
         inputs: Tuple[Tensor, ...]
 
         if baselines is not None and not isinstance(baselines, tuple):
@@ -487,13 +499,14 @@ class Test(BaseTest):
         model: Module,
         inputs: TensorOrTupleOfTensorsGeneric,
         baselines: Union[None, Tensor, Tuple[Tensor, ...]] = None,
-        target: Union[None, int] = None,
-        additional_forward_args: Any = None,
+        target: Optional[int] = None,
+        additional_forward_args: Optional[object] = None,
         approximation_method: str = "gausslegendre",
     ) -> None:
         ig = IntegratedGradients(model)
         if not isinstance(inputs, tuple):
             inputs = (inputs,)  # type: ignore
+        # pyre-fixme[35]: Target cannot be annotated.
         inputs: Tuple[Tensor, ...]
 
         if baselines is not None and not isinstance(baselines, tuple):

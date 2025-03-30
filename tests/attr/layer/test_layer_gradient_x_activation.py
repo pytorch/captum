@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+
+# pyre-strict
+
 import unittest
 from typing import Any, List, Tuple, Union
 
@@ -6,12 +9,13 @@ import torch
 from captum._utils.typing import ModuleOrModuleList
 from captum.attr._core.layer.layer_activation import LayerActivation
 from captum.attr._core.layer.layer_gradient_x_activation import LayerGradientXActivation
-from tests.helpers.basic import assertTensorTuplesAlmostEqual, BaseTest
-from tests.helpers.basic_models import (
+from captum.testing.helpers.basic import assertTensorTuplesAlmostEqual, BaseTest
+from captum.testing.helpers.basic_models import (
     BasicEmbeddingModel,
     BasicModel_MultiLayer,
     BasicModel_MultiLayer_MultiInput,
 )
+from packaging import version
 from torch import Tensor
 from torch.nn import Module
 
@@ -129,12 +133,35 @@ class Test(BaseTest):
                 list(layer_act.attribute(inputs=(input1, input2)).shape), [4, 100]
             )
 
+    def test_simple_multi_gradient_activation_with_unused_layer(self) -> None:
+        if version.parse(torch.__version__) < version.parse("2.1.0"):
+            raise unittest.SkipTest(
+                "Skipping unused layed gradient test since it is not supported "
+                "by torch version < 2.1"
+            )
+
+        model = BasicModel_MultiLayer(multi_input_module=True)
+        test_input = torch.tensor([[3.0, 4.0, 0.0]], requires_grad=True)
+        # pyre-fixme[6]: For 2nd argument expected `ModuleOrModuleList` but got
+        #  `List[Union[ReLU, Linear]]`.
+        layer_act = LayerGradientXActivation(model, [model.linear1, model.relu])
+        attributions = layer_act.attribute(
+            inputs=test_input, target=0, grad_kwargs={"materialize_grads": True}
+        )
+        self.assertEqual(len(attributions), 2)
+        self.assertEqual(list(attributions[0].shape), [1, 4])
+        self.assertEqual(list(attributions[1].shape), [1, 4])
+
     def _layer_activation_test_assert(
         self,
         model: Module,
         target_layer: ModuleOrModuleList,
         test_input: Union[Tensor, Tuple[Tensor, ...]],
+        # pyre-fixme[24]: Generic type `list` expects 1 type parameter, use
+        # `typing.List[<element type>]` to avoid runtime subscripting errors.
         expected_activation: Union[List, Tuple[List[List[float]], ...]],
+        # pyre-fixme[2]: Parameter `additional_input` has type `None`
+        # but type `Any` is specified.
         additional_input: Any = None,
     ) -> None:
         layer_act = LayerGradientXActivation(model, target_layer)
@@ -147,6 +174,8 @@ class Test(BaseTest):
                 self, attributions, expected_activation, delta=0.01
             )
         else:
+            # pyre-fixme[6]: For 1st argument expected
+            #  `pyre_extensions.PyreReadOnly[Sized]` but got `ModuleOrModuleList`.
             for i in range(len(target_layer)):
                 assertTensorTuplesAlmostEqual(
                     self, attributions[i], expected_activation[i], delta=0.01
@@ -169,6 +198,8 @@ class Test(BaseTest):
                 delta=0.01,
             )
         else:
+            # pyre-fixme[6]: For 1st argument expected
+            #  `pyre_extensions.PyreReadOnly[Sized]` but got `ModuleOrModuleList`.
             for i in range(len(target_layer)):
                 assertTensorTuplesAlmostEqual(
                     self,

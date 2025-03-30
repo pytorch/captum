@@ -1,0 +1,27 @@
+name: Unit-tests for Pip install with mypy type checks
+
+on:
+  pull_request:
+  push:
+    branches:
+      - master
+
+  workflow_dispatch:
+
+jobs:
+  tests:
+    strategy:
+      matrix:
+        pytorch_args: ["", "-n"]
+      fail-fast: false
+    uses: pytorch/test-infra/.github/workflows/linux_job.yml@main
+    with:
+      runner: linux.12xlarge
+      docker-image: cimg/python:3.11
+      repository: pytorch/captum
+      script: |
+        sudo chmod -R 777 .
+        ./scripts/install_via_pip.sh ${{ matrix.pytorch_args }}
+        ./scripts/run_mypy.sh
+        # Run Tests
+        python3 -m pytest -ra --cov=. --cov-report term-missing

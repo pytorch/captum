@@ -1,13 +1,16 @@
 #!/usr/bin/env python3
 
+# pyre-unsafe
+
 import unittest
 
 import torch
 from captum._utils.typing import BaselineType, Tensor
 from captum.attr._core.integrated_gradients import IntegratedGradients
 from captum.attr._core.noise_tunnel import NoiseTunnel
-from tests.helpers.basic import assertTensorAlmostEqual, BaseTest
-from tests.helpers.classification_models import SigmoidModel, SoftmaxModel
+from captum.testing.helpers import BaseTest
+from captum.testing.helpers.basic import assertTensorAlmostEqual
+from captum.testing.helpers.classification_models import SigmoidModel, SoftmaxModel
 from torch.nn import Module
 
 

@@ -15,8 +15,8 @@
       "title": "Intepreting vision with CIFAR"
     },
     {
-      "id": "Resnet_TorchVision_Interpret",
-      "title": "Interpreting vision with ResNet"
+      "id": "TorchVision_Interpret",
+      "title": "Interpreting vision with Pretrained Models"
     },
     {
       "id": "Resnet_TorchVision_Ablation",
@@ -28,7 +28,7 @@
     },
     {
       "id": "House_Prices_Regression_Interpret",
-      "title": "Interpreting a regression model of Boston house prices"
+      "title": "Interpreting a regression model of California house prices"
     },
     {
       "id": "Segmentation_Interpret",
@@ -45,6 +45,10 @@
     {
       "id": "Image_and_Text_Classification_LIME",
       "title": "Interpreting vision and text models with LIME"
+    },
+    {
+      "id": "Llama2_LLM_Attribution",
+      "title": "Understanding Llama2 with Captum LLM Attribution"
     },
     {
       "title": "Interpreting BERT",

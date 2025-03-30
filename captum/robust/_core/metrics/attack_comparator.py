@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+
+# pyre-strict
 import warnings
 from collections import namedtuple
 from typing import (
@@ -21,6 +23,7 @@ from captum._utils.common import (
     _reduce_list,
 )
 from captum.attr import Max, Mean, Min, Summarizer
+from captum.log import log_usage
 from captum.robust._core.perturbation import Perturbation
 from torch import Tensor
 
@@ -32,6 +35,7 @@ MetricResultType = TypeVar(
 
 
 class AttackInfo(NamedTuple):
+    # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
     attack_fn: Union[Perturbation, Callable]
     name: str
     num_attempts: int
@@ -40,6 +44,8 @@ class AttackInfo(NamedTuple):
     additional_args: List[str]
 
 
+# pyre-fixme[3]: Return type must be annotated.
+# pyre-fixme[2]: Parameter must be annotated.
 def agg_metric(inp):
     if isinstance(inp, Tensor):
         return inp.mean(dim=0)
@@ -58,17 +64,19 @@ class AttackComparator(Generic[MetricResultType]):
 
     def __init__(
         self,
+        # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
         forward_func: Callable,
         metric: Callable[..., MetricResultType],
-        preproc_fn: Callable = None,
+        # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
+        preproc_fn: Optional[Callable] = None,
     ) -> None:
         r"""
         Args:
-            forward_func (callable or torch.nn.Module): This can either be an instance
+            forward_func (Callable or torch.nn.Module): This can either be an instance
                 of pytorch model or any modification of a model's forward
                 function.
 
-            metric (callable): This function is applied to the model output in
+            metric (Callable): This function is applied to the model output in
                 order to compute the desired performance metric or metrics.
                 This function should have the following signature::
 
@@ -85,23 +93,28 @@ class AttackComparator(Generic[MetricResultType]):
                 If tensor metrics represent results for the full batch, the size of the
                 first dimension should be 1.
 
-            preproc_fn (callable, optional): Optional method applied to inputs. Output
+            preproc_fn (Callable, optional): Optional method applied to inputs. Output
                 of preproc_fn is then provided as input to model, in addition to
                 additional_forward_args provided to evaluate.
+                Default: ``None``
         """
         self.forward_func = forward_func
+        # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
         self.metric: Callable = metric
         self.preproc_fn = preproc_fn
         self.attacks: Dict[str, AttackInfo] = {}
         self.summary_results: Dict[str, Summarizer] = {}
+        # pyre-fixme[4]: Attribute must be annotated.
         self.metric_aggregator = agg_metric
         self.batch_stats = [Mean, Min, Max]
         self.aggregate_stats = [Mean]
         self.summary_results = {}
+        # pyre-fixme[4]: Attribute must be annotated.
         self.out_format = None
 
     def add_attack(
         self,
+        # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
         attack: Union[Perturbation, Callable],
         name: Optional[str] = None,
         num_attempts: int = 1,
@@ -113,31 +126,38 @@ class AttackComparator(Generic[MetricResultType]):
         Adds attack to be evaluated when calling evaluate.
 
         Args:
-            attack (perturbation or callable): This can either be an instance
+
+            attack (Perturbation or Callable): This can either be an instance
                 of a Captum Perturbation / Attack
                 or any other perturbation or attack function such
                 as a torchvision transform.
 
-            name (optional, str): Name or identifier for attack, used as key for
+            name (str, optional): Name or identifier for attack, used as key for
                 attack results. This defaults to attack.__class__.__name__
                 if not provided and must be unique for all added attacks.
+                Default: ``None``
 
-            num_attempts (int): Number of attempts that attack should be
+            num_attempts (int, optional): Number of attempts that attack should be
                 repeated. This should only be set to > 1 for non-deterministic
                 attacks. The minimum, maximum, and average (best, worst, and
                 average case) are tracked for attack attempts.
+                Default: ``1``
 
-            apply_before_preproc (bool): Defines whether attack should be applied
-                before or after preproc function.
+            apply_before_preproc (bool, optional): Defines whether attack should be
+                applied before or after preproc function.
+                Default: ``True``
 
-            attack_kwargs (dict): Additional arguments to be provided to given attack.
-                This should be provided as a dictionary of keyword arguments.
+            attack_kwargs (dict, optional): Additional arguments to be provided to
+                given attack. This should be provided as a dictionary of keyword
+                arguments.
+                Default: ``None``
 
-            additional_attack_arg_names (list[str]): Any additional arguments for the
-                attack which are specific to the particular input example or batch.
-                An example of this is target, which is necessary for some attacks such
-                as FGSM or PGD. These arguments are included if provided as a kwarg
-                to evaluate.
+            additional_attack_arg_names (list[str], optional): Any additional
+                arguments for the attack which are specific to the particular input
+                example or batch. An example of this is target, which is necessary
+                for some attacks such as FGSM or PGD. These arguments are included
+                if provided as a kwarg to evaluate.
+                Default: ``None``
         """
         if name is None:
             name = attack.__class__.__name__
@@ -163,7 +183,11 @@ class AttackComparator(Generic[MetricResultType]):
         )
 
     def _format_summary(
-        self, summary: Union[Dict, List[Dict]]
+        self,
+        # pyre-fixme[24]: Generic type `dict` expects 2 type parameters, use
+        #  `typing.Dict[<key type>, <value type>]` to avoid runtime subscripting
+        #  errors.
+        summary: Union[Dict, List[Dict]],
     ) -> Dict[str, MetricResultType]:
         r"""
         This method reformats a given summary; particularly for tuples,
@@ -175,6 +199,7 @@ class AttackComparator(Generic[MetricResultType]):
         if isinstance(summary, dict):
             return summary
         else:
+            # pyre-fixme[24]: Generic type `tuple` expects at least 1 type parameter.
             summary_dict: Dict[str, Tuple] = {}
             for key in summary[0]:
                 summary_dict[key] = tuple(s[key] for s in summary)
@@ -196,7 +221,9 @@ class AttackComparator(Generic[MetricResultType]):
 
     def _evaluate_batch(
         self,
+        # pyre-fixme[2]: Parameter annotation cannot contain `Any`.
         input_list: List[Any],
+        # pyre-fixme[24]: Generic type `tuple` expects at least 1 type parameter.
         additional_forward_args: Optional[Tuple],
         key_list: List[str],
         batch_summarizers: Dict[str, Summarizer],
@@ -227,11 +254,14 @@ class AttackComparator(Generic[MetricResultType]):
                 batch_summarizers[key_list[i]].update(out_metric)
                 current_count += batch_size
 
+    @log_usage()
     def evaluate(
         self,
+        # pyre-fixme[2]: Parameter annotation cannot be `Any`.
         inputs: Any,
-        additional_forward_args: Any = None,
+        additional_forward_args: Optional[object] = None,
         perturbations_per_eval: int = 1,
+        # pyre-fixme[2]: Parameter must be annotated.
         **kwargs,
     ) -> Dict[str, Union[MetricResultType, Dict[str, MetricResultType]]]:
         r"""
@@ -239,7 +269,7 @@ class AttackComparator(Generic[MetricResultType]):
 
         Args:
 
-        inputs (any): Input for which attack metrics
+            inputs (Any): Input for which attack metrics
                 are computed. It can be provided as a tensor, tuple of tensors,
                 or any raw input type (e.g. PIL image or text string).
                 This input is provided directly as input to preproc function as well
@@ -247,7 +277,7 @@ class AttackComparator(Generic[MetricResultType]):
                 function is provided, this input is provided directly to the main
                 model and all attacks.
 
-        additional_forward_args (any, optional): If the forward function
+            additional_forward_args (Any, optional): If the forward function
                 requires additional arguments other than the preprocessing
                 outputs (or inputs if preproc_fn is None), this argument
                 can be provided. It must be either a single additional
@@ -259,8 +289,8 @@ class AttackComparator(Generic[MetricResultType]):
                 For a tensor, the first dimension of the tensor must
                 correspond to the number of examples. For all other types,
                 the given argument is used for all forward evaluations.
-                Default: None
-        perturbations_per_eval (int, optional): Allows perturbations of multiple
+                Default: ``None``
+            perturbations_per_eval (int, optional): Allows perturbations of multiple
                 attacks to be grouped and evaluated in one call of forward_fn
                 Each forward pass will contain a maximum of
                 perturbations_per_eval * #examples samples.
@@ -272,9 +302,10 @@ class AttackComparator(Generic[MetricResultType]):
                 In order to apply this functionality, the output of preproc_fn
                 (or inputs itself if no preproc_fn is provided) must be a tensor
                 or tuple of tensors.
-                Default: 1
-        kwargs (any, optional): Additional keyword arguments provided to metric function
-                as well as selected attacks based on chosen additional_args
+                Default: ``1``
+            kwargs (Any, optional): Additional keyword arguments provided to metric
+                function as well as selected attacks based on chosen additional_args.
+                Default: ``None``
 
         Returns:
 
@@ -338,6 +369,10 @@ class AttackComparator(Generic[MetricResultType]):
                 [stat() for stat in self.aggregate_stats]
             )
 
+        # pyre-fixme[53]: Captured variable `batch_summarizers` is not annotated.
+        # pyre-fixme[53]: Captured variable `expanded_additional_args` is not annotated.
+        # pyre-fixme[3]: Return type must be annotated.
+        # pyre-fixme[2]: Parameter must be annotated.
         def _check_and_evaluate(input_list, key_list):
             if len(input_list) == perturbations_per_eval:
                 self._evaluate_batch(
@@ -363,7 +398,8 @@ class AttackComparator(Generic[MetricResultType]):
             for key in attack.additional_args:
                 if key not in kwargs:
                     warnings.warn(
-                        f"Additional sample arg {key} not provided for {attack_key}"
+                        f"Additional sample arg {key} not provided for {attack_key}",
+                        stacklevel=1,
                     )
                 else:
                     additional_attack_args[key] = kwargs[key]
@@ -403,6 +439,11 @@ class AttackComparator(Generic[MetricResultType]):
     ) -> Dict[str, Union[MetricResultType, Dict[str, MetricResultType]]]:
         results: Dict[str, Union[MetricResultType, Dict[str, MetricResultType]]] = {
             ORIGINAL_KEY: self._format_summary(
+                # pyre-fixme[24]: Generic type `dict` expects 2 type parameters, use
+                #  `typing.Dict[<key type>, <value type>]` to avoid runtime
+                #  subscripting errors.
+                # pyre-fixme[24]: Generic type `list` expects 1 type parameter, use
+                #  `typing.List[<element type>]` to avoid runtime subscripting errors.
                 cast(Union[Dict, List], batch_summarizers[ORIGINAL_KEY].summary)
             )["mean"]
         }
@@ -412,6 +453,11 @@ class AttackComparator(Generic[MetricResultType]):
         for attack_key in self.attacks:
             attack = self.attacks[attack_key]
             attack_results = self._format_summary(
+                # pyre-fixme[24]: Generic type `dict` expects 2 type parameters, use
+                #  `typing.Dict[<key type>, <value type>]` to avoid runtime
+                #  subscripting errors.
+                # pyre-fixme[24]: Generic type `list` expects 1 type parameter, use
+                #  `typing.List[<element type>]` to avoid runtime subscripting errors.
                 cast(Union[Dict, List], batch_summarizers[attack.name].summary)
             )
             results[attack.name] = attack_results
@@ -455,6 +501,11 @@ class AttackComparator(Generic[MetricResultType]):
         """
         return {
             key: self._format_summary(
+                # pyre-fixme[24]: Generic type `dict` expects 2 type parameters, use
+                #  `typing.Dict[<key type>, <value type>]` to avoid runtime
+                #  subscripting errors.
+                # pyre-fixme[24]: Generic type `list` expects 1 type parameter, use
+                #  `typing.List[<element type>]` to avoid runtime subscripting errors.
                 cast(Union[Dict, List], self.summary_results[key].summary)
             )
             for key in self.summary_results

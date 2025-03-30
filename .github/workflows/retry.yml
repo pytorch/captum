@@ -1,0 +1,26 @@
+name: Rerun tests if failed
+on:
+  workflow_run:
+    workflows: ["Unit-tests for Conda install", "Unit-tests for Pip install with mypy type checks", "Unit-tests for Pip install"]
+    types: ["completed"]
+
+permissions:
+  actions: write
+
+jobs:
+  rerun-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Log workflow metadata
+        run: |
+          echo "ID: ${{ github.event.workflow_run.id }}"
+          echo "attempt: ${{ github.event.workflow_run.run_attempt }}"
+          echo "event: ${{ github.event.workflow_run.conclusion }}"
+          echo "event: ${{ github.event.workflow_run.event }}"
+      - name: Rerun Failed Workflows
+        if: github.event.workflow_run.conclusion == 'failure' && github.event.workflow_run.run_attempt <= 3
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RUN_ID: ${{ github.event.workflow_run.id }}
+        run: |
+          gh run rerun ${RUN_ID} --repo="${{ github.repository }}" --failed

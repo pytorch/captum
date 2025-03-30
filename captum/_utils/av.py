@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+# pyre-strict
+
 import glob
 import os
 import re
@@ -47,7 +49,7 @@ class AV:
             identifier: Optional[str] = None,
             layer: Optional[str] = None,
             num_id: Optional[str] = None,
-        ):
+        ) -> None:
             r"""
             Loads into memory the list of all activation file paths associated
             with the input `model_id`.
@@ -66,12 +68,14 @@ class AV:
                     which the activation vectors are computed
             """
 
+            # pyre-fixme[4]: Attribute must be annotated.
             self.av_filesearch = AV._construct_file_search(
                 path, model_id, identifier, layer, num_id
             )
 
             files = glob.glob(self.av_filesearch)
 
+            # pyre-fixme[4]: Attribute must be annotated.
             self.files = AV.sort_files(files)
 
         def __getitem__(self, idx: int) -> Union[Tensor, Tuple[Tensor, ...]]:
@@ -80,7 +84,7 @@ class AV:
             av = torch.load(fl)
             return av
 
-        def __len__(self):
+        def __len__(self) -> int:
             return len(self.files)
 
     AV_DIR_NAME: str = "av"
@@ -211,9 +215,9 @@ class AV:
                     AV.generate_dataset_activations from batch index.
                     It assumes identifier is same for all layers if a list of
                     `layers` is provided.
-            layers (str or List of str): The layer(s) for which the activation vectors
+            layers (str or list[str]): The layer(s) for which the activation vectors
                     are computed.
-            act_tensors (Tensor or List of Tensor): A batch of activation vectors.
+            act_tensors (tensor or list of tensor): A batch of activation vectors.
                     This must match the dimension of `layers`.
             num_id (str): string representing the batch number for which the activation
                     vectors are computed
@@ -299,13 +303,15 @@ class AV:
                     for the `layer` are stored.
             model_id (str): The name/version of the model for which layer activations
                     are being computed and stored.
-            layers (str or List of str): The layer(s) for which the activation vectors
+            layers (str or list[str]): The layer(s) for which the activation vectors
                     are computed.
+            load_from_disk (bool, optional): Whether or not to load from disk.
+                Default: True
             identifier (str or None): An optional identifier for the layer
                     activations. Can be used to distinguish between activations for
                     different training batches.
-            num_id (str): An optional string representing the batch number for which the
-                    activation vectors are computed
+            num_id (str, optional): An optional string representing the batch number
+                for which the activation vectors are computed.
 
         Returns:
             List of layer names for which activations should be generated
@@ -324,7 +330,8 @@ class AV:
                 "Overwriting activations: load_from_disk is set to False. Removing all "
                 f"activations matching specified parameters {{path: {path}, "
                 f"model_id: {model_id}, layers: {layers}, identifier: {identifier}}} "
-                "before generating new activations."
+                "before generating new activations.",
+                stacklevel=1,
             )
             for layer in layers:
                 files = glob.glob(
@@ -344,7 +351,7 @@ class AV:
         inputs: Union[Tensor, Tuple[Tensor, ...]],
         identifier: str,
         num_id: str,
-        additional_forward_args: Any = None,
+        additional_forward_args: Optional[object] = None,
         load_from_disk: bool = True,
     ) -> None:
         r"""
@@ -357,9 +364,9 @@ class AV:
                     define all of its layers as attributes of the model.
             model_id (str): The name/version of the model for which layer activations
                     are being computed and stored.
-            layers (str or List of str): The layer(s) for which the activation vectors
+            layers (str or list[str]): The layer(s) for which the activation vectors
                     are computed.
-            inputs (tensor or tuple of tensors): Batch of examples for
+            inputs (Tensor or tuple[Tensor, ...]): Batch of examples for
                     which influential instances are computed. They are passed to the
                     input `model`. The first dimension in `inputs` tensor or tuple of
                     tensors corresponds to the batch size.
@@ -368,7 +375,7 @@ class AV:
                     different training batches.
             num_id (str): An required string representing the batch number for which the
                     activation vectors are computed
-            additional_forward_args (optional):  Additional arguments that will be
+            additional_forward_args (Any, optional): Additional arguments that will be
                     passed to `model` after inputs.
                     Default: None
             load_from_disk (bool): Forces function to regenerate activations if False.
@@ -393,6 +400,8 @@ class AV:
             AV.save(path, model_id, identifier, unsaved_layers, new_activations, num_id)
 
     @staticmethod
+    # pyre-fixme[3]: Return annotation cannot be `Any`.
+    # pyre-fixme[2]: Parameter annotation cannot be `Any`.
     def _unpack_data(data: Union[Any, Tuple[Any, Any]]) -> Any:
         r"""
         Helper to extract input from labels when getting items from a Dataset. Assumes
@@ -433,7 +442,7 @@ class AV:
                     define all of its layers as attributes of the model.
             model_id (str): The name/version of the model for which layer activations
                     are being computed and stored.
-            layers (str or List of str): The layer(s) for which the activation vectors
+            layers (str or list[str]): The layer(s) for which the activation vectors
                     are computed.
             dataloader (torch.utils.data.DataLoader): DataLoader that yields Dataset
                     for which influential instances are computed. They are passed to
@@ -488,6 +497,8 @@ class AV:
         lexigraphical sort.
         """
 
+        # pyre-fixme[3]: Return type must be annotated.
+        # pyre-fixme[2]: Parameter must be annotated.
         def split_alphanum(s):
             r"""
             Splits string into a list of strings and numbers

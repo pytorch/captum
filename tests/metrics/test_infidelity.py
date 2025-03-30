@@ -1,6 +1,9 @@
 #!/usr/bin/env python3
+
+# pyre-strict
+
 import typing
-from typing import Any, Callable, cast, List, Tuple, Union
+from typing import Any, Callable, cast, List, Optional, Tuple, Union
 
 import torch
 from captum._utils.typing import BaselineType, TargetType, TensorOrTupleOfTensorsGeneric
@@ -12,8 +15,9 @@ from captum.attr import (
     Saliency,
 )
 from captum.metrics import infidelity, infidelity_perturb_func_decorator
-from tests.helpers.basic import assertTensorAlmostEqual, BaseTest
-from tests.helpers.basic_models import (
+from captum.testing.helpers import BaseTest
+from captum.testing.helpers.basic import assertTensorAlmostEqual
+from captum.testing.helpers.basic_models import (
     BasicModel2,
     BasicModel4_MultiArgs,
     BasicModel_ConvNet_One_Conv,
@@ -27,19 +31,24 @@ from torch.nn import Module
 def _local_perturb_func_default(
     inputs: TensorOrTupleOfTensorsGeneric,
 ) -> TensorOrTupleOfTensorsGeneric:
+    # pyre-fixme[7]: Expected `TensorOrTupleOfTensorsGeneric` but got `Tensor`.
+    # pyre-fixme[6]: For 1st argument expected `Tensor` but got
+    #  `TensorOrTupleOfTensorsGeneric`.
     return _local_perturb_func(inputs)[1]
 
 
 @typing.overload
-def _local_perturb_func(inputs: Tensor) -> Tuple[Tensor, Tensor]:
-    ...
+# pyre-ignore[43]: The implementation of `_local_perturb_func` does not accept all
+#  possible arguments of overload defined on line `43`.
+def _local_perturb_func(
+    inputs: Tuple[Tensor, ...],
+) -> Tuple[Tuple[Tensor, ...], Tuple[Tensor, ...]]: ...
 
 
 @typing.overload
-def _local_perturb_func(
-    inputs: Tuple[Tensor, ...]
-) -> Tuple[Tuple[Tensor, ...], Tuple[Tensor, ...]]:
-    ...
+# pyre-ignore[43]: The implementation of `_local_perturb_func` does not accept all
+#  possible arguments of overload defined on line `51`.
+def _local_perturb_func(inputs: Tensor) -> Tuple[Tensor, Tensor]: ...
 
 
 def _local_perturb_func(
@@ -64,19 +73,24 @@ def _local_perturb_func(
 def _global_perturb_func1_default(
     inputs: TensorOrTupleOfTensorsGeneric,
 ) -> TensorOrTupleOfTensorsGeneric:
+    # pyre-fixme[7]: Expected `TensorOrTupleOfTensorsGeneric` but got `Tensor`.
+    # pyre-fixme[6]: For 1st argument expected `Tensor` but got
+    #  `TensorOrTupleOfTensorsGeneric`.
     return _global_perturb_func1(inputs)[1]
 
 
 @typing.overload
-def _global_perturb_func1(inputs: Tensor) -> Tuple[Tensor, Tensor]:
-    ...
+# pyre-fixme[43]: The implementation of `_global_perturb_func1` does not accept all
+#  possible arguments of overload defined on line `74`.
+def _global_perturb_func1(
+    inputs: Tuple[Tensor, ...],
+) -> Tuple[Tuple[Tensor, ...], Tuple[Tensor, ...]]: ...
 
 
 @typing.overload
-def _global_perturb_func1(
-    inputs: Tuple[Tensor, ...]
-) -> Tuple[Tuple[Tensor, ...], Tuple[Tensor, ...]]:
-    ...
+# pyre-fixme[43]: The implementation of `_global_perturb_func1` does not accept all
+#  possible arguments of overload defined on line `70`.
+def _global_perturb_func1(inputs: Tensor) -> Tuple[Tensor, Tensor]: ...
 
 
 # sensitivity-N, N = #input features
@@ -208,7 +222,7 @@ class Test(BaseTest):
         model = BasicModel_MultiLayer()
         input = torch.arange(1.0, 13.0).view(4, 3)
         additional_forward_args = (torch.arange(1, 13).view(4, 3).float(), True)
-        targets: List = [(0, 1, 1), (0, 1, 1), (1, 1, 1), (0, 1, 1)]
+        targets: List[Tuple[int, ...]] = [(0, 1, 1), (0, 1, 1), (1, 1, 1), (0, 1, 1)]
         sa = Saliency(model)
 
         infid1 = self.infidelity_assert(
@@ -242,14 +256,14 @@ class Test(BaseTest):
         input = torch.arange(1.0, 13.0).view(4, 3)
         baseline = torch.ones(4, 3)
         additional_forward_args = (torch.arange(1, 13).view(4, 3).float(), True)
-        targets: List = [(0, 1, 1), (0, 1, 1), (1, 1, 1), (0, 1, 1)]
+        targets: List[Tuple[int, ...]] = [(0, 1, 1), (0, 1, 1), (1, 1, 1), (0, 1, 1)]
         ig = IntegratedGradients(model)
 
-        def perturbed_func2(inputs, baselines):
+        def perturbed_func2(inputs: Tensor, baselines: Tensor) -> Tuple[Tensor, Tensor]:
             return torch.ones(baselines.shape), baselines
 
         @infidelity_perturb_func_decorator(True)
-        def perturbed_func3(inputs, baselines):
+        def perturbed_func3(inputs: Tensor, baselines: Tensor) -> Tensor:
             return baselines
 
         attr, delta = ig.attribute(
@@ -326,17 +340,17 @@ class Test(BaseTest):
         self, attr_algo: Attribution, model: Module
     ) -> None:
         # sensitivity-2
-        def _global_perturb_func2(input):
+        def _global_perturb_func2(input: Tensor) -> Tuple[Tensor, Tensor]:
             pert = torch.tensor([[0, 1, 1], [1, 1, 0], [1, 0, 1]]).float()
             return pert, (1 - pert) * input
 
         # sensitivity-1
-        def _global_perturb_func3(input):
+        def _global_perturb_func3(input: Tensor) -> Tuple[Tensor, Tensor]:
             pert = torch.tensor([[0, 0, 1], [1, 0, 0], [0, 1, 0]]).float()
             return pert, (1 - pert) * input
 
         @infidelity_perturb_func_decorator(True)
-        def _global_perturb_func3_custom(input):
+        def _global_perturb_func3_custom(input: Tensor) -> Tensor:
             return _global_perturb_func3(input)[1]
 
         input = torch.tensor([[1.0, 2.5, 3.3]])
@@ -398,11 +412,12 @@ class Test(BaseTest):
         model: Module,
         inputs: TensorOrTupleOfTensorsGeneric,
         expected: Tensor,
-        n_perturb_samples: int = 10,
-        max_batch_size: int = None,
-        perturb_func: Callable = _local_perturb_func,
-        multiply_by_inputs: bool = False,
-        normalize: bool = False,
+        n_perturb_samples: Optional[int] = 10,
+        max_batch_size: Optional[int] = None,
+        # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
+        perturb_func: Optional[Callable] = _local_perturb_func,
+        multiply_by_inputs: Optional[bool] = False,
+        normalize: Optional[bool] = False,
     ) -> Tensor:
         ig = IntegratedGradients(model)
         if multiply_by_inputs:
@@ -432,12 +447,15 @@ class Test(BaseTest):
         model: Module,
         inputs: TensorOrTupleOfTensorsGeneric,
         expected: Tensor,
-        additional_args: Any = None,
-        target: TargetType = None,
-        n_perturb_samples: int = 10,
-        max_batch_size: int = None,
-        perturb_func: Callable = _global_perturb_func1,
-        normalize: bool = False,
+        # pyre-fixme[2]: Parameter `additional_args` has type `None`
+        # but type `Any` is specified.
+        additional_args: Optional[Any] = None,
+        target: Optional[TargetType] = None,
+        n_perturb_samples: Optional[int] = 10,
+        max_batch_size: Optional[int] = None,
+        # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
+        perturb_func: Optional[Callable] = _global_perturb_func1,
+        normalize: Optional[bool] = False,
     ) -> Tensor:
         attrs = attr_algo.attribute(
             inputs, additional_forward_args=additional_args, target=target
@@ -462,14 +480,17 @@ class Test(BaseTest):
         attributions: TensorOrTupleOfTensorsGeneric,
         inputs: TensorOrTupleOfTensorsGeneric,
         expected: Tensor,
-        additional_args: Any = None,
-        baselines: BaselineType = None,
-        n_perturb_samples: int = 10,
-        target: TargetType = None,
-        max_batch_size: int = None,
-        multi_input: bool = True,
-        perturb_func: Callable = _local_perturb_func,
-        normalize: bool = False,
+        # pyre-fixme[2]: Parameter `additional_args` has type `None`
+        # but type `Any` is specified.
+        additional_args: Optional[Any] = None,
+        baselines: Optional[BaselineType] = None,
+        n_perturb_samples: Optional[int] = 10,
+        target: Optional[TargetType] = None,
+        max_batch_size: Optional[int] = None,
+        multi_input: Optional[bool] = True,
+        # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
+        perturb_func: Optional[Callable] = _local_perturb_func,
+        normalize: Optional[bool] = False,
         **kwargs: Any,
     ) -> Tensor:
         infid = infidelity(

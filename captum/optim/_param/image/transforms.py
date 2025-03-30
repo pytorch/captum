@@ -20,9 +20,9 @@ class BlendAlpha(nn.Module):
         """
         Args:
 
-            background (tensor, optional):  An NCHW image tensor to be used as the
+            background (torch.Tensor, optional): An NCHW image tensor to be used as the
                 Alpha channel's background.
-                Default: None
+                Default: ``None``
         """
         super().__init__()
         self.background = background
@@ -36,7 +36,7 @@ class BlendAlpha(nn.Module):
             x (torch.Tensor): RGBA image tensor to blend into an RGB image tensor.
 
         Returns:
-            **blended** (torch.Tensor): RGB image tensor.
+            blended (torch.Tensor): RGB image tensor.
         """
         assert x.dim() == 4
         assert x.size(1) == 4
@@ -60,7 +60,7 @@ class IgnoreAlpha(nn.Module):
             x (torch.Tensor): RGBA image tensor.
 
         Returns:
-            **rgb** (torch.Tensor): RGB image tensor without the alpha channel.
+            rgb (torch.Tensor): RGB image tensor without the alpha channel.
         """
         assert x.dim() == 4
         assert x.size(1) == 4
@@ -71,13 +71,31 @@ class IgnoreAlpha(nn.Module):
 class ToRGB(nn.Module):
     """Transforms arbitrary channels to RGB. We use this to ensure our
     image parametrization itself can be decorrelated. So this goes between
-    the image parametrization and the normalization/sigmoid step.
+    the image parametrization and the normalization / sigmoid step, like in
+    :class:`captum.optim.images.NaturalImage`.
+
     We offer two precalculated transforms: Karhunen-Loève (KLT) and I1I2I3.
     KLT corresponds to the empirically measured channel correlations on imagenet.
     I1I2I3 corresponds to an approximation for natural images from Ohta et al.[0]
+
+    While the default transform matrices should work for the vast majority of use
+    cases, you can also use your own 3x3 transform matrix. If you wish to calculate
+    your own KLT transform matrix on a custom dataset, then please see
+    :func:`captum.optim.dataset.dataset_klt_matrix` for an example of how to do so.
+
     [0] Y. Ohta, T. Kanade, and T. Sakai, "Color information for region segmentation,"
     Computer Graphics and Image Processing, vol. 13, no. 3, pp. 222–241, 1980
     https://www.sciencedirect.com/science/article/pii/0146664X80900477
+
+    Example::
+
+        >>> to_rgb = opt.transforms.ToRGB()
+        >>> x = torch.randn(1, 3, 224, 224)
+        >>> decorrelated_colors = to_rgb(x, inverse=True)
+        >>> recorrelated_colors = to_rgb(decorrelated_colors)
+
+    .. note:: The ``ToRGB`` transform is included by default inside
+              :class:`.NaturalImage`.
     """
 
     @staticmethod
@@ -86,7 +104,7 @@ class ToRGB(nn.Module):
         Karhunen-Loève transform (KLT) measured on ImageNet
 
         Returns:
-            **transform** (torch.Tensor): A Karhunen-Loève transform (KLT) measured on
+            transform (torch.Tensor): A Karhunen-Loève transform (KLT) measured on
                 the ImageNet dataset.
         """
         # Handle older versions of PyTorch
@@ -105,7 +123,7 @@ class ToRGB(nn.Module):
     def i1i2i3_transform() -> torch.Tensor:
         """
         Returns:
-            **transform** (torch.Tensor): An approximation of natural colors transform
+            transform (torch.Tensor): An approximation of natural colors transform
                 (i1i2i3).
         """
         i1i2i3_matrix = [
@@ -119,9 +137,9 @@ class ToRGB(nn.Module):
         """
         Args:
 
-            transform (str or tensor):  Either a string for one of the precalculated
-                transform matrices, or a 3x3 matrix for the 3 RGB channels of input
-                tensors.
+            transform (str or torch.Tensor): Either a string for one of the
+                precalculated transform matrices, or a 3x3 matrix for the 3 RGB
+                channels of input tensors.
         """
         super().__init__()
         assert isinstance(transform, str) or torch.is_tensor(transform)
@@ -143,12 +161,12 @@ class ToRGB(nn.Module):
         """
         Args:
 
-            x (torch.tensor):  A CHW or NCHW RGB or RGBA image tensor.
-            inverse (bool, optional):  Whether to recorrelate or decorrelate colors.
-                Default: False.
+            x (torch.Tensor): A CHW or NCHW RGB or RGBA image tensor.
+            inverse (bool, optional): Whether to recorrelate or decorrelate colors.
+                Default: ``False``
 
         Returns:
-            chw (torch.tensor):  A tensor with it's colors recorrelated or
+            chw (torch.Tensor): A tensor with it's colors recorrelated or
                 decorrelated.
         """
 
@@ -197,12 +215,12 @@ class ToRGB(nn.Module):
 
         Args:
 
-            x (torch.tensor):  A CHW pr NCHW RGB or RGBA image tensor.
-            inverse (bool, optional):  Whether to recorrelate or decorrelate colors.
-                Default: False.
+            x (torch.Tensor): A CHW pr NCHW RGB or RGBA image tensor.
+            inverse (bool, optional): Whether to recorrelate or decorrelate colors.
+                Default: ``False``
 
         Returns:
-            chw (torch.tensor):  A tensor with it's colors recorrelated or
+            chw (torch.Tensor): A tensor with it's colors recorrelated or
                 decorrelated.
         """
 
@@ -244,12 +262,12 @@ class ToRGB(nn.Module):
 
         Args:
 
-            x (torch.tensor):  A CHW or NCHW RGB or RGBA image tensor.
-            inverse (bool, optional):  Whether to recorrelate or decorrelate colors.
-                Default: False.
+            x (torch.Tensor): A CHW or NCHW RGB or RGBA image tensor.
+            inverse (bool, optional): Whether to recorrelate or decorrelate colors.
+                Default: ``False``
 
         Returns:
-            chw (torch.tensor):  A tensor with it's colors recorrelated or
+            chw (torch.Tensor): A tensor with it's colors recorrelated or
                 decorrelated.
         """
         if torch.jit.is_scripting():
@@ -263,6 +281,8 @@ class CenterCrop(torch.nn.Module):
     """
     Center crop a specified amount from a tensor. If input are smaller than the
     specified crop size, padding will be applied.
+
+    See :func:`.center_crop` for the functional version of this transform.
     """
 
     __constants__ = [
@@ -291,18 +311,20 @@ class CenterCrop(torch.nn.Module):
             pixels_from_edges (bool, optional): Whether to treat crop size
                 values as the number of pixels from the tensor's edge, or an
                 exact shape in the center.
-                Default: False
+                Default: ``False``
             offset_left (bool, optional): If the cropped away sides are not
                 equal in size, offset center by +1 to the left and/or top.
-                This parameter is only valid when `pixels_from_edges` is False.
-                Default: False
-            padding_mode (optional, str): One of "constant", "reflect", "replicate"
-                or "circular". This parameter is only used if the crop size is larger
-                than the image size.
-                Default: "constant"
-            padding_value (float, optional): fill value for "constant" padding. This
-                parameter is only used if the crop size is larger than the image size.
-                Default: 0.0
+                This parameter is only valid when ``pixels_from_edges`` is
+                ``False``.
+                Default: ``False``
+            padding_mode (str, optional): One of: ``"constant"``, ``"reflect"``,
+                ``"replicate"``, or ``"circular"``. This parameter is only used if the
+                crop size is larger than the image size.
+                Default: ``"constant"``
+            padding_value (float, optional): fill value for ``"constant"`` padding.
+                This parameter is only used if the crop size is larger than the image
+                size.
+                Default: ``0.0``
         """
         super().__init__()
         if not hasattr(size, "__iter__"):
@@ -333,7 +355,7 @@ class CenterCrop(torch.nn.Module):
             input (torch.Tensor): Input to center crop.
 
         Returns:
-            **tensor** (torch.Tensor): A center cropped *tensor*.
+            tensor (torch.Tensor): A center cropped NCHW tensor.
         """
 
         return center_crop(
@@ -358,28 +380,32 @@ def center_crop(
     Center crop a specified amount from a tensor. If input are smaller than the
     specified crop size, padding will be applied.
 
+    This function is the functional version of: :class:`.CenterCrop`.
+
     Args:
 
-        input (tensor):  A CHW or NCHW image tensor to center crop.
+        input (torch.Tensor): A CHW or NCHW image tensor to center crop.
         size (int, sequence, int): Number of pixels to center crop away.
         pixels_from_edges (bool, optional): Whether to treat crop size
             values as the number of pixels from the tensor's edge, or an
             exact shape in the center.
-            Default: False
+            Default: ``False``
         offset_left (bool, optional): If the cropped away sides are not
             equal in size, offset center by +1 to the left and/or top.
-            This parameter is only valid when `pixels_from_edges` is False.
-            Default: False
-        padding_mode (optional, str): One of "constant", "reflect", "replicate" or
-            "circular". This parameter is only used if the crop size is larger than
-            the image size.
-            Default: "constant"
-        padding_value (float, optional): fill value for "constant" padding. This
-            parameter is only used if the crop size is larger than the image size.
-            Default: 0.0
+            This parameter is only valid when ``pixels_from_edges`` is
+            ``False``.
+            Default: ``False``
+        padding_mode (str, optional): One of: ``"constant"``, ``"reflect"``,
+            ``"replicate"``, or ``"circular"``. This parameter is only used if the crop
+            size is larger than the image size.
+            Default: ``"constant"``
+        padding_value (float, optional): fill value for ``"constant"`` padding.
+            This parameter is only used if the crop size is larger than the image
+            size.
+            Default: ``0.0``
 
     Returns:
-        **tensor**:  A center cropped *tensor*.
+        tensor (torch.Tensor): A center cropped NCHW tensor.
     """
 
     assert input.dim() == 3 or input.dim() == 4
@@ -433,7 +459,8 @@ def center_crop(
 
 class RandomScale(nn.Module):
     """
-    Apply random rescaling on a NCHW tensor using the F.interpolate function.
+    Apply random rescaling on a NCHW tensor using the
+    :func:`torch.nn.functional.interpolate` function.
     """
 
     __constants__ = [
@@ -458,21 +485,26 @@ class RandomScale(nn.Module):
         Args:
 
             scale (float, sequence, or torch.distribution): Sequence of rescaling
-                values to randomly select from, or a torch.distributions instance.
+                values to randomly select from, or a :mod:`torch.distributions`
+                instance.
             mode (str, optional): Interpolation mode to use. See documentation of
-                F.interpolate for more details. One of; "bilinear", "nearest", "area",
-                or "bicubic".
-                Default: "bilinear"
+                :func:`torch.nn.functional.interpolate` for more details. One of;
+                ``"bilinear"``, ``"nearest"``, ``"nearest-exact"``, ``"area"``, or
+                ``"bicubic"``.
+                Default: ``"bilinear"``
             align_corners (bool, optional): Whether or not to align corners. See
-                documentation of F.interpolate for more details.
-                Default: False
+                documentation of :func:`torch.nn.functional.interpolate` for more
+                details.
+                Default: ``False``
             recompute_scale_factor (bool, optional): Whether or not to recompute the
-                scale factor See documentation of F.interpolate for more details.
-                Default: False
+                scale factor See documentation of
+                :func:`torch.nn.functional.interpolate` for more details.
+                Default: ``False``
             antialias (bool, optional): Whether or not use to anti-aliasing. This
-                feature is currently only available for "bilinear" and "bicubic"
-                modes. See documentation of F.interpolate for more details.
-                Default: False
+                feature is currently only available for ``"bilinear"`` and
+                ``"bicubic"`` modes. See documentation of
+                :func:`torch.nn.functional.interpolate` for more details.
+                Default: ``False``
         """
         super().__init__()
         assert mode not in ["linear", "trilinear"]
@@ -508,7 +540,7 @@ class RandomScale(nn.Module):
             scale (float): The amount to scale the NCHW image by.
 
         Returns:
-            **x** (torch.Tensor): A scaled NCHW image tensor.
+            x (torch.Tensor): A scaled NCHW image tensor.
         """
         if self._has_antialias:
             x = F.interpolate(
@@ -538,7 +570,7 @@ class RandomScale(nn.Module):
             x (torch.Tensor): NCHW image tensor to randomly scale.
 
         Returns:
-            **x** (torch.Tensor): A randomly scaled NCHW image *tensor*.
+            x (torch.Tensor): A randomly scaled NCHW image tensor.
         """
         assert x.dim() == 4
         if self._is_distribution:
@@ -562,11 +594,11 @@ class RandomScaleAffine(nn.Module):
     """
     Apply random rescaling on a NCHW tensor.
 
-    This random scaling transform utilizes F.affine_grid & F.grid_sample, and as a
-    result has two key differences to the default RandomScale transforms This
-    transform either shrinks an image while adding a background, or center crops image
-    and then resizes it to a larger size. This means that the output image shape is the
-    same shape as the input image.
+    This random scaling transform utilizes :func:`torch.nn.functional.affine_grid`
+    & :func:`torch.nn.functional.grid_sample`, and as a result has two key differences
+    to the default RandomScale transforms This transform either shrinks an image while
+    adding a background, or center crops image and then resizes it to a larger size.
+    This means that the output image shape is the same shape as the input image.
 
     In constrast to RandomScaleAffine, the default RandomScale transform simply resizes
     the input image using F.interpolate.
@@ -591,18 +623,21 @@ class RandomScaleAffine(nn.Module):
         Args:
 
             scale (float, sequence, or torch.distribution): Sequence of rescaling
-                values to randomly select from, or a torch.distributions instance.
+                values to randomly select from, or a :mod:`torch.distributions`
+                instance.
             mode (str, optional): Interpolation mode to use. See documentation of
-                F.grid_sample for more details. One of; "bilinear", "nearest", or
-                "bicubic".
-                Default: "bilinear"
+                :func:`torch.nn.functional.grid_sample` for more details. One of;
+                ``"bilinear"``, ``"nearest"``, or ``"bicubic"``.
+                Default: ``"bilinear"``
             padding_mode (str, optional): Padding mode for values that fall outside of
-                the grid. See documentation of F.grid_sample for more details. One of;
-                "zeros", "border", or "reflection".
-                Default: "zeros"
+                the grid. See documentation of :func:`torch.nn.functional.grid_sample`
+                for more details. One of; ``"zeros"``, ``"border"``, or
+                ``"reflection"``.
+                Default: ``"zeros"``
             align_corners (bool, optional): Whether or not to align corners. See
-                documentation of F.affine_grid & F.grid_sample for more details.
-                Default: False
+                documentation of :func:`torch.nn.functional.affine_grid` &
+                :func:`torch.nn.functional.grid_sample` for more details.
+                Default: ``False``
         """
         super().__init__()
         if isinstance(scale, torch.distributions.distribution.Distribution):
@@ -637,7 +672,7 @@ class RandomScaleAffine(nn.Module):
             m (float): The scale value to use.
 
         Returns:
-            **scale_mat** (torch.Tensor): A scale matrix.
+            scale_mat (torch.Tensor): A scale matrix.
         """
         scale_mat = torch.tensor(
             [[m, 0.0, 0.0], [0.0, m, 0.0]], device=device, dtype=dtype
@@ -654,7 +689,7 @@ class RandomScaleAffine(nn.Module):
             scale (float): The amount to scale the NCHW image by.
 
         Returns:
-            **x** (torch.Tensor): A scaled NCHW image tensor.
+            x (torch.Tensor): A scaled NCHW image tensor.
         """
         scale_matrix = self._get_scale_mat(scale, x.device, x.dtype)[None, ...].repeat(
             x.shape[0], 1, 1
@@ -678,7 +713,7 @@ class RandomScaleAffine(nn.Module):
             x (torch.Tensor): NCHW image tensor to randomly scale.
 
         Returns:
-            **x** (torch.Tensor): A randomly scaled NCHW image *tensor*.
+            x (torch.Tensor): A randomly scaled NCHW image tensor.
         """
         assert x.dim() == 4
         if self._is_distribution:
@@ -736,7 +771,7 @@ class RandomSpatialJitter(torch.nn.Module):
             input (torch.Tensor): Input to randomly translate.
 
         Returns:
-            **tensor** (torch.Tensor): A randomly translated *tensor*.
+            tensor (torch.Tensor): A randomly translated NCHW tensor.
         """
         insets = torch.randint(
             high=self.pad_range,
@@ -750,8 +785,7 @@ class RandomSpatialJitter(torch.nn.Module):
 
 class RandomRotation(nn.Module):
     """
-    Apply random rotation transforms on a NCHW tensor, using a sequence of degrees or
-    torch.distributions instance.
+    Apply random rotation transforms on a NCHW tensor.
     """
 
     __constants__ = [
@@ -772,19 +806,22 @@ class RandomRotation(nn.Module):
         """
         Args:
 
-            degrees (float, sequence, or torch.distribution): Tuple of degrees values
-                to randomly select from, or a torch.distributions instance.
+            degrees (float, sequence, or torch.distribution): Tuple or list of degrees
+                values to randomly select from, or a :mod:`torch.distributions`
+                instance.
             mode (str, optional): Interpolation mode to use. See documentation of
-                F.grid_sample for more details. One of; "bilinear", "nearest", or
-                "bicubic".
-                Default: "bilinear"
+                :func:`torch.nn.functional.grid_sample` for more details. One of;
+                ``"bilinear"``, ``"nearest"``, or ``"bicubic"``.
+                Default: ``"bilinear"``
             padding_mode (str, optional): Padding mode for values that fall outside of
-                the grid. See documentation of F.grid_sample for more details. One of;
-                "zeros", "border", or "reflection".
-                Default: "zeros"
+                the grid. See documentation of :func:`torch.nn.functional.grid_sample`
+                for more details. One of; ``"zeros"``, ``"border"``, or
+                ``"reflection"``.
+                Default: ``"zeros"``
             align_corners (bool, optional): Whether or not to align corners. See
-                documentation of F.affine_grid & F.grid_sample for more details.
-                Default: False
+                documentation of :func:`torch.nn.functional.affine_grid` &
+                :func:`torch.nn.functional.grid_sample` for more details.
+                Default: ``False``
         """
         super().__init__()
         if isinstance(degrees, torch.distributions.distribution.Distribution):
@@ -820,7 +857,7 @@ class RandomRotation(nn.Module):
             theta (float): The rotation value in degrees.
 
         Returns:
-            **rot_mat** (torch.Tensor): A rotation matrix.
+            rot_mat (torch.Tensor): A rotation matrix.
         """
         theta = theta * math.pi / 180.0
         rot_mat = torch.tensor(
@@ -843,7 +880,7 @@ class RandomRotation(nn.Module):
             theta (float): The amount to rotate the NCHW image, in degrees.
 
         Returns:
-            **x** (torch.Tensor): A rotated NCHW image tensor.
+            x (torch.Tensor): A rotated NCHW image tensor.
         """
         rot_matrix = self._get_rot_mat(theta, x.device, x.dtype)[None, ...].repeat(
             x.shape[0], 1, 1
@@ -867,7 +904,7 @@ class RandomRotation(nn.Module):
             x (torch.Tensor): NCHW image tensor to randomly rotate.
 
         Returns:
-            **x** (torch.Tensor): A randomly rotated NCHW image *tensor*.
+            x (torch.Tensor): A randomly rotated NCHW image tensor.
         """
         assert x.dim() == 4
         if self._is_distribution:
@@ -899,7 +936,7 @@ class ScaleInputRange(nn.Module):
         """
         Args:
 
-            multiplier (float, optional):  A float value used to scale the input.
+            multiplier (float, optional): A float value used to scale the input.
         """
         super().__init__()
         self.multiplier = multiplier
@@ -913,7 +950,7 @@ class ScaleInputRange(nn.Module):
             x (torch.Tensor): Input to scale values of.
 
         Returns:
-            **tensor** (torch.Tensor): tensor with it's values scaled.
+            tensor (torch.Tensor): tensor with it's values scaled.
         """
         return x * self.multiplier
 
@@ -932,29 +969,11 @@ class RGBToBGR(nn.Module):
             x (torch.Tensor): RGB image tensor to convert to BGR.
 
         Returns:
-            **BGR tensor** (torch.Tensor): A BGR tensor.
+            BGR tensor (torch.Tensor): A BGR tensor.
         """
         assert x.dim() == 4
         assert x.size(1) == 3
         return x[:, [2, 1, 0]]
-
-
-# class TransformationRobustness(nn.Module):
-#     def __init__(self, jitter=False, scale=False):
-#         super().__init__()
-#         if jitter:
-#             self.jitter = RandomSpatialJitter(4)
-#         if scale:
-#             self.scale = RandomScale()
-
-#     def forward(self, x):
-#         original_shape = x.shape
-#         if hasattr(self, "jitter"):
-#             x = self.jitter(x)
-#         if hasattr(self, "scale"):
-#             x = self.scale(x)
-#         cropped = center_crop(x, original_shape)
-#         return cropped
 
 
 # class RandomHomography(nn.Module):
@@ -975,11 +994,11 @@ class RGBToBGR(nn.Module):
 class GaussianSmoothing(nn.Module):
     """
     Apply gaussian smoothing on a
-    1d, 2d or 3d tensor. Filtering is performed seperately for each channel
+    1d, 2d or 3d tensor. Filtering is performed separately for each channel
     in the input using a depthwise convolution.
     """
 
-    __constants__ = ["groups"]
+    __constants__ = ["groups", "padding"]
 
     def __init__(
         self,
@@ -987,6 +1006,7 @@ class GaussianSmoothing(nn.Module):
         kernel_size: Union[int, Sequence[int]],
         sigma: Union[float, Sequence[float]],
         dim: int = 2,
+        padding: Union[str, int, Tuple[int, int]] = "same",
     ) -> None:
         """
         Args:
@@ -996,7 +1016,11 @@ class GaussianSmoothing(nn.Module):
             kernel_size (int, sequence): Size of the gaussian kernel.
             sigma (float, sequence): Standard deviation of the gaussian kernel.
             dim (int, optional): The number of dimensions of the data.
-                Default value is 2 (spatial).
+                Default value is ``2`` for (spatial)
+            padding (str, int or list of tuple, optional): The desired padding amount
+                or mode to use. One of; ``"valid"``, ``"same"``, a single number, or a
+                tuple in the format of: (padH, padW).
+                Default: ``"same"``
         """
         super().__init__()
         if isinstance(kernel_size, numbers.Number):
@@ -1007,9 +1031,18 @@ class GaussianSmoothing(nn.Module):
         # The gaussian kernel is the product of the
         # gaussian function of each dimension.
         kernel = 1
-        meshgrids = torch.meshgrid(
-            [torch.arange(size, dtype=torch.float32) for size in kernel_size]
-        )
+
+        # PyTorch v1.10.0 adds a new indexing argument
+        if version.parse(torch.__version__) >= version.parse("1.10.0"):
+            meshgrids = torch.meshgrid(
+                [torch.arange(size, dtype=torch.float32) for size in kernel_size],
+                indexing="ij",
+            )
+        else:
+            meshgrids = torch.meshgrid(
+                [torch.arange(size, dtype=torch.float32) for size in kernel_size]
+            )
+
         for size, std, mgrid in zip(kernel_size, sigma, meshgrids):
             mean = (size - 1) / 2
             kernel *= (
@@ -1027,6 +1060,7 @@ class GaussianSmoothing(nn.Module):
 
         self.register_buffer("weight", kernel)
         self.groups = channels
+        self.padding = padding
 
         if dim == 1:
             self.conv = F.conv1d
@@ -1048,9 +1082,11 @@ class GaussianSmoothing(nn.Module):
             input (torch.Tensor): Input to apply gaussian filter on.
 
         Returns:
-            **filtered** (torch.Tensor): Filtered output.
+            filtered (torch.Tensor): Filtered output.
         """
-        return self.conv(input, weight=self.weight, groups=self.groups)
+        return self.conv(
+            input, weight=self.weight, groups=self.groups, padding=self.padding
+        )
 
 
 class SymmetricPadding(torch.autograd.Function):
@@ -1070,7 +1106,7 @@ class SymmetricPadding(torch.autograd.Function):
             x (torch.Tensor): Input to apply symmetric padding on.
 
         Returns:
-            **tensor** (torch.Tensor): Padded tensor.
+            tensor (torch.Tensor): Padded tensor.
         """
         ctx.padding = padding
         x_device = x.device
@@ -1093,7 +1129,7 @@ class SymmetricPadding(torch.autograd.Function):
             grad_output (torch.Tensor): Input to remove symmetric padding from.
 
         Returns:
-            **grad_input** (torch.Tensor): Unpadded tensor.
+            grad_input (torch.Tensor): Unpadded tensor.
         """
         grad_input = grad_output.clone()
         B, C, H, W = grad_input.size()
@@ -1117,7 +1153,8 @@ class NChannelsToRGB(nn.Module):
         Args:
 
             warp (bool, optional): Whether or not to make the resulting RGB colors more
-                distict from each other. Default is set to False.
+                distict from each other.
+                Default: ``False``
         """
         super().__init__()
         self.warp = warp
@@ -1131,7 +1168,7 @@ class NChannelsToRGB(nn.Module):
             x (torch.Tensor): Input to reduce channel dimensions on.
 
         Returns:
-            **3 channel RGB tensor** (torch.Tensor): RGB image tensor.
+            x (torch.Tensor): A 3 channel RGB image tensor.
         """
         assert x.dim() == 4
         return nchannels_to_rgb(x, self.warp)
@@ -1181,6 +1218,16 @@ class RandomCrop(nn.Module):
         ]
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
+        """
+        Randomly crop an NCHW image tensor.
+
+        Args:
+
+            x (torch.Tensor): The NCHW image tensor to randomly crop.
+
+        Returns
+            x (torch.Tensor): The randomly cropped NCHW image tensor.
+        """
         assert x.dim() == 4
         hs = int(math.ceil((x.shape[2] - self.crop_size[0]) / 2.0))
         ws = int(math.ceil((x.shape[3] - self.crop_size[1]) / 2.0))
@@ -1206,9 +1253,21 @@ class RandomCrop(nn.Module):
         return self._center_crop(x)
 
 
+# Define TransformationRobustness defaults externally for easier Sphinx docs formatting
+_TR_TRANSLATE: List[int] = [4] * 10
+_TR_SCALE: List[float] = [0.995**n for n in range(-5, 80)] + [
+    0.998**n for n in 2 * list(range(20, 40))
+]
+_TR_DEGREES: List[int] = (
+    list(range(-20, 20)) + list(range(-10, 10)) + list(range(-5, 5)) + 5 * [0]
+)
+
+
 class TransformationRobustness(nn.Module):
     """
-    This transform combines the standard transforms together for ease of use.
+    This transform combines the standard transforms (:class:`.RandomSpatialJitter`,
+    :class:`.RandomScale` & :class:`.RandomRotation`) together for ease of
+    use.
 
     Multiple jitter transforms can be used to create roughly gaussian distribution
     of jitter.
@@ -1222,15 +1281,9 @@ class TransformationRobustness(nn.Module):
     def __init__(
         self,
         padding_transform: Optional[nn.Module] = nn.ConstantPad2d(2, value=0.5),
-        translate: Optional[Union[int, List[int]]] = [4] * 10,
-        scale: Optional[NumSeqOrTensorOrProbDistType] = [
-            0.995**n for n in range(-5, 80)
-        ]
-        + [0.998**n for n in 2 * list(range(20, 40))],
-        degrees: Optional[NumSeqOrTensorOrProbDistType] = list(range(-20, 20))
-        + list(range(-10, 10))
-        + list(range(-5, 5))
-        + 5 * [0],
+        translate: Optional[Union[int, List[int]]] = _TR_TRANSLATE,
+        scale: Optional[NumSeqOrTensorOrProbDistType] = _TR_SCALE,
+        degrees: Optional[NumSeqOrTensorOrProbDistType] = _TR_DEGREES,
         final_translate: Optional[int] = 2,
         crop_or_pad_output: bool = False,
     ) -> None:
@@ -1238,26 +1291,30 @@ class TransformationRobustness(nn.Module):
         Args:
 
             padding_transform (nn.Module, optional): A padding module instance. No
-                padding will be applied before transforms if set to None.
-                Default: nn.ConstantPad2d(2, value=0.5)
-            translate (int or list of int, optional): The max horizontal and vertical
-                 translation to use for each jitter transform.
-                 Default: [4] * 10
+                padding will be applied before transforms if set to ``None``.
+                Default: ``nn.ConstantPad2d(2, value=0.5)``
+            translate (int or List[int], optional): The max horizontal and vertical
+                 translation to use for each :class:`.RandomSpatialJitter` transform.
+                 Default: ``[4] * 10``
             scale (float, sequence, or torch.distribution, optional): Sequence of
-                rescaling values to randomly select from, or a torch.distributions
-                instance. If set to None, no rescaling transform will be used.
-                Default: A set of optimal values.
+                rescaling values to randomly select from, or a
+                :mod:`torch.distributions` instance. If set to ``None``, no
+                :class:`.RandomScale` transform will be used.
+                Default: ``[0.995**n for n in range(-5, 80)] + [0.998**n for n in 2 *
+                list(range(20, 40))]``
             degrees (float, sequence, or torch.distribution, optional): Sequence of
-                degrees to randomly select from, or a torch.distributions
-                instance. If set to None, no rotation transform will be used.
-                Default: A set of optimal values.
+                degrees to randomly select from, or a :mod:`torch.distributions`
+                instance. If set to ``None``, no :class:`.RandomRotation` transform
+                will be used.
+                Default: ``list(range(-20, 20)) + list(range(-10, 10)) +
+                list(range(-5, 5)) + 5 * [0]``
             final_translate (int, optional): The max horizontal and vertical
-                 translation to use for the final jitter transform on fractional
-                 pixels.
-                 Default: 2
+                 translation to use for the final :class:`.RandomSpatialJitter`
+                 transform on fractional pixels.
+                 Default: ``2``
             crop_or_pad_output (bool, optional): Whether or not to crop or pad the
                 transformed output so that it is the same shape as the input.
-                Default: False
+                Default: ``False``
         """
         super().__init__()
         self.padding_transform = padding_transform
@@ -1280,6 +1337,14 @@ class TransformationRobustness(nn.Module):
         self.crop_or_pad_output = crop_or_pad_output
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
+        """
+        Args:
+
+            x (torch.Tensor): An NCHW tensor.
+
+        Returns:
+            x (torch.Tensor): A transformed NCHW tensor.
+        """
         assert x.dim() == 4
         crop_size = x.shape[2:]
 

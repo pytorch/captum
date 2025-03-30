@@ -1,7 +1,10 @@
 #!/usr/bin/env python3
 
+# pyre-unsafe
+
 import torch
-from tests.helpers.basic import assertTensorAlmostEqual, BaseTest
+from captum.testing.helpers import BaseTest
+from captum.testing.helpers.basic import assertTensorAlmostEqual
 
 
 class HelpersTest(BaseTest):

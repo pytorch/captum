@@ -1,5 +1,5 @@
 import math
-from typing import List, Optional, Tuple, Union
+from typing import Callable, List, Optional, Tuple, Union
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -27,13 +27,13 @@ def make_grid_image(
 
         tiles (torch.Tensor or list of torch.Tensor): A stack of NCHW image tensors or
             a list of NCHW image tensors to create a grid from.
-        nrow (int, optional): The number of rows to use for the grid image.
-            Default: 4
+        images_per_row (int, optional): The number of rows to use for the grid image.
+            Default: ``4``
         padding (int, optional): The amount of padding between images in the grid
             images.
-            padding: 2
+            padding: ``2``
         pad_value (float, optional): The value to use for the padding.
-            Default: 0.0
+            Default: ``0.0``
 
     Returns:
         grid_img (torch.Tensor): The full NCHW grid image.
@@ -79,22 +79,27 @@ def show(
     """
     Show CHW & NCHW tensors as an image.
 
+    Alias: ``captum.optim.images.show``
+
     Args:
 
         x (torch.Tensor): The tensor you want to display as an image.
-        figsize (Tuple[int, int], optional): height & width to use
-            for displaying the image figure.
-        scale (float): Value to multiply the input tensor by so that
+        figsize (tuple of int, optional): The height & width to use for displaying the
+            ``ImageTensor`` figure, in the format of: (height, width).
+            Default: ``None``
+        scale (float, optional): Value to multiply the input tensor by so that
             it's value range is [0-255] for display.
+            Default: ``255.0``
         images_per_row (int, optional): The number of images per row to use for the
-            grid image. Default is set to None for no grid image creation.
-            Default: None
+            grid image. Default is set to ``None`` for no grid image creation.
+            Default: ``None``
         padding (int, optional): The amount of padding between images in the grid
-            images. This parameter only has an effect if nrow is not None.
-            Default: 2
+            images. This parameter only has an effect if ``images_per_row`` is not
+            ``None``.
+            Default: ``2``
         pad_value (float, optional): The value to use for the padding. This parameter
-            only has an effect if nrow is not None.
-            Default: 0.0
+            only has an effect if ``images_per_row`` is not ``None``.
+            Default: ``0.0``
     """
 
     if x.dim() not in [3, 4]:
@@ -127,24 +132,28 @@ def save_tensor_as_image(
     """
     Save RGB & RGBA image tensors with a shape of CHW or NCHW as images.
 
+    Alias: ``captum.optim.images.save_tensor_as_image``
+
     Args:
 
         x (torch.Tensor): The tensor you want to save as an image.
         filename (str): The filename to use when saving the image.
         scale (float, optional): Value to multiply the input tensor by so that
             it's value range is [0-255] for saving.
+            Default: ``255.0``
         mode (str, optional): A PIL / Pillow supported colorspace. Default is
             set to None for automatic RGB / RGBA detection and usage.
-            Default: None
+            Default: ``None``
         images_per_row (int, optional): The number of images per row to use for the
             grid image. Default is set to None for no grid image creation.
-            Default: None
+            Default: ``None``
         padding (int, optional): The amount of padding between images in the grid
-            images. This parameter only has an effect if `nrow` is not None.
-            Default: 2
+            images. This parameter only has an effect if ``images_per_row`` is not
+            ``None``.
+            Default: ``2``
         pad_value (float, optional): The value to use for the padding. This parameter
-            only has an effect if `nrow` is not None.
-            Default: 0.0
+            only has an effect if ``images_per_row`` is not ``None``.
+            Default: ``0.0``
     """
 
     if x.dim() not in [3, 4]:
@@ -170,14 +179,14 @@ def get_neuron_pos(
     """
     Args:
 
-        H (int) The height
-        W (int) The width
+        H (int): The h position to use.
+        W (int): The w position to use.
         x (int, optional): Optionally specify and exact x location of the neuron. If
-            set to None, then the center x location will be used.
-            Default: None
+            set to ``None``, then the center x location will be used.
+            Default: ``None``
         y (int, optional): Optionally specify and exact y location of the neuron. If
-            set to None, then the center y location will be used.
-            Default: None
+            set to ``None``, then the center y location will be used.
+            Default: ``None``
 
     Return:
         Tuple[_x, _y] (Tuple[int, int]): The x and y dimensions of the neuron.
@@ -208,17 +217,22 @@ def _dot_cossim(
     a specified dimension.
 
     Args:
+
         x (torch.Tensor): The tensor that you wish to compute the cosine similarity
             for in relation to tensor y.
         y (torch.Tensor): The tensor that you wish to compute the cosine similarity
             for in relation to tensor x.
         cossim_pow (float, optional): The desired cosine similarity power to use.
+            Default: ``0.0``
         dim (int, optional): The target dimension for computing cosine similarity.
+            Default: ``1``
         eps (float, optional): If cossim_pow is greater than zero, the desired
             epsilon value to use for cosine similarity calculations.
+            Default: ``1e-8``
+
     Returns:
         tensor (torch.Tensor): Dot cosine similarity between x and y, along the
-        specified dim.
+            specified dim.
     """
 
     dot = torch.sum(x * y, dim)
@@ -241,13 +255,16 @@ def hue_to_rgb(
 ) -> torch.Tensor:
     """
     Create an RGB unit vector based on a hue of the input angle.
+
     Args:
+
         angle (float): The hue angle to create an RGB color for.
         device (torch.device, optional): The device to create the angle color tensor
             on.
-            Default: torch.device("cpu")
+            Default: ``torch.device("cpu")``
         warp (bool, optional): Whether or not to make colors more distinguishable.
-            Default: True
+            Default: ``True``
+
     Returns:
         color_vec (torch.Tensor): A color vector.
     """
@@ -288,11 +305,12 @@ def nchannels_to_rgb(
 
     Args:
 
-        x (torch.Tensor):  NCHW image tensor to transform into RGB image.
-        warp (bool, optional):  Whether or not to make colors more distinguishable.
-            Default: True
+        x (torch.Tensor): NCHW image tensor to transform into RGB image.
+        warp (bool, optional): Whether or not to make colors more distinguishable.
+            Default: ``True``
         eps (float, optional): An optional epsilon value.
-            Default: 1e-4
+            Default: ``1e-4``
+
     Returns:
         tensor (torch.Tensor): An NCHW RGB image tensor.
     """
@@ -326,13 +344,15 @@ def weights_to_heatmap_2d(
     no excitation or inhibition.
 
     Args:
-        weight (torch.Tensor):  A 2d tensor to create the heatmap from.
-        colors (list of str):  A list of 5 strings containing hex triplet
+
+        weight (torch.Tensor): A 2d tensor to create the heatmap from.
+        colors (list of str, optional): A list of 5 strings containing hex triplet
             (six digit), three-byte hexadecimal color values to use for coloring
             the heatmap.
+            Default: ``["0571b0", "92c5de", "f7f7f7", "f4a582", "ca0020"]``
 
     Returns:
-        color_tensor (torch.Tensor):  A weight heatmap.
+        color_tensor (torch.Tensor): A weight heatmap.
     """
 
     assert weight.dim() == 2
@@ -363,3 +383,56 @@ def weights_to_heatmap_2d(
         * ((1 - (-x - 0.5) * 2) * color_list[1] + (-x - 0.5) * 2 * color_list[0])
     ).permute(2, 0, 1)
     return color_tensor
+
+
+def _create_new_vector(
+    x: torch.Tensor,
+    vec: torch.Tensor,
+    activation_fn: Optional[
+        Callable[[torch.Tensor], torch.Tensor]
+    ] = torch.nn.functional.relu,
+    move_channel_dim_to_final_dim: bool = True,
+) -> torch.Tensor:
+    """
+    Create a vector using a given set of activations and another vector.
+    This function is intended for use in CLIP related loss objectives.
+
+    https://distill.pub/2021/multimodal-neurons/
+    https://github.com/openai/CLIP-featurevis/blob/master/example_facets.py
+    The einsum equation: "ijkl,j->ikl", used by the paper's associated code is the
+    same thing as: "[..., C] @ vec", where vec has a shape of 'C'.
+
+    Args:
+
+        x (torch.Tensor): A set of 2d or 4d activations.
+        vec (torch.Tensor): A 1D direction vector to use, with a compatible shape for
+            computing the matrix product of the activations. See torch.matmul for
+            See torch.matmul for more details on compatible shapes:
+            https://pytorch.org/docs/stable/generated/torch.matmul.html
+            By default, ``vec`` is expected to share the same size as the channel or
+            feature dimension of the activations.
+        activation_fn (Callable, optional): An optional activation function to
+            apply to the activations before computing the matrix product. If set
+            to None, then no activation function will be used.
+            Default: ``torch.nn.functional.relu``
+        move_channel_dim_to_final_dim (bool, optional): Whether or not to move the
+            channel dimension to the last dimension before computing the matrix
+            product.
+            Default: ``True``
+
+    Returns
+        x (torch.Tensor): A vector created from the input activations and the
+            stored vector.
+    """
+    assert x.device == vec.device
+    assert x.dim() > 1 and vec.dim() == 1
+    if activation_fn:
+        x = activation_fn(x)
+    if x.dim() > 2:
+        if move_channel_dim_to_final_dim:
+            permute_vals = [0] + list(range(x.dim()))[2:] + [1]
+            x = x.permute(*permute_vals)
+        mean_vals = list(range(1, x.dim() - 1))
+        return torch.mean(x @ vec, mean_vals)
+    else:
+        return (x @ vec)[:, None]

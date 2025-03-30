@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+# pyre-strict
+
 import warnings
 from functools import reduce
 
@@ -19,14 +21,21 @@ class InterpretableEmbeddingBase(Module):
     precomputed embedding vectors to the layers below.
     """
 
+    # pyre-fixme[2]: Parameter must be annotated.
     def __init__(self, embedding, full_name) -> None:
         Module.__init__(self)
+        # pyre-fixme[4]: Attribute must be annotated.
         self.num_embeddings = getattr(embedding, "num_embeddings", None)
+        # pyre-fixme[4]: Attribute must be annotated.
         self.embedding_dim = getattr(embedding, "embedding_dim", None)
 
+        # pyre-fixme[4]: Attribute must be annotated.
         self.embedding = embedding
+        # pyre-fixme[4]: Attribute must be annotated.
         self.full_name = full_name
 
+    # pyre-fixme[3]: Return type must be annotated.
+    # pyre-fixme[2]: Parameter must be annotated.
     def forward(self, *inputs, **kwargs):
         r"""
         The forward function of a wrapper embedding layer that takes and returns
@@ -70,13 +79,15 @@ class InterpretableEmbeddingBase(Module):
         )
         return inputs[0] if len(inputs) > 0 else list(kwargs.values())[0]
 
+    # pyre-fixme[3]: Return type must be annotated.
+    # pyre-fixme[2]: Parameter must be annotated.
     def indices_to_embeddings(self, *input, **kwargs):
         r"""
         Maps indices to corresponding embedding vectors. E.g. word embeddings
 
         Args:
 
-            *input (Any, Optional): This can be a tensor(s) of input indices or any
+            *input (Any, optional): This can be a tensor(s) of input indices or any
                     other variable necessary to comput the embeddings. A typical
                     example of input indices are word or token indices.
             **kwargs (Any, optional): Similar to `input` this can be any sequence
@@ -99,10 +110,11 @@ class TokenReferenceBase:
     `TokenReferenceBase` class.
     """
 
-    def __init__(self, reference_token_idx=0) -> None:
+    def __init__(self, reference_token_idx: int = 0) -> None:
         self.reference_token_idx = reference_token_idx
 
-    def generate_reference(self, sequence_length, device):
+    # pyre-fixme[2]: Parameter must be annotated.
+    def generate_reference(self, sequence_length, device: torch.device) -> torch.Tensor:
         r"""
         Generated reference tensor of given `sequence_length` using
         `reference_token_idx`.
@@ -120,6 +132,8 @@ class TokenReferenceBase:
         return torch.tensor([self.reference_token_idx] * sequence_length, device=device)
 
 
+# pyre-fixme[3]: Return type must be annotated.
+# pyre-fixme[2]: Parameter must be annotated.
 def _get_deep_layer_name(obj, layer_names):
     r"""
     Traverses through the layer names that are separated by
@@ -128,7 +142,8 @@ def _get_deep_layer_name(obj, layer_names):
     return reduce(getattr, layer_names.split("."), obj)
 
 
-def _set_deep_layer_value(obj, layer_names, value):
+# pyre-fixme[2]: Parameter must be annotated.
+def _set_deep_layer_value(obj, layer_names, value) -> None:
     r"""
     Traverses through the layer names that are separated by
     dot in order to access the embedding layer and update its value.
@@ -137,22 +152,25 @@ def _set_deep_layer_value(obj, layer_names, value):
     setattr(reduce(getattr, layer_names[:-1], obj), layer_names[-1], value)
 
 
-def configure_interpretable_embedding_layer(model, embedding_layer_name="embedding"):
+def configure_interpretable_embedding_layer(
+    model: Module, embedding_layer_name: str = "embedding"
+) -> InterpretableEmbeddingBase:
     r"""
-    This method wraps model's embedding layer with an interpretable embedding
+    This method wraps a model's embedding layer with an interpretable embedding
     layer that allows us to access the embeddings through their indices.
 
     Args:
 
-        model (torch.nn.Model): An instance of PyTorch model that contains embeddings.
+        model (torch.nn.Module): An instance of PyTorch model that contains embeddings.
         embedding_layer_name (str, optional): The name of the embedding layer
                     in the `model` that we would like to make interpretable.
 
     Returns:
 
-        interpretable_emb (tensor): An instance of `InterpretableEmbeddingBase`
-                    embedding layer that wraps model's embedding layer that is being
-                    accessed through `embedding_layer_name`.
+        interpretable_emb (InterpretableEmbeddingBase): An instance of
+                    `InterpretableEmbeddingBase` embedding layer that wraps model's
+                    embedding layer that is being accessed through
+                    `embedding_layer_name`.
 
     Examples::
 
@@ -193,7 +211,8 @@ def configure_interpretable_embedding_layer(model, embedding_layer_name="embeddi
         "embeddings and compute attributions for each embedding dimension. "
         "The original embedding layer must be set "
         "back by calling `remove_interpretable_embedding_layer` function "
-        "after model interpretation is finished. "
+        "after model interpretation is finished. ",
+        stacklevel=1,
     )
     interpretable_emb = InterpretableEmbeddingBase(
         embedding_layer, embedding_layer_name
@@ -202,7 +221,9 @@ def configure_interpretable_embedding_layer(model, embedding_layer_name="embeddi
     return interpretable_emb
 
 
-def remove_interpretable_embedding_layer(model, interpretable_emb):
+def remove_interpretable_embedding_layer(
+    model: Module, interpretable_emb: InterpretableEmbeddingBase
+) -> None:
     r"""
     Removes interpretable embedding layer and sets back original
     embedding layer in the model.
@@ -210,8 +231,8 @@ def remove_interpretable_embedding_layer(model, interpretable_emb):
     Args:
 
         model (torch.nn.Module): An instance of PyTorch model that contains embeddings
-        interpretable_emb (tensor): An instance of `InterpretableEmbeddingBase`
-                    that was originally created in
+        interpretable_emb (InterpretableEmbeddingBase): An instance of
+                    `InterpretableEmbeddingBase` that was originally created in
                     `configure_interpretable_embedding_layer` function and has
                     to be removed after interpretation is finished.
 

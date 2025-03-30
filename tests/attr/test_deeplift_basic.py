@@ -1,17 +1,19 @@
 #!/usr/bin/env python3
 
+# pyre-unsafe
+
 from inspect import signature
-from typing import Callable, List, Tuple, Union
+from typing import Callable, List, Optional, Tuple, Union
 
 import torch
 from captum.attr._core.deep_lift import DeepLift, DeepLiftShap
 from captum.attr._core.integrated_gradients import IntegratedGradients
-from tests.helpers.basic import (
+from captum.testing.helpers.basic import (
     assertAttributionComparision,
     assertTensorAlmostEqual,
     BaseTest,
 )
-from tests.helpers.basic_models import (
+from captum.testing.helpers.basic_models import (
     BasicModelWithReusedModules,
     Conv1dSeqModel,
     LinearMaxPoolLinearModel,
@@ -103,8 +105,36 @@ class Test(BaseTest):
         # expected = [[[0.0, 0.0]], [[6.0, 2.0]]]
         self._deeplift_assert(model, DeepLift(model), inputs, baselines)
 
+    def test_relu_linear_deeplift_compare_inplace(self) -> None:
+        model1 = ReLULinearModel(inplace=True)
+        x1 = torch.tensor([[-10.0, 1.0, -5.0], [2.0, 3.0, 4.0]], requires_grad=True)
+        x2 = torch.tensor([[3.0, 3.0, 1.0], [2.3, 5.0, 4.0]], requires_grad=True)
+        inputs = (x1, x2)
+        attributions1 = DeepLift(model1).attribute(inputs)
+
+        model2 = ReLULinearModel()
+        attributions2 = DeepLift(model2).attribute(inputs)
+        assertTensorAlmostEqual(self, attributions1[0], attributions2[0])
+        assertTensorAlmostEqual(self, attributions1[1], attributions2[1])
+
+    def test_relu_linear_deepliftshap_compare_inplace(self) -> None:
+        model1 = ReLULinearModel(inplace=True)
+        x1 = torch.tensor([[-10.0, 1.0, -5.0], [2.0, 3.0, 4.0]], requires_grad=True)
+        x2 = torch.tensor([[3.0, 3.0, 1.0], [2.3, 5.0, 4.0]], requires_grad=True)
+        inputs = (x1, x2)
+        b1 = torch.tensor([[0.0, 0.0, 0.0], [1.0, 1.0, 1.0]])
+        b2 = torch.tensor([[0.0, 0.0, 0.0], [1.0, 1.0, 1.0]])
+        baselines = (b1, b2)
+
+        attributions1 = DeepLiftShap(model1).attribute(inputs, baselines)
+
+        model2 = ReLULinearModel()
+        attributions2 = DeepLiftShap(model2).attribute(inputs, baselines)
+        assertTensorAlmostEqual(self, attributions1[0], attributions2[0])
+        assertTensorAlmostEqual(self, attributions1[1], attributions2[1])
+
     def test_relu_linear_deeplift_batch(self) -> None:
-        model = ReLULinearModel(inplace=False)
+        model = ReLULinearModel(inplace=True)
         x1 = torch.tensor([[-10.0, 1.0, -5.0], [2.0, 3.0, 4.0]], requires_grad=True)
         x2 = torch.tensor([[3.0, 3.0, 1.0], [2.3, 5.0, 4.0]], requires_grad=True)
 
@@ -170,7 +200,7 @@ class Test(BaseTest):
         self._deeplift_assert(model, DeepLiftShap(model), inputs, baselines)
 
     def test_relu_deepliftshap_baselines_as_func(self) -> None:
-        model = ReLULinearModel(inplace=False)
+        model = ReLULinearModel(inplace=True)
         x1 = torch.tensor([[-10.0, 1.0, -5.0]])
         x2 = torch.tensor([[3.0, 3.0, 1.0]])
 
@@ -218,7 +248,7 @@ class Test(BaseTest):
         ) -> Tuple[Tensor, ...]:
             return tuple(multiplier * 0.0 for multiplier in multipliers)
 
-        model = ReLULinearModel(inplace=False)
+        model = ReLULinearModel(inplace=True)
         x1 = torch.tensor([[-10.0, 1.0, -5.0]])
         x2 = torch.tensor([[3.0, 3.0, 1.0]])
         b1 = torch.tensor([[0.0, 0.0, 0.0], [1.0, 1.0, 1.0]])
@@ -267,13 +297,21 @@ class Test(BaseTest):
         assertTensorAlmostEqual(self, attrs, expected, 0.0001)
         assertTensorAlmostEqual(self, delta, expected_delta, 0.0001)
 
+    def test_futures_not_implemented(self) -> None:
+        model = ReLUDeepLiftModel()
+        dl = DeepLift(model, multiply_by_inputs=False)
+        attributions = None
+        with self.assertRaises(NotImplementedError):
+            attributions = dl.attribute_future()
+        self.assertEqual(attributions, None)
+
     def _deeplift_assert(
         self,
         model: Module,
         attr_method: Union[DeepLift, DeepLiftShap],
         inputs: Tuple[Tensor, ...],
         baselines,
-        custom_attr_func: Callable[..., Tuple[Tensor, ...]] = None,
+        custom_attr_func: Optional[Callable[..., Tuple[Tensor, ...]]] = None,
     ) -> None:
         input_bsz = len(inputs[0])
         if callable(baselines):

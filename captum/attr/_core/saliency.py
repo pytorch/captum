@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 
-from typing import Any, Callable
+# pyre-strict
+
+from typing import Callable, Optional
 
 import torch
 from captum._utils.common import _format_output, _format_tensor_into_tuples, _is_tuple
@@ -11,6 +13,7 @@ from captum._utils.gradient import (
 from captum._utils.typing import TargetType, TensorOrTupleOfTensorsGeneric
 from captum.attr._utils.attribution import GradientAttribution
 from captum.log import log_usage
+from torch import Tensor
 
 
 class Saliency(GradientAttribution):
@@ -20,15 +23,15 @@ class Saliency(GradientAttribution):
     the default, the absolute value of the gradients is returned.
 
     More details about the approach can be found in the following paper:
-        https://arxiv.org/pdf/1312.6034.pdf
+        https://arxiv.org/abs/1312.6034
     """
 
-    def __init__(self, forward_func: Callable) -> None:
+    def __init__(self, forward_func: Callable[..., Tensor]) -> None:
         r"""
         Args:
 
-            forward_func (callable): The forward function of the model or
-                        any modification of it
+            forward_func (Callable): The forward function of the model or
+                        any modification of it.
         """
         GradientAttribution.__init__(self, forward_func)
 
@@ -38,21 +41,21 @@ class Saliency(GradientAttribution):
         inputs: TensorOrTupleOfTensorsGeneric,
         target: TargetType = None,
         abs: bool = True,
-        additional_forward_args: Any = None,
+        additional_forward_args: Optional[object] = None,
     ) -> TensorOrTupleOfTensorsGeneric:
         r"""
         Args:
 
-            inputs (tensor or tuple of tensors):  Input for which integrated
-                        gradients are computed. If forward_func takes a single
-                        tensor as input, a single input tensor should be provided.
+            inputs (Tensor or tuple[Tensor, ...]): Input for which saliency
+                        is computed. If forward_func takes a single tensor
+                        as input, a single input tensor should be provided.
                         If forward_func takes multiple tensors as input, a tuple
                         of the input tensors should be provided. It is assumed
                         that for all given input tensors, dimension 0 corresponds
                         to the number of examples (aka batch size), and if
                         multiple input tensors are provided, the examples must
                         be aligned appropriately.
-            target (int, tuple, tensor or list, optional):  Output indices for
+            target (int, tuple, Tensor, or list, optional): Output indices for
                         which gradients are computed (for classification cases,
                         this is usually the target class).
                         If the network returns a scalar value per example,
@@ -81,7 +84,7 @@ class Saliency(GradientAttribution):
                         to True, otherwise returns the (signed) gradients if
                         False.
                         Default: True
-            additional_forward_args (any, optional): If the forward function
+            additional_forward_args (Any, optional): If the forward function
                         requires additional arguments other than the inputs for
                         which attributions should not be computed, this argument
                         can be provided. It must be either a single additional
@@ -95,8 +98,8 @@ class Saliency(GradientAttribution):
                         Default: None
 
         Returns:
-            *tensor* or tuple of *tensors* of **attributions**:
-            - **attributions** (*tensor* or tuple of *tensors*):
+            *Tensor* or *tuple[Tensor, ...]* of **attributions**:
+            - **attributions** (*Tensor* or *tuple[Tensor, ...]*):
                         The gradients with respect to each input feature.
                         Attributions will always be
                         the same size as the provided inputs, with each value
@@ -122,17 +125,26 @@ class Saliency(GradientAttribution):
         # converting it into a tuple.
         is_inputs_tuple = _is_tuple(inputs)
 
-        inputs = _format_tensor_into_tuples(inputs)
-        gradient_mask = apply_gradient_requirements(inputs)
+        inputs_tuple = _format_tensor_into_tuples(inputs)
+        gradient_mask = apply_gradient_requirements(inputs_tuple)
 
         # No need to format additional_forward_args here.
         # They are being formated in the `_run_forward` function in `common.py`
         gradients = self.gradient_func(
-            self.forward_func, inputs, target, additional_forward_args
+            self.forward_func, inputs_tuple, target, additional_forward_args
         )
         if abs:
             attributions = tuple(torch.abs(gradient) for gradient in gradients)
         else:
             attributions = gradients
-        undo_gradient_requirements(inputs, gradient_mask)
+        undo_gradient_requirements(inputs_tuple, gradient_mask)
+        # pyre-fixme[7]: Expected `TensorOrTupleOfTensorsGeneric` but got
+        #  `Tuple[Tensor, ...]`.
         return _format_output(is_inputs_tuple, attributions)
+
+    # pyre-fixme[24] Generic type `Callable` expects 2 type parameters.
+    def attribute_future(self) -> Callable:
+        r"""
+        This method is not implemented for Saliency.
+        """
+        raise NotImplementedError("attribute_future is not implemented for Saliency")

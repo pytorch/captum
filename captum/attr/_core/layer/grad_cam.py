@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
-from typing import Any, Callable, List, Tuple, Union
+
+# pyre-strict
+from typing import Any, Callable, cast, Dict, List, Optional, Tuple, Union
 
 import torch
 import torch.nn.functional as F
@@ -47,25 +49,25 @@ class LayerGradCam(LayerAttribution, GradientAttribution):
 
     More details regarding the GradCAM method can be found in the
     original paper here:
-    https://arxiv.org/pdf/1610.02391.pdf
+    https://arxiv.org/abs/1610.02391
     """
 
     def __init__(
         self,
-        forward_func: Callable,
+        forward_func: Callable[..., Tensor],
         layer: Module,
         device_ids: Union[None, List[int]] = None,
     ) -> None:
         r"""
         Args:
 
-            forward_func (callable):  The forward function of the model or any
+            forward_func (Callable): The forward function of the model or any
                           modification of it
             layer (torch.nn.Module): Layer for which attributions are computed.
                           Output size of attribute matches this layer's output
                           dimensions, except for dimension 2, which will be 1,
                           since GradCAM sums over channels.
-            device_ids (list(int)): Device ID list, necessary only if forward_func
+            device_ids (list[int]): Device ID list, necessary only if forward_func
                           applies a DataParallel model. This allows reconstruction of
                           intermediate outputs from batched results across devices.
                           If forward_func is given as the DataParallel model itself,
@@ -79,14 +81,16 @@ class LayerGradCam(LayerAttribution, GradientAttribution):
         self,
         inputs: Union[Tensor, Tuple[Tensor, ...]],
         target: TargetType = None,
-        additional_forward_args: Any = None,
+        additional_forward_args: Optional[object] = None,
         attribute_to_layer_input: bool = False,
         relu_attributions: bool = False,
+        attr_dim_summation: bool = True,
+        grad_kwargs: Optional[Dict[str, Any]] = None,
     ) -> Union[Tensor, Tuple[Tensor, ...]]:
         r"""
         Args:
 
-            inputs (tensor or tuple of tensors):  Input for which attributions
+            inputs (Tensor or tuple[Tensor, ...]): Input for which attributions
                         are computed. If forward_func takes a single
                         tensor as input, a single input tensor should be provided.
                         If forward_func takes multiple tensors as input, a tuple
@@ -94,7 +98,7 @@ class LayerGradCam(LayerAttribution, GradientAttribution):
                         that for all given input tensors, dimension 0 corresponds
                         to the number of examples, and if multiple input tensors
                         are provided, the examples must be aligned appropriately.
-            target (int, tuple, tensor or list, optional):  Output indices for
+            target (int, tuple, Tensor, or list, optional): Output indices for
                         which gradients are computed (for classification cases,
                         this is usually the target class).
                         If the network returns a scalar value per example,
@@ -119,7 +123,7 @@ class LayerGradCam(LayerAttribution, GradientAttribution):
                           target for the corresponding example.
 
                         Default: None
-            additional_forward_args (any, optional): If the forward function
+            additional_forward_args (Any, optional): If the forward function
                         requires additional arguments other than the inputs for
                         which attributions should not be computed, this argument
                         can be provided. It must be either a single additional
@@ -149,10 +153,17 @@ class LayerGradCam(LayerAttribution, GradientAttribution):
                         otherwise, by default, both positive and negative
                         attributions are returned.
                         Default: False
+            attr_dim_summation (bool, optional): Indicates whether to
+                        sum attributions along dimension 1 (usually channel).
+                        The default (True) means to sum along dimension 1.
+                        Default: True
+            grad_kwargs (Dict[str, Any], optional): Additional keyword
+                        arguments for torch.autograd.grad.
+                        Default: None
 
         Returns:
-            *tensor* or tuple of *tensors* of **attributions**:
-            - **attributions** (*tensor* or tuple of *tensors*):
+            *Tensor* or *tuple[Tensor, ...]* of **attributions**:
+            - **attributions** (*Tensor* or *tuple[Tensor, ...]*):
                         Attributions based on GradCAM method.
                         Attributions will be the same size as the
                         output of the given layer, except for dimension 2,
@@ -189,29 +200,39 @@ class LayerGradCam(LayerAttribution, GradientAttribution):
         # hidden layer and hidden layer evaluated at each input.
         layer_gradients, layer_evals = compute_layer_gradients_and_eval(
             self.forward_func,
-            self.layer,
+            cast(Module, self.layer),
             inputs,
             target,
             additional_forward_args,
             device_ids=self.device_ids,
             attribute_to_layer_input=attribute_to_layer_input,
+            grad_kwargs=grad_kwargs,
         )
 
         summed_grads = tuple(
-            torch.mean(
-                layer_grad,
-                dim=tuple(x for x in range(2, len(layer_grad.shape))),
-                keepdim=True,
+            (
+                torch.mean(
+                    layer_grad,
+                    dim=tuple(x for x in range(2, len(layer_grad.shape))),
+                    keepdim=True,
+                )
+                if len(layer_grad.shape) > 2
+                else layer_grad
             )
-            if len(layer_grad.shape) > 2
-            else layer_grad
             for layer_grad in layer_gradients
         )
 
-        scaled_acts = tuple(
-            torch.sum(summed_grad * layer_eval, dim=1, keepdim=True)
-            for summed_grad, layer_eval in zip(summed_grads, layer_evals)
-        )
+        if attr_dim_summation:
+            scaled_acts = tuple(
+                torch.sum(summed_grad * layer_eval, dim=1, keepdim=True)
+                for summed_grad, layer_eval in zip(summed_grads, layer_evals)
+            )
+        else:
+            scaled_acts = tuple(
+                summed_grad * layer_eval
+                for summed_grad, layer_eval in zip(summed_grads, layer_evals)
+            )
+
         if relu_attributions:
             scaled_acts = tuple(F.relu(scaled_act) for scaled_act in scaled_acts)
         return _format_output(len(scaled_acts) > 1, scaled_acts)

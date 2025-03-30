@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+# pyre-unsafe
+
 import unittest
 from typing import Any, Callable, Tuple, Union
 
@@ -9,12 +11,12 @@ from captum.attr._core.integrated_gradients import IntegratedGradients
 from captum.attr._core.neuron.neuron_integrated_gradients import (
     NeuronIntegratedGradients,
 )
-from tests.helpers.basic import (
+from captum.testing.helpers.basic import (
     assertTensorAlmostEqual,
     assertTensorTuplesAlmostEqual,
     BaseTest,
 )
-from tests.helpers.basic_models import (
+from captum.testing.helpers.basic_models import (
     BasicModel_ConvNet,
     BasicModel_MultiLayer,
     BasicModel_MultiLayer_MultiInput,
@@ -144,7 +146,7 @@ class Test(BaseTest):
             grad = NeuronIntegratedGradients(
                 model, target_layer, multiply_by_inputs=multiply_by_inputs
             )
-            self.assertEquals(grad.multiplies_by_inputs, multiply_by_inputs)
+            self.assertEqual(grad.multiplies_by_inputs, multiply_by_inputs)
             attributions = grad.attribute(
                 test_input,
                 test_neuron,

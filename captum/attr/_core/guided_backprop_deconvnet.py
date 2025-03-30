@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
+
+# pyre-strict
 import warnings
-from typing import Any, List, Tuple, Union
+from typing import Callable, List, Optional, Tuple, Union
 
 import torch
 import torch.nn.functional as F
@@ -27,7 +29,7 @@ class ModifiedReluGradientAttribution(GradientAttribution):
         r"""
         Args:
 
-            model (nn.Module):  The reference to PyTorch model instance.
+            model (nn.Module): The reference to PyTorch model instance.
         """
         GradientAttribution.__init__(self, model)
         self.model = model
@@ -43,7 +45,7 @@ class ModifiedReluGradientAttribution(GradientAttribution):
         self,
         inputs: TensorOrTupleOfTensorsGeneric,
         target: TargetType = None,
-        additional_forward_args: Any = None,
+        additional_forward_args: Optional[object] = None,
     ) -> TensorOrTupleOfTensorsGeneric:
         r"""
         Computes attribution by overriding relu gradients. Based on constructor
@@ -57,46 +59,58 @@ class ModifiedReluGradientAttribution(GradientAttribution):
         # converting it into a tuple.
         is_inputs_tuple = _is_tuple(inputs)
 
-        inputs = _format_tensor_into_tuples(inputs)
-        gradient_mask = apply_gradient_requirements(inputs)
+        inputs_tuple = _format_tensor_into_tuples(inputs)
+        gradient_mask = apply_gradient_requirements(inputs_tuple)
 
         # set hooks for overriding ReLU gradients
         warnings.warn(
             "Setting backward hooks on ReLU activations."
-            "The hooks will be removed after the attribution is finished"
+            "The hooks will be removed after the attribution is finished",
+            stacklevel=1,
         )
         try:
             self.model.apply(self._register_hooks)
 
             gradients = self.gradient_func(
-                self.forward_func, inputs, target, additional_forward_args
+                self.forward_func, inputs_tuple, target, additional_forward_args
             )
         finally:
             self._remove_hooks()
 
-        undo_gradient_requirements(inputs, gradient_mask)
+        undo_gradient_requirements(inputs_tuple, gradient_mask)
+        # pyre-fixme[7]: Expected `TensorOrTupleOfTensorsGeneric` but got
+        #  `Tuple[Tensor, ...]`.
         return _format_output(is_inputs_tuple, gradients)
 
-    def _register_hooks(self, module: Module):
+    # pyre-fixme[24] Generic type `Callable` expects 2 type parameters.
+    def attribute_future(self) -> Callable:
+        r"""
+        This method is not implemented for ModifiedReluGradientAttribution.
+        """
+        raise NotImplementedError(
+            "attribute_future is not implemented for ModifiedReluGradientAttribution"
+        )
+
+    def _register_hooks(self, module: Module) -> None:
         if isinstance(module, torch.nn.ReLU):
-            hook = _register_backward_hook(module, self._backward_hook, self)
-            self.backward_hooks.append(hook)
+            hooks = _register_backward_hook(module, self._backward_hook, self)
+            self.backward_hooks.extend(hooks)
 
     def _backward_hook(
         self,
         module: Module,
         grad_input: Union[Tensor, Tuple[Tensor, ...]],
         grad_output: Union[Tensor, Tuple[Tensor, ...]],
-    ):
+    ) -> Union[Tuple[Tensor], Tensor]:
         to_override_grads = grad_output if self.use_relu_grad_output else grad_input
         if isinstance(to_override_grads, tuple):
             return tuple(
-                F.relu(to_override_grad) for to_override_grad in to_override_grads
+                F.relu(to_override_grad) for to_override_grad in to_override_grads  # type: ignore # noqa: E501 line too long
             )
         else:
             return F.relu(to_override_grads)
 
-    def _remove_hooks(self):
+    def _remove_hooks(self) -> None:
         for hook in self.backward_hooks:
             hook.remove()
 
@@ -121,9 +135,7 @@ class GuidedBackprop(ModifiedReluGradientAttribution):
         r"""
         Args:
 
-            model (nn.Module):  The reference to PyTorch model instance. Model cannot
-                        contain any in-place ReLU submodules; these are not
-                        supported by the register_full_backward_hook PyTorch API.
+            model (nn.Module):  The reference to PyTorch model instance.
         """
         ModifiedReluGradientAttribution.__init__(
             self, model, use_relu_grad_output=False
@@ -134,21 +146,21 @@ class GuidedBackprop(ModifiedReluGradientAttribution):
         self,
         inputs: TensorOrTupleOfTensorsGeneric,
         target: TargetType = None,
-        additional_forward_args: Any = None,
+        additional_forward_args: Optional[object] = None,
     ) -> TensorOrTupleOfTensorsGeneric:
         r"""
         Args:
 
-            inputs (tensor or tuple of tensors):  Input for which
-                        attributions are computed. If forward_func takes a single
+            inputs (Tensor or tuple[Tensor, ...]): Input for which
+                        attributions are computed. If model takes a single
                         tensor as input, a single input tensor should be provided.
-                        If forward_func takes multiple tensors as input, a tuple
+                        If model takes multiple tensors as input, a tuple
                         of the input tensors should be provided. It is assumed
                         that for all given input tensors, dimension 0 corresponds
                         to the number of examples (aka batch size), and if
                         multiple input tensors are provided, the examples must
                         be aligned appropriately.
-            target (int, tuple, tensor or list, optional):  Output indices for
+            target (int, tuple, Tensor, or list, optional): Output indices for
                         which gradients are computed (for classification cases,
                         this is usually the target class).
                         If the network returns a scalar value per example,
@@ -173,21 +185,21 @@ class GuidedBackprop(ModifiedReluGradientAttribution):
                           target for the corresponding example.
 
                         Default: None
-            additional_forward_args (any, optional): If the forward function
+            additional_forward_args (Any, optional): If the forward function
                         requires additional arguments other than the inputs for
                         which attributions should not be computed, this argument
                         can be provided. It must be either a single additional
                         argument of a Tensor or arbitrary (non-tuple) type or a tuple
                         containing multiple additional arguments including tensors
                         or any arbitrary python types. These arguments are provided to
-                        forward_func in order, following the arguments in inputs.
+                        model in order, following the arguments in inputs.
                         Note that attributions are not computed with respect
                         to these arguments.
                         Default: None
 
         Returns:
-            *tensor* or tuple of *tensors* of **attributions**:
-            - **attributions** (*tensor* or tuple of *tensors*):
+            *Tensor* or *tuple[Tensor, ...]* of **attributions**:
+            - **attributions** (*Tensor* or *tuple[Tensor, ...]*):
                         The guided backprop gradients with respect to each
                         input feature. Attributions will always
                         be the same size as the provided inputs, with each value
@@ -234,9 +246,7 @@ class Deconvolution(ModifiedReluGradientAttribution):
         r"""
         Args:
 
-            model (nn.Module):  The reference to PyTorch model instance. Model cannot
-                        contain any in-place ReLU submodules; these are not
-                        supported by the register_full_backward_hook PyTorch API.
+            model (nn.Module):  The reference to PyTorch model instance.
         """
         ModifiedReluGradientAttribution.__init__(self, model, use_relu_grad_output=True)
 
@@ -245,21 +255,21 @@ class Deconvolution(ModifiedReluGradientAttribution):
         self,
         inputs: TensorOrTupleOfTensorsGeneric,
         target: TargetType = None,
-        additional_forward_args: Any = None,
+        additional_forward_args: Optional[object] = None,
     ) -> TensorOrTupleOfTensorsGeneric:
         r"""
         Args:
 
-            inputs (tensor or tuple of tensors):  Input for which
-                        attributions are computed. If forward_func takes a single
+            inputs (Tensor or tuple[Tensor, ...]): Input for which
+                        attributions are computed. If model takes a single
                         tensor as input, a single input tensor should be provided.
-                        If forward_func takes multiple tensors as input, a tuple
+                        If model takes multiple tensors as input, a tuple
                         of the input tensors should be provided. It is assumed
                         that for all given input tensors, dimension 0 corresponds
                         to the number of examples (aka batch size), and if
                         multiple input tensors are provided, the examples must
                         be aligned appropriately.
-            target (int, tuple, tensor or list, optional):  Output indices for
+            target (int, tuple, Tensor, or list, optional): Output indices for
                         which gradients are computed (for classification cases,
                         this is usually the target class).
                         If the network returns a scalar value per example,
@@ -284,21 +294,21 @@ class Deconvolution(ModifiedReluGradientAttribution):
                           target for the corresponding example.
 
                         Default: None
-            additional_forward_args (any, optional): If the forward function
+            additional_forward_args (Any, optional): If the forward function
                         requires additional arguments other than the inputs for
                         which attributions should not be computed, this argument
                         can be provided. It must be either a single additional
                         argument of a Tensor or arbitrary (non-tuple) type or a tuple
                         containing multiple additional arguments including tensors
                         or any arbitrary python types. These arguments are provided to
-                        forward_func in order, following the arguments in inputs.
+                        model in order, following the arguments in inputs.
                         Note that attributions are not computed with respect
                         to these arguments.
                         Default: None
 
         Returns:
-            *tensor* or tuple of *tensors* of **attributions**:
-            - **attributions** (*tensor* or tuple of *tensors*):
+            *Tensor* or *tuple[Tensor, ...]* of **attributions**:
+            - **attributions** (*Tensor* or *tuple[Tensor, ...]*):
                         The deconvolution attributions with respect to each
                         input feature. Attributions will always
                         be the same size as the provided inputs, with each value

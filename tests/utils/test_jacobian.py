@@ -1,13 +1,19 @@
 #!/usr/bin/env python3
 
+# pyre-unsafe
+
 import torch
 import torch.nn as nn
 from captum._utils.gradient import (
     _compute_jacobian_wrt_params,
     _compute_jacobian_wrt_params_with_sample_wise_trick,
 )
-from tests.helpers.basic import assertTensorAlmostEqual, BaseTest
-from tests.helpers.basic_models import BasicLinearModel2, BasicLinearModel_Multilayer
+from captum.testing.helpers import BaseTest
+from captum.testing.helpers.basic import assertTensorAlmostEqual
+from captum.testing.helpers.basic_models import (
+    BasicLinearModel2,
+    BasicLinearModel_Multilayer,
+)
 
 
 class Test(BaseTest):

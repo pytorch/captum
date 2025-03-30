@@ -1,12 +1,26 @@
 Utilities
 ==========
 
+Interpretable Input
+^^^^^^^^^^^^^^^^^^^^^
+.. autoclass:: captum.attr.InterpretableInput
+    :members:
+
+.. autoclass:: captum.attr.TextTemplateInput
+    :members:
+
+.. autoclass:: captum.attr.TextTokenInput
+    :members:
+
+
 Visualization
 ^^^^^^^^^^^^^^
 
 .. autofunction:: captum.attr.visualization.visualize_image_attr
 
 .. autofunction:: captum.attr.visualization.visualize_image_attr_multiple
+
+.. autofunction:: captum.attr.visualization.visualize_timeseries_attr
 
 
 Interpretable Embeddings
@@ -16,6 +30,7 @@ Interpretable Embeddings
     :members:
 
 .. autofunction:: captum.attr.configure_interpretable_embedding_layer
+
 .. autofunction:: captum.attr.remove_interpretable_embedding_layer
 
 
@@ -44,4 +59,10 @@ Linear Models
 .. autoclass:: captum._utils.models.linear_model.SGDLasso
     :members:
 .. autoclass:: captum._utils.models.linear_model.SGDRidge
+    :members:
+
+Baselines
+^^^^^^^^^^^^^^^^
+
+.. autoclass:: captum.attr.ProductBaselines
     :members:

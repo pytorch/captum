@@ -1,0 +1,49 @@
+name: Unit-tests for Pip install
+
+on:
+  pull_request:
+  push:
+    branches:
+      - master
+
+  workflow_dispatch:
+
+jobs:
+  tests:
+    strategy:
+      matrix:
+        pytorch_args: ["-v 1.10", "-v 1.11", "-v 1.12", "-v 1.13", "-v 2.0.0", "-v 2.1.0", "-v 2.2.0", "-v 2.3.0"]
+        transformers_args: ["-t 4.38.0", "-t 4.39.0", "-t 4.41.0", "-t 4.43.0", "-t 4.45.2"]
+        docker_img: ["cimg/python:3.9", "cimg/python:3.10", "cimg/python:3.11", "cimg/python:3.12"]
+        exclude:
+          - pytorch_args: "-v 1.10"
+            docker_img: "cimg/python:3.10"
+          - pytorch_args: "-v 1.10"
+            docker_img: "cimg/python:3.11"
+          - pytorch_args: "-v 1.11"
+            docker_img: "cimg/python:3.11"
+          - pytorch_args: "-v 1.12"
+            docker_img: "cimg/python:3.11"
+          - pytorch_args: "-v 1.10"
+            docker_img: "cimg/python:3.12"
+          - pytorch_args: "-v 1.11"
+            docker_img: "cimg/python:3.12"
+          - pytorch_args: "-v 1.12"
+            docker_img: "cimg/python:3.12"
+          - pytorch_args: "-v 1.13"
+            docker_img: "cimg/python:3.12"
+          - pytorch_args: "-v 2.0.0"
+            docker_img: "cimg/python:3.12"
+          - pytorch_args: "-v 2.1.0"
+            docker_img: "cimg/python:3.12"
+      fail-fast: false
+    uses: pytorch/test-infra/.github/workflows/linux_job.yml@main
+    with:
+      runner: linux.12xlarge
+      docker-image: ${{ matrix.docker_img }}
+      repository: pytorch/captum
+      script: |
+        sudo chmod -R 777 .
+        ./scripts/install_via_pip.sh ${{ matrix.pytorch_args }} ${{ matrix.transformers_args }}
+        # Run Tests
+        python3 -m pytest -ra --cov=. --cov-report term-missing

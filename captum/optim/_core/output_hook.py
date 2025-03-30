@@ -101,11 +101,11 @@ class ActivationFetcher:
         """
         Args:
 
-            model (nn.Module):  The reference to PyTorch model instance.
-            targets (nn.Module or list of nn.Module):  The target layers to
+            model (nn.Module): The reference to PyTorch model instance.
+            targets (nn.Module or list of nn.Module): The target layers to
                 collect activations from.
         """
-        super(ActivationFetcher, self).__init__()
+        super().__init__()
         self.model = model
         self.layers = ModuleOutputsHook(targets)
 
@@ -113,12 +113,13 @@ class ActivationFetcher:
         """
         Args:
 
-            input_t (tensor or tuple of tensors, optional):  The input to use
+            input_t (torch.Tensor or tuple of torch.Tensor, optional): The input to use
                 with the specified model.
 
         Returns:
-            activations_dict: An dict containing the collected activations. The keys
-                for the returned dictionary are the target layers.
+            activations_dict (ModuleOutputMapping): A dict containing the collected
+                activations. The keys for the returned dictionary are the target
+                layers.
         """
 
         try:

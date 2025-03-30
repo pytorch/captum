@@ -1,9 +1,12 @@
 #!/usr/bin/env python3
 
+# pyre-strict
+
 import inspect
-from typing import Any
+from typing import List
 
 import torch.nn as nn
+from torch import Tensor
 
 
 class InputIdentity(nn.Module):
@@ -19,7 +22,7 @@ class InputIdentity(nn.Module):
         super().__init__()
         self.input_name = input_name
 
-    def forward(self, x):
+    def forward(self, x: Tensor) -> Tensor:
         return x
 
 
@@ -60,17 +63,19 @@ class ModelInputWrapper(nn.Module):
         self.module = module_to_wrap
 
         # ignore self
-        self.arg_name_list = inspect.getfullargspec(module_to_wrap.forward).args[1:]
+        self.arg_name_list: List[str] = inspect.getfullargspec(
+            module_to_wrap.forward
+        ).args[1:]
         self.input_maps = nn.ModuleDict(
             {arg_name: InputIdentity(arg_name) for arg_name in self.arg_name_list}
         )
 
-    def forward(self, *args, **kwargs) -> Any:
-        args = list(args)
-        for idx, (arg_name, arg) in enumerate(zip(self.arg_name_list, args)):
-            args[idx] = self.input_maps[arg_name](arg)
+    def forward(self, *args: object, **kwargs: object) -> object:
+        args_list = list(args)
+        for idx, (arg_name, arg) in enumerate(zip(self.arg_name_list, args_list)):
+            args_list[idx] = self.input_maps[arg_name](arg)
 
         for arg_name in kwargs.keys():
             kwargs[arg_name] = self.input_maps[arg_name](kwargs[arg_name])
 
-        return self.module(*tuple(args), **kwargs)
+        return self.module(*tuple(args_list), **kwargs)

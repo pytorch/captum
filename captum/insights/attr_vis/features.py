@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+
+# pyre-strict
 import base64
 import warnings
 from collections import namedtuple
@@ -8,11 +10,16 @@ from typing import Callable, List, Optional, Union
 from captum._utils.common import safe_div
 from captum.attr._utils import visualization as viz
 from captum.insights.attr_vis._utils.transforms import format_transforms
+from matplotlib.figure import Figure
+from torch import Tensor
 
+
+# pyre-fixme[4]: Attribute annotation cannot be `Any`.
+# pyre-fixme[2]: Parameter annotation cannot be `Any`.
 FeatureOutput = namedtuple("FeatureOutput", "name base modified type contribution")
 
 
-def _convert_figure_base64(fig):
+def _convert_figure_base64(fig: Figure) -> str:
     buff = BytesIO()
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
@@ -34,8 +41,11 @@ class BaseFeature:
     def __init__(
         self,
         name: str,
+        # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
         baseline_transforms: Optional[Union[Callable, List[Callable]]],
+        # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
         input_transforms: Optional[Union[Callable, List[Callable]]],
+        # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
         visualization_transform: Optional[Callable],
     ) -> None:
         r"""
@@ -43,23 +53,25 @@ class BaseFeature:
 
             name (str): The label of the specific feature. For example, an
                         ImageFeature's name can be "Photo".
-            baseline_transforms (list, callable, optional): Optional list of
+            baseline_transforms (list, Callable, optional): Optional list of
                         callables (e.g. functions) to be called on the input tensor
                         to construct multiple baselines. Currently only one baseline
                         is supported. See
                         :py:class:`.IntegratedGradients` for more
                         information about baselines.
-            input_transforms (list, callable, optional): Optional list of callables
+            input_transforms (list, Callable, optional): Optional list of callables
                         (e.g. functions) called on the input tensor sequentially to
                         convert it into the format expected by the model.
-            visualization_transform (callable, optional): Optional callable (e.g.
+            visualization_transform (Callable, optional): Optional callable (e.g.
                         function) applied as a postprocessing step of the original
                         input data (before ``input_transforms``) to convert it to a
                         format to be understood by the frontend visualizer as
                         specified in ``captum/captum/insights/frontend/App.js``.
         """
         self.name = name
+        # pyre-fixme[4]: Attribute must be annotated.
         self.baseline_transforms = format_transforms(baseline_transforms)
+        # pyre-fixme[4]: Attribute must be annotated.
         self.input_transforms = format_transforms(input_transforms)
         self.visualization_transform = visualization_transform
 
@@ -67,6 +79,7 @@ class BaseFeature:
     def visualization_type() -> str:
         raise NotImplementedError
 
+    # pyre-fixme[2]: Parameter must be annotated.
     def visualize(self, attribution, data, contribution_frac) -> FeatureOutput:
         raise NotImplementedError
 
@@ -81,24 +94,27 @@ class ImageFeature(BaseFeature):
     def __init__(
         self,
         name: str,
-        baseline_transforms: Union[Callable, List[Callable]],
-        input_transforms: Union[Callable, List[Callable]],
+        # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
+        baseline_transforms: Optional[Union[Callable, List[Callable]]],
+        # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
+        input_transforms: Optional[Union[Callable, List[Callable]]],
+        # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
         visualization_transform: Optional[Callable] = None,
     ) -> None:
         r"""
         Args:
             name (str): The label of the specific feature. For example, an
                         ImageFeature's name can be "Photo".
-            baseline_transforms (list, callable, optional): Optional list of
+            baseline_transforms (list, Callable, optional): Optional list of
                         callables (e.g. functions) to be called on the input tensor
                         to construct multiple baselines. Currently only one baseline
                         is supported. See
                         :py:class:`.IntegratedGradients` for more
                         information about baselines.
-            input_transforms (list, callable, optional): A list of transforms
+            input_transforms (list, Callable, optional): A list of transforms
                         or transform to be applied to the input. For images,
                         normalization is often applied here.
-            visualization_transform (callable, optional): Optional callable (e.g.
+            visualization_transform (Callable, optional): Optional callable (e.g.
                         function) applied as a postprocessing step of the original
                         input data (before input_transforms) to convert it to a
                         format to be visualized.
@@ -114,6 +130,7 @@ class ImageFeature(BaseFeature):
     def visualization_type() -> str:
         return "image"
 
+    # pyre-fixme[2]: Parameter must be annotated.
     def visualize(self, attribution, data, contribution_frac) -> FeatureOutput:
         if self.visualization_transform:
             data = self.visualization_transform(data)
@@ -156,15 +173,18 @@ class TextFeature(BaseFeature):
     def __init__(
         self,
         name: str,
-        baseline_transforms: Union[Callable, List[Callable]],
-        input_transforms: Union[Callable, List[Callable]],
-        visualization_transform: Callable,
+        # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
+        baseline_transforms: Optional[Union[Callable, List[Callable]]],
+        # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
+        input_transforms: Optional[Union[Callable, List[Callable]]],
+        # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
+        visualization_transform: Optional[Callable],
     ) -> None:
         r"""
         Args:
             name (str): The label of the specific feature. For example, an
                         ImageFeature's name can be "Photo".
-            baseline_transforms (list, callable, optional): Optional list of
+            baseline_transforms (list, Callable, optional): Optional list of
                         callables (e.g. functions) to be called on the input tensor
                         to construct multiple baselines. Currently only one baseline
                         is supported. See
@@ -174,7 +194,7 @@ class TextFeature(BaseFeature):
                         corresponding to PAD with the same size as the input
                         tensor. See :py:class:`.TokenReferenceBase` for more
                         information.
-            input_transforms (list, callable, optional): A list of transforms
+            input_transforms (list, Callable, optional): A list of transforms
                         or transform to be applied to the input. For text, a common
                         transform is to convert the tokenized input tensor into an
                         interpretable embedding. See
@@ -182,7 +202,7 @@ class TextFeature(BaseFeature):
                         and
                         :py:func:`~.configure_interpretable_embedding_layer`
                         for more information.
-            visualization_transform (callable, optional): Optional callable (e.g.
+            visualization_transform (Callable, optional): Optional callable (e.g.
                         function) applied as a postprocessing step of the original
                         input data (before ``input_transforms``) to convert it to a
                         suitable format for visualization. For text features,
@@ -200,7 +220,8 @@ class TextFeature(BaseFeature):
     def visualization_type() -> str:
         return "text"
 
-    def visualize(self, attribution, data, contribution_frac) -> FeatureOutput:
+    # pyre-fixme[2]: Parameter must be annotated.
+    def visualize(self, attribution: Tensor, data, contribution_frac) -> FeatureOutput:
         if self.visualization_transform:
             text = self.visualization_transform(data)
         else:
@@ -255,7 +276,8 @@ class GeneralFeature(BaseFeature):
     def visualization_type() -> str:
         return "general"
 
-    def visualize(self, attribution, data, contribution_frac) -> FeatureOutput:
+    # pyre-fixme[2]: Parameter must be annotated.
+    def visualize(self, attribution: Tensor, data, contribution_frac) -> FeatureOutput:
         attribution = attribution.squeeze(0)
         data = data.squeeze(0)
 
@@ -279,8 +301,11 @@ class EmptyFeature(BaseFeature):
     def __init__(
         self,
         name: str = "empty",
+        # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
         baseline_transforms: Optional[Union[Callable, List[Callable]]] = None,
+        # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
         input_transforms: Optional[Union[Callable, List[Callable]]] = None,
+        # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
         visualization_transform: Optional[Callable] = None,
     ) -> None:
         super().__init__(
@@ -294,7 +319,8 @@ class EmptyFeature(BaseFeature):
     def visualization_type() -> str:
         return "empty"
 
-    def visualize(self, _attribution, _data, contribution_frac) -> FeatureOutput:
+    # pyre-fixme[2]: Parameter must be annotated.
+    def visualize(self, attribution, data, contribution_frac) -> FeatureOutput:
         return FeatureOutput(
             name=self.name,
             base=None,

@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
+
+# pyre-strict
 import warnings
-from typing import Any, Callable, List, Tuple, Union
+from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
 import torch
 from captum._utils.common import (
@@ -12,7 +14,12 @@ from captum._utils.common import (
     _verify_select_neuron,
 )
 from captum._utils.gradient import compute_layer_gradients_and_eval
-from captum._utils.typing import BaselineType, TargetType, TensorOrTupleOfTensorsGeneric
+from captum._utils.typing import (
+    BaselineType,
+    SliceIntType,
+    TargetType,
+    TensorOrTupleOfTensorsGeneric,
+)
 from captum.attr._utils.approximation_methods import approximation_parameters
 from captum.attr._utils.attribution import GradientAttribution, NeuronAttribution
 from captum.attr._utils.batching import _batch_attribution
@@ -37,7 +44,7 @@ class NeuronConductance(NeuronAttribution, GradientAttribution):
 
     def __init__(
         self,
-        forward_func: Callable,
+        forward_func: Callable[..., Tensor],
         layer: Module,
         device_ids: Union[None, List[int]] = None,
         multiply_by_inputs: bool = True,
@@ -45,7 +52,7 @@ class NeuronConductance(NeuronAttribution, GradientAttribution):
         r"""
         Args:
 
-            forward_func (callable):  The forward function of the model or any
+            forward_func (Callable): The forward function of the model or any
                         modification of it
             layer (torch.nn.Module): Layer for which neuron attributions are computed.
                         Attributions for a particular neuron in the input or output
@@ -62,7 +69,7 @@ class NeuronConductance(NeuronAttribution, GradientAttribution):
                         Currently, it is assumed that the inputs or the outputs
                         of the layer, depending on which one is used for
                         attribution, can only be a single tensor.
-            device_ids (list(int)): Device ID list, necessary only if forward_func
+            device_ids (list[int]): Device ID list, necessary only if forward_func
                         applies a DataParallel model. This allows reconstruction of
                         intermediate outputs from batched results across devices.
                         If forward_func is given as the DataParallel model itself,
@@ -91,19 +98,24 @@ class NeuronConductance(NeuronAttribution, GradientAttribution):
     def attribute(
         self,
         inputs: TensorOrTupleOfTensorsGeneric,
-        neuron_selector: Union[int, Tuple[int, ...], Callable],
+        neuron_selector: Union[
+            int,
+            Tuple[Union[int, SliceIntType], ...],
+            Callable[[Union[Tensor, Tuple[Tensor, ...]]], Tensor],
+        ],
         baselines: BaselineType = None,
         target: TargetType = None,
-        additional_forward_args: Any = None,
+        additional_forward_args: Optional[object] = None,
         n_steps: int = 50,
         method: str = "riemann_trapezoid",
         internal_batch_size: Union[None, int] = None,
         attribute_to_neuron_input: bool = False,
+        grad_kwargs: Optional[Dict[str, Any]] = None,
     ) -> TensorOrTupleOfTensorsGeneric:
         r"""
         Args:
 
-            inputs (tensor or tuple of tensors):  Input for which neuron
+            inputs (Tensor or tuple[Tensor, ...]): Input for which neuron
                         conductance is computed. If forward_func takes a single
                         tensor as input, a single input tensor should be provided.
                         If forward_func takes multiple tensors as input, a tuple
@@ -111,7 +123,7 @@ class NeuronConductance(NeuronAttribution, GradientAttribution):
                         that for all given input tensors, dimension 0 corresponds
                         to the number of examples, and if multiple input tensors
                         are provided, the examples must be aligned appropriately.
-            neuron_selector (int, callable, or tuple of ints or slices):
+            neuron_selector (int, Callable, tuple[int], or slice):
                         Selector for neuron
                         in given layer for which attribution is desired.
                         Neuron selector can be provided as:
@@ -143,7 +155,7 @@ class NeuronConductance(NeuronAttribution, GradientAttribution):
                           the gradient of output with respect to the intermedite neuron,
                           which cannot be computed for aggregations of multiple
                           intemediate neurons.
-            baselines (scalar, tensor, tuple of scalars or tensors, optional):
+            baselines (scalar, Tensor, tuple of scalar, or Tensor, optional):
                         Baselines define the starting point from which integral
                         is computed and can be provided as:
 
@@ -172,7 +184,7 @@ class NeuronConductance(NeuronAttribution, GradientAttribution):
                         use zero scalar corresponding to each input tensor.
 
                         Default: None
-            target (int, tuple, tensor or list, optional):  Output indices for
+            target (int, tuple, Tensor, or list, optional): Output indices for
                         which gradients are computed (for classification cases,
                         this is usually the target class).
                         If the network returns a scalar value per example,
@@ -197,7 +209,7 @@ class NeuronConductance(NeuronAttribution, GradientAttribution):
                           target for the corresponding example.
 
                         Default: None
-            additional_forward_args (any, optional): If the forward function
+            additional_forward_args (Any, optional): If the forward function
                         requires additional arguments other than the inputs for
                         which attributions should not be computed, this argument
                         can be provided. It must be either a single additional
@@ -216,7 +228,7 @@ class NeuronConductance(NeuronAttribution, GradientAttribution):
                         Default: None
             n_steps (int, optional): The number of steps used by the approximation
                         method. Default: 50.
-            method (string, optional): Method for approximating the integral,
+            method (str, optional): Method for approximating the integral,
                         one of `riemann_right`, `riemann_left`, `riemann_middle`,
                         `riemann_trapezoid` or `gausslegendre`.
                         Default: `gausslegendre` if no method is provided.
@@ -244,8 +256,8 @@ class NeuronConductance(NeuronAttribution, GradientAttribution):
                         Default: False
 
         Returns:
-            *tensor* or tuple of *tensors* of **attributions**:
-            - **attributions** (*tensor* or tuple of *tensors*):
+            *Tensor* or *tuple[Tensor, ...]* of **attributions**:
+            - **attributions** (*Tensor* or *tuple[Tensor, ...]*):
                         Conductance for
                         particular neuron with respect to each input feature.
                         Attributions will always be the same size as the provided
@@ -277,24 +289,27 @@ class NeuronConductance(NeuronAttribution, GradientAttribution):
                 "The neuron_selector provided is a callable. Please ensure that this"
                 " function only selects neurons from the given layer; aggregating"
                 " or performing other operations on the tensor may lead to inaccurate"
-                " results."
+                " results.",
+                stacklevel=1,
             )
         is_inputs_tuple = _is_tuple(inputs)
 
-        inputs, baselines = _format_input_baseline(inputs, baselines)
-        _validate_input(inputs, baselines, n_steps, method)
+        formatted_inputs, formatted_baselines = _format_input_baseline(
+            inputs, baselines
+        )
+        _validate_input(formatted_inputs, formatted_baselines, n_steps, method)
 
-        num_examples = inputs[0].shape[0]
+        num_examples = formatted_inputs[0].shape[0]
 
         if internal_batch_size is not None:
-            num_examples = inputs[0].shape[0]
+            num_examples = formatted_inputs[0].shape[0]
             attrs = _batch_attribution(
                 self,
                 num_examples,
                 internal_batch_size,
                 n_steps,
-                inputs=inputs,
-                baselines=baselines,
+                inputs=formatted_inputs,
+                baselines=formatted_baselines,
                 neuron_selector=neuron_selector,
                 target=target,
                 additional_forward_args=additional_forward_args,
@@ -303,28 +318,36 @@ class NeuronConductance(NeuronAttribution, GradientAttribution):
             )
         else:
             attrs = self._attribute(
-                inputs=inputs,
+                inputs=formatted_inputs,
                 neuron_selector=neuron_selector,
-                baselines=baselines,
+                baselines=formatted_baselines,
                 target=target,
                 additional_forward_args=additional_forward_args,
                 n_steps=n_steps,
                 method=method,
                 attribute_to_neuron_input=attribute_to_neuron_input,
+                grad_kwargs=grad_kwargs,
             )
+        # pyre-fixme[7]: Expected `TensorOrTupleOfTensorsGeneric` but got
+        #  `Tuple[Tensor, ...]`.
         return _format_output(is_inputs_tuple, attrs)
 
     def _attribute(
         self,
         inputs: Tuple[Tensor, ...],
-        neuron_selector: Union[int, Tuple[int, ...], Callable],
+        neuron_selector: Union[
+            int,
+            Tuple[Union[int, SliceIntType], ...],
+            Callable[[Union[Tensor, Tuple[Tensor, ...]]], Tensor],
+        ],
         baselines: Tuple[Union[Tensor, int, float], ...],
         target: TargetType = None,
-        additional_forward_args: Any = None,
+        additional_forward_args: Optional[object] = None,
         n_steps: int = 50,
         method: str = "riemann_trapezoid",
         attribute_to_neuron_input: bool = False,
         step_sizes_and_alphas: Union[None, Tuple[List[float], List[float]]] = None,
+        grad_kwargs: Optional[Dict[str, Any]] = None,
     ) -> Tuple[Tensor, ...]:
 
         num_examples = inputs[0].shape[0]
@@ -371,6 +394,7 @@ class NeuronConductance(NeuronAttribution, GradientAttribution):
             gradient_neuron_selector=neuron_selector,
             device_ids=self.device_ids,
             attribute_to_layer_input=attribute_to_neuron_input,
+            grad_kwargs=grad_kwargs,
         )
 
         mid_grads = _verify_select_neuron(layer_gradients, neuron_selector)
@@ -389,7 +413,9 @@ class NeuronConductance(NeuronAttribution, GradientAttribution):
 
         # Aggregates across all steps for each tensor in the input tuple
         total_grads = tuple(
-            _reshape_and_sum(scaled_grad, n_steps, num_examples, input_grad.shape[1:])
+            _reshape_and_sum(
+                scaled_grad, n_steps, num_examples, tuple(input_grad.shape[1:])
+            )
             for (scaled_grad, input_grad) in zip(scaled_grads, input_grads)
         )
 
@@ -406,5 +432,5 @@ class NeuronConductance(NeuronAttribution, GradientAttribution):
         return attributions
 
     @property
-    def multiplies_by_inputs(self):
+    def multiplies_by_inputs(self) -> bool:
         return self._multiply_by_inputs

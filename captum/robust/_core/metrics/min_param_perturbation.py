@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+
+# pyre-strict
 import math
 from enum import Enum
 from typing import Any, Callable, cast, Dict, Generator, List, Optional, Tuple, Union
@@ -10,6 +12,7 @@ from captum._utils.common import (
     _reduce_list,
 )
 from captum._utils.typing import TargetType
+from captum.log import log_usage
 from captum.robust._core.perturbation import Perturbation
 from torch import Tensor
 
@@ -18,8 +21,12 @@ def drange(
     min_val: Union[int, float], max_val: Union[int, float], step_val: Union[int, float]
 ) -> Generator[Union[int, float], None, None]:
     curr = min_val
+    # pyre-fixme[58]: `>` is not supported for operand types `Union[float, int]` and
+    #  `int`.
     while curr < max_val:
         yield curr
+        # pyre-fixme[58]: `+` is not supported for operand types `Union[float, int]`
+        #  and `Union[float, int]`.
         curr += step_val
 
 
@@ -40,7 +47,9 @@ class MinParamPerturbationMode(Enum):
 class MinParamPerturbation:
     def __init__(
         self,
+        # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
         forward_func: Callable,
+        # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
         attack: Union[Callable, Perturbation],
         arg_name: str,
         arg_min: Union[int, float],
@@ -48,10 +57,12 @@ class MinParamPerturbation:
         arg_step: Union[int, float],
         mode: str = "linear",
         num_attempts: int = 1,
+        # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
         preproc_fn: Optional[Callable] = None,
         apply_before_preproc: bool = False,
+        # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
         correct_fn: Optional[Callable] = None,
-    ):
+    ) -> None:
         r"""
         Identifies minimal perturbation based on target variable which causes
         misclassification (or other incorrect prediction) of target input.
@@ -63,7 +74,7 @@ class MinParamPerturbation:
         corresponding perturbed input.
 
         Args:
-            forward_func (callable or torch.nn.Module): This can either be an instance
+            forward_func (Callable or torch.nn.Module): This can either be an instance
                 of pytorch model or any modification of a model's forward
                 function.
 
@@ -85,23 +96,23 @@ class MinParamPerturbation:
             arg_step (int, float): Minimum interval for increase of target variable.
 
             mode (str, optional): Mode for search of minimum attack value;
-                either 'linear' for linear search on variable, or 'binary' for
+                either ``linear`` for linear search on variable, or ``binary`` for
                 binary search of variable
-                Default: 'linear'
+                Default: ``linear``
 
             num_attempts (int, optional): Number of attempts or trials with
                 given variable. This should only be set to > 1 for non-deterministic
                 perturbation / attack functions
-                Default: 1
+                Default: ``1``
 
-            preproc_fn (callable, optional): Optional method applied to inputs. Output
+            preproc_fn (Callable, optional): Optional method applied to inputs. Output
                 of preproc_fn is then provided as input to model, in addition to
                 additional_forward_args provided to evaluate.
-                Default: None
+                Default: ``None``
 
             apply_before_preproc (bool, optional): Defines whether attack should be
                 applied before or after preproc function.
-                Default: False
+                Default: ``False``
 
             correct_fn (Callable, optional): This determines whether the perturbed input
                 leads to a correct or incorrect prediction. By default, this function
@@ -114,13 +125,15 @@ class MinParamPerturbation:
                 function must be provided which determines correctness.
 
                 The first argument to this function must be the model out;
-                any additional arguments should be provided through correct_fn_kwargs.
+                any additional arguments should be provided through
+                ``correct_fn_kwargs``.
 
-                This function should have the following signature:
+                This function should have the following signature::
+
                     def correct_fn(model_out: Tensor, **kwargs: Any) -> bool
 
                 Method should return a boolean if correct (True) and incorrect (False).
-                Default: None (applies standard correct_fn for classification)
+                Default: ``None`` (applies standard correct_fn for classification)
         """
         self.forward_func = forward_func
         self.attack = attack
@@ -129,25 +142,34 @@ class MinParamPerturbation:
         self.arg_max = arg_max
         self.arg_step = arg_step
         assert self.arg_max > (
-            self.arg_min + self.arg_step
+            self.arg_min
+            # pyre-fixme[6]: For 1st argument expected `int` but got `Union[float,
+            #  int]`.
+            + self.arg_step
         ), "Step size cannot be smaller than range between min and max"
 
         self.num_attempts = num_attempts
         self.preproc_fn = preproc_fn
         self.apply_before_preproc = apply_before_preproc
+        # pyre-fixme[4]: Attribute must be annotated.
         self.correct_fn = cast(
-            Callable, correct_fn if correct_fn is not None else default_correct_fn
+            # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
+            Callable,
+            correct_fn if correct_fn is not None else default_correct_fn,
         )
 
         assert (
             mode.upper() in MinParamPerturbationMode.__members__
         ), f"Provided perturb mode {mode} is not valid - must be linear or binary"
+        # pyre-fixme[4]: Attribute must be annotated.
         self.mode = MinParamPerturbationMode[mode.upper()]
 
     def _evaluate_batch(
         self,
+        # pyre-fixme[24]: Generic type `list` expects 1 type parameter, use
+        #  `typing.List[<element type>]` to avoid runtime subscripting errors.
         input_list: List,
-        additional_forward_args: Any,
+        additional_forward_args: Optional[Tuple[object, ...]],
         correct_fn_kwargs: Optional[Dict[str, Any]],
         target: TargetType,
     ) -> Optional[int]:
@@ -182,9 +204,12 @@ class MinParamPerturbation:
                 current_count += batch_size
             return None
 
+    # pyre-fixme[3]: Return annotation cannot contain `Any`.
     def _apply_attack(
         self,
+        # pyre-fixme[2]: Parameter annotation cannot be `Any`.
         inputs: Any,
+        # pyre-fixme[2]: Parameter annotation cannot be `Any`.
         preproc_input: Any,
         attack_kwargs: Optional[Dict[str, Any]],
         param: Union[int, float],
@@ -205,12 +230,16 @@ class MinParamPerturbation:
             preproc_attacked_inp = attacked_inp
         return preproc_attacked_inp, attacked_inp
 
+    # pyre-fixme[3]: Return annotation cannot contain `Any`.
     def _linear_search(
         self,
+        # pyre-fixme[2]: Parameter annotation cannot be `Any`.
         inputs: Any,
+        # pyre-fixme[2]: Parameter annotation cannot be `Any`.
         preproc_input: Any,
         attack_kwargs: Optional[Dict[str, Any]],
-        additional_forward_args: Any,
+        additional_forward_args: Optional[Tuple[object, ...]],
+        # pyre-fixme[2]: Parameter annotation cannot be `Any`.
         expanded_additional_args: Any,
         correct_fn_kwargs: Optional[Dict[str, Any]],
         target: TargetType,
@@ -262,12 +291,16 @@ class MinParamPerturbation:
                 )
         return None, None
 
+    # pyre-fixme[3]: Return annotation cannot contain `Any`.
     def _binary_search(
         self,
+        # pyre-fixme[2]: Parameter annotation cannot be `Any`.
         inputs: Any,
+        # pyre-fixme[2]: Parameter annotation cannot be `Any`.
         preproc_input: Any,
         attack_kwargs: Optional[Dict[str, Any]],
-        additional_forward_args: Any,
+        additional_forward_args: Optional[Tuple[object, ...]],
+        # pyre-fixme[2]: Parameter annotation cannot be `Any`.
         expanded_additional_args: Any,
         correct_fn_kwargs: Optional[Dict[str, Any]],
         target: TargetType,
@@ -277,11 +310,23 @@ class MinParamPerturbation:
         max_range = self.arg_max
         min_so_far = None
         min_input = None
+        # pyre-fixme[58]: `<` is not supported for operand types `Union[float, int]`
+        #  and `int`.
         while max_range > min_range:
+            # pyre-fixme[6]: For 1st argument expected `int` but got `Union[float,
+            #  int]`.
+            # pyre-fixme[58]: `//` is not supported for operand types `int` and
+            #  `Union[float, int]`.
             mid_step = ((max_range - min_range) // self.arg_step) // 2
 
+            # pyre-fixme[6]: For 1st argument expected `int` but got `Union[float,
+            #  int]`.
+            # pyre-fixme[58]: `<` is not supported for operand types `int` and
+            #  `Union[float, int]`.
             if mid_step == 0 and min_range + self.arg_step < max_range:
                 mid_step = 1
+            # pyre-fixme[58]: `*` is not supported for operand types `int` and
+            #  `Union[float, int]`.
             mid = min_range + (mid_step * self.arg_step)
 
             input_list = []
@@ -333,9 +378,13 @@ class MinParamPerturbation:
 
         return min_input, min_so_far
 
+    @log_usage()
+    # pyre-fixme[3]: Return annotation cannot contain `Any`.
     def evaluate(
         self,
+        # pyre-fixme[2]: Parameter annotation cannot be `Any`.
         inputs: Any,
+        # pyre-fixme[24]: Generic type `tuple` expects at least 1 type parameter.
         additional_forward_args: Optional[Tuple] = None,
         target: TargetType = None,
         perturbations_per_eval: int = 1,
@@ -363,7 +412,7 @@ class MinParamPerturbation:
                     pre-processing function is provided,
                     this input is provided directly to the main model and all attacks.
 
-            additional_forward_args (any, optional): If the forward function
+            additional_forward_args (Any, optional): If the forward function
                     requires additional arguments other than the preprocessing
                     outputs (or inputs if preproc_fn is None), this argument
                     can be provided. It must be either a single additional
@@ -375,9 +424,9 @@ class MinParamPerturbation:
                     For a tensor, the first dimension of the tensor must
                     correspond to the number of examples. For all other types,
                     the given argument is used for all forward evaluations.
-                    Default: None
+                    Default: ``None``
             target (TargetType): Target class for classification. This is required if
-                using the default correct_fn
+                using the default ``correct_fn``.
 
             perturbations_per_eval (int, optional): Allows perturbations of multiple
                     attacks to be grouped and evaluated in one call of forward_fn
@@ -391,10 +440,10 @@ class MinParamPerturbation:
                     In order to apply this functionality, the output of preproc_fn
                     (or inputs itself if no preproc_fn is provided) must be a tensor
                     or tuple of tensors.
-                    Default: 1
-            attack_kwargs (dictionary, optional): Optional dictionary of keyword
+                    Default: ``1``
+            attack_kwargs (dict, optional): Optional dictionary of keyword
                     arguments provided to attack function
-            correct_fn_kwargs (dictionary, optional): Optional dictionary of keyword
+            correct_fn_kwargs (dict, optional): Optional dictionary of keyword
                     arguments provided to correct function
 
         Returns:

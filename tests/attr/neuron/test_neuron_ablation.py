@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+# pyre-unsafe
+
 import unittest
 from typing import Any, Callable, Tuple, Union
 
@@ -10,8 +12,9 @@ from captum._utils.typing import (
     TensorOrTupleOfTensorsGeneric,
 )
 from captum.attr._core.neuron.neuron_feature_ablation import NeuronFeatureAblation
-from tests.helpers.basic import assertTensorAlmostEqual, BaseTest
-from tests.helpers.basic_models import (
+from captum.testing.helpers import BaseTest
+from captum.testing.helpers.basic import assertTensorAlmostEqual
+from captum.testing.helpers.basic_models import (
     BasicModel_ConvNet_One_Conv,
     BasicModel_MultiLayer,
     BasicModel_MultiLayer_MultiInput,
@@ -80,8 +83,8 @@ class Test(BaseTest):
         inp2 = torch.tensor([[20.0, 50.0, 30.0], [0.0, 100.0, 0.0]])
         inp3 = torch.tensor([[0.0, 100.0, 10.0], [2.0, 10.0, 3.0]])
         mask1 = torch.tensor([[1, 1, 1], [0, 1, 0]])
-        mask2 = torch.tensor([[0, 1, 2]])
-        mask3 = torch.tensor([[0, 1, 2], [0, 0, 0]])
+        mask2 = torch.tensor([[3, 4, 2]])
+        mask3 = torch.tensor([[5, 6, 7], [5, 5, 5]])
         expected = (
             [[492.0, 492.0, 492.0], [200.0, 200.0, 200.0]],
             [[80.0, 200.0, 120.0], [0.0, 400.0, 0.0]],
