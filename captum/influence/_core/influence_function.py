@@ -1054,7 +1054,6 @@ class NaiveInfluenceFunction(IntermediateQuantitiesInfluenceFunction):
         # define a helper function that returns the embeddings for a batch
         # pyre-fixme[53]: Captured variable `loss_fn` is not annotated.
         def get_batch_embeddings(batch: Tuple[Tensor, ...]) -> Tensor:
-            nonlocal loss_fn, reduction_type, return_device
             # if `self.R` is on cpu, and `self.model_device` was not cpu, this implies
             # `self.R` was too large to fit in gpu memory, and we should do the matrix
             # multiplication of the batch jacobians with `self.R` separately for each

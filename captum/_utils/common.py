@@ -863,10 +863,8 @@ def _register_backward_hook(
         inp: Union[Tensor, Tuple[Tensor, ...]],
         out: Union[Tensor, Tuple[Tensor, ...]],
     ) -> None:
-        nonlocal grad_out
 
         def output_tensor_hook(output_grad: Tensor) -> None:
-            nonlocal grad_out
             grad_out[output_grad.device] = output_grad
 
         if isinstance(out, tuple):
@@ -881,7 +879,6 @@ def _register_backward_hook(
         def input_tensor_hook(
             input_grad: Tensor,
         ) -> Union[None, Tensor, Tuple[Tensor, ...]]:
-            nonlocal grad_out
 
             if len(grad_out) == 0:
                 return None

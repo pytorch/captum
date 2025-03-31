@@ -878,7 +878,6 @@ class TracInCP(TracInCPBase):
         f_inputs: DataLoader = _format_inputs_dataset(inputs)
 
         def get_checkpoint_contribution(checkpoint: str) -> Tensor:
-            nonlocal f_inputs
             assert (
                 checkpoint is not None
             ), "None returned from `checkpoints`, cannot load."
@@ -1246,7 +1245,6 @@ class TracInCP(TracInCPBase):
             )
 
         def get_checkpoint_contribution(checkpoint: str) -> Tensor:
-            nonlocal inputs_len
             # This function returns a 1D tensor representing the contribution to the
             # self influence score for the given checkpoint, for all batches in
             # `inputs`. The length of the 1D tensor is the total number of
