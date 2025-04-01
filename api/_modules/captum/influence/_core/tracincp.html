@@ -929,7 +929,6 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="n">f_inputs</span><span class="p">:</span> <span class="n">DataLoader</span> <span class="o">=</span> <span class="n">_format_inputs_dataset</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span>
 
         <span class="k">def</span> <span class="nf">get_checkpoint_contribution</span><span class="p">(</span><span class="n">checkpoint</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tensor</span><span class="p">:</span>
-            <span class="k">nonlocal</span> <span class="n">f_inputs</span>
             <span class="k">assert</span> <span class="p">(</span>
                 <span class="n">checkpoint</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
             <span class="p">),</span> <span class="s2">"None returned from `checkpoints`, cannot load."</span>
@@ -1298,7 +1297,6 @@ src="/_sphinx/documentation_options.js"></script>
             <span class="p">)</span>
 
         <span class="k">def</span> <span class="nf">get_checkpoint_contribution</span><span class="p">(</span><span class="n">checkpoint</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tensor</span><span class="p">:</span>
-            <span class="k">nonlocal</span> <span class="n">inputs_len</span>
             <span class="c1"># This function returns a 1D tensor representing the contribution to the</span>
             <span class="c1"># self influence score for the given checkpoint, for all batches in</span>
             <span class="c1"># `inputs`. The length of the 1D tensor is the total number of</span>
