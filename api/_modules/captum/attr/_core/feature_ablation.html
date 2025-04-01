@@ -34,6 +34,7 @@ src="/_sphinx/documentation_options.js"></script>
 
 <span class="c1"># pyre-strict</span>
 
+<span class="kn">import</span> <span class="nn">logging</span>
 <span class="kn">import</span> <span class="nn">math</span>
 <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="p">(</span>
     <span class="n">Any</span><span class="p">,</span>
@@ -73,6 +74,8 @@ src="/_sphinx/documentation_options.js"></script>
     <span class="n">tqdm</span> <span class="o">=</span> <span class="kc">None</span>
 
 <span class="n">IterableType</span> <span class="o">=</span> <span class="n">TypeVar</span><span class="p">(</span><span class="s2">"IterableType"</span><span class="p">)</span>
+
+<span class="n">logger</span><span class="p">:</span> <span class="n">logging</span><span class="o">.</span><span class="n">Logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
 
 <div class="viewcode-block" id="FeatureAblation">
@@ -120,6 +123,10 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="c1"># input grow as expected. Once it turns to True, we will assume the model's</span>
         <span class="c1"># behavior stays consistent and no longer check again</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_is_output_shape_valid</span> <span class="o">=</span> <span class="kc">False</span>
+
+        <span class="c1"># Minimum number of elements needed in each input tensor, otherwise the</span>
+        <span class="c1"># attribution for the tensor will be skipped</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_min_examples_per_batch</span> <span class="o">=</span> <span class="mi">1</span>
 
 <div class="viewcode-block" id="FeatureAblation.attribute">
 <a class="viewcode-back" href="../../../../feature_ablation.html#captum.attr.FeatureAblation.attribute">[docs]</a>
@@ -445,8 +452,17 @@ src="/_sphinx/documentation_options.js"></script>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">Tensor</span><span class="p">],</span> <span class="n">List</span><span class="p">[</span><span class="n">Tensor</span><span class="p">]]:</span>
         <span class="c1"># Iterate through each feature tensor for ablation</span>
         <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">formatted_inputs</span><span class="p">)):</span>
-            <span class="c1"># Skip any empty input tensors</span>
             <span class="k">if</span> <span class="n">torch</span><span class="o">.</span><span class="n">numel</span><span class="p">(</span><span class="n">formatted_inputs</span><span class="p">[</span><span class="n">i</span><span class="p">])</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">"Skipping input tensor at index </span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2"> since it contains no elements"</span>
+                <span class="p">)</span>
+                <span class="k">continue</span>
+            <span class="k">if</span> <span class="n">formatted_inputs</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">_min_examples_per_batch</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">"Skipping input tensor at index </span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2"> since its 0th dim "</span>
+                    <span class="sa">f</span><span class="s2">"(</span><span class="si">{</span><span class="n">formatted_inputs</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s2">) "</span>
+                    <span class="sa">f</span><span class="s2">"is less than </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_min_examples_per_batch</span><span class="si">}</span><span class="s2">"</span>
+                <span class="p">)</span>
                 <span class="k">continue</span>
 
             <span class="k">for</span> <span class="p">(</span>
