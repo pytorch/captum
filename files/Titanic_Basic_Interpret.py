@@ -41,7 +41,7 @@ dataset_path = "titanic3.csv"
 # Read dataset from csv file.
 titanic_data = pd.read_csv(dataset_path)
 
-# With the data loaded, we now preprocess the data by converting some categorical features such as gender, location of embarcation, and passenger class into one-hot encodings (separate feature columns for each class with 0 / 1). We also remove some features that are more difficult to analyze, such as name, and fill missing values in age and fare with the average values.
+# With the data loaded, we now preprocess the data by converting some categorical features such as gender, location of embarkation, and passenger class into one-hot encodings (separate feature columns for each class with 0 / 1). We also remove some features that are more difficult to analyze, such as name, and fill missing values in age and fare with the average values.
 
 # In[5]:
 
@@ -165,18 +165,18 @@ out_probs = net(test_input_tensor).detach().numpy()
 out_classes = np.argmax(out_probs, axis=1)
 print("Test Accuracy:", sum(out_classes == test_labels) / len(test_labels))
 
-# Beyond just considering the accuracy of the classifier, there are many important questions to understand how the model is working and it's decision, which is the purpose of Captum, to help make neural networks in PyTorch more interpretable.
+# Beyond just considering the accuracy of the classifier, there are many important questions to understand how the model is working and its decision, which is the purpose of Captum, to help make neural networks in PyTorch more interpretable.
 
-# The first question we can ask is which of the features were actually important to the model to reach this decision? This is the first main component of Captum, the ability to obtain **Feature Attributions**. For this example, we will apply Integrated Gradients, which is one of the Feature Attribution methods included in Captum. More information regarding Integrated Gradients can be found in the original paper here: https://arxiv.org/pdf/1703.01365.pdf
+# The first question we can ask is which of the features were actually important to the model to reach this decision? This is the first main component of Captum, the ability to obtain **Feature Attributions**. For this example, we will apply Integrated Gradients, which is one of the Feature Attribution methods included in Captum. More information regarding Integrated Gradients can be found in the original paper here: https://arxiv.org/pdf/1703.01365.pdf.
 
-# To apply integrated gradients, we first create an IntegratedGradients object, providing the model object.
+# To apply Integrated Gradients, we first create an IntegratedGradients object, providing the model object.
 
 # In[15]:
 
 
 ig = IntegratedGradients(net)
 
-# To compute the integrated gradients, we use the attribute method of the IntegratedGradients object. The method takes tensor(s) of input examples (matching the forward function of the model), and returns the input attributions for the given examples. For a network with multiple outputs, a target index must also be provided, defining the index of the output for which gradients are computed. For this example, we provide target = 1, corresponding to survival. 
+# To compute the Integrated Gradients, we use the attribute method of the IntegratedGradients object. The method takes tensor(s) of input examples (matching the forward function of the model), and returns the input attributions for the given examples. For a network with multiple outputs, a target index must also be provided, defining the index of the output for which gradients are computed. For this example, we provide target=1, corresponding to survival. 
 # 
 # The input tensor provided should require grad, so we call requires\_grad\_ on the tensor. The attribute method also takes a baseline, which is the starting point from which gradients are integrated. The default value is just the 0 tensor, which is a reasonable baseline / default for this task. 
 # 
@@ -241,7 +241,7 @@ plt.ylabel("Average Attribution");
 
 # Now that we have a better understanding of the importance of different input features, the next question we can ask regarding the function of the neural network is how the different neurons in each layer work together to reach the prediction. For instance, in our first hidden layer output containing 12 units, are all the units used for prediction? Do some units learn features positively correlated with survival while others learn features negatively correlated with survival?
 
-# This leads us to the second type of attributions available in Captum, **Layer Attributions**. Layer attributions allow us to understand the importance of all the neurons in the output of a particular layer. For this example, we will be using Layer Conductance, one of the Layer Attribution methods in Captum, which is an extension of Integrated Gradients applied to hidden neurons. More information regarding conductance can be found in the original paper here: https://arxiv.org/abs/1805.12233. 
+# This leads us to the second type of attributions available in Captum, **Layer Attributions**. Layer attributions allow us to understand the importance of all the neurons in the output of a particular layer. For this example, we will be using Layer Conductance, one of the Layer Attribution methods in Captum, which is an extension of Integrated Gradients applied to hidden neurons. More information regarding conductance can be found in the original paper here: https://arxiv.org/abs/1805.12233.
 
 # To use Layer Conductance, we create a LayerConductance object passing in the model as well as the module (layer) whose output we would like to understand. In this case, we choose net.sigmoid1, the output of the first hidden layer.
 
@@ -250,7 +250,7 @@ plt.ylabel("Average Attribution");
 
 cond = LayerConductance(net, net.sigmoid1)
 
-# We can now obtain the conductance values for all the test examples by calling attribute on the LayerConductance object. LayerConductance also requires a target index for networks with mutliple outputs, defining the index of the output for which gradients are computed. Similar to feature attributions, we provide target = 1, corresponding to survival. LayerConductance also utilizes a baseline, but we simply use the default zero baseline as in integrated gradients.
+# We can now obtain the conductance values for all the test examples by calling attribute on the LayerConductance object. LayerConductance also requires a target index for networks with mutliple outputs, defining the index of the output for which gradients are computed. Similar to feature attributions, we provide target=1, corresponding to survival. LayerConductance also utilizes a baseline, but we simply use the default zero baseline as in Integrated Gradients.
 
 # In[21]:
 
@@ -299,7 +299,7 @@ plt.title("Neuron 10 Distribution");
 
 neuron_cond = NeuronConductance(net, net.sigmoid1)
 
-# We can now obtain the neuron conductance values for all the test examples by calling attribute on the NeuronConductance object. Neuron Conductance requires the neuron index in the target layer for which attributions are requested as well as the target index for networks with mutliple outputs, similar to layer conductance. As before, we provide target = 1, corresponding to survival, and compute neuron conductance for neurons 0 and 10, the significant neurons identified above. The neuron index can be provided either as a tuple or as just an integer if the layer output is 1-dimensional.
+# We can now obtain the neuron conductance values for all the test examples by calling attribute on the NeuronConductance object. Neuron Conductance requires the neuron index in the target layer for which attributions are requested as well as the target index for networks with mutliple outputs, similar to layer conductance. As before, we provide target=1, corresponding to survival, and compute neuron conductance for neurons 0 and 10, the significant neurons identified above. The neuron index can be provided either as a tuple or as just an integer if the layer output is 1-dimensional.
 
 # In[26]:
 
