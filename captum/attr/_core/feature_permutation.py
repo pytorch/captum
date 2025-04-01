@@ -92,6 +92,10 @@ class FeaturePermutation(FeatureAblation):
         """
         FeatureAblation.__init__(self, forward_func=forward_func)
         self.perm_func = perm_func
+        # Minimum number of elements needed in each input tensor, otherwise the
+        # attribution for the tensor will be skipped. Set to 1 to throw if any
+        # input tensors only have one example
+        self._min_examples_per_batch = 2
 
     # suppressing error caused by the child class not having a matching
     # signature to the parent

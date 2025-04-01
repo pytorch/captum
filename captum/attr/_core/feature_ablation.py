@@ -2,6 +2,7 @@
 
 # pyre-strict
 
+import logging
 import math
 from typing import (
     Any,
@@ -41,6 +42,8 @@ except ImportError:
     tqdm = None
 
 IterableType = TypeVar("IterableType")
+
+logger: logging.Logger = logging.getLogger(__name__)
 
 
 class FeatureAblation(PerturbationAttribution):
@@ -86,6 +89,10 @@ class FeatureAblation(PerturbationAttribution):
         # input grow as expected. Once it turns to True, we will assume the model's
         # behavior stays consistent and no longer check again
         self._is_output_shape_valid = False
+
+        # Minimum number of elements needed in each input tensor, otherwise the
+        # attribution for the tensor will be skipped
+        self._min_examples_per_batch = 1
 
     @log_usage()
     def attribute(
@@ -408,8 +415,17 @@ class FeatureAblation(PerturbationAttribution):
     ) -> Tuple[List[Tensor], List[Tensor]]:
         # Iterate through each feature tensor for ablation
         for i in range(len(formatted_inputs)):
-            # Skip any empty input tensors
             if torch.numel(formatted_inputs[i]) == 0:
+                logger.info(
+                    f"Skipping input tensor at index {i} since it contains no elements"
+                )
+                continue
+            if formatted_inputs[i].shape[0] < self._min_examples_per_batch:
+                logger.warning(
+                    f"Skipping input tensor at index {i} since its 0th dim "
+                    f"({formatted_inputs[i].shape[0]}) "
+                    f"is less than {self._min_examples_per_batch}"
+                )
                 continue
 
             for (

@@ -112,6 +112,23 @@ class Test(BaseTest):
             assertTensorAlmostEqual(self, attribs[:, 0], zeros, delta=0.05, mode="max")
             self.assertTrue((attribs[:, 1 : input_size[0]].abs() > 0).all())
 
+    def test_simple_input_with_min_examples(self) -> None:
+        def forward_func(x: Tensor) -> Tensor:
+            return x.sum(dim=-1)
+
+        feature_importance = FeaturePermutation(forward_func=forward_func)
+        inp = torch.tensor([[1.0, 2.0]])
+        assertTensorAlmostEqual(
+            self,
+            feature_importance.attribute(inp),
+            torch.tensor([[0.0, 0.0]]),
+            delta=0.0,
+        )
+
+        feature_importance._min_examples_per_batch = 1
+        with self.assertRaises(AssertionError):
+            feature_importance.attribute(inp)
+
     def test_single_input_with_future(
         self,
     ) -> None:
