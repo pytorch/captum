@@ -90,9 +90,18 @@ class FeatureAblation(PerturbationAttribution):
         # behavior stays consistent and no longer check again
         self._is_output_shape_valid = False
 
-        # Minimum number of elements needed in each input tensor, otherwise the
-        # attribution for the tensor will be skipped
+        # Minimum number of elements needed in each input tensor when
+        # `enable_cross_tensor_attribution`, is False, otherwise the attribution
+        # for the tensor will be skipped
         self._min_examples_per_batch = 1
+        # Similar to above, when `enable_cross_tensor_attribution` is True.
+        # Considering the case when we permute multiple input tensors at once
+        # through `feature_mask`, we disregard the feature group if the 0th
+        # dim of *any* input tensor in the group is less than
+        # `_min_examples_per_batch_grouped` if defined.
+        # If *all* input tensors in the group are empty, we also skip the feature/
+        # feature group (not parameterized by `_min_examples_per_batch_grouped`).
+        self._min_examples_per_batch_grouped: Optional[int] = None
 
     @log_usage()
     def attribute(
@@ -543,6 +552,36 @@ class FeatureAblation(PerturbationAttribution):
             current_num_ablated_features = min(
                 perturbations_per_eval, len(current_feature_idxs)
             )
+
+            should_skip = False
+            all_empty = True
+            tensor_idx_list = []
+            for feature_idx in current_feature_idxs:
+                tensor_idx_list += feature_idx_to_tensor_idx[feature_idx]
+            for tensor_idx in set(tensor_idx_list):
+                if all_empty and torch.numel(formatted_inputs[tensor_idx]) != 0:
+                    all_empty = False
+                if self._min_examples_per_batch_grouped is not None and (
+                    formatted_inputs[tensor_idx].shape[0]
+                    # pyre-ignore[58]: Type has been narrowed to int
+                    < self._min_examples_per_batch_grouped
+                ):
+                    should_skip = True
+                    break
+            if all_empty:
+                logger.info(
+                    f"Skipping feature group {current_feature_idxs} since all "
+                    f"input tensors are empty"
+                )
+                continue
+
+            if should_skip:
+                logger.warning(
+                    f"Skipping feature group {current_feature_idxs} since it contains "
+                    f"at least one input tensor with 0th dim less than "
+                    f"{self._min_examples_per_batch_grouped}"
+                )
+                continue
 
             # Store appropriate inputs and additional args based on batch size.
             if current_num_ablated_features != perturbations_per_eval:

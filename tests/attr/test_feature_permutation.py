@@ -129,6 +129,59 @@ class Test(BaseTest):
         with self.assertRaises(AssertionError):
             feature_importance.attribute(inp)
 
+    def test_simple_input_with_min_examples_in_group(self) -> None:
+        def forward_func(x: Tensor) -> Tensor:
+            return x.sum(dim=-1)
+
+        feature_importance = FeaturePermutation(forward_func=forward_func)
+        inp = torch.tensor([[1.0, 2.0]])
+        assertTensorAlmostEqual(
+            self,
+            feature_importance.attribute(inp, enable_cross_tensor_attribution=True),
+            torch.tensor([[0.0, 0.0]]),
+            delta=0.0,
+        )
+        assertTensorAlmostEqual(
+            self,
+            feature_importance.attribute(
+                torch.tensor([]), enable_cross_tensor_attribution=True
+            ),
+            torch.tensor([0.0]),
+            delta=0.0,
+        )
+
+        feature_importance._min_examples_per_batch_grouped = 1
+        with self.assertRaises(AssertionError):
+            feature_importance.attribute(inp, enable_cross_tensor_attribution=True)
+
+    def test_simple_input_custom_mask_with_min_examples_in_group(self) -> None:
+        def forward_func(x1: Tensor, x2: Tensor) -> Tensor:
+            return x1.sum(dim=-1)
+
+        feature_importance = FeaturePermutation(forward_func=forward_func)
+        inp = (
+            torch.tensor([[1.0, 2.0]]),
+            torch.tensor(([3.0, 4.0], [5.0, 6.0])),
+        )
+        mask = (
+            torch.tensor([0, 0]),
+            torch.tensor([[0, 0], [0, 0]]),
+        )
+        assertTensorAlmostEqual(
+            self,
+            feature_importance.attribute(
+                inp, feature_mask=mask, enable_cross_tensor_attribution=True
+            )[0],
+            torch.tensor([[0.0, 0.0]]),
+            delta=0.0,
+        )
+
+        feature_importance._min_examples_per_batch_grouped = 1
+        with self.assertRaises(AssertionError):
+            feature_importance.attribute(
+                inp, feature_mask=mask, enable_cross_tensor_attribution=True
+            )
+
     def test_single_input_with_future(
         self,
     ) -> None:
