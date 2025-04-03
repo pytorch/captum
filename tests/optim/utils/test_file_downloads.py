@@ -12,7 +12,7 @@ class TestFileExistence(unittest.TestCase):
         response = requests.get(url)
         self.assertEqual(response.status_code, 200, f"File not found: {url}")
         lines = response.text.strip().split("\n")
-        self.assertEqual(len(lines), 48895, f"Unexpected number of lines in {url}, expected 48895 but got {len(lines)}")
+        self.assertEqual(len(lines), 48895, f"Unexpected number of lines in {url}," +  f"expected 48895 but got {len(lines)}")
 
     def test_inceptionv1_mixed4c_relu_samples_activations_pt(self) -> None:
         url = BASE_URL + "inceptionv1_mixed4c_relu_samples_activations.pt"
