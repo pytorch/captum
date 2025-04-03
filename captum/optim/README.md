@@ -1,13 +1,17 @@
 # Captum "optim" module
 
-This is a WIP PR to integrate existing feature visualization code from the authors of `tensorflow/lucid` into captum.
-It is also an opportunity to review which parts of such interpretability tools still feel rough to implement in a system like PyTorch, and to make suggestions to the core PyTorch team for how to improve these aspects.
+This is project began as an attempt to integrate the [tensorflow/lucid](https://github.com/tensorflow/lucid) library into the [pytorch/captum](https://github.com/pytorch/captum/) library. It implements numerous papers on feature visualization and interpretability.
 
-## Roadmap
+## Paper Implementations
 
-* unify API with Captum API: a single class that's callable per "technique"(? check for details before implementing)
-* Consider if we need an abstraction around "an optimization process" (in terms of stopping criteria, reporting losses, etc) or if there are sufficiently strong conventions in PyTorch land for such tasks
-* integrate Eli's FFT param changes (mostly for simplification) 
-* make a table of PyTorch interpretability tools for readme?
-* do we need image viewing helpers and io helpers or throw those out?
-* can we integrate paper references closer with the code?
+https://distill.pub/2017/feature-visualization/
+https://distill.pub/2018/building-blocks/
+https://distill.pub/2018/differentiable-parameterizations/
+https://distill.pub/2019/activation-atlas/
+https://distill.pub/2020/circuits/
+https://distill.pub/2020/circuits/zoom-in/
+https://distill.pub/2020/circuits/curve-detectors/
+https://distill.pub/2020/circuits/frequency-edges/
+https://distill.pub/2020/circuits/visualizing-weights/
+https://distill.pub/2020/circuits/weight-banding/
+https://distill.pub/2021/multimodal-neurons/
