@@ -2,6 +2,8 @@
 
 This is project began as an attempt to integrate the [tensorflow/lucid](https://github.com/tensorflow/lucid) library into the [pytorch/captum](https://github.com/pytorch/captum/) library. It implements numerous papers on feature visualization and interpretability.
 
+See tutorials/optimvis for examples of how to use this library module.
+
 ## Paper Implementations
 
 * https://distill.pub/2017/feature-visualization/
