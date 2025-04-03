@@ -124,9 +124,18 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="c1"># behavior stays consistent and no longer check again</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_is_output_shape_valid</span> <span class="o">=</span> <span class="kc">False</span>
 
-        <span class="c1"># Minimum number of elements needed in each input tensor, otherwise the</span>
-        <span class="c1"># attribution for the tensor will be skipped</span>
+        <span class="c1"># Minimum number of elements needed in each input tensor when</span>
+        <span class="c1"># `enable_cross_tensor_attribution`, is False, otherwise the attribution</span>
+        <span class="c1"># for the tensor will be skipped</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_min_examples_per_batch</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="c1"># Similar to above, when `enable_cross_tensor_attribution` is True.</span>
+        <span class="c1"># Considering the case when we permute multiple input tensors at once</span>
+        <span class="c1"># through `feature_mask`, we disregard the feature group if the 0th</span>
+        <span class="c1"># dim of *any* input tensor in the group is less than</span>
+        <span class="c1"># `_min_examples_per_batch_grouped` if defined.</span>
+        <span class="c1"># If *all* input tensors in the group are empty, we also skip the feature/</span>
+        <span class="c1"># feature group (not parameterized by `_min_examples_per_batch_grouped`).</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_min_examples_per_batch_grouped</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
 
 <div class="viewcode-block" id="FeatureAblation.attribute">
 <a class="viewcode-back" href="../../../../feature_ablation.html#captum.attr.FeatureAblation.attribute">[docs]</a>
@@ -580,6 +589,36 @@ src="/_sphinx/documentation_options.js"></script>
             <span class="n">current_num_ablated_features</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span>
                 <span class="n">perturbations_per_eval</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">current_feature_idxs</span><span class="p">)</span>
             <span class="p">)</span>
+
+            <span class="n">should_skip</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="n">all_empty</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="n">tensor_idx_list</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">feature_idx</span> <span class="ow">in</span> <span class="n">current_feature_idxs</span><span class="p">:</span>
+                <span class="n">tensor_idx_list</span> <span class="o">+=</span> <span class="n">feature_idx_to_tensor_idx</span><span class="p">[</span><span class="n">feature_idx</span><span class="p">]</span>
+            <span class="k">for</span> <span class="n">tensor_idx</span> <span class="ow">in</span> <span class="nb">set</span><span class="p">(</span><span class="n">tensor_idx_list</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">all_empty</span> <span class="ow">and</span> <span class="n">torch</span><span class="o">.</span><span class="n">numel</span><span class="p">(</span><span class="n">formatted_inputs</span><span class="p">[</span><span class="n">tensor_idx</span><span class="p">])</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="n">all_empty</span> <span class="o">=</span> <span class="kc">False</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_min_examples_per_batch_grouped</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="p">(</span>
+                    <span class="n">formatted_inputs</span><span class="p">[</span><span class="n">tensor_idx</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                    <span class="c1"># pyre-ignore[58]: Type has been narrowed to int</span>
+                    <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">_min_examples_per_batch_grouped</span>
+                <span class="p">):</span>
+                    <span class="n">should_skip</span> <span class="o">=</span> <span class="kc">True</span>
+                    <span class="k">break</span>
+            <span class="k">if</span> <span class="n">all_empty</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">"Skipping feature group </span><span class="si">{</span><span class="n">current_feature_idxs</span><span class="si">}</span><span class="s2"> since all "</span>
+                    <span class="sa">f</span><span class="s2">"input tensors are empty"</span>
+                <span class="p">)</span>
+                <span class="k">continue</span>
+
+            <span class="k">if</span> <span class="n">should_skip</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">"Skipping feature group </span><span class="si">{</span><span class="n">current_feature_idxs</span><span class="si">}</span><span class="s2"> since it contains "</span>
+                    <span class="sa">f</span><span class="s2">"at least one input tensor with 0th dim less than "</span>
+                    <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_min_examples_per_batch_grouped</span><span class="si">}</span><span class="s2">"</span>
+                <span class="p">)</span>
+                <span class="k">continue</span>
 
             <span class="c1"># Store appropriate inputs and additional args based on batch size.</span>
             <span class="k">if</span> <span class="n">current_num_ablated_features</span> <span class="o">!=</span> <span class="n">perturbations_per_eval</span><span class="p">:</span>

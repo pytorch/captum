@@ -126,10 +126,17 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">        """</span>
         <span class="n">FeatureAblation</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">forward_func</span><span class="o">=</span><span class="n">forward_func</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">perm_func</span> <span class="o">=</span> <span class="n">perm_func</span>
-        <span class="c1"># Minimum number of elements needed in each input tensor, otherwise the</span>
+        <span class="c1"># Minimum number of elements needed in each input tensor, when</span>
+        <span class="c1"># `enable_cross_tensor_attribution` is False, otherwise the</span>
         <span class="c1"># attribution for the tensor will be skipped. Set to 1 to throw if any</span>
         <span class="c1"># input tensors only have one example</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_min_examples_per_batch</span> <span class="o">=</span> <span class="mi">2</span>
+        <span class="c1"># Similar to above, when `enable_cross_tensor_attribution` is True.</span>
+        <span class="c1"># Considering the case when we permute multiple input tensors at once</span>
+        <span class="c1"># through `feature_mask`, we disregard the feature group if the 0th</span>
+        <span class="c1"># dim of *any* input tensor in the group is less than</span>
+        <span class="c1"># `_min_examples_per_batch_grouped`.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_min_examples_per_batch_grouped</span> <span class="o">=</span> <span class="mi">2</span>
 
     <span class="c1"># suppressing error caused by the child class not having a matching</span>
     <span class="c1"># signature to the parent</span>
