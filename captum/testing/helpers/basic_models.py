@@ -436,7 +436,7 @@ class BasicModel_GradientLayerAttribution(nn.Module):
     def __init__(
         self,
         inplace: bool = False,
-        unsupported_layer_output: PassThroughOutputType = None,
+        unsupported_layer_output: Optional[PassThroughOutputType] = None,
     ) -> None:
         super().__init__()
         # Linear 0 is simply identity transform
@@ -464,7 +464,7 @@ class BasicModel_GradientLayerAttribution(nn.Module):
         self.linear3.weight = nn.Parameter(torch.ones(2, 4))
         self.linear3.bias = nn.Parameter(torch.tensor([-1.0, 1.0]))
 
-        self.int_layer = PassThroughLayerOutput()  # sample layer with an int ouput
+        self.int_layer = PassThroughLayerOutput()  # sample layer with an int output
 
     @no_type_check
     def forward(

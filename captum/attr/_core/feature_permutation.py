@@ -92,6 +92,17 @@ class FeaturePermutation(FeatureAblation):
         """
         FeatureAblation.__init__(self, forward_func=forward_func)
         self.perm_func = perm_func
+        # Minimum number of elements needed in each input tensor, when
+        # `enable_cross_tensor_attribution` is False, otherwise the
+        # attribution for the tensor will be skipped. Set to 1 to throw if any
+        # input tensors only have one example
+        self._min_examples_per_batch = 2
+        # Similar to above, when `enable_cross_tensor_attribution` is True.
+        # Considering the case when we permute multiple input tensors at once
+        # through `feature_mask`, we disregard the feature group if the 0th
+        # dim of *any* input tensor in the group is less than
+        # `_min_examples_per_batch_grouped`.
+        self._min_examples_per_batch_grouped = 2
 
     # suppressing error caused by the child class not having a matching
     # signature to the parent
