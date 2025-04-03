@@ -4,8 +4,8 @@ This is project began as an attempt to integrate the [tensorflow/lucid](https://
 
 ## Paper Implementations
 
-https://distill.pub/2017/feature-visualization/
-https://distill.pub/2018/building-blocks/
+* https://distill.pub/2017/feature-visualization/
+* https://distill.pub/2018/building-blocks/
 https://distill.pub/2018/differentiable-parameterizations/
 https://distill.pub/2019/activation-atlas/
 https://distill.pub/2020/circuits/
