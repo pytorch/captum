@@ -390,3 +390,16 @@ def _construct_default_feature_mask(
     total_features = current_num_features
     feature_mask = tuple(feature_mask)
     return feature_mask, total_features
+
+
+def get_total_features_from_mask(
+    feature_mask: Tuple[Tensor, ...],
+) -> int:
+    """
+    Return the numbers of input features based on the total unique
+    feature IDs/indices in the feature mask.
+    """
+    seen_idxs = set()
+    for mask in feature_mask:
+        seen_idxs |= set(torch.unique(mask).tolist())
+    return len(seen_idxs)
