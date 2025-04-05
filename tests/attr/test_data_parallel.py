@@ -4,6 +4,7 @@
 import copy
 import os
 from enum import Enum
+import tempfile
 from typing import Any, Callable, cast, Dict, List, Optional, Tuple, Type
 
 import torch
@@ -300,9 +301,8 @@ def _get_dp_attr_methods(
 if torch.cuda.is_available() and torch.cuda.device_count() != 0:
 
     # Distributed Data Parallel env setup
-    os.environ["MASTER_ADDR"] = "localhost"
-    os.environ["MASTER_PORT"] = "29500"
-    dist.init_process_group(backend="gloo", rank=0, world_size=1)
+    f = tempfile.NamedTemporaryFile(delete=False)
+    dist.init_process_group(backend="gloo", init_method=f"file://{f.name}", rank=0, world_size=1)
 
     class DataParallelTest(BaseTest, metaclass=DataParallelMeta):
         @classmethod
