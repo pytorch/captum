@@ -63,7 +63,10 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="kn">from</span> <span class="nn">captum._utils.progress</span> <span class="kn">import</span> <span class="n">progress</span><span class="p">,</span> <span class="n">SimpleProgress</span>
 <span class="kn">from</span> <span class="nn">captum._utils.typing</span> <span class="kn">import</span> <span class="n">BaselineType</span><span class="p">,</span> <span class="n">TargetType</span><span class="p">,</span> <span class="n">TensorOrTupleOfTensorsGeneric</span>
 <span class="kn">from</span> <span class="nn">captum.attr._utils.attribution</span> <span class="kn">import</span> <span class="n">PerturbationAttribution</span>
-<span class="kn">from</span> <span class="nn">captum.attr._utils.common</span> <span class="kn">import</span> <span class="n">_format_input_baseline</span>
+<span class="kn">from</span> <span class="nn">captum.attr._utils.common</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">_format_input_baseline</span><span class="p">,</span>
+    <span class="n">get_total_features_from_mask</span><span class="p">,</span>
+<span class="p">)</span>
 <span class="kn">from</span> <span class="nn">captum.log</span> <span class="kn">import</span> <span class="n">log_usage</span>
 <span class="kn">from</span> <span class="nn">torch</span> <span class="kn">import</span> <span class="n">dtype</span><span class="p">,</span> <span class="n">Tensor</span>
 <span class="kn">from</span> <span class="nn">torch.futures</span> <span class="kn">import</span> <span class="n">collect_all</span><span class="p">,</span> <span class="n">Future</span>
@@ -934,7 +937,9 @@ src="/_sphinx/documentation_options.js"></script>
             <span class="n">formatted_inputs</span><span class="p">,</span> <span class="n">feature_mask</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span>
         <span class="p">)</span>
         <span class="n">total_forwards</span> <span class="o">=</span> <span class="p">(</span>
-            <span class="n">math</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="nb">sum</span><span class="p">(</span><span class="n">feature_counts</span><span class="p">))</span> <span class="o">/</span> <span class="n">perturbations_per_eval</span><span class="p">)</span>
+            <span class="n">math</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span>
+                <span class="n">get_total_features_from_mask</span><span class="p">(</span><span class="n">feature_mask</span><span class="p">)</span> <span class="o">/</span> <span class="n">perturbations_per_eval</span>
+            <span class="p">)</span>
             <span class="k">if</span> <span class="n">enable_cross_tensor_attribution</span>
             <span class="k">else</span> <span class="nb">sum</span><span class="p">(</span>
                 <span class="n">math</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">count</span> <span class="o">/</span> <span class="n">perturbations_per_eval</span><span class="p">)</span> <span class="k">for</span> <span class="n">count</span> <span class="ow">in</span> <span class="n">feature_counts</span>
