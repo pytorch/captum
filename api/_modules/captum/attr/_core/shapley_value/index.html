@@ -433,7 +433,9 @@ src="/_sphinx/documentation_options.js"></script>
                     <span class="k">if</span> <span class="n">show_progress</span><span class="p">:</span>
                         <span class="n">attr_progress</span><span class="o">.</span><span class="n">update</span><span class="p">()</span>
                     <span class="k">if</span> <span class="n">agg_output_mode</span><span class="p">:</span>
-                        <span class="n">eval_diff</span> <span class="o">=</span> <span class="n">modified_eval</span> <span class="o">-</span> <span class="n">prev_results</span>
+                        <span class="n">eval_diff</span> <span class="o">=</span> <span class="p">(</span><span class="n">modified_eval</span> <span class="o">-</span> <span class="n">prev_results</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span>
+                            <span class="n">inputs_tuple</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">device</span>
+                        <span class="p">)</span>
                         <span class="n">prev_results</span> <span class="o">=</span> <span class="n">modified_eval</span>
                     <span class="k">else</span><span class="p">:</span>
                         <span class="c1"># when perturb_per_eval &gt; 1, every num_examples stands for</span>
@@ -441,7 +443,9 @@ src="/_sphinx/documentation_options.js"></script>
                         <span class="c1"># perumuation, each diff of a perturb is its eval minus</span>
                         <span class="c1"># the eval of the previous perturb</span>
                         <span class="n">all_eval</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">((</span><span class="n">prev_results</span><span class="p">,</span> <span class="n">modified_eval</span><span class="p">),</span> <span class="n">dim</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
-                        <span class="n">eval_diff</span> <span class="o">=</span> <span class="n">all_eval</span><span class="p">[</span><span class="n">num_examples</span><span class="p">:]</span> <span class="o">-</span> <span class="n">all_eval</span><span class="p">[:</span><span class="o">-</span><span class="n">num_examples</span><span class="p">]</span>
+                        <span class="n">eval_diff</span> <span class="o">=</span> <span class="p">(</span>
+                            <span class="n">all_eval</span><span class="p">[</span><span class="n">num_examples</span><span class="p">:]</span> <span class="o">-</span> <span class="n">all_eval</span><span class="p">[:</span><span class="o">-</span><span class="n">num_examples</span><span class="p">]</span>
+                        <span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">inputs_tuple</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
                         <span class="n">prev_results</span> <span class="o">=</span> <span class="n">all_eval</span><span class="p">[</span><span class="o">-</span><span class="n">num_examples</span><span class="p">:]</span>
 
                     <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">total_attrib</span><span class="p">)):</span>
@@ -729,7 +733,7 @@ src="/_sphinx/documentation_options.js"></script>
             <span class="n">agg_output_mode</span><span class="p">,</span>
         <span class="p">)</span> <span class="o">=</span> <span class="n">prev_results_tuple</span>
         <span class="k">if</span> <span class="n">agg_output_mode</span><span class="p">:</span>
-            <span class="n">eval_diff</span> <span class="o">=</span> <span class="n">modified_eval</span> <span class="o">-</span> <span class="n">prev_results</span>
+            <span class="n">eval_diff</span> <span class="o">=</span> <span class="p">(</span><span class="n">modified_eval</span> <span class="o">-</span> <span class="n">prev_results</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">inputs_tuple</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
             <span class="n">prev_results</span> <span class="o">=</span> <span class="n">modified_eval</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="c1"># when perturb_per_eval &gt; 1, every num_examples stands for</span>
@@ -738,7 +742,9 @@ src="/_sphinx/documentation_options.js"></script>
             <span class="c1"># the eval of the previous perturb</span>
 
             <span class="n">all_eval</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">((</span><span class="n">prev_results</span><span class="p">,</span> <span class="n">modified_eval</span><span class="p">),</span> <span class="n">dim</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
-            <span class="n">eval_diff</span> <span class="o">=</span> <span class="n">all_eval</span><span class="p">[</span><span class="n">num_examples</span><span class="p">:]</span> <span class="o">-</span> <span class="n">all_eval</span><span class="p">[:</span><span class="o">-</span><span class="n">num_examples</span><span class="p">]</span>
+            <span class="n">eval_diff</span> <span class="o">=</span> <span class="p">(</span><span class="n">all_eval</span><span class="p">[</span><span class="n">num_examples</span><span class="p">:]</span> <span class="o">-</span> <span class="n">all_eval</span><span class="p">[:</span><span class="o">-</span><span class="n">num_examples</span><span class="p">])</span><span class="o">.</span><span class="n">to</span><span class="p">(</span>
+                <span class="n">inputs_tuple</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">device</span>
+            <span class="p">)</span>
             <span class="n">prev_results</span> <span class="o">=</span> <span class="n">all_eval</span><span class="p">[</span><span class="o">-</span><span class="n">num_examples</span><span class="p">:]</span>
 
         <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">total_attrib</span><span class="p">)):</span>
@@ -839,7 +845,10 @@ src="/_sphinx/documentation_options.js"></script>
             <span class="p">)</span>
             <span class="n">current_tensors_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">current_tensors</span><span class="p">)</span>
             <span class="n">current_mask_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
-                <span class="nb">tuple</span><span class="p">(</span><span class="n">mask</span> <span class="o">==</span> <span class="n">feature_permutation</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">mask</span> <span class="ow">in</span> <span class="n">input_masks</span><span class="p">)</span>
+                <span class="nb">tuple</span><span class="p">(</span>
+                    <span class="p">(</span><span class="n">mask</span> <span class="o">==</span> <span class="n">feature_permutation</span><span class="p">[</span><span class="n">i</span><span class="p">])</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">inputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
+                    <span class="k">for</span> <span class="n">mask</span> <span class="ow">in</span> <span class="n">input_masks</span>
+                <span class="p">)</span>
             <span class="p">)</span>
             <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">current_tensors_list</span><span class="p">)</span> <span class="o">==</span> <span class="n">perturbations_per_eval</span><span class="p">:</span>
                 <span class="n">combined_inputs</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span>
