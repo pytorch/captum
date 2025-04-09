@@ -2,7 +2,7 @@
 
 # pyre-strict
 
-from typing import Any, Dict, Optional, Protocol, Tuple, Type
+from typing import Any, cast, Dict, Optional, Protocol, Tuple, Type
 
 import torch
 
@@ -46,10 +46,7 @@ if transformers_installed:
         )
 
         Cache = _Cache
-        # pyre-ignore[9]: Incompatible variable type: DynamicCache is declared to have
-        # type `Optional[Type[DynamicCacheLike]]` but is used as type
-        # `Type[_DynamicCache]`
-        DynamicCache = _DynamicCache
+        DynamicCache = cast(Optional[Type[DynamicCacheLike]], _DynamicCache)
     except ImportError:
         Cache = DynamicCache = None
 else:
