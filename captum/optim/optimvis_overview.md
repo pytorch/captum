@@ -111,4 +111,10 @@ References
 
   * Weight Banding: https://distill.pub/2020/circuits/weight-banding/
 
+  * Zoom in: https://distill.pub/2020/circuits/zoom-in/
+
+  * Curve Detectors: https://distill.pub/2020/circuits/curve-detectors/
+
+  * Frequency Edges: https://distill.pub/2020/circuits/frequency-edges/
+
 * Multimodal Neurons in Artificial Neural Networks: https://distill.pub/2021/multimodal-neurons/
