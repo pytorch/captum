@@ -4,6 +4,7 @@
 import copy
 import os
 from enum import Enum
+import tempfile
 from typing import Any, Callable, cast, Dict, List, Optional, Tuple, Type
 
 import torch
@@ -39,11 +40,6 @@ defined in tests/attr/helpers/test_config.py. To add new test cases,
 read the documentation in test_config.py and add cases based on the
 schema described there.
 """
-
-# Distributed Data Parallel env setup
-os.environ["MASTER_ADDR"] = "localhost"
-os.environ["MASTER_PORT"] = "29500"
-dist.init_process_group(backend="gloo", rank=0, world_size=1)
 
 
 class DataParallelCompareMode(Enum):
@@ -303,6 +299,10 @@ def _get_dp_attr_methods(
 
 
 if torch.cuda.is_available() and torch.cuda.device_count() != 0:
+
+    # Distributed Data Parallel env setup
+    f = tempfile.NamedTemporaryFile(delete=False)
+    dist.init_process_group(backend="gloo", init_method=f"file://{f.name}", rank=0, world_size=1)
 
     class DataParallelTest(BaseTest, metaclass=DataParallelMeta):
         @classmethod
