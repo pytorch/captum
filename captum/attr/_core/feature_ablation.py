@@ -31,7 +31,10 @@ from captum._utils.exceptions import FeatureAblationFutureError
 from captum._utils.progress import progress, SimpleProgress
 from captum._utils.typing import BaselineType, TargetType, TensorOrTupleOfTensorsGeneric
 from captum.attr._utils.attribution import PerturbationAttribution
-from captum.attr._utils.common import _format_input_baseline
+from captum.attr._utils.common import (
+    _format_input_baseline,
+    get_total_features_from_mask,
+)
 from captum.log import log_usage
 from torch import dtype, Tensor
 from torch.futures import collect_all, Future
@@ -894,7 +897,9 @@ class FeatureAblation(PerturbationAttribution):
             formatted_inputs, feature_mask, **kwargs
         )
         total_forwards = (
-            math.ceil(int(sum(feature_counts)) / perturbations_per_eval)
+            math.ceil(
+                get_total_features_from_mask(feature_mask) / perturbations_per_eval
+            )
             if enable_cross_tensor_attribution
             else sum(
                 math.ceil(count / perturbations_per_eval) for count in feature_counts
