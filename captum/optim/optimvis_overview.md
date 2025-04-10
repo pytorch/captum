@@ -58,7 +58,7 @@ The docs for the optim module can be found here.
 Tutorials
 -----------------
 
-We also provide multiple tutorials covering a wide array of research for the optim module [here](See https://github.com/ProGamerGov/captum/tree/master-optim/tutorials/optimvis for examples of how to use this library module).
+We also provide multiple tutorials covering a wide array of research for the optim module [here](https://github.com/ProGamerGov/captum/tree/master-optim/tutorials/optimvis).
 
 
 FAQ
