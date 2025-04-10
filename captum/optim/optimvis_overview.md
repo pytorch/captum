@@ -85,7 +85,7 @@ For the most part, yes. Image parameterizations, transforms, and many of the hel
 
 **What dtypes does the Optim module support?**
 
-In addition to the default ``torch.float32`` dtype, the Optim module also easily supports ``torch.float64``. 
+In addition to the default ``torch.float32`` dtype, the Optim module also easily support the other float dtypes. 
 
 The ``FFTImage`` parameterization currently doesn't work with ``torch.float16`` or ``torch.bfloat16`` due to issues with PyTorch's support for ``torch.complex32``.
 
