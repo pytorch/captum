@@ -12,7 +12,7 @@ The Optim module is designed to be extremely customizable, as to avoid limitatio
 History
 -----------------
 
-The initial concept for the Optim module was devised by Ludwig Shubert, and then developed by Ben Egan and Swee Kiat Lim with help from Chris Olah & Narine Kokhlikyan.
+The initial concept for the Optim module was devised by Ludwig Shubert, and then developed by Ben Egan and Swee Kiat Lim with help from Chris Olah & Narine Kokhlikyan. This is project began as an attempt to integrate the tensorflow/lucid library into the pytorch/captum library. It implements numerous papers on feature visualization and interpretability.
 
 
 Optim Structure
