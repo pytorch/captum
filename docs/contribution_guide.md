@@ -45,7 +45,7 @@ Before contributing an algorithm to Captum, please review these guidelines and p
 
 If you think that proposed algorithm/feature satisfies many of the above criteria, please open an issue on GitHub (https://github.com/pytorch/captum/issues) to discuss the method with the core Captum team members before submitting a pull request. If the method seems suitable for inclusion in Captum, we will generally request a design document or proposal, explaining the proposed API and structure for the new algorithm. An example of a design proposal for LIME and Kernel SHAP can be found here (https://github.com/pytorch/captum/issues/467).
 
-If an algorithm or feature adds only marginal improvements or does not meet most the criteria described above, then we would suggest including it into our AWESOME_LIST.MD (https://github.com/pytorch/captum/blob/master/AWESOME_LIST.md) instead of adding it to the core Captum library. In the future, if the algorithm gains more popularity and acceptance in the model interpretability community, we would be happy to accept a PR to add it to the Captum core library.
+If an algorithm or feature adds only marginal improvements or does not meet most the criteria described above, then we would suggest including it into our AWESOME_LIST.MD (https://github.com/pytorch/captum/blob/main/AWESOME_LIST.md) instead of adding it to the core Captum library. In the future, if the algorithm gains more popularity and acceptance in the model interpretability community, we would be happy to accept a PR to add it to the Captum core library.
 
 *Note that we reserve the right to decide not to include any algorithms that meet the above criteria, but we are unable to support in the long run.*
 
