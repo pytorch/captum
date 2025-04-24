@@ -975,18 +975,21 @@ class RemoteLLMAttribution(LLMAttribution):
     ) -> Tensor:
         """
         Forward function for the remote LLM provider.
+        
+        Raises:
+            ValueError: If the number of token logprobs doesn't match expected length
         """
-
         perturbed_input = self._format_model_input(inp.to_model_input(perturbed_tensor))
         
         target_str:str = self.tokenizer.decode(target_tokens)
         
         target_token_probs = self.provider.get_logprobs(input_prompt=perturbed_input, target_str=target_str, tokenizer=self.tokenizer)
         
-        assert len(target_token_probs) == target_tokens.size()[0], (
-            f"Number of token logprobs from provider ({len(target_token_probs)}) "
-            f"does not match expected target token length ({target_tokens.size()[0]})"
-        )
+        if len(target_token_probs) != target_tokens.size()[0]:
+            raise ValueError(
+                f"Number of token logprobs from provider ({len(target_token_probs)}) "
+                f"does not match expected target token length ({target_tokens.size()[0]})"
+            )
         
         log_prob_list: List[Tensor] = list(map(torch.tensor, target_token_probs))
         
