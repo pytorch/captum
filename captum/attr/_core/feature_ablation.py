@@ -24,7 +24,9 @@ from captum._utils.common import (
     _format_additional_forward_args,
     _format_feature_mask,
     _format_output,
+    _get_feature_idx_to_tensor_idx,
     _is_tuple,
+    _maybe_expand_parameters,
     _run_forward,
 )
 from captum._utils.exceptions import FeatureAblationFutureError
@@ -508,33 +510,19 @@ class FeatureAblation(PerturbationAttribution):
         perturbations_per_eval: int,
         **kwargs: Any,
     ) -> Tuple[List[Tensor], List[Tensor]]:
-        feature_idx_to_tensor_idx: Dict[int, List[int]] = {}
-        for i, mask in enumerate(formatted_feature_mask):
-            for feature_idx in torch.unique(mask):
-                if feature_idx.item() not in feature_idx_to_tensor_idx:
-                    feature_idx_to_tensor_idx[feature_idx.item()] = []
-                feature_idx_to_tensor_idx[feature_idx.item()].append(i)
+        feature_idx_to_tensor_idx = _get_feature_idx_to_tensor_idx(
+            formatted_feature_mask
+        )
         all_feature_idxs = list(feature_idx_to_tensor_idx.keys())
 
-        additional_args_repeated: object
-        if perturbations_per_eval > 1:
-            # Repeat features and additional args for batch size.
-            all_features_repeated = tuple(
-                torch.cat([formatted_inputs[j]] * perturbations_per_eval, dim=0)
-                for j in range(len(formatted_inputs))
+        (all_features_repeated, additional_args_repeated, target_repeated) = (
+            _maybe_expand_parameters(
+                perturbations_per_eval,
+                formatted_inputs,
+                formatted_additional_forward_args,
+                target,
             )
-            additional_args_repeated = (
-                _expand_additional_forward_args(
-                    formatted_additional_forward_args, perturbations_per_eval
-                )
-                if formatted_additional_forward_args is not None
-                else None
-            )
-            target_repeated = _expand_target(target, perturbations_per_eval)
-        else:
-            all_features_repeated = formatted_inputs
-            additional_args_repeated = formatted_additional_forward_args
-            target_repeated = target
+        )
         num_examples = formatted_inputs[0].shape[0]
 
         current_additional_args: object
@@ -556,34 +544,11 @@ class FeatureAblation(PerturbationAttribution):
                 perturbations_per_eval, len(current_feature_idxs)
             )
 
-            should_skip = False
-            all_empty = True
-            tensor_idx_list = []
-            for feature_idx in current_feature_idxs:
-                tensor_idx_list += feature_idx_to_tensor_idx[feature_idx]
-            for tensor_idx in set(tensor_idx_list):
-                if all_empty and torch.numel(formatted_inputs[tensor_idx]) != 0:
-                    all_empty = False
-                if self._min_examples_per_batch_grouped is not None and (
-                    formatted_inputs[tensor_idx].shape[0]
-                    # pyre-ignore[58]: Type has been narrowed to int
-                    < self._min_examples_per_batch_grouped
-                ):
-                    should_skip = True
-                    break
-            if all_empty:
-                logger.info(
-                    f"Skipping feature group {current_feature_idxs} since all "
-                    f"input tensors are empty"
-                )
-                continue
-
-            if should_skip:
-                logger.warning(
-                    f"Skipping feature group {current_feature_idxs} since it contains "
-                    f"at least one input tensor with 0th dim less than "
-                    f"{self._min_examples_per_batch_grouped}"
-                )
+            if self._should_skip_inputs_and_warn(
+                current_feature_idxs,
+                feature_idx_to_tensor_idx,
+                formatted_inputs,
+            ):
                 continue
 
             # Store appropriate inputs and additional args based on batch size.
@@ -650,6 +615,42 @@ class FeatureAblation(PerturbationAttribution):
                 perturbations_per_eval,
             )
         return total_attrib, weights
+
+    def _should_skip_inputs_and_warn(
+        self,
+        current_feature_idxs: List[int],
+        feature_idx_to_tensor_idx: Dict[int, List[int]],
+        formatted_inputs: Tuple[Tensor, ...],
+    ) -> bool:
+        should_skip = False
+        all_empty = True
+        tensor_idx_list = []
+        for feature_idx in current_feature_idxs:
+            tensor_idx_list += feature_idx_to_tensor_idx[feature_idx]
+        for tensor_idx in set(tensor_idx_list):
+            if all_empty and torch.numel(formatted_inputs[tensor_idx]) != 0:
+                all_empty = False
+            if self._min_examples_per_batch_grouped is not None and (
+                formatted_inputs[tensor_idx].shape[0]
+                # pyre-ignore[58]: Type has been narrowed to int
+                < self._min_examples_per_batch_grouped
+            ):
+                should_skip = True
+                break
+        if should_skip:
+            logger.warning(
+                f"Skipping feature group {current_feature_idxs} since it contains "
+                f"at least one input tensor with 0th dim less than "
+                f"{self._min_examples_per_batch_grouped}"
+            )
+            return True
+        if all_empty:
+            logger.info(
+                f"Skipping feature group {current_feature_idxs} since all "
+                f"input tensors are empty"
+            )
+            return True
+        return False
 
     def _construct_ablated_input_across_tensors(
         self,
@@ -949,33 +950,19 @@ class FeatureAblation(PerturbationAttribution):
         perturbations_per_eval: int,
         **kwargs: Any,
     ) -> Future[Union[Tensor, Tuple[Tensor, ...]]]:
-        feature_idx_to_tensor_idx: Dict[int, List[int]] = {}
-        for i, mask in enumerate(formatted_feature_mask):
-            for feature_idx in torch.unique(mask):
-                if feature_idx.item() not in feature_idx_to_tensor_idx:
-                    feature_idx_to_tensor_idx[feature_idx.item()] = []
-                feature_idx_to_tensor_idx[feature_idx.item()].append(i)
+        feature_idx_to_tensor_idx = _get_feature_idx_to_tensor_idx(
+            formatted_feature_mask
+        )
         all_feature_idxs = list(feature_idx_to_tensor_idx.keys())
 
-        additional_args_repeated: object
-        if perturbations_per_eval > 1:
-            # Repeat features and additional args for batch size.
-            all_features_repeated = tuple(
-                torch.cat([formatted_inputs[j]] * perturbations_per_eval, dim=0)
-                for j in range(len(formatted_inputs))
+        (all_features_repeated, additional_args_repeated, target_repeated) = (
+            _maybe_expand_parameters(
+                perturbations_per_eval,
+                formatted_inputs,
+                formatted_additional_forward_args,
+                target,
             )
-            additional_args_repeated = (
-                _expand_additional_forward_args(
-                    formatted_additional_forward_args, perturbations_per_eval
-                )
-                if formatted_additional_forward_args is not None
-                else None
-            )
-            target_repeated = _expand_target(target, perturbations_per_eval)
-        else:
-            all_features_repeated = formatted_inputs
-            additional_args_repeated = formatted_additional_forward_args
-            target_repeated = target
+        )
         num_examples = formatted_inputs[0].shape[0]
 
         current_additional_args: object
@@ -999,34 +986,11 @@ class FeatureAblation(PerturbationAttribution):
                 perturbations_per_eval, len(current_feature_idxs)
             )
 
-            should_skip = False
-            all_empty = True
-            tensor_idx_list = []
-            for feature_idx in current_feature_idxs:
-                tensor_idx_list += feature_idx_to_tensor_idx[feature_idx]
-            for tensor_idx in set(tensor_idx_list):
-                if all_empty and torch.numel(formatted_inputs[tensor_idx]) != 0:
-                    all_empty = False
-                if self._min_examples_per_batch_grouped is not None and (
-                    formatted_inputs[tensor_idx].shape[0]
-                    # pyre-ignore[58]: Type has been narrowed to int
-                    < self._min_examples_per_batch_grouped
-                ):
-                    should_skip = True
-                    break
-            if all_empty:
-                logger.info(
-                    f"Skipping feature group {current_feature_idxs} since all "
-                    f"input tensors are empty"
-                )
-                continue
-
-            if should_skip:
-                logger.warning(
-                    f"Skipping feature group {current_feature_idxs} since it contains "
-                    f"at least one input tensor with 0th dim less than "
-                    f"{self._min_examples_per_batch_grouped}"
-                )
+            if self._should_skip_inputs_and_warn(
+                current_feature_idxs,
+                feature_idx_to_tensor_idx,
+                formatted_inputs,
+            ):
                 continue
 
             # Store appropriate inputs and additional args based on batch size.
