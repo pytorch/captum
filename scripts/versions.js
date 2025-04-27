@@ -49,7 +49,7 @@ function Versions(props) {
               <tr>
                 <td>
                   {'latest'}
-                  {' (master)'}
+                  {' (main)'}
                 </td>
                 <td>
                   <code>

@@ -30,7 +30,7 @@ pip install captum
 <!--END_DOCUSAURUS_CODE_TABS-->
 
 For more detailed installation instructions, please see the
-[Project Readme](https://github.com/pytorch/captum/blob/master/README.md)
+[Project Readme](https://github.com/pytorch/captum/blob/main/README.md)
 on GitHub.
 
 
@@ -50,5 +50,5 @@ For an in-depth reference of the various Captum internals, see our
 ## Contributing
 
 You'd like to contribute to Captum? Great! Please see
-[here](https://github.com/pytorch/captum/blob/master/CONTRIBUTING.md)
+[here](https://github.com/pytorch/captum/blob/main/CONTRIBUTING.md)
 for how to help out.

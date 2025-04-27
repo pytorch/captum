@@ -11,7 +11,7 @@
 [![Conda Recipe](https://img.shields.io/static/v1?logo=conda-forge&style=flat&color=green&label=recipe&message=captum)][#conda-forge-feedstock]
 [![Docs - GitHub.io](https://img.shields.io/static/v1?logo=captum&style=flat&color=pink&label=docs&message=captum)][#docs-package]
 
-[#github-license]: https://github.com/pytorch/captum/blob/master/LICENSE
+[#github-license]: https://github.com/pytorch/captum/blob/main/LICENSE
 [#pypi-package]: https://pypi.org/project/captum/
 [#conda-forge-package]: https://anaconda.org/conda-forge/captum
 [#conda-forge-feedstock]: https://github.com/conda-forge/captum-feedstock
@@ -80,7 +80,7 @@ pip install captum
 
 If you'd like to try our bleeding edge features (and don't mind potentially
 running into the occasional bug here or there), you can install the latest
-master directly from GitHub. For a basic install, run:
+main directly from GitHub. For a basic install, run:
 ```bash
 git clone https://github.com/pytorch/captum.git
 cd captum
