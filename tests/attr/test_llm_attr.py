@@ -191,9 +191,6 @@ class DummyLLM(nn.Module):
         assert mock_response, "must mock response to use DummyLLM to generate"
         response = self.tokenizer.encode(mock_response)[1:]
         return torch.cat(
-            # pyre-fixme[6]: In call `torch._C._VariableFunctions.cat`,
-            # for 1st positional argument, expected `Union[List[Tensor],
-            # typing.Tuple[Tensor, ...]]` but got `List[Union[List[int], Tensor]]`.
             [input_ids, torch.tensor([response], device=self.device)],  # type: ignore
             dim=1,
         )
@@ -236,13 +233,9 @@ class DummyLLM(nn.Module):
         else [("cpu", True), ("cpu", False)]
     ),
 )
-# pyre-fixme[13]: Attribute `device` is never initialized.
-# pyre-fixme[13]: Attribute `use_cached_outputs` is never initialized.
 class TestLLMAttr(BaseTest):
-    # pyre-fixme[13]: Attribute `device` is never initialized.
-    device: str
-    # pyre-fixme[13]: Attribute `use_cached_outputs` is never initialized.
-    use_cached_outputs: bool
+    device: Optional[str] = None
+    use_cached_outputs: bool = False
 
     # pyre-fixme[56]: Pyre was not able to infer the type of argument `comprehension
     @parameterized.expand(
@@ -509,8 +502,7 @@ class TestLLMAttr(BaseTest):
     ("device",), [("cpu",), ("cuda",)] if torch.cuda.is_available() else [("cpu",)]
 )
 class TestLLMGradAttr(BaseTest):
-    # pyre-fixme[13]: Attribute `device` is never initialized.
-    device: str
+    device: Optional[str] = None
 
     @parameterized.expand(
         [

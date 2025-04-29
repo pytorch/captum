@@ -34,10 +34,8 @@ except ImportError:
     ),
 )
 class TestLLMAttrHFCompatibility(BaseTest):
-    # pyre-fixme[13]: Attribute `device` is never initialized.
-    device: str
-    # pyre-fixme[13]: Attribute `use_cached_outputs` is never initialized.
-    use_cached_outputs: bool
+    device: Optional[str] = None
+    use_cached_outputs: bool = False
 
     def setUp(self) -> None:
         if not HAS_HF:
