@@ -304,8 +304,12 @@ class FeaturePermutation(FeatureAblation):
         feature_mask: Union[None, TensorOrTupleOfTensorsGeneric] = None,
         perturbations_per_eval: int = 1,
         show_progress: bool = False,
+        enable_cross_tensor_attribution: bool = False,
         **kwargs: Any,
     ) -> Future[TensorOrTupleOfTensorsGeneric]:
+        """
+        Similar to attribute(), but supports async forward functions.
+        """
         if isinstance(kwargs, dict) and "baselines" in kwargs:
             del kwargs["baselines"]
         return FeatureAblation.attribute_future.__wrapped__(
@@ -317,6 +321,7 @@ class FeaturePermutation(FeatureAblation):
             feature_mask=feature_mask,
             perturbations_per_eval=perturbations_per_eval,
             show_progress=show_progress,
+            enable_cross_tensor_attribution=enable_cross_tensor_attribution,
             **kwargs,
         )
 
