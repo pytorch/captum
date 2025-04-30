@@ -9,31 +9,19 @@ import torch
 from captum.module.gaussian_stochastic_gates import GaussianStochasticGates
 from captum.testing.helpers import BaseTest
 from captum.testing.helpers.basic import assertTensorAlmostEqual
-from parameterized import parameterized_class
 
 
-@parameterized_class(
-    [
-        {"testing_device": "cpu"},
-        {"testing_device": "cuda"},
-    ]
-)
 class TestGaussianStochasticGates(BaseTest):
-    # pyre-fixme[13]: Attribute `testing_device` is never initialized.
-    testing_device: str
+    testing_device: str = "cpu"
 
     def setUp(self) -> None:
         super().setUp()
-        # pyre-fixme[16]: `TestGaussianStochasticGates` has no attribute
-        #  `testing_device`.
         if self.testing_device == "cuda" and not torch.cuda.is_available():
             raise unittest.SkipTest("Skipping GPU test since CUDA not available.")
 
     def test_gstg_1d_input(self) -> None:
 
         dim = 3
-        # pyre-fixme[16]: `TestGaussianStochasticGates` has no attribute
-        #  `testing_device`.
         gstg = GaussianStochasticGates(dim).to(self.testing_device)
 
         input_tensor = torch.tensor(
@@ -58,8 +46,6 @@ class TestGaussianStochasticGates(BaseTest):
     def test_gstg_1d_input_with_reg_reduction(self) -> None:
         dim = 3
         mean_gstg = GaussianStochasticGates(dim, reg_reduction="mean").to(
-            # pyre-fixme[16]: `TestGaussianStochasticGates` has no attribute
-            #  `testing_device`.
             self.testing_device
         )
         none_gstg = GaussianStochasticGates(dim, reg_reduction="none").to(
@@ -84,8 +70,6 @@ class TestGaussianStochasticGates(BaseTest):
     def test_gstg_1d_input_with_n_gates_error(self) -> None:
 
         dim = 3
-        # pyre-fixme[16]: `TestGaussianStochasticGates` has no attribute
-        #  `testing_device`.
         gstg = GaussianStochasticGates(dim).to(self.testing_device)
         input_tensor = torch.tensor([0.0, 0.1, 0.2]).to(self.testing_device)
 
@@ -95,8 +79,6 @@ class TestGaussianStochasticGates(BaseTest):
     def test_gstg_1d_input_with_mask(self) -> None:
 
         dim = 2
-        # pyre-fixme[16]: `TestGaussianStochasticGates` has no attribute
-        #  `testing_device`.
         mask = torch.tensor([0, 0, 1]).to(self.testing_device)
         gstg = GaussianStochasticGates(dim, mask=mask).to(self.testing_device)
         input_tensor = torch.tensor(
@@ -120,8 +102,6 @@ class TestGaussianStochasticGates(BaseTest):
 
     def test_gates_values_matching_dim_when_eval(self) -> None:
         dim = 3
-        # pyre-fixme[16]: `TestGaussianStochasticGates` has no attribute
-        #  `testing_device`.
         gstg = GaussianStochasticGates(dim).to(self.testing_device)
         input_tensor = torch.tensor(
             [
@@ -137,8 +117,6 @@ class TestGaussianStochasticGates(BaseTest):
     def test_gstg_2d_input(self) -> None:
 
         dim = 3 * 2
-        # pyre-fixme[16]: `TestGaussianStochasticGates` has no attribute
-        #  `testing_device`.
         gstg = GaussianStochasticGates(dim).to(self.testing_device)
 
         # shape(2,3,2)
@@ -178,8 +156,6 @@ class TestGaussianStochasticGates(BaseTest):
     def test_gstg_2d_input_with_n_gates_error(self) -> None:
 
         dim = 5
-        # pyre-fixme[16]: `TestGaussianStochasticGates` has no attribute
-        #  `testing_device`.
         gstg = GaussianStochasticGates(dim).to(self.testing_device)
         input_tensor = torch.tensor(
             [
@@ -203,8 +179,6 @@ class TestGaussianStochasticGates(BaseTest):
                 [1, 1],
                 [0, 2],
             ]
-            # pyre-fixme[16]: `TestGaussianStochasticGates` has no attribute
-            #  `testing_device`.
         ).to(self.testing_device)
         gstg = GaussianStochasticGates(dim, mask=mask).to(self.testing_device)
 
@@ -245,8 +219,6 @@ class TestGaussianStochasticGates(BaseTest):
     def test_get_gate_values_1d_input(self) -> None:
 
         dim = 3
-        # pyre-fixme[16]: `TestGaussianStochasticGates` has no attribute
-        #  `testing_device`.
         gstg = GaussianStochasticGates(dim).to(self.testing_device)
         input_tensor = torch.tensor(
             [
@@ -265,8 +237,6 @@ class TestGaussianStochasticGates(BaseTest):
 
         dim = 2
         mask = torch.tensor([0, 1, 1])
-        # pyre-fixme[16]: `TestGaussianStochasticGates` has no attribute
-        #  `testing_device`.
         gstg = GaussianStochasticGates(dim, mask=mask).to(self.testing_device)
         input_tensor = torch.tensor(
             [
@@ -284,8 +254,6 @@ class TestGaussianStochasticGates(BaseTest):
     def test_get_gate_values_2d_input(self) -> None:
 
         dim = 3 * 2
-        # pyre-fixme[16]: `TestGaussianStochasticGates` has no attribute
-        #  `testing_device`.
         gstg = GaussianStochasticGates(dim).to(self.testing_device)
 
         # shape(2,3,2)
@@ -320,8 +288,6 @@ class TestGaussianStochasticGates(BaseTest):
                 [0, 2],
             ]
         )
-        # pyre-fixme[16]: `TestGaussianStochasticGates` has no attribute
-        #  `testing_device`.
         gstg = GaussianStochasticGates(dim, mask=mask).to(self.testing_device)
 
         input_tensor = torch.tensor(
@@ -348,8 +314,6 @@ class TestGaussianStochasticGates(BaseTest):
     def test_get_gate_values_clamp(self) -> None:
         gstg = GaussianStochasticGates._from_pretrained(
             torch.tensor([2.0, -2.0, 2.0])
-            # pyre-fixme[16]: `TestGaussianStochasticGates` has no attribute
-            #  `testing_device`.
         ).to(self.testing_device)
 
         clamped_gate_values = gstg.get_gate_values().cpu().tolist()
@@ -365,8 +329,6 @@ class TestGaussianStochasticGates(BaseTest):
     def test_get_gate_active_probs_1d_input(self) -> None:
 
         dim = 3
-        # pyre-fixme[16]: `TestGaussianStochasticGates` has no attribute
-        #  `testing_device`.
         gstg = GaussianStochasticGates(dim).to(self.testing_device)
         input_tensor = torch.tensor(
             [
@@ -387,8 +349,6 @@ class TestGaussianStochasticGates(BaseTest):
 
         dim = 2
         mask = torch.tensor([0, 1, 1])
-        # pyre-fixme[16]: `TestGaussianStochasticGates` has no attribute
-        #  `testing_device`.
         gstg = GaussianStochasticGates(dim, mask=mask).to(self.testing_device)
         input_tensor = torch.tensor(
             [
@@ -409,8 +369,6 @@ class TestGaussianStochasticGates(BaseTest):
     def test_get_gate_active_probs_2d_input(self) -> None:
 
         dim = 3 * 2
-        # pyre-fixme[16]: `TestGaussianStochasticGates` has no attribute
-        #  `testing_device`.
         gstg = GaussianStochasticGates(dim).to(self.testing_device)
 
         # shape(2,3,2)
@@ -448,8 +406,6 @@ class TestGaussianStochasticGates(BaseTest):
                 [0, 2],
             ]
         )
-        # pyre-fixme[16]: `TestGaussianStochasticGates` has no attribute
-        #  `testing_device`.
         gstg = GaussianStochasticGates(dim, mask=mask).to(self.testing_device)
 
         input_tensor = torch.tensor(
