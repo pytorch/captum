@@ -363,8 +363,6 @@ src="/_sphinx/documentation_options.js"></script>
                 <span class="n">torch</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">long</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">expanded_input</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
                 <span class="o">-</span> <span class="n">input_mask</span>
             <span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">expanded_input</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
-            <span class="c1"># pyre-fixme[58]: `*` is not supported for operand types `Union[None, float,</span>
-            <span class="c1">#  Tensor]` and `Tensor`.</span>
         <span class="p">)</span> <span class="o">+</span> <span class="p">(</span><span class="n">baseline</span> <span class="o">*</span> <span class="n">input_mask</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">expanded_input</span><span class="o">.</span><span class="n">dtype</span><span class="p">))</span>
         <span class="k">return</span> <span class="n">ablated_tensor</span><span class="p">,</span> <span class="n">input_mask</span>
 

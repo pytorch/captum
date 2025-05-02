@@ -606,7 +606,6 @@ src="/_sphinx/documentation_options.js"></script>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tensor</span><span class="p">:</span>
         <span class="n">model_out</span> <span class="o">=</span> <span class="n">_run_forward</span><span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">forward_func</span><span class="p">,</span>
-            <span class="c1"># pyre-fixme[6]: For 1st argument expected `Sequence[Variable[TupleOrTens...</span>
             <span class="n">_reduce_list</span><span class="p">(</span><span class="n">curr_model_inputs</span><span class="p">),</span>
             <span class="n">expanded_target</span><span class="p">,</span>
             <span class="n">expanded_additional_args</span><span class="p">,</span>

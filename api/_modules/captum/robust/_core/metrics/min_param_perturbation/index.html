@@ -195,7 +195,6 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="k">assert</span> <span class="p">(</span>
             <span class="n">mode</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span> <span class="ow">in</span> <span class="n">MinParamPerturbationMode</span><span class="o">.</span><span class="n">__members__</span>
         <span class="p">),</span> <span class="sa">f</span><span class="s2">"Provided perturb mode </span><span class="si">{</span><span class="n">mode</span><span class="si">}</span><span class="s2"> is not valid - must be linear or binary"</span>
-        <span class="c1"># pyre-fixme[4]: Attribute must be annotated.</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">mode</span> <span class="o">=</span> <span class="n">MinParamPerturbationMode</span><span class="p">[</span><span class="n">mode</span><span class="o">.</span><span class="n">upper</span><span class="p">()]</span>
 
     <span class="k">def</span> <span class="nf">_evaluate_batch</span><span class="p">(</span>

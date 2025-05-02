@@ -204,8 +204,6 @@ src="/_sphinx/documentation_options.js"></script>
             <span class="k">else</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="ne">AssertionError</span><span class="p">(</span><span class="s2">"Norm constraint must be L2 or Linf."</span><span class="p">)</span>
 
-        <span class="c1"># pyre-fixme[6]: For 1st argument expected `Tensor` but got</span>
-        <span class="c1">#  `TensorOrTupleOfTensorsGeneric`.</span>
         <span class="n">is_inputs_tuple</span> <span class="o">=</span> <span class="n">_is_tuple</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span>
         <span class="n">formatted_inputs</span> <span class="o">=</span> <span class="n">_format_tensor_into_tuples</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span>
         <span class="c1"># pyre-fixme[9]: formatted_masks has type `Union[typing.Tuple[int, ...],</span>

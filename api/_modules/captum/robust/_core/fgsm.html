@@ -192,8 +192,6 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">                        is returned. If a tuple is provided for inputs, a tuple of</span>
 <span class="sd">                        corresponding sized tensors is returned.</span>
 <span class="sd">        """</span>
-        <span class="c1"># pyre-fixme[6]: For 1st argument expected `Tensor` but got</span>
-        <span class="c1">#  `TensorOrTupleOfTensorsGeneric`.</span>
         <span class="n">is_inputs_tuple</span> <span class="o">=</span> <span class="n">_is_tuple</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span>
         <span class="c1"># pyre-fixme[35]: Target cannot be annotated.</span>
         <span class="n">inputs</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="n">_format_tensor_into_tuples</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span>

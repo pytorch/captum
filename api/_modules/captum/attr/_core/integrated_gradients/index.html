@@ -122,8 +122,6 @@ src="/_sphinx/documentation_options.js"></script>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">TensorOrTupleOfTensorsGeneric</span><span class="p">,</span> <span class="n">Tensor</span><span class="p">]:</span> <span class="o">...</span>
 
     <span class="nd">@typing</span><span class="o">.</span><span class="n">overload</span>
-    <span class="c1"># pyre-fixme[43]: The implementation of `attribute` does not accept all possible</span>
-    <span class="c1">#  arguments of overload defined on line `82`.</span>
     <span class="k">def</span> <span class="nf">attribute</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">inputs</span><span class="p">:</span> <span class="n">TensorOrTupleOfTensorsGeneric</span><span class="p">,</span>
@@ -298,14 +296,10 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="c1"># converting it into a tuple.</span>
         <span class="n">is_inputs_tuple</span> <span class="o">=</span> <span class="n">_is_tuple</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span>
 
-        <span class="c1"># pyre-fixme[9]: inputs has type `TensorOrTupleOfTensorsGeneric`; used as</span>
-        <span class="c1">#  `Tuple[Tensor, ...]`.</span>
         <span class="n">formatted_inputs</span><span class="p">,</span> <span class="n">formatted_baselines</span> <span class="o">=</span> <span class="n">_format_input_baseline</span><span class="p">(</span>
             <span class="n">inputs</span><span class="p">,</span> <span class="n">baselines</span>
         <span class="p">)</span>
 
-        <span class="c1"># pyre-fixme[6]: For 1st argument expected `Tuple[Tensor, ...]` but got</span>
-        <span class="c1">#  `TensorOrTupleOfTensorsGeneric`.</span>
         <span class="n">_validate_input</span><span class="p">(</span><span class="n">formatted_inputs</span><span class="p">,</span> <span class="n">formatted_baselines</span><span class="p">,</span> <span class="n">n_steps</span><span class="p">,</span> <span class="n">method</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="n">internal_batch_size</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
