@@ -304,12 +304,12 @@ class ArnoldiInfluenceFunction(IntermediateQuantitiesInfluenceFunction):
         # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
         checkpoints_load_func: Callable = _load_flexible_state_dict,
         layers: Optional[List[str]] = None,
-        # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
-        loss_fn: Optional[Union[Module, Callable]] = None,
+        loss_fn: Optional[Union[Module, Callable[[Tensor, Tensor], Tensor]]] = None,
         batch_size: Union[int, None] = 1,
         hessian_dataset: Optional[Union[Dataset, DataLoader]] = None,
-        # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
-        test_loss_fn: Optional[Union[Module, Callable]] = None,
+        test_loss_fn: Optional[
+            Union[Module, Callable[[Tensor, Tensor], Tensor]]
+        ] = None,
         sample_wise_grads_per_batch: bool = False,
         projection_dim: int = 50,
         seed: int = 0,
@@ -755,11 +755,12 @@ class ArnoldiInfluenceFunction(IntermediateQuantitiesInfluenceFunction):
             return_device = torch.device("cpu") if return_on_cpu else self.model_device
 
         # choose the correct loss function and reduction type based on `test`
-        loss_fn = self.test_loss_fn if test else self.loss_fn
+        loss_fn: Optional[Union[Module, Callable[[Tensor, Tensor], Tensor]]] = (
+            self.test_loss_fn if test else self.loss_fn
+        )
         reduction_type = self.test_reduction_type if test else self.reduction_type
 
         # define a helper function that returns the embeddings for a batch
-        # pyre-fixme[53]: Captured variable `loss_fn` is not annotated.
         # pyre-fixme[53]: Captured variable `reduction_type` is not annotated.
         # pyre-fixme[3]: Return type must be annotated.
         # pyre-fixme[2]: Parameter must be annotated.
