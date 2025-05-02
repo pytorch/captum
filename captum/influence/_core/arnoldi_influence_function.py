@@ -127,10 +127,9 @@ def _parameter_arnoldi(
     H = torch.zeros(n + 1, n, dtype=next(iter(b)).dtype).to(device=projection_device)
     qs = [
         _parameter_to(
-            # pyre-fixme[6]: For 2nd argument expected `Tensor` but got `float`.
-            # pyre-fixme[58]: `**` is not supported for operand types `Tensor` and
-            #  `float`.
-            _parameter_multiply(b, 1.0 / _parameter_dot(b, b) ** 0.5),
+            _parameter_multiply(
+                b, torch.div(1.0, torch.pow(_parameter_dot(b, b), 0.5))
+            ),
             device=projection_device,
         )
     ]
@@ -148,14 +147,11 @@ def _parameter_arnoldi(
         for i in range(k):
             H[i, k - 1] = _parameter_dot(qs[i], v)
             v = _parameter_add(v, _parameter_multiply(qs[i], -H[i, k - 1]))
-        # pyre-fixme[58]: `**` is not supported for operand types `Tensor` and `float`.
-        H[k, k - 1] = _parameter_dot(v, v) ** 0.5
+        H[k, k - 1] = torch.pow(_parameter_dot(v, v), 0.5)
 
         if H[k, k - 1] < tol:
             break
-        # pyre-fixme[6]: For 2nd argument expected `Tensor` but got `float`.
-        # pyre-fixme[58]: `/` is not supported for operand types `float` and `Tensor`.
-        qs.append(_parameter_multiply(v, 1.0 / H[k, k - 1]))
+        qs.append(_parameter_multiply(v, torch.div(1.0, H[k, k - 1])))
 
     # pyre-fixme[61]: `k` is undefined, or not always defined.
     return qs[:k], H[:k, : k - 1]
@@ -657,8 +653,7 @@ class ArnoldiInfluenceFunction(IntermediateQuantitiesInfluenceFunction):
         # however, since `vs` is instead a list of tuple of tensors, `R` should be
         # a list of tuple of tensors, where each entry in the list is scaled by the
         # corresponding entry in `ls ** 0.5`, which we first compute.
-        # pyre-fixme[58]: `/` is not supported for operand types `float` and `Tensor`.
-        ls = (1.0 / ls) ** 0.5
+        ls = torch.pow(torch.div(1.0, ls), 0.5)
 
         # then, scale each entry in `vs` by the corresponding entry in `ls ** 0.5`
         # since each entry in `vs` is a tuple of tensors, we use a helper function
