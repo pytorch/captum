@@ -168,8 +168,6 @@ class PGD(Perturbation):
             else:
                 raise AssertionError("Norm constraint must be L2 or Linf.")
 
-        # pyre-fixme[6]: For 1st argument expected `Tensor` but got
-        #  `TensorOrTupleOfTensorsGeneric`.
         is_inputs_tuple = _is_tuple(inputs)
         formatted_inputs = _format_tensor_into_tuples(inputs)
         # pyre-fixme[9]: formatted_masks has type `Union[typing.Tuple[int, ...],

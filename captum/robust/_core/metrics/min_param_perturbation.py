@@ -161,7 +161,6 @@ class MinParamPerturbation:
         assert (
             mode.upper() in MinParamPerturbationMode.__members__
         ), f"Provided perturb mode {mode} is not valid - must be linear or binary"
-        # pyre-fixme[4]: Attribute must be annotated.
         self.mode = MinParamPerturbationMode[mode.upper()]
 
     def _evaluate_batch(
