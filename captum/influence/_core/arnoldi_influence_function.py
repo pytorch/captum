@@ -495,14 +495,14 @@ class ArnoldiInfluenceFunction(IntermediateQuantitiesInfluenceFunction):
 
         # infer the device the model is on.  all parameters are assumed to be on the
         # same device
-        # pyre-fixme[4]: Attribute must be annotated.
-        self.model_device = next(model.parameters()).device
+        self.model_device: torch.device = next(model.parameters()).device
 
-        # pyre-fixme[4]: Attribute must be annotated.
-        self.R = self._retrieve_projections_arnoldi_influence_function(
-            self.hessian_dataloader,
-            projection_on_cpu,
-            show_progress,
+        self.R: List[Tuple[Tensor, ...]] = (
+            self._retrieve_projections_arnoldi_influence_function(
+                self.hessian_dataloader,
+                projection_on_cpu,
+                show_progress,
+            )
         )
 
     def _retrieve_projections_arnoldi_influence_function(
