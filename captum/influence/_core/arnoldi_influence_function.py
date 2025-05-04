@@ -2,7 +2,7 @@
 
 # pyre-strict
 import functools
-from typing import Any, Callable, List, Optional, Tuple, Union
+from typing import Callable, List, Optional, Tuple, Union
 
 import torch
 
@@ -297,8 +297,9 @@ class ArnoldiInfluenceFunction(IntermediateQuantitiesInfluenceFunction):
         model: Module,
         train_dataset: Union[Dataset, DataLoader],
         checkpoint: str,
-        # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
-        checkpoints_load_func: Callable = _load_flexible_state_dict,
+        checkpoints_load_func: Callable[
+            [Module, str], float
+        ] = _load_flexible_state_dict,
         layers: Optional[List[str]] = None,
         loss_fn: Optional[Union[Module, Callable[[Tensor, Tensor], Tensor]]] = None,
         batch_size: Union[int, None] = 1,
@@ -810,8 +811,7 @@ class ArnoldiInfluenceFunction(IntermediateQuantitiesInfluenceFunction):
     @log_usage(skip_self_logging=True)
     def influence(  # type: ignore[override]
         self,
-        # pyre-fixme[24]: Generic type `tuple` expects at least 1 type parameter.
-        inputs: Tuple,
+        inputs: Tuple[Tensor, ...],
         k: Optional[int] = None,
         proponents: bool = True,
         show_progress: bool = False,
@@ -895,8 +895,7 @@ class ArnoldiInfluenceFunction(IntermediateQuantitiesInfluenceFunction):
 
     def _get_k_most_influential(
         self,
-        # pyre-fixme[2]: Parameter annotation cannot contain `Any`.
-        inputs: Union[Tuple[Any, ...], DataLoader],
+        inputs: Union[Tuple[Tensor, ...], DataLoader],
         k: int = 5,
         proponents: bool = True,
         show_progress: bool = False,
@@ -969,8 +968,7 @@ class ArnoldiInfluenceFunction(IntermediateQuantitiesInfluenceFunction):
 
     def _influence(
         self,
-        # pyre-fixme[2]: Parameter annotation cannot contain `Any`.
-        inputs: Union[Tuple[Any, ...], DataLoader],
+        inputs: Union[Tuple[Tensor, ...], DataLoader],
         show_progress: bool = False,
     ) -> Tensor:
         r"""
@@ -1009,8 +1007,7 @@ class ArnoldiInfluenceFunction(IntermediateQuantitiesInfluenceFunction):
 
     def self_influence(
         self,
-        # pyre-fixme[2]: Parameter annotation cannot contain `Any`.
-        inputs_dataset: Optional[Union[Tuple[Any, ...], DataLoader]] = None,
+        inputs_dataset: Optional[Union[Tuple[Tensor, ...], DataLoader]] = None,
         show_progress: bool = False,
     ) -> Tensor:
         """
