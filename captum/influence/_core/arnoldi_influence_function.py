@@ -663,8 +663,7 @@ class ArnoldiInfluenceFunction(IntermediateQuantitiesInfluenceFunction):
 
     def compute_intermediate_quantities(
         self,
-        # pyre-fixme[2]: Parameter annotation cannot contain `Any`.
-        inputs_dataset: Union[Tuple[Any, ...], DataLoader],
+        inputs_dataset: Union[Tuple[Tensor, ...], DataLoader],
         aggregate: bool = False,
         show_progress: bool = False,
         return_on_cpu: bool = True,
@@ -744,6 +743,7 @@ class ArnoldiInfluenceFunction(IntermediateQuantitiesInfluenceFunction):
 
         # infer model / data device through model. return device is same as that of
         # model unless explicitly specified
+        return_device: Optional[torch.device] = None
         if return_on_cpu is None:
             return_device = self.model_device
         else:
@@ -753,19 +753,18 @@ class ArnoldiInfluenceFunction(IntermediateQuantitiesInfluenceFunction):
         loss_fn: Optional[Union[Module, Callable[[Tensor, Tensor], Tensor]]] = (
             self.test_loss_fn if test else self.loss_fn
         )
-        reduction_type = self.test_reduction_type if test else self.reduction_type
+        reduction_type: str = self.test_reduction_type if test else self.reduction_type
 
         # define a helper function that returns the embeddings for a batch
-        # pyre-fixme[53]: Captured variable `reduction_type` is not annotated.
-        # pyre-fixme[3]: Return type must be annotated.
-        # pyre-fixme[2]: Parameter must be annotated.
-        def get_batch_embeddings(batch):
+        def get_batch_embeddings(batch: List[Tensor]) -> Tensor:
             # get gradient
             features, labels = tuple(batch[0:-1]), batch[-1]
             # `jacobians`` is a tensor of tuples. unlike parameters, however, the first
             # dimension is a batch dimension
-            jacobians = _compute_jacobian_sample_wise_grads_per_batch(
-                self, features, labels, loss_fn, reduction_type
+            jacobians: Tuple[Tensor, ...] = (
+                _compute_jacobian_sample_wise_grads_per_batch(
+                    self, features, labels, loss_fn, reduction_type
+                )
             )
 
             # `jacobians`` contains the per-example parameters for a batch. this
@@ -783,20 +782,14 @@ class ArnoldiInfluenceFunction(IntermediateQuantitiesInfluenceFunction):
             # with `params` to get a 1D tensor whose length is the batch size. however,
             # we can do the same computation without actually creating that list of
             # tuple of tensors by using broadcasting.
-            # pyre-fixme[53]: Captured variable `return_device` is not annotated.
-            # pyre-fixme[53]: Captured variable `jacobians` is not annotated.
-            # pyre-fixme[3]: Return type must be annotated.
-            # pyre-fixme[2]: Parameter must be annotated.
-            def get_batch_coordinate(params):
+            def get_batch_coordinate(params: Tuple[Tensor, ...]) -> Tensor:
                 batch_coordinate = 0
                 for _jacobians, param in zip(jacobians, params):
                     batch_coordinate += torch.sum(
                         _jacobians * param.to(device=self.model_device).unsqueeze(0),
                         dim=tuple(range(1, len(_jacobians.shape))),
                     )
-                # pyre-fixme[16]: Item `int` of `Union[int, Tensor]` has no
-                #  attribute `to`.
-                return batch_coordinate.to(device=return_device)
+                return torch.tensor(batch_coordinate).to(device=return_device)
 
             # to get the embedding for the batch, we get the coordinates for the batch
             # corresponding to one parameter in `R`. We do this for every parameter in
