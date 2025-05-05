@@ -566,7 +566,6 @@ class LimeBase(PerturbationAttribution):
     ) -> Tensor:
         model_out = _run_forward(
             self.forward_func,
-            # pyre-fixme[6]: For 1st argument expected `Sequence[Variable[TupleOrTens...
             _reduce_list(curr_model_inputs),
             expanded_target,
             expanded_additional_args,

@@ -273,13 +273,7 @@ class Test(BaseTest):
                     for n in range(attributions.shape[0]):
                         self.assertAlmostEqual(
                             torch.sum(neuron_vals[n]).item(),
-                            # pyre-fixme[6]: For 2nd argument expected
-                            #  `SupportsRSub[Variable[_T],
-                            #  SupportsAbs[SupportsRound[object]]]` but got
-                            #  `Union[bool, float, int]`.
                             attributions[n, i, j, k].item(),
-                            # pyre-fixme[6]: For 3rd argument expected `None` but
-                            #  got `float`.
                             delta=0.005,
                         )
 

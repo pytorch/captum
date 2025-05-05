@@ -2,7 +2,7 @@
 
 # pyre-strict
 import functools
-from typing import Any, Callable, List, Optional, Tuple, Union
+from typing import Callable, List, Optional, Tuple, Union
 
 import torch
 
@@ -127,10 +127,9 @@ def _parameter_arnoldi(
     H = torch.zeros(n + 1, n, dtype=next(iter(b)).dtype).to(device=projection_device)
     qs = [
         _parameter_to(
-            # pyre-fixme[6]: For 2nd argument expected `Tensor` but got `float`.
-            # pyre-fixme[58]: `**` is not supported for operand types `Tensor` and
-            #  `float`.
-            _parameter_multiply(b, 1.0 / _parameter_dot(b, b) ** 0.5),
+            _parameter_multiply(
+                b, torch.div(1.0, torch.pow(_parameter_dot(b, b), 0.5))
+            ),
             device=projection_device,
         )
     ]
@@ -148,14 +147,11 @@ def _parameter_arnoldi(
         for i in range(k):
             H[i, k - 1] = _parameter_dot(qs[i], v)
             v = _parameter_add(v, _parameter_multiply(qs[i], -H[i, k - 1]))
-        # pyre-fixme[58]: `**` is not supported for operand types `Tensor` and `float`.
-        H[k, k - 1] = _parameter_dot(v, v) ** 0.5
+        H[k, k - 1] = torch.pow(_parameter_dot(v, v), 0.5)
 
         if H[k, k - 1] < tol:
             break
-        # pyre-fixme[6]: For 2nd argument expected `Tensor` but got `float`.
-        # pyre-fixme[58]: `/` is not supported for operand types `float` and `Tensor`.
-        qs.append(_parameter_multiply(v, 1.0 / H[k, k - 1]))
+        qs.append(_parameter_multiply(v, torch.div(1.0, H[k, k - 1])))
 
     # pyre-fixme[61]: `k` is undefined, or not always defined.
     return qs[:k], H[:k, : k - 1]
@@ -301,15 +297,16 @@ class ArnoldiInfluenceFunction(IntermediateQuantitiesInfluenceFunction):
         model: Module,
         train_dataset: Union[Dataset, DataLoader],
         checkpoint: str,
-        # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
-        checkpoints_load_func: Callable = _load_flexible_state_dict,
+        checkpoints_load_func: Callable[
+            [Module, str], float
+        ] = _load_flexible_state_dict,
         layers: Optional[List[str]] = None,
-        # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
-        loss_fn: Optional[Union[Module, Callable]] = None,
+        loss_fn: Optional[Union[Module, Callable[[Tensor, Tensor], Tensor]]] = None,
         batch_size: Union[int, None] = 1,
         hessian_dataset: Optional[Union[Dataset, DataLoader]] = None,
-        # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
-        test_loss_fn: Optional[Union[Module, Callable]] = None,
+        test_loss_fn: Optional[
+            Union[Module, Callable[[Tensor, Tensor], Tensor]]
+        ] = None,
         sample_wise_grads_per_batch: bool = False,
         projection_dim: int = 50,
         seed: int = 0,
@@ -499,14 +496,14 @@ class ArnoldiInfluenceFunction(IntermediateQuantitiesInfluenceFunction):
 
         # infer the device the model is on.  all parameters are assumed to be on the
         # same device
-        # pyre-fixme[4]: Attribute must be annotated.
-        self.model_device = next(model.parameters()).device
+        self.model_device: torch.device = next(model.parameters()).device
 
-        # pyre-fixme[4]: Attribute must be annotated.
-        self.R = self._retrieve_projections_arnoldi_influence_function(
-            self.hessian_dataloader,
-            projection_on_cpu,
-            show_progress,
+        self.R: List[Tuple[Tensor, ...]] = (
+            self._retrieve_projections_arnoldi_influence_function(
+                self.hessian_dataloader,
+                projection_on_cpu,
+                show_progress,
+            )
         )
 
     def _retrieve_projections_arnoldi_influence_function(
@@ -657,8 +654,7 @@ class ArnoldiInfluenceFunction(IntermediateQuantitiesInfluenceFunction):
         # however, since `vs` is instead a list of tuple of tensors, `R` should be
         # a list of tuple of tensors, where each entry in the list is scaled by the
         # corresponding entry in `ls ** 0.5`, which we first compute.
-        # pyre-fixme[58]: `/` is not supported for operand types `float` and `Tensor`.
-        ls = (1.0 / ls) ** 0.5
+        ls = torch.pow(torch.div(1.0, ls), 0.5)
 
         # then, scale each entry in `vs` by the corresponding entry in `ls ** 0.5`
         # since each entry in `vs` is a tuple of tensors, we use a helper function
@@ -668,8 +664,7 @@ class ArnoldiInfluenceFunction(IntermediateQuantitiesInfluenceFunction):
 
     def compute_intermediate_quantities(
         self,
-        # pyre-fixme[2]: Parameter annotation cannot contain `Any`.
-        inputs_dataset: Union[Tuple[Any, ...], DataLoader],
+        inputs_dataset: Union[Tuple[Tensor, ...], DataLoader],
         aggregate: bool = False,
         show_progress: bool = False,
         return_on_cpu: bool = True,
@@ -749,27 +744,28 @@ class ArnoldiInfluenceFunction(IntermediateQuantitiesInfluenceFunction):
 
         # infer model / data device through model. return device is same as that of
         # model unless explicitly specified
+        return_device: Optional[torch.device] = None
         if return_on_cpu is None:
             return_device = self.model_device
         else:
             return_device = torch.device("cpu") if return_on_cpu else self.model_device
 
         # choose the correct loss function and reduction type based on `test`
-        loss_fn = self.test_loss_fn if test else self.loss_fn
-        reduction_type = self.test_reduction_type if test else self.reduction_type
+        loss_fn: Optional[Union[Module, Callable[[Tensor, Tensor], Tensor]]] = (
+            self.test_loss_fn if test else self.loss_fn
+        )
+        reduction_type: str = self.test_reduction_type if test else self.reduction_type
 
         # define a helper function that returns the embeddings for a batch
-        # pyre-fixme[53]: Captured variable `loss_fn` is not annotated.
-        # pyre-fixme[53]: Captured variable `reduction_type` is not annotated.
-        # pyre-fixme[3]: Return type must be annotated.
-        # pyre-fixme[2]: Parameter must be annotated.
-        def get_batch_embeddings(batch):
+        def get_batch_embeddings(batch: List[Tensor]) -> Tensor:
             # get gradient
             features, labels = tuple(batch[0:-1]), batch[-1]
             # `jacobians`` is a tensor of tuples. unlike parameters, however, the first
             # dimension is a batch dimension
-            jacobians = _compute_jacobian_sample_wise_grads_per_batch(
-                self, features, labels, loss_fn, reduction_type
+            jacobians: Tuple[Tensor, ...] = (
+                _compute_jacobian_sample_wise_grads_per_batch(
+                    self, features, labels, loss_fn, reduction_type
+                )
             )
 
             # `jacobians`` contains the per-example parameters for a batch. this
@@ -787,20 +783,14 @@ class ArnoldiInfluenceFunction(IntermediateQuantitiesInfluenceFunction):
             # with `params` to get a 1D tensor whose length is the batch size. however,
             # we can do the same computation without actually creating that list of
             # tuple of tensors by using broadcasting.
-            # pyre-fixme[53]: Captured variable `return_device` is not annotated.
-            # pyre-fixme[53]: Captured variable `jacobians` is not annotated.
-            # pyre-fixme[3]: Return type must be annotated.
-            # pyre-fixme[2]: Parameter must be annotated.
-            def get_batch_coordinate(params):
+            def get_batch_coordinate(params: Tuple[Tensor, ...]) -> Tensor:
                 batch_coordinate = 0
                 for _jacobians, param in zip(jacobians, params):
                     batch_coordinate += torch.sum(
                         _jacobians * param.to(device=self.model_device).unsqueeze(0),
                         dim=tuple(range(1, len(_jacobians.shape))),
                     )
-                # pyre-fixme[16]: Item `int` of `Union[int, Tensor]` has no
-                #  attribute `to`.
-                return batch_coordinate.to(device=return_device)
+                return torch.tensor(batch_coordinate).to(device=return_device)
 
             # to get the embedding for the batch, we get the coordinates for the batch
             # corresponding to one parameter in `R`. We do this for every parameter in
@@ -821,8 +811,7 @@ class ArnoldiInfluenceFunction(IntermediateQuantitiesInfluenceFunction):
     @log_usage(skip_self_logging=True)
     def influence(  # type: ignore[override]
         self,
-        # pyre-fixme[24]: Generic type `tuple` expects at least 1 type parameter.
-        inputs: Tuple,
+        inputs: Tuple[Tensor, ...],
         k: Optional[int] = None,
         proponents: bool = True,
         show_progress: bool = False,
@@ -906,8 +895,7 @@ class ArnoldiInfluenceFunction(IntermediateQuantitiesInfluenceFunction):
 
     def _get_k_most_influential(
         self,
-        # pyre-fixme[2]: Parameter annotation cannot contain `Any`.
-        inputs: Union[Tuple[Any, ...], DataLoader],
+        inputs: Union[Tuple[Tensor, ...], DataLoader],
         k: int = 5,
         proponents: bool = True,
         show_progress: bool = False,
@@ -980,8 +968,7 @@ class ArnoldiInfluenceFunction(IntermediateQuantitiesInfluenceFunction):
 
     def _influence(
         self,
-        # pyre-fixme[2]: Parameter annotation cannot contain `Any`.
-        inputs: Union[Tuple[Any, ...], DataLoader],
+        inputs: Union[Tuple[Tensor, ...], DataLoader],
         show_progress: bool = False,
     ) -> Tensor:
         r"""
@@ -1020,8 +1007,7 @@ class ArnoldiInfluenceFunction(IntermediateQuantitiesInfluenceFunction):
 
     def self_influence(
         self,
-        # pyre-fixme[2]: Parameter annotation cannot contain `Any`.
-        inputs_dataset: Optional[Union[Tuple[Any, ...], DataLoader]] = None,
+        inputs_dataset: Optional[Union[Tuple[Tensor, ...], DataLoader]] = None,
         show_progress: bool = False,
     ) -> Tensor:
         """

@@ -103,6 +103,7 @@ class LayerGradientShap(LayerAttribution, GradientAttribution):
         self._multiply_by_inputs = multiply_by_inputs
 
     @typing.overload
+    @log_usage()
     def attribute(
         self,
         inputs: TensorOrTupleOfTensorsGeneric,
@@ -119,6 +120,7 @@ class LayerGradientShap(LayerAttribution, GradientAttribution):
     ) -> Tuple[Union[Tensor, Tuple[Tensor, ...]], Tensor]: ...
 
     @typing.overload
+    @log_usage()
     def attribute(
         self,
         inputs: TensorOrTupleOfTensorsGeneric,
@@ -134,8 +136,6 @@ class LayerGradientShap(LayerAttribution, GradientAttribution):
     ) -> Union[Tensor, Tuple[Tensor, ...]]: ...
 
     @log_usage()
-    # pyre-fixme[43]: This definition does not have the same decorators as the
-    #  preceding overload(s).
     def attribute(
         self,
         inputs: TensorOrTupleOfTensorsGeneric,

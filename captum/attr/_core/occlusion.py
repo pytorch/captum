@@ -323,8 +323,6 @@ class Occlusion(FeatureAblation):
                 torch.ones(1, dtype=torch.long, device=expanded_input.device)
                 - input_mask
             ).to(expanded_input.dtype)
-            # pyre-fixme[58]: `*` is not supported for operand types `Union[None, float,
-            #  Tensor]` and `Tensor`.
         ) + (baseline * input_mask.to(expanded_input.dtype))
         return ablated_tensor, input_mask
 

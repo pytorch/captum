@@ -24,8 +24,6 @@ from torch import Tensor
 from torch.nn import Module
 
 
-# pyre-fixme[13]: Attribute `attribute` is never initialized.
-# pyre-fixme[13]: Attribute `compute_convergence_delta` is never initialized.
 class Attribution:
     r"""
     All attribution algorithms extend this class. It enforces its child classes
@@ -471,7 +469,6 @@ class LayerAttribution(InternalAttribution):
         return F.interpolate(layer_attribution, interpolate_dims, mode=interpolate_mode)
 
 
-# pyre-fixme[13]: Attribute `attribute` is never initialized.
 # pyre-fixme[24]: Generic type `InternalAttribution` expects 1 type parameter.
 class NeuronAttribution(InternalAttribution):
     r"""
