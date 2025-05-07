@@ -784,13 +784,21 @@ class ArnoldiInfluenceFunction(IntermediateQuantitiesInfluenceFunction):
             # we can do the same computation without actually creating that list of
             # tuple of tensors by using broadcasting.
             def get_batch_coordinate(params: Tuple[Tensor, ...]) -> Tensor:
-                batch_coordinate = 0
+                batch_coordinate = None
                 for _jacobians, param in zip(jacobians, params):
-                    batch_coordinate += torch.sum(
+                    example_coordinate = torch.sum(
                         _jacobians * param.to(device=self.model_device).unsqueeze(0),
                         dim=tuple(range(1, len(_jacobians.shape))),
                     )
-                return torch.tensor(batch_coordinate).to(device=return_device)
+                    if batch_coordinate is None:
+                        batch_coordinate = example_coordinate
+                    else:
+                        batch_coordinate += example_coordinate
+                return (
+                    batch_coordinate.to(device=return_device)
+                    if batch_coordinate is not None
+                    else torch.tensor(0).to(device=return_device)
+                )
 
             # to get the embedding for the batch, we get the coordinates for the batch
             # corresponding to one parameter in `R`. We do this for every parameter in
