@@ -161,7 +161,9 @@ class AttributionCalculation:
             if not self.use_label_for_attr or label is None or label.nelement() == 0
             else label
         )
-        attribute_callable: _IntrospectableCallable = attribution_method.attribute
+        attribute_callable: _IntrospectableCallable = (
+            attribution_method.attribute  # type: ignore[has-type]
+        )
         if "baselines" in inspect.signature(attribute_callable).parameters:
             attribution_arguments["baselines"] = baseline
         attr = attribution_method.attribute.__wrapped__(  # type: ignore

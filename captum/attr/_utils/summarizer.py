@@ -31,7 +31,7 @@ class Summarizer:
     _stats: List[Stat]
     _summary_stats_indicies: List[int]
 
-    @log_usage()
+    @log_usage(part_of_slo=False)
     def __init__(self, stats: List[Stat]) -> None:
         r"""
         Args:

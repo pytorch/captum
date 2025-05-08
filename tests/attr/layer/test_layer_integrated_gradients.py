@@ -122,10 +122,12 @@ class Test(BaseTest):
         ig = IntegratedGradients(net)
 
         # test layer inputs
-        attribs_inputs = lig.attribute(
+        attribs_inputs = lig.attribute(  # type: ignore[has-type]
             inputs, baseline, target=0, attribute_to_layer_input=True
         )
-        attribs_inputs_regular_ig = ig.attribute(inputs, baseline, target=0)
+        attribs_inputs_regular_ig = ig.attribute(  # type: ignore[has-type]
+            inputs, baseline, target=0
+        )
 
         self.assertIsInstance(attribs_inputs, list)
         self.assertEqual(len(attribs_inputs), 2)
@@ -144,9 +146,9 @@ class Test(BaseTest):
         )
 
         # test layer outputs
-        attribs = lig.attribute(inputs, baseline, target=0)
+        attribs = lig.attribute(inputs, baseline, target=0)  # type: ignore[has-type]
         ig = IntegratedGradients(lambda x, y: x + y)
-        attribs_ig = ig.attribute(
+        attribs_ig = ig.attribute(  # type: ignore[has-type]
             (net.m1(input1), net.m234(input2, input3, input1, 1)),
             (net.m1(baseline[0]), net.m234(baseline[1], baseline[2], baseline[1], 1)),
             target=0,
@@ -171,10 +173,12 @@ class Test(BaseTest):
         ig = IntegratedGradients(net)
 
         # test layer inputs
-        attribs_inputs = lig.attribute(
+        attribs_inputs = lig.attribute(  # type: ignore[has-type]
             inputs, baseline, target=0, attribute_to_layer_input=True
         )
-        attribs_inputs_regular_ig = ig.attribute(inputs, baseline, target=0)
+        attribs_inputs_regular_ig = ig.attribute(  # type: ignore[has-type]
+            inputs, baseline, target=0
+        )
 
         self.assertIsInstance(attribs_inputs, list)
         self.assertEqual(len(attribs_inputs), 2)
@@ -190,9 +194,9 @@ class Test(BaseTest):
         )
 
         # test layer outputs
-        attribs = lig.attribute(inputs, baseline, target=0)
+        attribs = lig.attribute(inputs, baseline, target=0)  # type: ignore[has-type]
         ig = IntegratedGradients(lambda x, y: x + y)
-        attribs_ig = ig.attribute(
+        attribs_ig = ig.attribute(  # type: ignore[has-type]
             (net.m1(input1), net.m234(input2, input3, input4, 1)),
             (net.m1(baseline[0]), net.m234(baseline[1], baseline[2], baseline[3], 1)),
             target=0,
@@ -206,18 +210,19 @@ class Test(BaseTest):
         base = torch.tensor([[0.0, 0.0, 0.0]])
         target_layer = net.multi_relu
         layer_ig = LayerIntegratedGradients(net, target_layer)
-        layer_ig_wo_mult_by_inputs = LayerIntegratedGradients(
+        layer_ig_wo_mult_by_inp = LayerIntegratedGradients(
             net, target_layer, multiply_by_inputs=False
         )
         layer_act = LayerActivation(net, target_layer)
-        attributions = layer_ig.attribute(inp, target=0)
-        attributions_wo_mult_by_inputs = layer_ig_wo_mult_by_inputs.attribute(
+        attributions = layer_ig.attribute(inp, target=0)  # type: ignore[has-type]
+        attributions_wo_mult_by_inp = layer_ig_wo_mult_by_inp.attribute(  # type: ignore
             inp, target=0
         )
         inp_minus_baseline_activ = tuple(
             inp_act - base_act
             for inp_act, base_act in zip(
-                layer_act.attribute(inp), layer_act.attribute(base)
+                layer_act.attribute(inp),  # type: ignore[has-type]
+                layer_act.attribute(base),  # type: ignore[has-type]
             )
         )
         assertTensorTuplesAlmostEqual(
@@ -225,7 +230,7 @@ class Test(BaseTest):
             tuple(
                 attr_wo_mult * inp_min_base
                 for attr_wo_mult, inp_min_base in zip(
-                    attributions_wo_mult_by_inputs, inp_minus_baseline_activ
+                    attributions_wo_mult_by_inp, inp_minus_baseline_activ
                 )
             ),
             attributions,
@@ -245,7 +250,7 @@ class Test(BaseTest):
         layer_ig = LayerIntegratedGradients(model, [model.linear1, model.relu])
         attributions = cast(
             List[Tensor],
-            layer_ig.attribute(
+            layer_ig.attribute(  # type: ignore[has-type]
                 inputs=test_input, target=0, grad_kwargs={"materialize_grads": True}
             ),
         )
@@ -259,7 +264,7 @@ class Test(BaseTest):
         lc = LayerConductance(model, cast(Module, model.linear2))
         # For large number of steps layer conductance and layer integrated gradients
         # become very close
-        attribution, delta = lc.attribute(
+        attribution, delta = lc.attribute(  # type: ignore[has-type]
             input,
             target=0,
             n_steps=1500,
@@ -267,7 +272,7 @@ class Test(BaseTest):
             attribute_to_layer_input=attribute_to_layer_input,
         )
         lig = LayerIntegratedGradients(model, cast(Module, model.linear2))
-        attributions2, delta2 = lig.attribute(
+        attributions2, delta2 = lig.attribute(  # type: ignore[has-type]
             input,
             target=0,
             n_steps=1500,
@@ -300,7 +305,7 @@ class Test(BaseTest):
                 model, model.embedding1, multiply_by_inputs=multiply_by_inputs
             )
 
-        attributions, delta = lig.attribute(
+        attributions, delta = lig.attribute(  # type: ignore[has-type]
             input,
             baselines=baseline,
             additional_forward_args=additional_args,
@@ -327,7 +332,7 @@ class Test(BaseTest):
             baseline_emb = (e1_baseline_emb, e2_baseline_emb)
 
         ig = IntegratedGradients(model, multiply_by_inputs=multiply_by_inputs)
-        attributions_with_ig, delta_with_ig = ig.attribute(
+        attributions_with_ig, delta_with_ig = ig.attribute(  # type: ignore[has-type]
             input_emb,
             baselines=baseline_emb,
             additional_forward_args=additional_args,
@@ -375,7 +380,7 @@ class Test(BaseTest):
         additional_input: Any = None,
     ) -> None:
         layer_ig = LayerIntegratedGradients(model, target_layer)
-        attributions = layer_ig.attribute(
+        attributions = layer_ig.attribute(  # type: ignore[has-type]
             test_input, target=0, additional_forward_args=additional_input
         )
         assertTensorTuplesAlmostEqual(self, attributions, expected_ig, delta=0.01)

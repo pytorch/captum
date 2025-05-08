@@ -104,7 +104,7 @@ class ShapleyValueSampling(PerturbationAttribution):
         PerturbationAttribution.__init__(self, forward_func)
         self.permutation_generator = _perm_generator
 
-    @log_usage()
+    @log_usage(part_of_slo=True)
     def attribute(
         self,
         inputs: TensorOrTupleOfTensorsGeneric,
@@ -966,7 +966,7 @@ class ShapleyValues(ShapleyValueSampling):
         ShapleyValueSampling.__init__(self, forward_func)
         self.permutation_generator = _all_perm_generator
 
-    @log_usage()
+    @log_usage(part_of_slo=True)
     def attribute(
         self,
         inputs: TensorOrTupleOfTensorsGeneric,

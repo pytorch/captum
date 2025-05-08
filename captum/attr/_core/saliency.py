@@ -35,7 +35,7 @@ class Saliency(GradientAttribution):
         """
         GradientAttribution.__init__(self, forward_func)
 
-    @log_usage()
+    @log_usage(part_of_slo=True)
     def attribute(
         self,
         inputs: TensorOrTupleOfTensorsGeneric,

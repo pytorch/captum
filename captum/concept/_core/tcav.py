@@ -583,7 +583,7 @@ class TCAV(ConceptInterpreter):
 
         return self.cavs
 
-    @log_usage()
+    @log_usage(part_of_slo=True)
     def interpret(
         self,
         inputs: TensorOrTupleOfTensorsGeneric,

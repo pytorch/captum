@@ -254,7 +254,7 @@ class AttackComparator(Generic[MetricResultType]):
                 batch_summarizers[key_list[i]].update(out_metric)
                 current_count += batch_size
 
-    @log_usage()
+    @log_usage(part_of_slo=False)
     def evaluate(
         self,
         # pyre-fixme[2]: Parameter annotation cannot be `Any`.
