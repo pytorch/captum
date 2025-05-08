@@ -27,7 +27,9 @@ from captum.attr._core.llm_attr import (
     LLMAttribution,
     LLMAttributionResult,
     LLMGradientAttribution,
+    RemoteLLMAttribution,
 )
+from captum.attr._core.remote_provider import RemoteLLMProvider, VLLMProvider
 from captum.attr._core.lrp import LRP
 from captum.attr._core.neuron.neuron_conductance import NeuronConductance
 from captum.attr._core.neuron.neuron_deep_lift import NeuronDeepLift, NeuronDeepLiftShap
@@ -111,6 +113,9 @@ __all__ = [
     "LLMAttribution",
     "LLMAttributionResult",
     "LLMGradientAttribution",
+    "RemoteLLMAttribution",
+    "RemoteLLMProvider",
+    "VLLMProvider",
     "InternalInfluence",
     "InterpretableInput",
     "LayerGradCam",
