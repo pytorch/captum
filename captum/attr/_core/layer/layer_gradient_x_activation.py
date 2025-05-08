@@ -71,7 +71,7 @@ class LayerGradientXActivation(LayerAttribution, GradientAttribution):
     def multiplies_by_inputs(self) -> bool:
         return self._multiply_by_inputs
 
-    @log_usage()
+    @log_usage(part_of_slo=True)
     def attribute(
         self,
         inputs: Union[Tensor, Tuple[Tensor, ...]],

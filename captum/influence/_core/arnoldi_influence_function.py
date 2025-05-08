@@ -816,7 +816,7 @@ class ArnoldiInfluenceFunction(IntermediateQuantitiesInfluenceFunction):
             aggregate,
         )
 
-    @log_usage(skip_self_logging=True)
+    @log_usage(part_of_slo=True, skip_self_logging=True)
     def influence(  # type: ignore[override]
         self,
         inputs: Tuple[Tensor, ...],

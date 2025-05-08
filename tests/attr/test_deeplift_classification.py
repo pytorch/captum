@@ -34,14 +34,16 @@ class Test(BaseTest):
         model = SigmoidDeepLiftModel(num_in, 5, 1)
         dl = DeepLift(model)
         model.zero_grad()
-        attributions, delta = dl.attribute(
+        attributions, delta = dl.attribute(  # type: ignore[has-type]
             input, baseline, target=target, return_convergence_delta=True
         )
         self._assert_attributions(model, attributions, input, baseline, delta, target)
 
         # compare with integrated gradients
         ig = IntegratedGradients(model)
-        attributions_ig = ig.attribute(input, baseline, target=target)
+        attributions_ig = ig.attribute(  # type: ignore[has-type]
+            input, baseline, target=target
+        )
         assertAttributionComparision(self, (attributions,), (attributions_ig,))
 
     def test_softmax_classification_zero_baseline(self) -> None:
@@ -169,13 +171,13 @@ class Test(BaseTest):
             ), "Non-tensor baseline not supported for DeepLiftShap"
 
         model.zero_grad()
-        attributions, delta = attr_method.attribute(
+        attributions, delta = attr_method.attribute(  # type: ignore[has-type]
             input, baselines=baselines, target=target, return_convergence_delta=True
         )
         self._assert_attributions(model, attributions, input, baselines, delta, target)
 
         target2 = torch.tensor(1)
-        attributions, delta = attr_method.attribute(
+        attributions, delta = attr_method.attribute(  # type: ignore[has-type]
             input, baselines=baselines, target=target2, return_convergence_delta=True
         )
 
@@ -202,5 +204,7 @@ class Test(BaseTest):
         # compare with integrated gradients
         if isinstance(baselines, (int, float)) or inputs.shape == baselines.shape:
             ig = IntegratedGradients(model)
-            attributions_ig = ig.attribute(inputs, baselines=baselines, target=target)
+            attributions_ig = ig.attribute(  # type: ignore[has-type]
+                inputs, baselines=baselines, target=target
+            )
             assertAttributionComparision(self, attributions, attributions_ig)

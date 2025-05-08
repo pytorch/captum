@@ -74,6 +74,7 @@ class IntegratedGradients(GradientAttribution):
     # and when return_convergence_delta is True, the return type is
     # a tuple with both attributions and deltas.
     @typing.overload
+    @log_usage(part_of_slo=True)
     def attribute(
         self,
         inputs: TensorOrTupleOfTensorsGeneric,
@@ -88,6 +89,7 @@ class IntegratedGradients(GradientAttribution):
     ) -> Tuple[TensorOrTupleOfTensorsGeneric, Tensor]: ...
 
     @typing.overload
+    @log_usage(part_of_slo=True)
     def attribute(
         self,
         inputs: TensorOrTupleOfTensorsGeneric,
@@ -100,7 +102,7 @@ class IntegratedGradients(GradientAttribution):
         return_convergence_delta: Literal[False] = False,
     ) -> TensorOrTupleOfTensorsGeneric: ...
 
-    @log_usage()
+    @log_usage(part_of_slo=True)
     def attribute(  # type: ignore
         self,
         inputs: TensorOrTupleOfTensorsGeneric,

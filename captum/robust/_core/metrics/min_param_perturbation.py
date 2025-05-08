@@ -377,7 +377,7 @@ class MinParamPerturbation:
 
         return min_input, min_so_far
 
-    @log_usage()
+    @log_usage(part_of_slo=False)
     # pyre-fixme[3]: Return annotation cannot contain `Any`.
     def evaluate(
         self,
