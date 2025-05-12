@@ -80,7 +80,7 @@ class FGSM(Perturbation):
         # pyre-fixme[4]: Attribute must be annotated.
         self.zero_thresh = 10**-6
 
-    @log_usage()
+    @log_usage(part_of_slo=False)
     def perturb(
         self,
         inputs: TensorOrTupleOfTensorsGeneric,

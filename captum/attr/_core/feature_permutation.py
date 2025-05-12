@@ -106,7 +106,7 @@ class FeaturePermutation(FeatureAblation):
 
     # suppressing error caused by the child class not having a matching
     # signature to the parent
-    @log_usage()
+    @log_usage(part_of_slo=True)
     def attribute(  # type: ignore
         self,
         inputs: TensorOrTupleOfTensorsGeneric,

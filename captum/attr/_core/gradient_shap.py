@@ -110,7 +110,7 @@ class GradientShap(GradientAttribution):
         return_convergence_delta: Literal[False] = False,
     ) -> TensorOrTupleOfTensorsGeneric: ...
 
-    @log_usage()
+    @log_usage(part_of_slo=True)
     # pyre-fixme[43]: This definition does not have the same decorators as the
     #  preceding overload(s).
     def attribute(
@@ -351,7 +351,7 @@ class InputBaselineXGradient(GradientAttribution):
         return_convergence_delta: Literal[False] = False,
     ) -> TensorOrTupleOfTensorsGeneric: ...
 
-    @log_usage()
+    @log_usage(part_of_slo=True)
     def attribute(  # type: ignore
         self,
         inputs: TensorOrTupleOfTensorsGeneric,

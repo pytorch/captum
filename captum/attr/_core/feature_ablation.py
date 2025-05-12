@@ -108,7 +108,7 @@ class FeatureAblation(PerturbationAttribution):
         # feature group (not parameterized by `_min_examples_per_batch_grouped`).
         self._min_examples_per_batch_grouped: Optional[int] = None
 
-    @log_usage()
+    @log_usage(part_of_slo=True)
     def attribute(
         self,
         inputs: TensorOrTupleOfTensorsGeneric,
@@ -720,7 +720,7 @@ class FeatureAblation(PerturbationAttribution):
             ) from e
         return result
 
-    @log_usage()
+    @log_usage(part_of_slo=True)
     def attribute_future(
         self,
         inputs: TensorOrTupleOfTensorsGeneric,

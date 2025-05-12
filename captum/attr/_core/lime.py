@@ -238,7 +238,7 @@ class LimeBase(PerturbationAttribution):
                 self.to_interp_rep_transform is not None
             ), "Must provide transform from original input space to interpretable space"
 
-    @log_usage()
+    @log_usage(part_of_slo=True)
     @torch.no_grad()
     def attribute(
         self,
@@ -869,7 +869,7 @@ class Lime(LimeBase):
             None,
         )
 
-    @log_usage()
+    @log_usage(part_of_slo=True)
     def attribute(  # type: ignore
         self,
         inputs: TensorOrTupleOfTensorsGeneric,

@@ -198,7 +198,7 @@ class GradientAttribution(Attribution):
         # pyre-fixme[4]: Attribute must be annotated.
         self.gradient_func = compute_gradients
 
-    @log_usage()
+    @log_usage(part_of_slo=True)
     def compute_convergence_delta(
         self,
         attributions: Union[Tensor, Tuple[Tensor, ...]],

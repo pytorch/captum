@@ -236,7 +236,7 @@ class TracInCPFast(TracInCPBase):
         else:
             self._final_fc_layer = layer
 
-    @log_usage()
+    @log_usage(part_of_slo=True)
     def influence(  # type: ignore[override]
         self,
         # pyre-fixme[2]: Parameter annotation cannot contain `Any`.
@@ -677,7 +677,7 @@ class TracInCPFast(TracInCPBase):
                 checkpoints_progress.update()
             return batches_self_tracin_scores
 
-    @log_usage()
+    @log_usage(part_of_slo=True)
     def self_influence(
         self,
         # pyre-fixme[2]: Parameter annotation cannot contain `Any`.
@@ -1176,7 +1176,7 @@ class TracInCPFastRandProj(TracInCPFast):
 
         return KMostInfluentialResults(indices, distances)
 
-    @log_usage()
+    @log_usage(part_of_slo=True)
     def self_influence(
         self,
         # pyre-fixme[2]: Parameter annotation cannot contain `Any`.
@@ -1250,7 +1250,7 @@ class TracInCPFastRandProj(TracInCPFast):
         )
         raise NotImplementedError
 
-    @log_usage()
+    @log_usage(part_of_slo=True)
     def influence(  # type: ignore[override]
         self,
         # pyre-fixme[2]: Parameter annotation cannot contain `Any`.
@@ -1606,7 +1606,7 @@ class TracInCPFastRandProj(TracInCPFast):
         # each row in this result is the "embedding" vector for an example in `batch`
         return torch.cat(checkpoint_contributions, dim=1)  # type: ignore
 
-    @log_usage()
+    @log_usage(part_of_slo=True)
     def compute_intermediate_quantities(
         self,
         # pyre-fixme[2]: Parameter annotation cannot contain `Any`.

@@ -71,7 +71,7 @@ class PGD(Perturbation):
         # pyre-fixme[4]: Attribute must be annotated.
         self.bound = lambda x: torch.clamp(x, min=lower_bound, max=upper_bound)
 
-    @log_usage()
+    @log_usage(part_of_slo=False)
     def perturb(
         self,
         inputs: TensorOrTupleOfTensorsGeneric,
