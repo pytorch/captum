@@ -29,7 +29,6 @@ from captum.attr._core.llm_attr import (
     LLMGradientAttribution,
     RemoteLLMAttribution,
 )
-from captum.attr._core.remote_provider import RemoteLLMProvider, VLLMProvider
 from captum.attr._core.lrp import LRP
 from captum.attr._core.neuron.neuron_conductance import NeuronConductance
 from captum.attr._core.neuron.neuron_deep_lift import NeuronDeepLift, NeuronDeepLiftShap
@@ -45,6 +44,7 @@ from captum.attr._core.neuron.neuron_integrated_gradients import (
 )
 from captum.attr._core.noise_tunnel import NoiseTunnel
 from captum.attr._core.occlusion import Occlusion
+from captum.attr._core.remote_provider import RemoteLLMProvider, VLLMProvider
 from captum.attr._core.saliency import Saliency
 from captum.attr._core.shapley_value import ShapleyValues, ShapleyValueSampling
 from captum.attr._models.base import (

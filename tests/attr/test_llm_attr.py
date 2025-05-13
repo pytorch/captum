@@ -28,7 +28,11 @@ from captum.attr._core.layer.layer_gradient_shap import LayerGradientShap
 from captum.attr._core.layer.layer_gradient_x_activation import LayerGradientXActivation
 from captum.attr._core.layer.layer_integrated_gradients import LayerIntegratedGradients
 from captum.attr._core.lime import Lime
-from captum.attr._core.llm_attr import LLMAttribution, LLMGradientAttribution, RemoteLLMAttribution
+from captum.attr._core.llm_attr import (
+    LLMAttribution,
+    LLMGradientAttribution,
+    RemoteLLMAttribution,
+)
 from captum.attr._core.remote_provider import RemoteLLMProvider
 from captum.attr._core.shapley_value import ShapleyValues, ShapleyValueSampling
 from captum.attr._utils.attribution import GradientAttribution, PerturbationAttribution
@@ -671,29 +675,39 @@ class TestLLMGradAttr(BaseTest):
         self.assertEqual(res.input_tokens, ["<sos>", "a", "b", "c"])
         self.assertEqual(res.output_tokens, ["m", "n", "o", "p", "q"])
 
+
 class DummyRemoteLLMProvider(RemoteLLMProvider):
     def __init__(self, deterministic_logprobs: bool = False) -> None:
         self.api_url = "https://test-api.com"
         self.deterministic_logprobs = deterministic_logprobs
-    
+
     def generate(self, prompt: str, **gen_args: Any) -> str:
-        assert "mock_response" in gen_args, "must mock response to use DummyRemoteLLMProvider to generate"
+        assert (
+            "mock_response" in gen_args
+        ), "must mock response to use DummyRemoteLLMProvider to generate"
         return gen_args["mock_response"]
 
-    def get_logprobs(self, input_prompt: str, target_str: str, tokenizer: Optional[TokenizerLike] = None) -> List[float]:
+    def get_logprobs(
+        self,
+        input_prompt: str,
+        target_str: str,
+        tokenizer: Optional[TokenizerLike] = None,
+    ) -> List[float]:
         assert tokenizer is not None, "Tokenizer is required"
         prompt = input_prompt + target_str
         tokens = tokenizer.encode(prompt, add_special_tokens=False)
         num_tokens = len(tokens)
-        
-        num_target_str_tokens = len(tokenizer.encode(target_str, add_special_tokens=False))
-        
+
+        num_target_str_tokens = len(
+            tokenizer.encode(target_str, add_special_tokens=False)
+        )
+
         logprobs = []
-        
+
         for i in range(num_tokens):
             # Start with a base value
             logprob = -0.1 - (0.01 * i)
-            
+
             # Make sensitive to key features
             if "a" not in prompt:
                 logprob -= 0.1
@@ -703,18 +717,19 @@ class DummyRemoteLLMProvider(RemoteLLMProvider):
                 logprob -= 0.3
             if "f" not in prompt:
                 logprob -= 0.4
-                
+
             logprobs.append(logprob)
-        
+
         return logprobs[-num_target_str_tokens:]
-   
+
+
 @parameterized_class(
     ("device",), [("cpu",), ("cuda",)] if torch.cuda.is_available() else [("cpu",)]
 )
 class TestRemoteLLMAttr(BaseTest):
     # pyre-fixme[13]: Attribute `device` is never initialized.
     device: str
-    
+
     # pyre-fixme[56]: Pyre was not able to infer the type of argument
     @parameterized.expand(
         [
@@ -736,25 +751,25 @@ class TestRemoteLLMAttr(BaseTest):
                 ),
                 (  # true_tok_attr
                     [  # FeatureAblation
-                            [0.1, 0.2, 0.3, 0.4],
-                            [0.1, 0.2, 0.3, 0.4],
-                            [0.1, 0.2, 0.3, 0.4],
-                            [0.1, 0.2, 0.3, 0.4],
-                            [0.1, 0.2, 0.3, 0.4],
+                        [0.1, 0.2, 0.3, 0.4],
+                        [0.1, 0.2, 0.3, 0.4],
+                        [0.1, 0.2, 0.3, 0.4],
+                        [0.1, 0.2, 0.3, 0.4],
+                        [0.1, 0.2, 0.3, 0.4],
                     ],
                     [  # ShapleyValueSampling
-                            [0.1, 0.2, 0.3, 0.4],
-                            [0.1, 0.2, 0.3, 0.4],
-                            [0.1, 0.2, 0.3, 0.4],
-                            [0.1, 0.2, 0.3, 0.4],
-                            [0.1, 0.2, 0.3, 0.4],
+                        [0.1, 0.2, 0.3, 0.4],
+                        [0.1, 0.2, 0.3, 0.4],
+                        [0.1, 0.2, 0.3, 0.4],
+                        [0.1, 0.2, 0.3, 0.4],
+                        [0.1, 0.2, 0.3, 0.4],
                     ],
                     [  # ShapleyValues
-                            [0.1, 0.2, 0.3, 0.4],
-                            [0.1, 0.2, 0.3, 0.4],
-                            [0.1, 0.2, 0.3, 0.4],
-                            [0.1, 0.2, 0.3, 0.4],
-                            [0.1, 0.2, 0.3, 0.4],
+                        [0.1, 0.2, 0.3, 0.4],
+                        [0.1, 0.2, 0.3, 0.4],
+                        [0.1, 0.2, 0.3, 0.4],
+                        [0.1, 0.2, 0.3, 0.4],
+                        [0.1, 0.2, 0.3, 0.4],
                     ],
                 ),
             )
@@ -771,14 +786,10 @@ class TestRemoteLLMAttr(BaseTest):
         attr_kws: Dict[str, int] = {}
         if n_samples is not None:
             attr_kws["n_samples"] = n_samples
-            
-        # In remote mode, we don't need the actual model, this is just a placeholder
-        placeholder_model = torch.nn.Module()
-        placeholder_model.device = self.device
 
         tokenizer = DummyTokenizer()
         provider = DummyRemoteLLMProvider(deterministic_logprobs=True)
-        attr_method = AttrClass(placeholder_model)
+        attr_method = AttrClass(RemoteLLMAttribution.placeholder_model)
         remote_llm_attr = RemoteLLMAttribution(
             attr_method=attr_method,
             tokenizer=tokenizer,
@@ -821,13 +832,10 @@ class TestRemoteLLMAttr(BaseTest):
         )
 
     def test_remote_llm_attr_without_target(self) -> None:
-        # In remote mode, we don't need the actual model, this is just a placeholder
-        placeholder_model = torch.nn.Module()
-        placeholder_model.device = self.device
-        
+
         tokenizer = DummyTokenizer()
         provider = DummyRemoteLLMProvider(deterministic_logprobs=True)
-        attr_method = FeatureAblation(placeholder_model)
+        attr_method = FeatureAblation(RemoteLLMAttribution.placeholder_model)
         remote_llm_attr = RemoteLLMAttribution(
             attr_method=attr_method,
             tokenizer=tokenizer,
@@ -850,13 +858,10 @@ class TestRemoteLLMAttr(BaseTest):
         self.assertEqual(cast(Tensor, res.token_attr).device.type, self.device)
 
     def test_remote_llm_attr_fa_log_prob(self) -> None:
-        # In remote mode, we don't need the actual model, this is just a placeholder
-        placeholder_model = torch.nn.Module()
-        placeholder_model.device = self.device
-        
+
         tokenizer = DummyTokenizer()
         provider = DummyRemoteLLMProvider(deterministic_logprobs=True)
-        attr_method = FeatureAblation(placeholder_model)
+        attr_method = FeatureAblation(RemoteLLMAttribution.placeholder_model)
         remote_llm_attr = RemoteLLMAttribution(
             attr_method=attr_method,
             tokenizer=tokenizer,
@@ -914,13 +919,9 @@ class TestRemoteLLMAttr(BaseTest):
         if n_samples is not None:
             attr_kws["n_samples"] = n_samples
 
-        # In remote mode, we don't need the actual model, this is just a placeholder
-        placeholder_model = torch.nn.Module()
-        placeholder_model.device = self.device
-        
         tokenizer = DummyTokenizer()
         provider = DummyRemoteLLMProvider(deterministic_logprobs=True)
-        attr_method = AttrClass(placeholder_model, **init_kws)
+        attr_method = AttrClass(RemoteLLMAttribution.placeholder_model, **init_kws)
         remote_llm_attr = RemoteLLMAttribution(
             attr_method=attr_method,
             tokenizer=tokenizer,
@@ -949,20 +950,18 @@ class TestRemoteLLMAttr(BaseTest):
             delta=delta,
             mode="max",
         )
+
     def test_remote_llm_attr_futures_not_implemented(self) -> None:
-        # In remote mode, we don't need the actual model, this is just a placeholder
-        placeholder_model = torch.nn.Module()
-        placeholder_model.device = self.device
-        
+
         tokenizer = DummyTokenizer()
         provider = DummyRemoteLLMProvider()
-        attr_method = FeatureAblation(placeholder_model)
+        attr_method = FeatureAblation(RemoteLLMAttribution.placeholder_model)
         remote_llm_attr = RemoteLLMAttribution(
             attr_method=attr_method,
             tokenizer=tokenizer,
             provider=provider,
         )
-        
+
         # from TestLLMAttr
         attributions = None
         with self.assertRaises(NotImplementedError):
@@ -970,13 +969,10 @@ class TestRemoteLLMAttr(BaseTest):
         self.assertEqual(attributions, None)
 
     def test_remote_llm_attr_with_no_skip_tokens(self) -> None:
-        # In remote mode, we don't need the actual model, this is just a placeholder
-        placeholder_model = torch.nn.Module()
-        placeholder_model.device = self.device
-        
+
         tokenizer = DummyTokenizer()
         provider = DummyRemoteLLMProvider(deterministic_logprobs=True)
-        attr_method = FeatureAblation(placeholder_model)
+        attr_method = FeatureAblation(RemoteLLMAttribution.placeholder_model)
         remote_llm_fa = RemoteLLMAttribution(
             attr_method=attr_method,
             tokenizer=tokenizer,
@@ -985,10 +981,7 @@ class TestRemoteLLMAttr(BaseTest):
 
         # from TestLLMAttr
         inp = TextTokenInput("a b c", tokenizer)
-        res = remote_llm_fa.attribute(
-            inp,
-            "m n o p q"
-        )
+        res = remote_llm_fa.attribute(inp, "m n o p q")
 
         # 5 output tokens, 4 input tokens including sos
         self.assertEqual(res.seq_attr.shape, (4,))
@@ -998,15 +991,12 @@ class TestRemoteLLMAttr(BaseTest):
         self.assertEqual(token_attr.shape, (6, 4))
         self.assertEqual(res.input_tokens, ["<sos>", "a", "b", "c"])
         self.assertEqual(res.output_tokens, ["<sos>", "m", "n", "o", "p", "q"])
-        
+
     def test_remote_llm_attr_with_skip_tensor_target(self) -> None:
-        # In remote mode, we don't need the actual model, this is just a placeholder
-        placeholder_model = torch.nn.Module()
-        placeholder_model.device = self.device
-        
+
         tokenizer = DummyTokenizer()
         provider = DummyRemoteLLMProvider(deterministic_logprobs=True)
-        attr_method = FeatureAblation(placeholder_model)
+        attr_method = FeatureAblation(RemoteLLMAttribution.placeholder_model)
         remote_llm_fa = RemoteLLMAttribution(
             attr_method=attr_method,
             tokenizer=tokenizer,

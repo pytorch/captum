@@ -23,6 +23,7 @@ from captum.attr._core.layer.layer_gradient_shap import LayerGradientShap
 from captum.attr._core.layer.layer_gradient_x_activation import LayerGradientXActivation
 from captum.attr._core.layer.layer_integrated_gradients import LayerIntegratedGradients
 from captum.attr._core.lime import Lime
+from captum.attr._core.remote_provider import RemoteLLMProvider
 from captum.attr._core.shapley_value import ShapleyValues, ShapleyValueSampling
 from captum.attr._utils.attribution import (
     Attribution,
@@ -35,7 +36,6 @@ from captum.attr._utils.interpretable_input import (
     TextTokenInput,
 )
 from torch import nn, Tensor
-from captum.attr._core.remote_provider import RemoteLLMProvider
 
 DEFAULT_GEN_ARGS: Dict[str, Any] = {
     "max_new_tokens": 25,
@@ -895,10 +895,29 @@ class GradientForwardFunc(nn.Module):
         return token_log_probs
 
 
+class _PlaceholderModel:
+    """
+    Simple placeholder model that can be used with
+    RemoteLLMAttribution without needing a real model.
+    This can be acheived by `lambda *_:0` but BaseLLMAttribution expects
+    `device`, so creating this class to set the device.
+    """
+
+    def __init__(self):
+        self.device = torch.device("cpu")
+
+    def __call__(self, *args, **kwargs):
+        return 0
+
+
 class RemoteLLMAttribution(LLMAttribution):
     """
-    Attribution class for large language models that are hosted remotely and offer logprob APIs.
+    Attribution class for large language models
+    that are hosted remotely and offer logprob APIs.
     """
+
+    placeholder_model = _PlaceholderModel()
+
     def __init__(
         self,
         attr_method: PerturbationAttribution,
@@ -920,7 +939,7 @@ class RemoteLLMAttribution(LLMAttribution):
             tokenizer=tokenizer,
             attr_target=attr_target,
         )
-        
+
         self.provider = provider
         self.attr_method.forward_func = self._remote_forward_func
 
@@ -929,42 +948,52 @@ class RemoteLLMAttribution(LLMAttribution):
         inp: InterpretableInput,
         target: Union[str, torch.Tensor, None] = None,
         skip_tokens: Union[List[int], List[str], None] = None,
-        gen_args: Optional[Dict[str, Any]] = None
-        ) -> Tensor:
+        gen_args: Optional[Dict[str, Any]] = None,
+    ) -> Tensor:
         """
         Get the target tokens for the remote LLM provider.
         """
         assert isinstance(
             inp, self.SUPPORTED_INPUTS
         ), f"RemoteLLMAttribution does not support input type {type(inp)}"
-        
+
         if target is None:
             # generate when None with remote provider
-            assert hasattr(self.provider, "generate") and callable(self.provider.generate), (
-                "The provider does not have generate function for generating target sequence."
+            assert hasattr(self.provider, "generate") and callable(
+                self.provider.generate
+            ), (
+                "The provider does not have generate function"
+                " for generating target sequence."
                 "Target must be given for attribution"
             )
             if not gen_args:
                 gen_args = DEFAULT_GEN_ARGS
-        
-            model_inp = self._format_model_input(inp.to_model_input())
+
+            model_inp = self._format_remote_model_input(inp.to_model_input())
             target_str = self.provider.generate(model_inp, **gen_args)
-            target_tokens = self.tokenizer.encode(target_str, return_tensors="pt", add_special_tokens=False)[0]
-        
+            target_tokens = self.tokenizer.encode(
+                target_str, return_tensors="pt", add_special_tokens=False
+            )[0]
+
         else:
-            target_tokens = super()._get_target_tokens(inp, target, skip_tokens, gen_args)
-        
+            target_tokens = super()._get_target_tokens(
+                inp, target, skip_tokens, gen_args
+            )
+
         return target_tokens
-            
-    def _format_model_input(self, model_input: Union[str, Tensor]) -> str:
+
+    def _format_remote_model_input(self, model_input: Union[str, Tensor]) -> str:
         """
         Format the model input for the remote LLM provider.
+        Convert tokenized tensor to str
+        to make RemoteLLMAttribution work with model inputs of both
+        raw text and text token tensors
         """
         # return str input
         if isinstance(model_input, Tensor):
             return self.tokenizer.decode(model_input.flatten())
         return model_input
-            
+
     def _remote_forward_func(
         self,
         perturbed_tensor: Union[None, Tensor],
@@ -975,24 +1004,31 @@ class RemoteLLMAttribution(LLMAttribution):
     ) -> Tensor:
         """
         Forward function for the remote LLM provider.
-        
+
         Raises:
             ValueError: If the number of token logprobs doesn't match expected length
         """
-        perturbed_input = self._format_model_input(inp.to_model_input(perturbed_tensor))
-        
-        target_str:str = self.tokenizer.decode(target_tokens)
-        
-        target_token_probs = self.provider.get_logprobs(input_prompt=perturbed_input, target_str=target_str, tokenizer=self.tokenizer)
-        
+        perturbed_input = self._format_remote_model_input(
+            inp.to_model_input(perturbed_tensor)
+        )
+
+        target_str: str = self.tokenizer.decode(target_tokens)
+
+        target_token_probs = self.provider.get_logprobs(
+            input_prompt=perturbed_input,
+            target_str=target_str,
+            tokenizer=self.tokenizer,
+        )
+
         if len(target_token_probs) != target_tokens.size()[0]:
             raise ValueError(
                 f"Number of token logprobs from provider ({len(target_token_probs)}) "
-                f"does not match expected target token length ({target_tokens.size()[0]})"
+                f"does not match expected target "
+                f"token length ({target_tokens.size()[0]})"
             )
-        
+
         log_prob_list: List[Tensor] = list(map(torch.tensor, target_token_probs))
-        
+
         total_log_prob = torch.sum(torch.stack(log_prob_list), dim=0)
         # 1st element is the total prob, rest are the target tokens
         # add a leading dim for batch even we only support single instance for now
