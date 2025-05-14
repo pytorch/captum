@@ -18,6 +18,7 @@ from typing import (
     Type,
     Union,
 )
+from unittest.mock import MagicMock, patch
 
 import torch
 from captum._utils.models.linear_model import SkLearnLasso
@@ -33,7 +34,7 @@ from captum.attr._core.llm_attr import (
     LLMGradientAttribution,
     RemoteLLMAttribution,
 )
-from captum.attr._core.remote_provider import RemoteLLMProvider
+from captum.attr._core.remote_provider import RemoteLLMProvider, VLLMProvider
 from captum.attr._core.shapley_value import ShapleyValues, ShapleyValueSampling
 from captum.attr._utils.attribution import GradientAttribution, PerturbationAttribution
 from captum.attr._utils.interpretable_input import TextTemplateInput, TextTokenInput
@@ -674,6 +675,355 @@ class TestLLMGradAttr(BaseTest):
         self.assertEqual(token_attr.shape, (5, 4))
         self.assertEqual(res.input_tokens, ["<sos>", "a", "b", "c"])
         self.assertEqual(res.output_tokens, ["m", "n", "o", "p", "q"])
+
+
+class TestVLLMProvider(BaseTest):
+    """Test suite for VLLMProvider class."""
+
+    def setUp(self) -> None:
+        super().setUp()
+        self.api_url = "https://test-vllm-api.com"
+        self.model_name = "test-model"
+        self.input_prompt = "a b c d"
+        self.target_str = "e f g h"
+
+        self.tokenizer = DummyTokenizer()
+
+        # Set up patch for OpenAI import
+        self.openai_patcher = patch("openai.OpenAI")
+        self.mock_openai = self.openai_patcher.start()
+
+        # Create a mock OpenAI client
+        self.mock_client = MagicMock()
+        self.mock_openai.return_value = self.mock_client
+
+    def tearDown(self) -> None:
+        self.openai_patcher.stop()
+        super().tearDown()
+
+    def test_init_successful(self) -> None:
+        """Test successful initialization of VLLMProvider."""
+        model_name: str = "default-model"
+
+        # Mock the models.list() response
+        mock_models_data = [MagicMock(id=model_name)]
+        self.mock_client.models.list.return_value = MagicMock(data=mock_models_data)
+
+        # Create provider without specifying model name
+        provider = VLLMProvider(api_url=self.api_url)
+
+        # Verify the client was initialized correctly
+        self.mock_openai.assert_called_once()
+        self.assertEqual(provider.api_url, self.api_url)
+        self.assertEqual(provider.model_name, model_name)
+
+        # Verify models.list() was called
+        self.mock_client.models.list.assert_called_once()
+
+    def test_init_with_model_name(self) -> None:
+        """Test initialization with specific model name."""
+        provider = VLLMProvider(api_url=self.api_url, model_name=self.model_name)
+
+        # Verify model name was set correctly
+        self.assertEqual(provider.model_name, self.model_name)
+
+        # Verify models.list() was NOT called
+        self.mock_client.models.list.assert_not_called()
+
+    def test_init_empty_api_url(self) -> None:
+        """Test initialization with empty API URL raises ValueError."""
+        with self.assertRaises(ValueError) as context:
+            VLLMProvider(api_url=" ")
+
+        self.assertIn("API URL is required", str(context.exception))
+
+    def test_init_connection_error(self) -> None:
+        """Test initialization handling connection error."""
+        # Mock connection error
+        self.mock_openai.side_effect = ConnectionError("Failed to connect")
+
+        with self.assertRaises(ConnectionError) as context:
+            VLLMProvider(api_url=self.api_url)
+
+        self.assertIn("Failed to connect to vLLM API", str(context.exception))
+
+    def test_init_no_models(self) -> None:
+        """Test initialization when no models are available."""
+        # Mock empty models list
+        self.mock_client.models.list.return_value = MagicMock(data=[])
+
+        with self.assertRaises(ValueError) as context:
+            VLLMProvider(api_url=self.api_url)
+
+        self.assertIn("No models available", str(context.exception))
+
+    def test_generate_successful(self) -> None:
+        """Test successful text generation."""
+        # Set up mock response
+        mock_choice = MagicMock()
+        mock_choice.text = self.target_str
+        mock_response = MagicMock()
+        mock_response.choices = [mock_choice]
+        self.mock_client.completions.create.return_value = mock_response
+
+        # Create provider
+        provider = VLLMProvider(api_url=self.api_url, model_name=self.model_name)
+        provider.client = self.mock_client
+
+        # Call generate
+        result = provider.generate(self.input_prompt, max_tokens=10)
+
+        # Verify result
+        self.assertEqual(result, self.target_str)
+
+        # Verify API was called with correct parameters
+        self.mock_client.completions.create.assert_called_once_with(
+            model=self.model_name, prompt=self.input_prompt, max_tokens=10
+        )
+
+    def test_generate_with_max_new_tokens(self) -> None:
+        """Test generation with max_new_tokens parameter."""
+        # Set up mock response
+        mock_choice = MagicMock()
+        mock_choice.text = self.target_str
+        mock_response = MagicMock()
+        mock_response.choices = [mock_choice]
+        self.mock_client.completions.create.return_value = mock_response
+
+        # Create provider
+        provider = VLLMProvider(api_url=self.api_url, model_name=self.model_name)
+        provider.client = self.mock_client
+
+        # Call generate with max_new_tokens instead of max_tokens
+        _ = provider.generate(self.input_prompt, max_new_tokens=10)
+
+        # Verify API was called with converted max_tokens parameter
+        self.mock_client.completions.create.assert_called_once_with(
+            model=self.model_name, prompt=self.input_prompt, max_tokens=10
+        )
+
+    def test_generate_empty_choices(self) -> None:
+        """Test generation when response has empty choices."""
+        # Set up mock response with empty choices
+        mock_response = MagicMock()
+        mock_response.choices = []
+        self.mock_client.completions.create.return_value = mock_response
+
+        # Create provider
+        provider = VLLMProvider(api_url=self.api_url, model_name=self.model_name)
+        provider.client = self.mock_client
+
+        # Call generate and expect exception
+        with self.assertRaises(KeyError) as context:
+            provider.generate(self.input_prompt)
+
+        self.assertIn(
+            "API response missing expected 'choices' data", str(context.exception)
+        )
+
+    def test_generate_connection_error(self) -> None:
+        """Test generation handling connection error."""
+        # Mock connection error
+        self.mock_client.completions.create.side_effect = ConnectionError(
+            "Connection failed"
+        )
+
+        # Create provider
+        provider = VLLMProvider(api_url=self.api_url, model_name=self.model_name)
+        provider.client = self.mock_client
+
+        # Call generate and expect exception
+        with self.assertRaises(ConnectionError) as context:
+            provider.generate(self.input_prompt)
+
+        self.assertIn("Failed to connect to vLLM API", str(context.exception))
+
+    def test_get_logprobs_successful(self) -> None:
+        """Test successful retrieval of log probabilities."""
+        # Set up test data
+        input_token_ids = self.tokenizer.encode(
+            self.input_prompt, add_special_tokens=False
+        )
+        num_input_tokens = len(input_token_ids)
+
+        target_token_ids = self.tokenizer.encode(
+            self.target_str, add_special_tokens=False
+        )
+        expected_values = [0.1, 0.2, 0.3, 0.4]
+        num_target_tokens = len(target_token_ids)
+
+        # Create mock vLLM response with prompt_logprobs
+        prompt_logprobs: List[Dict[str, Dict[str, Any]]] = []
+        for i in range(num_input_tokens):
+            token_probs = {
+                str(input_token_ids[i]): {
+                    "logprob": -0.5,  # fixed logprob for input tokens (for testing)
+                    "rank": i + 1,
+                    "decoded_token": self.tokenizer.convert_ids_to_tokens(
+                        input_token_ids[i]
+                    ),
+                }
+            }
+            prompt_logprobs.append(token_probs)
+        for i in range(num_target_tokens):
+            token_probs = {
+                str(target_token_ids[i]): {
+                    "logprob": expected_values[i],
+                    "rank": i + 1,
+                    "decoded_token": self.tokenizer.convert_ids_to_tokens(
+                        target_token_ids[i]
+                    ),
+                }
+            }
+            prompt_logprobs.append(token_probs)
+
+        mock_choices = MagicMock()
+        # prompt_logprobs will be of length
+        # num_input_tokens + num_target_tokens
+        mock_choices.prompt_logprobs = prompt_logprobs
+        mock_response = MagicMock()
+        mock_response.choices = [mock_choices]
+        self.mock_client.completions.create.return_value = mock_response
+
+        # Create provider and call get_logprobs
+        provider = VLLMProvider(api_url=self.api_url, model_name=self.model_name)
+        provider.client = self.mock_client
+
+        logprobs = provider.get_logprobs(
+            self.input_prompt, self.target_str, self.tokenizer
+        )
+
+        # Verify API call
+        self.mock_client.completions.create.assert_called_once_with(
+            model=self.model_name,
+            prompt=self.input_prompt + self.target_str,
+            temperature=0.0,
+            max_tokens=1,
+            extra_body={"prompt_logprobs": 0},
+        )
+
+        # Verify results
+        self.assertEqual(len(logprobs), num_target_tokens)
+        for i, logprob in enumerate(logprobs):
+            self.assertEqual(logprob, expected_values[i])
+
+    def test_get_logprobs_missing_tokenizer(self) -> None:
+        """Test get_logprobs with missing tokenizer."""
+        with self.assertRaises(ValueError) as context:
+            provider = VLLMProvider(api_url=self.api_url, model_name=self.model_name)
+            provider.get_logprobs(self.input_prompt, self.target_str, None)
+
+        self.assertIn("Tokenizer is required", str(context.exception))
+
+    def test_get_logprobs_empty_target(self) -> None:
+        """Test get_logprobs with empty target string."""
+        with self.assertRaises(ValueError) as context:
+            provider = VLLMProvider(api_url=self.api_url, model_name=self.model_name)
+            provider.get_logprobs(self.input_prompt, "", self.tokenizer)
+
+        self.assertIn("Target string cannot be empty", str(context.exception))
+
+    def test_get_logprobs_missing_prompt_logprobs(self) -> None:
+        """Test get_logprobs when response is missing prompt_logprobs."""
+        # Set up mock response without prompt_logprobs
+        mock_choices = MagicMock()
+        mock_choices.prompt_logprobs = None
+        mock_response = MagicMock()
+        mock_response.choices = [mock_choices]
+        self.mock_client.completions.create.return_value = mock_response
+
+        # Create provider
+        provider = VLLMProvider(api_url=self.api_url, model_name=self.model_name)
+        provider.client = self.mock_client
+
+        with self.assertRaises(KeyError) as context:
+            provider.get_logprobs(self.input_prompt, self.target_str, self.tokenizer)
+
+        self.assertIn(
+            "API response missing 'prompt_logprobs' data", str(context.exception)
+        )
+
+    def test_get_logprobs_empty_probs(self) -> None:
+        """Test get_logprobs with empty probability data."""
+        # Create mock response with empty probs
+        prompt_logprobs: List[Dict[str, Dict[str, Any]]] = [{}]  # Empty dict for token probabilities
+        mock_choices = MagicMock()
+        mock_choices.prompt_logprobs = prompt_logprobs
+        mock_response = MagicMock()
+        mock_response.choices = [mock_choices]
+        self.mock_client.completions.create.return_value = mock_response
+
+        # Create provider
+        provider = VLLMProvider(api_url=self.api_url, model_name=self.model_name)
+        provider.client = self.mock_client
+
+        with self.assertRaises(ValueError) as context:
+            provider.get_logprobs(self.input_prompt, self.target_str, self.tokenizer)
+
+        self.assertIn("Empty probability data", str(context.exception))
+
+    def test_get_logprobs_keyerror(self) -> None:
+        """Test get_logprobs with missing 'logprob' key in response."""
+        # Create mock response with invalid token prob structure
+        prompt_logprobs: List[Dict[str, Dict[str, Any]]] = [
+            {"1": {"wrong_logprob_key": 0.1, "rank": 1, "decoded_token": "a"}},
+            {"2": {"wrong_logprob_key": 0.2, "rank": 1, "decoded_token": "b"}},
+        ]
+        mock_choices = MagicMock()
+        mock_choices.prompt_logprobs = prompt_logprobs
+        mock_response = MagicMock()
+        mock_response.choices = [mock_choices]
+        self.mock_client.completions.create.return_value = mock_response
+
+        # Create provider
+        provider = VLLMProvider(api_url=self.api_url, model_name=self.model_name)
+        provider.client = self.mock_client
+
+        with self.assertRaises(IndexError) as context:
+            provider.get_logprobs("a", "b", self.tokenizer)
+
+        self.assertIn(
+            "Unexpected format in log probability data", str(context.exception)
+        )
+
+    def test_get_logprobs_length_mismatch(self) -> None:
+        """Test get_logprobs with length mismatch
+        between expected and received tokens."""
+        # Create mock response with only 1 logprobs (fewer than expected)
+        prompt_logprobs = [{"1": {"logprob": 0.1, "rank": 1, "decoded_token": "a"}}]
+        mock_choices = MagicMock()
+        mock_choices.prompt_logprobs = prompt_logprobs
+        mock_response = MagicMock()
+        mock_response.choices = [mock_choices]
+        self.mock_client.completions.create.return_value = mock_response
+
+        # Create provider
+        provider = VLLMProvider(api_url=self.api_url, model_name=self.model_name)
+        provider.client = self.mock_client
+
+        with self.assertRaises(ValueError) as context:
+            provider.get_logprobs(self.input_prompt, self.target_str, self.tokenizer)
+
+        self.assertIn("Not enough logprobs received", str(context.exception))
+
+    def test_get_logprobs_connection_error(self) -> None:
+        """Test get_logprobs handling connection error."""
+        # Mock connection error
+        self.mock_client.completions.create.side_effect = ConnectionError(
+            "Connection failed"
+        )
+
+        # Create provider
+        provider = VLLMProvider(api_url=self.api_url, model_name=self.model_name)
+        provider.client = self.mock_client
+
+        with self.assertRaises(ConnectionError) as context:
+            provider.get_logprobs(self.input_prompt, self.target_str, self.tokenizer)
+
+        self.assertIn(
+            "Failed to connect to vLLM API when getting logprobs",
+            str(context.exception),
+        )
 
 
 class DummyRemoteLLMProvider(RemoteLLMProvider):

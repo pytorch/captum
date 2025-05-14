@@ -100,6 +100,8 @@ class VLLMProvider(RemoteLLMProvider):
             else:
                 self.model_name = model_name
 
+        except ValueError:
+            raise
         except ConnectionError as e:
             raise ConnectionError(f"Failed to connect to vLLM API: {str(e)}")
         except Exception as e:
@@ -142,6 +144,8 @@ class VLLMProvider(RemoteLLMProvider):
 
             return response.choices[0].text
 
+        except KeyError:
+            raise
         except ConnectionError as e:
             raise ConnectionError(f"Failed to connect to vLLM API: {str(e)}")
         except Exception as e:
@@ -197,7 +201,10 @@ class VLLMProvider(RemoteLLMProvider):
             if not hasattr(response, "choices") or not response.choices:
                 raise KeyError("API response missing expected 'choices' data")
 
-            if not hasattr(response.choices[0], "prompt_logprobs"):
+            if (
+                not hasattr(response.choices[0], "prompt_logprobs")
+                or not response.choices[0].prompt_logprobs
+            ):
                 raise KeyError("API response missing 'prompt_logprobs' data")
 
             prompt_logprobs = []
@@ -219,6 +226,8 @@ class VLLMProvider(RemoteLLMProvider):
 
             return prompt_logprobs
 
+        except (KeyError, IndexError, ValueError):
+            raise
         except ConnectionError as e:
             raise ConnectionError(
                 f"Failed to connect to vLLM API when getting logprobs: {str(e)}"
