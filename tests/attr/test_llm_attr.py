@@ -946,7 +946,9 @@ class TestVLLMProvider(BaseTest):
     def test_get_logprobs_empty_probs(self) -> None:
         """Test get_logprobs with empty probability data."""
         # Create mock response with empty probs
-        prompt_logprobs: List[Dict[str, Dict[str, Any]]] = [{}]  # Empty dict for token probabilities
+        prompt_logprobs: List[Dict[str, Dict[str, Any]]] = [
+            {}
+        ]  # Empty dict for token probabilities
         mock_choices = MagicMock()
         mock_choices.prompt_logprobs = prompt_logprobs
         mock_response = MagicMock()
