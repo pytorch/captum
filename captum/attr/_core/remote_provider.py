@@ -214,6 +214,7 @@ class VLLMProvider(RemoteLLMProvider):
                 ]:
                     if not probs:
                         raise ValueError("Empty probability data in API response")
+                    assert len(probs) == 1, "Expected exactly one token in logprobs"
                     prompt_logprobs.append(next(iter(probs.values()))["logprob"])
             except (IndexError, KeyError) as e:
                 raise IndexError(f"Unexpected format in log probability data: {str(e)}")
