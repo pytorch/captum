@@ -5,6 +5,8 @@ from typing import Any, List, Optional
 
 from captum._utils.typing import TokenizerLike
 
+logger = logging.getLogger(__name__)
+
 
 class RemoteLLMProvider(ABC):
     """All remote LLM providers that offer logprob via API
@@ -93,7 +95,7 @@ class VLLMProvider(RemoteLLMProvider):
                 if not models:
                     raise ValueError("No models available from the vLLM API")
                 self.model_name = models[0].id
-                logging.info(
+                logger.info(
                     f"No model_name is specified for VLLMProvider."
                     f" Using first available model: {self.model_name}"
                 )
