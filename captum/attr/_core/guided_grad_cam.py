@@ -67,7 +67,7 @@ class GuidedGradCam(GradientAttribution):
         self.grad_cam = LayerGradCam(model, layer, device_ids)
         self.guided_backprop = GuidedBackprop(model)
 
-    @log_usage()
+    @log_usage(part_of_slo=True)
     def attribute(
         self,
         inputs: TensorOrTupleOfTensorsGeneric,

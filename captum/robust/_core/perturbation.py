@@ -4,7 +4,6 @@
 from typing import Callable
 
 
-# pyre-fixme[13]: Attribute `perturb` is never initialized.
 class Perturbation:
     r"""
     All perturbation and attack algorithms extend this class. It enforces

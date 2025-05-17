@@ -96,6 +96,7 @@ class LayerDeepLift(LayerAttribution, DeepLift):
 
     # Ignoring mypy error for inconsistent signature with DeepLift
     @typing.overload  # type: ignore
+    @log_usage(part_of_slo=True)
     def attribute(
         self,
         inputs: Union[Tensor, Tuple[Tensor, ...]],
@@ -110,6 +111,7 @@ class LayerDeepLift(LayerAttribution, DeepLift):
     ) -> Tuple[Union[Tensor, Tuple[Tensor, ...]], Tensor]: ...
 
     @typing.overload
+    @log_usage(part_of_slo=True)
     def attribute(
         self,
         inputs: Union[Tensor, Tuple[Tensor, ...]],
@@ -122,9 +124,7 @@ class LayerDeepLift(LayerAttribution, DeepLift):
         grad_kwargs: Optional[Dict[str, Any]] = None,
     ) -> Union[Tensor, Tuple[Tensor, ...]]: ...
 
-    @log_usage()
-    # pyre-fixme[43]: This definition does not have the same decorators as the
-    #  preceding overload(s).
+    @log_usage(part_of_slo=True)
     def attribute(
         self,
         inputs: Union[Tensor, Tuple[Tensor, ...]],
@@ -435,6 +435,7 @@ class LayerDeepLiftShap(LayerDeepLift, DeepLiftShap):
 
     # Ignoring mypy error for inconsistent signature with DeepLiftShap
     @typing.overload  # type: ignore
+    @log_usage(part_of_slo=True)
     def attribute(
         self,
         inputs: Union[Tensor, Tuple[Tensor, ...]],
@@ -450,6 +451,7 @@ class LayerDeepLiftShap(LayerDeepLift, DeepLiftShap):
     ) -> Tuple[Union[Tensor, Tuple[Tensor, ...]], Tensor]: ...
 
     @typing.overload  # type: ignore
+    @log_usage(part_of_slo=True)
     def attribute(
         self,
         inputs: Union[Tensor, Tuple[Tensor, ...]],
@@ -463,9 +465,7 @@ class LayerDeepLiftShap(LayerDeepLift, DeepLiftShap):
         custom_attribution_func: Union[None, Callable[..., Tuple[Tensor, ...]]] = None,
     ) -> Union[Tensor, Tuple[Tensor, ...]]: ...
 
-    @log_usage()
-    # pyre-fixme[43]: This definition does not have the same decorators as the
-    #  preceding overload(s).
+    @log_usage(part_of_slo=True)
     def attribute(
         self,
         inputs: Union[Tensor, Tuple[Tensor, ...]],

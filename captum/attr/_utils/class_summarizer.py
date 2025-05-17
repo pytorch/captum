@@ -22,7 +22,7 @@ class ClassSummarizer(Summarizer, Generic[KeyType]):
     This also keeps track of an aggregate of all class summaries.
     """
 
-    @log_usage()
+    @log_usage(part_of_slo=False)
     def __init__(self, stats: List[Stat]) -> None:
         Summarizer.__init__.__wrapped__(self, stats)
         self.summaries: Dict[KeyType, Summarizer] = defaultdict(

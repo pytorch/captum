@@ -15,10 +15,6 @@ while getopts 'nf' flag; do
 #conda update -y -n base -c defaults conda
 conda update -q --all --yes
 
-# install other frameworks if asked for and make sure this is before pytorch
-if [[ $FRAMEWORKS == true ]]; then
-  pip install -q pytext-nlp
-fi
 
 # install CPU version for much smaller download
 conda install -q -y pytorch cpuonly -c pytorch

@@ -112,6 +112,7 @@ class DeepLift(GradientAttribution):
         self._multiply_by_inputs = multiply_by_inputs
 
     @typing.overload
+    @log_usage(part_of_slo=True)
     def attribute(
         self,
         inputs: TensorOrTupleOfTensorsGeneric,
@@ -124,6 +125,7 @@ class DeepLift(GradientAttribution):
     ) -> Tuple[TensorOrTupleOfTensorsGeneric, Tensor]: ...
 
     @typing.overload
+    @log_usage(part_of_slo=True)
     def attribute(
         self,
         inputs: TensorOrTupleOfTensorsGeneric,
@@ -134,7 +136,7 @@ class DeepLift(GradientAttribution):
         custom_attribution_func: Union[None, Callable[..., Tuple[Tensor, ...]]] = None,
     ) -> TensorOrTupleOfTensorsGeneric: ...
 
-    @log_usage()
+    @log_usage(part_of_slo=True)
     def attribute(  # type: ignore
         self,
         inputs: TensorOrTupleOfTensorsGeneric,
@@ -599,6 +601,7 @@ class DeepLiftShap(DeepLift):
     # There's a mismatch between the signatures of DeepLift.attribute and
     # DeepLiftShap.attribute, so we ignore typing here
     @typing.overload  # type: ignore
+    @log_usage(part_of_slo=True)
     def attribute(
         self,
         inputs: TensorOrTupleOfTensorsGeneric,
@@ -613,6 +616,7 @@ class DeepLiftShap(DeepLift):
     ) -> Tuple[TensorOrTupleOfTensorsGeneric, Tensor]: ...
 
     @typing.overload
+    @log_usage(part_of_slo=True)
     def attribute(
         self,
         inputs: TensorOrTupleOfTensorsGeneric,
@@ -625,7 +629,7 @@ class DeepLiftShap(DeepLift):
         custom_attribution_func: Union[None, Callable[..., Tuple[Tensor, ...]]] = None,
     ) -> TensorOrTupleOfTensorsGeneric: ...
 
-    @log_usage()
+    @log_usage(part_of_slo=True)
     def attribute(  # type: ignore
         self,
         inputs: TensorOrTupleOfTensorsGeneric,

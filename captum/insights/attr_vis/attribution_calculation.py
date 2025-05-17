@@ -4,6 +4,7 @@
 import inspect
 from collections import namedtuple
 from typing import (
+    Any,
     Callable,
     cast,
     Dict,
@@ -28,6 +29,9 @@ from torch.nn import Module
 # pyre-fixme[4]: Attribute annotation cannot be `Any`.
 # pyre-fixme[2]: Parameter annotation cannot be `Any`.
 OutputScore = namedtuple("OutputScore", "score index label")
+
+# pyre-fixme[33]: TypeAlias cannot alias to a type containing `Any`.
+_IntrospectableCallable = Callable[..., Any]
 
 
 class AttributionCalculation:
@@ -157,7 +161,10 @@ class AttributionCalculation:
             if not self.use_label_for_attr or label is None or label.nelement() == 0
             else label
         )
-        if "baselines" in inspect.signature(attribution_method.attribute).parameters:
+        attribute_callable: _IntrospectableCallable = (
+            attribution_method.attribute  # type: ignore[has-type]
+        )
+        if "baselines" in inspect.signature(attribute_callable).parameters:
             attribution_arguments["baselines"] = baseline
         attr = attribution_method.attribute.__wrapped__(  # type: ignore
             attribution_method,  # self

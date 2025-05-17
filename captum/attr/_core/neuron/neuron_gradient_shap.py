@@ -93,7 +93,7 @@ class NeuronGradientShap(NeuronAttribution, GradientAttribution):
         GradientAttribution.__init__(self, forward_func)
         self._multiply_by_inputs = multiply_by_inputs
 
-    @log_usage()
+    @log_usage(part_of_slo=True)
     def attribute(
         self,
         inputs: TensorOrTupleOfTensorsGeneric,

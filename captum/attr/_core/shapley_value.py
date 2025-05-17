@@ -104,7 +104,7 @@ class ShapleyValueSampling(PerturbationAttribution):
         PerturbationAttribution.__init__(self, forward_func)
         self.permutation_generator = _perm_generator
 
-    @log_usage()
+    @log_usage(part_of_slo=True)
     def attribute(
         self,
         inputs: TensorOrTupleOfTensorsGeneric,
@@ -397,7 +397,9 @@ class ShapleyValueSampling(PerturbationAttribution):
                     if show_progress:
                         attr_progress.update()
                     if agg_output_mode:
-                        eval_diff = modified_eval - prev_results
+                        eval_diff = (modified_eval - prev_results).to(
+                            inputs_tuple[0].device
+                        )
                         prev_results = modified_eval
                     else:
                         # when perturb_per_eval > 1, every num_examples stands for
@@ -405,7 +407,9 @@ class ShapleyValueSampling(PerturbationAttribution):
                         # perumuation, each diff of a perturb is its eval minus
                         # the eval of the previous perturb
                         all_eval = torch.cat((prev_results, modified_eval), dim=0)
-                        eval_diff = all_eval[num_examples:] - all_eval[:-num_examples]
+                        eval_diff = (
+                            all_eval[num_examples:] - all_eval[:-num_examples]
+                        ).to(inputs_tuple[0].device)
                         prev_results = all_eval[-num_examples:]
 
                     for j in range(len(total_attrib)):
@@ -689,7 +693,7 @@ class ShapleyValueSampling(PerturbationAttribution):
             agg_output_mode,
         ) = prev_results_tuple
         if agg_output_mode:
-            eval_diff = modified_eval - prev_results
+            eval_diff = (modified_eval - prev_results).to(inputs_tuple[0].device)
             prev_results = modified_eval
         else:
             # when perturb_per_eval > 1, every num_examples stands for
@@ -698,7 +702,9 @@ class ShapleyValueSampling(PerturbationAttribution):
             # the eval of the previous perturb
 
             all_eval = torch.cat((prev_results, modified_eval), dim=0)
-            eval_diff = all_eval[num_examples:] - all_eval[:-num_examples]
+            eval_diff = (all_eval[num_examples:] - all_eval[:-num_examples]).to(
+                inputs_tuple[0].device
+            )
             prev_results = all_eval[-num_examples:]
 
         for j in range(len(total_attrib)):
@@ -799,7 +805,10 @@ class ShapleyValueSampling(PerturbationAttribution):
             )
             current_tensors_list.append(current_tensors)
             current_mask_list.append(
-                tuple(mask == feature_permutation[i] for mask in input_masks)
+                tuple(
+                    (mask == feature_permutation[i]).to(inputs[0].device)
+                    for mask in input_masks
+                )
             )
             if len(current_tensors_list) == perturbations_per_eval:
                 combined_inputs = tuple(
@@ -957,7 +966,7 @@ class ShapleyValues(ShapleyValueSampling):
         ShapleyValueSampling.__init__(self, forward_func)
         self.permutation_generator = _all_perm_generator
 
-    @log_usage()
+    @log_usage(part_of_slo=True)
     def attribute(
         self,
         inputs: TensorOrTupleOfTensorsGeneric,

@@ -96,7 +96,7 @@ class Test(BaseTest):
         ig = IntegratedGradients(model.forward)
         model.zero_grad()
         if type == "vanilla":
-            attributions, delta = ig.attribute(
+            attributions, delta = ig.attribute(  # type: ignore[has-type]
                 input,
                 baselines=baseline,
                 target=target,

@@ -238,7 +238,7 @@ class LimeBase(PerturbationAttribution):
                 self.to_interp_rep_transform is not None
             ), "Must provide transform from original input space to interpretable space"
 
-    @log_usage()
+    @log_usage(part_of_slo=True)
     @torch.no_grad()
     def attribute(
         self,
@@ -566,7 +566,6 @@ class LimeBase(PerturbationAttribution):
     ) -> Tensor:
         model_out = _run_forward(
             self.forward_func,
-            # pyre-fixme[6]: For 1st argument expected `Sequence[Variable[TupleOrTens...
             _reduce_list(curr_model_inputs),
             expanded_target,
             expanded_additional_args,
@@ -870,7 +869,7 @@ class Lime(LimeBase):
             None,
         )
 
-    @log_usage()
+    @log_usage(part_of_slo=True)
     def attribute(  # type: ignore
         self,
         inputs: TensorOrTupleOfTensorsGeneric,

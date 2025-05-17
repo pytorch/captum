@@ -174,7 +174,7 @@ class Test(BaseTest):
 
         ig = IntegratedGradients(model)
         self.sensitivity_max_assert(
-            ig.attribute,
+            ig.attribute,  # type: ignore[has-type]
             input,
             torch.tensor([0.006, 0.01, 0.001, 0.008]),
             n_perturb_samples=1,
@@ -226,7 +226,7 @@ class Test(BaseTest):
         ig = DeepLift(model)
 
         sensitivity1 = self.sensitivity_max_assert(
-            ig.attribute,
+            ig.attribute,  # type: ignore[has-type]
             (input1, input2),
             torch.zeros(1),
             additional_forward_args=args,
@@ -236,7 +236,7 @@ class Test(BaseTest):
         )
 
         sensitivity2 = self.sensitivity_max_assert(
-            ig.attribute,
+            ig.attribute,  # type: ignore[has-type]
             (input1, input2),
             torch.zeros(1),
             additional_forward_args=args,
@@ -255,7 +255,7 @@ class Test(BaseTest):
         dl = DeepLift(model)
 
         sens1 = self.sensitivity_max_assert(
-            dl.attribute,
+            dl.attribute,  # type: ignore[has-type]
             input,
             torch.tensor([0.01, 0.003, 0.001, 0.001]),
             additional_forward_args=additional_forward_args,
@@ -265,7 +265,7 @@ class Test(BaseTest):
             perturb_func=_perturb_func,
         )
         sens2 = self.sensitivity_max_assert(
-            dl.attribute,
+            dl.attribute,  # type: ignore[has-type]
             input,
             torch.zeros(4),
             additional_forward_args=additional_forward_args,
