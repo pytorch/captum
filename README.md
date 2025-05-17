@@ -467,8 +467,7 @@ You can watch the recorded talk [here](https://www.youtube.com/watch?v=ayhBHZYje
 - [Paper](https://arxiv.org/abs/2106.07475) on Investigating Sanity Checks for Saliency Maps
 
 
-Summer school on medical imaging at University of Lyon. A class on model explainability (link to the video)
-https://www.youtube.com/watch?v=vn-jLzY67V0
+Summer school on medical imaging at University of Lyon has a class on model explainability you can watch [here](https://www.youtube.com/watch?v=vn-jLzY67V0)
 
 ## References of Algorithms
 
@@ -480,7 +479,7 @@ https://www.youtube.com/watch?v=vn-jLzY67V0
 * `LayerConductance`: [Computationally Efficient Measures of Internal Neuron Importance, Avanti Shrikumar et al. 2018](https://arxiv.org/abs/1807.09946)
 * `DeepLift`, `NeuronDeepLift`, `LayerDeepLift`: [Learning Important Features Through Propagating Activation Differences, Avanti Shrikumar et al. 2017](https://arxiv.org/abs/1704.02685) and [Towards better understanding of gradient-based attribution methods for deep neural networks, Marco Ancona et al. 2018](https://openreview.net/pdf?id=Sy21R9JAW)
 * `NeuronIntegratedGradients`: [Computationally Efficient Measures of Internal Neuron Importance, Avanti Shrikumar et al. 2018](https://arxiv.org/abs/1807.09946)
-* `GradientShap`, `NeuronGradientShap`, `LayerGradientShap`, `DeepLiftShap`, `NeuronDeepLiftShap`, `LayerDeepLiftShap`: [A Unified Approach to Interpreting Model Predictions, Scott M. Lundberg et al. 2017](http://papers.nips.cc/paper/7062-a-unified-approach-to-interpreting-model-predictions)
+* `GradientShap`, `NeuronGradientShap`, `LayerGradientShap`, `DeepLiftShap`, `NeuronDeepLiftShap`, `LayerDeepLiftShap`: [A Unified Approach to Interpreting Model Predictions, Scott M. Lundberg et al. 2017](https://proceedings.neurips.cc/paper/2017/hash/8a20a8621978632d76c43dfd28b67767-Abstract.html)
 * `InternalInfluence`: [Influence-Directed Explanations for Deep Convolutional Networks, Klas Leino et al. 2018](https://arxiv.org/abs/1802.03788)
 * `Saliency`, `NeuronGradient`: [Deep Inside Convolutional Networks: Visualising
 Image Classification Models and Saliency Maps, K. Simonyan, et. al. 2014](https://arxiv.org/abs/1312.6034)
@@ -497,7 +496,7 @@ Image Classification Models and Saliency Maps, K. Simonyan, et. al. 2014](https:
 * `BinaryConcreteStochasticGates`: [Stochastic Gates with Binary Concrete Distribution](https://arxiv.org/abs/1712.01312)
 * `GaussianStochasticGates`: [Stochastic Gates with Gaussian Distribution](https://arxiv.org/abs/1810.04247)
 
-More details about the above mentioned [attribution algorithms](https://captum.ai/docs/attribution_algorithms) and their pros and cons can be found on our [web-site](https://captum.ai/docs/algorithms_comparison_matrix).
+More details about the above mentioned [attribution algorithms](https://captum.ai/docs/attribution_algorithms) and their pros and cons can be found on our [website](https://captum.ai/docs/algorithms_comparison_matrix).
 
 ## License
 Captum is BSD licensed, as found in the [LICENSE](LICENSE) file.
