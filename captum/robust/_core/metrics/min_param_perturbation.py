@@ -161,7 +161,6 @@ class MinParamPerturbation:
         assert (
             mode.upper() in MinParamPerturbationMode.__members__
         ), f"Provided perturb mode {mode} is not valid - must be linear or binary"
-        # pyre-fixme[4]: Attribute must be annotated.
         self.mode = MinParamPerturbationMode[mode.upper()]
 
     def _evaluate_batch(
@@ -378,7 +377,7 @@ class MinParamPerturbation:
 
         return min_input, min_so_far
 
-    @log_usage()
+    @log_usage(part_of_slo=False)
     # pyre-fixme[3]: Return annotation cannot contain `Any`.
     def evaluate(
         self,

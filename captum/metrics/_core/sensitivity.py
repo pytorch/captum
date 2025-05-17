@@ -60,7 +60,7 @@ def default_perturb_func(
     return perturbed_input
 
 
-@log_usage()
+@log_usage(part_of_slo=True)
 def sensitivity_max(
     # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
     explanation_func: Callable,

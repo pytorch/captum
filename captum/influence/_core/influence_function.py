@@ -1054,7 +1054,6 @@ class NaiveInfluenceFunction(IntermediateQuantitiesInfluenceFunction):
         # define a helper function that returns the embeddings for a batch
         # pyre-fixme[53]: Captured variable `loss_fn` is not annotated.
         def get_batch_embeddings(batch: Tuple[Tensor, ...]) -> Tensor:
-            nonlocal loss_fn, reduction_type, return_device
             # if `self.R` is on cpu, and `self.model_device` was not cpu, this implies
             # `self.R` was too large to fit in gpu memory, and we should do the matrix
             # multiplication of the batch jacobians with `self.R` separately for each
@@ -1084,7 +1083,7 @@ class NaiveInfluenceFunction(IntermediateQuantitiesInfluenceFunction):
             aggregate,
         )
 
-    @log_usage(skip_self_logging=True)
+    @log_usage(part_of_slo=True, skip_self_logging=True)
     def influence(  # type: ignore[override]
         self,
         # pyre-fixme[24]: Generic type `tuple` expects at least 1 type parameter.
@@ -1285,7 +1284,7 @@ class NaiveInfluenceFunction(IntermediateQuantitiesInfluenceFunction):
             self, inputs_dataset, show_progress
         )
 
-    @log_usage(skip_self_logging=True)
+    @log_usage(part_of_slo=True, skip_self_logging=True)
     def self_influence(
         self,
         # pyre-fixme[2]: Parameter annotation cannot contain `Any`.

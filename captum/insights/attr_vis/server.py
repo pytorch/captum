@@ -93,7 +93,7 @@ def run_app(debug: bool = True, bind_all: bool = False) -> None:
         app.run(port=port, use_reloader=False, debug=debug)
 
 
-@log_usage()
+@log_usage(part_of_slo=False)
 # pyre-fixme[3]: Return type must be annotated.
 def start_server(
     _viz,
