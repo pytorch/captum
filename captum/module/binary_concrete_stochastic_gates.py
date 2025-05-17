@@ -58,7 +58,7 @@ class BinaryConcreteStochasticGates(StochasticGatesBase):
         n_gates: int,
         mask: Optional[Tensor] = None,
         reg_weight: float = 1.0,
-        temperature: float = 2.0 / 3,
+        temperature: float = 2 / 3,
         lower_bound: float = -0.1,
         upper_bound: float = 1.1,
         eps: float = 1e-8,
@@ -118,16 +118,17 @@ class BinaryConcreteStochasticGates(StochasticGatesBase):
 
         assert (
             0 < temperature < 1
-        ), f"the temperature should be bwteen 0 and 1, received {temperature}"
+        ), f"the temperature should be between 0 and 1, received {temperature}"
         self.temperature = temperature
 
         assert (
             lower_bound < 0
-        ), f"the stretch lower bound should smaller than 0, received {lower_bound}"
+        ), f"the stretch lower bound should be smaller than 0, received {lower_bound}"
         self.lower_bound = lower_bound
+
         assert (
             upper_bound > 1
-        ), f"the stretch upper bound should larger than 1, received {upper_bound}"
+        ), f"the stretch upper bound should be larger than 1, received {upper_bound}"
         self.upper_bound = upper_bound
 
         self.eps = eps
