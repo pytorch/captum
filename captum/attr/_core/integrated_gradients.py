@@ -74,6 +74,7 @@ class IntegratedGradients(GradientAttribution):
     # and when return_convergence_delta is True, the return type is
     # a tuple with both attributions and deltas.
     @typing.overload
+    @log_usage(part_of_slo=True)
     def attribute(
         self,
         inputs: TensorOrTupleOfTensorsGeneric,
@@ -88,8 +89,7 @@ class IntegratedGradients(GradientAttribution):
     ) -> Tuple[TensorOrTupleOfTensorsGeneric, Tensor]: ...
 
     @typing.overload
-    # pyre-fixme[43]: The implementation of `attribute` does not accept all possible
-    #  arguments of overload defined on line `82`.
+    @log_usage(part_of_slo=True)
     def attribute(
         self,
         inputs: TensorOrTupleOfTensorsGeneric,
@@ -102,7 +102,7 @@ class IntegratedGradients(GradientAttribution):
         return_convergence_delta: Literal[False] = False,
     ) -> TensorOrTupleOfTensorsGeneric: ...
 
-    @log_usage()
+    @log_usage(part_of_slo=True)
     def attribute(  # type: ignore
         self,
         inputs: TensorOrTupleOfTensorsGeneric,
@@ -262,14 +262,10 @@ class IntegratedGradients(GradientAttribution):
         # converting it into a tuple.
         is_inputs_tuple = _is_tuple(inputs)
 
-        # pyre-fixme[9]: inputs has type `TensorOrTupleOfTensorsGeneric`; used as
-        #  `Tuple[Tensor, ...]`.
         formatted_inputs, formatted_baselines = _format_input_baseline(
             inputs, baselines
         )
 
-        # pyre-fixme[6]: For 1st argument expected `Tuple[Tensor, ...]` but got
-        #  `TensorOrTupleOfTensorsGeneric`.
         _validate_input(formatted_inputs, formatted_baselines, n_steps, method)
 
         if internal_batch_size is not None:

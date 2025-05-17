@@ -57,7 +57,7 @@ class NeuronDeconvolution(NeuronAttribution, GradientAttribution):
         GradientAttribution.__init__(self, model)
         self.deconv = Deconvolution(model)
 
-    @log_usage()
+    @log_usage(part_of_slo=True)
     def attribute(
         self,
         inputs: TensorOrTupleOfTensorsGeneric,
@@ -215,7 +215,7 @@ class NeuronGuidedBackprop(NeuronAttribution, GradientAttribution):
         GradientAttribution.__init__(self, model)
         self.guided_backprop = GuidedBackprop(model)
 
-    @log_usage()
+    @log_usage(part_of_slo=True)
     def attribute(
         self,
         inputs: TensorOrTupleOfTensorsGeneric,

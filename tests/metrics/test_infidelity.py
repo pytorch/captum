@@ -209,7 +209,8 @@ class Test(BaseTest):
 
         self.infidelity_assert(
             model,
-            dl.attribute(input, target=torch.tensor([1] * 20)) / input,
+            dl.attribute(input, target=torch.tensor([1] * 20))  # type: ignore[has-type]
+            / input,
             input,
             torch.zeros(20),
             target=torch.tensor([1] * 20),
@@ -266,7 +267,7 @@ class Test(BaseTest):
         def perturbed_func3(inputs: Tensor, baselines: Tensor) -> Tensor:
             return baselines
 
-        attr, delta = ig.attribute(
+        attr, delta = ig.attribute(  # type: ignore[has-type]
             input,
             target=targets,
             additional_forward_args=additional_forward_args,
@@ -311,7 +312,7 @@ class Test(BaseTest):
 
         model = BasicModel2()
         ig = IntegratedGradients(model)
-        attrs = ig.attribute(inputs)
+        attrs = ig.attribute(inputs)  # type: ignore[has-type]
         scaled_attrs = tuple(attr * 100 for attr in attrs)
 
         infid = self.infidelity_assert(model, attrs, inputs, expected, normalize=True)
@@ -424,11 +425,14 @@ class Test(BaseTest):
             attrs = cast(
                 TensorOrTupleOfTensorsGeneric,
                 tuple(
-                    attr / input for input, attr in zip(inputs, ig.attribute(inputs))
+                    attr / input
+                    for input, attr in zip(
+                        inputs, ig.attribute(inputs)  # type: ignore[has-type]
+                    )
                 ),
             )
         else:
-            attrs = ig.attribute(inputs)
+            attrs = ig.attribute(inputs)  # type: ignore[has-type]
 
         return self.infidelity_assert(
             model,
