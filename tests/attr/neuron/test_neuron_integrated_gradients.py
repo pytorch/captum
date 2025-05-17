@@ -170,7 +170,9 @@ class Test(BaseTest):
         input_attrib = IntegratedGradients(model)
         ig_attrib = NeuronIntegratedGradients(model, output_layer)
         for i in range(out.shape[1]):
-            ig_vals = input_attrib.attribute(test_input, target=i, baselines=baseline)
+            ig_vals = input_attrib.attribute(  # type: ignore[has-type]
+                test_input, target=i, baselines=baseline
+            )
             neuron_ig_vals = ig_attrib.attribute(test_input, (i,), baselines=baseline)
             assertTensorAlmostEqual(
                 self, ig_vals, neuron_ig_vals, delta=0.001, mode="max"

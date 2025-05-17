@@ -68,6 +68,7 @@ class LRP(GradientAttribution):
         return True
 
     @typing.overload
+    @log_usage(part_of_slo=True)
     def attribute(
         self,
         inputs: TensorOrTupleOfTensorsGeneric,
@@ -79,6 +80,7 @@ class LRP(GradientAttribution):
     ) -> Tuple[TensorOrTupleOfTensorsGeneric, Tensor]: ...
 
     @typing.overload
+    @log_usage(part_of_slo=True)
     def attribute(
         self,
         inputs: TensorOrTupleOfTensorsGeneric,
@@ -88,9 +90,7 @@ class LRP(GradientAttribution):
         verbose: bool = False,
     ) -> TensorOrTupleOfTensorsGeneric: ...
 
-    @log_usage()
-    # pyre-fixme[43]: This definition does not have the same decorators as the
-    #  preceding overload(s).
+    @log_usage(part_of_slo=True)
     def attribute(
         self,
         inputs: TensorOrTupleOfTensorsGeneric,

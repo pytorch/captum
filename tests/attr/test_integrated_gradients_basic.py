@@ -417,7 +417,7 @@ class Test(BaseTest):
             baselines = _tensorize_baseline(inputs, _zeros(inputs))
 
         if type == "vanilla":
-            attributions, delta = ig.attribute(
+            attributions, delta = ig.attribute(  # type: ignore[has-type]
                 inputs,
                 baselines,
                 additional_forward_args=additional_forward_args,
@@ -427,7 +427,7 @@ class Test(BaseTest):
                 return_convergence_delta=True,
             )
             model.zero_grad()
-            attributions_without_delta, delta = ig.attribute(
+            attributions_without_delta, delta = ig.attribute(  # type: ignore[has-type]
                 inputs,
                 baselines,
                 additional_forward_args=additional_forward_args,
@@ -516,7 +516,7 @@ class Test(BaseTest):
             baselines = _tensorize_baseline(inputs, _zeros(inputs))
 
         for internal_batch_size in [None, 10, 20]:
-            attributions, delta = ig.attribute(
+            attributions, delta = ig.attribute(  # type: ignore[has-type]
                 inputs,
                 baselines,
                 additional_forward_args=additional_forward_args,
@@ -528,7 +528,7 @@ class Test(BaseTest):
             )
             total_delta = 0.0
             for i in range(inputs[0].shape[0]):
-                attributions_indiv, delta_indiv = ig.attribute(
+                attrib_indiv, delta_indiv = ig.attribute(  # type: ignore[has-type]
                     tuple(input[i : i + 1] for input in inputs),
                     tuple(baseline[i : i + 1] for baseline in baselines),
                     additional_forward_args=additional_forward_args,
@@ -543,7 +543,7 @@ class Test(BaseTest):
                     assertTensorAlmostEqual(
                         self,
                         attributions[j][i : i + 1].squeeze(0),
-                        attributions_indiv[j].squeeze(0),
+                        attrib_indiv[j].squeeze(0),
                         delta=0.05,
                         mode="max",
                     )

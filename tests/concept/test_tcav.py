@@ -844,8 +844,6 @@ class Test(BaseTest):
                     self.assertAlmostEqual(
                         stats["accs"].item(),
                         acc,
-                        # pyre-fixme[6]: For 3rd argument expected `None` but got
-                        #  `float`.
                         delta=0.0001,
                     )
 

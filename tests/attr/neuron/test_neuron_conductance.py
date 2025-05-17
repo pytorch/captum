@@ -141,7 +141,9 @@ class Test(BaseTest):
         inp = torch.tensor([[0.0, 6.0, 0.0]])
 
         lc = LayerConductance(net, net.multi_relu)
-        layer_attr = lc.attribute(inp, target=0, n_steps=500, method="gausslegendre")
+        layer_attr = lc.attribute(  # type: ignore[has-type]
+            inp, target=0, n_steps=500, method="gausslegendre"
+        )
         nc = NeuronConductance(net, net.multi_relu)
         for i in range(len(layer_attr)):
             for j in range(layer_attr[i].shape[1]):
@@ -169,7 +171,9 @@ class Test(BaseTest):
         inp = torch.tensor([[0.0, 6.0, 0.0]])
 
         lc = LayerConductance(net, net.multi_relu)
-        layer_attr = lc.attribute(inp, target=0, n_steps=500, method="gausslegendre")
+        layer_attr = lc.attribute(  # type: ignore[has-type]
+            inp, target=0, n_steps=500, method="gausslegendre"
+        )
         nc = NeuronConductance(net, net.multi_relu)
         for i in range(len(layer_attr)):
             for j in range(layer_attr[i].shape[1]):
@@ -250,7 +254,7 @@ class Test(BaseTest):
         layer_cond = LayerConductance(model, target_layer)
         attributions = cast(
             Tensor,
-            layer_cond.attribute(
+            layer_cond.attribute(  # type: ignore[has-type]
                 test_input,
                 baselines=test_baseline,
                 target=0,
@@ -273,13 +277,7 @@ class Test(BaseTest):
                     for n in range(attributions.shape[0]):
                         self.assertAlmostEqual(
                             torch.sum(neuron_vals[n]).item(),
-                            # pyre-fixme[6]: For 2nd argument expected
-                            #  `SupportsRSub[Variable[_T],
-                            #  SupportsAbs[SupportsRound[object]]]` but got
-                            #  `Union[bool, float, int]`.
                             attributions[n, i, j, k].item(),
-                            # pyre-fixme[6]: For 3rd argument expected `None` but
-                            #  got `float`.
                             delta=0.005,
                         )
 

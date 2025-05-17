@@ -166,7 +166,7 @@ class Test(BaseTest):
         cond = LayerConductance(model, target_layer)
         self.assertTrue(cond.multiplies_by_inputs)
         for internal_batch_size in (None, 4, 20):
-            attributions, delta = cond.attribute(
+            attributions, delta = cond.attribute(  # type: ignore[has-type]
                 test_input,
                 baselines=baselines,
                 target=0,
@@ -211,7 +211,7 @@ class Test(BaseTest):
         cond_ref = ConductanceReference(model, target_layer)
         attributions, delta = cast(
             Tuple[Tensor, Tensor],
-            cond.attribute(
+            cond.attribute(  # type: ignore[has-type]
                 test_input,
                 baselines=test_baseline,
                 target=target_index,
@@ -251,7 +251,7 @@ class Test(BaseTest):
             for i in range(test_input.shape[0]):
                 single_attributions = cast(
                     Tensor,
-                    cond.attribute(
+                    cond.attribute(  # type: ignore[has-type]
                         test_input[i : i + 1],
                         baselines=(
                             test_baseline[i : i + 1]

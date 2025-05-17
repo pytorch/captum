@@ -47,7 +47,7 @@ class Test(BaseTest):
         inputs = torch.tensor([[1.0, -20.0, 10.0]])
         baselines = torch.zeros(3, 3)
         lgs = LayerGradientShap(model, model.linear2, multiply_by_inputs=False)
-        attrs = lgs.attribute(
+        attrs = lgs.attribute(  # type: ignore[has-type]
             inputs,
             baselines,
             target=0,
@@ -187,7 +187,7 @@ class Test(BaseTest):
         add_args: Any = None,
     ) -> None:
         lgs = LayerGradientShap(model, layer)
-        attrs, delta = lgs.attribute(
+        attrs, delta = lgs.attribute(  # type: ignore[has-type]
             inputs,
             baselines,
             target=target,
