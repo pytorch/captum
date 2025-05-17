@@ -613,7 +613,7 @@ class TracInCP(TracInCPBase):
         if layers is not None:
             self.layer_modules = _set_active_parameters(model, layers)
 
-    @log_usage()
+    @log_usage(part_of_slo=True)
     def influence(  # type: ignore[override]
         self,
         # pyre-fixme[2]: Parameter annotation cannot contain `Any`.
@@ -815,7 +815,7 @@ class TracInCP(TracInCPBase):
             for all_inputs_batch_jacobian in zip(*all_inputs_batch_jacobians)
         )
 
-    @log_usage()
+    @log_usage(part_of_slo=True)
     def compute_intermediate_quantities(
         self,
         # pyre-fixme[2]: Parameter annotation cannot contain `Any`.
@@ -878,7 +878,6 @@ class TracInCP(TracInCPBase):
         f_inputs: DataLoader = _format_inputs_dataset(inputs)
 
         def get_checkpoint_contribution(checkpoint: str) -> Tensor:
-            nonlocal f_inputs
             assert (
                 checkpoint is not None
             ), "None returned from `checkpoints`, cannot load."
@@ -1246,7 +1245,6 @@ class TracInCP(TracInCPBase):
             )
 
         def get_checkpoint_contribution(checkpoint: str) -> Tensor:
-            nonlocal inputs_len
             # This function returns a 1D tensor representing the contribution to the
             # self influence score for the given checkpoint, for all batches in
             # `inputs`. The length of the 1D tensor is the total number of
@@ -1338,7 +1336,7 @@ class TracInCP(TracInCPBase):
 
         return batches_self_tracin_scores
 
-    @log_usage()
+    @log_usage(part_of_slo=True)
     def self_influence(
         self,
         # pyre-fixme[2]: Parameter annotation cannot contain `Any`.

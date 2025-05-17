@@ -194,17 +194,18 @@ def _is_mask_valid(mask: Tensor, inp: Tensor) -> bool:
 def _format_feature_mask(
     feature_mask: Union[None, Tensor, Tuple[Tensor, ...]],
     inputs: Tuple[Tensor, ...],
+    start_idx: int = 0,
 ) -> Tuple[Tensor, ...]:
     """
     Format a feature mask into a tuple of tensors.
     The `inputs` should be correctly formatted first
     If `feature_mask` is None, assign each non-batch dimension with a consecutive
-    integer from 0.
+    integer from `start_idx`.
     If `feature_mask` is a tensor, wrap it in a tuple.
     """
     if feature_mask is None:
         formatted_mask = []
-        current_num_features = 0
+        current_num_features = start_idx
         for inp in inputs:
             # the following can handle empty tensor where numel is 0
             # empty tensor will be added to the feature mask
@@ -862,10 +863,8 @@ def _register_backward_hook(
         inp: Union[Tensor, Tuple[Tensor, ...]],
         out: Union[Tensor, Tuple[Tensor, ...]],
     ) -> None:
-        nonlocal grad_out
 
         def output_tensor_hook(output_grad: Tensor) -> None:
-            nonlocal grad_out
             grad_out[output_grad.device] = output_grad
 
         if isinstance(out, tuple):
@@ -880,8 +879,6 @@ def _register_backward_hook(
         def input_tensor_hook(
             input_grad: Tensor,
         ) -> Union[None, Tensor, Tuple[Tensor, ...]]:
-            nonlocal grad_out
-
             if len(grad_out) == 0:
                 return None
             hook_out = hook(module, input_grad, grad_out[input_grad.device])
@@ -916,3 +913,54 @@ def _get_max_feature_index(feature_mask: Tuple[Tensor, ...]) -> int:
     """
 
     return int(max(torch.max(mask).item() for mask in feature_mask if mask.numel()))
+
+
+def _get_feature_idx_to_tensor_idx(
+    formatted_feature_mask: Tuple[Tensor, ...],
+) -> Dict[int, List[int]]:
+    """
+    For a given tuple of tensors, return dict of tensor values to list of tensor indices
+    they appear in.
+    """
+    feature_idx_to_tensor_idx: Dict[int, List[int]] = {}
+    for i, mask in enumerate(formatted_feature_mask):
+        for feature_idx in torch.unique(mask):
+            if feature_idx.item() not in feature_idx_to_tensor_idx:
+                feature_idx_to_tensor_idx[feature_idx.item()] = []
+            feature_idx_to_tensor_idx[feature_idx.item()].append(i)
+    return feature_idx_to_tensor_idx
+
+
+def _maybe_expand_parameters(
+    perturbations_per_eval: int,
+    formatted_inputs: Tuple[Tensor, ...],
+    # pyre-fixme[24]: Generic type `tuple` expects at least 1 type parameter.
+    formatted_additional_forward_args: Union[None, Tuple],
+    target: TargetType,
+    # pyre-fixme[24]: Generic type `tuple` expects at least 1 type parameter.
+) -> Tuple[Tuple[Tensor, ...], Union[None, Tuple], TargetType]:
+    """
+    When passing in multiple perturbed inputs in one forward pass, we also
+    need to expand additional forward args and target.
+    """
+    additional_args_repeated: object
+    if perturbations_per_eval > 1:
+        # Repeat features and additional args for batch size.
+        all_features_repeated = tuple(
+            torch.cat([formatted_inputs[j]] * perturbations_per_eval, dim=0)
+            for j in range(len(formatted_inputs))
+        )
+        additional_args_repeated = (
+            _expand_additional_forward_args(
+                formatted_additional_forward_args, perturbations_per_eval
+            )
+            if formatted_additional_forward_args is not None
+            else None
+        )
+        target_repeated = _expand_target(target, perturbations_per_eval)
+    else:
+        all_features_repeated = formatted_inputs
+        additional_args_repeated = formatted_additional_forward_args
+        target_repeated = target
+
+    return all_features_repeated, additional_args_repeated, target_repeated

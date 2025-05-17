@@ -275,7 +275,6 @@ class NormLayer(nn.Module):
         self.mean = mean
         # pyre-fixme[4]: Attribute must be annotated.
         self.std = std
-        # pyre-fixme[4]: Attribute must be annotated.
         self.eps = eps
 
     # pyre-fixme[3]: Return type must be annotated.

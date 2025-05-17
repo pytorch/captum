@@ -100,8 +100,6 @@ class Test(BaseTest):
 
         # possible candidates for `layer_modules`, which are the modules whose
         # parameters we want to compute sample grads for
-        # pyre-fixme[9]: layer_moduless has type `List[List[Module]]`; used as
-        #  `List[Union[List[Union[Conv2d, Linear]], List[Conv2d], List[Linear]]]`.
         layer_moduless: List[List[Module]] = [
             [model.conv1],
             [model.fc1],

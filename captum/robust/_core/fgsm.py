@@ -80,7 +80,7 @@ class FGSM(Perturbation):
         # pyre-fixme[4]: Attribute must be annotated.
         self.zero_thresh = 10**-6
 
-    @log_usage()
+    @log_usage(part_of_slo=False)
     def perturb(
         self,
         inputs: TensorOrTupleOfTensorsGeneric,
@@ -156,8 +156,6 @@ class FGSM(Perturbation):
                         is returned. If a tuple is provided for inputs, a tuple of
                         corresponding sized tensors is returned.
         """
-        # pyre-fixme[6]: For 1st argument expected `Tensor` but got
-        #  `TensorOrTupleOfTensorsGeneric`.
         is_inputs_tuple = _is_tuple(inputs)
         # pyre-fixme[35]: Target cannot be annotated.
         inputs: Tuple[Tensor, ...] = _format_tensor_into_tuples(inputs)

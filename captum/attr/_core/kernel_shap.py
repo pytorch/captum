@@ -43,7 +43,7 @@ class KernelShap(Lime):
         )
         self.inf_weight = 1000000.0
 
-    @log_usage()
+    @log_usage(part_of_slo=True)
     def attribute(  # type: ignore
         self,
         inputs: TensorOrTupleOfTensorsGeneric,

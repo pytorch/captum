@@ -72,6 +72,7 @@ class LayerConductance(LayerAttribution, GradientAttribution):
         return True
 
     @typing.overload
+    @log_usage(part_of_slo=True)
     def attribute(
         self,
         inputs: Union[Tensor, Tuple[Tensor, ...]],
@@ -88,6 +89,7 @@ class LayerConductance(LayerAttribution, GradientAttribution):
     ) -> Tuple[Union[Tensor, Tuple[Tensor, ...]], Tensor]: ...
 
     @typing.overload
+    @log_usage(part_of_slo=True)
     def attribute(
         self,
         inputs: Union[Tensor, Tuple[Tensor, ...]],
@@ -102,9 +104,7 @@ class LayerConductance(LayerAttribution, GradientAttribution):
         grad_kwargs: Optional[Dict[str, Any]] = None,
     ) -> Union[Tensor, Tuple[Tensor, ...]]: ...
 
-    @log_usage()
-    # pyre-fixme[43]: This definition does not have the same decorators as the
-    #  preceding overload(s).
+    @log_usage(part_of_slo=True)
     def attribute(
         self,
         inputs: Union[Tensor, Tuple[Tensor, ...]],
