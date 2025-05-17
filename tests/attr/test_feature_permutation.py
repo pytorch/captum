@@ -112,6 +112,76 @@ class Test(BaseTest):
             assertTensorAlmostEqual(self, attribs[:, 0], zeros, delta=0.05, mode="max")
             self.assertTrue((attribs[:, 1 : input_size[0]].abs() > 0).all())
 
+    def test_simple_input_with_min_examples(self) -> None:
+        def forward_func(x: Tensor) -> Tensor:
+            return x.sum(dim=-1)
+
+        feature_importance = FeaturePermutation(forward_func=forward_func)
+        inp = torch.tensor([[1.0, 2.0]])
+        assertTensorAlmostEqual(
+            self,
+            feature_importance.attribute(inp),
+            torch.tensor([[0.0, 0.0]]),
+            delta=0.0,
+        )
+
+        feature_importance._min_examples_per_batch = 1
+        with self.assertRaises(AssertionError):
+            feature_importance.attribute(inp)
+
+    def test_simple_input_with_min_examples_in_group(self) -> None:
+        def forward_func(x: Tensor) -> Tensor:
+            return x.sum(dim=-1)
+
+        feature_importance = FeaturePermutation(forward_func=forward_func)
+        inp = torch.tensor([[1.0, 2.0]])
+        assertTensorAlmostEqual(
+            self,
+            feature_importance.attribute(inp, enable_cross_tensor_attribution=True),
+            torch.tensor([[0.0, 0.0]]),
+            delta=0.0,
+        )
+        assertTensorAlmostEqual(
+            self,
+            feature_importance.attribute(
+                torch.tensor([]), enable_cross_tensor_attribution=True
+            ),
+            torch.tensor([0.0]),
+            delta=0.0,
+        )
+
+        feature_importance._min_examples_per_batch_grouped = 1
+        with self.assertRaises(AssertionError):
+            feature_importance.attribute(inp, enable_cross_tensor_attribution=True)
+
+    def test_simple_input_custom_mask_with_min_examples_in_group(self) -> None:
+        def forward_func(x1: Tensor, x2: Tensor) -> Tensor:
+            return x1.sum(dim=-1)
+
+        feature_importance = FeaturePermutation(forward_func=forward_func)
+        inp = (
+            torch.tensor([[1.0, 2.0]]),
+            torch.tensor(([3.0, 4.0], [5.0, 6.0])),
+        )
+        mask = (
+            torch.tensor([0, 0]),
+            torch.tensor([[0, 0], [0, 0]]),
+        )
+        assertTensorAlmostEqual(
+            self,
+            feature_importance.attribute(
+                inp, feature_mask=mask, enable_cross_tensor_attribution=True
+            )[0],
+            torch.tensor([[0.0, 0.0]]),
+            delta=0.0,
+        )
+
+        feature_importance._min_examples_per_batch_grouped = 1
+        with self.assertRaises(AssertionError):
+            feature_importance.attribute(
+                inp, feature_mask=mask, enable_cross_tensor_attribution=True
+            )
+
     def test_single_input_with_future(
         self,
     ) -> None:
@@ -123,22 +193,25 @@ class Test(BaseTest):
             return x.sum(dim=-1)
 
         feature_importance = FeaturePermutation(
-            forward_func=self.construct_future_forward(forward_func)
+            forward_func=self.construct_future_forward(forward_func),
         )
 
         inp = torch.randn((batch_size,) + input_size)
 
         inp[:, 0] = constant_value
         zeros = torch.zeros_like(inp[:, 0])
+        for enable_cross_tensor_attribution in [True, False]:
+            attribs = feature_importance.attribute_future(
+                inp,
+                enable_cross_tensor_attribution=enable_cross_tensor_attribution,
+            )
 
-        attribs = feature_importance.attribute_future(inp)
+            self.assertTrue(type(attribs) is torch.Future)
+            attribs = attribs.wait()
 
-        self.assertTrue(type(attribs) is torch.Future)
-        attribs = attribs.wait()
-
-        self.assertTrue(attribs.squeeze(0).size() == (batch_size,) + input_size)
-        assertTensorAlmostEqual(self, attribs[:, 0], zeros, delta=0.05, mode="max")
-        self.assertTrue((attribs[:, 1 : input_size[0]].abs() > 0).all())
+            self.assertTrue(attribs.squeeze(0).size() == (batch_size,) + input_size)
+            assertTensorAlmostEqual(self, attribs[:, 0], zeros, delta=0.05, mode="max")
+            self.assertTrue((attribs[:, 1 : input_size[0]].abs() > 0).all())
 
     def test_multi_input(
         self,
@@ -268,26 +341,33 @@ class Test(BaseTest):
 
         feature_mask = (
             torch.arange(inp[0][0].numel()).view_as(inp[0][0]).unsqueeze(0),
-            torch.arange(inp[1][0].numel()).view_as(inp[1][0]).unsqueeze(0),
+            torch.arange(inp[0][0].numel(), inp[0][0].numel() + inp[1][0].numel())
+            .view_as(inp[1][0])
+            .unsqueeze(0),
         )
 
         inp[1][:, :, 1] = 4
 
-        attribs = feature_importance.attribute_future(inp, feature_mask=feature_mask)
-        self.assertTrue(type(attribs) is torch.Future)
-        attribs = attribs.wait()
+        for enable_cross_tensor_attribution in [True, False]:
+            attribs = feature_importance.attribute_future(
+                inp,
+                feature_mask=feature_mask,
+                enable_cross_tensor_attribution=enable_cross_tensor_attribution,
+            )
+            self.assertTrue(type(attribs) is torch.Future)
+            attribs = attribs.wait()
 
-        self.assertTrue(isinstance(attribs, tuple))
-        self.assertTrue(len(attribs) == 2)
+            self.assertTrue(isinstance(attribs, tuple))
+            self.assertTrue(len(attribs) == 2)
 
-        self.assertTrue(attribs[0].squeeze(0).size() == inp1_size)
-        self.assertTrue(attribs[1].squeeze(0).size() == inp2_size)
+            self.assertTrue(attribs[0].squeeze(0).size() == inp1_size)
+            self.assertTrue(attribs[1].squeeze(0).size() == inp2_size)
 
-        self.assertTrue((attribs[1][:, :, 1] == 0).all())
-        self.assertTrue((attribs[1][:, :, 2] == 0).all())
+            self.assertTrue((attribs[1][:, :, 1] == 0).all())
+            self.assertTrue((attribs[1][:, :, 2] == 0).all())
 
-        self.assertTrue((attribs[0] != 0).all())
-        self.assertTrue((attribs[1][:, :, 0] != 0).all())
+            self.assertTrue((attribs[0] != 0).all())
+            self.assertTrue((attribs[1][:, :, 0] != 0).all())
 
     def test_multiple_perturbations_per_eval(
         self,
@@ -340,24 +420,28 @@ class Test(BaseTest):
             forward_func=self.construct_future_forward(forward_func)
         )
 
-        attribs = feature_importance.attribute_future(
-            inp, perturbations_per_eval=perturbations_per_eval, target=target
-        )
-        self.assertTrue(type(attribs) is torch.Future)
-        attribs = attribs.wait()
-
-        self.assertTrue(attribs.size() == (batch_size,) + input_size)
-
-        for i in range(inp.size(1)):
-            if i == target:
-                continue
-            assertTensorAlmostEqual(
-                self, attribs[:, i], torch.zeros_like(attribs[:, i])
+        for enable_cross_tensor_attribution in [True, False]:
+            attribs = feature_importance.attribute_future(
+                inp,
+                perturbations_per_eval=perturbations_per_eval,
+                target=target,
+                enable_cross_tensor_attribution=enable_cross_tensor_attribution,
             )
+            self.assertTrue(type(attribs) is torch.Future)
+            attribs = attribs.wait()
 
-        y = forward_func(inp)
-        actual_diff = torch.stack([(y[0] - y[1])[target], (y[1] - y[0])[target]])
-        assertTensorAlmostEqual(self, attribs[:, target], actual_diff)
+            self.assertTrue(attribs.size() == (batch_size,) + input_size)
+
+            for i in range(inp.size(1)):
+                if i == target:
+                    continue
+                assertTensorAlmostEqual(
+                    self, attribs[:, i], torch.zeros_like(attribs[:, i])
+                )
+
+            y = forward_func(inp)
+            actual_diff = torch.stack([(y[0] - y[1])[target], (y[1] - y[0])[target]])
+            assertTensorAlmostEqual(self, attribs[:, target], actual_diff)
 
     def test_broadcastable_masks(
         self,
@@ -423,31 +507,35 @@ class Test(BaseTest):
             torch.tensor([[[0, 1, 2, 3], [3, 3, 4, 5], [6, 6, 4, 6], [7, 8, 9, 10]]]),
         ]
 
-        results = []
-
-        for mask in masks:
-            attribs_future = feature_importance.attribute_future(inp, feature_mask=mask)
-            results.append(attribs_future)
-            self.assertTrue(attribs_future is not None)
-
-        for idx in range(len(results)):
-            attribs = results[idx].wait()
-            self.assertTrue(attribs is not None)
-            self.assertTrue(attribs.shape == inp.shape)
-
-            fm = masks[idx].expand_as(inp[0])
-
-            features = set(masks[idx].flatten())
-            for feature in features:
-                m = (fm == feature).bool()
-                attribs_for_feature = attribs[:, m]
-                assertTensorAlmostEqual(
-                    self,
-                    attribs_for_feature[0],
-                    -attribs_for_feature[1],
-                    delta=0.05,
-                    mode="max",
+        for enable_cross_tensor_attribution in [True, False]:
+            results = []
+            for mask in masks:
+                attribs_future = feature_importance.attribute_future(
+                    inp,
+                    feature_mask=mask,
+                    enable_cross_tensor_attribution=enable_cross_tensor_attribution,
                 )
+                results.append(attribs_future)
+                self.assertTrue(attribs_future is not None)
+
+            for idx in range(len(results)):
+                attribs = results[idx].wait()
+                self.assertTrue(attribs is not None)
+                self.assertTrue(attribs.shape == inp.shape)
+
+                fm = masks[idx].expand_as(inp[0])
+
+                features = set(masks[idx].flatten())
+                for feature in features:
+                    m = (fm == feature).bool()
+                    attribs_for_feature = attribs[:, m]
+                    assertTensorAlmostEqual(
+                        self,
+                        attribs_for_feature[0],
+                        -attribs_for_feature[1],
+                        delta=0.05,
+                        mode="max",
+                    )
 
     def test_empty_sparse_features(self) -> None:
         model = BasicModelWithSparseInputs()

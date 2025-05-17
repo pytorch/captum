@@ -58,7 +58,6 @@ class Concept:
         return "Concept(%r, %r)" % (self.id, self.name)
 
 
-# pyre-fixme[13]: Attribute `interpret` is never initialized.
 class ConceptInterpreter:
     r"""
     An abstract class that exposes an abstract interpret method

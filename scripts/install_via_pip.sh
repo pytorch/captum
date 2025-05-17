@@ -46,11 +46,6 @@ pip install --upgrade pip --progress-bar off
 pip install -e .[dev] --progress-bar off
 BUILD_INSIGHTS=1 python setup.py develop
 
-# install other frameworks if asked for and make sure this is before pytorch
-if [[ $FRAMEWORKS == true ]]; then
-  pip install pytext-nlp --progress-bar off
-fi
-
 # install pytorch nightly if asked for
 if [[ $PYTORCH_NIGHTLY == true ]]; then
   pip install --upgrade --pre torch -f https://download.pytorch.org/whl/nightly/cpu/torch_nightly.html --progress-bar off

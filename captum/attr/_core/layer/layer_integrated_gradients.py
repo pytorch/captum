@@ -235,6 +235,7 @@ class LayerIntegratedGradients(LayerAttribution, GradientAttribution):
         return _gradient_func
 
     @overload
+    @log_usage(part_of_slo=True)
     def attribute(
         self,
         inputs: Union[Tensor, Tuple[Tensor, ...]],
@@ -250,6 +251,7 @@ class LayerIntegratedGradients(LayerAttribution, GradientAttribution):
     ) -> Union[Tensor, Tuple[Tensor, ...], List[Union[Tensor, Tuple[Tensor, ...]]]]: ...
 
     @overload
+    @log_usage(part_of_slo=True)
     def attribute(  # type: ignore
         self,
         inputs: Union[Tensor, Tuple[Tensor, ...]],
@@ -268,8 +270,7 @@ class LayerIntegratedGradients(LayerAttribution, GradientAttribution):
     ]: ...
 
     @overload
-    # pyre-fixme[43]: This definition does not have the same decorators as the
-    #  preceding overload(s).
+    @log_usage(part_of_slo=True)
     def attribute(
         self,
         inputs: Union[Tensor, Tuple[Tensor, ...]],
@@ -290,9 +291,7 @@ class LayerIntegratedGradients(LayerAttribution, GradientAttribution):
         ],
     ]: ...
 
-    @log_usage()
-    # pyre-fixme[43]: This definition does not have the same decorators as the
-    #  preceding overload(s).
+    @log_usage(part_of_slo=True)
     def attribute(
         self,
         inputs: Union[Tensor, Tuple[Tensor, ...]],

@@ -306,7 +306,6 @@ def _forward_layer_distributed_eval(
             if require_layer_grads:
                 apply_gradient_requirements(eval_tsrs, warn=False)
             with lock:
-                nonlocal saved_layer
                 # Note that cloning behaviour of `eval_tsr` is different
                 # when `forward_hook_with_return` is set to True. This is because
                 # otherwise `backward()` on the last output layer won't execute.
@@ -683,8 +682,6 @@ def compute_layer_gradients_and_eval(
             " take gradient with respect to multiple outputs."
         )
 
-        # pyre-fixme[6]: For 2nd argument expected `Dict[Module, Dict[device,
-        #  typing.Tuple[Tensor, ...]]]` but got `Module`.
         device_ids = _extract_device_ids(forward_fn, saved_layer, device_ids)
 
         # Identifies correct device ordering based on device ids.
@@ -730,7 +727,6 @@ def compute_layer_gradients_and_eval(
             for layer_tensor in saved_layer[single_layer][device_id]
         )
         saved_grads = torch.autograd.grad(
-            # pyre-fixme[6]: For 1st argument expected `Tensor` but got `Module`.
             outputs=torch.unbind(output),
             inputs=grad_inputs,
             **grad_kwargs or {},
