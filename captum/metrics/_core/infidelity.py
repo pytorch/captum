@@ -138,7 +138,7 @@ def infidelity_perturb_func_decorator(
     return sub_infidelity_perturb_func_decorator
 
 
-@log_usage()
+@log_usage(part_of_slo=True)
 def infidelity(
     forward_func: Callable[..., Tensor],
     perturb_func: Callable[

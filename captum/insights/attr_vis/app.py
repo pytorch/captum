@@ -243,7 +243,7 @@ class AttributionVisualizer:
             num_examples=4,
         )
 
-    @log_usage()
+    @log_usage(part_of_slo=False)
     def render(self, debug: bool = True) -> None:
         from captum.insights.attr_vis.widget.widget import CaptumInsights
         from IPython.display import display
@@ -253,7 +253,7 @@ class AttributionVisualizer:
         if debug:
             display(widget.out)
 
-    @log_usage()
+    @log_usage(part_of_slo=False)
     # pyre-fixme[3]: Return type must be annotated.
     def serve(
         self,
@@ -529,7 +529,7 @@ class AttributionVisualizer:
 
         return vis_outputs
 
-    @log_usage()
+    @log_usage(part_of_slo=False)
     # pyre-fixme[3]: Return type must be annotated.
     def visualize(self):
         self._outputs = []

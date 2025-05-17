@@ -887,7 +887,9 @@ def _parameter_add(
     return tuple(param_1 + param_2 for (param_1, param_2) in zip(params_1, params_2))
 
 
-def _parameter_multiply(params: Tuple[Tensor, ...], c: Tensor) -> Tuple[Tensor, ...]:
+def _parameter_multiply(
+    params: Tuple[Tensor, ...], c: Union[Tensor, float]
+) -> Tuple[Tensor, ...]:
     """
     multiplies all tensors in a tuple of tensors by a given scalar
     """

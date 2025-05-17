@@ -2,7 +2,7 @@
 
 # pyre-strict
 
-from typing import no_type_check, Optional, Tuple, Union
+from typing import Dict, no_type_check, Optional, Tuple, Union
 
 import torch
 import torch.nn as nn
@@ -418,7 +418,7 @@ class BasicEmbeddingModel(nn.Module):
         return self.linear2(self.relu(self.linear1(embeddings))).sum(1)
 
 
-class GradientUnsupportedLayerOutput(nn.Module):
+class PassThroughLayerOutput(nn.Module):
     """
     This layer is used to test the case where the model returns a layer that
     is not supported by the gradient computation.
@@ -428,17 +428,15 @@ class GradientUnsupportedLayerOutput(nn.Module):
         super().__init__()
 
     @no_type_check
-    def forward(
-        self, unsupported_layer_output: PassThroughOutputType
-    ) -> PassThroughOutputType:
-        return unsupported_layer_output
+    def forward(self, output: PassThroughOutputType) -> PassThroughOutputType:
+        return output
 
 
 class BasicModel_GradientLayerAttribution(nn.Module):
     def __init__(
         self,
         inplace: bool = False,
-        unsupported_layer_output: PassThroughOutputType = None,
+        unsupported_layer_output: Optional[PassThroughOutputType] = None,
     ) -> None:
         super().__init__()
         # Linear 0 is simply identity transform
@@ -456,7 +454,7 @@ class BasicModel_GradientLayerAttribution(nn.Module):
 
         self.relu = nn.ReLU(inplace=inplace)
         self.relu_alt = nn.ReLU(inplace=False)
-        self.unsupportedLayer = GradientUnsupportedLayerOutput()
+        self.unsupported_layer = PassThroughLayerOutput()
 
         self.linear2 = nn.Linear(4, 2)
         self.linear2.weight = nn.Parameter(torch.ones(2, 4))
@@ -466,15 +464,19 @@ class BasicModel_GradientLayerAttribution(nn.Module):
         self.linear3.weight = nn.Parameter(torch.ones(2, 4))
         self.linear3.bias = nn.Parameter(torch.tensor([-1.0, 1.0]))
 
+        self.int_layer = PassThroughLayerOutput()  # sample layer with an int output
+
     @no_type_check
-    def forward(self, x: Tensor, add_input: Optional[Tensor] = None) -> Tensor:
+    def forward(
+        self, x: Tensor, add_input: Optional[Tensor] = None
+    ) -> Dict[str, Tensor]:
         input = x if add_input is None else x + add_input
         lin0_out = self.linear0(input)
         lin1_out = self.linear1(lin0_out)
         lin1_out_alt = self.linear1_alt(lin0_out)
 
         if self.unsupported_layer_output is not None:
-            self.unsupportedLayer(self.unsupported_layer_output)
+            self.unsupported_layer(self.unsupported_layer_output)
             # unsupportedLayer is unused in the forward func.
         self.relu_alt(
             lin1_out_alt
@@ -483,9 +485,17 @@ class BasicModel_GradientLayerAttribution(nn.Module):
         relu_out = self.relu(lin1_out)
         lin2_out = self.linear2(relu_out)
 
-        lin3_out = self.linear3(lin1_out_alt).to(torch.int64)
+        lin3_out = self.linear3(lin1_out_alt)
+        int_output = self.int_layer(lin3_out.to(torch.int64))
 
-        return torch.cat((lin2_out, lin3_out), dim=1)
+        output_tensors = torch.cat((lin2_out, int_output), dim=1)
+
+        # we return a dictionary of tensors as an output to test the case
+        # where an output accessor is required
+        return {
+            "task {}".format(i + 1): output_tensors[:, i]
+            for i in range(output_tensors.shape[1])
+        }
 
 
 class MultiRelu(nn.Module):
@@ -650,6 +660,16 @@ class BasicModel_MultiLayer_MultiInput(nn.Module):
     # pyre-fixme[3]: Return type must be annotated.
     def forward(self, x1: Tensor, x2: Tensor, x3: Tensor, scale: int):
         return self.model(scale * (x1 + x2 + x3))
+
+
+class BasicModel_MultiLayer_TupleInput(nn.Module):
+    def __init__(self) -> None:
+        super().__init__()
+        self.model = BasicModel_MultiLayer()
+
+    @no_type_check
+    def forward(self, x: Tuple[Tensor, Tensor, Tensor]) -> Tensor:
+        return self.model(x[0] + x[1] + x[2])
 
 
 class BasicModel_MultiLayer_MultiInput_with_Future(nn.Module):
