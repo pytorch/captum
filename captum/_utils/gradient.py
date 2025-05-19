@@ -682,8 +682,6 @@ def compute_layer_gradients_and_eval(
             " take gradient with respect to multiple outputs."
         )
 
-        # pyre-fixme[6]: For 2nd argument expected `Dict[Module, Dict[device,
-        #  typing.Tuple[Tensor, ...]]]` but got `Module`.
         device_ids = _extract_device_ids(forward_fn, saved_layer, device_ids)
 
         # Identifies correct device ordering based on device ids.
@@ -729,7 +727,6 @@ def compute_layer_gradients_and_eval(
             for layer_tensor in saved_layer[single_layer][device_id]
         )
         saved_grads = torch.autograd.grad(
-            # pyre-fixme[6]: For 1st argument expected `Tensor` but got `Module`.
             outputs=torch.unbind(output),
             inputs=grad_inputs,
             **grad_kwargs or {},

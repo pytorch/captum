@@ -68,7 +68,6 @@ class PropagationRule(ABC):
             device = grad.device
             # pyre-fixme[16]: `PropagationRule` has no attribute `_has_single_input`.
             if self._has_single_input:
-                # pyre-fixme[16]: `PropagationRule` has no attribute `relevance_input`.
                 self.relevance_input[device] = relevance.data
             else:
                 cast(List[Tensor], self.relevance_input[device]).append(relevance.data)
@@ -82,14 +81,12 @@ class PropagationRule(ABC):
 
     # pyre-fixme[3]: Return type must be annotated.
     def _create_backward_hook_output(self, outputs: torch.Tensor):
-        # pyre-fixme[53]: Captured variable `outputs` is not annotated.
         # pyre-fixme[3]: Return type must be annotated.
         # pyre-fixme[2]: Parameter must be annotated.
         def _backward_hook_output(grad):
             sign = torch.sign(outputs)
             sign[sign == 0] = 1
             relevance = grad / (outputs + sign * self.STABILITY_FACTOR)
-            # pyre-fixme[16]: `PropagationRule` has no attribute `relevance_output`.
             self.relevance_output[grad.device] = grad.data
             return relevance
 
@@ -138,7 +135,6 @@ class EpsilonRule(PropagationRule):
     """
 
     def __init__(self, epsilon: float = 1e-9) -> None:
-        # pyre-fixme[4]: Attribute must be annotated.
         self.STABILITY_FACTOR = epsilon
 
     # pyre-fixme[2]: Parameter must be annotated.
@@ -159,9 +155,7 @@ class GammaRule(PropagationRule):
     """
 
     def __init__(self, gamma: float = 0.25, set_bias_to_zero: bool = False) -> None:
-        # pyre-fixme[4]: Attribute must be annotated.
         self.gamma = gamma
-        # pyre-fixme[4]: Attribute must be annotated.
         self.set_bias_to_zero = set_bias_to_zero
 
     # pyre-fixme[2]: Parameter must be annotated.
@@ -188,7 +182,6 @@ class Alpha1_Beta0_Rule(PropagationRule):
     """
 
     def __init__(self, set_bias_to_zero: bool = False) -> None:
-        # pyre-fixme[4]: Attribute must be annotated.
         self.set_bias_to_zero = set_bias_to_zero
 
     # pyre-fixme[2]: Parameter must be annotated.
@@ -215,7 +208,6 @@ class IdentityRule(EpsilonRule):
         # pyre-fixme[3]: Return type must be annotated.
         # pyre-fixme[2]: Parameter must be annotated.
         def _backward_hook_input(grad):
-            # pyre-fixme[16]: `IdentityRule` has no attribute `relevance_output`.
             return self.relevance_output[grad.device]
 
         return _backward_hook_input

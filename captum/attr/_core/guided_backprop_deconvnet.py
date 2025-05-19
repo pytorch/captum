@@ -40,7 +40,7 @@ class ModifiedReluGradientAttribution(GradientAttribution):
             " ReLU layers."
         )
 
-    @log_usage()
+    @log_usage(part_of_slo=True)
     def attribute(
         self,
         inputs: TensorOrTupleOfTensorsGeneric,
@@ -141,7 +141,7 @@ class GuidedBackprop(ModifiedReluGradientAttribution):
             self, model, use_relu_grad_output=False
         )
 
-    @log_usage()
+    @log_usage(part_of_slo=True)
     def attribute(
         self,
         inputs: TensorOrTupleOfTensorsGeneric,
@@ -250,7 +250,7 @@ class Deconvolution(ModifiedReluGradientAttribution):
         """
         ModifiedReluGradientAttribution.__init__(self, model, use_relu_grad_output=True)
 
-    @log_usage()
+    @log_usage(part_of_slo=True)
     def attribute(
         self,
         inputs: TensorOrTupleOfTensorsGeneric,

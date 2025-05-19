@@ -58,7 +58,9 @@ class Test(BaseTest):
         # Compare with integrated gradients
         ig = IntegratedGradients(model)
         baselines = (torch.zeros(batch_size, 3), torch.zeros(batch_size, 4))
-        attributions_ig = ig.attribute(inputs, baselines=baselines)
+        attributions_ig = ig.attribute(  # type: ignore[has-type]
+            inputs, baselines=baselines
+        )
         self._assert_shap_ig_comparision(attributions, attributions_ig)
 
         # compare attributions retrieved with and without
@@ -213,7 +215,9 @@ class Test(BaseTest):
         # Compare with integrated gradients
         ig = IntegratedGradients(model)
         baselines = torch.arange(0.0, num_in * 2.0).reshape(2, num_in)
-        attributions_ig = ig.attribute(inputs, baselines=baselines, target=target)
+        attributions_ig = ig.attribute(  # type: ignore[has-type]
+            inputs, baselines=baselines, target=target
+        )
         self._assert_shap_ig_comparision((attributions,), (attributions_ig,))
 
     def test_basic_relu_multi_input(self) -> None:
@@ -243,7 +247,9 @@ class Test(BaseTest):
         )
 
         ig = IntegratedGradients(model)
-        attributions_ig = ig.attribute(inputs, baselines=baselines)
+        attributions_ig = ig.attribute(  # type: ignore[has-type]
+            inputs, baselines=baselines
+        )
         self._assert_shap_ig_comparision(attributions, attributions_ig)
 
     def test_futures_not_implemented(self) -> None:

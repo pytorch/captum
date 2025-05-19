@@ -1083,7 +1083,7 @@ class NaiveInfluenceFunction(IntermediateQuantitiesInfluenceFunction):
             aggregate,
         )
 
-    @log_usage(skip_self_logging=True)
+    @log_usage(part_of_slo=True, skip_self_logging=True)
     def influence(  # type: ignore[override]
         self,
         # pyre-fixme[24]: Generic type `tuple` expects at least 1 type parameter.
@@ -1284,7 +1284,7 @@ class NaiveInfluenceFunction(IntermediateQuantitiesInfluenceFunction):
             self, inputs_dataset, show_progress
         )
 
-    @log_usage(skip_self_logging=True)
+    @log_usage(part_of_slo=True, skip_self_logging=True)
     def self_influence(
         self,
         # pyre-fixme[2]: Parameter annotation cannot contain `Any`.

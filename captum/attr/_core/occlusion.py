@@ -47,7 +47,7 @@ class Occlusion(FeatureAblation):
         FeatureAblation.__init__(self, forward_func)
         self.use_weights = True
 
-    @log_usage()
+    @log_usage(part_of_slo=True)
     def attribute(  # type: ignore
         self,
         inputs: TensorOrTupleOfTensorsGeneric,
@@ -323,8 +323,6 @@ class Occlusion(FeatureAblation):
                 torch.ones(1, dtype=torch.long, device=expanded_input.device)
                 - input_mask
             ).to(expanded_input.dtype)
-            # pyre-fixme[58]: `*` is not supported for operand types `Union[None, float,
-            #  Tensor]` and `Tensor`.
         ) + (baseline * input_mask.to(expanded_input.dtype))
         return ablated_tensor, input_mask
 
