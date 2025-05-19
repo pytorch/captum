@@ -86,12 +86,12 @@
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>In the second part of interpreting Bert models we look into attention matrices, their importance scores, vector norms and compare them with the results that we found in Part 1.</p>
-<p>Similar to Part 1 we use Bert Question Answering model fine-tuned on SQUAD dataset using transformers library from Hugging Face: <a href="https://huggingface.co/transformers/">https://huggingface.co/transformers/</a></p>
-<p>In order to be able to use the same setup and reproduce the results form Part 1 we will redefine same setup and helper functions in this tutorial as well.</p>
-<p>In this tutorial we compare attention matrices with their importance scores when we attribute them to a particular class, and vector norms as proposed in paper: <a href="https://arxiv.org/pdf/2004.10102.pdf">https://arxiv.org/pdf/2004.10102.pdf</a></p>
+<p>In the second part of interpreting BERT models we look into attention matrices, their importance scores, vector norms and compare them with the results that we found in Part 1.</p>
+<p>Similar to Part 1 we use the BERT Question Answering model fine-tuned on the SQUAD dataset using transformers library from Hugging Face: <a href="https://huggingface.co/transformers/">https://huggingface.co/transformers/</a>.</p>
+<p>In order to be able to use the same setup and reproduce the results form Part 1 we will redefine the same setup and helper functions in this tutorial as well.</p>
+<p>In this tutorial we compare attention matrices with their importance scores when we attribute them to a particular class, and vector norms as proposed in paper: <a href="https://arxiv.org/pdf/2004.10102.pdf">https://arxiv.org/pdf/2004.10102.pdf</a>.</p>
 <p>We show that the importance scores computed for the attention matrices and specific class are more meaningful than the attention matrices alone or different norm vectors computed for different input activations.</p>
-<p>Note: Before running this tutorial, please install <code>seaborn</code>, <code>pandas</code> and <code>matplotlib</code>, <code>transformers</code>(from hugging face) python packages in addition to <code>Captum</code> and <code>torch</code> libraries.</p>
+<p>Note: Before running this tutorial, please install <code>seaborn</code>, <code>pandas</code>, <code>matplotlib</code>, and <code>transformers</code>(from hugging face) python packages in addition to <code>Captum</code> and <code>torch</code> libraries.</p>
 <p>This tutorial was built using transformer version 4.3.0.</p>
 </div>
 </div>
@@ -135,7 +135,7 @@
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>The first step is to fine-tune BERT model on SQUAD dataset. This can be easiy accomplished by following the steps described in hugging face's official web site: <a href="https://github.com/huggingface/transformers#run_squadpy-fine-tuning-on-squad-for-question-answering">https://github.com/huggingface/transformers#run_squadpy-fine-tuning-on-squad-for-question-answering</a></p>
+<p>The first step is to fine-tune the BERT model on the SQUAD dataset. This can be easily accomplished by following the steps described in hugging face's official web site: <a href="https://github.com/huggingface/transformers#run_squadpy-fine-tuning-on-squad-for-question-answering">https://github.com/huggingface/transformers#run_squadpy-fine-tuning-on-squad-for-question-answering</a></p>
 <p>Note that the fine-tuning is done on a <code>bert-base-uncased</code> pre-trained model.</p>
 </div>
 </div>
@@ -192,7 +192,7 @@
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>Defining a custom forward function that will allow us to access the start and end positions of our prediction using <code>position</code> input argument.</p>
+<p>Defining a custom forward function that will allow us to access the start and end positions of our prediction using the <code>position</code> input argument.</p>
 </div>
 </div>
 </div>
@@ -216,7 +216,7 @@
 <div class="text_cell_render border-box-sizing rendered_html">
 <p>Let's define some variables and functions that will help us to compute the attribution of attention matrices for specific output such as start or end positions of the prediction.</p>
 <p>To do so, we need to define baselines / references, numericalize both the baselines and the inputs. We will define helper functions to achieve that.</p>
-<p>The cell below defines numericalized special tokens that will be later used for constructing inputs and corresponding baselines/references.</p>
+<p>The cell below defines numericalized special tokens that will be later used for constructing inputs and corresponding baselines / references.</p>
 </div>
 </div>
 </div>
@@ -236,7 +236,7 @@
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>Below we define a set of helper function for constructing references / baselines for word tokens, token types and position ids.</p>
+<p>Below we define a set of helper function for constructing baselines / references for word tokens, token types and position IDs.</p>
 </div>
 </div>
 </div>
@@ -292,7 +292,7 @@
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>Let's define the <code>question - text</code> pair that we'd like to use as an input for our Bert model and interpret what the model was focusing on when predicting an answer to the question from given input text</p>
+<p>Let's define the <code>question - text</code> pair that we'd like to use as an input for our BERT model and interpret what the model was focusing on when predicting an answer to the question from a given input text.</p>
 </div>
 </div>
 </div>
@@ -356,7 +356,7 @@
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>Now let's make predictions using input, token type, position id and a default attention mask.</p>
+<p>Now let's make predictions using input, token type, position ID and a default attention mask.</p>
 </div>
 </div>
 </div>
@@ -400,7 +400,7 @@ Predicted Answer:  to include , em ##power and support humans of all kinds
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p><code>output_attentions</code> represent attention matrices aka attention probabilities for all 12 layers and all 12 heads. It represents softmax-normalized dot-product between the key and query vectors. In the literature (<a href="https://www.aclweb.org/anthology/W19-4828.pdf">https://www.aclweb.org/anthology/W19-4828.pdf</a>) it has been used as an importance indicator of how much a token attends / relates to another token in the text. In case of translation for example it is a good indicator of how much a token in one language attends to the corresponding translation in another language. In case of Question Answering model it indicates which tokens attend / relate to each other in question, text or answer segment.</p>
+<p><code>output_attentions</code> represent attention matrices, aka attention probabilities, for all 12 layers and all 12 heads. It represents a softmax-normalized dot-product between the key and query vectors. In the literature (<a href="https://www.aclweb.org/anthology/W19-4828.pdf">https://www.aclweb.org/anthology/W19-4828.pdf</a>) it has been used as an importance indicator of how much a token attends / relates to another token in the text. In case of translation for example, it is a good indicator of how much a token in one language attends to the corresponding translation in another language. In case of Question Answering models it indicates which tokens attend / relate to each other in a question, text or answer segment.</p>
 <p>Since <code>output_attentions</code> contains the layers in a list, we will stack them in order to move everything into a tensor.</p>
 </div>
 </div>
@@ -427,7 +427,7 @@ Predicted Answer:  to include , em ##power and support humans of all kinds
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>Below helper function will be used for visualizing token-to-token relation / attention scores for all heads in a given layer or for all layers across all heads.</p>
+<p>The below helper function will be used for visualizing token-to-token relation / attention scores for all heads in a given layer or for all layers across all heads.</p>
 </div>
 </div>
 </div>
@@ -472,7 +472,7 @@ Predicted Answer:  to include , em ##power and support humans of all kinds
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>Below helper function will be used for visualizing the importance scores for tokens across all heads in all layers.</p>
+<p>The below helper function will be used for visualizing the importance scores for tokens across all heads in all layers.</p>
 </div>
 </div>
 </div>
@@ -510,7 +510,7 @@ Predicted Answer:  to include , em ##power and support humans of all kinds
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>Let's examine a specific layer. For that reason we will define a fixed layer id that will be used for visualization purposes. The users are free to change this layer if they want to examine a different one.</p>
+<p>Let's examine a specific layer. For that reason we will define a fixed layer ID that will be used for visualization purposes. The users are free to change this layer if they want to examine a different one.</p>
 </div>
 </div>
 </div>
@@ -557,21 +557,21 @@ Predicted Answer:  to include , em ##power and support humans of all kinds
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>Based on the visualizations above we observe that there is a high attention set along the diagonals and on an uninformative token such as <code>[SEP]</code>. This is something that was observed in previous papers which indicates that attention matrices aren't always a good indicator of finding which tokens are more important or which token is related to which. We observe similar pattern when we examine another layer.</p>
+<p>Based on the visualizations above we observe that there is a high attention set along the diagonals and on an uninformative token such as <code>[SEP]</code>. This is something that was observed in previous papers which indicates that attention matrices aren't always a good indicator of finding which tokens are more important or which token is related to which. We observe similar patterns when we examine another layer.</p>
 </div>
 </div>
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>In the cell below we compute and visualize L2 norm across head axis for all 12 layer. This provides a summary for each layer across all heads.</p>
+<p>In the cell below we compute and visualize L2 norm across head axis for all 12 layers. This provides a summary for each layer across all heads.</p>
 </div>
 </div>
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>Defining normalization function depending on pytorch version.</p>
+<p>Defining a normalization function depending on pytorch version.</p>
 </div>
 </div>
 </div>
@@ -615,7 +615,7 @@ Predicted Answer:  to include , em ##power and support humans of all kinds
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>Based on the visualiziation above we can convince ourselves that attention scores aren't trustworthy measures of importances for token-to-token relations across all layers. We see strong signal along the diagonal and for the <code>[SEP]</code> and <code>[CLS]</code> tokens. These signals, however, aren't true indicators of what semantic the model learns.</p>
+<p>Based on the visualiziation above we can convince ourselves that attention scores aren't trustworthy measures of importance for token-to-token relations across all layers. We see strong signal along the diagonal and for the <code>[SEP]</code> and <code>[CLS]</code> tokens. These signals, however, aren't true indicators of what semantics the model learns.</p>
 </div>
 </div>
 </div>
@@ -629,7 +629,7 @@ Predicted Answer:  to include , em ##power and support humans of all kinds
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>In the cells below we visualize the attribution scores of attention matrices for the start and end position positions prediction and compare with the actual attention matrices. To do so, first of all, we compute the attribution scores using LayerConductance algorithm similar to Part 1.</p>
+<p>In the cells below we visualize the attribution scores of attention matrices for the start and end position predictions and compare with the actual attention matrices. To do so, first of all, we compute the attribution scores using LayerConductance algorithm similar to Part 1.</p>
 </div>
 </div>
 </div>
@@ -664,7 +664,7 @@ Predicted Answer:  to include , em ##power and support humans of all kinds
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>Now let's look into the layers of our network. More specifically we would like to look into the distribution of attribution scores for each token across all layers and attribution matrices for each head in all layers in Bert model.<br/>
+<p>Now let's look into the layers of our network. More specifically we would like to look into the distribution of attribution scores for each token across all layers and attribution matrices for each head in all layers of the BERT model.
 We do that using one of the layer attribution algorithms, namely, layer conductance. However, we encourage you to try out and compare the results with other algorithms as well.</p>
 <p>Let's configure <code>InterpretableEmbeddingsBase</code> again, in this case in order to interpret the layers of our model.</p>
 </div>
@@ -684,8 +684,8 @@ We do that using one of the layer attribution algorithms, namely, layer conducta
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>Let's iterate over all layers and compute the attributions w.r.t. all tokens in the input and attention matrices.</p>
-<p>Note: Since below code is iterating over all layers it can take over 5 seconds. Please be patient!</p>
+<p>Let's iterate over all layers and compute the attributions with respect to all tokens in the input and attention matrices.</p>
+<p>Note: Since the below code is iterating over all layers it can take over 5 seconds. Please be patient!</p>
 </div>
 </div>
 </div>
@@ -745,10 +745,10 @@ We do that using one of the layer attribution algorithms, namely, layer conducta
 <div class="text_cell_render border-box-sizing rendered_html">
 <p>As a reminder of Part 1 we visualize the heatmaps of the attributions for the outputs of all 12 layers in the plots below. The outputs of 12 layers are also known as context layer which represents the dot product between the attribution matrices and value vector.</p>
 <p>The plot below represents a heatmap of attributions across all layers and tokens for the start position prediction.</p>
-<p>Note that here we do not have information about different heads. Heads related information will be examined separately when we visualize the attribution scores of the attention matrices w.r.t. the start or end position predictions.</p>
+<p>Note that here we do not have information about different heads. Heads related information will be examined separately when we visualize the attribution scores of the attention matrices with respect to the start or end position predictions.</p>
 <p>It is interesting to observe that the question word <code>what</code> gains increasingly high attribution from layer one to ten. In the last two layers that importance is slowly diminishing.<br/>
-In contrary to <code>what</code> token, many other tokens have negative or close to zero attribution in the first 6 layers.</p>
-<p>We start seeing slightly higher attribution in tokens <code>important</code>, <code>us</code> and <code>to</code>. Interestingly token <code>important</code> is also assigned high attribution score which is remarkably high in the fifth and sixth layers.</p>
+In contrast to the <code>what</code> token, many other tokens have negative or close to zero attribution in the first 6 layers.</p>
+<p>We start seeing slightly higher attribution in tokens <code>important</code>, <code>us</code> and <code>to</code>. Interestingly token <code>important</code> is also assigned a high attribution score which is remarkably high in the fifth and sixth layers.</p>
 <p>Lastly, our correctly predicted token <code>to</code> gains increasingly high positive attribution especially in the last two layers.</p>
 </div>
 </div>
@@ -785,7 +785,7 @@ In contrary to <code>what</code> token, many other tokens have negative or close
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
 <p>Now let's examine the heat map of the attributions for the end position prediction. In the case of end position prediction we again observe high attribution scores for the token <code>what</code> in the last 11 layers.
-Correctly predicted end token <code>kinds</code> has positive attribution across all layers and it is especially prominent in the last two layers. It's also interesting to observe that <code>humans</code> token also has  relatively high attribution score in the last two layers.</p>
+Correctly predicted end token <code>kinds</code> has positive attribution across all layers and it is especially prominent in the last two layers. It's also interesting to observe that the <code>humans</code> token also has a relatively high attribution score in the last two layers.</p>
 </div>
 </div>
 </div>
@@ -836,7 +836,7 @@ Correctly predicted end token <code>kinds</code> has positive attribution across
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>In this section we visualize the attribution scores of start and end position predictions w.r.t. attention matrices.
+<p>In this section we visualize the attribution scores of start and end position predictions with respect to attention matrices.
 Note that each layer has 12 heads, hence attention matrices. We will first visualize for a specific layer and head, later we will summarize across all heads in order to gain a bigger picture.</p>
 </div>
 </div>
@@ -873,7 +873,7 @@ Note that each layer has 12 heads, hence attention matrices. We will first visua
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>As we can see from the visualizations above, in contrary to attention scores the attributions of specific target w.r.t. to those scores are more meaningful and most importantly, they do not attend to <code>[SEP]</code> token or show diagonal patterns. We observe that heads 4, 9, 12 and 2 show strong relationship between <code>what</code> and <code>it</code> tokens when predicting start position, head 10 and 11 between <code>it</code> and <code>it</code>, heads 8 between <code>important</code> and <code>to</code> and head 1 between <code>to</code> and <code>what</code>. Note that <code>to</code> token is the start position of the answer token. It is also important to mention that these observations are for a selected <code>layer</code>. We can change the index of selected <code>layer</code> and examine interesting relationships in other layers.</p>
+<p>As we can see from the visualizations above, in contrast to attention scores the attributions of specific targets with respect to those scores are more meaningful and most importantly, they do not attend to <code>[SEP]</code> token or show diagonal patterns. We observe that heads 2, 4, 9, and 12 show strong relationships between <code>what</code> and <code>it</code> tokens when predicting start position, head 10 and 11 between <code>it</code> and <code>it</code>, heads 8 between <code>important</code> and <code>to</code> and head 1 between <code>to</code> and <code>what</code>. Note that the <code>to</code> token is the start position of the answer token. It is also important to mention that these observations are for a selected <code>layer</code>. We can change the index of selected <code>layer</code> and examine interesting relationships in other layers.</p>
 </div>
 </div>
 </div>
@@ -910,14 +910,14 @@ Note that each layer has 12 heads, hence attention matrices. We will first visua
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>By looking at the visualizations above we can see that the model pays attention to very specific handpicked relationships when making a sprediction for start position. Most notably in the layers 10, 7, 11 and 4 it focuses more on the relationships between <code>it</code> and <code>is</code>, <code>important</code> and <code>to</code>.</p>
+<p>By looking at the visualizations above we can see that the model pays attention to very specific handpicked relationships when making a prediction for start position. Most notably in the layers 10, 7, 11 and 4 it focuses more on the relationships between <code>it</code> and <code>is</code>, <code>important</code> and <code>to</code>.</p>
 </div>
 </div>
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>Now let's run the same experiments for the end position prediction. Below we visualize the attribution scorese of attention matrices for the end position prediction for the selected <code>layer</code>.</p>
+<p>Now let's run the same experiments for the end position prediction. Below we visualize the attribution scores of attention matrices for the end position prediction for the selected <code>layer</code>.</p>
 </div>
 </div>
 </div>
@@ -946,7 +946,7 @@ Note that each layer has 12 heads, hence attention matrices. We will first visua
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>As we can see from the visualizations above that for the end position prediction we have stronger attention towards the end of the answer token <code>kinds</code>. Here we can see stronger connection between <code>humans</code> and <code>kinds</code> in the 11th head, <code>it</code> and <code>em</code>, <code>power</code>, <code>and</code> in the 5th, 6th and 8th heads. The connections between <code>it</code> and <code>what</code> are also strong in first couple and 10th heads.</p>
+<p>As we can see from the visualizations above that for the end position prediction we have stronger attention towards the end of the answer token <code>kinds</code>. Here we can see stronger connections between <code>humans</code> and <code>kinds</code> in the 11th head, <code>it</code> and <code>em</code>, <code>power</code>, <code>and</code> in the 5th, 6th and 8th heads. The connections between <code>it</code> and <code>what</code> are also strong in the first couple and 10th heads.</p>
 </div>
 </div>
 </div>
@@ -997,7 +997,7 @@ Note that each layer has 12 heads, hence attention matrices. We will first visua
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>In this section of the tutorial we will compute Vector norms for activation layers such as ||f(x)||, ||α * f(x)|| and ||Σαf(x)|| as also described in the: <a href="https://arxiv.org/pdf/2004.10102.pdf">https://arxiv.org/pdf/2004.10102.pdf</a></p>
+<p>In this section of the tutorial we will compute Vector norms for activation layers such as ||f(x)||, ||α * f(x)|| and ||Σαf(x)|| as described in: <a href="https://arxiv.org/pdf/2004.10102.pdf">https://arxiv.org/pdf/2004.10102.pdf</a>.</p>
 <p>As also shown in the paper mentioned above, normalized activations are better indicators of importance scores than the attention scores however they aren't as indicative as the attribution scores. This is because normalized activations ||f(x)|| and ||α * f(x)|| aren't attributed to a specific output prediction. From our results we can also see that according to those normalized scores <code>[SEP]</code> tokens are insignificant.</p>
 </div>
 </div>
@@ -1005,7 +1005,7 @@ Note that each layer has 12 heads, hence attention matrices. We will first visua
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>Below we define / extract all parameters that we need to computation vector norms.</p>
+<p>Below we define / extract all parameters that we need to computate vector norms.</p>
 </div>
 </div>
 </div>
@@ -1028,7 +1028,7 @@ Note that each layer has 12 heads, hence attention matrices. We will first visua
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>In order to compute above mentioned norms we need to get access to dense layer's weights and value vector of the self attention layer.</p>
+<p>In order to compute the above mentioned norms we need to get access to dense layer's weights and value vector of the self attention layer.</p>
 </div>
 </div>
 </div>
@@ -1082,7 +1082,7 @@ Note that each layer has 12 heads, hence attention matrices. We will first visua
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>In the cell below we perform several transformations with the value layer activations and bring it to the shape so that we can compute different norms. The transformations are done the same way as it is described in the original paper and corresponding github implementation.</p>
+<p>In the cell below we perform several transformations with the value layer activations and change it to the shape so that we can compute different norms. The transformations are done the same way as described in the original paper and corresponding GitHub implementation.</p>
 </div>
 </div>
 </div>
@@ -1340,14 +1340,14 @@ Note that each layer has 12 heads, hence attention matrices. We will first visua
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>Above visualizations also confirm that the attention scores aren't concentrated on the tokens such as <code>[CLS]</code>, <code>[SEP]</code> and <code>.</code> however we see stronger signals along the diagonals and some patches of stronger signals between certain parts of the text including some tokens in the question part that are relevant in the answer piece.</p>
+<p>The above visualizations also confirm that the attention scores aren't concentrated on the tokens such as <code>[CLS]</code>, <code>[SEP]</code> and <code>.</code> however we see stronger signals along the diagonals and some patches of stronger signals between certain parts of the text including some tokens in the question part that are relevant in the answer piece.</p>
 </div>
 </div>
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>It is important to mention that all experiments were performed for one input sample, namely, <code>sentence</code>. In the papers we often see aggregation of the results across multiple samples. For further analysis and more convincing propositions we recommend to conduct the experiments across multiple input samples. In addition to that it would be also interesting to look into the correlation of heads in layer and across different layers.</p>
+<p>It is important to mention that all experiments were performed for one input sample, namely, <code>sentence</code>. In the papers we often see aggregation of the results across multiple samples. For further analysis and more convincing propositions we recommend to conduct the experiments across multiple input samples. In addition to that it would be interesting to look into the correlation of heads in layer and across different layers.</p>
 </div>
 </div>
 </div>

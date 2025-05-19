@@ -3,9 +3,9 @@
 
 # # Interpret regression models using California Housing Prices Dataset
 
-# This notebook demonstrates how to apply `Captum` library on a regression model and understand important features, layers / neurons that contribute to the prediction. It compares a number of attribution algorithms from `Captum` library for a simple DNN model trained on a sub-sample of a well-known California house prices dataset.
+# This notebook demonstrates how to apply the `Captum` library on a regression model and understand important features, layers / neurons that contribute to the prediction. It compares a number of attribution algorithms from `Captum` library for a simple DNN model trained on a sub-sample of a well-known California house prices dataset.
 # 
-# Note that in order to be able to run this notebook successfully you need to install scikit-learn package in advance.
+# Note that in order to be able to run this notebook successfully you need to install matplotlib and scikit-learn packages in advance.
 # 
 
 # In[85]:
@@ -18,7 +18,7 @@ from os import path
 
 import matplotlib.pyplot as plt
 
-#scikit-learn related imports
+# scikit-learn related imports
 import sklearn
 from sklearn.datasets import fetch_california_housing
 from sklearn.datasets import fetch_openml
@@ -66,7 +66,7 @@ A block group is the smallest geographical unit for which the U.S. Census Bureau
 (a block group typically has a population of 600 to 3,000 people).
 """
 
-#take first n examples for speed up
+# take first n examples for speed up
 n = 600
 X = california.data[:n]
 y = california.target[:n]
@@ -91,7 +91,7 @@ X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_
 
 # # Data Exploration
 
-# Let's visualize dependent variable vs each independent variable in a separate plot. Apart from that we will also perform a simple regression analysis and plot the fitted line in dashed, red color.
+# Let's visualize the dependent variable vs each independent variable in a separate plot. Apart from that we will also perform a simple regression analysis and plot the fitted line in dashed, red color.
 
 # In[89]:
 
@@ -110,7 +110,7 @@ for i, (ax, col) in enumerate(zip(axs.flat, feature_names)):
     ax.set_ylabel('Median House Value')
 
 # From the diagram above we can tell that some of the most influential features that are correlated with the output average house value are:   
-#    - MedInc, median income in block group
+#    - MedInc, median income in block group.
 #      If MedInc increases the house value increases too.
 #    - AveRooms, average number of rooms per household.
 #      This variable is positively correlated with the house value. The higher the average number of rooms per household the higher the average value of the house.     
@@ -133,7 +133,7 @@ datasets = torch.utils.data.TensorDataset(X_train, y_train)
 train_iter = torch.utils.data.DataLoader(datasets, batch_size=10, shuffle=True)
 
 
-# Defining default hyper parameters for the model.
+# Defining default hyperparameters for the model.
 # 
 
 # In[91]:
@@ -183,7 +183,7 @@ model.train()
 
 criterion = nn.MSELoss(reduction='sum')
 
-# Defining the training function that contains the training loop and uses RMSprop and given input hyper-parameters to train the model defined in the cell above.
+# Defining the training function that contains the training loop and uses RMSprop and given input hyperparameters to train the model defined in the cell above.
 
 # In[95]:
 
@@ -213,7 +213,7 @@ def train(model_inp, num_epochs = num_epochs):
 
 # If the model was previously trained and stored, we load that pre-trained model, otherwise, we train a new model and store it for future uses.
 # 
-# Models can found here: https://github.com/pytorch/captum/tree/master/tutorials/models
+# Models can found here: https://github.com/pytorch/captum/tree/master/tutorials/models.
 
 # In[96]:
 
@@ -235,7 +235,7 @@ def train_load_save_model(model_obj, model_path):
 SAVED_MODEL_PATH = 'models/california_model.pt'
 train_load_save_model(model, SAVED_MODEL_PATH)
 
-# Let's perform a simple sanity check and compute the performance of the model using Root Squared Mean Error (RSME) metric.
+# Let's perform a simple sanity check and compute the performance of the model using Root Mean Square Error (RMSE) metric.
 
 # In[99]:
 
@@ -248,7 +248,7 @@ print('model err: ', err)
 
 # # Comparing different attribution algorithms
 
-# Let's compute the attributions with respect to the inputs of the model using different attribution algorithms from core `Captum` library and visualize those attributions. We use test dataset defined in the cells above for this purpose.
+# Let's compute the attributions with respect to the inputs of the model using different attribution algorithms from core `Captum` library and visualize those attributions. We use the test dataset defined in the cells above for this purpose.
 # 
 # We use mainly default settings, such as default baselines, number of steps etc., for all algorithms, however you are welcome to play with the settings. For GradientSHAP specifically we use the entire training dataset as the distribution of baselines.
 # 
@@ -270,7 +270,7 @@ gs_attr_test = gs.attribute(X_test, X_train)
 fa_attr_test = fa.attribute(X_test)
 
 
-# Now let's visualize attribution scores with respect to inputs (using test dataset) for our simple model in one plot. This will help us to understand how similar or different the attribution scores assigned from different attribution algorithms are. Apart from that we will also compare attribution scores with the learned model weights.
+# Now let's visualize attribution scores with respect to inputs (using the test dataset) for our simple model in one plot. This will help us to understand how similar or different the attribution scores assigned from different attribution algorithms are. Apart from that we will also compare attribution scores with the learned model weights.
 # 
 # It is important to note the we aggregate the attributions across the entire test dataset in order to retain a global view of feature importance. This, however, is not ideal since the attributions can cancel out each other when we aggregate then across multiple samples.
 
@@ -335,17 +335,17 @@ plt.show()
 # 
 # From the plot above we can see that attribution algorithms sometimes disagree on assigning importance scores and that they are not always aligned with weights. However, we can still observe that two of the top important features: `MedInc`, and `AveRooms` are also considered to be important based on both most attribution algorithms and the weight scores.
 # 
-# It is interesting to observe that the feature `Population` has high positive attribution score based on some of the attribution algorithms. This can be related, for example, to the choice of the baseline. In this tutorial we use zero-valued baselines for all features, however if we were to choose those values more carefully for each feature the picture will change. Similar arguments apply also when the signs of the weights and attributions mismatches or when one algorithm assigns higher or lower attribution scores compare to the others.
+# It is interesting to observe that the feature `Population` has high positive attribution score based on some of the attribution algorithms. This can be related, for example, to the choice of the baseline. In this tutorial we use zero-valued baselines for all features, however if we were to choose those values more carefully for each feature the picture will change. Similar arguments apply also when the signs of the weights and attributions mismatch or when one algorithm assigns higher or lower attribution scores compare to the others.
 # 
 # In terms of least important features, we observe that `AveBedrms` and `AveOccup` are voted to be least important both based on most attribution algorithms and learned coefficients.
 # 
-# Another interesting observation is that both Integrated Gradients and DeepLift return similar attribution scores across all features. This is associated with the fact that although we have non-linearities in our model, their effects aren't significant and DeepLift is close to `(input - baselines) * gradients`. And because the gradients do not change significantly along the straight line from baseline to input, we observe similar situation with Integrated Gradients as well.
+# Another interesting observation is that both Integrated Gradients and DeepLift return similar attribution scores across all features. This is associated with the fact that although we have non-linearities in our model, their effects aren't significant and DeepLift is close to `(input - baselines) * gradients`. Because the gradients do not change significantly along the straight line from baseline to input, we observe similar situation with Integrated Gradients as well.
 # 
 # We also note that GradientShap behaves differently than the other methods for this data and model.  Whereas the other methods in this tutorial are calculated on test inputs and a reference baseline of zero, GradientShap is calculated with a baseline of the training distribution which might be the cause of the behavior observed.
 
 # ## Attributing to the layers and comparing with model weights
 
-# Now let's beside attributing to the inputs of the model, also attribute to the layers of the model and understand which neurons appear to be more important.
+# Beside attributing to the inputs of the model, now let's also attribute to the layers of the model and understand which neurons appear to be more important.
 # 
 # In the cell below we will attribute to the inputs of the second linear layer of our model. Similar to the previous case, the attribution is performed on the test dataset.
 
